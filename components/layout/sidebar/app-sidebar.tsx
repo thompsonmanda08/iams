@@ -55,7 +55,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton className="hover:text-foreground h-10 group-data-[collapsible=icon]:px-0! hover:bg-[var(--primary)]/5">
                   <Logo />
-                  <span className="font-semibold">Shadcn UI Kit</span>
+                  <span className="font-semibold">IAMS</span>
                   <ChevronsUpDown className="ml-auto group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -64,29 +64,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 side={isMobile ? "bottom" : "right"}
                 align="end"
                 sideOffset={4}>
-                <DropdownMenuLabel>Projects</DropdownMenuLabel>
+                <DropdownMenuLabel>All Dashboards</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex items-center gap-3">
-                  <ShoppingBagIcon className="text-muted-foreground size-4" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">E-commerce</span>
-                    <span className="text-muted-foreground text-xs">Active</span>
-                  </div>
+                <DropdownMenuItem>
+                  <Link href={"/#"} className="flex items-center gap-3">
+                    <ShoppingBagIcon className="text-muted-foreground size-4" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Personal Risk Profile</span>
+                      <span className="text-muted-foreground text-xs">Active</span>
+                    </div>
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3">
-                  <UserCircle2Icon className="text-muted-foreground size-4" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Blog Platform</span>
-                    <span className="text-muted-foreground text-xs">Inactive</span>
-                  </div>
+                <DropdownMenuItem>
+                  <Link href={"/#"} className="flex items-center gap-3">
+                    <ShoppingBagIcon className="text-muted-foreground size-4" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Operational Risk</span>
+                      <span className="text-muted-foreground text-xs">Inactive</span>
+                    </div>
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem>
+                  <Link href={"/#"} className="flex items-center gap-3">
+                    <UserCircle2Icon className="text-muted-foreground size-4" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Audit & Assurance</span>
+                      <span className="text-muted-foreground text-xs">Inactive</span>
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+
+                {/*   <DropdownMenuSeparator /> <DropdownMenuItem asChild>
                   <Button className="w-full" variant="secondary">
                     <PlusIcon />
                     Add New Project
                   </Button>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
@@ -98,7 +111,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </ScrollArea>
       </SidebarContent>
       <SidebarFooter>
-        <Card className="gap-4 overflow-hidden py-4 group-data-[collapsible=icon]:hidden">
+        {/* <Card className="gap-4 overflow-hidden py-4 group-data-[collapsible=icon]:hidden">
           <CardHeader className="px-3">
             <CardTitle>Download</CardTitle>
             <CardDescription>
@@ -112,7 +125,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </Link>
             </Button>
           </CardContent>
-        </Card>
+        </Card> */}
         <NavUser />
       </SidebarFooter>
     </Sidebar>
