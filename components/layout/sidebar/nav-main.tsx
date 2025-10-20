@@ -84,6 +84,7 @@ export const navItems: NavGroup[] = [
         items: [
           { title: "Branches", href: "/dashboard/ecommerce" },
           { title: "Departments", href: "/dashboard/pages/products" },
+          { title: "Users Management", href: "/dashboard/pages/products/create" },
           { title: "Risk Configs", href: "/dashboard/pages/products/1" },
           { title: "Audit Configs", href: "/dashboard/pages/products/create" }
         ]
@@ -98,18 +99,18 @@ export const navItems: NavGroup[] = [
           { title: "Risk Configs", href: "/dashboard/pages/products/1" },
           { title: "Audit Configs", href: "/dashboard/pages/products/create" }
         ]
-      },
-      {
-        title: "Security",
-        href: "#",
-        icon: LucideShieldCheck,
-        items: [
-          { title: "Branches", href: "/dashboard/ecommerce" },
-          { title: "Departments", href: "/dashboard/pages/products" },
-          { title: "Risk Configs", href: "/dashboard/pages/products/1" },
-          { title: "Audit Configs", href: "/dashboard/pages/products/create" }
-        ]
       }
+      // {
+      //   title: "Security",
+      //   href: "#",
+      //   icon: LucideShieldCheck,
+      //   items: [
+      //     { title: "Branches", href: "/dashboard/ecommerce" },
+      //     { title: "Departments", href: "/dashboard/pages/products" },
+      //     { title: "Risk Configs", href: "/dashboard/pages/products/1" },
+      //     { title: "Audit Configs", href: "/dashboard/pages/products/create" }
+      //   ]
+      // }
     ]
   }
 ];
