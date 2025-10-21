@@ -3,15 +3,15 @@ import { generateMeta } from "@/lib/utils";
 import CustomDateRangePicker from "@/components/custom-date-range-picker";
 import { Button } from "@/components/ui/button";
 
-import {
-  ChatWidget,
-  ExerciseMinutes,
-  LatestPayments,
-  PaymentMethodCard,
-  SubscriptionsCard,
-  TeamMembersCard,
-  TotalRevenueCard
-} from "@/app/_delete-me/(auth)/default/components";
+// import {
+//   ChatWidget,
+//   ExerciseMinutes,
+//   LatestPayments,
+//   PaymentMethodCard,
+//   SubscriptionsCard,
+//   TeamMembersCard,
+//   TotalRevenueCard
+// } from "@/app/_delete-me/(auth)/default/components";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,7 +38,8 @@ export default function Page() {
         </div>
       </div>
       <div className="gap-4 space-y-4 lg:grid lg:grid-cols-3 lg:space-y-0">
-        <TeamMembersCard />
+        HELLO HERE
+        {/* <TeamMembersCard />
         <SubscriptionsCard />
         <TotalRevenueCard />
         <ChatWidget />
@@ -48,7 +49,7 @@ export default function Page() {
         <div className="lg:col-span-2">
           <LatestPayments />
         </div>
-        <PaymentMethodCard />
+        <PaymentMethodCard /> */}
       </div>
     </div>
   );
