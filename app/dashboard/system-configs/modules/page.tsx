@@ -20,12 +20,12 @@ export default function Page() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex justify-between items-start mb-6">
-        <aside className="border-border w-md border p-6 rounded-lg">
+      <div className="mb-6 flex items-start justify-between">
+        <aside className="border-border w-md rounded-lg border p-6">
           <div className="mb-6">
             <h2 className="text-foreground text-lg font-semibold">Module Management</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              Create and edit system modules to customize your organization's needs.
+              Create and edit system modules to customize your organization&apos;s needs.
             </p>
           </div>
 
@@ -92,10 +92,12 @@ export default function Page() {
               </Label>
             </div>
 
-            <Button onClick={handleSave} className="w-full">Save</Button>
+            <Button onClick={handleSave} className="w-full">
+              Save
+            </Button>
           </div>
         </aside>
-        <main className="flex-1 pb-6 px-6">
+        <main className="flex-1 px-6 pb-6">
           <ModuleList />
         </main>
       </div>

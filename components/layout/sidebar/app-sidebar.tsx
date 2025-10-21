@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useEffect } from "react";
-import { ChevronsUpDown, ShoppingBagIcon, UserCircle2Icon } from "lucide-react";
+import { ChevronsUpDown, HistoryIcon, ShoppingBagIcon, UserCircle2Icon } from "lucide-react";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { usePathname } from "next/navigation";
 import { useIsTablet } from "@/hooks/use-mobile";
@@ -69,29 +69,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuLabel>All Dashboards</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Link href={"/#"} className="flex items-center gap-3">
-                    <ShoppingBagIcon className="text-muted-foreground size-4" />
+                  <Link href={"/dashboard/home"} className="flex items-center gap-3">
+                    <UserCircle2Icon className="text-muted-foreground size-4" />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">Personal Risk Profile</span>
-                      <span className="text-muted-foreground text-xs">Active</span>
+                      {/* <span className="text-muted-foreground text-xs">Active</span> */}
                     </div>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href={"/#"} className="flex items-center gap-3">
+                  <Link href={"/dashboard/home/operations"} className="flex items-center gap-3">
                     <ShoppingBagIcon className="text-muted-foreground size-4" />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">Operational Risk</span>
-                      <span className="text-muted-foreground text-xs">Inactive</span>
+                      {/* <span className="text-muted-foreground text-xs">Inactive</span> */}
                     </div>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href={"/#"} className="flex items-center gap-3">
-                    <UserCircle2Icon className="text-muted-foreground size-4" />
+                  <Link href={"/dashboard/home/audit"} className="flex items-center gap-3">
+                    <HistoryIcon className="text-muted-foreground size-4" />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">Audit & Assurance</span>
-                      <span className="text-muted-foreground text-xs">Inactive</span>
+                      {/* <span className="text-muted-foreground text-xs">Inactive</span> */}
                     </div>
                   </Link>
                 </DropdownMenuItem>

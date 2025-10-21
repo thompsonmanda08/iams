@@ -12,7 +12,7 @@ import {
   SalesByCountriesCard,
   TotalEarningCard,
   MonthlyCampaignStateCard
-} from "@/app/dashboard/(auth)/website-analytics/components";
+} from "@/app/dashboard/website-analytics/components";
 
 export async function generateMetadata() {
   return generateMeta({

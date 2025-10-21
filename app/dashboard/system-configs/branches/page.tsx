@@ -182,7 +182,7 @@ const BRANCH_INITIAL_STATE = {
   physical_address: ""
 };
 
-export function CreateOrUpdateBranch({
+function CreateOrUpdateBranch({
   showTrigger,
   openModal,
   setOpenModal,

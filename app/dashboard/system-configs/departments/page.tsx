@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, PropsWithChildren, useMemo } from "react";
-import { configApi, type Province, type Town, type Branch } from "@/lib/api/config-api";
+import { configApi } from "@/lib/api/config-api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

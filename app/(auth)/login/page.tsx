@@ -1,8 +1,12 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
+// import { Button } from "@/components/ui/button";
+// import { Checkbox } from "@/components/ui/checkbox";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -11,8 +15,10 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
+    setIsLoading(true);
     e.preventDefault();
     console.log("Login attempt:", { email, password });
   };
@@ -21,7 +27,7 @@ export default function Page() {
       <div className="w-full max-w-md">
         <div className="space-y-8 rounded-2xl border bg-white p-8">
           <div className="flex flex-col items-center justify-center space-y-2">
-            <Image src="/iams.png" width={70} height={70} alt="logo" unoptimized />
+            <Image src="/images/infratel-logo.png" width={70} height={70} alt="logo" unoptimized />
 
             <h1 className="text-3xl font-bold text-slate-900">IAMS</h1>
             <p className="text-slate-600">Enter your credentials to continue</p>
@@ -33,10 +39,10 @@ export default function Page() {
                 Email Address
               </Label>
               <div className="relative">
-                <Mail className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="email"
                   type="email"
+                  label="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full py-3 pr-4 pl-11 transition-all"
@@ -47,13 +53,11 @@ export default function Page() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                Password
-              </Label>
               <div className="relative">
                 <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="password"
+                  label="Password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -62,8 +66,9 @@ export default function Page() {
                   required
                 />
                 <Button
+                  size={"sm"}
                   type="button"
-                  variant='link'
+                  variant="link"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600">
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -98,7 +103,8 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="mt-6 text-center text-sm text-slate-500">
+        <div className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-slate-500">
+          <Lock className="h-5 w-5 text-green-400" />
           <p>Secured access for authorized personnel only</p>
         </div>
       </div>
