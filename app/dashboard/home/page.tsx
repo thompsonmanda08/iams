@@ -185,7 +185,7 @@ export default function RiskDashboard() {
           <div className="space-y-6 lg:col-span-2">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Quick Links */}
-              <Card className="from-card to-card/50 border-border/50 bg-gradient-to-br p-6">
+              <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6">
                 <div className="mb-4 flex items-center gap-2">
                   <Zap className="text-primary h-5 w-5" />
                   <h3 className="text-lg font-semibold">Quick links</h3>
@@ -206,7 +206,7 @@ export default function RiskDashboard() {
               </Card>
 
               {/* App Launcher */}
-              <Card className="from-card to-card/50 border-border/50 bg-gradient-to-br p-6">
+              <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6">
                 <div className="mb-4 flex items-center gap-2">
                   <Target className="text-accent h-5 w-5" />
                   <h3 className="text-lg font-semibold">App launcher</h3>
@@ -230,7 +230,7 @@ export default function RiskDashboard() {
             {/* Dashboards & Resources */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* My Dashboards */}
-              <Card className="from-card to-card/50 border-border/50 bg-gradient-to-br p-6">
+              <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6">
                 <div className="mb-4 flex items-center gap-2">
                   <BarChart3 className="text-primary h-5 w-5" />
                   <h3 className="text-lg font-semibold">My dashboards</h3>
@@ -251,7 +251,7 @@ export default function RiskDashboard() {
               </Card>
 
               {/* Help & Resources */}
-              <Card className="from-card to-card/50 border-border/50 bg-gradient-to-br p-6">
+              <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6">
                 <div className="mb-4 flex items-center gap-2">
                   <HelpCircle className="text-accent h-5 w-5" />
                   <h3 className="text-lg font-semibold">Help and resources</h3>

@@ -96,7 +96,7 @@ export default function BranchesConfigPage() {
               <TableHead>Name</TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Province</TableHead>
-              <TableHead>city</TableHead>
+              <TableHead>City</TableHead>
               <TableHead>Physical Address</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
@@ -109,31 +109,34 @@ export default function BranchesConfigPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              branches.map((department) => (
-                <TableRow key={department.id}>
+              branches.map((branch) => (
+                <TableRow key={branch.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <MapPin className="text-muted-foreground h-4 w-4" />
-                      <span className="font-medium">{department.name}</span>
+                      <span className="font-medium">{branch.name}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <span className="font-mono text-sm">
-                      {department.code || "No description provided"}
+                      {branch.code || "No description provided"}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="font-mono text-sm">{department.code}</span>
+                    <span className="font-mono text-sm">{branch.code}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-sm">{branch.code}</span>
                   </TableCell>
                   <TableCell>
                     <span
                       className={cn(
                         "rounded-full px-2 py-1 text-xs font-medium",
-                        department.isActive
+                        branch.isActive
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-700"
                       )}>
-                      {department.isActive ? "Active" : "Inactive"}
+                      {branch.code}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -142,7 +145,7 @@ export default function BranchesConfigPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setEditingBranch(department);
+                          setEditingBranch(branch);
                           setOpenModal(true);
                         }}>
                         <Edit className="h-4 w-4" />
@@ -150,7 +153,7 @@ export default function BranchesConfigPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteBranch(String(department.id))}
+                        onClick={() => handleDeleteBranch(String(branch.id))}
                         className="text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -206,10 +209,10 @@ function CreateOrUpdateBranch({
   useEffect(() => {
     if (openModal) {
       if (initialData) {
-        // Update form when editing existing department
+        // Update form when editing existing branch
         setFormData(BRANCH_INITIAL_STATE);
       } else {
-        // Reset form when creating new department
+        // Reset form when creating new branch
         setFormData(BRANCH_INITIAL_STATE);
       }
       // Reset error state when modal opens
