@@ -12,6 +12,12 @@ import { ActiveThemeProvider } from "@/components/active-theme";
 import { DEFAULT_THEME } from "@/lib/themes";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Infratel IAMS",
+  description: "Infratel IAMS Admin Dashboard"
+};
 
 export default async function RootLayout({
   children
