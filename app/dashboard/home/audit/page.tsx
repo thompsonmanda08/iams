@@ -60,14 +60,14 @@ export default function AuditDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-                <AlertCircle className="h-6 w-6 text-blue-400" />
+              <h1 className="text-foreground flex items-center gap-2 text-2xl font-bold">
+                <AlertCircle className="dark:text-primary h-6 w-6" />
                 Audit Dashboard
               </h1>
               <p className="mt-1 text-sm text-slate-400">Completion rates and audit analytics.</p>
@@ -82,12 +82,12 @@ export default function AuditDashboard() {
                     </span>
                   ))}
                   <span className="text-lg text-slate-600">★</span>
-                  <span className="ml-2 font-semibold text-white">(4.5)</span>
+                  <span className="text-foreground ml-2 font-semibold">(4.5)</span>
                 </div>
               </div>
               <div className="text-right">
                 <p className="mb-1 text-xs text-slate-400">Risk factors</p>
-                <p className="text-3xl font-bold text-white">35</p>
+                <p className="text-foreground text-3xl font-bold">35</p>
               </div>
             </div>
           </div>
@@ -99,9 +99,9 @@ export default function AuditDashboard() {
           {/* Left Sidebar */}
           <div className="col-span-3 space-y-6">
             {/* Audits Card */}
-            <Card className="border-white/10 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-blue-400" />
                   Audits
                 </CardTitle>
@@ -113,7 +113,7 @@ export default function AuditDashboard() {
                       <span className="text-sm text-slate-400">{stat.label}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl font-bold text-white">{stat.value}</span>
+                      <span className="text-foreground text-3xl font-bold">{stat.value}</span>
                     </div>
                     <Progress value={(stat.value / 30) * 100} className="h-2" />
                   </div>
@@ -122,9 +122,9 @@ export default function AuditDashboard() {
             </Card>
 
             {/* Aggregates Card */}
-            <Card className="border-white/10 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-emerald-400" />
                   Aggregates
                 </CardTitle>
@@ -135,7 +135,7 @@ export default function AuditDashboard() {
                     <span className="text-sm text-slate-400">Completion rate</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl font-bold text-white">37%</span>
+                    <span className="text-foreground text-3xl font-bold">37%</span>
                   </div>
                   <Progress value={37} className="h-2" />
                 </div>
@@ -150,7 +150,7 @@ export default function AuditDashboard() {
               {statusCards.map((card, index) => (
                 <Card
                   key={index}
-                  className={`bg-gradient-to-br ${card.color} group relative overflow-hidden border-0 transition-transform duration-300 hover:scale-105`}>
+                  className={`bg-linear-to-br ${card.color} group relative overflow-hidden border-0 transition-transform duration-300 hover:scale-105`}>
                   <CardContent className="p-6">
                     <div className="mb-4 flex items-start justify-between">
                       <div>
@@ -163,7 +163,7 @@ export default function AuditDashboard() {
 
                     {/* Wave Pattern */}
                     <svg
-                      className="absolute bottom-0 left-0 h-16 w-full opacity-20"
+                      className="absolute top-0 left-0 h-16 w-full opacity-20"
                       viewBox="0 0 1200 120"
                       preserveAspectRatio="none">
                       <path
@@ -176,9 +176,9 @@ export default function AuditDashboard() {
             </div>
 
             {/* Audit Dashboard Section */}
-            <Card className="border-white/10 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-blue-400" />
                   Audit Dashboard
                 </CardTitle>
@@ -189,7 +189,7 @@ export default function AuditDashboard() {
                   <div className="space-y-4">
                     <div>
                       <p className="mb-2 text-sm text-slate-400">Total findings</p>
-                      <p className="text-4xl font-bold text-white">20</p>
+                      <p className="text-foreground text-4xl font-bold">20</p>
                     </div>
                     <Progress value={100} className="h-2" />
                   </div>
@@ -220,7 +220,7 @@ export default function AuditDashboard() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <p className="text-2xl font-bold text-white">55%</p>
+                        <p className="text-foreground text-2xl font-bold">55%</p>
                       </div>
                     </div>
                     <p className="mt-3 text-sm text-slate-400">Closed findings</p>
@@ -252,7 +252,7 @@ export default function AuditDashboard() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <p className="text-2xl font-bold text-white">45%</p>
+                        <p className="text-foreground text-2xl font-bold">45%</p>
                       </div>
                     </div>
                     <p className="mt-3 text-sm text-slate-400">Open findings</p>
@@ -262,12 +262,12 @@ export default function AuditDashboard() {
                 <div className="mt-8 grid grid-cols-2 gap-6 border-t border-white/10 pt-8">
                   <div className="space-y-2">
                     <p className="text-sm text-slate-400">Internal audit planned</p>
-                    <p className="text-3xl font-bold text-white">0</p>
+                    <p className="text-foreground text-3xl font-bold">0</p>
                     <Progress value={0} className="h-2" />
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm text-slate-400">External audit planned</p>
-                    <p className="text-3xl font-bold text-white">0</p>
+                    <p className="text-foreground text-3xl font-bold">0</p>
                     <Progress value={0} className="h-2" />
                   </div>
                 </div>
@@ -277,9 +277,9 @@ export default function AuditDashboard() {
             {/* Bottom Row */}
             <div className="grid grid-cols-2 gap-6">
               {/* Findings by Category */}
-              <Card className="border-white/10 bg-slate-900/50 backdrop-blur-sm">
+              <Card className="backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
+                  <CardTitle className="text-foreground flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-blue-400" />
                     Findings by Category
                   </CardTitle>
@@ -288,12 +288,12 @@ export default function AuditDashboard() {
                   {findingsByCategory.map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-300">{item.category}</span>
-                        <span className="text-sm font-semibold text-white">{item.value}</span>
+                        <span className="text-sm text-slate-400">{item.category}</span>
+                        <span className="text-foreground text-sm font-semibold">{item.value}</span>
                       </div>
                       <div className="relative h-2 overflow-hidden rounded-full bg-slate-800">
                         <div
-                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
+                          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-blue-500 to-blue-600"
                           style={{ width: `${(item.value / item.max) * 100}%` }}
                         />
                       </div>
@@ -303,9 +303,9 @@ export default function AuditDashboard() {
               </Card>
 
               {/* Risk Framework Status */}
-              <Card className="border-white/10 bg-slate-900/50 backdrop-blur-sm">
+              <Card className="backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
+                  <CardTitle className="text-foreground flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                     Risk Framework Status
                   </CardTitle>
@@ -314,15 +314,17 @@ export default function AuditDashboard() {
                   {frameworkStatus.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between rounded-lg bg-slate-800/50 p-3 transition-colors hover:bg-slate-800">
-                      <span className="text-sm text-slate-300">{item.label}</span>
+                      className="flex items-center justify-between rounded-lg bg-slate-100/50 p-3 transition-colors hover:bg-slate-100">
+                      <span className="text-sm text-slate-700 dark:text-slate-300">
+                        {item.label}
+                      </span>
                       <div
                         className={`flex h-6 w-6 items-center justify-center rounded-full ${
                           item.status === "success"
-                            ? "bg-emerald-500/20 text-emerald-400"
+                            ? "bg-emerald-500/30 text-emerald-500"
                             : item.status === "error"
-                              ? "bg-red-500/20 text-red-400"
-                              : "bg-amber-500/20 text-amber-400"
+                              ? "bg-red-500/30 text-red-500"
+                              : "bg-amber-500/30 text-amber-500"
                         }`}>
                         {item.status === "success" ? "✓" : item.status === "error" ? "✕" : "!"}
                       </div>

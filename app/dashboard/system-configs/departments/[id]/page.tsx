@@ -206,7 +206,7 @@ export default async function DepartmentDetailsPage() {
             </div>
 
             <ModuleSelection modules={[]} />
-            <Separator className="my-4" />
+            {/* <Separator className="my-4" /> */}
           </Card>
         </TabsContent>
 

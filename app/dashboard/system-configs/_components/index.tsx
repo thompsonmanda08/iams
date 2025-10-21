@@ -11,7 +11,7 @@ import { useParams } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, FolderCode } from "lucide-react";
 import { add } from "date-fns";
-import { capitalize } from "@/lib/utils";
+import { capitalize, cn } from "@/lib/utils";
 
 import { ArrowUpRightIcon } from "lucide-react";
 import {
@@ -234,7 +234,11 @@ export function ModuleSelection({
   const [selectedModules, setSelectedModules] = useState(modules.map((m) => m.backendKey));
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3",
+        modules.length === 0 && "place-items-center"
+      )}>
       {modules && modules.length > 0 ? (
         modules.map((module, index) => {
           return (
@@ -255,27 +259,29 @@ export function ModuleSelection({
           );
         })
       ) : (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <FolderCode />
-            </EmptyMedia>
-            <EmptyTitle>No Modules Yet</EmptyTitle>
-            <EmptyDescription>
-              You haven&apos;t created any modules yet. Get started by creating your first module.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <div className="flex gap-2">
-              <Button>Create module</Button>
-            </div>
-          </EmptyContent>
-          <Button variant="link" asChild className="text-muted-foreground" size="sm">
-            <Link href="#">
-              Configure Modules <ArrowUpRightIcon />
-            </Link>
-          </Button>
-        </Empty>
+        <div className="col-span-full">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FolderCode />
+              </EmptyMedia>
+              <EmptyTitle>No Modules Yet</EmptyTitle>
+              <EmptyDescription>
+                You haven&apos;t created any modules yet. Get started by creating your first module.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <div className="flex gap-2">
+                <Button>Create module</Button>
+              </div>
+            </EmptyContent>
+            <Button variant="link" asChild className="text-muted-foreground" size="sm">
+              <Link href="#">
+                Configure Modules <ArrowUpRightIcon />
+              </Link>
+            </Button>
+          </Empty>
+        </div>
       )}
     </div>
   );

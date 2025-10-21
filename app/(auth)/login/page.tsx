@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 // import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Page() {
@@ -16,11 +17,17 @@ export default function Page() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     setIsLoading(true);
     e.preventDefault();
     console.log("Login attempt:", { email, password });
+    router.push("/dashboard/home");
+
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000 * 60);
   };
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -35,14 +42,12 @@ export default function Page() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                Email Address
-              </Label>
               <div className="relative">
+                <Mail className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="email"
                   type="email"
-                  label="Email"
+                  label="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full py-3 pr-4 pl-11 transition-all"
@@ -54,7 +59,7 @@ export default function Page() {
 
             <div className="space-y-2">
               <div className="relative">
-                <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <Lock className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="password"
                   label="Password"
@@ -70,7 +75,7 @@ export default function Page() {
                   type="button"
                   variant="link"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600">
+                  className="absolute top-2/3 right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600">
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </Button>
               </div>
@@ -88,7 +93,11 @@ export default function Page() {
               </a>
             </div>
 
-            <Button type="submit" className="w-full py-3 font-semibold">
+            <Button
+              type="submit"
+              className="w-full py-3 font-semibold"
+              isLoading={isLoading}
+              loadingText="Signing in...">
               Sign In
             </Button>
           </form>
@@ -104,7 +113,7 @@ export default function Page() {
         </div>
 
         <div className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-slate-500">
-          <Lock className="h-5 w-5 text-green-400" />
+          <Lock className="h-4 w-4 text-green-400" />
           <p>Secured access for authorized personnel only</p>
         </div>
       </div>
