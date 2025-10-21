@@ -1,257 +1,213 @@
-"use server";
+// "use server";
 
-import { prisma } from "@bgs-tickety/database";
-import { TeamRole } from "@prisma/client";
+// /**
+//  * Server actions for managing role permissions
+//  */
 
-/**
- * Server actions for managing role permissions
- */
+// /**
+//  * Get all role permissions from the database
+//  */
+// export async function getAllRolePermissions() {
+//   try {
+//     const permissions = await Promise.resolve(() =>
+//       setTimeout(() => {
+//         console.log("simulate api call");
+//       }, 2000)
+//     );
 
-export interface RolePermissionData {
-  role: TeamRole;
-  description?: string | null;
-  canCreateEvents: boolean;
-  canEditEvents: boolean;
-  canDeleteEvents: boolean;
-  canManageTickets: boolean;
-  canViewAnalytics: boolean;
-  canManageTeam: boolean;
-  canManageVendors: boolean;
-  canCheckIn: boolean;
-  isActive: boolean;
-}
+//     return {
+//       success: true,
+//       data: permissions
+//     };
+//   } catch (error: any) {
+//     console.error("Error fetching role permissions:", error);
+//     return {
+//       success: false,
+//       error: error.message || "Failed to fetch role permissions"
+//     };
+//   }
+// }
 
-/**
- * Get all role permissions from the database
- */
-export async function getAllRolePermissions() {
-  try {
-    const permissions = await prisma.rolePermission.findMany({
-      orderBy: {
-        role: "asc",
-      },
-    });
+// /**
+//  * Get permissions for a specific role
+//  */
+// export async function getRolePermissions(role: any) {
+//   try {
+//     const permissions = await Promise.resolve(() =>
+//       setTimeout(() => {
+//         console.log("simulate api call");
+//       }, 2000)
+//     );
 
-    return {
-      success: true,
-      data: permissions,
-    };
-  } catch (error: any) {
-    console.error("Error fetching role permissions:", error);
-    return {
-      success: false,
-      error: error.message || "Failed to fetch role permissions",
-    };
-  }
-}
+//     if (!permissions) {
+//       return {
+//         success: false,
+//         error: `No permissions found for role: ${role}`
+//       };
+//     }
 
-/**
- * Get permissions for a specific role
- */
-export async function getRolePermissions(role: TeamRole) {
-  try {
-    const permissions = await prisma.rolePermission.findUnique({
-      where: { role },
-    });
+//     return {
+//       success: true,
+//       data: permissions
+//     };
+//   } catch (error: any) {
+//     console.error(`Error fetching permissions for role ${role}:`, error);
+//     return {
+//       success: false,
+//       error: error.message || `Failed to fetch permissions for role: ${role}`
+//     };
+//   }
+// }
 
-    if (!permissions) {
-      return {
-        success: false,
-        error: `No permissions found for role: ${role}`,
-      };
-    }
+// /**
+//  * Update permissions for a specific role
+//  */
+// export async function updateRolePermissions(role: TeamRole, data: Partial<RolePermissionData>) {
+//   try {
+//     // Check if role permissions exist
+//     const existing = await Promise.resolve(() =>
+//       setTimeout(() => {
+//         console.log("simulate api call");
+//       }, 2000)
+//     );
 
-    return {
-      success: true,
-      data: permissions,
-    };
-  } catch (error: any) {
-    console.error(`Error fetching permissions for role ${role}:`, error);
-    return {
-      success: false,
-      error: error.message || `Failed to fetch permissions for role: ${role}`,
-    };
-  }
-}
+//     if (!existing) {
+//       return {
+//         success: false,
+//         error: `No permissions found for role: ${role}`
+//       };
+//     }
 
-/**
- * Update permissions for a specific role
- */
-export async function updateRolePermissions(
-  role: TeamRole,
-  data: Partial<RolePermissionData>
-) {
-  try {
-    // Check if role permissions exist
-    const existing = await prisma.rolePermission.findUnique({
-      where: { role },
-    });
+//     // Update the permissions
+//     const updated = await Promise.resolve(() =>
+//       setTimeout(() => {
+//         console.log("simulate api call");
+//       }, 2000)
+//     );
+//     return {
+//       success: true,
+//       data: updated,
+//       message: `Successfully updated permissions for ${role}`
+//     };
+//   } catch (error: any) {
+//     console.error(`Error updating permissions for role ${role}:`, error);
+//     return {
+//       success: false,
+//       error: error.message || `Failed to update permissions for role: ${role}`
+//     };
+//   }
+// }
 
-    if (!existing) {
-      return {
-        success: false,
-        error: `No permissions found for role: ${role}`,
-      };
-    }
+// /**
+//  * Bulk update all role permissions
+//  */
+// export async function bulkUpdateRolePermissions(
+//   permissions: Record<TeamRole, Partial<RolePermissionData>>
+// ) {
+//   try {
+//     const updates = [];
 
-    // Update the permissions
-    const updated = await prisma.rolePermission.update({
-      where: { role },
-      data: {
-        description: data.description,
-        canCreateEvents: data.canCreateEvents,
-        canEditEvents: data.canEditEvents,
-        canDeleteEvents: data.canDeleteEvents,
-        canManageTickets: data.canManageTickets,
-        canViewAnalytics: data.canViewAnalytics,
-        canManageTeam: data.canManageTeam,
-        canManageVendors: data.canManageVendors,
-        canCheckIn: data.canCheckIn,
-        isActive: data.isActive,
-      },
-    });
+//     for (const [role, data] of Object.entries(permissions)) {
+//       const result = await Promise.resolve(() =>
+//       setTimeout(() => {
+//         console.log("simulate api call");
+//       }, 2000)
+//     );
 
-    return {
-      success: true,
-      data: updated,
-      message: `Successfully updated permissions for ${role}`,
-    };
-  } catch (error: any) {
-    console.error(`Error updating permissions for role ${role}:`, error);
-    return {
-      success: false,
-      error: error.message || `Failed to update permissions for role: ${role}`,
-    };
-  }
-}
+//     return {
+//       success: true,
+//       data: updates,
+//       message: `Successfully updated ${updates.length} role permissions`
+//     };
+//   } catch (error: any) {
+//     console.error("Error bulk updating role permissions:", error);
+//     return {
+//       success: false,
+//       error: error.message || "Failed to bulk update role permissions"
+//     };
+//   }
+// }
 
-/**
- * Bulk update all role permissions
- */
-export async function bulkUpdateRolePermissions(
-  permissions: Record<TeamRole, Partial<RolePermissionData>>
-) {
-  try {
-    const updates = [];
+// /**
+//  * Reset role permissions to defaults
+//  */
+// export async function resetRolePermissionsToDefaults() {
+//   try {
 
-    for (const [role, data] of Object.entries(permissions)) {
-      const result = await prisma.rolePermission.update({
-        where: { role: role as TeamRole },
-        data: {
-          description: data.description,
-          canCreateEvents: data.canCreateEvents,
-          canEditEvents: data.canEditEvents,
-          canDeleteEvents: data.canDeleteEvents,
-          canManageTickets: data.canManageTickets,
-          canViewAnalytics: data.canViewAnalytics,
-          canManageTeam: data.canManageTeam,
-          canManageVendors: data.canManageVendors,
-          canCheckIn: data.canCheckIn,
-          isActive: data.isActive,
-        },
-      });
-      updates.push(result);
-    }
+//     // Reseed with defaults
+//     const result = await Promise.resolve(() =>
+//       setTimeout(() => {
+//         console.log("simulate api call");
+//       }, 2000)
+//     );
 
-    return {
-      success: true,
-      data: updates,
-      message: `Successfully updated ${updates.length} role permissions`,
-    };
-  } catch (error: any) {
-    console.error("Error bulk updating role permissions:", error);
-    return {
-      success: false,
-      error: error.message || "Failed to bulk update role permissions",
-    };
-  }
-}
+//     if (!result.success) {
+//       return {
+//         success: false,
+//         error: result.message
+//       };
+//     }
 
-/**
- * Reset role permissions to defaults
- */
-export async function resetRolePermissionsToDefaults() {
-  try {
-    // Import seed function
-    const { seedRolePermissions } = await import(
-      "../../../../../admin/src/lib/seeds"
-    );
+//     return {
+//       success: true,
+//       message: `Successfully reset ${result.count} role permissions to defaults`
+//     };
+//   } catch (error: any) {
+//     console.error("Error resetting role permissions:", error);
+//     return {
+//       success: false,
+//       error: error.message || "Failed to reset role permissions"
+//     };
+//   }
+// }
 
-    // Delete existing permissions
-    await prisma.rolePermission.deleteMany();
+// /**
+//  * Apply role permissions to all existing team members of a specific role
+//  * This syncs the default permissions to team members who don't have custom overrides
+//  */
+// export async function applyRolePermissionsToTeamMembers(role: TeamRole) {
+//   try {
+//     // Get the default permissions for this role
+//     const rolePermissions = await prisma.rolePermission.findUnique({
+//       where: { role }
+//     });
 
-    // Reseed with defaults
-    const result = await seedRolePermissions();
+//     if (!rolePermissions) {
+//       return {
+//         success: false,
+//         error: `No default permissions found for role: ${role}`
+//       };
+//     }
 
-    if (!result.success) {
-      return {
-        success: false,
-        error: result.message,
-      };
-    }
+//     // Update all team members with this role
+//     // Only update if they don't have custom permission overrides
+//     const updated = await prisma.teamMember.updateMany({
+//       where: {
+//         role
+//         // Add conditions here to only update members without custom overrides
+//       },
+//       data: {
+//         canCreateEvents: rolePermissions.canCreateEvents,
+//         canEditEvents: rolePermissions.canEditEvents,
+//         canDeleteEvents: rolePermissions.canDeleteEvents,
+//         canManageTickets: rolePermissions.canManageTickets,
+//         canViewAnalytics: rolePermissions.canViewAnalytics,
+//         canManageTeam: rolePermissions.canManageTeam,
+//         canManageVendors: rolePermissions.canManageVendors,
+//         canCheckIn: rolePermissions.canCheckIn
+//       }
+//     });
 
-    return {
-      success: true,
-      message: `Successfully reset ${result.count} role permissions to defaults`,
-    };
-  } catch (error: any) {
-    console.error("Error resetting role permissions:", error);
-    return {
-      success: false,
-      error: error.message || "Failed to reset role permissions",
-    };
-  }
-}
-
-/**
- * Apply role permissions to all existing team members of a specific role
- * This syncs the default permissions to team members who don't have custom overrides
- */
-export async function applyRolePermissionsToTeamMembers(role: TeamRole) {
-  try {
-    // Get the default permissions for this role
-    const rolePermissions = await prisma.rolePermission.findUnique({
-      where: { role },
-    });
-
-    if (!rolePermissions) {
-      return {
-        success: false,
-        error: `No default permissions found for role: ${role}`,
-      };
-    }
-
-    // Update all team members with this role
-    // Only update if they don't have custom permission overrides
-    const updated = await prisma.teamMember.updateMany({
-      where: {
-        role,
-        // Add conditions here to only update members without custom overrides
-      },
-      data: {
-        canCreateEvents: rolePermissions.canCreateEvents,
-        canEditEvents: rolePermissions.canEditEvents,
-        canDeleteEvents: rolePermissions.canDeleteEvents,
-        canManageTickets: rolePermissions.canManageTickets,
-        canViewAnalytics: rolePermissions.canViewAnalytics,
-        canManageTeam: rolePermissions.canManageTeam,
-        canManageVendors: rolePermissions.canManageVendors,
-        canCheckIn: rolePermissions.canCheckIn,
-      },
-    });
-
-    return {
-      success: true,
-      message: `Successfully applied permissions to ${updated.count} team members with role ${role}`,
-      count: updated.count,
-    };
-  } catch (error: any) {
-    console.error(`Error applying permissions to team members for role ${role}:`, error);
-    return {
-      success: false,
-      error:
-        error.message ||
-        `Failed to apply permissions to team members for role: ${role}`,
-    };
-  }
-}
+//     return {
+//       success: true,
+//       message: `Successfully applied permissions to ${updated.count} team members with role ${role}`,
+//       count: updated.count
+//     };
+//   } catch (error: any) {
+//     console.error(`Error applying permissions to team members for role ${role}:`, error);
+//     return {
+//       success: false,
+//       error: error.message || `Failed to apply permissions to team members for role: ${role}`
+//     };
+//   }
+// }

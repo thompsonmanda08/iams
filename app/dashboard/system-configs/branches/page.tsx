@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, PropsWithChildren, useMemo } from "react";
-import { configApi, type Province, type Town, type Branch } from "@/lib/api/config-api";
+import { configApi } from "@/lib/api/config-api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,7 +17,7 @@ import { Plus, Edit, Trash2, MapPin, PencilLineIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Props } from "@dnd-kit/core/dist/components/DragOverlay";
-import { Department, DepartmentUser, ErrorState } from "@/types";
+import { Branch, ErrorState } from "@/types";
 import {
   Dialog,
   DialogClose,
@@ -29,19 +29,12 @@ import {
 import { Input } from "@/components/ui/input-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import { createNewDepartment, updateDepartment } from "@/app/_actions/config-actions";
-import { useRouter } from "next/navigation";
-import { useDepartments } from "@/hooks/use-query-data";
+import { createNewBranch, updateBranch } from "@/app/_actions/config-actions";
+import { SelectField } from "@/components/ui/select-field";
 
-export default function DepartmentsConfigPage() {
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [editingCategory, setEditingDepartment] = useState<any | null>(null);
+export default function BranchesConfigPage() {
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // const { data, isLoading: isLoadingDepartments } = useDepartments();
-
-  const router = useRouter();
 
   useEffect(() => {
     loadData();
@@ -50,8 +43,8 @@ export default function DepartmentsConfigPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [provincesData] = await Promise.all([configApi.getProvinces()]);
-      setDepartments(provincesData as any);
+      const [x] = await Promise.all([configApi.getBranches()]);
+      setBranches(x as any);
     } catch (error) {
       toast.error("Failed to load office configuration");
     } finally {
@@ -59,38 +52,41 @@ export default function DepartmentsConfigPage() {
     }
   };
 
-  const handleDeleteDepartment = async (id: string) => {
-    if (!confirm("Are you sure? This will affect related towns and branches.")) return;
+  const handleDeleteBranch = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this branch?")) return;
 
     try {
-      await configApi.deleteProvince(id);
-      toast.success("Province deleted successfully");
+      await configApi.deleteBranch(id);
+      toast.success("Branch deleted successfully");
       loadData();
     } catch (error) {
-      toast.error("Failed to delete department");
+      toast.error("Failed to delete branch");
     }
   };
+
+  const [openModal, setOpenModal] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<any | null>(null);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-foreground text-3xl font-bold">Department Setup</h1>
-          <p className="text-muted-foreground mt-1">Manage your departments across the country</p>
+          <h1 className="text-foreground text-3xl font-bold">Branch Setup</h1>
+          <p className="text-muted-foreground mt-1">Manage your branches across the country</p>
         </div>
       </div>
 
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Departments</h3>
+          <h3 className="text-lg font-semibold">Branches</h3>
           <Button
             size="sm"
             onClick={() => {
-              setEditingDepartment(null);
+              setEditingBranch(null);
               setOpenModal(true);
             }}>
-            <Plus className="h-4 w-4" /> Create New Department
+            <Plus className="h-4 w-4" /> Create New Branch
           </Button>
         </div>
 
@@ -98,9 +94,10 @@ export default function DepartmentsConfigPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
               <TableHead>Code</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Province</TableHead>
+              <TableHead>city</TableHead>
+              <TableHead>Physical Address</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -112,13 +109,8 @@ export default function DepartmentsConfigPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              departments.map((department) => (
-                <TableRow
-                  key={department.id}
-                  onClick={() => {
-                    console.info("Row Clicked...", department?.code);
-                    router.push(`/dashboard/system-configs/departments/${department.id}`);
-                  }}>
+              branches.map((department) => (
+                <TableRow key={department.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <MapPin className="text-muted-foreground h-4 w-4" />
@@ -127,7 +119,7 @@ export default function DepartmentsConfigPage() {
                   </TableCell>
                   <TableCell>
                     <span className="font-mono text-sm">
-                      {department.description || "No description provided"}
+                      {department.code || "No description provided"}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -150,7 +142,7 @@ export default function DepartmentsConfigPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setEditingDepartment(department);
+                          setEditingBranch(department);
                           setOpenModal(true);
                         }}>
                         <Edit className="h-4 w-4" />
@@ -158,7 +150,7 @@ export default function DepartmentsConfigPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteDepartment(String(department.id))}
+                        onClick={() => handleDeleteBranch(String(department.id))}
                         className="text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -171,17 +163,26 @@ export default function DepartmentsConfigPage() {
         </Table>
       </Card>
 
-      <CreateOrUpdateDepartment
+      <CreateOrUpdateBranch
         openModal={openModal}
         setOpenModal={setOpenModal}
-        initialData={editingCategory}
-        setInitialData={setEditingDepartment}
+        initialData={editingBranch}
+        setInitialData={setEditingBranch}
       />
     </div>
   );
 }
 
-function CreateOrUpdateDepartment({
+const BRANCH_INITIAL_STATE = {
+  id: "",
+  name: "",
+  code: "",
+  province: "",
+  city: "",
+  physical_address: ""
+};
+
+export function CreateOrUpdateBranch({
   showTrigger,
   openModal,
   setOpenModal,
@@ -190,8 +191,8 @@ function CreateOrUpdateDepartment({
 }: PropsWithChildren & {
   showTrigger?: boolean;
   openModal?: boolean;
-  initialData?: Department | null;
-  setInitialData?: React.Dispatch<React.SetStateAction<Department | null>>;
+  initialData?: Branch | null;
+  setInitialData?: React.Dispatch<React.SetStateAction<Branch | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [error, setError] = useState<ErrorState>({
@@ -199,34 +200,17 @@ function CreateOrUpdateDepartment({
     message: ""
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<Department>(
-    initialData ?? {
-      id: undefined,
-      name: "",
-      code: "",
-      description: ""
-    }
-  );
+  const [formData, setFormData] = useState<Branch>(initialData ?? BRANCH_INITIAL_STATE);
 
   // Improved useEffect to handle initialData changes
   useEffect(() => {
     if (openModal) {
       if (initialData) {
         // Update form when editing existing department
-        setFormData({
-          id: initialData.id,
-          name: initialData.name || "",
-          code: initialData.code || "",
-          description: initialData.description || ""
-        });
+        setFormData(BRANCH_INITIAL_STATE);
       } else {
         // Reset form when creating new department
-        setFormData({
-          id: undefined,
-          name: "",
-          code: "",
-          description: ""
-        });
+        setFormData(BRANCH_INITIAL_STATE);
       }
       // Reset error state when modal opens
       setError({ status: false, message: "" });
@@ -238,12 +222,7 @@ function CreateOrUpdateDepartment({
     if (!openModal) {
       // Small delay to allow animation to complete
       const timer = setTimeout(() => {
-        setFormData({
-          id: undefined,
-          name: "",
-          code: "",
-          description: ""
-        });
+        setFormData(BRANCH_INITIAL_STATE);
         setError({ status: false, message: "" });
         setInitialData?.(null);
       }, 300);
@@ -268,14 +247,14 @@ function CreateOrUpdateDepartment({
     }
 
     const res = initialData
-      ? await updateDepartment({ ...formData, id: String(initialData?.id) })
-      : await createNewDepartment({ ...formData });
+      ? await updateBranch({ ...formData, id: String(initialData?.id) })
+      : await createNewBranch({ ...formData });
 
     if (res.success) {
-      toast.success(`Department ${initialData ? "updated" : "created"}`);
+      toast.success(`Branch ${initialData ? "updated" : "created"}`);
       setOpenModal?.(false);
       setInitialData?.(null);
-      setFormData({ id: undefined, name: "", code: "", description: "" });
+      setFormData(BRANCH_INITIAL_STATE);
     } else {
       toast.error(res.message);
       setError({ status: true, message: res.message });
@@ -292,11 +271,11 @@ function CreateOrUpdateDepartment({
             {" "}
             {initialData ? (
               <>
-                <PencilLineIcon className="mr-2 h-4 w-4" /> Update Department
+                <PencilLineIcon className="mr-2 h-4 w-4" /> Update Branch
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" /> Create New Department
+                <Plus className="mr-2 h-4 w-4" /> Create New Branch
               </>
             )}
           </Button>
@@ -304,27 +283,58 @@ function CreateOrUpdateDepartment({
       )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Update Department" : "Create New Department"}</DialogTitle>
+          <DialogTitle>{initialData ? "Update Branch" : "Create New Branch"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleCreateOrUpdate} className="space-y-4">
           <Input
-            label="Name"
-            placeholder="Department Name"
+            label="Branch Name"
+            placeholder="Headquarters (HQ)"
             value={formData.name}
             onChange={(e) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, name: e.target.value }));
             }}
             required
-            // descriptionText="A unique code will be automatically generated from the name"
+            descriptionText="A unique code will be automatically generated from the name"
           />
           <Input
-            label="Description"
-            placeholder="Department description (optional)"
-            value={formData.description}
+            label="Branch Code"
+            placeholder="e.g. KTK10, NDL001"
+            value={formData.code}
             onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, description: e.target.value }));
+              setFormData((c) => ({ ...c, code: e.target.value }));
+            }}
+          />
+          <SelectField
+            label="Province"
+            placeholder="e.g. Western Province, Copperbelt"
+            options={[]}
+            value={formData.province}
+            onValueChange={(province) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, province }));
+            }}
+          />
+          <SelectField
+            label="City"
+            placeholder="e.g. Western Province, Copperbelt"
+            options={[]}
+            isLoading={false}
+            value={formData.city}
+            onValueChange={(city) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, city }));
+            }}
+          />
+
+          <Input
+            label="Physical Address"
+            placeholder="e.g. 7th Floor, 4th Street Ibex Hill"
+            value={formData.physical_address}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, physical_address: e.target.value }));
             }}
           />
           {error.status && (

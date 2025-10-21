@@ -2,18 +2,16 @@
 
 import { getUploadAuthParams } from "@imagekit/next/server";
 
-import { createAuthSession, verifySession } from "@/lib/auth";
-import { APIResponse } from "@bgs-tickety/shared";
 import axios, {
-  badRequestResponse,
+  handleBadRequest,
   handleError,
   successResponse,
-  unauthorizedResponse,
+  unauthorizedResponse
 } from "./api-config";
 
 export async function loginUser({
   username,
-  password,
+  password
 }: {
   username: string;
   password: string;
@@ -31,7 +29,7 @@ export async function loginUser({
       message: "Login successful",
       data: response?.data?.sellerData,
       status: response.status,
-      statusText: response.statusText,
+      statusText: response.statusText
     };
   } catch (error: Error | any) {
     console.error({
@@ -40,7 +38,7 @@ export async function loginUser({
       statusText: error?.response?.statusText,
       headers: error?.response?.headers,
       config: error?.response?.config,
-      data: error?.response?.data || error,
+      data: error?.response?.data || error
     });
 
     return {
@@ -53,7 +51,7 @@ export async function loginUser({
         "Oops! Something went wrong. Please try again.",
       data: null,
       status: error?.response?.status,
-      statusText: error?.response?.statusText,
+      statusText: error?.response?.statusText
     };
   }
 }
@@ -69,7 +67,7 @@ export async function createNewAccount({
   businessName,
   businessType,
   description,
-  referral,
+  referral
 }: {
   email: string;
   username: string;
@@ -97,15 +95,13 @@ export async function createNewAccount({
       businessName,
       businessType,
       description,
-      referral,
+      referral
     });
 
     // Set authentication cookie
     await createAuthSession(response.data.tokenData);
 
-    return successResponse(
-      response.data?.userData || "Account created successfully",
-    );
+    return successResponse(response.data?.userData || "Account created successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST | AUTH SIGNUP", url);
   }
@@ -113,7 +109,7 @@ export async function createNewAccount({
 
 export async function sendResetEmail({
   username,
-  email,
+  email
 }: {
   username?: string;
   email?: string;
@@ -121,7 +117,7 @@ export async function sendResetEmail({
   const url = `/api/auth/forgot-password`;
 
   if (!username && !email) {
-    return badRequestResponse("Please enter your username or email");
+    return handleBadRequest("Please enter your username or email");
   }
 
   try {
@@ -135,7 +131,7 @@ export async function sendResetEmail({
 
 export async function resetPassword({
   newPassword,
-  token,
+  token
 }: {
   newPassword: string;
   token: string;
@@ -157,10 +153,7 @@ export async function checkSignupAvailability(): Promise<APIResponse> {
   try {
     const response = await axios.get(url);
 
-    return successResponse(
-      response?.data,
-      "Signup settings fetched successfully",
-    );
+    return successResponse(response?.data, "Signup settings fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET | CHECK SIGNUP AVAILABILITY", url);
   }
@@ -177,7 +170,7 @@ export async function uploadImageAuth(): Promise<APIResponse> {
   try {
     const { token, expire, signature } = getUploadAuthParams({
       privateKey: process.env.IMAGEKIT_PRIVATE_KEY as string,
-      publicKey: process.env.IMAGEKIT_PUBLIC_KEY as string,
+      publicKey: process.env.IMAGEKIT_PUBLIC_KEY as string
     });
 
     return successResponse(
@@ -185,9 +178,9 @@ export async function uploadImageAuth(): Promise<APIResponse> {
         token,
         expire,
         signature,
-        publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+        publicKey: process.env.IMAGEKIT_PUBLIC_KEY
       },
-      "Image upload auth fetched successfully",
+      "Image upload auth fetched successfully"
     );
   } catch (error: Error | any) {
     return handleError(error, "GET | UPLOAD IMAGE AUTH", "/api/upload-auth");

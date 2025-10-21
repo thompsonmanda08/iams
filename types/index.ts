@@ -1,6 +1,6 @@
-import { JWTPayload } from 'jose';
+import { JWTPayload } from "jose";
 
-import { User } from './account';
+import { User } from "./account";
 
 export type PageProps = {
   params?: Promise<{ [key: string]: string }>;
@@ -58,11 +58,39 @@ export type UserSession = {
   [x: string]: unknown;
 };
 
-export type WorkspaceSession = {
-  workspaceType: string | null;
-  workspaceIDs: string[];
-  workspacePermissions?: any;
-  [x: string]: any;
+export type Department = {
+  id: string | undefined;
+  name: string;
+  code: string;
+  description: string;
+  [key: string]: any;
+};
+
+export type DepartmentUser = {
+  id: string;
+  fullName: string;
+  role: string;
+  department: string;
+  isActive: boolean;
+
+  [key: string]: any;
+};
+export type AppModule = {
+  id: string;
+  name: string;
+  description?: string;
+  department: string;
+  backendKey: string;
+  isActive: boolean;
+  [key: string]: any;
+};
+export type Branch = {
+  name: string;
+  code: string;
+  province: string;
+  city: string;
+  physical_address: string;
+  [key: string]: any;
 };
 
 export type DateRangeFilter = {

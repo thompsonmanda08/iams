@@ -82,11 +82,11 @@ export const navItems: NavGroup[] = [
         href: "#",
         icon: SettingsIcon,
         items: [
-          { title: "Branches", href: "/dashboard/ecommerce" },
-          { title: "Departments", href: "/dashboard/pages/products" },
-          { title: "Users Management", href: "/dashboard/pages/products/create" },
-          { title: "Risk Configs", href: "/dashboard/pages/products/1" },
-          { title: "Audit Configs", href: "/dashboard/pages/products/create" }
+          { title: "Branches", href: "/dashboard/system-configs/branches" },
+          { title: "Departments", href: "/dashboard/system-configs/departments" },
+          { title: "Users Management", href: "/dashboard/system-configs/users" },
+          { title: "Risk Configs", href: "/dashboard/system-configs/risks" },
+          { title: "Audit Configs", href: "/dashboard/system-configs/audit" }
         ]
       },
       {

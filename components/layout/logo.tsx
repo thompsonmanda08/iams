@@ -3,11 +3,12 @@ import Image from "next/image";
 export default function Logo() {
   return (
     <Image
-      src="/logo.png"
-      width={30}
-      height={30}
-      className="me-1 rounded-[5px] transition-all group-data-collapsible:size-7 group-data-[collapsible=icon]:size-8"
-      alt="shadcn ui kit logo"
+      // src="/logo.png"
+      src="/images/infratel-logo.png"
+      width={100}
+      height={48}
+      className="me-1 w-24 rounded-[5px] transition-all"
+      alt="infratel logo"
       unoptimized
     />
   );
