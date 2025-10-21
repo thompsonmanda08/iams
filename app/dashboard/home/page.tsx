@@ -94,9 +94,10 @@ export default function RiskDashboard() {
   };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="border-border bg-card/50 sticky top-0 z-10 border-b backdrop-blur-sm">
+
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -104,28 +105,26 @@ export default function RiskDashboard() {
                 <User className="text-primary h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight">My Risk Profile Dashboard</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">My Risk Profile</h1>
                 <p className="text-muted-foreground text-sm">Completion rates and risk analytics</p>
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
               <div className="text-right">
-                <p className="text-muted-foreground mb-1 text-xs">Action response rating</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`h-3 w-3 rounded-sm ${i < 4 ? "bg-warning" : "bg-muted"}`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium">(4.5)</span>
+                <p className="mb-1 text-xs text-slate-400">Action response rating</p>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4].map((star) => (
+                    <span key={star} className="text-lg text-amber-400">
+                      ★
+                    </span>
+                  ))}
+                  <span className="text-lg text-slate-600">★</span>
+                  <span className="text-foreground ml-2 font-semibold">(4.5)</span>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-muted-foreground mb-1 text-xs">Risk factors</p>
-                <p className="text-primary text-2xl font-bold">35</p>
+                <p className="mb-1 text-xs text-slate-400">Risk factors</p>
+                <p className="text-foreground text-3xl font-bold">35</p>
               </div>
             </div>
           </div>
@@ -135,7 +134,7 @@ export default function RiskDashboard() {
       <div className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Welcome Card */}
-          <Card className="from-card to-card/50 border-border/50 bg-gradient-to-br p-6 lg:col-span-1">
+          <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6 lg:col-span-1">
             <div className="mb-6 flex items-start gap-4">
               <Avatar className="border-primary/20 h-14 w-14 border-2">
                 <AvatarImage src="/placeholder.svg?height=56&width=56" />
@@ -145,7 +144,7 @@ export default function RiskDashboard() {
               </Avatar>
               <div className="flex-1">
                 <p className="text-muted-foreground mb-1 text-sm">Welcome</p>
-                <h3 className="text-lg font-semibold">Izukanji Sinkolongo</h3>
+                <h3 className="text-lg font-semibold">Bob Mwale</h3>
                 <div className="mt-2 flex items-center gap-2">
                   <span className="text-muted-foreground text-sm">
                     Your risk profile is currently
