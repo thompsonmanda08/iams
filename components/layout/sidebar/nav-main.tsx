@@ -55,15 +55,14 @@ export const navItems: NavGroup[] = [
     items: [
       {
         title: "Risk",
-        href: "/dashboard/apps/kanban",
+        href: "/dashboard/home/risks",
         icon: ActivityIcon,
-        isNew: true
-        // items: [
-        //   { title: "RCSA", href: "/dashboard/ecommerce" },
-        //   { title: "Incidents", href: "/dashboard/pages/products" },
-        //   { title: "Risk Indicators", href: "/dashboard/pages/products/1" },
-        //   { title: "Actions", href: "/dashboard/pages/products/create" }
-        // ]
+        items: [
+          { title: "Risk Register", href: "/dashboard/home/risks/risk-register" },
+          { title: "Heat Map", href: "/dashboard/home/risks/heat-map" },
+          { title: "KRI Dashboard", href: "/dashboard/home/risks/kri" },
+          { title: "Actions", href: "/dashboard/home/risks/actions" }
+        ]
       },
 
       {

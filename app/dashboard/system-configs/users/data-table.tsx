@@ -169,18 +169,16 @@ export const columns: ColumnDef<User>[] = [
       const config = statusConfig[status];
 
       return (
-        <Badge variant="outline" className={config.className}>
-          <div
-            className={`mr-1.5 h-2 w-2 rounded-full ${
-              status === "active"
-                ? "bg-green-600"
-                : status === "pending"
-                  ? "bg-yellow-600"
-                  : "bg-gray-400"
-            }`}
-          />
+        <span
+          className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
+            status === "active"
+              ? "bg-green-100 text-green-700"
+              : status === "pending"
+                ? "bg-yellow-100 text-yellow-700"
+                : "bg-gray-100 text-gray-700"
+          }`}>
           {status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
+        </span>
       );
     }
   },

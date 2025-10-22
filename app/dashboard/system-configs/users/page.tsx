@@ -25,7 +25,7 @@ export default function Page() {
             Manage your team members and their account permissions
           </p>
         </div>
-        <Button onClick={() => setIsOpen(true)} size="lg">
+        <Button onClick={() => setIsOpen(true)} size="sm">
           <UserPlus className="mr-2 h-4 w-4" />
           Create New User
         </Button>
