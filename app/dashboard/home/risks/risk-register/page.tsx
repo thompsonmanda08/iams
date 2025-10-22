@@ -138,19 +138,19 @@ export default function RisksPage() {
           <p className="text-muted-foreground mt-1">Manage and monitor organizational risks</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/dashboard/risks/heatmap">
-            <Button variant="outline">
+          <Link href="/dashboard/home/risks/heat-map">
+            <Button variant="outline" size="sm">
               <TrendingUp className="w-4 h-4 mr-2" />
               Heat Map
             </Button>
           </Link>
-          <Link href="/dashboard/risks/kri">
-            <Button variant="outline">
+          <Link href="/dashboard/home/risks/kri">
+            <Button variant="outline" size="sm">
               <AlertTriangle className="w-4 h-4 mr-2" />
               KRI Dashboard
             </Button>
           </Link>
-          <Button onClick={handleCreate}>
+          <Button onClick={handleCreate} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Add Risk
           </Button>
