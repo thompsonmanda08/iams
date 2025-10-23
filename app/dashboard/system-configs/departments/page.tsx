@@ -16,6 +16,7 @@ import {
 import { Plus, Edit, Trash2, MapPin, PencilLineIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Props } from "@dnd-kit/core/dist/components/DragOverlay";
 import { Department, DepartmentUser, ErrorState } from "@/types";
 import {
@@ -38,6 +39,9 @@ export default function DepartmentsConfigPage() {
   const [openModal, setOpenModal] = useState(false);
   const [editingCategory, setEditingDepartment] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // const { data, isLoading: isLoadingDepartments } = useDepartments();
 
@@ -59,15 +63,25 @@ export default function DepartmentsConfigPage() {
     }
   };
 
-  const handleDeleteDepartment = async (id: string) => {
-    if (!confirm("Are you sure? This will affect related towns and branches.")) return;
+  const handleDeleteClick = (id: string) => {
+    setDepartmentToDelete(id);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!departmentToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await configApi.deleteProvince(id);
-      toast.success("Province deleted successfully");
+      await configApi.deleteProvince(departmentToDelete);
+      toast.success("Department deleted successfully");
       loadData();
+      setDeleteDialogOpen(false);
+      setDepartmentToDelete(null);
     } catch (error) {
       toast.error("Failed to delete department");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -160,7 +174,7 @@ export default function DepartmentsConfigPage() {
                         variant="ghost"
                         size="icon"
                         onClick={(e) => {
-                          handleDeleteDepartment(String(department.id));
+                          handleDeleteClick(String(department.id));
                           e.stopPropagation();
                         }}
                         className="text-destructive">
@@ -180,6 +194,15 @@ export default function DepartmentsConfigPage() {
         setOpenModal={setOpenModal}
         initialData={editingCategory}
         setInitialData={setEditingDepartment}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Department"
+        description="Are you sure you want to delete this department? This action cannot be undone and may affect related data."
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleting}
       />
     </div>
   );
