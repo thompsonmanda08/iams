@@ -292,11 +292,11 @@ export function ModuleSelection({
                   </Link>
                 </div>
               </EmptyContent>
-              <Link href="/dashboard/system-configs/modules">
-                <Button variant="link" asChild className="text-muted-foreground" size="sm">
+              <Button variant="link" asChild className="text-muted-foreground" size="sm">
+                <Link href="/dashboard/system-configs/modules">
                   Configure Modules <ArrowUpRightIcon />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </Empty>
           </div>
         )}

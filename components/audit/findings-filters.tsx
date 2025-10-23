@@ -18,7 +18,7 @@ export function FindingsFilters({
   selectedStatuses,
   onSeverityToggle,
   onStatusToggle,
-  onClearAll,
+  onClearAll
 }: FindingsFiltersProps) {
   const severities: FindingSeverity[] = ["critical", "high", "medium", "low"];
   const statuses: FindingStatus[] = ["open", "in-progress", "resolved", "closed"];
@@ -54,20 +54,10 @@ export function FindingsFilters({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Filters</h3>
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={onClearAll} className="h-8 text-xs">
-            <X className="h-3 w-3 mr-1" />
-            Clear All
-          </Button>
-        )}
-      </div>
-
+    <div className="relative flex flex-col items-end gap-4 sm:flex-row sm:gap-8">
       {/* Severity Filters */}
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Severity</label>
+        <label className="text-muted-foreground text-xs font-medium">Severity</label>
         <div className="flex flex-wrap gap-2">
           {severities.map((severity) => {
             const isSelected = selectedSeverities.includes(severity);
@@ -76,8 +66,7 @@ export function FindingsFilters({
                 key={severity}
                 variant="outline"
                 className={`cursor-pointer transition-colors ${getSeverityColor(severity, isSelected)}`}
-                onClick={() => onSeverityToggle(severity)}
-              >
+                onClick={() => onSeverityToggle(severity)}>
                 {severity.charAt(0).toUpperCase() + severity.slice(1)}
               </Badge>
             );
@@ -87,7 +76,7 @@ export function FindingsFilters({
 
       {/* Status Filters */}
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Status</label>
+        <label className="text-muted-foreground text-xs font-medium">Status</label>
         <div className="flex flex-wrap gap-2">
           {statuses.map((status) => {
             const isSelected = selectedStatuses.includes(status);
@@ -96,8 +85,7 @@ export function FindingsFilters({
                 key={status}
                 variant="outline"
                 className={`cursor-pointer transition-colors ${getStatusColor(status, isSelected)}`}
-                onClick={() => onStatusToggle(status)}
-              >
+                onClick={() => onStatusToggle(status)}>
                 {status
                   .split("-")
                   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -107,6 +95,16 @@ export function FindingsFilters({
           })}
         </div>
       </div>
+      {hasActiveFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClearAll}
+          className="h-6! bg-red-50 text-xs text-red-500">
+          <X className="mr-1 h-3 w-3" />
+          Clear All
+        </Button>
+      )}
     </div>
   );
 }

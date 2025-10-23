@@ -57,20 +57,21 @@ export function FindingsPageEnhanced({ stats, findings }: FindingsPageEnhancedPr
     const matchesSeverity =
       selectedSeverities.length === 0 || selectedSeverities.includes(finding.severity);
 
-    const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(finding.status);
+    const matchesStatus =
+      selectedStatuses.length === 0 || selectedStatuses.includes(finding.status);
 
     return matchesSearch && matchesSeverity && matchesStatus;
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="border-b bg-card">
+      <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Audit Findings</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Track and manage non-conformities and observations
               </p>
             </div>
@@ -95,11 +96,11 @@ export function FindingsPageEnhanced({ stats, findings }: FindingsPageEnhancedPr
           <div className="grid gap-4 md:grid-cols-4">
             <Card className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950">
+                <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
                   <AlertCircle className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Findings</p>
+                  <p className="text-muted-foreground text-sm">Total Findings</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
               </div>
@@ -107,11 +108,11 @@ export function FindingsPageEnhanced({ stats, findings }: FindingsPageEnhancedPr
 
             <Card className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950">
+                <div className="rounded-lg bg-red-50 p-3 dark:bg-red-950">
                   <AlertCircle className="h-6 w-6 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Open</p>
+                  <p className="text-muted-foreground text-sm">Open</p>
                   <p className="text-2xl font-bold">{stats.open}</p>
                 </div>
               </div>
@@ -119,11 +120,11 @@ export function FindingsPageEnhanced({ stats, findings }: FindingsPageEnhancedPr
 
             <Card className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950">
+                <div className="rounded-lg bg-amber-50 p-3 dark:bg-amber-950">
                   <Clock className="h-6 w-6 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">In Progress</p>
+                  <p className="text-muted-foreground text-sm">In Progress</p>
                   <p className="text-2xl font-bold">{stats.inProgress}</p>
                 </div>
               </div>
@@ -131,11 +132,11 @@ export function FindingsPageEnhanced({ stats, findings }: FindingsPageEnhancedPr
 
             <Card className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950">
+                <div className="rounded-lg bg-green-50 p-3 dark:bg-green-950">
                   <CheckCircle2 className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Resolved</p>
+                  <p className="text-muted-foreground text-sm">Resolved</p>
                   <p className="text-2xl font-bold">{stats.resolved}</p>
                 </div>
               </div>
@@ -150,39 +151,38 @@ export function FindingsPageEnhanced({ stats, findings }: FindingsPageEnhancedPr
             </TabsList>
 
             <TabsContent value="list" className="space-y-6">
-              <div className="grid gap-6 lg:grid-cols-4">
-                {/* Filters Sidebar */}
-                <Card className="p-6 lg:col-span-1 h-fit">
-                  <FindingsFilters
-                    selectedSeverities={selectedSeverities}
-                    selectedStatuses={selectedStatuses}
-                    onSeverityToggle={handleSeverityToggle}
-                    onStatusToggle={handleStatusToggle}
-                    onClearAll={handleClearFilters}
-                  />
-                </Card>
-
-                {/* Findings Table */}
-                <div className="lg:col-span-3 space-y-4">
-                  {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search findings by reference, description, or recommendation..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+              <div className="grid">
+                {/* SEARCH AND FILTER  */}
+                <div className="space-y-4">
+                  {/* Filters */}
+                  <Card className="gap-4 p-6 py-4">
+                    <h3 className="font-medium">Search or filter by: </h3>
+                    {/* Search */}
+                    <div className="relative">
+                      <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                      <Input
+                        placeholder="Search findings by reference, description, or recommendation..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <FindingsFilters
+                      selectedSeverities={selectedSeverities}
+                      selectedStatuses={selectedStatuses}
+                      onSeverityToggle={handleSeverityToggle}
+                      onStatusToggle={handleStatusToggle}
+                      onClearAll={handleClearFilters}
                     />
-                  </div>
-
-                  {/* Results Count */}
-                  <div className="text-sm text-muted-foreground">
-                    Showing {filteredFindings.length} of {findings.length} finding
-                    {findings.length !== 1 ? "s" : ""}
-                  </div>
+                  </Card>
 
                   {/* Table */}
                   <FindingsTable findings={filteredFindings} />
+                  {/* Results Count */}
+                  <div className="text-muted-foreground text-sm">
+                    Showing {filteredFindings.length} of {findings.length} finding
+                    {findings.length !== 1 ? "s" : ""}
+                  </div>
                 </div>
               </div>
             </TabsContent>

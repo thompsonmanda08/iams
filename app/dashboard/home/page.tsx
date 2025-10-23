@@ -258,7 +258,7 @@ export default function RiskDashboard() {
                 </div>
                 <div className="space-y-2">
                   {resources.map((resource, index) => (
-                    <a
+                    <Link
                       key={index}
                       href={resource.href}
                       className="hover:bg-primary/5 group flex items-center gap-3 rounded-lg p-3 transition-colors">
@@ -266,7 +266,7 @@ export default function RiskDashboard() {
                         <resource.icon className="text-primary h-4 w-4" />
                       </div>
                       <span className="text-sm font-medium">{resource.label}</span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </Card>

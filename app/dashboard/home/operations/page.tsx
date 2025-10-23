@@ -90,7 +90,7 @@ export default function OperationalRiskDashboard() {
         {/* Top Row - Risk Posture Cards */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Operational Risk Posture */}
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-500/90 to-teal-600/90 p-6">
+          <Card className="relative overflow-hidden border-0 bg-linear-to-br from-emerald-500/90 to-teal-600/90 p-6">
             <div className="relative z-10">
               <div className="mb-4 flex items-center gap-2">
                 <Activity className="h-5 w-5 text-white" />
@@ -119,15 +119,15 @@ export default function OperationalRiskDashboard() {
               <h3 className="text-foreground text-lg font-semibold">Departments Risk Posture</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-rose-500 to-red-600 p-4">
+              <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-rose-500 to-red-600 p-4">
                 <div className="mb-2 h-12 w-12 rounded-full border-4 border-white/30" />
                 <span className="text-sm font-medium text-white">Commercial</span>
               </div>
-              <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4">
+              <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 p-4">
                 <div className="mb-2 h-12 w-12 rounded-full border-4 border-white/30" />
                 <span className="text-sm font-medium text-white">Operations</span>
               </div>
-              <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 p-4">
+              <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-orange-500 to-amber-600 p-4">
                 <div className="mb-2 h-12 w-12 rounded-full border-4 border-white/30" />
                 <span className="text-sm font-medium text-white">ICT</span>
               </div>
@@ -180,7 +180,7 @@ export default function OperationalRiskDashboard() {
                 <tbody>
                   <tr className="border-b border-slate-800">
                     <td className="p-3">
-                      <div className="mr-2 inline-block h-8 w-3 rounded bg-gradient-to-br from-emerald-500 to-teal-600" />
+                      <div className="mr-2 inline-block h-8 w-3 rounded bg-linear-to-br from-emerald-500 to-teal-600" />
                       <span className="text-foreground font-medium">Commercial</span>
                     </td>
                     <td className="p-3 text-right font-semibold text-emerald-400">+2%</td>
@@ -193,7 +193,7 @@ export default function OperationalRiskDashboard() {
                   </tr>
                   <tr>
                     <td className="p-3">
-                      <div className="mr-2 inline-block h-8 w-3 rounded bg-gradient-to-br from-rose-500 to-red-600" />
+                      <div className="mr-2 inline-block h-8 w-3 rounded bg-linear-to-br from-rose-500 to-red-600" />
                       <span className="text-foreground font-medium">Finance</span>
                     </td>
                     <td className="p-3 text-right font-semibold text-rose-400">-1.4%</td>
@@ -294,7 +294,7 @@ export default function OperationalRiskDashboard() {
                   <span className="text-2xl font-bold text-emerald-400">0%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-700">
-                  <div className="h-full w-0 bg-gradient-to-r from-emerald-500 to-teal-500" />
+                  <div className="h-full w-0 bg-linear-to-r from-emerald-500 to-teal-500" />
                 </div>
               </div>
               <div className="rounded-lg border border-slate-700/50 bg-slate-800/50 p-4">
@@ -303,7 +303,7 @@ export default function OperationalRiskDashboard() {
                   <span className="text-2xl font-bold text-emerald-400">85%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-700">
-                  <div className="h-full w-[85%] bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500" />
+                  <div className="h-full w-[85%] bg-linear-to-r from-emerald-500 via-amber-500 to-rose-500" />
                 </div>
               </div>
             </div>

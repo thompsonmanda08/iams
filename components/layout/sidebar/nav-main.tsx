@@ -94,8 +94,6 @@ export const navItems: NavGroup[] = [
           { title: "Departments", href: "/dashboard/system-configs/departments" },
           { title: "Users Management", href: "/dashboard/system-configs/users" },
           { title: "Modules", href: "/dashboard/system-configs/modules" },
-          { title: "Risk Configs", href: "/dashboard/system-configs/risks" },
-          { title: "Audit Configs", href: "/dashboard/system-configs/audit" }
         ]
       }
       // {

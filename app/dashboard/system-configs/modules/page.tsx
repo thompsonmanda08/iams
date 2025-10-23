@@ -19,7 +19,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="container mx-auto flex flex-col p-6">
       <div className="mb-6 flex items-start justify-between">
         <aside className="border-border w-md rounded-lg border p-6">
           <div className="mb-6">
