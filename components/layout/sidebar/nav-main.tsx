@@ -55,21 +55,28 @@ export const navItems: NavGroup[] = [
     items: [
       {
         title: "Risk",
-        href: "/dashboard/module/risks",
+        href: "/dashboard/risks",
         icon: ActivityIcon,
         items: [
-          { title: "Risk Register", href: "/dashboard/module/risks/risk-register" },
-          { title: "Heat Map", href: "/dashboard/module/risks/heat-map" },
-          { title: "KRI Dashboard", href: "/dashboard/module/risks/kri" },
-          { title: "Actions", href: "/dashboard/module/risks/actions" }
+          { title: "Risk Register", href: "/dashboard/risks/risk-register" },
+          { title: "Heat Map", href: "/dashboard/risks/heat-map" },
+          { title: "KRI Dashboard", href: "/dashboard/risks/kri" },
+          { title: "Actions", href: "/dashboard/risks/actions" }
         ]
       },
 
       {
         title: "Audit",
-        href: "/dashboard/apps/todo-list-app",
+        href: "/dashboard/audit",
         icon: BookOpenCheck,
-        isNew: true
+        isNew: true,
+        items: [
+          { title: "Dashboard", href: "/dashboard/audit" },
+          { title: "Audit Plans", href: "/dashboard/audit/plans" },
+          { title: "Findings", href: "/dashboard/audit/findings" },
+          { title: "Workpapers", href: "/dashboard/audit/workpapers" },
+          { title: "Reports", href: "/dashboard/audit/reports" }
+        ]
       }
     ]
   },
