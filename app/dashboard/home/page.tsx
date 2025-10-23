@@ -24,6 +24,7 @@ import {
   BookMarked,
   ListChecks
 } from "lucide-react";
+import Link from "next/link";
 
 export default function RiskDashboard() {
   const riskMetrics = [
@@ -96,30 +97,29 @@ export default function RiskDashboard() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                <User className="text-primary h-5 w-5" />
+      <div className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-3">
+                <div className="border-primary/30 rounded-lg border bg-white/20 p-2">
+                  <User className="text-primary h-6 w-6 dark:text-blue-400" />
+                </div>
+                <h1 className="text-foreground text-3xl font-bold">My Risk Profile</h1>
               </div>
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight">My Risk Profile</h1>
-                <p className="text-muted-foreground text-sm">Completion rates and risk analytics</p>
-              </div>
+              <p className="text-sm text-slate-400">Completion rates and audit analytics</p>
             </div>
             <div className="flex items-center gap-8">
               <div className="text-right">
                 <p className="mb-1 text-xs text-slate-400">Action response rating</p>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4].map((star) => (
-                    <span key={star} className="text-lg text-amber-400">
-                      ★
-                    </span>
-                  ))}
-                  <span className="text-lg text-slate-600">★</span>
-                  <span className="text-foreground ml-2 font-semibold">(4.5)</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4].map((star) => (
+                      <div key={star} className="h-4 w-4 rounded-sm bg-amber-400" />
+                    ))}
+                    <div className="h-4 w-4 rounded-sm bg-amber-400/30" />
+                  </div>
+                  <span className="text-foreground font-semibold">(4.5)</span>
                 </div>
               </div>
               <div className="text-right">
@@ -129,9 +129,9 @@ export default function RiskDashboard() {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Welcome Card */}
           <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6 lg:col-span-1">
@@ -173,7 +173,7 @@ export default function RiskDashboard() {
                   <span className="text-foreground/80 text-sm">{metric.label}</span>
                   <Badge
                     variant="outline"
-                    className={`${getStatusColor(metric.status)} min-w-[2.5rem] justify-center font-semibold`}>
+                    className={`${getStatusColor(metric.status)} min-w-10 justify-center font-semibold`}>
                     {metric.value}
                   </Badge>
                 </div>
@@ -192,7 +192,7 @@ export default function RiskDashboard() {
                 </div>
                 <div className="space-y-2">
                   {quickLinks.map((link, index) => (
-                    <a
+                    <Link
                       key={index}
                       href={link.href}
                       className="hover:bg-primary/5 group flex items-center gap-3 rounded-lg p-3 transition-colors">
@@ -200,7 +200,7 @@ export default function RiskDashboard() {
                         <link.icon className="text-primary h-4 w-4" />
                       </div>
                       <span className="text-sm font-medium">{link.label}</span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </Card>
@@ -208,20 +208,20 @@ export default function RiskDashboard() {
               {/* App Launcher */}
               <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6">
                 <div className="mb-4 flex items-center gap-2">
-                  <Target className="text-accent h-5 w-5" />
+                  <Target className="text-primary h-5 w-5" />
                   <h3 className="text-lg font-semibold">App launcher</h3>
                 </div>
                 <div className="space-y-2">
                   {appLauncher.map((app, index) => (
-                    <a
+                    <Link
                       key={index}
                       href={app.href}
-                      className="hover:bg-accent/5 group flex items-center gap-3 rounded-lg p-3 transition-colors">
-                      <div className="bg-accent/10 group-hover:bg-accent/20 flex h-9 w-9 items-center justify-center rounded-md transition-colors">
-                        <app.icon className="text-accent h-4 w-4" />
+                      className="hover:bg-primary/5 group flex items-center gap-3 rounded-lg p-3 transition-colors">
+                      <div className="bg-primary/10 group-hover:bg-primary/20 flex h-9 w-9 items-center justify-center rounded-md transition-colors">
+                        <app.icon className="text-primary h-4 w-4" />
                       </div>
                       <span className="text-sm font-medium">{app.label}</span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </Card>
@@ -237,7 +237,7 @@ export default function RiskDashboard() {
                 </div>
                 <div className="space-y-2">
                   {dashboards.map((dashboard, index) => (
-                    <a
+                    <Link
                       key={index}
                       href={dashboard.href}
                       className="hover:bg-primary/5 group flex items-center gap-3 rounded-lg p-3 transition-colors">
@@ -245,7 +245,7 @@ export default function RiskDashboard() {
                         <dashboard.icon className="text-primary h-4 w-4" />
                       </div>
                       <span className="text-sm font-medium">{dashboard.label}</span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </Card>
@@ -253,7 +253,7 @@ export default function RiskDashboard() {
               {/* Help & Resources */}
               <Card className="from-card to-card/50 border-border/50 bg-linear-to-br p-6">
                 <div className="mb-4 flex items-center gap-2">
-                  <HelpCircle className="text-accent h-5 w-5" />
+                  <HelpCircle className="text-primary h-5 w-5" />
                   <h3 className="text-lg font-semibold">Help and resources</h3>
                 </div>
                 <div className="space-y-2">
@@ -261,9 +261,9 @@ export default function RiskDashboard() {
                     <a
                       key={index}
                       href={resource.href}
-                      className="hover:bg-accent/5 group flex items-center gap-3 rounded-lg p-3 transition-colors">
-                      <div className="bg-accent/10 group-hover:bg-accent/20 flex h-9 w-9 items-center justify-center rounded-md transition-colors">
-                        <resource.icon className="text-accent h-4 w-4" />
+                      className="hover:bg-primary/5 group flex items-center gap-3 rounded-lg p-3 transition-colors">
+                      <div className="bg-primary/10 group-hover:bg-primary/20 flex h-9 w-9 items-center justify-center rounded-md transition-colors">
+                        <resource.icon className="text-primary h-4 w-4" />
                       </div>
                       <span className="text-sm font-medium">{resource.label}</span>
                     </a>

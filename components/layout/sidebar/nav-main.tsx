@@ -32,6 +32,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 type NavGroup = {
   title: string;
@@ -154,7 +155,7 @@ export function NavMain() {
                             <DropdownMenuLabel>{item.title}</DropdownMenuLabel>
                             {item.items?.map((item) => (
                               <DropdownMenuItem
-                                className="hover:text-foreground active:text-foreground hover:bg-[var(--primary)]/10! active:bg-[var(--primary)]/10!"
+                                className="hover:text-foreground active:text-foreground active:bg-primary/10! hover:bg-primary/10!"
                                 asChild
                                 key={item.title}>
                                 <Link href={item.href}>{item.title}</Link>
@@ -166,7 +167,7 @@ export function NavMain() {
                       <Collapsible className="group/collapsible block group-data-[collapsible=icon]:hidden">
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            className="hover:text-foreground active:text-foreground hover:bg-[var(--primary)]/10 active:bg-[var(--primary)]/10"
+                            className="hover:text-foreground active:text-foreground hover:bg-primary/10 active:bg-primary/10"
                             tooltip={item.title}>
                             {item.icon && <item.icon />}
                             <span>{item.title}</span>
@@ -178,7 +179,7 @@ export function NavMain() {
                             {item?.items?.map((subItem, key) => (
                               <SidebarMenuSubItem key={key}>
                                 <SidebarMenuSubButton
-                                  className="hover:text-foreground active:text-foreground hover:bg-[var(--primary)]/10 active:bg-[var(--primary)]/10"
+                                  className="hover:text-foreground active:text-foreground hover:bg-primary/10 active:bg-primary/10"
                                   isActive={pathname === subItem.href}
                                   asChild>
                                   <Link href={subItem.href} target={subItem.newTab ? "_blank" : ""}>
@@ -193,7 +194,7 @@ export function NavMain() {
                     </>
                   ) : (
                     <SidebarMenuButton
-                      className="hover:text-foreground active:text-foreground hover:bg-[var(--primary)]/10 active:bg-[var(--primary)]/10"
+                      className="hover:text-foreground active:text-foreground hover:bg-primary/10 active:bg-primary/10"
                       isActive={pathname === item.href}
                       tooltip={item.title}
                       asChild>
@@ -209,7 +210,14 @@ export function NavMain() {
                     </SidebarMenuBadge>
                   )}
                   {!!item.isNew && (
-                    <SidebarMenuBadge className="border border-green-400 text-green-600 peer-hover/menu-button:text-green-600">
+                    <SidebarMenuBadge
+                      className={cn(
+                        "border border-green-400 text-green-600 peer-hover/menu-button:text-green-600",
+                        {
+                          "absolute top-1.5 right-8 opacity-80":
+                            Array.isArray(item.items) && item.items.length > 0
+                        }
+                      )}>
                       New
                     </SidebarMenuBadge>
                   )}

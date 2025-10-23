@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="hover:text-foreground h-10 items-center overflow-visible group-data-[collapsible=icon]:px-0! hover:bg-[var(--primary)]/5">
+                <SidebarMenuButton className="hover:text-foreground h-10 items-center overflow-visible group-data-[collapsible=icon]:px-0! hover:bg-(--primary)/5">
                   <Logo />
                   <span className="mt-1 text-lg font-bold group-data-[collapsible=icon]:hidden">
                     IAMS
