@@ -58,8 +58,8 @@ export const navItems: NavGroup[] = [
         href: "/dashboard/risks",
         icon: ActivityIcon,
         items: [
-          { title: "Overview", href: "/dashboard/risks" } ,
-          { title: "Risk Register", href: "/dashboard/risks/risk-register" } ,
+          { title: "Overview", href: "/dashboard/risks" },
+          { title: "Risk Register", href: "/dashboard/risks/risk-register" },
           { title: "Heat Map", href: "/dashboard/risks/heat-map" },
           { title: "KRI Dashboard", href: "/dashboard/risks/kri" },
           { title: "Actions", href: "/dashboard/risks/actions" }
@@ -96,18 +96,18 @@ export const navItems: NavGroup[] = [
           { title: "Risk Configs", href: "/dashboard/system-configs/risks" },
           { title: "Audit Configs", href: "/dashboard/system-configs/audit" }
         ]
-      },
-      {
-        title: "Workflows",
-        href: "#",
-        icon: MonitorCogIcon,
-        items: [
-          { title: "Branches", href: "/dashboard/ecommerce" },
-          { title: "Departments", href: "/dashboard/pages/products" },
-          { title: "Risk Configs", href: "/dashboard/pages/products/1" },
-          { title: "Audit Configs", href: "/dashboard/pages/products/create" }
-        ]
       }
+      // {
+      //   title: "Workflows",
+      //   href: "#",
+      //   icon: MonitorCogIcon,
+      //   items: [
+      //     { title: "Branches", href: "/dashboard/ecommerce" },
+      //     { title: "Departments", href: "/dashboard/pages/products" },
+      //     { title: "Risk Configs", href: "/dashboard/pages/products/1" },
+      //     { title: "Audit Configs", href: "/dashboard/pages/products/create" }
+      //   ]
+      // }
       // {
       //   title: "Security",
       //   href: "#",

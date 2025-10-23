@@ -34,15 +34,27 @@ import {
   Trash2,
   Eye,
   TrendingUp,
+<<<<<<<< HEAD:app/dashboard/(modules)/risks/risk-register/page.tsx
   AlertTriangle
+========
+  AlertTriangle,
+  ArrowLeft
+>>>>>>>> eacfc95f5d15ec765eac39bfb4b307d39d5329d5:app/dashboard/module/risks/risk-registers/[id]/page.tsx
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { RiskFormDialog } from "@/components/forms/risk-form-dialog";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
+<<<<<<<< HEAD:app/dashboard/(modules)/risks/risk-register/page.tsx
 
 export default function RisksPage() {
+========
+import { useRouter } from "next/navigation";
+
+export default function RisksPage() {
+  const router = useRouter();
+>>>>>>>> eacfc95f5d15ec765eac39bfb4b307d39d5329d5:app/dashboard/module/risks/risk-registers/[id]/page.tsx
   const [risks, setRisks] = useState<Risk[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [params, setParams] = useState<RiskQueryParams>({
@@ -158,7 +170,12 @@ export default function RisksPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      <div className="mb-2 flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 size-4" />
+          Back to Registers
+        </Button>
+      </div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-foreground text-3xl font-bold">Risk Register</h1>
