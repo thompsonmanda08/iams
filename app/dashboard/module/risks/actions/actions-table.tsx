@@ -142,7 +142,7 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" onClick={() => router.push(`/dashboard/home/risks/actions/${action.actionId}`)}>
+                      <Button size="sm" onClick={() => router.push(`/dashboard/module/risks/actions/${action.actionId}`)}>
                         View
                       </Button>
                     </TableCell>

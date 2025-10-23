@@ -138,13 +138,13 @@ export default function RisksPage() {
           <p className="text-muted-foreground mt-1">Manage and monitor organizational risks</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/dashboard/home/risks/heat-map">
+          <Link href="/dashboard/module/risks/heat-map">
             <Button variant="outline" size="sm">
               <TrendingUp className="w-4 h-4 mr-2" />
               Heat Map
             </Button>
           </Link>
-          <Link href="/dashboard/home/risks/kri">
+          <Link href="/dashboard/module/risks/kri">
             <Button variant="outline" size="sm">
               <AlertTriangle className="w-4 h-4 mr-2" />
               KRI Dashboard
