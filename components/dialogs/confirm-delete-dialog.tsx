@@ -40,7 +40,7 @@ export function ConfirmDeleteDialog({
           </div>
           <DialogDescription className="pt-3">{description}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 space-x-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
