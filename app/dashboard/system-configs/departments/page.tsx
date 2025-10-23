@@ -149,16 +149,20 @@ export default function DepartmentsConfigPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
+                        onClick={(e) => {
                           setEditingDepartment(department);
                           setOpenModal(true);
+                          e.stopPropagation();
                         }}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteDepartment(String(department.id))}
+                        onClick={(e) => {
+                          handleDeleteDepartment(String(department.id));
+                          e.stopPropagation();
+                        }}
                         className="text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>

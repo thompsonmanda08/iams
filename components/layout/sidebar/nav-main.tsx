@@ -58,7 +58,8 @@ export const navItems: NavGroup[] = [
         href: "/dashboard/risks",
         icon: ActivityIcon,
         items: [
-          { title: "Risk Register", href: "/dashboard/risks/risk-register" },
+          { title: "Overview", href: "/dashboard/risks" } ,
+          { title: "Risk Register", href: "/dashboard/risks/risk-register" } ,
           { title: "Heat Map", href: "/dashboard/risks/heat-map" },
           { title: "KRI Dashboard", href: "/dashboard/risks/kri" },
           { title: "Actions", href: "/dashboard/risks/actions" }
@@ -71,7 +72,7 @@ export const navItems: NavGroup[] = [
         icon: BookOpenCheck,
         isNew: true,
         items: [
-          { title: "Dashboard", href: "/dashboard/audit" },
+          { title: "Overview", href: "/dashboard/audit" },
           { title: "Audit Plans", href: "/dashboard/audit/plans" },
           { title: "Findings", href: "/dashboard/audit/findings" },
           { title: "Workpapers", href: "/dashboard/audit/workpapers" },

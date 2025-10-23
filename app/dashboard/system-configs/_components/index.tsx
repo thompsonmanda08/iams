@@ -204,10 +204,11 @@ const ModuleItem = ({
       className="relative flex w-full cursor-pointer justify-start gap-x-2 rounded-lg border border-blue-100 bg-blue-50 p-3 hover:bg-blue-100">
       <Checkbox
         checked={selectedModules?.includes(backendKey)}
-        onChange={(checked) => {
+        onCheckedChange={(checked) => {
           if (!allowSelect) return;
           onSelection(backendKey, checked ? "add" : "remove");
         }}
+        disabled={!allowSelect}
         className="h-4 w-4"
       />
       <div className="gap-3s flex items-center justify-center rounded">
@@ -225,62 +226,89 @@ const ModuleItem = ({
 
 export function ModuleSelection({
   modules = [],
-  allowSelect
+  allowSelect,
+  initialSelectedModules = [],
+  onSave
 }: {
   modules: AppModule[];
   allowSelect?: boolean;
+  initialSelectedModules?: string[];
+  onSave?: (selectedModules: string[]) => void | Promise<void>;
 }) {
-  // const [isLoading, setIsLoading] = useState(true);
-  const [selectedModules, setSelectedModules] = useState(modules.map((m) => m.backendKey));
+  const [selectedModules, setSelectedModules] = useState<string[]>(
+    initialSelectedModules.length > 0 ? initialSelectedModules : modules.map((m) => m.backendKey)
+  );
+
+  async function handleSave() {
+    if (onSave) {
+      await onSave(selectedModules);
+    }
+  }
 
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3",
-        modules.length === 0 && "place-items-center"
-      )}>
-      {modules && modules.length > 0 ? (
-        modules.map((module, index) => {
-          return (
-            <ModuleItem
-              key={module.backendKey + "-display"}
-              name={capitalize(module.name)}
-              description={module.description || "No Description"}
-              allowSelect={allowSelect}
-              backendKey={module.backendKey}
-              onSelection={(key, action) => {
-                if (action == "add") {
-                  setSelectedModules((prev) => prev.concat(key));
-                } else {
-                  setSelectedModules((prev) => prev.filter((item) => item !== key));
-                }
-              }}
-            />
-          );
-        })
-      ) : (
-        <div className="col-span-full">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <FolderCode />
-              </EmptyMedia>
-              <EmptyTitle>No Modules Yet</EmptyTitle>
-              <EmptyDescription>
-                You haven&apos;t created any modules yet. Get started by creating your first module.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <div className="flex gap-2">
-                <Button>Create module</Button>
-              </div>
-            </EmptyContent>
-            <Button variant="link" asChild className="text-muted-foreground" size="sm">
-              <Link href="#">
-                Configure Modules <ArrowUpRightIcon />
+    <div className="flex w-full flex-col gap-2">
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3",
+          modules.length === 0 && "place-items-center"
+        )}>
+        {modules && modules.length > 0 ? (
+          modules.map((module, index) => {
+            return (
+              <ModuleItem
+                key={module.backendKey + "-display"}
+                name={capitalize(module.name)}
+                description={module.description || "No Description"}
+                allowSelect={allowSelect}
+                backendKey={module.backendKey}
+                selectedModules={selectedModules}
+                onSelection={(key, action) => {
+                  if (action == "add") {
+                    setSelectedModules((prev) => prev.concat(key));
+                  } else {
+                    setSelectedModules((prev) => prev.filter((item) => item !== key));
+                  }
+                }}
+              />
+            );
+          })
+        ) : (
+          <div className="col-span-full">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FolderCode />
+                </EmptyMedia>
+                <EmptyTitle>No Modules Yet</EmptyTitle>
+                <EmptyDescription>
+                  You haven&apos;t created any modules yet. Get started by creating your first
+                  module.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <div className="flex gap-2">
+                  <Link href="/dashboard/system-configs/modules">
+                    <Button>Create module</Button>
+                  </Link>
+                </div>
+              </EmptyContent>
+              <Link href="/dashboard/system-configs/modules">
+                <Button variant="link" asChild className="text-muted-foreground" size="sm">
+                  Configure Modules <ArrowUpRightIcon />
+                </Button>
               </Link>
-            </Button>
-          </Empty>
+            </Empty>
+          </div>
+        )}
+      </div>
+      {allowSelect && (
+        <div className="flex w-full items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            {selectedModules.length} module{selectedModules.length !== 1 ? "s" : ""} selected
+          </span>
+          <Button onClick={handleSave} disabled={selectedModules.length === 0}>
+            Save Selection
+          </Button>
         </div>
       )}
     </div>
