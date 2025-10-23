@@ -34,27 +34,19 @@ import {
   Trash2,
   Eye,
   TrendingUp,
-<<<<<<<< HEAD:app/dashboard/(modules)/risks/risk-register/page.tsx
-  AlertTriangle
-========
   AlertTriangle,
   ArrowLeft
->>>>>>>> eacfc95f5d15ec765eac39bfb4b307d39d5329d5:app/dashboard/module/risks/risk-registers/[id]/page.tsx
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { RiskFormDialog } from "@/components/forms/risk-form-dialog";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
-<<<<<<<< HEAD:app/dashboard/(modules)/risks/risk-register/page.tsx
 
-export default function RisksPage() {
-========
 import { useRouter } from "next/navigation";
 
 export default function RisksPage() {
   const router = useRouter();
->>>>>>>> eacfc95f5d15ec765eac39bfb4b307d39d5329d5:app/dashboard/module/risks/risk-registers/[id]/page.tsx
   const [risks, setRisks] = useState<Risk[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [params, setParams] = useState<RiskQueryParams>({
