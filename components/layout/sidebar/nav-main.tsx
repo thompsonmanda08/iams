@@ -55,13 +55,13 @@ export const navItems: NavGroup[] = [
     items: [
       {
         title: "Risk",
-        href: "/dashboard/home/risks",
+        href: "/dashboard/module/risks",
         icon: ActivityIcon,
         items: [
-          { title: "Risk Register", href: "/dashboard/home/risks/risk-register" },
-          { title: "Heat Map", href: "/dashboard/home/risks/heat-map" },
-          { title: "KRI Dashboard", href: "/dashboard/home/risks/kri" },
-          { title: "Actions", href: "/dashboard/home/risks/actions" }
+          { title: "Risk Register", href: "/dashboard/module/risks/risk-register" },
+          { title: "Heat Map", href: "/dashboard/module/risks/heat-map" },
+          { title: "KRI Dashboard", href: "/dashboard/module/risks/kri" },
+          { title: "Actions", href: "/dashboard/module/risks/actions" }
         ]
       },
 
