@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,17 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
-import { CheckCircle2, MinusCircle, XCircle, Save, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
+import {
+  CheckCircle2,
+  MinusCircle,
+  XCircle,
+  Save,
+  Loader2,
+  AlertCircle,
+  AlertTriangle
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TemplateSelector } from "./template-selector";
 import { EvidenceUpload } from "./evidence-upload";
@@ -29,12 +37,14 @@ import type {
   TestResult,
   EvidenceInput,
   WorkpaperInput,
+  TeamMember
 } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
+import { SelectField } from "../ui/select-field";
 
 interface CreateWorkpaperFormProps {
-  auditId: string;
+  auditId?: string; // Now optional - can be attached to audit plan later
   auditTitle?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -46,7 +56,7 @@ export function CreateWorkpaperForm({
   auditTitle,
   onSuccess,
   onCancel,
-  initialData,
+  initialData
 }: CreateWorkpaperFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -84,7 +94,7 @@ export function CreateWorkpaperForm({
     conclusion: initialData?.conclusion || "",
     evidence: initialData?.evidence || [],
     preparedBy: initialData?.preparedBy || currentUser,
-    reviewedBy: initialData?.reviewedBy || "",
+    reviewedBy: initialData?.reviewedBy || ""
   });
 
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -94,6 +104,7 @@ export function CreateWorkpaperForm({
 
   // Load draft on mount
   useEffect(() => {
+    if (!auditId) return; // Skip draft loading if no auditId
     const draft = getDraft(auditId);
     if (draft && !initialData) {
       setFormData({
@@ -106,12 +117,12 @@ export function CreateWorkpaperForm({
         conclusion: draft.conclusion || "",
         evidence: draft.evidence || [],
         preparedBy: draft.preparedBy || currentUser,
-        reviewedBy: draft.reviewedBy || "",
+        reviewedBy: draft.reviewedBy || ""
       });
       setLastSaved(draft.lastSaved || null);
       toast({
         title: "Draft Restored",
-        description: "Your previous work has been restored.",
+        description: "Your previous work has been restored."
       });
     }
   }, [auditId, getDraft, initialData, currentUser, toast]);
@@ -120,7 +131,7 @@ export function CreateWorkpaperForm({
   const debouncedFormData = useDebounce(formData, 30000); // 30 seconds
 
   useEffect(() => {
-    if (hasUnsavedChanges && debouncedFormData) {
+    if (hasUnsavedChanges && debouncedFormData && auditId) {
       saveDraft(auditId, debouncedFormData);
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
@@ -128,28 +139,22 @@ export function CreateWorkpaperForm({
   }, [debouncedFormData, hasUnsavedChanges, auditId, saveDraft]);
 
   // Handle template selection
-  const handleTemplateSelect = useCallback(
-    (template: ClauseTemplate | null) => {
-      setSelectedTemplate(template);
-      if (template) {
-        setFormData((prev) => ({
-          ...prev,
-          clause: template.clause,
-          clauseTitle: template.clauseTitle,
-          objectives: template.objective,
-          testProcedures: template.testProcedure,
-        }));
-        setHasUnsavedChanges(true);
-      }
-    },
-    []
-  );
+  const handleTemplateSelect = useCallback((template: ClauseTemplate | null) => {
+    setSelectedTemplate(template);
+    if (template) {
+      setFormData((prev) => ({
+        ...prev,
+        clause: template.clause,
+        clauseTitle: template.clauseTitle,
+        objectives: template.objective,
+        testProcedures: template.testProcedure
+      }));
+      setHasUnsavedChanges(true);
+    }
+  }, []);
 
   // Update form field
-  const updateField = <K extends keyof typeof formData>(
-    field: K,
-    value: (typeof formData)[K]
-  ) => {
+  const updateField = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasUnsavedChanges(true);
   };
@@ -166,12 +171,20 @@ export function CreateWorkpaperForm({
 
   // Handle save draft manually
   const handleSaveDraft = () => {
+    if (!auditId) {
+      toast({
+        title: "Cannot Save Draft",
+        description: "Drafts can only be saved when attached to an audit plan.",
+        variant: "destructive"
+      });
+      return;
+    }
     saveDraft(auditId, formData);
     setLastSaved(new Date());
     setHasUnsavedChanges(false);
     toast({
       title: "Draft Saved",
-      description: "Your work has been saved as a draft.",
+      description: "Your work has been saved as a draft."
     });
   };
 
@@ -182,13 +195,13 @@ export function CreateWorkpaperForm({
       toast({
         title: "Validation Error",
         description: error,
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
 
     const workpaperData: WorkpaperInput = {
-      auditId,
+      auditId, // Optional - can be attached later
       clause: formData.clause,
       clauseTitle: formData.clauseTitle,
       objectives: formData.objectives,
@@ -199,16 +212,21 @@ export function CreateWorkpaperForm({
       evidence: formData.evidence.length > 0 ? formData.evidence : undefined,
       preparedBy: formData.preparedBy,
       preparedDate: new Date(),
-      reviewedBy: formData.reviewedBy || undefined,
+      reviewedBy: formData.reviewedBy || undefined
     };
 
     try {
       const result = await createMutation.mutateAsync(workpaperData);
-      // Clear draft on success
-      deleteDraft(auditId);
+      // Clear draft on success (only if auditId exists)
+      if (auditId) {
+        deleteDraft(auditId);
+      }
 
       // If non-conformity, prompt to create finding
-      if (formData.testResult === 'non-conformity' || formData.testResult === 'partial-conformity') {
+      if (
+        formData.testResult === "non-conformity" ||
+        formData.testResult === "partial-conformity"
+      ) {
         setCreatedWorkpaperId(result.id);
         setShowCreateFinding(true);
         // Don't close the modal yet - wait for finding creation
@@ -271,6 +289,15 @@ export function CreateWorkpaperForm({
     }
   };
 
+  const teamMemberOptions = useMemo(() => {
+    return teamMembers && teamMembers.length > 0
+      ? teamMembers?.map((m: TeamMember, i: number) => ({
+          id: m.id || `${i}-${m.name}-${m.role}`,
+          name: `${m.name} - ${m.role}`
+        }))
+      : [];
+  }, [teamMembers]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -278,11 +305,11 @@ export function CreateWorkpaperForm({
         <div>
           <h2 className="text-2xl font-bold">Create Workpaper</h2>
           {auditTitle && (
-            <p className="text-sm text-muted-foreground mt-1">For Audit: {auditTitle}</p>
+            <p className="text-muted-foreground mt-1 text-sm">For Audit: {auditTitle}</p>
           )}
         </div>
         {lastSaved && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <Save className="h-3 w-3" />
             Draft saved at {lastSaved.toLocaleTimeString()}
           </div>
@@ -299,7 +326,7 @@ export function CreateWorkpaperForm({
       <Card className="p-6">
         <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Workpaper Details</h3>
+            <h3 className="mb-4 text-lg font-semibold">Workpaper Details</h3>
 
             {/* Clause Display */}
             {formData.clause && formData.clauseTitle && (
@@ -327,9 +354,7 @@ export function CreateWorkpaperForm({
               value={formData.objectives}
               onChange={(e) => updateField("objectives", e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              {formData.objectives.length} characters
-            </p>
+            <p className="text-muted-foreground text-xs">{formData.objectives.length} characters</p>
           </div>
 
           {/* Test Procedure */}
@@ -345,7 +370,7 @@ export function CreateWorkpaperForm({
               value={formData.testProcedures}
               onChange={(e) => updateField("testProcedures", e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {formData.testProcedures.length} characters
             </p>
           </div>
@@ -367,9 +392,9 @@ export function CreateWorkpaperForm({
 
           {/* Test Results Textarea */}
           <div className="space-y-2">
-            <Label htmlFor="testResults">Test Results (Optional)</Label>
             <Textarea
               id="testResults"
+              label="Test Results (Optional)"
               placeholder="Document the results of testing (can be filled during audit execution)..."
               rows={5}
               className="resize-none"
@@ -383,20 +408,15 @@ export function CreateWorkpaperForm({
             <Label>Test Result (Optional)</Label>
             <RadioGroup
               value={formData.testResult}
-              onValueChange={(value) => updateField("testResult", value as TestResult)}
-            >
+              onValueChange={(value) => updateField("testResult", value as TestResult)}>
               <div className="grid grid-cols-3 gap-3">
                 {(["conformity", "partial-conformity", "non-conformity"] as TestResult[]).map(
                   (result) => (
-                    <div
-                      key={result}
-                      className="flex items-center space-x-2 rounded-lg border p-3"
-                    >
+                    <div key={result} className="flex items-center space-x-2 rounded-lg border p-3">
                       <RadioGroupItem value={result} id={result} />
                       <Label
                         htmlFor={result}
-                        className="flex items-center gap-2 cursor-pointer font-normal flex-1"
-                      >
+                        className="flex flex-1 cursor-pointer items-center gap-2 font-normal">
                         {getTestResultIcon(result)}
                         {getTestResultLabel(result)}
                       </Label>
@@ -409,9 +429,9 @@ export function CreateWorkpaperForm({
 
           {/* Conclusion */}
           <div className="space-y-2">
-            <Label htmlFor="conclusion">Conclusion (Optional)</Label>
             <Textarea
               id="conclusion"
+              label="Conclusion (Optional)"
               placeholder="Summarize findings and conclusion..."
               rows={5}
               className="resize-none"
@@ -421,16 +441,20 @@ export function CreateWorkpaperForm({
           </div>
 
           {/* Non-Conformity Notice */}
-          {(formData.testResult === 'non-conformity' || formData.testResult === 'partial-conformity') && (
-            <Card className="p-4 bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+          {(formData.testResult === "non-conformity" ||
+            formData.testResult === "partial-conformity") && (
+            <Card className="border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <AlertTriangle className="mt-0.5 h-5 w-5 text-yellow-600" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
-                    {formData.testResult === 'non-conformity' ? 'Non-Conformity Detected' : 'Partial Conformity Detected'}
+                    {formData.testResult === "non-conformity"
+                      ? "Non-Conformity Detected"
+                      : "Partial Conformity Detected"}
                   </p>
                   <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                    After creating this workpaper, you'll be prompted to create a finding to track this issue.
+                    After creating this workpaper, you'll be prompted to create a finding to track
+                    this issue.
                   </p>
                 </div>
               </div>
@@ -445,44 +469,32 @@ export function CreateWorkpaperForm({
           <h3 className="text-lg font-semibold">Assignment</h3>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Prepared By */}
-            <div className="space-y-2">
-              <Label htmlFor="preparedBy">
-                Prepared By <span className="text-destructive">*</span>
-              </Label>
-              <Select value={formData.preparedBy} onValueChange={(v) => updateField("preparedBy", v)}>
-                <SelectTrigger id="preparedBy">
-                  <SelectValue placeholder="Select user..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {teamMembers?.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
-                      {member.name} - {member.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Reviewed By */}
-            <div className="space-y-2">
-              <Label htmlFor="reviewedBy">Reviewed By (Optional)</Label>
-              <Select
+            <div className="flex w-full flex-col gap-2 space-y-2 md:flex-row">
+              {/* Prepared By */}
+              <SelectField
+                id="preparedBy"
+                label="Prepared By"
+                placeholder="Select user..."
+                required
+                classNames={{
+                  wrapper: "w-full max-w-max!"
+                }}
+                value={formData.preparedBy}
+                onValueChange={(v) => updateField("preparedBy", v)}
+                options={teamMemberOptions}
+              />
+              {/* Reviewed By */}
+              <SelectField
+                label="Reviewed By (Optional)"
+                placeholder="Select a clause"
+                className="w-full"
+                classNames={{
+                  wrapper: "w-full max-w-none!"
+                }}
                 value={formData.reviewedBy}
                 onValueChange={(v) => updateField("reviewedBy", v)}
-              >
-                <SelectTrigger id="reviewedBy">
-                  <SelectValue placeholder="Select reviewer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None</SelectItem>
-                  {teamMembers?.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
-                      {member.name} - {member.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={teamMemberOptions}
+              />
             </div>
           </div>
         </div>
@@ -492,8 +504,8 @@ export function CreateWorkpaperForm({
       {(() => {
         const error = validateForm();
         return error ? (
-          <Card className="p-4 bg-destructive/10 border-destructive">
-            <div className="flex items-center gap-2 text-destructive">
+          <Card className="bg-destructive/10 border-destructive p-4">
+            <div className="text-destructive flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               <p className="text-sm font-medium">{error}</p>
             </div>
@@ -502,9 +514,9 @@ export function CreateWorkpaperForm({
       })()}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex items-center justify-between border-t pt-4">
         <Button variant="outline" onClick={handleSaveDraft} disabled={!hasUnsavedChanges}>
-          <Save className="h-4 w-4 mr-2" />
+          <Save className="mr-2 h-4 w-4" />
           Save Draft
         </Button>
 
@@ -515,7 +527,7 @@ export function CreateWorkpaperForm({
           <Button onClick={handleSubmit} disabled={createMutation.isPending || !!validateForm()}>
             {createMutation.isPending ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Creating...
               </>
             ) : (
@@ -536,9 +548,9 @@ export function CreateWorkpaperForm({
           preSelectedClause={formData.clause}
           workpaperId={createdWorkpaperId}
           preFilledData={{
-            description: formData.conclusion || formData.testResults || '',
+            description: formData.conclusion || formData.testResults || "",
             testResult: formData.testResult,
-            evidence: formData.evidence,
+            evidence: formData.evidence
           }}
           onSuccess={handleFindingCreated}
         />
