@@ -73,7 +73,7 @@ const mockCustomTemplates: CustomTemplate[] = [
 
 export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClientProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedAuditId, setSelectedAuditId] = useState<string>("");
+  const [selectedAuditId, setSelectedAuditId] = useState<string | undefined>(undefined);
   const [selectedTemplate, setSelectedTemplate] = useState<WorkpaperTemplate>(null);
   const [selectedCustomTemplate, setSelectedCustomTemplate] = useState<CustomTemplate | null>(null);
 
@@ -88,14 +88,14 @@ export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClien
 
   const handleSuccess = () => {
     setIsCreateDialogOpen(false);
-    setSelectedAuditId("");
+    setSelectedAuditId(undefined);
     setSelectedTemplate(null);
     setSelectedCustomTemplate(null);
   };
 
   const handleCancel = () => {
     setIsCreateDialogOpen(false);
-    setSelectedAuditId("");
+    setSelectedAuditId(undefined);
     setSelectedTemplate(null);
     setSelectedCustomTemplate(null);
   };

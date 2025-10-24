@@ -53,7 +53,7 @@ export function CustomWorkpaperForm({
   // Form state
   const [preparedBy, setPreparedBy] = useState(currentUser);
   const [preparedDate, setPreparedDate] = useState(new Date());
-  const [reviewedBy, setReviewedBy] = useState("");
+  const [reviewedBy, setReviewedBy] = useState<string | undefined>(undefined);
   const [reviewedDate, setReviewedDate] = useState<Date | undefined>();
 
   // Dynamic field values
@@ -293,12 +293,12 @@ export function CustomWorkpaperForm({
 
             <div className="space-y-2">
               <Label htmlFor="reviewedBy">Reviewed By (Optional)</Label>
-              <Select value={reviewedBy} onValueChange={setReviewedBy}>
+              <Select value={reviewedBy} onValueChange={(value) => setReviewedBy(value === "none" ? undefined : value)}>
                 <SelectTrigger id="reviewedBy">
                   <SelectValue placeholder="Select reviewer..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {teamMembers?.map((member) => (
                     <SelectItem key={member.id} value={member.name}>
                       {member.name} - {member.role}

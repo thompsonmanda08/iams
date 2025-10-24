@@ -12,7 +12,7 @@ import { FindingsAnalytics } from "@/components/audit/findings-analytics";
 import { CreateFindingModal } from "@/components/audit/create-finding-modal";
 import type { Finding, FindingSeverity, FindingStatus } from "@/lib/types/audit-types";
 
-interface FindingsPageEnhancedProps {
+interface AuditFindingsTabProps {
   stats: {
     total: number;
     open: number;
@@ -22,7 +22,7 @@ interface FindingsPageEnhancedProps {
   findings: Finding[];
 }
 
-export function FindingsPageEnhanced({ stats, findings }: FindingsPageEnhancedProps) {
+export function AuditFindingsTab({ stats, findings }: AuditFindingsTabProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSeverities, setSelectedSeverities] = useState<FindingSeverity[]>([]);

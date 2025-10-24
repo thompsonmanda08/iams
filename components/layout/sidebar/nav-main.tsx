@@ -75,7 +75,6 @@ export const navItems: NavGroup[] = [
         items: [
           { title: "Overview", href: "/dashboard/audit" },
           { title: "Audit Plans", href: "/dashboard/audit/plans" },
-          { title: "Findings", href: "/dashboard/audit/findings" },
           { title: "Workpapers", href: "/dashboard/audit/workpapers" },
           { title: "Reports", href: "/dashboard/audit/reports" }
         ]

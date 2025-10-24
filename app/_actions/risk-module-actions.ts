@@ -663,8 +663,7 @@ export async function createFinding(input: FindingInput): Promise<APIResponse> {
 
     mockFindings.push(newFinding);
 
-    revalidatePath("/dashboard/audit/findings");
-    revalidatePath(`/dashboard/audit/plans/${input.auditId}/findings`);
+    revalidatePath(`/dashboard/audit/plans/${input.auditId}`);
 
     return successResponse(newFinding, "Finding created successfully");
   } catch (error: any) {
@@ -695,8 +694,10 @@ export async function updateFinding(id: string, data: Partial<FindingInput>): Pr
       updatedAt: new Date()
     };
 
-    revalidatePath("/dashboard/audit/findings");
-    revalidatePath(`/dashboard/audit/findings/${id}`);
+    const finding = mockFindings[index];
+    if (finding.auditId) {
+      revalidatePath(`/dashboard/audit/plans/${finding.auditId}`);
+    }
 
     return successResponse(mockFindings[index], "Finding updated successfully");
   } catch (error: any) {
