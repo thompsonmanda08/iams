@@ -104,8 +104,8 @@ export interface AuditFilters {
  */
 export interface Workpaper {
   id: string;
-  auditId: string;
-  auditTitle: string;
+  auditId?: string; // Optional - can be attached to audit plan later
+  auditTitle?: string; // Optional - only present when attached to audit
   clause: string;
   clauseTitle: string;
   objectives: string;
@@ -297,7 +297,7 @@ export interface GeneralWorkpaper {
  * Input type for creating general workpaper
  */
 export interface GeneralWorkpaperInput {
-  auditId: string;
+  auditId?: string; // Optional - can be attached to audit plan later
   processUnderReview: string;
   preparedBy: string;
   preparedDate: Date;
@@ -418,7 +418,7 @@ export interface CustomWorkpaper {
  * Input type for creating custom workpaper from template
  */
 export interface CustomWorkpaperInput {
-  auditId: string;
+  auditId?: string; // Optional - can be attached to audit plan later
   templateId: string;
   preparedBy: string;
   preparedDate: Date;

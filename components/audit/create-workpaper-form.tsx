@@ -538,7 +538,7 @@ export function CreateWorkpaperForm({
       </div>
 
       {/* Create Finding Modal */}
-      {showCreateFinding && createdWorkpaperId && (
+      {showCreateFinding && createdWorkpaperId && auditId && (
         <CreateFindingModal
           open={showCreateFinding}
           onOpenChange={(open) => {
