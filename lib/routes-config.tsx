@@ -29,15 +29,15 @@ export const navItems: NavGroup[] = [
     title: "Modules",
     items: [
       {
-        title: "Risk Management",
+        title: "Risk",
         href: "/dashboard/risks",
         icon: ShieldAlert,
         items: [
-          { title: "Dashboard", href: "/dashboard/risks" },
-          { title: "Risk Register", href: "/dashboard/risks/risk-register" },
+          { title: "Overview", href: "/dashboard/risks" },
+          { title: "Risk Registers", href: "/dashboard/risks/risk-registers" },
           { title: "Heat Map", href: "/dashboard/risks/heat-map" },
-          { title: "KRI Management", href: "/dashboard/risks/kri" },
-          { title: "Risk Actions", href: "/dashboard/risks/actions" }
+          { title: "KRI Dashboard", href: "/dashboard/risks/kri" },
+          { title: "Actions", href: "/dashboard/risks/actions" }
         ]
       },
       {
@@ -68,7 +68,7 @@ export const navItems: NavGroup[] = [
         icon: Building
       },
       {
-        title: "Branches",
+        title: "Locations",
         href: "/dashboard/system-configs/branches",
         icon: MapPin
       },

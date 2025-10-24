@@ -83,7 +83,7 @@ export default function RisksDashboardPage() {
             <h2 className="text-xl font-semibold mb-4">Risk Modules</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {/* Risk Register */}
-              <Link href="/dashboard/risks/risk-register">
+              <Link href="/dashboard/risks/risk-registers">
                 <Card className="p-6 transition-all hover:shadow-lg cursor-pointer h-full">
                   <div className="flex flex-col h-full">
                     <div className="flex items-start justify-between mb-4">
@@ -168,7 +168,7 @@ export default function RisksDashboardPage() {
           <div>
             <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
             <div className="flex flex-wrap gap-3">
-              <Link href="/dashboard/risks/risk-register">
+              <Link href="/dashboard/risks/risk-registers">
                 <Button className="gap-2">
                   <FileText className="h-4 w-4" />
                   Add New Risk

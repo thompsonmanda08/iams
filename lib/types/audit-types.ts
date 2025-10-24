@@ -130,7 +130,7 @@ export interface Workpaper {
  * Input type for creating or updating a workpaper
  */
 export interface WorkpaperInput {
-  auditId: string;
+  auditId?: string; // Optional - can be attached to audit plan later
   clause: string;
   clauseTitle?: string;
   objectives: string;

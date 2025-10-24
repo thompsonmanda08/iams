@@ -27,7 +27,7 @@ export default async function ActionDetailPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <main>
+    <main className="min-h-screen bg-background">
       <ActionDetails action={mockActionDetails} />
     </main>
   );

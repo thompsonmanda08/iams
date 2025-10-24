@@ -3,9 +3,6 @@
 import { useState, useEffect } from "react";
 import { risksApi, type HeatMapData } from "@/lib/api/risks-api";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export default function RiskHeatMapPage() {
@@ -44,16 +41,20 @@ export default function RiskHeatMapPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-3xl font-bold">Risk Heat Map</h1>
-          <p className="text-muted-foreground mt-1">Visual representation of risk distribution</p>
+      <div className="bg-card border-b">
+        <div className="container mx-auto px-4 py-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Risk Heat Map</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Visual representation of risk distribution
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="container mx-auto grid grid-cols-1 gap-6 px-4 py-8 lg:grid-cols-3">
         {/* Heat Map */}
         <Card className="p-6 lg:col-span-2">
           {isLoading ? (

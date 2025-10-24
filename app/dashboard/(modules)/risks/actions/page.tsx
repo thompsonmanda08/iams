@@ -20,12 +20,18 @@ const mockActions = [
 
 export default function ActionsPage() {
   return (
-    <main>
-      <div className="mb-2">
-        <h1 className="text-foreground text-3xl font-semibold">Your Active Risk Actions</h1>
-        <p className="text-muted-foreground mt-1 text-sm">My Actions</p>
+    <main className="bg-background min-h-screen">
+      <div className="bg-card border-b">
+        <div className="container mx-auto px-4 py-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">My Actions</h1>
+            <p className="text-muted-foreground mt-1 text-sm">Your Active Risk Actions</p>
+          </div>
+        </div>
       </div>
-      <ActionsTable actions={mockActions} />
+      <div className="container mx-auto px-4 py-8">
+        <ActionsTable actions={mockActions} />
+      </div>
     </main>
   );
 }

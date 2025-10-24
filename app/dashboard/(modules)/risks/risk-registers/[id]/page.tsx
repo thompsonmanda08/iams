@@ -161,40 +161,44 @@ export default function RisksPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mb-2 flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 size-4" />
-          Back to Registers
-        </Button>
-      </div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-3xl font-bold">Risk Register</h1>
-          <p className="text-muted-foreground mt-1">Manage and monitor organizational risks</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/risks/heat-map">
-            <Button variant="outline" size="sm">
-              <TrendingUp className="mr-2 h-4 w-4" />
-              Heat Map
+    <div className="bg-background min-h-screen">
+      <div className="bg-card border-b">
+        <div className="container mx-auto py-6">
+          <div className="mb-2 flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 size-4" />
+              Back to Registers
             </Button>
-          </Link>
-          <Link href="/dashboard/risks/kri">
-            <Button variant="outline" size="sm">
-              <AlertTriangle className="mr-2 h-4 w-4" />
-              KRI Dashboard
-            </Button>
-          </Link>
-          <Button onClick={handleCreate} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Risk
-          </Button>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-foreground text-3xl font-bold">Risk Register</h1>
+              <p className="text-muted-foreground mt-1">Manage and monitor organizational risks</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/dashboard/risks/heat-map">
+                <Button variant="outline" size="sm">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Heat Map
+                </Button>
+              </Link>
+              <Link href="/dashboard/risks/kri">
+                <Button variant="outline" size="sm">
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  KRI Dashboard
+                </Button>
+              </Link>
+              <Button onClick={handleCreate} size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Risk
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="container mx-auto grid grid-cols-1 gap-4 py-8 md:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -248,7 +252,7 @@ export default function RisksPage() {
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
+      <Card className="container mx-auto px-4 py-8">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -295,161 +299,163 @@ export default function RisksPage() {
       </Card>
 
       {/* Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Risk ID</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Inherent Score</TableHead>
-              <TableHead>Residual Score</TableHead>
-              <TableHead>Magnitude</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={9}>
-                      <div className="bg-muted h-16 animate-pulse rounded" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </>
-            ) : risks.length === 0 ? (
+      <div className="container mx-auto py-8">
+        <Card>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={9} className="py-12 text-center">
-                  <p className="text-muted-foreground">No risks found</p>
-                </TableCell>
+                <TableHead>Risk ID</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Inherent Score</TableHead>
+                <TableHead>Residual Score</TableHead>
+                <TableHead>Magnitude</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Owner</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
-            ) : (
-              risks.map((risk) => (
-                <TableRow key={risk.id}>
-                  <TableCell>
-                    <span className="font-mono text-sm font-medium">{risk.riskId}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="text-foreground font-medium">{risk.title}</p>
-                      <p className="text-muted-foreground max-w-xs truncate text-sm">
-                        {risk.description}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{risk.category}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "text-sm font-semibold",
-                          getRiskScoreColor(risk.inherentScore)
-                        )}>
-                        {risk.inherentScore}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        ({risk.inherentImpact}×{risk.inherentLikelihood})
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "text-sm font-semibold",
-                          getRiskScoreColor(risk.residualScore)
-                        )}>
-                        {risk.residualScore}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        ({risk.residualImpact}×{risk.residualLikelihood})
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium capitalize",
-                        getMagnitudeColor(risk.riskMagnitude)
-                      )}>
-                      {risk.riskMagnitude}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium capitalize",
-                        getStatusColor(risk.status)
-                      )}>
-                      {risk.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{risk.owner}</span>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(risk)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(risk.id)}
-                          className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={9}>
+                        <div className="bg-muted h-16 animate-pulse rounded" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </>
+              ) : risks.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-12 text-center">
+                    <p className="text-muted-foreground">No risks found</p>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                risks.map((risk) => (
+                  <TableRow key={risk.id}>
+                    <TableCell>
+                      <span className="font-mono text-sm font-medium">{risk.riskId}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-foreground font-medium">{risk.title}</p>
+                        <p className="text-muted-foreground max-w-xs truncate text-sm">
+                          {risk.description}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{risk.category}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "text-sm font-semibold",
+                            getRiskScoreColor(risk.inherentScore)
+                          )}>
+                          {risk.inherentScore}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          ({risk.inherentImpact}×{risk.inherentLikelihood})
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "text-sm font-semibold",
+                            getRiskScoreColor(risk.residualScore)
+                          )}>
+                          {risk.residualScore}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          ({risk.residualImpact}×{risk.residualLikelihood})
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-1 text-xs font-medium capitalize",
+                          getMagnitudeColor(risk.riskMagnitude)
+                        )}>
+                        {risk.riskMagnitude}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-1 text-xs font-medium capitalize",
+                          getStatusColor(risk.status)
+                        )}>
+                        {risk.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{risk.owner}</span>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(risk)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(risk.id)}
+                            className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
 
-        {/* Pagination */}
-        {!isLoading && risks.length > 0 && (
-          <div className="flex items-center justify-between border-t p-4">
-            <p className="text-muted-foreground text-sm">
-              Showing {(meta.page - 1) * meta.limit + 1} to{" "}
-              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} risks
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={meta.page === 1}
-                onClick={() => setParams({ ...params, page: meta.page - 1 })}>
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={meta.page === meta.totalPages}
-                onClick={() => setParams({ ...params, page: meta.page + 1 })}>
-                Next
-              </Button>
+          {/* Pagination */}
+          {!isLoading && risks.length > 0 && (
+            <div className="flex items-center justify-between border-t p-4">
+              <p className="text-muted-foreground text-sm">
+                Showing {(meta.page - 1) * meta.limit + 1} to{" "}
+                {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} risks
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={meta.page === 1}
+                  onClick={() => setParams({ ...params, page: meta.page - 1 })}>
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={meta.page === meta.totalPages}
+                  onClick={() => setParams({ ...params, page: meta.page + 1 })}>
+                  Next
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
+      </div>
 
       <RiskFormDialog
         open={riskDialogOpen}

@@ -17,7 +17,6 @@ export default function KRIPage() {
   const [isConfigureOpen, setIsConfigureOpen] = useState(false);
 
   console.log("Selected KRI:", selectedKRI);
-  
 
   useEffect(() => {
     loadKRIs();
@@ -57,21 +56,25 @@ export default function KRIPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-3xl font-bold">Key Risk Indicators (KRI)</h1>
-          <p className="text-muted-foreground mt-1">Monitor critical risk metrics and thresholds</p>
-        </div>
-        <Button size="sm" onClick={() => setIsConfigureOpen(true)}>
+      <div className="bg-card border-b">
+        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Key Risk Indicators (KRI)</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Monitor critical risk metrics and thresholds
+            </p>
+          </div>
+           <Button size="sm" onClick={() => setIsConfigureOpen(true)}>
           <AlertCircle className="mr-2 h-4 w-4" />
           Configure KRIs
         </Button>
+        </div>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="container mx-auto grid grid-cols-1 gap-4 px-4 md:grid-cols-3 pt-6">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -114,7 +117,7 @@ export default function KRIPage() {
       </div>
 
       {/* KRI Cards */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="container mx-auto grid grid-cols-1 gap-6 px-4 py-8 lg:grid-cols-2">
         {isLoading ? (
           <>
             {[1, 2, 3, 4].map((i) => (

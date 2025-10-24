@@ -65,42 +65,43 @@ export function ActionDetails({ action }: ActionDetailsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 size-4" />
-              Back to Actions
-            </Button>
+      <div className="bg-card border-b">
+        <div className="container mx-auto flex items-center justify-between px-4 py-6">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 size-4" />
+                Back to Actions
+              </Button>
+            </div>
+            <h1 className="text-foreground text-3xl font-semibold">Risk Action Details</h1>
+            <p className="text-muted-foreground mt-1 font-mono text-sm">{action.id}</p>
           </div>
-          <h1 className="text-foreground text-3xl font-semibold">Risk Action Details</h1>
-          <p className="text-muted-foreground mt-1 font-mono text-sm">{action.id}</p>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                Select Mitigation Option
+                <span className="ml-2">▼</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => handleMitigationSelect("Mitigate")}>
+                Mitigate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMitigationSelect("Accept")}>
+                Accept
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMitigationSelect("Avoid")}>
+                Avoid
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMitigationSelect("Transfer")}>
+                Transfer
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button>
-              Select Mitigation Option
-              <span className="ml-2">▼</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => handleMitigationSelect("Mitigate")}>
-              Mitigate
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleMitigationSelect("Accept")}>
-              Accept
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleMitigationSelect("Avoid")}>
-              Avoid
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleMitigationSelect("Transfer")}>
-              Transfer
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="container mx-auto grid gap-6 px-4 py-8 md:grid-cols-2">
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-4">
@@ -176,68 +177,69 @@ export function ActionDetails({ action }: ActionDetailsProps) {
           </Card>
         </div>
       </div>
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="mb-4 flex items-center justify-between">
+              <Input
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-xs"
+              />
+            </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="mb-4 flex items-center justify-between">
-            <Input
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-xs"
-            />
-          </div>
-
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>DATE</TableHead>
-                  <TableHead>UPDATE TYPE</TableHead>
-                  <TableHead>DESCRIPTION</TableHead>
-                  <TableHead>ATTACHMENT</TableHead>
-                  <TableHead>PROGRESS</TableHead>
-                  <TableHead>STATUS</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {updates.length === 0 ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center">
-                      No data available in table
-                    </TableCell>
+                    <TableHead>DATE</TableHead>
+                    <TableHead>UPDATE TYPE</TableHead>
+                    <TableHead>DESCRIPTION</TableHead>
+                    <TableHead>ATTACHMENT</TableHead>
+                    <TableHead>PROGRESS</TableHead>
+                    <TableHead>STATUS</TableHead>
                   </TableRow>
-                ) : (
-                  updates.map((update, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{update.date}</TableCell>
-                      <TableCell>{update.updateType}</TableCell>
-                      <TableCell>{update.description}</TableCell>
-                      <TableCell>{update.attachment || "-"}</TableCell>
-                      <TableCell>{update.progress}%</TableCell>
-                      <TableCell>
-                        <Badge>{update.status}</Badge>
+                </TableHeader>
+                <TableBody>
+                  {updates.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-8 text-center">
+                        No data available in table
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-muted-foreground text-sm">Showing 0 to 0 of 0 entries</div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" disabled>
-                Next
-              </Button>
+                  ) : (
+                    updates.map((update, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{update.date}</TableCell>
+                        <TableCell>{update.updateType}</TableCell>
+                        <TableCell>{update.description}</TableCell>
+                        <TableCell>{update.attachment || "-"}</TableCell>
+                        <TableCell>{update.progress}%</TableCell>
+                        <TableCell>
+                          <Badge>{update.status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-muted-foreground text-sm">Showing 0 to 0 of 0 entries</div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled>
+                  Next
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

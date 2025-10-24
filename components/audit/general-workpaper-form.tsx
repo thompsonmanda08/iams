@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,16 +12,17 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 import { Save, Loader2, AlertCircle, FileText, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EvidenceGrid } from "./evidence-grid";
 import { CreateFindingModal } from "./create-finding-modal";
 import { useTeamMembers } from "@/hooks/use-audit-query-data";
-import type { GeneralWorkpaperInput, EvidenceRow } from "@/lib/types/audit-types";
+import type { GeneralWorkpaperInput, EvidenceRow, TeamMember } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/data/tick-marks";
+import { SelectField } from "../ui/select-field";
 
 interface GeneralWorkpaperFormProps {
   auditId: string;
@@ -36,11 +37,20 @@ export function GeneralWorkpaperForm({
   auditTitle,
   onSuccess,
   onCancel,
-  initialData,
+  initialData
 }: GeneralWorkpaperFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers();
+
+  const teamMemberOptions = useMemo(() => {
+    return teamMembers && teamMembers.length > 0
+      ? teamMembers?.map((m: TeamMember, i: number) => ({
+          id: m.id || `${i}-${m.name}-${m.role}`,
+          name: `${m.name} - ${m.role}`
+        }))
+      : [];
+  }, [teamMembers]);
 
   // Get current user (mock - replace with actual auth)
   const currentUser = teamMembers?.[0]?.name || "Current User";
@@ -72,14 +82,11 @@ export function GeneralWorkpaperForm({
     mattersArising: initialData?.mattersArising || "",
     conclusion: initialData?.conclusion || "",
     evidenceRows: initialData?.evidenceRows || [],
-    selectedTickMarks: initialData?.selectedTickMarks || DEFAULT_REVENUE_TICK_MARKS,
+    selectedTickMarks: initialData?.selectedTickMarks || DEFAULT_REVENUE_TICK_MARKS
   });
 
   // Update form field
-  const updateField = <K extends keyof typeof formData>(
-    field: K,
-    value: (typeof formData)[K]
-  ) => {
+  const updateField = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -96,7 +103,7 @@ export function GeneralWorkpaperForm({
   const handleSaveDraft = () => {
     toast({
       title: "Draft Saved",
-      description: "Your work has been saved as a draft.",
+      description: "Your work has been saved as a draft."
     });
   };
 
@@ -107,7 +114,7 @@ export function GeneralWorkpaperForm({
       toast({
         title: "Validation Error",
         description: error,
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -125,7 +132,7 @@ export function GeneralWorkpaperForm({
       mattersArising: formData.mattersArising || undefined,
       conclusion: formData.conclusion || undefined,
       evidenceRows: formData.evidenceRows,
-      selectedTickMarks: formData.selectedTickMarks,
+      selectedTickMarks: formData.selectedTickMarks
     };
 
     try {
@@ -138,7 +145,7 @@ export function GeneralWorkpaperForm({
 
       toast({
         title: "Success",
-        description: "General workpaper created successfully",
+        description: "General workpaper created successfully"
       });
 
       // Check if there are any rows with observations that might need findings
@@ -158,7 +165,7 @@ export function GeneralWorkpaperForm({
       toast({
         title: "Error",
         description: "Failed to create general workpaper",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
@@ -171,7 +178,7 @@ export function GeneralWorkpaperForm({
       toast({
         title: "Error",
         description: "Please save the workpaper first",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -209,22 +216,22 @@ export function GeneralWorkpaperForm({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
           <FileText className="h-5 w-5 text-blue-600" />
         </div>
         <div className="flex-1">
           <h2 className="text-2xl font-bold">General Work Paper (B.1.1.2)</h2>
           {auditTitle && (
-            <p className="text-sm text-muted-foreground mt-1">For Audit: {auditTitle}</p>
+            <p className="text-muted-foreground mt-1 text-sm">For Audit: {auditTitle}</p>
           )}
         </div>
       </div>
 
       {/* Company Header */}
-      <Card className="p-6 bg-slate-50">
+      <Card className="bg-slate-50 p-6">
         <div className="text-center">
           <h3 className="text-xl font-bold">INFRATEL INTERNAL AUDIT</h3>
-          <p className="text-sm text-muted-foreground mt-1">General Work Paper</p>
+          <p className="text-muted-foreground mt-1 text-sm">General Work Paper</p>
         </div>
       </Card>
 
@@ -252,24 +259,20 @@ export function GeneralWorkpaperForm({
           <div className="grid grid-cols-2 gap-6">
             {/* Prepared By */}
             <div className="space-y-2">
-              <Label htmlFor="preparedBy">
-                Prepared By <span className="text-destructive">*</span>
-              </Label>
-              <Select
+              {/* Prepared By */}
+              <SelectField
+                // id="preparedBy"
+                label="Prepared By"
+                placeholder="Select a user"
+                required
+                className="w-full"
+                classNames={{
+                  wrapper: "w-full "
+                }}
                 value={formData.preparedBy}
                 onValueChange={(v) => updateField("preparedBy", v)}
-              >
-                <SelectTrigger id="preparedBy">
-                  <SelectValue placeholder="Select user..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {teamMembers?.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
-                      {member.name} - {member.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={teamMemberOptions}
+              />
             </div>
 
             {/* Preparation Date */}
@@ -287,23 +290,17 @@ export function GeneralWorkpaperForm({
 
             {/* Reviewed By */}
             <div className="space-y-2">
-              <Label htmlFor="reviewedBy">Reviewed By (Optional)</Label>
-              <Select
+              <SelectField
+                label="Reviewed By (Optional)"
+                placeholder="Select a user"
+                className="w-full"
+                classNames={{
+                  wrapper: "w-full "
+                }}
                 value={formData.reviewedBy}
                 onValueChange={(v) => updateField("reviewedBy", v)}
-              >
-                <SelectTrigger id="reviewedBy">
-                  <SelectValue placeholder="Select reviewer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None</SelectItem>
-                  {teamMembers?.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
-                      {member.name} - {member.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={teamMemberOptions}
+              />
             </div>
 
             {/* Review Date */}
@@ -313,9 +310,7 @@ export function GeneralWorkpaperForm({
                 id="reviewedDate"
                 type="date"
                 value={
-                  formData.reviewedDate
-                    ? formData.reviewedDate.toISOString().split("T")[0]
-                    : ""
+                  formData.reviewedDate ? formData.reviewedDate.toISOString().split("T")[0] : ""
                 }
                 onChange={(e) =>
                   updateField("reviewedDate", e.target.value ? new Date(e.target.value) : undefined)
@@ -339,14 +334,12 @@ export function GeneralWorkpaperForm({
             <Textarea
               id="workDone"
               placeholder="Describe the audit work performed, procedures executed, and evidence examined..."
-              rows={8}
+              rows={4}
               className="resize-none font-mono text-sm"
               value={formData.workDone}
               onChange={(e) => updateField("workDone", e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              {formData.workDone.length} characters
-            </p>
+            <p className="text-muted-foreground text-xs">{formData.workDone.length} characters</p>
           </div>
 
           {/* Matters Arising */}
@@ -355,20 +348,20 @@ export function GeneralWorkpaperForm({
             <Textarea
               id="mattersArising"
               placeholder="Document any issues, concerns, or follow-up items identified during the audit work..."
-              rows={6}
+              rows={4}
               className="resize-none font-mono text-sm"
               value={formData.mattersArising}
               onChange={(e) => updateField("mattersArising", e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {formData.mattersArising.length} characters
             </p>
 
             {/* Matters Arising Notice */}
             {formData.mattersArising && formData.mattersArising.trim().length > 0 && (
-              <Card className="p-3 bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800 mt-2">
+              <Card className="mt-2 border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" />
                   <p className="text-xs text-yellow-800 dark:text-yellow-200">
                     After creating this workpaper, you can create findings to track these matters.
                   </p>
@@ -379,18 +372,16 @@ export function GeneralWorkpaperForm({
 
           {/* Conclusion */}
           <div className="space-y-2">
-            <Label htmlFor="conclusion">Conclusion (Optional)</Label>
             <Textarea
               id="conclusion"
+              label="Conclusion (Optional)"
               placeholder="Summarize the overall findings, audit opinion, and key takeaways..."
-              rows={6}
+              rows={4}
               className="resize-none font-mono text-sm"
               value={formData.conclusion}
               onChange={(e) => updateField("conclusion", e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              {formData.conclusion.length} characters
-            </p>
+            <p className="text-muted-foreground text-xs">{formData.conclusion.length} characters</p>
           </div>
         </div>
       </Card>
@@ -410,8 +401,8 @@ export function GeneralWorkpaperForm({
       {(() => {
         const error = validateForm();
         return error ? (
-          <Card className="p-4 bg-destructive/10 border-destructive">
-            <div className="flex items-center gap-2 text-destructive">
+          <Card className="bg-destructive/10 border-destructive p-4">
+            <div className="text-destructive flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               <p className="text-sm font-medium">{error}</p>
             </div>
@@ -420,9 +411,9 @@ export function GeneralWorkpaperForm({
       })()}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex items-center justify-between border-t pt-4">
         <Button variant="outline" onClick={handleSaveDraft}>
-          <Save className="h-4 w-4 mr-2" />
+          <Save className="mr-2 h-4 w-4" />
           Save Draft
         </Button>
 
@@ -433,7 +424,7 @@ export function GeneralWorkpaperForm({
           <Button onClick={handleSubmit} disabled={isSaving || !!validateForm()}>
             {isSaving ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Creating...
               </>
             ) : (
@@ -455,8 +446,8 @@ export function GeneralWorkpaperForm({
           evidenceRowId={selectedRowForFinding?.id}
           preFilledData={{
             description: selectedRowForFinding
-              ? `Issue found in evidence row: ${selectedRowForFinding.description}\nObservation: ${selectedRowForFinding.auditObservation || ''}\nComment: ${selectedRowForFinding.auditComment || ''}`
-              : formData.mattersArising || '',
+              ? `Issue found in evidence row: ${selectedRowForFinding.description}\nObservation: ${selectedRowForFinding.auditObservation || ""}\nComment: ${selectedRowForFinding.auditComment || ""}`
+              : formData.mattersArising || ""
           }}
           onSuccess={handleFindingCreated}
         />

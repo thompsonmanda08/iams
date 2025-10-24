@@ -147,23 +147,25 @@ export default function RiskRegistersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-3xl font-bold">Risk Registers</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage and organize your risk assessment registers
-          </p>
+      <div className="bg-card border-b">
+        <div className="container mx-auto flex items-center justify-between py-6">
+          <div>
+            <h1 className="text-foreground text-3xl font-bold">Risk Registers</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage and organize your risk assessment registers
+            </p>
+          </div>
+          <Button onClick={() => setIsDialogOpen(true)} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New Risk Register
+          </Button>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          New Risk Register
-        </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="container mx-auto grid grid-cols-1 gap-4 py-8 md:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -217,7 +219,7 @@ export default function RiskRegistersPage() {
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
+      <Card className="container mx-auto px-4 py-8">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -248,102 +250,102 @@ export default function RiskRegistersPage() {
       </Card>
 
       {/* Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Branch</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead>Updated At</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead className="text-right">OPTIONS</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedRegisters.length === 0 ? (
+      <div className="container mx-auto py-8">
+        <Card>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center">
-                  <p className="text-muted-foreground">No risk registers found</p>
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Branch</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead>Updated At</TableHead>
+                <TableHead>Created By</TableHead>
+                <TableHead className="text-right">OPTIONS</TableHead>
               </TableRow>
-            ) : (
-              paginatedRegisters.map((register) => (
-                <TableRow
-                  key={register.id}
-                  onClick={() =>
-                    router.push(`/dashboard/module/risks/risk-registers/${register.id}`)
-                  }
-                  className="cursor-pointer">
-                  <TableCell>
-                    <p className="text-foreground font-medium">{register.name}</p>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{register.startDate}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{register.dueDate}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium capitalize",
-                        getStatusColor(register.status)
-                      )}>
-                      {register.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{register.branch}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-muted-foreground text-sm">{register.createdAt}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-muted-foreground text-sm">{register.updatedAt}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{register.createdBy}</span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" className="cursor-pointer font-normal">
-                      View
-                    </Button>
+            </TableHeader>
+            <TableBody>
+              {paginatedRegisters.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-12 text-center">
+                    <p className="text-muted-foreground">No risk registers found</p>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                paginatedRegisters.map((register) => (
+                  <TableRow
+                    key={register.id}
+                    onClick={() => router.push(`/dashboard/risks/risk-registers/${register.id}`)}
+                    className="cursor-pointer">
+                    <TableCell>
+                      <p className="text-foreground font-medium">{register.name}</p>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{register.startDate}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{register.dueDate}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-1 text-xs font-medium capitalize",
+                          getStatusColor(register.status)
+                        )}>
+                        {register.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{register.branch}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">{register.createdAt}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">{register.updatedAt}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{register.createdBy}</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" className="cursor-pointer font-normal">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
 
-        {/* Pagination */}
-        {paginatedRegisters.length > 0 && (
-          <div className="flex items-center justify-between border-t p-4">
-            <p className="text-muted-foreground text-sm">
-              Showing {startIndex + 1} to {endIndex} of {filteredRegisters.length} risk registers
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}>
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}>
-                Next
-              </Button>
+          {/* Pagination */}
+          {paginatedRegisters.length > 0 && (
+            <div className="flex items-center justify-between border-t p-4">
+              <p className="text-muted-foreground text-sm">
+                Showing {startIndex + 1} to {endIndex} of {filteredRegisters.length} risk registers
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}>
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}>
+                  Next
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
