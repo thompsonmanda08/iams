@@ -103,7 +103,7 @@ export default async function AuditDashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             <Link href="/dashboard/audit/plans">
               <Card className="p-6 transition-all hover:shadow-lg cursor-pointer">
                 <div className="flex items-start justify-between">
@@ -111,20 +111,6 @@ export default async function AuditDashboardPage() {
                     <h3 className="text-lg font-semibold">Audit Plans</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
                       View and manage all audit plans
-                    </p>
-                  </div>
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </Card>
-            </Link>
-
-            <Link href="/dashboard/audit/findings">
-              <Card className="p-6 transition-all hover:shadow-lg cursor-pointer">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">Findings</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Track and resolve non-conformities
                     </p>
                   </div>
                   <FileText className="h-8 w-8 text-muted-foreground" />

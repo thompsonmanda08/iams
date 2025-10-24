@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, FileText } from "lucide-react";
 import type { Finding } from "@/lib/types/audit-types";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -98,6 +98,7 @@ export function FindingsTable({ findings, isLoading }: FindingsTableProps) {
             <TableHead>Reference</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Clause</TableHead>
+            <TableHead>Source</TableHead>
             <TableHead>Severity</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Assigned To</TableHead>
@@ -135,6 +136,21 @@ export function FindingsTable({ findings, isLoading }: FindingsTableProps) {
                       {finding.clauseTitle}
                     </p>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {finding.workpaperId ? (
+                    <Link
+                      href={`/dashboard/audit/workpapers/${finding.workpaperId}`}
+                      className="inline-flex items-center gap-1.5 text-sm hover:text-primary hover:underline"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span className="font-mono text-xs">{finding.workpaperReference || finding.workpaperId}</span>
+                    </Link>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
+                      {finding.sourceType === 'manual' ? 'Manual Entry' : 'External'}
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={cn(severity.className)}>

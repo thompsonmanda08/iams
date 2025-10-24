@@ -110,8 +110,9 @@ export interface Workpaper {
   clauseTitle: string;
   objectives: string;
   testProcedures: string;
-  testResults: string;
-  testResult: TestResult;
+  testResults?: string;
+  testResult?: TestResult;
+  conclusion?: string;
   evidence: Evidence[];
   preparedBy: string;
   preparedDate: Date;
@@ -119,6 +120,10 @@ export interface Workpaper {
   reviewedDate?: Date;
   createdAt: Date;
   updatedAt: Date;
+
+  // Findings relationship
+  findingIds?: string[];
+  findingsCount?: number;
 }
 
 /**
@@ -127,10 +132,13 @@ export interface Workpaper {
 export interface WorkpaperInput {
   auditId: string;
   clause: string;
+  clauseTitle?: string;
   objectives: string;
   testProcedures: string;
-  testResults: string;
-  testResult: TestResult;
+  testResults?: string;
+  testResult?: TestResult;
+  conclusion?: string;
+  evidence?: EvidenceInput[];
   preparedBy: string;
   preparedDate: Date;
   reviewedBy?: string;
@@ -142,16 +150,51 @@ export interface WorkpaperInput {
  */
 export interface WorkpaperDraft {
   auditId: string;
-  clause: string;
-  objectives: string;
-  testProcedures: string;
+  clause?: string;
+  clauseTitle?: string;
+  objectives?: string;
+  testProcedures?: string;
   testResults?: string;
   testResult?: TestResult;
+  conclusion?: string;
+  evidence?: EvidenceInput[];
+  preparedBy?: string;
+  reviewedBy?: string;
   lastSaved?: Date;
 }
 
 /**
- * Workpaper template for pre-filled testing procedures
+ * Clause template category types
+ */
+export type ClauseCategory = 'Context' | 'Leadership' | 'Planning' | 'Support' | 'Operation' | 'Evaluation' | 'Improvement' | 'Annex A';
+
+/**
+ * Clause template for workpaper creation
+ */
+export interface ClauseTemplate {
+  id: string;
+  clause: string;
+  clauseTitle: string;
+  category: ClauseCategory;
+  objective: string;
+  testProcedure: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+/**
+ * Input type for creating a clause template
+ */
+export interface ClauseTemplateInput {
+  clause: string;
+  clauseTitle: string;
+  category: ClauseCategory;
+  objective: string;
+  testProcedure: string;
+}
+
+/**
+ * Workpaper template for pre-filled testing procedures (deprecated - use ClauseTemplate)
  */
 export interface WorkpaperTemplate {
   id: string;
@@ -163,6 +206,23 @@ export interface WorkpaperTemplate {
 }
 
 /**
+ * Evidence type categories
+ */
+export type EvidenceType = 'Policy' | 'Screenshot' | 'Minutes' | 'Report' | 'Other';
+
+/**
+ * Evidence input for uploading
+ */
+export interface EvidenceInput {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  evidenceType: EvidenceType;
+  file?: File;
+}
+
+/**
  * Evidence file attached to workpapers or findings
  */
 export interface Evidence {
@@ -170,9 +230,203 @@ export interface Evidence {
   fileName: string;
   fileType: string;
   fileSize: number;
+  evidenceType: EvidenceType;
   uploadedBy: string;
   uploadedAt: Date;
   url: string;
+}
+
+// ============================================================================
+// GENERAL WORKPAPER TYPES (B.1.1.2 Template)
+// ============================================================================
+
+/**
+ * Tick mark for audit testing
+ */
+export interface TickMark {
+  code: string;
+  description: string;
+  category?: string;
+}
+
+/**
+ * Evidence row in general workpaper testing grid
+ */
+export interface EvidenceRow {
+  id: string;
+  source: string;
+  documentDate?: Date;
+  description: string;
+  postingSequence?: string;
+  batchEntry?: string;
+  debits?: number;
+  credits?: number;
+  tickMarks: Record<string, boolean>; // Key is tick mark code, value is checked status
+  auditObservation?: string;
+  auditComment?: string;
+  attachments?: EvidenceInput[];
+}
+
+/**
+ * General workpaper (B.1.1.2 template)
+ */
+export interface GeneralWorkpaper {
+  id: string;
+  auditId: string;
+  auditTitle: string;
+  processUnderReview: string;
+  preparedBy: string;
+  preparedDate: Date;
+  reviewedBy?: string;
+  reviewedDate?: Date;
+  workDone: string;
+  mattersArising?: string;
+  conclusion?: string;
+  evidenceRows: EvidenceRow[];
+  selectedTickMarks: string[]; // Array of tick mark codes to display
+  status: 'draft' | 'in-review' | 'completed';
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Findings relationship
+  findingIds?: string[];
+  findingsCount?: number;
+}
+
+/**
+ * Input type for creating general workpaper
+ */
+export interface GeneralWorkpaperInput {
+  auditId: string;
+  processUnderReview: string;
+  preparedBy: string;
+  preparedDate: Date;
+  reviewedBy?: string;
+  reviewedDate?: Date;
+  workDone: string;
+  mattersArising?: string;
+  conclusion?: string;
+  evidenceRows: EvidenceRow[];
+  selectedTickMarks: string[];
+}
+
+// ============================================================================
+// CUSTOM TEMPLATE TYPES
+// ============================================================================
+
+/**
+ * Custom workpaper template type
+ */
+export type CustomTemplateType = 'standard' | 'iso27001' | 'general' | 'custom';
+
+/**
+ * Custom field definition for flexible templates
+ */
+export interface CustomField {
+  id: string;
+  label: string;
+  type: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'file';
+  required: boolean;
+  placeholder?: string;
+  options?: string[]; // For select fields
+  defaultValue?: string | number | boolean;
+  order: number;
+}
+
+/**
+ * Section in custom template
+ */
+export interface CustomTemplateSection {
+  id: string;
+  title: string;
+  description?: string;
+  fields: CustomField[];
+  order: number;
+}
+
+/**
+ * Custom workpaper template created by users
+ */
+export interface CustomTemplate {
+  id: string;
+  name: string;
+  description: string;
+  type: CustomTemplateType;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isPublic: boolean; // Can be shared with team
+
+  // Template configuration
+  includeEvidenceGrid?: boolean;
+  includeTickMarks?: boolean;
+  defaultTickMarks?: string[];
+
+  // Custom sections and fields
+  sections: CustomTemplateSection[];
+
+  // Usage statistics
+  usageCount?: number;
+  lastUsed?: Date;
+}
+
+/**
+ * Input type for creating custom template
+ */
+export interface CustomTemplateInput {
+  name: string;
+  description: string;
+  type?: CustomTemplateType;
+  isPublic?: boolean;
+  includeEvidenceGrid?: boolean;
+  includeTickMarks?: boolean;
+  defaultTickMarks?: string[];
+  sections: Omit<CustomTemplateSection, 'id'>[];
+}
+
+/**
+ * Workpaper created from custom template
+ */
+export interface CustomWorkpaper {
+  id: string;
+  auditId: string;
+  auditTitle: string;
+  templateId: string;
+  templateName: string;
+  preparedBy: string;
+  preparedDate: Date;
+  reviewedBy?: string;
+  reviewedDate?: Date;
+
+  // Dynamic field values
+  fieldValues: Record<string, any>; // Key is field ID, value is user input
+
+  // Optional evidence grid (if template includes it)
+  evidenceRows?: EvidenceRow[];
+  selectedTickMarks?: string[];
+
+  status: 'draft' | 'in-review' | 'completed';
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Findings relationship
+  findingIds?: string[];
+  findingsCount?: number;
+}
+
+/**
+ * Input type for creating custom workpaper from template
+ */
+export interface CustomWorkpaperInput {
+  auditId: string;
+  templateId: string;
+  preparedBy: string;
+  preparedDate: Date;
+  reviewedBy?: string;
+  reviewedDate?: Date;
+  fieldValues: Record<string, any>;
+  evidenceRows?: EvidenceRow[];
+  selectedTickMarks?: string[];
 }
 
 // ============================================================================
@@ -200,6 +454,12 @@ export interface Finding {
   attachments: Attachment[];
   createdAt: Date;
   updatedAt: Date;
+
+  // Workpaper relationship
+  workpaperId?: string;
+  workpaperReference?: string;
+  evidenceRowId?: string; // For general workpapers - links to specific row
+  sourceType?: 'workpaper' | 'manual' | 'external'; // How the finding was created
 }
 
 /**
@@ -214,6 +474,11 @@ export interface FindingInput {
   correctiveAction?: string;
   assignedTo?: string;
   dueDate?: Date;
+
+  // Workpaper relationship
+  workpaperId?: string;
+  evidenceRowId?: string;
+  sourceType?: 'workpaper' | 'manual' | 'external';
 }
 
 /**

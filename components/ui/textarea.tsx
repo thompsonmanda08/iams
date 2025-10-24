@@ -1,18 +1,97 @@
-import * as React from "react"
+import { TextareaHTMLAttributes, forwardRef } from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
-function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
-  return (
-    <textarea
-      data-slot="textarea"
-      className={cn(
-        "border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label?: string;
+  onError?: boolean;
+  error?: string;
+  errorText?: string;
+  descriptionText?: string;
+  isInvalid?: boolean;
+  showLimit?: boolean;
+  classNames?: {
+    base?: string;
+    wrapper?: string;
+    input?: string;
+    label?: string;
+    errorText?: string;
+    descriptionText?: string;
+  };
+};
 
-export { Textarea }
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
+  (
+    {
+      label,
+      className,
+      onError,
+      errorText,
+      classNames,
+      descriptionText,
+      showLimit = false,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <div className={cn("w-full", classNames?.wrapper)}>
+        {label && (
+          <label
+            className={cn("text-foreground/70 pl-1 text-sm font-medium text-nowrap", {
+              "text-red-500": onError || props?.isInvalid,
+              "opacity-50": props?.disabled
+            })}
+            htmlFor={props?.name}>
+            {label} {props?.required && <span className="font-bold text-red-500"> *</span>}
+          </label>
+        )}
+        <textarea
+          ref={ref}
+          name={props?.name}
+          data-slot="textarea"
+          disabled={props?.disabled}
+          className={cn(
+            "flex min-h-[60px] w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-black ring-offset-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            {
+              "border-red-500 focus:border-red-500/70 focus-visible:ring-red-500/30": onError,
+              "opacity-50": props?.disabled
+            },
+            className,
+            classNames?.base
+          )}
+          {...props}
+        />
+
+        {(errorText || descriptionText) && (
+          <motion.span
+            className={cn(
+              "text-muted-foreground ml-1 flex items-center justify-between gap-2 text-xs",
+              {
+                "text-red-600": onError
+              },
+              classNames?.descriptionText,
+              classNames?.errorText
+            )}
+            whileInView={{
+              scale: [0, 1],
+              opacity: [0, 1],
+              transition: { duration: 0.3 }
+            }}>
+            {errorText ? errorText : descriptionText}{" "}
+            {showLimit && (
+              <span>
+                {props?.value?.toString()?.length}/{props?.maxLength}
+              </span>
+            )}
+          </motion.span>
+        )}
+      </div>
+    );
+  }
+);
+
+Textarea.displayName = "Textarea";
+
+export { Textarea };
