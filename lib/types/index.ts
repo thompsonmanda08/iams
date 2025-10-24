@@ -52,9 +52,7 @@ export type AuthSession = JWTPayload & {
 
 export type UserSession = {
   user: Partial<User> | null;
-  merchantID: string;
-  userPermissions: object[];
-  kyc: any;
+  permissions: object[];
   [x: string]: unknown;
 };
 

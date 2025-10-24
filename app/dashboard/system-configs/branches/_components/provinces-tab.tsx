@@ -1,0 +1,282 @@
+"use client";
+
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Plus, Edit, Trash2, MapPin } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ErrorState } from "@/lib/types";
+import { createProvince, updateProvince, deleteProvince } from "@/app/_actions/config-actions";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants";
+
+interface Province {
+  id: string;
+  name: string;
+  code: string;
+  is_active: boolean;
+}
+
+interface ProvincesTabProps {
+  initialProvinces: Province[];
+}
+
+export function ProvincesTab({ initialProvinces }: ProvincesTabProps) {
+  const queryClient = useQueryClient();
+  const [provinces, setProvinces] = useState<Province[]>(initialProvinces);
+  const [openModal, setOpenModal] = useState(false);
+  const [editingProvince, setEditingProvince] = useState<Province | null>(null);
+
+  const deleteProvinceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await deleteProvince(id);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    },
+    onSuccess: () => {
+      toast.success("Province deleted successfully");
+      // Refetch provinces
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete province");
+    }
+  });
+
+  const handleDeleteProvince = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this province?")) return;
+    deleteProvinceMutation.mutate(id);
+  };
+
+  return (
+    <Card className="p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Provinces</h3>
+        <Button
+          size="sm"
+          onClick={() => {
+            setEditingProvince(null);
+            setOpenModal(true);
+          }}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Province
+        </Button>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Code</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="w-24">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {provinces.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-muted-foreground text-center">
+                No provinces found
+              </TableCell>
+            </TableRow>
+          ) : (
+            provinces.map((province) => (
+              <TableRow key={province.id}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="text-muted-foreground h-4 w-4" />
+                    <span className="font-medium">{province.name}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="font-mono text-sm">{province.code}</span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-1 text-xs font-medium",
+                      province.is_active
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-700"
+                    )}>
+                    {province.is_active ? "Active" : "Inactive"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEditingProvince(province);
+                        setOpenModal(true);
+                      }}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteProvince(province.id)}
+                      className="text-destructive"
+                      disabled={deleteProvinceMutation.isPending}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+
+      <CreateOrUpdateProvinceDialog
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+        initialData={editingProvince}
+        setInitialData={setEditingProvince}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
+        }}
+      />
+    </Card>
+  );
+}
+
+const PROVINCE_INITIAL_STATE = {
+  name: "",
+  code: "",
+  is_active: true
+};
+
+interface CreateOrUpdateProvinceDialogProps {
+  openModal: boolean;
+  setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
+  initialData: Province | null;
+  setInitialData: React.Dispatch<React.SetStateAction<Province | null>>;
+  onSuccess: () => void;
+}
+
+function CreateOrUpdateProvinceDialog({
+  openModal,
+  setOpenModal,
+  initialData,
+  setInitialData,
+  onSuccess
+}: CreateOrUpdateProvinceDialogProps) {
+  const [error, setError] = useState<ErrorState>({
+    status: false,
+    message: ""
+  });
+  const [formData, setFormData] = useState(initialData || PROVINCE_INITIAL_STATE);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = initialData
+        ? await updateProvince({ ...data, id: initialData.id, isActive: data.is_active })
+        : await createProvince({ ...data, isActive: data.is_active });
+
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    },
+    onSuccess: () => {
+      toast.success(`Province ${initialData ? "updated" : "created"} successfully`);
+      setOpenModal(false);
+      setInitialData(null);
+      setFormData(PROVINCE_INITIAL_STATE);
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      setError({ status: true, message: error.message });
+      toast.error(error.message);
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveMutation.mutate(formData);
+  };
+
+  return (
+    <Dialog
+      open={openModal}
+      onOpenChange={(open) => {
+        setOpenModal(open);
+        if (!open) {
+          setFormData(PROVINCE_INITIAL_STATE);
+          setError({ status: false, message: "" });
+          setInitialData(null);
+        }
+      }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{initialData ? "Update Province" : "Create New Province"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Province Name"
+            placeholder="e.g. Lusaka, Copperbelt"
+            value={formData.name}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, name: e.target.value }));
+            }}
+            required
+          />
+          <Input
+            label="Province Code"
+            placeholder="e.g. LSK, CPB"
+            value={formData.code}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, code: e.target.value.toUpperCase() }));
+            }}
+            required
+          />
+          {error.status && (
+            <Alert variant="destructive">
+              <AlertDescription>{error.message}</AlertDescription>
+            </Alert>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <DialogClose asChild>
+              <Button type="button" size="sm" variant="outline" onClick={() => setOpenModal(false)}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={saveMutation.isPending || !formData.name || !formData.code}
+              isLoading={saveMutation.isPending}
+              loadingText="Saving...">
+              Save
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

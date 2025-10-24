@@ -13,7 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import RolesPermissions from "../../_components/roles-permissions";
-import { DepartmentUser } from "@/types";
+import { DepartmentUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const users: DepartmentUser[] = [
@@ -159,7 +159,13 @@ const users: DepartmentUser[] = [
   }
 ];
 
-export default async function DepartmentDetailsPage() {
+export default async function DepartmentDetailsPage({
+  params
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const departmentId = (await params).id;
+
   return (
     <div className="container mx-auto space-y-6 p-6">
       {/* Header */}
@@ -205,7 +211,7 @@ export default async function DepartmentDetailsPage() {
               </p>
             </div>
 
-            <ModuleSelection modules={[]} />
+            <ModuleSelection departmentId={departmentId} />
             {/* <Separator className="my-4" /> */}
           </Card>
         </TabsContent>
@@ -306,7 +312,8 @@ export default async function DepartmentDetailsPage() {
             </div>
 
             <div>
-              <RolesPermissions /> <Separator className="my-4" />
+              <RolesPermissions departmentId={departmentId} />
+              <Separator className="my-4" />
             </div>
             {/* 
             <Table>

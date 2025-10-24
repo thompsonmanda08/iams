@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { navItems } from "@/components/layout/sidebar/nav-main";
+import { page_routes as navItems } from "@/lib/routes-config";
 
 export default function Search() {
   const [open, setOpen] = useState(false);

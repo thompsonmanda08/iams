@@ -1,213 +1,403 @@
-// "use server";
+"use server";
 
-// /**
-//  * Server actions for managing role permissions
-//  */
+import { APIResponse } from "@/lib/types";
+import { axios, handleBadRequest, handleError, successResponse } from "./api-config";
 
-// /**
-//  * Get all role permissions from the database
-//  */
-// export async function getAllRolePermissions() {
-//   try {
-//     const permissions = await Promise.resolve(() =>
-//       setTimeout(() => {
-//         console.log("simulate api call");
-//       }, 2000)
-//     );
+// ============================================================================
+// ROLE PERMISSIONS MANAGEMENT
+// ============================================================================
 
-//     return {
-//       success: true,
-//       data: permissions
-//     };
-//   } catch (error: any) {
-//     console.error("Error fetching role permissions:", error);
-//     return {
-//       success: false,
-//       error: error.message || "Failed to fetch role permissions"
-//     };
-//   }
-// }
+/**
+ * Get all permissions for a specific role
+ * Endpoint: GET /api/v1/roles/{id}/permissions
+ * Status: ✅ Documented in API
+ *
+ * IMPORTANT: Only returns permissions for modules assigned to the role's department
+ */
+export async function getRolePermissions(roleId: string): Promise<APIResponse> {
+  const url = `/api/v1/roles/${roleId}/permissions`;
 
-// /**
-//  * Get permissions for a specific role
-//  */
-// export async function getRolePermissions(role: any) {
-//   try {
-//     const permissions = await Promise.resolve(() =>
-//       setTimeout(() => {
-//         console.log("simulate api call");
-//       }, 2000)
-//     );
+  if (!roleId) {
+    return handleBadRequest("Role ID is required");
+  }
 
-//     if (!permissions) {
-//       return {
-//         success: false,
-//         error: `No permissions found for role: ${role}`
-//       };
-//     }
+  try {
+    const response = await axios.get(url);
+    return successResponse(response?.data, "Role permissions fetched successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "GET", url);
+  }
+}
 
-//     return {
-//       success: true,
-//       data: permissions
-//     };
-//   } catch (error: any) {
-//     console.error(`Error fetching permissions for role ${role}:`, error);
-//     return {
-//       success: false,
-//       error: error.message || `Failed to fetch permissions for role: ${role}`
-//     };
-//   }
-// }
+/**
+ * Grant or update permission for a role on a specific module
+ * Endpoint: POST /api/v1/roles/{id}/permissions
+ * Status: ✅ Documented in API
+ *
+ * IMPORTANT: The module must be assigned to the role's department
+ *
+ * Permission Types:
+ * - can_view: View access
+ * - can_create: Create new items
+ * - can_edit: Edit existing items
+ * - can_delete: Delete items
+ * - can_approve: Approve actions
+ * - can_export: Export data
+ * - can_assign: Assign tasks/items to others
+ * - can_configure: Configure settings
+ * - custom_permissions: JSONB field for module-specific permissions
+ */
+export async function grantOrUpdateRolePermission({
+  roleId,
+  moduleId,
+  canView = false,
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
+  canApprove = false,
+  canExport = false,
+  canAssign = false,
+  canConfigure = false,
+  customPermissions
+}: {
+  roleId: string;
+  moduleId: string;
+  canView?: boolean;
+  canCreate?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canApprove?: boolean;
+  canExport?: boolean;
+  canAssign?: boolean;
+  canConfigure?: boolean;
+  customPermissions?: Record<string, any>;
+}): Promise<APIResponse> {
+  const url = `/api/v1/roles/${roleId}/permissions`;
 
-// /**
-//  * Update permissions for a specific role
-//  */
-// export async function updateRolePermissions(role: TeamRole, data: Partial<RolePermissionData>) {
-//   try {
-//     // Check if role permissions exist
-//     const existing = await Promise.resolve(() =>
-//       setTimeout(() => {
-//         console.log("simulate api call");
-//       }, 2000)
-//     );
+  if (!roleId || !moduleId) {
+    return handleBadRequest("Role ID and Module ID are required");
+  }
 
-//     if (!existing) {
-//       return {
-//         success: false,
-//         error: `No permissions found for role: ${role}`
-//       };
-//     }
+  try {
+    const response = await axios.post(url, {
+      module_id: moduleId,
+      can_view: canView,
+      can_create: canCreate,
+      can_edit: canEdit,
+      can_delete: canDelete,
+      can_approve: canApprove,
+      can_export: canExport,
+      can_assign: canAssign,
+      can_configure: canConfigure,
+      custom_permissions: customPermissions || {}
+    });
 
-//     // Update the permissions
-//     const updated = await Promise.resolve(() =>
-//       setTimeout(() => {
-//         console.log("simulate api call");
-//       }, 2000)
-//     );
-//     return {
-//       success: true,
-//       data: updated,
-//       message: `Successfully updated permissions for ${role}`
-//     };
-//   } catch (error: any) {
-//     console.error(`Error updating permissions for role ${role}:`, error);
-//     return {
-//       success: false,
-//       error: error.message || `Failed to update permissions for role: ${role}`
-//     };
-//   }
-// }
+    return successResponse(response?.data, "Permission granted successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "POST", url);
+  }
+}
 
-// /**
-//  * Bulk update all role permissions
-//  */
-// export async function bulkUpdateRolePermissions(
-//   permissions: Record<TeamRole, Partial<RolePermissionData>>
-// ) {
-//   try {
-//     const updates = [];
+/**
+ * Revoke all permissions for a role on a specific module
+ * Endpoint: DELETE /api/v1/roles/{role_id}/permissions/{module_id}
+ * Status: ✅ Documented in API
+ */
+export async function revokeRolePermission({
+  roleId,
+  moduleId
+}: {
+  roleId: string;
+  moduleId: string;
+}): Promise<APIResponse> {
+  const url = `/api/v1/roles/${roleId}/permissions/${moduleId}`;
 
-//     for (const [role, data] of Object.entries(permissions)) {
-//       const result = await Promise.resolve(() =>
-//       setTimeout(() => {
-//         console.log("simulate api call");
-//       }, 2000)
-//     );
+  if (!roleId || !moduleId) {
+    return handleBadRequest("Role ID and Module ID are required");
+  }
 
-//     return {
-//       success: true,
-//       data: updates,
-//       message: `Successfully updated ${updates.length} role permissions`
-//     };
-//   } catch (error: any) {
-//     console.error("Error bulk updating role permissions:", error);
-//     return {
-//       success: false,
-//       error: error.message || "Failed to bulk update role permissions"
-//     };
-//   }
-// }
+  try {
+    await axios.delete(url);
+    return successResponse(null, "Permission revoked successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "DELETE", url);
+  }
+}
 
-// /**
-//  * Reset role permissions to defaults
-//  */
-// export async function resetRolePermissionsToDefaults() {
-//   try {
+/**
+ * Get available modules that can be assigned permissions for a role
+ * Endpoint: GET /api/v1/roles/{id}/available-modules
+ * Status: ✅ Documented in API
+ *
+ * IMPORTANT: Only returns modules assigned to the role's department
+ * This implements the department-constrained RBAC system
+ */
+export async function getAvailableModulesForRole(roleId: string): Promise<APIResponse> {
+  const url = `/api/v1/roles/${roleId}/available-modules`;
 
-//     // Reseed with defaults
-//     const result = await Promise.resolve(() =>
-//       setTimeout(() => {
-//         console.log("simulate api call");
-//       }, 2000)
-//     );
+  if (!roleId) {
+    return handleBadRequest("Role ID is required");
+  }
 
-//     if (!result.success) {
-//       return {
-//         success: false,
-//         error: result.message
-//       };
-//     }
+  try {
+    const response = await axios.get(url);
+    return successResponse(response?.data, "Available modules fetched successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "GET", url);
+  }
+}
 
-//     return {
-//       success: true,
-//       message: `Successfully reset ${result.count} role permissions to defaults`
-//     };
-//   } catch (error: any) {
-//     console.error("Error resetting role permissions:", error);
-//     return {
-//       success: false,
-//       error: error.message || "Failed to reset role permissions"
-//     };
-//   }
-// }
+/**
+ * Bulk update multiple role permissions at once
+ * Helper function that wraps multiple grantOrUpdateRolePermission calls
+ *
+ * @param roleId - The role ID to update permissions for
+ * @param permissions - Array of permission objects to update
+ */
+export async function bulkUpdateRolePermissions({
+  roleId,
+  permissions
+}: {
+  roleId: string;
+  permissions: Array<{
+    moduleId: string;
+    canView?: boolean;
+    canCreate?: boolean;
+    canEdit?: boolean;
+    canDelete?: boolean;
+    canApprove?: boolean;
+    canExport?: boolean;
+    canAssign?: boolean;
+    canConfigure?: boolean;
+    customPermissions?: Record<string, any>;
+  }>;
+}): Promise<APIResponse> {
+  if (!roleId || !permissions || permissions.length === 0) {
+    return handleBadRequest("Role ID and permissions array are required");
+  }
 
-// /**
-//  * Apply role permissions to all existing team members of a specific role
-//  * This syncs the default permissions to team members who don't have custom overrides
-//  */
-// export async function applyRolePermissionsToTeamMembers(role: TeamRole) {
-//   try {
-//     // Get the default permissions for this role
-//     const rolePermissions = await prisma.rolePermission.findUnique({
-//       where: { role }
-//     });
+  const results: Array<{ moduleId: string; success: boolean; error?: string }> = [];
 
-//     if (!rolePermissions) {
-//       return {
-//         success: false,
-//         error: `No default permissions found for role: ${role}`
-//       };
-//     }
+  try {
+    // Process all permissions sequentially to avoid race conditions
+    for (const perm of permissions) {
+      const result = await grantOrUpdateRolePermission({
+        roleId,
+        ...perm
+      });
 
-//     // Update all team members with this role
-//     // Only update if they don't have custom permission overrides
-//     const updated = await prisma.teamMember.updateMany({
-//       where: {
-//         role
-//         // Add conditions here to only update members without custom overrides
-//       },
-//       data: {
-//         canCreateEvents: rolePermissions.canCreateEvents,
-//         canEditEvents: rolePermissions.canEditEvents,
-//         canDeleteEvents: rolePermissions.canDeleteEvents,
-//         canManageTickets: rolePermissions.canManageTickets,
-//         canViewAnalytics: rolePermissions.canViewAnalytics,
-//         canManageTeam: rolePermissions.canManageTeam,
-//         canManageVendors: rolePermissions.canManageVendors,
-//         canCheckIn: rolePermissions.canCheckIn
-//       }
-//     });
+      results.push({
+        moduleId: perm.moduleId,
+        success: result.success,
+        error: result.success ? undefined : result.message
+      });
+    }
 
-//     return {
-//       success: true,
-//       message: `Successfully applied permissions to ${updated.count} team members with role ${role}`,
-//       count: updated.count
-//     };
-//   } catch (error: any) {
-//     console.error(`Error applying permissions to team members for role ${role}:`, error);
-//     return {
-//       success: false,
-//       error: error.message || `Failed to apply permissions to team members for role: ${role}`
-//     };
-//   }
-// }
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.filter((r) => !r.success).length;
+
+    if (failureCount === 0) {
+      return successResponse(
+        { results, successCount, failureCount },
+        `Successfully updated ${successCount} permissions`
+      );
+    } else {
+      return {
+        success: false,
+        message: `Updated ${successCount} permissions, ${failureCount} failed`,
+        data: { results, successCount, failureCount },
+        status: 207, // Multi-Status
+        statusText: "PARTIAL_SUCCESS"
+      };
+    }
+  } catch (error: Error | any) {
+    return handleError(error, "BULK_UPDATE", `/api/v1/roles/${roleId}/permissions`);
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS FOR PERMISSION MANAGEMENT
+// ============================================================================
+
+/**
+ * Helper function to set all standard permissions at once
+ *
+ * @param roleId - The role ID
+ * @param moduleId - The module ID
+ * @param level - Permission level: 'none', 'view', 'edit', 'full'
+ */
+export async function setPermissionLevel({
+  roleId,
+  moduleId,
+  level
+}: {
+  roleId: string;
+  moduleId: string;
+  level: "none" | "view" | "edit" | "full";
+}): Promise<APIResponse> {
+  const permissionLevels = {
+    none: {
+      canView: false,
+      canCreate: false,
+      canEdit: false,
+      canDelete: false,
+      canApprove: false,
+      canExport: false,
+      canAssign: false,
+      canConfigure: false
+    },
+    view: {
+      canView: true,
+      canCreate: false,
+      canEdit: false,
+      canDelete: false,
+      canApprove: false,
+      canExport: true, // Allow export with view
+      canAssign: false,
+      canConfigure: false
+    },
+    edit: {
+      canView: true,
+      canCreate: true,
+      canEdit: true,
+      canDelete: false,
+      canApprove: false,
+      canExport: true,
+      canAssign: true, // Allow assignment with edit
+      canConfigure: false
+    },
+    full: {
+      canView: true,
+      canCreate: true,
+      canEdit: true,
+      canDelete: true,
+      canApprove: true,
+      canExport: true,
+      canAssign: true,
+      canConfigure: true
+    }
+  };
+
+  return grantOrUpdateRolePermission({
+    roleId,
+    moduleId,
+    ...permissionLevels[level]
+  });
+}
+
+/**
+ * Copy permissions from one role to another
+ * Useful for creating new roles based on existing ones
+ *
+ * @param sourceRoleId - Role to copy from
+ * @param targetRoleId - Role to copy to
+ */
+export async function copyRolePermissions({
+  sourceRoleId,
+  targetRoleId
+}: {
+  sourceRoleId: string;
+  targetRoleId: string;
+}): Promise<APIResponse> {
+  if (!sourceRoleId || !targetRoleId) {
+    return handleBadRequest("Source and target role IDs are required");
+  }
+
+  try {
+    // Get permissions from source role
+    const sourcePermissionsResult = await getRolePermissions(sourceRoleId);
+
+    if (!sourcePermissionsResult.success || !sourcePermissionsResult.data) {
+      return {
+        success: false,
+        message: "Failed to fetch source role permissions",
+        data: null,
+        status: 400,
+        statusText: "BAD_REQUEST"
+      };
+    }
+
+    const sourcePermissions = sourcePermissionsResult.data;
+
+    // Map to bulk update format
+    const permissionsToApply = sourcePermissions.map((perm: any) => ({
+      moduleId: perm.module_id,
+      canView: perm.can_view,
+      canCreate: perm.can_create,
+      canEdit: perm.can_edit,
+      canDelete: perm.can_delete,
+      canApprove: perm.can_approve,
+      canExport: perm.can_export,
+      canAssign: perm.can_assign,
+      canConfigure: perm.can_configure,
+      customPermissions: perm.custom_permissions
+    }));
+
+    // Apply to target role
+    return await bulkUpdateRolePermissions({
+      roleId: targetRoleId,
+      permissions: permissionsToApply
+    });
+  } catch (error: Error | any) {
+    return handleError(error, "COPY_PERMISSIONS", "/api/v1/roles/copy-permissions");
+  }
+}
+
+/**
+ * Check if a role has a specific permission on a module
+ *
+ * @param roleId - The role ID
+ * @param moduleId - The module ID
+ * @param permission - The permission type to check
+ */
+export async function checkRolePermission({
+  roleId,
+  moduleId,
+  permission
+}: {
+  roleId: string;
+  moduleId: string;
+  permission: "view" | "create" | "edit" | "delete" | "approve" | "export" | "assign" | "configure";
+}): Promise<APIResponse> {
+  try {
+    const permissionsResult = await getRolePermissions(roleId);
+
+    if (!permissionsResult.success || !permissionsResult.data) {
+      return {
+        success: false,
+        message: "Failed to fetch role permissions",
+        data: { hasPermission: false },
+        status: 400,
+        statusText: "BAD_REQUEST"
+      };
+    }
+
+    const modulePermission = permissionsResult.data.find(
+      (perm: any) => perm.module_id === moduleId
+    );
+
+    if (!modulePermission) {
+      return successResponse({ hasPermission: false }, "No permission found for module");
+    }
+
+    const permissionMap: Record<string, string> = {
+      view: "can_view",
+      create: "can_create",
+      edit: "can_edit",
+      delete: "can_delete",
+      approve: "can_approve",
+      export: "can_export",
+      assign: "can_assign",
+      configure: "can_configure"
+    };
+
+    const hasPermission = modulePermission[permissionMap[permission]] === true;
+
+    return successResponse(
+      { hasPermission, modulePermission },
+      hasPermission ? "Permission granted" : "Permission denied"
+    );
+  } catch (error: Error | any) {
+    return handleError(error, "CHECK_PERMISSION", `/api/v1/roles/${roleId}/permissions`);
+  }
+}

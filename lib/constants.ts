@@ -80,7 +80,11 @@ export const QUERY_KEYS = {
   CONFIGS: "configs",
   USER_ROLES: "user-roles",
   DEPARTMENTS: "departments",
-  BRANCHES: "branches"
+  BRANCHES: "branches",
+  MODULES: "modules",
+  DEPARTMENT_MODULES: "department-modules",
+  ROLES: "roles",
+  ROLE_PERMISSIONS: "role-permissions"
 };
 
 // ANIMATION_VARIANTS

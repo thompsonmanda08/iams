@@ -1,15 +1,9 @@
 import { verifySession } from "@/lib/session";
-import { APIResponse } from "@/types";
+import { APIResponse } from "@/lib/types";
 import axiosClient, { AxiosRequestConfig, AxiosRequestHeaders } from "axios";
-import { cookies } from "next/headers";
 
 export const axios = axiosClient.create({
-  baseURL:
-    process.env.NODE_ENV !== "development"
-      ? process.env.NEXT_PUBLIC_SERVER_URL ||
-        process.env.SERVER_URL ||
-        "https://console.cloud.xclsv.shop"
-      : "http://localhost:3002"
+  baseURL: process.env.BASE_URL || "http://localhost:8080"
 });
 
 // Reusable error handler following DRY principle
@@ -178,7 +172,11 @@ export function handleError(error: any, method: string = "GET", url: string): AP
     config: error?.config,
     status: error?.response?.status || 500,
     endpoint: `${method} | ~ ${url}`,
-    apiRoute: `${error?.config?.baseURL || error?.request?.baseURL}/${error?.config?.url || error?.request?.url}`,
+    apiRoute:
+      `${error?.config?.baseURL || error?.request?.baseURL}/${error?.config?.url || error?.request?.url}`.replaceAll(
+        "//",
+        "/"
+      ),
     code: error?.code,
     type: error?.type,
     message: error?.message,
