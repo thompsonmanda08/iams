@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getTopLevelClauses, getChildClauses } from "@/lib/data/iso27001-clauses";
-import type { FindingSeverity } from "@/lib/types/audit-types";
+import type { FindingSeverity, TestResult, EvidenceInput } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { createFinding } from "@/app/_actions/audit-module-actions";
@@ -19,6 +19,14 @@ interface CreateFindingModalProps {
   onOpenChange: (open: boolean) => void;
   auditPlanId: string;
   preSelectedClause?: string;
+  workpaperId?: string;
+  evidenceRowId?: string;
+  preFilledData?: {
+    description?: string;
+    testResult?: TestResult;
+    evidence?: EvidenceInput[];
+  };
+  onSuccess?: () => void;
 }
 
 export function CreateFindingModal({
@@ -26,14 +34,25 @@ export function CreateFindingModal({
   onOpenChange,
   auditPlanId,
   preSelectedClause,
+  workpaperId,
+  evidenceRowId,
+  preFilledData,
+  onSuccess: onSuccessCallback,
 }: CreateFindingModalProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [severity, setSeverity] = useState<FindingSeverity>("medium");
+  // Auto-set severity based on test result
+  const getDefaultSeverity = (): FindingSeverity => {
+    if (preFilledData?.testResult === 'non-conformity') return 'high';
+    if (preFilledData?.testResult === 'partial-conformity') return 'medium';
+    return 'medium';
+  };
+
+  const [severity, setSeverity] = useState<FindingSeverity>(getDefaultSeverity());
   const [clause, setClause] = useState(preSelectedClause || "");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(preFilledData?.description || "");
   const [recommendation, setRecommendation] = useState("");
   const [correctiveAction, setCorrectiveAction] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
@@ -68,17 +87,23 @@ export function CreateFindingModal({
         correctiveAction: correctiveAction || undefined,
         assignedTo: assignedTo || undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
+        workpaperId: workpaperId || undefined,
+        evidenceRowId: evidenceRowId || undefined,
+        sourceType: workpaperId ? 'workpaper' : 'manual',
       });
 
       if (result.success) {
         toast({
           title: "Finding created",
-          description: "The finding has been created successfully",
+          description: workpaperId
+            ? "Finding created and linked to workpaper successfully"
+            : "The finding has been created successfully",
         });
 
         onOpenChange(false);
         resetForm();
         router.refresh();
+        onSuccessCallback?.();
       } else {
         toast({
           title: "Error",
@@ -111,7 +136,15 @@ export function CreateFindingModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Finding</DialogTitle>
+          <DialogTitle>
+            {workpaperId ? "Create Finding from Workpaper" : "Create New Finding"}
+          </DialogTitle>
+          {workpaperId && (
+            <p className="text-sm text-muted-foreground mt-2">
+              This finding will be linked to the workpaper for complete audit trail.
+              {evidenceRowId && " It references a specific evidence row."}
+            </p>
+          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

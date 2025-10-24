@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, AlertCircle } from "lucide-react";
 import type { Workpaper } from "@/lib/types/audit-types";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -76,6 +76,7 @@ export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps)
             <TableHead>Audit</TableHead>
             <TableHead>Objectives</TableHead>
             <TableHead>Test Result</TableHead>
+            <TableHead>Findings</TableHead>
             <TableHead>Prepared By</TableHead>
             <TableHead>Reviewed By</TableHead>
             <TableHead>Date</TableHead>
@@ -111,6 +112,16 @@ export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps)
                   <Badge variant="outline" className={cn(testResult.className)}>
                     {testResult.label}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {workpaper.findingsCount && workpaper.findingsCount > 0 ? (
+                    <Badge variant="destructive" className="gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {workpaper.findingsCount} Finding{workpaper.findingsCount > 1 ? 's' : ''}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">None</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <span className="text-sm">{workpaper.preparedBy}</span>

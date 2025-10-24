@@ -180,7 +180,17 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
             <TabsContent value="workpapers" className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Audit Workpapers</h3>
+                <div>
+                  <h3 className="text-lg font-semibold">Audit Workpapers</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {workpapers.length} workpaper{workpapers.length !== 1 ? 's' : ''} created
+                    {workpapers.filter(w => w.findingsCount && w.findingsCount > 0).length > 0 && (
+                      <span className="ml-2">
+                        • {workpapers.filter(w => w.findingsCount && w.findingsCount > 0).length} with findings
+                      </span>
+                    )}
+                  </p>
+                </div>
                 <Button>Add Workpaper</Button>
               </div>
               <WorkpapersTable workpapers={workpapers} />
@@ -188,7 +198,17 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
             <TabsContent value="findings" className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Audit Findings</h3>
+                <div>
+                  <h3 className="text-lg font-semibold">Audit Findings</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {findings.length} finding{findings.length !== 1 ? 's' : ''} recorded
+                    {findings.filter(f => f.workpaperId).length > 0 && (
+                      <span className="ml-2">
+                        • {findings.filter(f => f.workpaperId).length} from workpapers
+                      </span>
+                    )}
+                  </p>
+                </div>
                 <Button>Add Finding</Button>
               </div>
               <FindingsTable findings={findings} />

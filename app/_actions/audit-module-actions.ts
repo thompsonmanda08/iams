@@ -18,6 +18,8 @@ import type {
   Workpaper,
   WorkpaperInput,
   WorkpaperTemplate,
+  ClauseTemplate,
+  ClauseTemplateInput,
   Finding,
   FindingInput,
   FindingFilters,
@@ -202,7 +204,7 @@ const mockFindings: Finding[] = [
   }
 ];
 
-// Mock Templates
+// Mock Templates (deprecated - use mockClauseTemplates)
 const mockTemplates: WorkpaperTemplate[] = [
   {
     id: "1",
@@ -220,6 +222,90 @@ const mockTemplates: WorkpaperTemplate[] = [
       "Verify stakeholder identification process",
       "Check frequency of context review"
     ]
+  }
+];
+
+// Mock Clause Templates
+const mockClauseTemplates: ClauseTemplate[] = [
+  {
+    id: "1",
+    clause: "4.1",
+    clauseTitle: "Understanding the Organization and its Context",
+    category: "Context",
+    objective: "Verify that the organization has identified and documented internal and external issues that are relevant to its purpose and affect its ability to achieve the intended outcomes of its ISMS.",
+    testProcedure: "Review the organization's context analysis documentation, interview management regarding internal and external issues, verify the stakeholder identification process, and confirm the frequency of context reviews.",
+    createdAt: new Date("2024-01-10"),
+    updatedAt: new Date("2024-01-10")
+  },
+  {
+    id: "2",
+    clause: "5.1",
+    clauseTitle: "Leadership and Commitment",
+    category: "Leadership",
+    objective: "Confirm that top management demonstrates leadership and commitment with respect to the ISMS by taking accountability, ensuring resources are available, and communicating the importance of effective information security management.",
+    testProcedure: "Review management meeting minutes, interview the CISO and senior management, verify policy approval documentation, examine resource allocation records, and assess communication effectiveness.",
+    createdAt: new Date("2024-01-10"),
+    updatedAt: new Date("2024-01-10")
+  },
+  {
+    id: "3",
+    clause: "6.1",
+    clauseTitle: "Actions to Address Risks and Opportunities",
+    category: "Planning",
+    objective: "Verify that the organization has established a process to identify risks and opportunities related to the ISMS and has planned actions to address them.",
+    testProcedure: "Review risk assessment methodology, examine risk register, verify risk treatment plans, interview risk owners, and assess the integration of risk management into business processes.",
+    createdAt: new Date("2024-01-11"),
+    updatedAt: new Date("2024-01-11")
+  },
+  {
+    id: "4",
+    clause: "7.2",
+    clauseTitle: "Competence",
+    category: "Support",
+    objective: "Ensure that persons doing work under the organization's control are competent on the basis of appropriate education, training, or experience.",
+    testProcedure: "Review personnel competency records, examine training programs and completion rates, verify job descriptions include security responsibilities, and assess awareness program effectiveness.",
+    createdAt: new Date("2024-01-12"),
+    updatedAt: new Date("2024-01-12")
+  },
+  {
+    id: "5",
+    clause: "8.2",
+    clauseTitle: "Information Security Risk Assessment",
+    category: "Operation",
+    objective: "Verify that information security risk assessments are performed at planned intervals or when significant changes occur, and that they produce consistent, valid, and comparable results.",
+    testProcedure: "Review risk assessment schedule and completed assessments, verify assessment criteria and methodology, examine change management triggers, and validate risk assessment outputs.",
+    createdAt: new Date("2024-01-13"),
+    updatedAt: new Date("2024-01-13")
+  },
+  {
+    id: "6",
+    clause: "9.2",
+    clauseTitle: "Internal Audit",
+    category: "Evaluation",
+    objective: "Confirm that the organization conducts internal audits at planned intervals to provide information on whether the ISMS conforms to requirements and is effectively implemented and maintained.",
+    testProcedure: "Review internal audit program and schedule, examine audit reports and findings, verify auditor competence and independence, and assess follow-up on audit findings.",
+    createdAt: new Date("2024-01-14"),
+    updatedAt: new Date("2024-01-14")
+  },
+  {
+    id: "7",
+    clause: "10.1",
+    clauseTitle: "Continual Improvement",
+    category: "Improvement",
+    objective: "Verify that the organization continually improves the suitability, adequacy, and effectiveness of the ISMS.",
+    testProcedure: "Review improvement initiatives and their outcomes, examine management review records, verify corrective action effectiveness, and assess performance trends over time.",
+    createdAt: new Date("2024-01-15"),
+    updatedAt: new Date("2024-01-15")
+  },
+  {
+    id: "8",
+    clause: "A.8.2",
+    clauseTitle: "Privileged Access Rights",
+    category: "Annex A",
+    objective: "Verify that the allocation and use of privileged access rights are restricted and controlled through a formal authorization process.",
+    testProcedure: "Review privileged access management procedures, examine access rights allocation and approval records, verify periodic access reviews, and test authentication mechanisms for privileged accounts.",
+    createdAt: new Date("2024-01-16"),
+    updatedAt: new Date("2024-01-16")
   }
 ];
 
@@ -553,7 +639,7 @@ export async function updateWorkpaper(
 }
 
 /**
- * Get workpaper templates
+ * Get workpaper templates (deprecated - use getClauseTemplates)
  */
 export async function getWorkpaperTemplates(clause?: string): Promise<APIResponse> {
   try {
@@ -568,6 +654,125 @@ export async function getWorkpaperTemplates(clause?: string): Promise<APIRespons
     return successResponse(filtered, "Templates fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | WORKPAPER TEMPLATES", "/api/audits/templates");
+  }
+}
+
+// ============================================================================
+// CLAUSE TEMPLATE ACTIONS
+// ============================================================================
+
+/**
+ * Get all clause templates with optional filtering
+ */
+export async function getClauseTemplates(category?: string): Promise<APIResponse> {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    let filtered = [...mockClauseTemplates];
+
+    if (category) {
+      filtered = filtered.filter((t) => t.category === category);
+    }
+
+    return successResponse(filtered, "Clause templates fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | CLAUSE TEMPLATES", "/api/audits/clause-templates");
+  }
+}
+
+/**
+ * Get single clause template by ID
+ */
+export async function getClauseTemplate(id: string): Promise<APIResponse> {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const template = mockClauseTemplates.find((t) => t.id === id);
+
+    if (!template) {
+      return handleBadRequest("Clause template not found");
+    }
+
+    return successResponse(template, "Clause template fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | CLAUSE TEMPLATE", `/api/audits/clause-templates/${id}`);
+  }
+}
+
+/**
+ * Create new clause template
+ */
+export async function createClauseTemplate(input: ClauseTemplateInput): Promise<APIResponse> {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const newTemplate: ClauseTemplate = {
+      id: String(mockClauseTemplates.length + 1),
+      ...input,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    mockClauseTemplates.push(newTemplate);
+
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(newTemplate, "Clause template created successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE CLAUSE TEMPLATE", "/api/audits/clause-templates");
+  }
+}
+
+/**
+ * Update existing clause template
+ */
+export async function updateClauseTemplate(
+  id: string,
+  data: Partial<ClauseTemplateInput>
+): Promise<APIResponse> {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const index = mockClauseTemplates.findIndex((t) => t.id === id);
+
+    if (index === -1) {
+      return handleBadRequest("Clause template not found");
+    }
+
+    mockClauseTemplates[index] = {
+      ...mockClauseTemplates[index],
+      ...data,
+      updatedAt: new Date()
+    };
+
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(mockClauseTemplates[index], "Clause template updated successfully");
+  } catch (error: any) {
+    return handleError(error, "PUT | UPDATE CLAUSE TEMPLATE", `/api/audits/clause-templates/${id}`);
+  }
+}
+
+/**
+ * Delete clause template
+ */
+export async function deleteClauseTemplate(id: string): Promise<APIResponse> {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    const index = mockClauseTemplates.findIndex((t) => t.id === id);
+
+    if (index === -1) {
+      return handleBadRequest("Clause template not found");
+    }
+
+    mockClauseTemplates.splice(index, 1);
+
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(null, "Clause template deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | CLAUSE TEMPLATE", `/api/audits/clause-templates/${id}`);
   }
 }
 
@@ -658,13 +863,31 @@ export async function createFinding(input: FindingInput): Promise<APIResponse> {
       status: "open",
       attachments: [],
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      // Workpaper relationship
+      workpaperId: input.workpaperId,
+      workpaperReference: input.workpaperId ? `WP-${input.clause}-${new Date().getFullYear()}` : undefined,
+      evidenceRowId: input.evidenceRowId,
+      sourceType: input.sourceType || 'manual',
     };
 
     mockFindings.push(newFinding);
 
+    // If linked to workpaper, update workpaper's finding count
+    if (input.workpaperId) {
+      const workpaper = mockWorkpapers.find((w) => w.id === input.workpaperId);
+      if (workpaper) {
+        if (!workpaper.findingIds) workpaper.findingIds = [];
+        workpaper.findingIds.push(newFinding.id);
+        workpaper.findingsCount = workpaper.findingIds.length;
+      }
+    }
+
     revalidatePath("/dashboard/audit/findings");
     revalidatePath(`/dashboard/audit/plans/${input.auditId}/findings`);
+    if (input.workpaperId) {
+      revalidatePath("/dashboard/audit/workpapers");
+    }
 
     return successResponse(newFinding, "Finding created successfully");
   } catch (error: any) {
