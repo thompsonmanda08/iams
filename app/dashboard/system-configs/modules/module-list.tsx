@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronRight, Pencil, Trash2, Calculator } from "lucide-react";
+import { ReactElement, useState } from "react";
+import { ChevronRight, Pencil, Trash2, Calculator, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+type ModuleIcon = ReactElement | React.ReactNode | string;
+
 interface Module {
   id: string;
   name: string;
-  icon: string;
+  icon: ModuleIcon;
   path?: string;
   subModules?: SubModule[];
   expanded?: boolean;
@@ -20,57 +22,39 @@ interface SubModule {
   id: string;
   name: string;
   path: string;
-  icon?: string;
+  icon?: ModuleIcon;
 }
 
 const initialModules: Module[] = [
   {
     id: "1",
     name: "Dashboard",
-    icon: "D",
+    icon: <LayoutDashboard className="h-4 w-4" />,
     path: "/dashboard",
     subModules: [{ id: "1-1", name: "home", path: "/dashboard", icon: "home" }],
     expanded: true
   },
   {
     id: "2",
-    name: "Super Merchants",
+    name: "Risk",
     icon: "S",
     expanded: false
   },
   {
     id: "3",
-    name: "Merchants",
+    name: "Audit",
     icon: "M",
     expanded: false
   },
   {
     id: "4",
-    name: "Accounts",
+    name: "Reports",
     icon: "A",
     subModules: [
       { id: "4-1", name: "calculator", path: "/dashboard/accounts/revenue", icon: "calculator" },
       { id: "4-2", name: "Revenue Account", path: "/dashboard/accounts/revenue" }
     ],
     expanded: true
-  },
-  {
-    id: "5",
-    name: "Settlements",
-    icon: "S",
-    expanded: false
-  },
-  {
-    id: "6",
-    name: "Invoices",
-    icon: "I",
-    expanded: false
-  },
-  {
-    id: "7",
-    name: "Configurations",
-    icon: "C",
-    expanded: false
   }
 ];
 

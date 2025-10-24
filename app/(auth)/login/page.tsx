@@ -30,92 +30,86 @@ export default function Page() {
     }, 1000 * 60);
   };
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="space-y-8 rounded-2xl border bg-white p-8">
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <Image src="/images/infratel-logo.png" width={70} height={70} alt="logo" unoptimized />
+    <div className="grid w-full max-w-md">
+      <div className="space-y-8 rounded-2xl border bg-white p-8">
+        <div className="flex flex-col items-center justify-center space-y-2">
+          <Image src="/images/infratel-logo.png" width={100} height={70} alt="logo" unoptimized />
 
-            <h1 className="text-3xl font-bold text-slate-900">IAMS</h1>
-            <p className="text-slate-600">Enter your credentials to continue</p>
+          <h1 className="text-primary text-3xl font-bold">IAMS</h1>
+          <p className="text-slate-600">Enter your credentials to continue</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <div className="relative">
+              <Mail className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Input
+                id="email"
+                type="email"
+                label="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full py-3 pr-4 pl-11 transition-all"
+                placeholder="your@email.com"
+                required
+              />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <div className="relative">
-                <Mail className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  label="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full py-3 pr-4 pl-11 transition-all"
-                  placeholder="your@email.com"
-                  required
-                />
-              </div>
+          <div className="space-y-2">
+            <div className="relative">
+              <Lock className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Input
+                id="password"
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full py-3 pr-12 pl-11"
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-2/3 right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600">
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <div className="relative">
-                <Lock className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                <Input
-                  id="password"
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full py-3 pr-12 pl-11"
-                  placeholder="Enter your password"
-                  required
-                />
-                <Button
-                  size={"sm"}
-                  type="button"
-                  variant="link"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-2/3 right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600">
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <Label className="flex cursor-pointer items-center space-x-2">
-                <Checkbox className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500" />
-                <span className="text-slate-600">Remember me</span>
-              </Label>
-              <a
-                href="#"
-                className="text-primary hover:text-primary/70 font-medium transition-colors">
-                Forgot password?
-              </a>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full py-3 font-semibold"
-              isLoading={isLoading}
-              loadingText="Signing in...">
-              Sign In
-            </Button>
-          </form>
-
-          <div className="border-t border-slate-200 pt-6 text-center text-sm text-slate-600">
-            Need help?{" "}
+          <div className="flex items-center justify-between text-sm">
+            <Label className="flex cursor-pointer items-center space-x-2">
+              <Checkbox className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500" />
+              <span className="text-slate-600">Remember me</span>
+            </Label>
             <a
               href="#"
               className="text-primary hover:text-primary/70 font-medium transition-colors">
-              Contact Support
+              Forgot password?
             </a>
           </div>
-        </div>
 
-        <div className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-slate-500">
-          <Lock className="h-4 w-4 text-green-400" />
-          <p>Secured access for authorized personnel only</p>
+          <Button
+            type="submit"
+            className="w-full py-3 font-semibold"
+            isLoading={isLoading}
+            loadingText="Signing in...">
+            Sign In
+          </Button>
+        </form>
+
+        <div className="border-t border-slate-200 pt-6 text-center text-sm text-slate-600">
+          Need help?{" "}
+          <a href="#" className="text-primary hover:text-primary/70 font-medium transition-colors">
+            Contact Support
+          </a>
         </div>
+      </div>
+
+      <div className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-white/80 sm:text-base">
+        <Lock className="h-4 w-4 text-green-400" />
+        <p>Secured access for authorized personnel only</p>
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export default function Page() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto flex flex-col space-y-6 p-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Users Management</h1>

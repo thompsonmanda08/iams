@@ -53,9 +53,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {isLoading ? (
           <span className="flex items-center gap-2">
             <Spinner
-              className={cn("", {
-                "text-primary-foreground": variant === "default",
-                "text-destructive-foreground": variant === "destructive"
+              className={cn("text-white", {
+                "text-primary": variant == "outline" || variant == "link" || variant == "ghost"
               })}
             />
             {loadingText}

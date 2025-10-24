@@ -90,7 +90,7 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 ? props.size
                 : "default"
             }
-            className={cn("!hhh-12 capitalize", className, classNames?.input)}>
+            className={cn("capitalize", className, classNames?.input)}>
             {isLoading ? (
               <div className="flex items-center gap-2 text-slate-400">
                 <Spinner className="h-5 w-5" />

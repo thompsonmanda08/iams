@@ -25,35 +25,9 @@ export async function loginUser({
     // Set authentication cookie
     await createAuthSession(response.data.tokenData);
 
-    return {
-      success: true,
-      message: "Login successful",
-      data: response?.data?.sellerData,
-      status: response.status,
-      statusText: response.statusText
-    };
+    return successResponse(response?.data, "Login successful");
   } catch (error: Error | any) {
-    console.error({
-      endpoint: `POST | AUTH LOGIN ~ ${url}`,
-      status: error?.response?.status,
-      statusText: error?.response?.statusText,
-      headers: error?.response?.headers,
-      config: error?.response?.config,
-      data: error?.response?.data || error
-    });
-
-    return {
-      success: false,
-      message:
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.response?.message ||
-        error?.message ||
-        "Oops! Something went wrong. Please try again.",
-      data: null,
-      status: error?.response?.status,
-      statusText: error?.response?.statusText
-    };
+    return handleError(error, "POST | AUTH LOGIN ~ /api/auth/login", url);
   }
 }
 
