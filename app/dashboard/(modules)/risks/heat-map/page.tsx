@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { risksApi, type HeatMapData } from "@/lib/api/risks-api";
+import { getHeatMap, type HeatMapData } from "@/app/_actions/risk-module-actions";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +17,10 @@ export default function RiskHeatMapPage() {
   const loadHeatMap = async () => {
     setIsLoading(true);
     try {
-      const data = await risksApi.getHeatMap();
-      setHeatMapData(data);
+      const response = await getHeatMap();
+      if (response.success && response.data) {
+        setHeatMapData(response.data);
+      }
     } catch (error) {
       console.error("Failed to load heat map:", error);
     } finally {

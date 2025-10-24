@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { risksApi, type Risk, type RiskQueryParams } from "@/lib/api/risks-api";
+import { getRisks, deleteRisk, updateRisk, createRisk, type Risk, type RiskQueryParams } from "@/app/_actions/risk-module-actions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,9 +75,11 @@ export default function RisksPage() {
   const loadRisks = async () => {
     setIsLoading(true);
     try {
-      const response = await risksApi.getAll(params);
-      setRisks(response.data);
-      setMeta(response.meta);
+      const response = await getRisks(params);
+      if (response.success && response.data) {
+        setRisks(response.data.data);
+        setMeta(response.data.meta);
+      }
     } catch (error) {
       toast.error("Failed to load risks");
     } finally {
@@ -98,11 +100,13 @@ export default function RisksPage() {
     if (!riskToDelete) return;
 
     try {
-      await risksApi.delete(riskToDelete);
-      toast.success("Risk deleted successfully");
-      loadRisks();
-      setDeleteDialogOpen(false);
-      setRiskToDelete(null);
+      const response = await deleteRisk(riskToDelete);
+      if (response.success) {
+        toast.success("Risk deleted successfully");
+        loadRisks();
+        setDeleteDialogOpen(false);
+        setRiskToDelete(null);
+      }
     } catch (error) {
       toast.error("Failed to delete risk");
     }
@@ -110,12 +114,17 @@ export default function RisksPage() {
 
   const handleSaveRisk = async (data: any) => {
     try {
+      let response;
       if (selectedRisk) {
-        await risksApi.update(selectedRisk.id, data);
-        toast.success("Risk updated successfully");
+        response = await updateRisk(selectedRisk.id, data);
+        if (response.success) {
+          toast.success("Risk updated successfully");
+        }
       } else {
-        await risksApi.create(data);
-        toast.success("Risk created successfully");
+        response = await createRisk(data);
+        if (response.success) {
+          toast.success("Risk created successfully");
+        }
       }
       loadRisks();
     } catch (error) {
