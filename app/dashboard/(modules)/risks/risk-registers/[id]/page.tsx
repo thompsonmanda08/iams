@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getRisks, deleteRisk, updateRisk, createRisk, type Risk, type RiskQueryParams } from "@/app/_actions/risk-module-actions";
+import {
+  getRisks,
+  deleteRisk,
+  updateRisk,
+  createRisk,
+  type Risk,
+  type RiskQueryParams
+} from "@/app/_actions/risk-module-actions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -170,9 +177,9 @@ export default function RisksPage() {
   };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen px-4">
       <div className="bg-card border-b">
-        <div className="container mx-auto py-6">
+        <div className="container mx-auto px-4 py-6">
           <div className="mb-2 flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 size-4" />
@@ -207,7 +214,7 @@ export default function RisksPage() {
       </div>
 
       {/* Stats */}
-      <div className="container mx-auto grid grid-cols-1 gap-4 py-8 md:grid-cols-4">
+      <div className="container mx-auto grid grid-cols-1 gap-4 px-4 py-8 md:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -308,7 +315,7 @@ export default function RisksPage() {
       </Card>
 
       {/* Table */}
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto px-4 py-8">
         <Card>
           <Table>
             <TableHeader>
