@@ -1,17 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { AppModule, Department, ErrorState } from "@/types";
+import { AppModule, Department, ErrorState } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input-field";
-import { updateDepartment } from "@/app/_actions/config-actions";
+import {
+  updateDepartment,
+  getModules,
+  getDepartmentModules,
+  assignModuleToDepartment,
+  removeModuleFromDepartment
+} from "@/app/_actions/config-actions";
 import { useParams } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, FolderCode } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { add } from "date-fns";
 import { capitalize, cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants";
 
 import { ArrowUpRightIcon } from "lucide-react";
 import {
@@ -193,7 +202,7 @@ const ModuleItem = ({
 }: {
   name: string;
   description: string;
-  onSelection: (key: string, action: "add" | "remove") => void;
+  onSelection: (key: string) => void;
   allowSelect?: boolean;
   backendKey: string;
   selectedModules?: string[];
@@ -206,7 +215,7 @@ const ModuleItem = ({
         checked={selectedModules?.includes(backendKey)}
         onCheckedChange={(checked) => {
           if (!allowSelect) return;
-          onSelection(backendKey, checked ? "add" : "remove");
+          onSelection(backendKey);
         }}
         disabled={!allowSelect}
         className="h-4 w-4"
@@ -225,35 +234,176 @@ const ModuleItem = ({
 };
 
 export function ModuleSelection({
-  modules = [],
-  allowSelect,
-  initialSelectedModules = [],
-  onSave
+  departmentId,
+  allowSelect = true
 }: {
-  modules: AppModule[];
+  departmentId?: string;
   allowSelect?: boolean;
-  initialSelectedModules?: string[];
-  onSave?: (selectedModules: string[]) => void | Promise<void>;
 }) {
-  const [selectedModules, setSelectedModules] = useState<string[]>(
-    initialSelectedModules.length > 0 ? initialSelectedModules : modules.map((m) => m.backendKey)
+  const queryClient = useQueryClient();
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [initialModules, setInitialModules] = useState<string[]>([]);
+
+  // Fetch all available modules
+  const { data: modulesResponse, isLoading: modulesLoading } = useQuery({
+    queryKey: [QUERY_KEYS.MODULES],
+    queryFn: () => getModules(),
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+
+  // Fetch department modules if departmentId is provided
+  const { data: departmentModulesResponse, isLoading: departmentModulesLoading } = useQuery({
+    queryKey: [QUERY_KEYS.DEPARTMENT_MODULES, departmentId],
+    queryFn: () => getDepartmentModules(departmentId!),
+    enabled: !!departmentId,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+
+  // Transform API modules to AppModule format
+  const modules: AppModule[] = useMemo(
+    () =>
+      modulesResponse?.success && modulesResponse?.data
+        ? (modulesResponse.data as any[]).map((module: any) => ({
+            id: module.id,
+            name: module.name,
+            description: module.description || "",
+            department: "",
+            backendKey: module.id,
+            isActive: module.is_active ?? true
+          }))
+        : [],
+    [modulesResponse]
   );
 
-  async function handleSave() {
-    if (onSave) {
-      await onSave(selectedModules);
+  // Update selected modules when department modules are loaded
+  useEffect(() => {
+    if (departmentModulesResponse?.success && departmentModulesResponse?.data) {
+      const assignedIds = (departmentModulesResponse.data as any[]).map((module: any) => module.id);
+      setSelectedModules(assignedIds);
+      setInitialModules(assignedIds);
+    } else if (!departmentId && modules.length > 0 && selectedModules.length === 0) {
+      // If no departmentId, select all modules by default
+      const allIds = modules.map((m) => m.backendKey);
+      setSelectedModules(allIds);
+      setInitialModules(allIds);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [departmentModulesResponse, departmentId, modules.length]);
+
+  // Mutation for saving module assignments
+  const saveModulesMutation = useMutation({
+    mutationFn: async () => {
+      if (!departmentId) {
+        throw new Error("Department ID is required to save module assignments");
+      }
+
+      // Determine which modules to add and which to remove
+      const modulesToAdd = selectedModules.filter((id) => !initialModules.includes(id));
+      const modulesToRemove = initialModules.filter((id) => !selectedModules.includes(id));
+
+      const results = {
+        added: 0,
+        removed: 0,
+        errors: [] as string[]
+      };
+
+      // Add new module assignments
+      for (const moduleId of modulesToAdd) {
+        const response = await assignModuleToDepartment({
+          departmentId,
+          moduleId
+        });
+
+        if (response.success) {
+          results.added++;
+        } else {
+          results.errors.push(`Failed to add module: ${response.message}`);
+        }
+      }
+
+      // Remove module assignments
+      for (const moduleId of modulesToRemove) {
+        const response = await removeModuleFromDepartment({
+          departmentId,
+          moduleId
+        });
+
+        if (response.success) {
+          results.removed++;
+        } else {
+          results.errors.push(`Failed to remove module: ${response.message}`);
+        }
+      }
+
+      return results;
+    },
+    onSuccess: (results) => {
+      // Show results
+      if (results.errors.length === 0) {
+        let message = "Module assignments updated successfully";
+        if (results.added > 0 && results.removed > 0) {
+          message = `Added ${results.added} module(s), removed ${results.removed} module(s)`;
+        } else if (results.added > 0) {
+          message = `Added ${results.added} module(s)`;
+        } else if (results.removed > 0) {
+          message = `Removed ${results.removed} module(s)`;
+        }
+
+        toast.success(message);
+      } else {
+        toast.error(`Some operations failed: ${results.errors.join(", ")}`);
+      }
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENT_MODULES, departmentId] });
+
+      // Update initial modules to match current selection
+      setInitialModules(selectedModules);
+    },
+    onError: (error) => {
+      console.error("Error saving module assignments:", error);
+      toast.error("Failed to save module assignments");
+    }
+  });
+
+  const handleSave = () => {
+    saveModulesMutation.mutate();
+  };
+
+  const isLoading = modulesLoading || departmentModulesLoading;
+  const isSaving = saveModulesMutation.isPending;
+
+  const handleModuleToggle = (moduleId: string) => {
+    setSelectedModules((prev) =>
+      prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="h-8 w-8" />
+        <span className="text-muted-foreground ml-2">Loading modules...</span>
+      </div>
+    );
   }
 
   return (
-    <div className="flex w-full flex-col gap-2">
+    <div className="flex w-full flex-col gap-4">
+      {isSaving && (
+        <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-3">
+          <Spinner className="h-4 w-4 text-blue-600" />
+          <span className="text-sm text-blue-600">Saving changes...</span>
+        </div>
+      )}
+
       <div
         className={cn(
           "grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3",
           modules.length === 0 && "place-items-center"
         )}>
         {modules && modules.length > 0 ? (
-          modules.map((module, index) => {
+          modules.map((module) => {
             return (
               <ModuleItem
                 key={module.backendKey + "-display"}
@@ -262,13 +412,7 @@ export function ModuleSelection({
                 allowSelect={allowSelect}
                 backendKey={module.backendKey}
                 selectedModules={selectedModules}
-                onSelection={(key, action) => {
-                  if (action == "add") {
-                    setSelectedModules((prev) => prev.concat(key));
-                  } else {
-                    setSelectedModules((prev) => prev.filter((item) => item !== key));
-                  }
-                }}
+                onSelection={handleModuleToggle}
               />
             );
           })
@@ -301,14 +445,28 @@ export function ModuleSelection({
           </div>
         )}
       </div>
-      {allowSelect && (
-        <div className="flex w-full items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {selectedModules.length} module{selectedModules.length !== 1 ? "s" : ""} selected
-          </span>
-          <Button onClick={handleSave} disabled={selectedModules.length === 0}>
-            Save Selection
-          </Button>
+
+      {allowSelect && departmentId && (
+        <div className="space-y-3">
+          <div className="flex w-full items-center justify-between">
+            <span className="text-muted-foreground text-sm">
+              {selectedModules.length} module{selectedModules.length !== 1 ? "s" : ""} selected
+            </span>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Selection"}
+            </Button>
+          </div>
+
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+            <h4 className="mb-2 text-sm font-medium text-blue-900">
+              About Department Module Assignment
+            </h4>
+            <div className="space-y-1 text-sm text-blue-700">
+              <p>• Modules assigned here will be available for roles within this department</p>
+              <p>• Roles can only receive permissions for modules assigned to their department</p>
+              <p>• This implements the department-constrained RBAC system</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

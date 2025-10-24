@@ -13,15 +13,7 @@ import {
   SidebarMenuSubItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import {
-  ActivityIcon,
-  ChevronRight,
-  SettingsIcon,
-  type LucideIcon,
-  MonitorCogIcon,
-  LucideShieldCheck,
-  BookOpenCheck
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { usePathname } from "next/navigation";
@@ -33,93 +25,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
-type NavGroup = {
-  title: string;
-  items: NavItem;
-};
-
-type NavItem = {
-  title: string;
-  href: string;
-  icon?: LucideIcon;
-  isComing?: boolean;
-  isDataBadge?: string;
-  isNew?: boolean;
-  newTab?: boolean;
-  items?: NavItem;
-}[];
-
-export const navItems: NavGroup[] = [
-  {
-    title: "Modules",
-    items: [
-      {
-        title: "Risk",
-        href: "/dashboard/risks",
-        icon: ActivityIcon,
-        items: [
-          { title: "Overview", href: "/dashboard/risks" },
-          { title: "Risk Registers", href: "/dashboard/risks/risk-registers" },
-          { title: "Heat Map", href: "/dashboard/risks/heat-map" },
-          { title: "KRI Dashboard", href: "/dashboard/risks/kri" },
-          { title: "Actions", href: "/dashboard/risks/actions" }
-        ]
-      },
-
-      {
-        title: "Audit",
-        href: "/dashboard/audit",
-        icon: BookOpenCheck,
-        isNew: true,
-        items: [
-          { title: "Overview", href: "/dashboard/audit" },
-          { title: "Audit Plans", href: "/dashboard/audit/plans" },
-          { title: "Workpapers", href: "/dashboard/audit/workpapers" },
-          { title: "Reports", href: "/dashboard/audit/reports" }
-        ]
-      }
-    ]
-  },
-  {
-    title: "System Setup",
-    items: [
-      {
-        title: "Configurations",
-        href: "#",
-        icon: SettingsIcon,
-        items: [
-          { title: "Branches", href: "/dashboard/system-configs/branches" },
-          { title: "Departments", href: "/dashboard/system-configs/departments" },
-          { title: "Users Management", href: "/dashboard/system-configs/users" },
-          { title: "Modules", href: "/dashboard/system-configs/modules" },
-        ]
-      }
-      // {
-      //   title: "Workflows",
-      //   href: "#",
-      //   icon: MonitorCogIcon,
-      //   items: [
-      //     { title: "Branches", href: "/dashboard/ecommerce" },
-      //     { title: "Departments", href: "/dashboard/pages/products" },
-      //     { title: "Risk Configs", href: "/dashboard/pages/products/1" },
-      //     { title: "Audit Configs", href: "/dashboard/pages/products/create" }
-      //   ]
-      // }
-      // {
-      //   title: "Security",
-      //   href: "#",
-      //   icon: LucideShieldCheck,
-      //   items: [
-      //     { title: "Branches", href: "/dashboard/ecommerce" },
-      //     { title: "Departments", href: "/dashboard/pages/products" },
-      //     { title: "Risk Configs", href: "/dashboard/pages/products/1" },
-      //     { title: "Audit Configs", href: "/dashboard/pages/products/create" }
-      //   ]
-      // }
-    ]
-  }
-];
+import { navItems } from "@/lib/routes-config";
 
 export function NavMain() {
   const pathname = usePathname();

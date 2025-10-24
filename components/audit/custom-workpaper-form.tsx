@@ -29,7 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS } from "@/lib/data/tick-marks";
 
 interface CustomWorkpaperFormProps {
-  auditId: string;
+  auditId?: string; // Optional - can be attached to audit plan later
   auditTitle?: string;
   template: CustomTemplate;
   onSuccess?: () => void;
@@ -248,8 +248,12 @@ export function CustomWorkpaperForm({
         </div>
         <div className="flex-1">
           <h2 className="text-2xl font-bold">{template.name}</h2>
-          {auditTitle && (
+          {auditTitle ? (
             <p className="text-sm text-muted-foreground mt-1">For Audit: {auditTitle}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-1">
+              You can attach this workpaper to an audit plan later
+            </p>
           )}
           <p className="text-sm text-muted-foreground">{template.description}</p>
         </div>

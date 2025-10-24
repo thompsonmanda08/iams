@@ -10,7 +10,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { APIResponse } from "@/types";
+import type { APIResponse } from "@/lib/types";
 import type {
   AuditPlan,
   AuditPlanInput,

@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, PropsWithChildren, useMemo } from "react";
-import { configApi } from "@/lib/api/config-api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -13,12 +11,11 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, MapPin, PencilLineIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Building, PencilLine } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
-import { Props } from "@dnd-kit/core/dist/components/DragOverlay";
-import { Department, DepartmentUser, ErrorState } from "@/types";
+import { Department } from "@/lib/types";
 import {
   Dialog,
   DialogClose,
@@ -29,39 +26,60 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Spinner } from "@/components/ui/spinner";
-import { createNewDepartment, updateDepartment } from "@/app/_actions/config-actions";
+import {
+  createNewDepartment,
+  updateDepartment,
+  getDepartments,
+  deleteDepartment
+} from "@/app/_actions/config-actions";
 import { useRouter } from "next/navigation";
-import { useDepartments } from "@/hooks/use-query-data";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants";
 
 export default function DepartmentsConfigPage() {
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [openModal, setOpenModal] = useState(false);
-  const [editingCategory, setEditingDepartment] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // const { data, isLoading: isLoadingDepartments } = useDepartments();
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Fetch departments with TanStack Query
+  const {
+    data: departmentsResponse,
+    isLoading
+  } = useQuery({
+    queryKey: [QUERY_KEYS.DEPARTMENTS],
+    queryFn: () => getDepartments(),
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [provincesData] = await Promise.all([configApi.getProvinces()]);
-      setDepartments(provincesData as any);
-    } catch (error) {
-      toast.error("Failed to load office configuration");
-    } finally {
-      setIsLoading(false);
+  const departments: Department[] = useMemo(
+    () => (departmentsResponse?.success && departmentsResponse?.data ? departmentsResponse.data : []),
+    [departmentsResponse]
+  );
+
+  // Delete department mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteDepartment(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success("Department deleted successfully");
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+      } else {
+        toast.error(response.message || "Failed to delete department");
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to delete department");
+      console.error("Error deleting department:", error);
+    },
+    onSettled: () => {
+      setDeleteDialogOpen(false);
+      setDepartmentToDelete(null);
     }
-  };
+  });
 
   const handleDeleteClick = (id: string) => {
     setDepartmentToDelete(id);
@@ -70,19 +88,7 @@ export default function DepartmentsConfigPage() {
 
   const handleDeleteConfirm = async () => {
     if (!departmentToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await configApi.deleteProvince(departmentToDelete);
-      toast.success("Department deleted successfully");
-      loadData();
-      setDeleteDialogOpen(false);
-      setDepartmentToDelete(null);
-    } catch (error) {
-      toast.error("Failed to delete department");
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteMutation.mutate(departmentToDelete);
   };
 
   return (
@@ -135,7 +141,7 @@ export default function DepartmentsConfigPage() {
                   }}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <MapPin className="text-muted-foreground h-4 w-4" />
+                      <Building className="text-muted-foreground h-4 w-4" />
                       <span className="font-medium">{department.name}</span>
                     </div>
                   </TableCell>
@@ -192,7 +198,7 @@ export default function DepartmentsConfigPage() {
       <CreateOrUpdateDepartment
         openModal={openModal}
         setOpenModal={setOpenModal}
-        initialData={editingCategory}
+        initialData={editingDepartment}
         setInitialData={setEditingDepartment}
       />
 
@@ -202,11 +208,17 @@ export default function DepartmentsConfigPage() {
         title="Delete Department"
         description="Are you sure you want to delete this department? This action cannot be undone and may affect related data."
         onConfirm={handleDeleteConfirm}
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );
 }
+
+type ErrorState = {
+  status: boolean;
+  message: string;
+  onParentId?: boolean;
+};
 
 function CreateOrUpdateDepartment({
   showTrigger,
@@ -221,11 +233,11 @@ function CreateOrUpdateDepartment({
   setInitialData?: React.Dispatch<React.SetStateAction<Department | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const queryClient = useQueryClient();
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Department>(
     initialData ?? {
       id: undefined,
@@ -279,36 +291,36 @@ function CreateOrUpdateDepartment({
     }
   }, [openModal, setInitialData]);
 
+  // Create/Update mutation
+  const saveMutation = useMutation({
+    mutationFn: (data: Department) => {
+      return initialData
+        ? updateDepartment({ ...data, id: String(initialData.id) })
+        : createNewDepartment(data);
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(`Department ${initialData ? "updated" : "created"} successfully`);
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        setOpenModal?.(false);
+        setInitialData?.(null);
+        setFormData({ id: undefined, name: "", code: "", description: "" });
+        setError({ status: false, message: "" });
+      } else {
+        toast.error(response.message);
+        setError({ status: true, message: response.message });
+      }
+    },
+    onError: (error) => {
+      toast.error("An error occurred");
+      setError({ status: true, message: "An unexpected error occurred" });
+      console.error("Error saving department:", error);
+    }
+  });
+
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Validate parent category is selected
-    if (!formData.parentId) {
-      setError({
-        status: true,
-        message: "Please select a parent category",
-        onParentId: true
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    const res = initialData
-      ? await updateDepartment({ ...formData, id: String(initialData?.id) })
-      : await createNewDepartment({ ...formData });
-
-    if (res.success) {
-      toast.success(`Department ${initialData ? "updated" : "created"}`);
-      setOpenModal?.(false);
-      setInitialData?.(null);
-      setFormData({ id: undefined, name: "", code: "", description: "" });
-    } else {
-      toast.error(res.message);
-      setError({ status: true, message: res.message });
-    }
-
-    setIsLoading(false);
+    saveMutation.mutate(formData);
   }
 
   return (
@@ -319,7 +331,7 @@ function CreateOrUpdateDepartment({
             {" "}
             {initialData ? (
               <>
-                <PencilLineIcon className="mr-2 h-4 w-4" /> Update Department
+                <PencilLine className="mr-2 h-4 w-4" /> Update Department
               </>
             ) : (
               <>
@@ -373,8 +385,8 @@ function CreateOrUpdateDepartment({
             <Button
               type="submit"
               size="sm"
-              disabled={isLoading || !formData.parentId || !formData.name}
-              isLoading={isLoading}
+              disabled={saveMutation.isPending || !formData.name}
+              isLoading={saveMutation.isPending}
               loadingText="Saving..."
               className="">
               Save

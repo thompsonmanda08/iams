@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { risksApi, type KRI } from "@/lib/api/risks-api";
+import { getKRIs, type KRI } from "@/app/_actions/risk-module-actions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Minus, AlertCircle } from "lucide-react";
@@ -25,8 +25,10 @@ export default function KRIPage() {
   const loadKRIs = async () => {
     setIsLoading(true);
     try {
-      const data = await risksApi.getKRIs();
-      setKris(data);
+      const response = await getKRIs();
+      if (response.success && response.data) {
+        setKris(response.data);
+      }
     } catch (error) {
       console.error("Failed to load KRIs:", error);
     } finally {

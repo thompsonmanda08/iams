@@ -25,7 +25,7 @@ import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/data/tick-marks";
 import { SelectField } from "../ui/select-field";
 
 interface GeneralWorkpaperFormProps {
-  auditId: string;
+  auditId?: string; // Optional - can be attached to audit plan later
   auditTitle?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -101,6 +101,15 @@ export function GeneralWorkpaperForm({
 
   // Handle save draft manually
   const handleSaveDraft = () => {
+    if (!auditId) {
+      toast({
+        title: "Cannot Save Draft",
+        description: "Drafts can only be saved when attached to an audit plan.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
       title: "Draft Saved",
       description: "Your work has been saved as a draft."
@@ -221,8 +230,12 @@ export function GeneralWorkpaperForm({
         </div>
         <div className="flex-1">
           <h2 className="text-2xl font-bold">General Work Paper (B.1.1.2)</h2>
-          {auditTitle && (
+          {auditTitle ? (
             <p className="text-muted-foreground mt-1 text-sm">For Audit: {auditTitle}</p>
+          ) : (
+            <p className="text-muted-foreground mt-1 text-sm">
+              You can attach this workpaper to an audit plan later
+            </p>
           )}
         </div>
       </div>
@@ -435,7 +448,7 @@ export function GeneralWorkpaperForm({
       </div>
 
       {/* Create Finding Modal */}
-      {showCreateFinding && createdWorkpaperId && (
+      {showCreateFinding && createdWorkpaperId && auditId && (
         <CreateFindingModal
           open={showCreateFinding}
           onOpenChange={(open) => {

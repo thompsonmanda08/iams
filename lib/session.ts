@@ -3,9 +3,9 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-import { AuthSession, UserSession, WorkspaceSession } from "@/types";
+import { AuthSession, UserSession } from "@/lib/types";
 
-import { AUTH_SESSION, USER_SESSION, WORKSPACE_SESSION } from "./constants";
+import { AUTH_SESSION, USER_SESSION } from "./constants";
 
 // 1. Get secret from environment variables (MUST be set) - SERVER SIDE ONLY
 // Note: Validation is deferred to runtime to avoid build-time issues
@@ -152,18 +152,11 @@ export async function updateAuthSession(fields: any): Promise<void> {
   }
 }
 
-export async function createUserSession({
-  user,
-  merchantID,
-  userPermissions,
-  kyc
-}: UserSession): Promise<void> {
+export async function createUserSession({ user, permissions }: UserSession): Promise<void> {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   const session = await encrypt({
     user,
-    merchantID,
-    userPermissions,
-    kyc
+    permissions
   });
 
   if (session) {
@@ -179,85 +172,25 @@ export async function createUserSession({
   }
 }
 
-export async function createWorkspaceSession({
-  workspaceIDs,
-  workspacePermissions
-}: WorkspaceSession): Promise<void> {
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const session = await encrypt({
-    workspaceIDs,
-    workspacePermissions
-  });
-
-  if (session) {
-    (await cookies()).set(WORKSPACE_SESSION, session, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      expires: expiresAt,
-      sameSite: "strict",
-      path: "/"
-    });
-  } else {
-    throw new Error("Failed to create workspace session token.");
-  }
-}
-
-// UPDATE THE WORKSPACE SESSION
-export async function updateWorkspaceSession(fields: any): Promise<WorkspaceSession | void> {
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const isLoggedIn = await verifySession();
-  const cookie = (await cookies()).get(WORKSPACE_SESSION)?.value;
-  const oldSession = await decrypt(cookie);
-
-  const updatedSession = {
-    ...oldSession,
-    ...fields,
-    workspacePermissions: (fields?.workspacePermissions ??
-      oldSession?.workspacePermissions) as WorkspaceSession["workspacePermissions"]
-  };
-
-  if (isLoggedIn && oldSession) {
-    const session = await encrypt(updatedSession);
-
-    if (session) {
-      (await cookies()).set(WORKSPACE_SESSION, session, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        expires: expiresAt,
-        sameSite: "strict",
-        path: "/"
-      });
-
-      return updatedSession as WorkspaceSession;
-    } else {
-      throw new Error("Failed to update workspace session token.");
-    }
-  }
-}
-
 export async function verifySession(): Promise<{
   isAuthenticated: boolean;
   session: AuthSession | null;
+  user?: UserSession | null;
 }> {
   const cookie = (await cookies()).get(AUTH_SESSION)?.value;
   const session = await decrypt(cookie);
 
-  if (session?.accessToken) return { isAuthenticated: true, session: session as AuthSession };
+  if (session?.accessToken) {
+    const authUserCookie = (await cookies()).get(USER_SESSION)?.value;
+    const userSession = await decrypt(authUserCookie);
+    return {
+      isAuthenticated: true,
+      session: session as AuthSession,
+      ...userSession
+    };
+  }
 
   return { isAuthenticated: false, session: null };
-}
-
-export async function getUserSession(): Promise<UserSession | null> {
-  const isLoggedIn = await verifySession();
-
-  const cookie = (await cookies()).get(USER_SESSION)?.value;
-  const session = await decrypt(cookie);
-
-  if (isLoggedIn) {
-    return session as unknown as UserSession;
-  } else {
-    return null;
-  }
 }
 
 // DELETE THE SESSION
@@ -268,7 +201,6 @@ export async function deleteSession() {
     // Delete all session cookies
     cookieStore.delete(AUTH_SESSION);
     cookieStore.delete(USER_SESSION);
-    cookieStore.delete(WORKSPACE_SESSION);
 
     return { success: true, message: "Logout Success" };
   } catch (error: any) {
