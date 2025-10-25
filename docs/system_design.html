@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Audit System - Deep Dive Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary-darkest: #0033A0;
+            --color-primary-dark: #0050D0;
+            --color-primary-base: #007BFF;
+            --color-primary-light: #409CFF;
+            --color-primary-lightest: #EBF5FF; /* Very light blue for backgrounds */
+            --color-accent-green: #00B377;
+            --color-text-base: #1f2937;
+            --color-text-muted: #4b5563;
+            --color-bg-light: #f9fafb;
+            --color-bg-white: #ffffff;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg-light);
+            color: var(--color-text-base);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+        }
+        .diag-node {
+            background-color: var(--color-bg-white);
+            border: 2px solid var(--color-primary-base);
+            color: var(--color-primary-darkest);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .diag-node-sm {
+            background-color: var(--color-primary-lightest);
+            border: 1px solid var(--color-primary-light);
+            color: var(--color-primary-darkest);
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        /* Style for the Domain Entities */
+        .diag-node-entity {
+            background-color: #f0f9ff; /* Light blue */
+            border: 1px solid #93c5fd; /* Medium blue */
+            color: #1e40af; /* Darker blue text */
+            padding: 0.6rem;
+            border-radius: 0.5rem;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.875rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        /* CSS Triangle Arrows */
+        .diag-arrow-css {
+            height: 1rem; /* Space the arrow takes */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0.5rem 0;
+        }
+        .diag-arrow-css::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+        }
+        .diag-arrow-down::after {
+            border-top: 12px solid var(--color-primary-base); /* Pointing down */
+        }
+        .diag-arrow-up::after {
+            border-bottom: 12px solid var(--color-primary-base); /* Pointing up */
+        }
+        /* End CSS Triangle Arrows */
+
+        .hierarchy-level {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-left: 2px solid var(--color-primary-light);
+            position: relative;
+        }
+        .hierarchy-level:before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: var(--color-primary-base);
+            border: 3px solid var(--color-bg-white);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <main class="container mx-auto max-w-7xl p-4 md:p-8">
+
+        <header class="text-center mb-10">
+            <h1 class="4xl md:text-5xl font-bold" style="color: var(--color-primary-darkest);">Risk Audit System Design</h1>
+            <p class="text-xl md:text-2xl mt-2" style="color: var(--color-primary-base);">Deep Dive: Models, Flows, and Structures</p>
+        </header>
+
+        <!-- INTRO SECTION -->
+        <section class="bg-white rounded-lg shadow-xl p-6 mb-8 md:col-span-3">
+            <h2 class="text-3xl font-bold mb-3" style="color: var(--color-primary-darkest);">System Overview & Purpose</h2>
+            <!-- REMOVED ** AND USED <span class="font-bold"> IN THE PARAGRAPH BELOW -->
+            <p class="text-lg font-medium mb-4" style="color: var(--color-text-muted);">
+                The Risk Audit System is a comprehensive platform for managing <span class="font-bold">Governance, Risk, and Compliance (GRC)</span> activities. It unifies <span class="font-bold">Risk Registers</span>, <span class="font-bold">Key Risk Indicators (KRIs)</span>, and <span class="font-bold">Audit Working Papers</span> into a single, cohesive application.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-50 p-4 rounded-lg border-l-4" style="border-color: var(--color-accent-green);">
+                    <h4 class="font-bold mb-1 text-lg" style="color: var(--color-primary-darkest);">Core Goal</h4>
+                    <!-- REMOVED ** AND USED <span class="font-bold"> IN THE PARAGRAPH BELOW -->
+                    <p class="text-sm text-gray-600">Establish a <span class="font-bold">single source of truth</span> for organizational assurance and control monitoring.</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border-l-4" style="border-color: var(--color-primary-base);">
+                    <h4 class="font-bold mb-1 text-lg" style="color: var(--color-primary-darkest);">Scope</h4>
+                    <!-- REMOVED ** AND USED <span class="font-bold"> IN THE PARAGRAPH BELOW -->
+                    <p class="text-sm text-gray-600">Supports multi-branch/multi-department scoping for granular <span class="font-bold">data visibility and access control</span>.</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border-l-4" style="border-color: var(--color-accent-green);">
+                    <h4 class="font-bold mb-1 text-lg" style="color: var(--color-primary-darkest);">Compliance</h4>
+                    <!-- REMOVED ** AND USED <span class="font-bold"> IN THE PARAGRAPH BELOW -->
+                    <p class="text-sm text-gray-600">Designed to facilitate compliance frameworks, primarily <span class="font-bold">ISO 27001:2022</span> standards.</p>
+                </div>
+            </div>
+        </section>
+        <!-- END: INTRO SECTION -->
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+
+            <!-- COLUMN 1: Architecture & Base -->
+            <div class="md:col-span-1 space-y-6">
+
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Core Architecture</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        Based on <span class="font-bold">Clean Architecture</span> to separate business logic (Domain) from technology (Infrastructure).
+                    </p>
+                    <div class="flex flex-col items-center space-y-2">
+                        <div class="diag-node w-full py-2 bg-yellow-100 border-yellow-500">Presentation Layer (HTTP/DTOs)</div>
+                        <div class="diag-arrow-css diag-arrow-down"></div>
+                        <div class="diag-node w-full py-2 bg-yellow-100 border-yellow-500">Application Layer (Services/Use Cases)</div>
+                        <div class="diag-arrow-css diag-arrow-down"></div>
+                        <div class="diag-node w-full py-2 font-bold text-white" style="background-color: var(--color-primary-base); border-color: var(--color-primary-dark);">Domain Layer (Entities/Rules)</div>
+                        <div class="diag-arrow-css diag-arrow-up"></div>
+                        <div class="diag-node w-full py-2 bg-yellow-100 border-yellow-500">Infrastructure Layer (DB/Adapters)</div>
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">User & Access Management Flow</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        <span class="font-bold">RBAC</span> is scoped by organization. <span class="font-bold">JWT</span> provides stateless security.
+                    </p>
+                    <div class="flex flex-col items-center space-y-2">
+                        <div class="diag-node-sm w-full">User &rarr; <span class="font-bold">Role</span> (Permissions)</div>
+                        <div class="diag-node-sm w-full">Scope: User &rarr; <span class="font-bold">Dept</span> &rarr; <span class="font-bold">Branch</span> (Data Visibility)</div>
+                        <div class="h-1 w-full border-b border-dashed" style="border-color: var(--color-text-muted); margin: 0.5rem 0;"></div>
+                        <div class="diag-node-sm w-full bg-blue-200 border-blue-400">1. Client Logs In (POST Credentials)</div>
+                        <div class="diag-arrow-css diag-arrow-down"></div>
+                        <div class="diag-node-sm w-full">2. Auth Service &rarr; Verify Password (<span class="font-semibold">bcrypt</span>)</div>
+                        <div class="diag-arrow-css diag-arrow-down"></div>
+                        <div class="diag-node-sm w-full bg-blue-200 border-blue-400">3. Generate <span class="font-bold">JWT</span> (Includes UserID, RoleID, Scope IDs)</div>
+                    </div>
+                </section>
+                
+                <!-- Security Feature Distribution (Pie Chart) -->
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Key Security Arrangement Distribution</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        The security design focuses on authorization, authentication, and comprehensive logging.
+                    </p>
+                    <!-- Increased chart height for better visibility -->
+                    <div class="chart-container h-64 md:h-80"> 
+                        <canvas id="securityPieChart"></canvas>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- COLUMN 2: Risk Flows & Quantification & Domain Model -->
+            <div class="md:col-span-1 space-y-6">
+                
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Core Process Flow: Risk Management</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        The lifecycle from identification to reporting and monitoring of controls.
+                    </p>
+                    <div class="flex flex-col items-start space-y-2">
+                        <div class="diag-node-sm w-full text-left">1. <span class="font-bold">Register Setup</span> (Initialize Categories)</div>
+                        <div class="diag-node-sm w-full text-left">2. <span class="font-bold">Create Risk</span> (Title, Description, Owner)</div>
+                        <div class="diag-node-sm w-full text-left">3. <span class="font-bold">Evaluation</span> (Assess Likelihood &times; Impact)</div>
+                        <div class="diag-node-sm w-full text-left">4. <span class="font-bold">Response</span> (Define Controls, Assign Responsibility)</div>
+                        <div class="diag-node-sm w-full text-left">5. <span class="font-bold">Monitoring</span> (Track KRIs, Update Status/Reassess)</div>
+                    </div>
+                </section>
+
+                <!-- NEW: Domain Model Entities (Beefiness) -->
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Core Domain Model Entities</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        These are the key structures within the <span class="font-bold">Domain Layer</span>, encapsulating business rules and state (e.g., Risk Score calculation).
+                    </p>
+                    <div class="space-y-3">
+                        <div class="diag-node-entity w-full">
+                            <span class="font-bold">Risk:</span> ID, Likelihood, Impact, Residual Score (Computed), Control Status (Enum), Owner ID (User Ref), Department ID (Scope Ref)
+                        </div>
+                        <div class="diag-node-entity w-full">
+                            <span class="font-bold">AuditProcedure (AP):</span> ID, Control Reference (e.g., ISO A.5.1), Finding (Text), Evidence URL, Report Flag (Boolean), Auditor ID (User Ref)
+                        </div>
+                        <div class="diag-node-entity w-full">
+                            <span class="font-bold">KRI (Indicator):</span> ID, Metric Name, Target Threshold (Min/Max), Current Value (Float), Unit of Measure, Data Source (Service/Manual)
+                        </div>
+                        <div class="diag-node-entity w-full">
+                            <span class="font-bold">WorkingPaper:</span> ID, Template (ISO/Custom), Status (Draft/Review/Final), Start Date, End Date, Lead Auditor ID
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Risk Quantification & Heatmap</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        Risk Score is L &times; I (max 25). Heatmaps visually represent the density of open risks by score.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="riskScoreChart"></canvas>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-lg font-semibold mb-2" style="color: var(--color-primary-dark);">Heatmap Generation Flow</h3>
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="diag-node-sm w-full">Client Request &rarr; DB Query</div>
+                            <div class="diag-arrow-css diag-arrow-down"></div>
+                            <div class="diag-node-sm w-full">`SELECT L, I, COUNT(*)` FROM Open Risks (Aggregated by 5x5 Matrix)</div>
+                            <div class="diag-arrow-css diag-arrow-down"></div>
+                            <div class="diag-node-sm w-full bg-green-100 border-green-500">Renders Dynamic Grid with Risk Counts</div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- COLUMN 3: Audit Flows & Structure -->
+            <div class="md:col-span-1 space-y-6">
+
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Audit Deep Dive: Working Paper Structure</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        The hierarchical data model used for all audit engagements (e.g., ISO 27001).
+                    </p>
+                    <div class="flex flex-col space-y-3">
+                        <div class="hierarchy-level" style="margin-left: 0;">
+                            <span class="font-bold text-lg text-white rounded px-2" style="background-color: var(--color-primary-base);">Top</span>
+                            <span class="ml-3 font-semibold">Working Paper</span>
+                            <span class="ml-auto text-xs" style="color: var(--color-text-muted);">Audit WP 2025</span>
+                        </div>
+                        <div class="hierarchy-level" style="margin-left: 1rem;">
+                            <span class="font-semibold text-white rounded px-2 bg-gray-500">Mid</span>
+                            <span class="ml-3 font-semibold">WPC (Category)</span>
+                            <span class="ml-auto text-xs" style="color: var(--color-text-muted);">A.5 Organizational Controls</span>
+                        </div>
+                        <div class="hierarchy-level" style="margin-left: 2rem;">
+                            <span class="font-semibold text-white rounded px-2 bg-gray-700">Bottom</span>
+                            <span class="ml-3 font-semibold">AP (Procedure)</span>
+                            <span class="ml-auto text-xs" style="color: var(--color-text-muted);">AP-1.1 Policy for InfoSec</span>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-xs font-medium" style="color: var(--color-text-muted);">
+                        <span class="font-bold">AuditProcedure (AP)</span> is the atomic unit where <span class="font-bold">Finding</span> and <span class="font-bold">ReportFlag</span> are set.
+                    </p>
+                </section>
+
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Core Process Flow: ISO 27001 Audit</h2>
+                    <p class="mb-4 text-sm font-medium" style="color: var(--color-text-muted);">
+                        Flow of the Working Paper from creation to final report generation.
+                    </p>
+                    <div class="flex flex-col items-start space-y-2">
+                        <div class="diag-node-sm w-full text-left">1. Admin &rarr; <span class="font-bold">Create Plan</span> (Selects ISO Template)</div>
+                        <div class="diag-node-sm w-full text-left">2. System &rarr; <span class="font-bold">Auto-Generate WP</span> (Based on Template)</div>
+                        <div class="diag-node-sm w-full text-left">3. Auditor &rarr; <span class="font-bold">Execute AP</span> (Records Findings & Evidence)</div>
+                        <div class="diag-node-sm w-full text-left">4. Auditor &rarr; <span class="font-bold">Set ReportFlag</span> (Yes/No for Final Report)</div>
+                        <div class="diag-node-sm w-full text-left">5. Lead Auditor &rarr; <span class="font-bold">Review & Sign Off</span></div>
+                        <div class="diag-node-sm w-full text-left bg-yellow-100 border-yellow-500">6. System &rarr; <span class="font-bold">Generate Report</span> (Includes only <span class="font-semibold">ReportFlag=TRUE</span>)</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Full Width Section (Technology & Future) -->
+            <section class="md:col-span-3 bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4" style="color: var(--color-primary-dark);">Technology, Security & Future Road Map</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3" style="color: var(--color-primary-dark);">Technology Stack</h3>
+                        <ul class="list-disc list-inside space-y-1 text-sm">
+                            <li>Backend: <span class="font-bold">Go (Golang)</span> for performance</li>
+                            <li>Database: <span class="font-bold">PostgreSQL</span> for reliability</li>
+                            <li>Authentication: <span class="font-bold">JWT</span> with <span class="font-bold">bcrypt</span> hashing</li>
+                            <li>Logging: <span class="font-bold">Zap</span></li>
+                            <li>Architecture: <span class="font-bold">Clean Architecture / DDD</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3" style="color: var(--color-primary-dark);">Security & Performance</h3>
+                        <ul class="list-disc list-inside space-y-1 text-sm">
+                            <li><span class="font-bold">RBAC</span> enforces granular data access.</li>
+                            <li>All data access is <span class="font-bold">paginated</span> (Max 100 records/page).</li>
+                            <li>Password hashing uses <span class="font-bold">bcrypt</span>.</li>
+                            <li><span class="font-bold">Audit Trails</span> track all sensitive modifications.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3" style="color: var(--color-primary-dark);">Future Enhancements</h3>
+                        <ul class="list-disc list-inside space-y-1 text-sm">
+                            <li><span class="font-bold">Real-time</span> features via WebSockets.</li>
+                            <li>Mobile application for <span class="font-bold">field audits</span>.</li>
+                            <li><span class="font-bold">PDF/Excel</span> generation for advanced reporting.</li>
+                            <li>Integration APIs (SIEM, ticketing systems).</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const tooltipTitleCallback = (tooltipItems) => {
+                const item = tooltipItems[0];
+                let label = item.chart.data.labels[item.dataIndex];
+                if (Array.isArray(label)) {
+                    return label.join(' ');
+                }
+                return label;
+            };
+
+            // --- Risk Score Bar Chart Initialization ---
+            const riskScoreCtx = document.getElementById('riskScoreChart')?.getContext('2d');
+            if (riskScoreCtx) {
+                new Chart(riskScoreCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['LOW (1-5)', 'MEDIUM (6-11)', 'HIGH (12-16)', 'CRITICAL (17-25)'],
+                        datasets: [{
+                            label: 'Max Risk Score in Level',
+                            data: [5, 11, 16, 25],
+                            backgroundColor: [
+                                'rgba(0, 200, 208, 0.6)',
+                                'rgba(255, 176, 0, 0.6)',
+                                'rgba(255, 79, 0, 0.6)',
+                                'rgba(210, 0, 0, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgb(0, 200, 208)',
+                                'rgb(255, 176, 0)',
+                                'rgb(255, 79, 0)',
+                                'rgb(210, 0, 0)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: { callbacks: { title: tooltipTitleCallback } },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 25,
+                                title: {
+                                    display: true,
+                                    text: 'Risk Score (Likelihood x Impact)',
+                                    font: { size: 12 }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    font: { size: 10 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // --- Security Pie Chart Initialization (New) ---
+            const securityPieCtx = document.getElementById('securityPieChart')?.getContext('2d');
+            if (securityPieCtx) {
+                new Chart(securityPieCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Role-Based Access Control (RBAC)', 'Secure Hashing (bcrypt/JWT)', 'Audit Trails & Logging', 'Data Pagination/Throttling'],
+                        datasets: [{
+                            label: 'Security Focus',
+                            data: [45, 25, 20, 10], // Weights for visualization
+                            backgroundColor: [
+                                'rgba(0, 123, 255, 0.8)',   /* Primary Blue (RBAC) */
+                                'rgba(255, 176, 0, 0.8)',   /* Orange (Hashing/Auth) */
+                                'rgba(0, 179, 119, 0.8)',   /* Green (Audit Trails) */
+                                'rgba(100, 100, 100, 0.8)'  /* Gray (Pagination) */
+                            ],
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 10, family: 'Inter' }
+                                }
+                            },
+                            title: {
+                                display: false,
+                            }
+                        }
+                    }
+                });
+            }
+
+        })();
+    </script>
+</body>
+</html>

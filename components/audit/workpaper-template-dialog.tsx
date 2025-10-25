@@ -99,10 +99,9 @@ export function WorkpaperTemplateDialog({
                     <ClipboardList className="h-8 w-8 text-blue-600" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">ISO 27001 Clause Template</h3>
+                    <h3 className="text-lg font-semibold">ISO 27001 Clause (Simple)</h3>
                     <p className="text-muted-foreground text-sm">
-                      Use pre-configured ISO 27001 clause templates with automated objective and
-                      test procedure population
+                      Quick workpaper for single ISO 27001 clause testing
                     </p>
                   </div>
                   <ul className="text-muted-foreground w-full space-y-1 text-left text-xs">
@@ -110,6 +109,32 @@ export function WorkpaperTemplateDialog({
                     <li>✓ Auto-population of objectives</li>
                     <li>✓ Evidence upload support</li>
                     <li>✓ Test result tracking</li>
+                  </ul>
+                </div>
+              </Card>
+
+              {/* ISO 27001:2022 Comprehensive Template */}
+              <Card
+                className="hover:border-primary cursor-pointer p-6 transition-all hover:bg-slate-50 border-2"
+                onClick={() => handleTemplateSelect("iso27001-2022")}>
+                <div className="flex flex-col items-center space-y-4 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
+                    <ClipboardList className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <h3 className="text-lg font-semibold">ISO 27001:2022</h3>
+                      <Badge variant="secondary" className="text-xs">New</Badge>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      Category-based template with comprehensive audit documentation
+                    </p>
+                  </div>
+                  <ul className="text-muted-foreground w-full space-y-1 text-left text-xs">
+                    <li>✓ 11 ISO 27001:2022 categories</li>
+                    <li>✓ Category-based organization</li>
+                    <li>✓ Documents & sampling fields</li>
+                    <li>✓ Compatible with audit plan templates</li>
                   </ul>
                 </div>
               </Card>

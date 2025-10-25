@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -71,6 +73,12 @@ export function CreateFindingModal({
   const [assignedTo, setAssignedTo] = useState("");
   const [dueDate, setDueDate] = useState("");
 
+  // New fields for report inclusion
+  const [includeInReport, setIncludeInReport] = useState(true); // Default to true for new findings
+  const [findingNumber, setFindingNumber] = useState("");
+  const [workingsAndTestResults, setWorkingsAndTestResults] = useState("");
+  const [conclusion, setConclusion] = useState("");
+
   const allClauses = [
     ...getTopLevelClauses(),
     ...getTopLevelClauses().flatMap((clause) => getChildClauses(clause.id))
@@ -102,7 +110,12 @@ export function CreateFindingModal({
         dueDate: dueDate ? new Date(dueDate) : undefined,
         workpaperId: workpaperId || undefined,
         evidenceRowId: evidenceRowId || undefined,
-        sourceType: workpaperId ? "workpaper" : "manual"
+        sourceType: workpaperId ? "workpaper" : "manual",
+        // New fields
+        includeInReport,
+        findingNumber: findingNumber || undefined,
+        workingsAndTestResults: workingsAndTestResults || undefined,
+        conclusion: conclusion || undefined,
       });
 
       if (result.success) {
@@ -143,6 +156,10 @@ export function CreateFindingModal({
     setCorrectiveAction("");
     setAssignedTo("");
     setDueDate("");
+    setIncludeInReport(true);
+    setFindingNumber("");
+    setWorkingsAndTestResults("");
+    setConclusion("");
   };
 
   return (
@@ -230,6 +247,76 @@ export function CreateFindingModal({
               className="resize-none"
             />
           </div>
+
+          <Separator />
+
+          {/* Report Inclusion and Additional Details */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold">Report Details</h4>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="includeInReport"
+                  checked={includeInReport}
+                  onCheckedChange={(checked) => setIncludeInReport(checked as boolean)}
+                />
+                <Label
+                  htmlFor="includeInReport"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Include in Final Report
+                </Label>
+              </div>
+            </div>
+
+            {includeInReport && (
+              <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                {/* Finding Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="findingNumber">Finding Number</Label>
+                  <Input
+                    id="findingNumber"
+                    value={findingNumber}
+                    onChange={(e) => setFindingNumber(e.target.value)}
+                    placeholder="e.g., F-001, 2025-001"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Auto-generated if left blank
+                  </p>
+                </div>
+
+                {/* Workings and Test Results */}
+                <div className="space-y-2">
+                  <Label htmlFor="workingsAndTestResults">
+                    Workings and Test Results
+                  </Label>
+                  <Textarea
+                    id="workingsAndTestResults"
+                    value={workingsAndTestResults}
+                    onChange={(e) => setWorkingsAndTestResults(e.target.value)}
+                    placeholder="Document detailed test workings and results for the report..."
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+
+                {/* Conclusion */}
+                <div className="space-y-2">
+                  <Label htmlFor="conclusion">Conclusion</Label>
+                  <Textarea
+                    id="conclusion"
+                    value={conclusion}
+                    onChange={(e) => setConclusion(e.target.value)}
+                    placeholder="Summarize the conclusion for the final report..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Separator />
 
           {/* Assigned To */}
           <div className="space-y-2">
