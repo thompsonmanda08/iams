@@ -14,7 +14,7 @@
 /**
  * Audit status types representing the lifecycle of an audit
  */
-export type AuditStatus = 'planned' | 'in-progress' | 'completed' | 'cancelled';
+export type AuditStatus = 'draft' | 'under-review' | 'planned' | 'in-progress' | 'completed' | 'cancelled';
 
 /**
  * Test result types for workpaper testing
@@ -46,6 +46,50 @@ export type ReportFormat = 'pdf' | 'excel' | 'csv';
  */
 export type ViewMode = 'list' | 'grid' | 'timeline';
 
+/**
+ * Template category group types
+ */
+export type TemplateCategoryGroup = 'main-clauses' | 'annex-a-controls';
+
+/**
+ * Workpaper status types
+ */
+export type WorkpaperStatus = 'unlinked' | 'linked' | 'in-progress' | 'completed';
+
+// ============================================================================
+// TEMPLATE TYPES
+// ============================================================================
+
+/**
+ * Template category definition for ISO standards
+ */
+export interface TemplateCategory {
+  id: string;
+  name: string;
+  displayName: string;
+  clauses: string[];
+  clauseRange?: string;
+  group: TemplateCategoryGroup;
+  objectives: string;
+  scope: string;
+  auditProcedure: string;
+  description?: string;
+  isRequired?: boolean;
+}
+
+/**
+ * Workpaper template definition (e.g., ISO 27001:2022)
+ */
+export interface WorkpaperTemplateDefinition {
+  id: string;
+  name: string;
+  description: string;
+  categories: TemplateCategory[];
+  version?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // ============================================================================
 // AUDIT PLAN TYPES
 // ============================================================================
@@ -66,6 +110,13 @@ export interface AuditPlan {
   status: AuditStatus;
   progress: number;
   conformityRate?: number;
+
+  // Template and workpaper relationships
+  templateId?: string;
+  templateName?: string;
+  selectedCategories?: string[];
+  workpaperIds?: string[];
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -83,6 +134,10 @@ export interface AuditPlanInput {
   startDate: Date;
   endDate: Date;
   status?: AuditStatus;
+
+  // Template and category selection
+  templateId?: string;
+  selectedCategories?: string[];
 }
 
 /**
@@ -106,18 +161,34 @@ export interface Workpaper {
   id: string;
   auditId?: string; // Optional - can be attached to audit plan later
   auditTitle?: string; // Optional - only present when attached to audit
+
+  // Category information (from template)
+  categoryId?: string;
+  category?: string;
+
   clause: string;
   clauseTitle: string;
   objectives: string;
+  scope?: string;
   testProcedures: string;
   testResults?: string;
   testResult?: TestResult;
   conclusion?: string;
+
+  // New fields for comprehensive audit documentation
+  documentsObtained?: string;
+  sourceDocuments?: string;
+  sampleSize?: string;
+  controlFrequency?: string;
+  samplingMethodology?: string;
+
   evidence: Evidence[];
   preparedBy: string;
   preparedDate: Date;
   reviewedBy?: string;
   reviewedDate?: Date;
+
+  status?: WorkpaperStatus;
   createdAt: Date;
   updatedAt: Date;
 
@@ -131,18 +202,34 @@ export interface Workpaper {
  */
 export interface WorkpaperInput {
   auditId?: string; // Optional - can be attached to audit plan later
+
+  // Category information (from template)
+  categoryId?: string;
+  category?: string;
+
   clause: string;
   clauseTitle?: string;
   objectives: string;
+  scope?: string;
   testProcedures: string;
   testResults?: string;
   testResult?: TestResult;
   conclusion?: string;
+
+  // New fields for comprehensive audit documentation
+  documentsObtained?: string;
+  sourceDocuments?: string;
+  sampleSize?: string;
+  controlFrequency?: string;
+  samplingMethodology?: string;
+
   evidence?: EvidenceInput[];
   preparedBy: string;
   preparedDate: Date;
   reviewedBy?: string;
   reviewedDate?: Date;
+
+  status?: WorkpaperStatus;
 }
 
 /**
@@ -439,6 +526,7 @@ export interface CustomWorkpaperInput {
 export interface Finding {
   id: string;
   referenceCode: string;
+  findingNumber?: string; // Auto-generated or manual finding number
   auditId: string;
   auditTitle: string;
   clause: string;
@@ -452,6 +540,14 @@ export interface Finding {
   dueDate?: Date;
   resolvedDate?: Date;
   attachments: Attachment[];
+
+  // Report inclusion
+  includeInReport: boolean; // Whether to include in final audit report
+
+  // Additional fields for report
+  workingsAndTestResults?: string;
+  conclusion?: string;
+
   createdAt: Date;
   updatedAt: Date;
 
@@ -474,6 +570,12 @@ export interface FindingInput {
   correctiveAction?: string;
   assignedTo?: string;
   dueDate?: Date;
+
+  // Report inclusion
+  includeInReport?: boolean;
+  findingNumber?: string;
+  workingsAndTestResults?: string;
+  conclusion?: string;
 
   // Workpaper relationship
   workpaperId?: string;

@@ -86,12 +86,13 @@ export default function NewWorkpaperPage() {
       </div>
 
       {/* Form Content based on template */}
-      {templateId === "iso27001" && (
+      {(templateId === "iso27001" || templateId === "iso27001-2022") && (
         <CreateWorkpaperForm
           auditId={auditId}
           auditTitle={auditTitle}
           onSuccess={handleSuccess}
           onCancel={handleCancel}
+          templateId={templateId}
         />
       )}
 
@@ -117,6 +118,7 @@ export default function NewWorkpaperPage() {
 
       {selectedCustomTemplate &&
        templateId !== "iso27001" &&
+       templateId !== "iso27001-2022" &&
        templateId !== "general" &&
        templateId !== "custom-new" && (
         <CustomWorkpaperForm
@@ -129,7 +131,7 @@ export default function NewWorkpaperPage() {
       )}
 
       {/* Invalid template */}
-      {!["iso27001", "general", "custom-new"].includes(templateId) &&
+      {!["iso27001", "iso27001-2022", "general", "custom-new"].includes(templateId) &&
        !selectedCustomTemplate && (
         <Card>
           <CardHeader>

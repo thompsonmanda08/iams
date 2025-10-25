@@ -36,6 +36,7 @@ import type {
   TeamMemberInput
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
+import { TemplateService } from "@/lib/services/template-service";
 
 // ============================================================================
 // MOCK DATA
@@ -420,8 +421,12 @@ export async function createAuditPlan(input: AuditPlanInput): Promise<APIRespons
       id: String(mockAuditPlans.length + 1),
       ...input,
       standard: input.standard || "ISO 27001:2022",
-      status: input.status || "planned",
+      status: input.status || "draft", // New audit plans start as draft
       progress: 0,
+      templateId: input.templateId,
+      templateName: input.templateId ? getTemplateName(input.templateId) : undefined,
+      selectedCategories: input.selectedCategories || [],
+      workpaperIds: [], // Will be populated when workpapers are created
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -449,6 +454,16 @@ export async function createAuditPlan(input: AuditPlanInput): Promise<APIRespons
       data: null
     };
   }
+}
+
+/**
+ * Helper function to get template name by ID
+ */
+function getTemplateName(templateId: string): string {
+  const templates: Record<string, string> = {
+    'iso27001-2022': 'ISO 27001:2022',
+  };
+  return templates[templateId] || templateId;
 }
 
 /**
@@ -524,6 +539,184 @@ export async function deleteAuditPlan(id: string): Promise<APIResponse> {
     return successResponse(null, "Audit plan deleted successfully");
   } catch (error: any) {
     return handleError(error, "DELETE | AUDIT PLAN", `/api/audits/${id}`);
+  }
+}
+
+/**
+ * Submit audit plan for review and auto-create workpapers from template
+ */
+export async function submitAuditPlanForReview(auditPlanId: string): Promise<APIResponse> {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Get audit plan
+    const auditPlan = mockAuditPlans.find((a) => a.id === auditPlanId);
+    if (!auditPlan) {
+      return {
+        success: false,
+        message: "Audit plan not found",
+        data: null
+      };
+    }
+
+    // Validate template and categories
+    if (!auditPlan.templateId || !auditPlan.selectedCategories?.length) {
+      return {
+        success: false,
+        message: "Template and categories must be selected before submitting for review",
+        data: null
+      };
+    }
+
+    // Create workpapers from selected categories
+    const workpapersResult = await createWorkpapersFromTemplate(
+      auditPlanId,
+      auditPlan.templateId,
+      auditPlan.selectedCategories
+    );
+
+    if (!workpapersResult.success) {
+      return workpapersResult;
+    }
+
+    // Update audit plan status to under-review
+    const index = mockAuditPlans.findIndex((a) => a.id === auditPlanId);
+    if (index !== -1) {
+      mockAuditPlans[index] = {
+        ...mockAuditPlans[index],
+        status: "under-review",
+        updatedAt: new Date()
+      };
+    }
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return {
+      success: true,
+      message: `Audit plan submitted for review. ${workpapersResult.data?.length || 0} workpapers created successfully.`,
+      data: {
+        auditPlan: mockAuditPlans[index],
+        workpapers: workpapersResult.data
+      }
+    };
+  } catch (error: any) {
+    console.error({
+      endpoint: `POST | SUBMIT AUDIT PLAN FOR REVIEW ~ ${auditPlanId}`,
+      error: error?.message || error
+    });
+
+    return {
+      success: false,
+      message: error?.message || "Failed to submit audit plan for review",
+      data: null
+    };
+  }
+}
+
+/**
+ * Create workpapers from template categories
+ */
+export async function createWorkpapersFromTemplate(
+  auditPlanId: string,
+  templateId: string,
+  selectedCategoryIds: string[]
+): Promise<APIResponse<Workpaper[]>> {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Get template
+    const template = TemplateService.getTemplate(templateId);
+    if (!template) {
+      return {
+        success: false,
+        message: "Template not found",
+        data: null
+      };
+    }
+
+    // Get audit plan to retrieve title
+    const auditPlan = mockAuditPlans.find((a) => a.id === auditPlanId);
+    const auditTitle = auditPlan?.title || "Unknown Audit";
+
+    // Filter categories based on selection
+    const selectedCategories = template.categories.filter((cat) =>
+      selectedCategoryIds.includes(cat.id)
+    );
+
+    if (selectedCategories.length === 0) {
+      return {
+        success: false,
+        message: "No valid categories selected",
+        data: null
+      };
+    }
+
+    // Create one workpaper for each selected category
+    const createdWorkpapers: Workpaper[] = [];
+
+    for (const category of selectedCategories) {
+      const workpaperId = String(mockWorkpapers.length + createdWorkpapers.length + 1);
+
+      const workpaper: Workpaper = {
+        id: workpaperId,
+        auditId: auditPlanId,
+        auditTitle: auditTitle,
+        categoryId: category.id,
+        category: category.name,
+        clause: category.clauses.join(", "),
+        clauseTitle: category.displayName,
+        objectives: category.objectives,
+        scope: category.scope,
+        testProcedures: category.auditProcedure,
+        testResults: "",
+        conclusion: "",
+        evidence: [],
+        preparedBy: auditPlan?.teamLeader || "",
+        preparedDate: new Date(),
+        status: "unlinked",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+
+        // Initialize new fields as empty
+        documentsObtained: "",
+        sourceDocuments: "",
+        sampleSize: "",
+        controlFrequency: "",
+        samplingMethodology: "",
+      };
+
+      createdWorkpapers.push(workpaper);
+      mockWorkpapers.push(workpaper);
+    }
+
+    // Update audit plan with workpaper IDs
+    const auditIndex = mockAuditPlans.findIndex((a) => a.id === auditPlanId);
+    if (auditIndex !== -1) {
+      mockAuditPlans[auditIndex] = {
+        ...mockAuditPlans[auditIndex],
+        workpaperIds: createdWorkpapers.map((wp) => wp.id),
+        updatedAt: new Date()
+      };
+    }
+
+    return {
+      success: true,
+      message: `${createdWorkpapers.length} workpapers created successfully`,
+      data: createdWorkpapers
+    };
+  } catch (error: any) {
+    console.error({
+      endpoint: "POST | CREATE WORKPAPERS FROM TEMPLATE",
+      error: error?.message || error
+    });
+
+    return {
+      success: false,
+      message: error?.message || "Failed to create workpapers from template",
+      data: null
+    };
   }
 }
 

@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Users, TrendingUp, AlertCircle, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, Users, TrendingUp, AlertCircle, FileText, Send, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { AuditStatusBadge } from "@/components/audit/audit-status-badge";
 import Link from "next/link";
 import { getAuditPlan, getWorkpapers, getFindings } from "@/app/_actions/audit-module-actions";
@@ -11,6 +12,8 @@ import { format } from "date-fns";
 import { AuditFindingsTab } from "@/components/audit/audit-findings-tab";
 import { AuditWorkpapersTab } from "@/components/audit/audit-workpapers-tab";
 import { AuditPlan } from "@/lib/types/audit-types";
+import { TemplateService } from "@/lib/services/template-service";
+import { SubmitForReviewButton } from "@/components/audit/submit-for-review-button";
 
 interface AuditDetailPageProps {
   params: Promise<{
@@ -141,6 +144,73 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
               <Progress value={auditPlan.progress} className="h-2" />
             </div>
           </Card>
+
+          {/* Template & Categories */}
+          {auditPlan.templateId && (
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Layers className="text-muted-foreground h-5 w-5" />
+                    <span className="font-semibold">Template & Categories</span>
+                  </div>
+                  {auditPlan.status === 'draft' && (
+                    <SubmitForReviewButton
+                      auditPlanId={auditPlan.id}
+                      categoryCount={auditPlan.selectedCategories?.length || 0}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-muted-foreground text-sm font-medium mb-2">
+                      Template
+                    </p>
+                    <Badge variant="secondary" className="text-sm">
+                      {auditPlan.templateName || auditPlan.templateId}
+                    </Badge>
+                  </div>
+
+                  {auditPlan.selectedCategories && auditPlan.selectedCategories.length > 0 && (
+                    <div>
+                      <p className="text-muted-foreground text-sm font-medium mb-2">
+                        Selected Categories ({auditPlan.selectedCategories.length})
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {auditPlan.selectedCategories.map((categoryId) => {
+                          const category = TemplateService.getCategoryById(
+                            auditPlan.templateId!,
+                            categoryId
+                          );
+                          return (
+                            <Badge
+                              key={categoryId}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {category?.name || categoryId}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {auditPlan.workpaperIds && auditPlan.workpaperIds.length > 0 && (
+                    <div className="pt-3 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">
+                          {auditPlan.workpaperIds.length}
+                        </span>{" "}
+                        workpapers generated from template
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Audit Details */}
           <Card className="p-6">

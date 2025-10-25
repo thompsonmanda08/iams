@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TemplateSelector } from "./template-selector";
+import { IsoCategorySelector } from "./iso-category-selector";
 import { EvidenceUpload } from "./evidence-upload";
 import { CreateFindingModal } from "./create-finding-modal";
 import { useCreateWorkpaper } from "@/hooks/use-audit-query-data";
@@ -34,6 +35,7 @@ import { useTeamMembers } from "@/hooks/use-audit-query-data";
 import useWorkpaperDraftStore from "@/store/useWorkpaperDraftStore";
 import type {
   ClauseTemplate,
+  TemplateCategory,
   TestResult,
   EvidenceInput,
   WorkpaperInput,
@@ -49,6 +51,7 @@ interface CreateWorkpaperFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   initialData?: Partial<WorkpaperInput>;
+  templateId?: string; // Template ID to determine which template system to use
 }
 
 export function CreateWorkpaperForm({
@@ -56,7 +59,8 @@ export function CreateWorkpaperForm({
   auditTitle,
   onSuccess,
   onCancel,
-  initialData
+  initialData,
+  templateId
 }: CreateWorkpaperFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -69,8 +73,11 @@ export function CreateWorkpaperForm({
   // Get current user (mock - replace with actual auth)
   const currentUser = teamMembers?.[0]?.name || "Current User";
 
-  // Selected template
+  // Selected template (for old clause-based system)
   const [selectedTemplate, setSelectedTemplate] = useState<ClauseTemplate | null>(null);
+
+  // Selected category (for new ISO 27001:2022 category-based system)
+  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<{
@@ -84,6 +91,15 @@ export function CreateWorkpaperForm({
     evidence: EvidenceInput[];
     preparedBy: string;
     reviewedBy: string;
+    // New fields for comprehensive audit documentation
+    categoryId?: string;
+    category: string;
+    scope: string;
+    documentsObtained: string;
+    sourceDocuments: string;
+    sampleSize: string;
+    controlFrequency: string;
+    samplingMethodology: string;
   }>({
     clause: initialData?.clause || "",
     clauseTitle: initialData?.clauseTitle || "",
@@ -94,7 +110,16 @@ export function CreateWorkpaperForm({
     conclusion: initialData?.conclusion || "",
     evidence: initialData?.evidence || [],
     preparedBy: initialData?.preparedBy || currentUser,
-    reviewedBy: initialData?.reviewedBy || ""
+    reviewedBy: initialData?.reviewedBy || "",
+    // New fields for comprehensive audit documentation
+    categoryId: (initialData as any)?.categoryId,
+    category: (initialData as any)?.category || "",
+    scope: (initialData as any)?.scope || "",
+    documentsObtained: (initialData as any)?.documentsObtained || "",
+    sourceDocuments: (initialData as any)?.sourceDocuments || "",
+    sampleSize: (initialData as any)?.sampleSize || "",
+    controlFrequency: (initialData as any)?.controlFrequency || "",
+    samplingMethodology: (initialData as any)?.samplingMethodology || "",
   });
 
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -138,7 +163,7 @@ export function CreateWorkpaperForm({
     }
   }, [debouncedFormData, hasUnsavedChanges, auditId, saveDraft]);
 
-  // Handle template selection
+  // Handle template selection (old clause-based system)
   const handleTemplateSelect = useCallback((template: ClauseTemplate | null) => {
     setSelectedTemplate(template);
     if (template) {
@@ -148,6 +173,30 @@ export function CreateWorkpaperForm({
         clauseTitle: template.clauseTitle,
         objectives: template.objective,
         testProcedures: template.testProcedure
+      }));
+      setHasUnsavedChanges(true);
+    }
+  }, []);
+
+  // Handle category selection (new ISO 27001:2022 category-based system)
+  const handleCategorySelect = useCallback((category: TemplateCategory | null) => {
+    setSelectedCategory(category);
+    if (category) {
+      setFormData((prev) => ({
+        ...prev,
+        categoryId: category.id,
+        category: category.name,
+        clause: category.clauses.join(", "),
+        clauseTitle: category.displayName,
+        objectives: category.objectives,
+        testProcedures: category.auditProcedure,
+        scope: category.scope,
+        // Initialize other fields as empty - user will fill them in
+        documentsObtained: prev.documentsObtained || "",
+        sourceDocuments: prev.sourceDocuments || "",
+        sampleSize: prev.sampleSize || "",
+        controlFrequency: prev.controlFrequency || "",
+        samplingMethodology: prev.samplingMethodology || ""
       }));
       setHasUnsavedChanges(true);
     }
@@ -212,7 +261,16 @@ export function CreateWorkpaperForm({
       evidence: formData.evidence.length > 0 ? formData.evidence : undefined,
       preparedBy: formData.preparedBy,
       preparedDate: new Date(),
-      reviewedBy: formData.reviewedBy || undefined
+      reviewedBy: formData.reviewedBy || undefined,
+      // New fields for comprehensive audit documentation
+      categoryId: formData.categoryId || undefined,
+      category: formData.category || undefined,
+      scope: formData.scope || undefined,
+      documentsObtained: formData.documentsObtained || undefined,
+      sourceDocuments: formData.sourceDocuments || undefined,
+      sampleSize: formData.sampleSize || undefined,
+      controlFrequency: formData.controlFrequency || undefined,
+      samplingMethodology: formData.samplingMethodology || undefined,
     };
 
     try {
@@ -316,11 +374,19 @@ export function CreateWorkpaperForm({
         )}
       </div>
 
-      {/* Template Selector */}
-      <TemplateSelector
-        onTemplateSelect={handleTemplateSelect}
-        selectedTemplate={selectedTemplate}
-      />
+      {/* Template/Category Selector - show appropriate selector based on templateId */}
+      {templateId === "iso27001-2022" ? (
+        <IsoCategorySelector
+          templateId={templateId}
+          onCategorySelect={handleCategorySelect}
+          selectedCategory={selectedCategory}
+        />
+      ) : (
+        <TemplateSelector
+          onTemplateSelect={handleTemplateSelect}
+          selectedTemplate={selectedTemplate}
+        />
+      )}
 
       {/* Workpaper Details */}
       <Card className="p-6">
@@ -328,13 +394,22 @@ export function CreateWorkpaperForm({
           <div>
             <h3 className="mb-4 text-lg font-semibold">Workpaper Details</h3>
 
-            {/* Clause Display */}
+            {/* Clause and Category Display */}
             {formData.clause && formData.clauseTitle && (
-              <div className="mb-4 flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm">
-                  {formData.clause}
-                </Badge>
-                <span className="text-sm font-medium">{formData.clauseTitle}</span>
+              <div className="mb-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-sm">
+                    {formData.clause}
+                  </Badge>
+                  <span className="text-sm font-medium">{formData.clauseTitle}</span>
+                </div>
+                {formData.category && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      Category: {formData.category}
+                    </Badge>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -372,6 +447,103 @@ export function CreateWorkpaperForm({
             />
             <p className="text-muted-foreground text-xs">
               {formData.testProcedures.length} characters
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Audit Documentation */}
+      <Card className="p-6">
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold">Audit Documentation</h3>
+
+          {/* Scope */}
+          {formData.scope && (
+            <div className="space-y-2">
+              <Label htmlFor="scope">Scope</Label>
+              <Textarea
+                id="scope"
+                placeholder="ISO clauses covered..."
+                rows={2}
+                className="resize-none bg-muted"
+                value={formData.scope}
+                onChange={(e) => updateField("scope", e.target.value)}
+                disabled
+              />
+              <p className="text-muted-foreground text-xs">
+                Pre-filled from template
+              </p>
+            </div>
+          )}
+
+          {/* Documents Obtained */}
+          <div className="space-y-2">
+            <Label htmlFor="documentsObtained">Documents Obtained</Label>
+            <Textarea
+              id="documentsObtained"
+              placeholder="From: [Source], Title: [Document Title]..."
+              rows={3}
+              className="resize-none"
+              value={formData.documentsObtained}
+              onChange={(e) => updateField("documentsObtained", e.target.value)}
+            />
+            <p className="text-muted-foreground text-xs">
+              List documents obtained during the audit
+            </p>
+          </div>
+
+          {/* Source Documents */}
+          <div className="space-y-2">
+            <Label htmlFor="sourceDocuments">Source Documents</Label>
+            <Textarea
+              id="sourceDocuments"
+              placeholder="Title: [Document], Date: [Date], Format: Hard copy / Electronic..."
+              rows={3}
+              className="resize-none"
+              value={formData.sourceDocuments}
+              onChange={(e) => updateField("sourceDocuments", e.target.value)}
+            />
+            <p className="text-muted-foreground text-xs">
+              Reference materials and standards used
+            </p>
+          </div>
+
+          {/* Sample Size and Control Frequency */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sampleSize">Sample Size</Label>
+              <Input
+                id="sampleSize"
+                placeholder="e.g., 20 items, All records"
+                value={formData.sampleSize}
+                onChange={(e) => updateField("sampleSize", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="controlFrequency">Frequency of Control</Label>
+              <Input
+                id="controlFrequency"
+                placeholder="e.g., Daily, Weekly, Monthly"
+                value={formData.controlFrequency}
+                onChange={(e) => updateField("controlFrequency", e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Sampling Methodology */}
+          <div className="space-y-2">
+            <Label htmlFor="samplingMethodology">Sampling Methodology</Label>
+            <Textarea
+              id="samplingMethodology"
+              placeholder="Describe the sampling approach used..."
+              rows={3}
+              className="resize-none"
+              value={formData.samplingMethodology}
+              onChange={(e) => updateField("samplingMethodology", e.target.value)}
+            />
+            <p className="text-muted-foreground text-xs">
+              Explain how samples were selected for testing
             </p>
           </div>
         </div>
