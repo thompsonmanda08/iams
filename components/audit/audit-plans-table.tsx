@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -10,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AuditStatusBadge } from "./audit-status-badge";
-import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -21,7 +23,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
+import { deleteAuditPlan } from "@/app/_actions/audit-module-actions";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuditPlansTableProps {
   plans: AuditPlan[];
@@ -29,6 +43,59 @@ interface AuditPlansTableProps {
 }
 
 export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<AuditPlan | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (plan: AuditPlan) => {
+    // Only allow deletion for Draft plans
+    if (plan.status !== 'draft' && plan.status !== 'Draft') {
+      toast({
+        title: "Cannot Delete",
+        description: "Only draft audit plans can be deleted.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPlanToDelete(plan);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!planToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteAuditPlan(planToDelete.id);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Audit plan deleted successfully",
+        });
+        setDeleteDialogOpen(false);
+        setPlanToDelete(null);
+        router.refresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to delete audit plan",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -129,15 +196,25 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                         View Details
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 cursor-pointer">
-                      <Edit className="h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2 text-destructive cursor-pointer">
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
+                    {(plan.status === 'draft' || plan.status === 'Draft') && (
+                      <>
+                        <DropdownMenuItem
+                          className="gap-2 cursor-pointer"
+                          onClick={() => router.push(`/dashboard/audit/plans/${plan.id}/edit`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="gap-2 text-destructive cursor-pointer"
+                          onClick={() => handleDeleteClick(plan)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -145,6 +222,35 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
           ))}
         </TableBody>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Audit Plan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{planToDelete?.title}&quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

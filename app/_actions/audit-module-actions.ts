@@ -37,6 +37,7 @@ import type {
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import { TemplateService } from "@/lib/services/template-service";
+import authenticatedApiClient from "./api-config";
 
 // ============================================================================
 // MOCK DATA
@@ -317,60 +318,26 @@ const mockClauseTemplates: ClauseTemplate[] = [
 /**
  * Get all audit plans with optional filters
  */
-export async function getAuditPlans(filters?: AuditFilters): Promise<APIResponse> {
+export async function getAuditPlans(filters?: {
+  year?: number;
+  status?: string;
+}): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Simulate network delay
+    const params = new URLSearchParams();
+    if (filters?.year) params.append('year', String(filters.year));
+    if (filters?.status) params.append('status', filters.status);
 
-    let filtered = [...mockAuditPlans];
+    const queryString = params.toString();
+    const url = `/api/v1/audit-plans${queryString ? `?${queryString}` : ''}`;
 
-    // Apply filters
-    if (filters?.status && filters.status.length > 0) {
-      filtered = filtered.filter((audit) => filters.status!.includes(audit.status));
-    }
-
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (audit) =>
-          audit.title.toLowerCase().includes(search) ||
-          audit.objectives.toLowerCase().includes(search) ||
-          audit.teamLeader.toLowerCase().includes(search)
-      );
-    }
-
-    if (filters?.teamLeader) {
-      filtered = filtered.filter((audit) => audit.teamLeader === filters.teamLeader);
-    }
-
-    if (filters?.dateRange) {
-      const [start, end] = filters.dateRange;
-      filtered = filtered.filter(
-        (audit) =>
-          (audit.startDate >= start && audit.startDate <= end) ||
-          (audit.endDate >= start && audit.endDate <= end)
-      );
-    }
-
-    return {
-      success: true,
-      message: "Audit plans fetched successfully",
-      data: filtered,
-      meta: {
-        total: filtered.length,
-        filtered: filtered.length
-      }
-    };
-  } catch (error: any) {
-    console.error({
-      endpoint: "GET | AUDIT PLANS",
-      error: error?.message || error
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
     });
 
-    return {
-      success: false,
-      message: error?.message || "Failed to fetch audit plans",
-      data: []
-    };
+    return successResponse(response.data, "Audit plans fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT PLANS", "/api/v1/audit-plans");
   }
 }
 
@@ -378,81 +345,62 @@ export async function getAuditPlans(filters?: AuditFilters): Promise<APIResponse
  * Get single audit plan by ID
  */
 export async function getAuditPlan(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const audit = mockAuditPlans.find((a) => a.id === id);
-
-    if (!audit) {
-      return {
-        success: false,
-        message: "Audit plan not found",
-        data: null
-      };
-    }
-
-    return {
-      success: true,
-      message: "Audit plan fetched successfully",
-      data: audit
-    };
-  } catch (error: any) {
-    console.error({
-      endpoint: `GET | AUDIT PLAN ~ ${id}`,
-      error: error?.message || error
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit-plans/${id}`
     });
 
-    return {
-      success: false,
-      message: error?.message || "Failed to fetch audit plan",
-      data: null
-    };
+    return successResponse(response.data, "Audit plan fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT PLAN", `/api/v1/audit-plans/${id}`);
   }
 }
 
 /**
  * Create new audit plan
  */
-export async function createAuditPlan(input: AuditPlanInput): Promise<APIResponse> {
+export async function createAuditPlan(data: {
+  year: number;
+  title: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  ref_no: string;
+  audit_area: string;
+  audit_scope: string;
+  audit_criteria: string;
+  audit_objective: string;
+  management_standard: string;
+  audit_team_leader: string;
+  audit_team_member?: string;
+  client_representative?: string;
+  audit_language?: string;
+  opening_meeting_datetime?: string;
+  closing_meeting_datetime?: string;
+  working_paper_template_id?: string;
+}): Promise<APIResponse> {
+  if (!data.year || !data.title || !data.start_date || !data.end_date || !data.ref_no) {
+    return handleBadRequest("Year, title, start date, end date, and reference number are required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/audit-plans",
+      data
+    });
 
-    const newAudit: AuditPlan = {
-      id: String(mockAuditPlans.length + 1),
-      ...input,
-      standard: input.standard || "ISO 27001:2022",
-      status: input.status || "draft", // New audit plans start as draft
-      progress: 0,
-      templateId: input.templateId,
-      templateName: input.templateId ? getTemplateName(input.templateId) : undefined,
-      selectedCategories: input.selectedCategories || [],
-      workpaperIds: [], // Will be populated when workpapers are created
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    mockAuditPlans.push(newAudit);
-
-    // Revalidate relevant paths
     revalidatePath("/dashboard/audit/plans");
     revalidatePath("/dashboard/home/audit");
 
-    return {
-      success: true,
-      message: "Audit plan created successfully",
-      data: newAudit
-    };
+    return successResponse(response.data, "Audit plan created successfully");
   } catch (error: any) {
-    console.error({
-      endpoint: "POST | CREATE AUDIT PLAN",
-      error: error?.message || error
-    });
-
-    return {
-      success: false,
-      message: error?.message || "Failed to create audit plan",
-      data: null
-    };
+    return handleError(error, "POST | CREATE AUDIT PLAN", "/api/v1/audit-plans");
   }
 }
 
@@ -467,78 +415,59 @@ function getTemplateName(templateId: string): string {
 }
 
 /**
- * Update existing audit plan
+ * Update existing audit plan (Draft only)
  */
 export async function updateAuditPlan(
   id: string,
-  data: Partial<AuditPlanInput>
+  data: {
+    title?: string;
+    description?: string;
+    audit_scope?: string;
+    audit_objective?: string;
+    [key: string]: any;
+  }
 ): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const index = mockAuditPlans.findIndex((a) => a.id === id);
-
-    if (index === -1) {
-      return {
-        success: false,
-        message: "Audit plan not found",
-        data: null
-      };
-    }
-
-    mockAuditPlans[index] = {
-      ...mockAuditPlans[index],
-      ...data,
-      updatedAt: new Date()
-    };
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/audit-plans/${id}`,
+      data
+    });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/${id}`);
     revalidatePath("/dashboard/home/audit");
 
-    return {
-      success: true,
-      message: "Audit plan updated successfully",
-      data: mockAuditPlans[index]
-    };
+    return successResponse(response.data, "Audit plan updated successfully");
   } catch (error: any) {
-    console.error({
-      endpoint: `PUT | UPDATE AUDIT PLAN ~ ${id}`,
-      error: error?.message || error
-    });
-
-    return {
-      success: false,
-      message: error?.message || "Failed to update audit plan",
-      data: null
-    };
+    return handleError(error, "PUT | UPDATE AUDIT PLAN", `/api/v1/audit-plans/${id}`);
   }
 }
 
 /**
- * Delete audit plan
+ * Delete audit plan (Draft only)
  */
 export async function deleteAuditPlan(id: string): Promise<APIResponse> {
   if (!id) {
-    return handleBadRequest("Audit plan ID is not missing");
+    return handleBadRequest("Audit plan ID is required");
   }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    const index = mockAuditPlans.findIndex((a) => a.id === id);
-
-    if (index === -1) {
-      return handleBadRequest("Audit plan not found");
-    }
-
-    mockAuditPlans.splice(index, 1);
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/audit-plans/${id}`
+    });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath("/dashboard/home/audit");
 
     return successResponse(null, "Audit plan deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | AUDIT PLAN", `/api/audits/${id}`);
+    return handleError(error, "DELETE | AUDIT PLAN", `/api/v1/audit-plans/${id}`);
   }
 }
 
@@ -727,23 +656,27 @@ export async function createWorkpapersFromTemplate(
 /**
  * Get all workpapers, optionally filtered by audit
  */
-export async function getWorkpapers(auditId?: string): Promise<APIResponse> {
+export async function getWorkpapers(auditPlanId?: string, filters?: {
+  status?: string;
+  prepared_by?: string;
+}): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const params = new URLSearchParams();
+    if (auditPlanId) params.append('audit_plan_id', auditPlanId);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.prepared_by) params.append('prepared_by', filters.prepared_by);
 
-    let filtered = [...mockWorkpapers];
+    const queryString = params.toString();
+    const url = `/api/v1/working-papers${queryString ? `?${queryString}` : ''}`;
 
-    if (auditId) {
-      filtered = filtered.filter((wp) => wp.auditId === auditId);
-    }
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
 
-    return successResponse(filtered, "Workpapers fetched successfully");
+    return successResponse(response.data, "Workpapers fetched successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | WORKPAPERS",
-      auditId ? `/api/audits/${auditId}/workpapers` : "/api/audits/workpapers"
-    );
+    return handleError(error, "GET | WORKPAPERS", "/api/v1/working-papers");
   }
 }
 
@@ -751,48 +684,118 @@ export async function getWorkpapers(auditId?: string): Promise<APIResponse> {
  * Get single workpaper by ID
  */
 export async function getWorkpaper(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-papers/${id}`
+    });
 
-    const workpaper = mockWorkpapers.find((wp) => wp.id === id);
-
-    if (!workpaper) {
-      return handleBadRequest("Workpaper not found");
-    }
-
-    return successResponse(workpaper, "Workpaper fetched successfully");
+    return successResponse(response.data, "Workpaper fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | WORKPAPER", `/api/audits/${id}`);
+    return handleError(error, "GET | WORKPAPER", `/api/v1/working-papers/${id}`);
+  }
+}
+
+/**
+ * Get working paper statistics
+ */
+export async function getWorkpaperStatistics(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-papers/${id}/statistics`
+    });
+
+    return successResponse(response.data, "Working paper statistics fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | WORKPAPER STATISTICS", `/api/v1/working-papers/${id}/statistics`);
+  }
+}
+
+/**
+ * Get audit plan working paper summary
+ */
+export async function getAuditPlanWorkpaperSummary(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
+    });
+
+    return successResponse(response.data, "Audit plan workpaper summary fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT PLAN WP SUMMARY", `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`);
   }
 }
 
 /**
  * Create new workpaper
  */
-export async function createWorkpaper(input: WorkpaperInput): Promise<APIResponse> {
+export async function createWorkpaper(data: {
+  audit_plan_id: string;
+  template_id: string;
+  ref_number: string;
+  working_paper_date: string;
+  prepared_by: string;
+  reviewed_by?: string;
+  status?: string;
+}): Promise<APIResponse> {
+  if (!data.audit_plan_id || !data.template_id || !data.ref_number) {
+    return handleBadRequest("Audit plan ID, template ID, and reference number are required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const audit = mockAuditPlans.find((a) => a.id === input.auditId);
-
-    const newWorkpaper: Workpaper = {
-      id: String(mockWorkpapers.length + 1),
-      ...input,
-      auditTitle: audit?.title || "Unknown Audit",
-      clauseTitle: `Clause ${input.clause}`,
-      evidence: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    mockWorkpapers.push(newWorkpaper);
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-papers",
+      data
+    });
 
     revalidatePath("/dashboard/audit/workpapers");
-    revalidatePath(`/dashboard/audit/plans/${input.auditId}/workpapers`);
+    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
 
-    return successResponse(newWorkpaper, "Workpaper created successfully");
+    return successResponse(response.data, "Workpaper created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE WORKPAPER", "/api/audits/workpapers");
+    return handleError(error, "POST | CREATE WORKPAPER", "/api/v1/working-papers");
+  }
+}
+
+/**
+ * Create workpaper from template
+ */
+export async function createWorkpaperFromTemplate(data: {
+  audit_plan_id: string;
+  template_id: string;
+}): Promise<APIResponse> {
+  if (!data.audit_plan_id || !data.template_id) {
+    return handleBadRequest("Audit plan ID and template ID are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-papers/from-template",
+      data
+    });
+
+    revalidatePath("/dashboard/audit/workpapers");
+    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
+
+    return successResponse(response.data, "Workpaper created from template successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE WORKPAPER FROM TEMPLATE", "/api/v1/working-papers/from-template");
   }
 }
 
@@ -801,33 +804,78 @@ export async function createWorkpaper(input: WorkpaperInput): Promise<APIRespons
  */
 export async function updateWorkpaper(
   id: string,
-  data: Partial<WorkpaperInput>
+  data: {
+    reviewed_by?: string;
+    status?: string;
+    [key: string]: any;
+  }
 ): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const index = mockWorkpapers.findIndex((wp) => wp.id === id);
-
-    if (index === -1) {
-      return {
-        success: false,
-        message: "Workpaper not found",
-        data: null
-      };
-    }
-
-    mockWorkpapers[index] = {
-      ...mockWorkpapers[index],
-      ...data,
-      updatedAt: new Date()
-    };
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-papers/${id}`,
+      data
+    });
 
     revalidatePath("/dashboard/audit/workpapers");
     revalidatePath(`/dashboard/audit/workpapers/${id}`);
 
-    return successResponse(mockWorkpapers[index], "Workpaper updated successfully");
+    return successResponse(response.data, "Workpaper updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE WORKPAPER", `/api/audits/${id}`);
+    return handleError(error, "PUT | UPDATE WORKPAPER", `/api/v1/working-papers/${id}`);
+  }
+}
+
+/**
+ * Update workpaper status only
+ */
+export async function updateWorkpaperStatus(
+  id: string,
+  status: string
+): Promise<APIResponse> {
+  if (!id || !status) {
+    return handleBadRequest("Working paper ID and status are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url: `/api/v1/working-papers/${id}/status`,
+      data: { status }
+    });
+
+    revalidatePath("/dashboard/audit/workpapers");
+    revalidatePath(`/dashboard/audit/workpapers/${id}`);
+
+    return successResponse(response.data, "Workpaper status updated successfully");
+  } catch (error: any) {
+    return handleError(error, "PATCH | UPDATE WORKPAPER STATUS", `/api/v1/working-papers/${id}/status`);
+  }
+}
+
+/**
+ * Delete workpaper
+ */
+export async function deleteWorkpaper(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-papers/${id}`
+    });
+
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(null, "Workpaper deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | WORKPAPER", `/api/v1/working-papers/${id}`);
   }
 }
 
@@ -976,41 +1024,48 @@ export async function deleteClauseTemplate(id: string): Promise<APIResponse> {
 /**
  * Get all findings with optional filters
  */
-export async function getFindings(filters?: FindingFilters): Promise<APIResponse> {
+export async function getFindings(filters?: {
+  working_paper_id?: string;
+  severity?: string;
+  status?: string;
+}): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const params = new URLSearchParams();
+    if (filters?.working_paper_id) params.append('working_paper_id', filters.working_paper_id);
+    if (filters?.severity) params.append('severity', filters.severity);
+    if (filters?.status) params.append('status', filters.status);
 
-    let filtered = [...mockFindings];
+    const queryString = params.toString();
+    const url = `/api/v1/working-paper-findings${queryString ? `?${queryString}` : ''}`;
 
-    if (filters?.severity && filters.severity.length > 0) {
-      filtered = filtered.filter((f) => filters.severity!.includes(f.severity));
-    }
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
 
-    if (filters?.status && filters.status.length > 0) {
-      filtered = filtered.filter((f) => filters.status!.includes(f.status));
-    }
-
-    if (filters?.clause) {
-      filtered = filtered.filter((f) => f.clause === filters.clause);
-    }
-
-    if (filters?.assignedTo) {
-      filtered = filtered.filter((f) => f.assignedTo === filters.assignedTo);
-    }
-
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (f) =>
-          f.referenceCode.toLowerCase().includes(search) ||
-          f.description.toLowerCase().includes(search) ||
-          f.recommendation.toLowerCase().includes(search)
-      );
-    }
-
-    return successResponse(filtered, "Findings fetched successfully");
+    return successResponse(response.data, "Findings fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | FINDINGS", "/api/audits/findings");
+    return handleError(error, "GET | FINDINGS", "/api/v1/working-paper-findings");
+  }
+}
+
+/**
+ * Get findings by category within a working paper
+ */
+export async function getFindingsByCategory(workingPaperId: string, categoryName: string): Promise<APIResponse> {
+  if (!workingPaperId || !categoryName) {
+    return handleBadRequest("Working paper ID and category name are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-papers/${workingPaperId}/categories/${categoryName}/findings`
+    });
+
+    return successResponse(response.data, "Category findings fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | CATEGORY FINDINGS", `/api/v1/working-papers/${workingPaperId}/categories/${categoryName}/findings`);
   }
 }
 
@@ -1018,106 +1073,140 @@ export async function getFindings(filters?: FindingFilters): Promise<APIResponse
  * Get single finding by ID
  */
 export async function getFinding(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-findings/${id}`
+    });
 
-    const finding = mockFindings.find((f) => f.id === id);
-
-    if (!finding) {
-      return {
-        success: false,
-        message: "Finding not found",
-        data: null
-      };
-    }
-
-    return successResponse(finding, "Finding fetched successfully");
+    return successResponse(response.data, "Finding fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | FINDING", `/api/audits/findings/${id}`);
+    return handleError(error, "GET | FINDING", `/api/v1/working-paper-findings/${id}`);
   }
 }
 
 /**
  * Create new finding
  */
-export async function createFinding(input: FindingInput): Promise<APIResponse> {
+export async function createFinding(data: {
+  audit_plan_id: string;
+  working_paper_id: string;
+  category_name: string;
+  finding_number: string;
+  workings_and_test_results?: string;
+  conclusion?: string;
+  report?: boolean;
+  severity?: string;
+  recommendation?: string;
+  management_response?: string;
+  action_plan?: string;
+  responsible_person?: string;
+  due_date?: string;
+  status?: string;
+  evidence_links?: string;
+}): Promise<APIResponse> {
+  if (!data.audit_plan_id || !data.working_paper_id || !data.category_name || !data.finding_number) {
+    return handleBadRequest("Audit plan ID, working paper ID, category name, and finding number are required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-paper-findings",
+      data
+    });
 
-    const audit = mockAuditPlans.find((a) => a.id === input.auditId);
-    const referenceCode = `FND-${new Date().getFullYear()}-${String(mockFindings.length + 1).padStart(3, "0")}`;
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
+    revalidatePath("/dashboard/audit/workpapers");
 
-    const newFinding: Finding = {
-      id: String(mockFindings.length + 1),
-      referenceCode,
-      ...input,
-      auditTitle: audit?.title || "Unknown Audit",
-      clauseTitle: `Clause ${input.clause}`,
-      status: "open",
-      attachments: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      // Workpaper relationship
-      workpaperId: input.workpaperId,
-      workpaperReference: input.workpaperId ? `WP-${input.clause}-${new Date().getFullYear()}` : undefined,
-      evidenceRowId: input.evidenceRowId,
-      sourceType: input.sourceType || 'manual',
-    };
-
-    mockFindings.push(newFinding);
-
-    // If linked to workpaper, update workpaper's finding count
-    if (input.workpaperId) {
-      const workpaper = mockWorkpapers.find((w) => w.id === input.workpaperId);
-      if (workpaper) {
-        if (!workpaper.findingIds) workpaper.findingIds = [];
-        workpaper.findingIds.push(newFinding.id);
-        workpaper.findingsCount = workpaper.findingIds.length;
-      }
-    }
-
-    revalidatePath(`/dashboard/audit/plans/${input.auditId}`);
-    if (input.workpaperId) {
-      revalidatePath("/dashboard/audit/workpapers");
-    }
-
-    return successResponse(newFinding, "Finding created successfully");
+    return successResponse(response.data, "Finding created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE FINDING", "/api/audits/findings");
+    return handleError(error, "POST | CREATE FINDING", "/api/v1/working-paper-findings");
   }
 }
 
 /**
  * Update existing finding
  */
-export async function updateFinding(id: string, data: Partial<FindingInput>): Promise<APIResponse> {
+export async function updateFinding(id: string, data: {
+  management_response?: string;
+  action_plan?: string;
+  responsible_person?: string;
+  due_date?: string;
+  status?: string;
+  severity?: string;
+  recommendation?: string;
+  [key: string]: any;
+}): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-paper-findings/${id}`,
+      data
+    });
 
-    const index = mockFindings.findIndex((f) => f.id === id);
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath("/dashboard/audit/workpapers");
 
-    if (index === -1) {
-      return {
-        success: false,
-        message: "Finding not found",
-        data: null
-      };
-    }
-
-    mockFindings[index] = {
-      ...mockFindings[index],
-      ...data,
-      updatedAt: new Date()
-    };
-
-    const finding = mockFindings[index];
-    if (finding.auditId) {
-      revalidatePath(`/dashboard/audit/plans/${finding.auditId}`);
-    }
-
-    return successResponse(mockFindings[index], "Finding updated successfully");
+    return successResponse(response.data, "Finding updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE FINDING", `/api/audits/findings/${id}`);
+    return handleError(error, "PUT | UPDATE FINDING", `/api/v1/working-paper-findings/${id}`);
+  }
+}
+
+/**
+ * Update finding status only
+ */
+export async function updateFindingStatus(id: string, status: string): Promise<APIResponse> {
+  if (!id || !status) {
+    return handleBadRequest("Finding ID and status are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url: `/api/v1/working-paper-findings/${id}/status`,
+      data: { status }
+    });
+
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(response.data, "Finding status updated successfully");
+  } catch (error: any) {
+    return handleError(error, "PATCH | UPDATE FINDING STATUS", `/api/v1/working-paper-findings/${id}/status`);
+  }
+}
+
+/**
+ * Delete finding
+ */
+export async function deleteFinding(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-paper-findings/${id}`
+    });
+
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(null, "Finding deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | FINDING", `/api/v1/working-paper-findings/${id}`);
   }
 }
 
@@ -1464,5 +1553,554 @@ export async function removeTeamMember(id: string): Promise<APIResponse> {
     return successResponse(null, "Team member removed successfully");
   } catch (error: any) {
     return handleError(error, "DELETE | REMOVE TEAM MEMBER", `/api/audits/settings/team/${id}`);
+  }
+}
+
+// ============================================================================
+// WORKING PAPER TEMPLATE ACTIONS (API Integration)
+// ============================================================================
+
+/**
+ * Get all working paper templates
+ */
+export async function getWorkingPaperTemplates(standard?: string, isActive?: boolean): Promise<APIResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (standard) params.append('standard', standard);
+    if (isActive !== undefined) params.append('is_active', String(isActive));
+
+    const queryString = params.toString();
+    const url = `/api/v1/working-paper-templates${queryString ? `?${queryString}` : ''}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data, "Working paper templates fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | WORKING PAPER TEMPLATES", "/api/v1/working-paper-templates");
+  }
+}
+
+/**
+ * Get single working paper template by ID
+ */
+export async function getWorkingPaperTemplate(templateId: string): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-templates/${templateId}`
+    });
+
+    return successResponse(response.data, "Working paper template fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | WORKING PAPER TEMPLATE", `/api/v1/working-paper-templates/${templateId}`);
+  }
+}
+
+/**
+ * Get working paper template with categories
+ */
+export async function getWorkingPaperTemplateWithCategories(templateId: string): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-templates/${templateId}/categories`
+    });
+
+    return successResponse(response.data, "Template with categories fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | TEMPLATE WITH CATEGORIES", `/api/v1/working-paper-templates/${templateId}/categories`);
+  }
+}
+
+/**
+ * Create new working paper template
+ */
+export async function createWorkingPaperTemplate(data: {
+  name: string;
+  standard: string;
+  description?: string;
+  version?: string;
+  is_active?: boolean;
+}): Promise<APIResponse> {
+  if (!data.name || !data.standard) {
+    return handleBadRequest("Template name and standard are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-paper-templates",
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(response.data, "Working paper template created successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE WORKING PAPER TEMPLATE", "/api/v1/working-paper-templates");
+  }
+}
+
+/**
+ * Update working paper template
+ */
+export async function updateWorkingPaperTemplate(
+  templateId: string,
+  data: {
+    name?: string;
+    standard?: string;
+    description?: string;
+    version?: string;
+    is_active?: boolean;
+  }
+): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-paper-templates/${templateId}`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+    revalidatePath(`/dashboard/audit/templates/${templateId}`);
+
+    return successResponse(response.data, "Working paper template updated successfully");
+  } catch (error: any) {
+    return handleError(error, "PUT | UPDATE WORKING PAPER TEMPLATE", `/api/v1/working-paper-templates/${templateId}`);
+  }
+}
+
+/**
+ * Delete working paper template
+ */
+export async function deleteWorkingPaperTemplate(templateId: string): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-paper-templates/${templateId}`
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(null, "Working paper template deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | WORKING PAPER TEMPLATE", `/api/v1/working-paper-templates/${templateId}`);
+  }
+}
+
+// ============================================================================
+// TEMPLATE CATEGORY ACTIONS (API Integration)
+// ============================================================================
+
+/**
+ * Get all categories for a template
+ */
+export async function getTemplateCategories(templateId: string): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-templates/${templateId}/categories-list`
+    });
+
+    return successResponse(response.data, "Template categories fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | TEMPLATE CATEGORIES", `/api/v1/working-paper-templates/${templateId}/categories-list`);
+  }
+}
+
+/**
+ * Get single template category by ID
+ */
+export async function getTemplateCategory(categoryId: string): Promise<APIResponse> {
+  if (!categoryId) {
+    return handleBadRequest("Category ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-categories/${categoryId}`
+    });
+
+    return successResponse(response.data, "Template category fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | TEMPLATE CATEGORY", `/api/v1/working-paper-categories/${categoryId}`);
+  }
+}
+
+/**
+ * Create new template category
+ */
+export async function createTemplateCategory(data: {
+  template_id: string;
+  name: string;
+  objectives?: string;
+  scope?: string;
+  documents_obtained?: string;
+  source_documents?: string;
+  sample_size?: string;
+  frequency_of_control?: string;
+  sampling_methodology?: string;
+  audit_procedure?: string;
+  sort_order?: number;
+}): Promise<APIResponse> {
+  if (!data.template_id || !data.name) {
+    return handleBadRequest("Template ID and category name are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-paper-categories",
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+    revalidatePath(`/dashboard/audit/templates/${data.template_id}`);
+
+    return successResponse(response.data, "Template category created successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE TEMPLATE CATEGORY", "/api/v1/working-paper-categories");
+  }
+}
+
+/**
+ * Update template category
+ */
+export async function updateTemplateCategory(
+  categoryId: string,
+  data: {
+    name?: string;
+    objectives?: string;
+    scope?: string;
+    documents_obtained?: string;
+    source_documents?: string;
+    sample_size?: string;
+    frequency_of_control?: string;
+    sampling_methodology?: string;
+    audit_procedure?: string;
+    sort_order?: number;
+  }
+): Promise<APIResponse> {
+  if (!categoryId) {
+    return handleBadRequest("Category ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-paper-categories/${categoryId}`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(response.data, "Template category updated successfully");
+  } catch (error: any) {
+    return handleError(error, "PUT | UPDATE TEMPLATE CATEGORY", `/api/v1/working-paper-categories/${categoryId}`);
+  }
+}
+
+/**
+ * Delete template category
+ */
+export async function deleteTemplateCategory(categoryId: string): Promise<APIResponse> {
+  if (!categoryId) {
+    return handleBadRequest("Category ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-paper-categories/${categoryId}`
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(null, "Template category deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | TEMPLATE CATEGORY", `/api/v1/working-paper-categories/${categoryId}`);
+  }
+}
+
+// ============================================================================
+// AUDIT PLAN APPROVAL WORKFLOW ACTIONS (API Integration)
+// ============================================================================
+
+/**
+ * Submit audit plan for approval
+ */
+export async function submitAuditPlanForApproval(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/submit`
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | SUBMIT AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/submit`);
+  }
+}
+
+/**
+ * HIAR approval for audit plan
+ */
+export async function hiarApproveAuditPlan(auditPlanId: string, comments?: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/hiar`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by HIAR successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | HIAR APPROVE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/approve/hiar`);
+  }
+}
+
+/**
+ * CEO approval for audit plan
+ */
+export async function ceoApproveAuditPlan(auditPlanId: string, comments?: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/ceo`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by CEO successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CEO APPROVE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/approve/ceo`);
+  }
+}
+
+/**
+ * Audit Chair approval for audit plan
+ */
+export async function auditChairApproveAuditPlan(auditPlanId: string, comments?: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by Audit Chair successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | AUDIT CHAIR APPROVE", `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`);
+  }
+}
+
+/**
+ * Reject audit plan
+ */
+export async function rejectAuditPlan(auditPlanId: string, reason: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+  if (!reason) {
+    return handleBadRequest("Rejection reason is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/reject`,
+      data: { reason }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan rejected successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | REJECT AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/reject`);
+  }
+}
+
+/**
+ * Activate audit plan
+ */
+export async function activateAuditPlan(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/activate`
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan activated successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | ACTIVATE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/activate`);
+  }
+}
+
+/**
+ * Complete audit plan
+ */
+export async function completeAuditPlan(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/complete`
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan completed successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | COMPLETE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/complete`);
+  }
+}
+
+// ============================================================================
+// SYSTEM AUDIT LOG ACTIONS (API Integration)
+// ============================================================================
+
+/**
+ * Get all audit logs with filters
+ */
+export async function getAuditLogs(filters?: {
+  action?: string;
+  entity_type?: string;
+  user_id?: string;
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<APIResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.action) params.append('action', filters.action);
+    if (filters?.entity_type) params.append('entity_type', filters.entity_type);
+    if (filters?.user_id) params.append('user_id', filters.user_id);
+    if (filters?.start_date) params.append('start_date', filters.start_date);
+    if (filters?.end_date) params.append('end_date', filters.end_date);
+    if (filters?.limit) params.append('limit', String(filters.limit));
+    if (filters?.offset) params.append('offset', String(filters.offset));
+
+    const queryString = params.toString();
+    const url = `/api/v1/audit-logs${queryString ? `?${queryString}` : ''}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data, "Audit logs fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT LOGS", "/api/v1/audit-logs");
+  }
+}
+
+/**
+ * Get audit logs by user
+ */
+export async function getAuditLogsByUser(userId: string, limit?: number, offset?: number): Promise<APIResponse> {
+  if (!userId) {
+    return handleBadRequest("User ID is required");
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', String(limit));
+    if (offset) params.append('offset', String(offset));
+
+    const queryString = params.toString();
+    const url = `/api/v1/audit-logs/user/${userId}${queryString ? `?${queryString}` : ''}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data, "User audit logs fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | USER AUDIT LOGS", `/api/v1/audit-logs/user/${userId}`);
+  }
+}
+
+/**
+ * Get audit logs by entity
+ */
+export async function getAuditLogsByEntity(entityType: string, entityId: string): Promise<APIResponse> {
+  if (!entityType || !entityId) {
+    return handleBadRequest("Entity type and ID are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit-logs/entity/${entityType}/${entityId}`
+    });
+
+    return successResponse(response.data, "Entity audit logs fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | ENTITY AUDIT LOGS", `/api/v1/audit-logs/entity/${entityType}/${entityId}`);
   }
 }

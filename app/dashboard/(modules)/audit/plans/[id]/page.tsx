@@ -14,6 +14,7 @@ import { AuditWorkpapersTab } from "@/components/audit/audit-workpapers-tab";
 import { AuditPlan } from "@/lib/types/audit-types";
 import { TemplateService } from "@/lib/services/template-service";
 import { SubmitForReviewButton } from "@/components/audit/submit-for-review-button";
+import { AuditPlanActions } from "@/components/audit/audit-plan-actions";
 
 interface AuditDetailPageProps {
   params: Promise<{
@@ -65,7 +66,10 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
                 <p className="text-muted-foreground mt-1">{auditPlan.standard}</p>
               </div>
             </div>
-            <AuditStatusBadge status={auditPlan.status} />
+            <div className="flex items-center gap-3">
+              <AuditStatusBadge status={auditPlan.status} />
+              <AuditPlanActions auditPlanId={auditPlan.id} status={auditPlan.status} />
+            </div>
           </div>
         </div>
       </div>
