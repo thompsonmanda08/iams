@@ -22,43 +22,30 @@ import {
 } from "@/components/ui/select";
 import { Notebook, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type RiskRegister = {
-  id: string;
-  name: string;
-  description: string;
-  startDate: string;
-  dueDate: string;
-  status: "Overdue" | "Open" | "Closed";
-  branch: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-};
+import { format } from "date-fns";
+import { RiskRegister } from "@/lib/types/risk-types";
 
 type RiskRegistersTableProps = {
   registers: RiskRegister[];
-  currentPage: number;
-  itemsPerPage: number;
+  pagination: {
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+  };
   currentStatus: string;
   currentSearch: string;
 };
 
 export default function RiskRegistersTable({
   registers,
-  currentPage,
-  itemsPerPage,
+  pagination,
   currentStatus,
   currentSearch
 }: RiskRegistersTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-
-  const totalPages = Math.ceil(registers?.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, registers?.length);
-  const paginatedRegisters = registers.slice(startIndex, endIndex);
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -70,7 +57,9 @@ export default function RiskRegistersTable({
     }
 
     // Reset to page 1 on filter change
-    params.delete("page");
+    if (key !== "page") {
+      params.delete("page");
+    }
 
     startTransition(() => {
       router.push(`?${params.toString()}`);
@@ -86,19 +75,36 @@ export default function RiskRegistersTable({
   };
 
   const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(newPage));
-    router.push(`?${params.toString()}`);
+    updateSearchParams("page", String(newPage));
   };
 
-  const getStatusColor = (status: RiskRegister["status"]) => {
+  const getStatusColor = (status: string) => {
     const colors = {
-      Open: "bg-blue-100 text-blue-700",
-      Overdue: "bg-purple-100 text-purple-700",
-      Closed: "bg-gray-100 text-gray-700"
+      OPEN: "bg-blue-100 text-blue-700",
+      CLOSED: "bg-gray-100 text-gray-700"
     };
-    return colors[status] || "bg-gray-100 text-gray-700";
+    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
   };
+
+  const getTimelineStatusColor = (timelineStatus: string) => {
+    const colors = {
+      ON_TRACK: "bg-green-100 text-green-700",
+      AT_RISK: "bg-yellow-100 text-yellow-700",
+      OVERDUE: "bg-red-100 text-red-700"
+    };
+    return colors[timelineStatus as keyof typeof colors] || "bg-gray-100 text-gray-700";
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy");
+    } catch {
+      return dateString;
+    }
+  };
+
+  const startIndex = (pagination.page - 1) * pagination.page_size + 1;
+  const endIndex = Math.min(pagination.page * pagination.page_size, pagination.total);
 
   return (
     <>
@@ -115,61 +121,68 @@ export default function RiskRegistersTable({
               disabled={isPending}
             />
           </div>
-          <Select value={currentStatus} onValueChange={handleStatusChange} disabled={isPending}>
+          <Select
+            value={currentStatus || "all"}
+            onValueChange={handleStatusChange}
+            disabled={isPending}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Open">Open</SelectItem>
-              <SelectItem value="Overdue">Overdue</SelectItem>
-              <SelectItem value="Closed">Closed</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </Card>
-
-      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Branch</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Branch</TableHead>
+              <TableHead>Timeline</TableHead>
               <TableHead>Created At</TableHead>
-              <TableHead>Updated At</TableHead>
-              <TableHead>Created By</TableHead>
               <TableHead className="text-right">OPTIONS</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedRegisters?.length === 0 ? (
+            {registers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-12 text-center">
+                <TableCell colSpan={8} className="py-12 text-center">
                   <p className="text-muted-foreground">No risk registers found</p>
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedRegisters.map((register) => (
+              registers.map((register) => (
                 <TableRow
                   key={register.id}
                   onClick={() => router.push(`/dashboard/risks/risk-registers/${register.id}`)}
                   className="cursor-pointer">
                   <TableCell>
                     <p className="text-foreground font-medium">{register.name}</p>
-                    <div className="flex space-x-1">
-                      <Notebook className="h-4 w-4" />
-                      <p className="text-xs font-normal text-gray-500">{register.description}</p>
+                    {register.description && (
+                      <div className="mt-1 flex items-center gap-1">
+                        <Notebook className="h-3 w-3 text-gray-400" />
+                        <p className="line-clamp-1 text-xs text-gray-500">{register.description}</p>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="text-sm font-medium">{register.branch.name}</p>
+                      <p className="text-xs text-gray-500">{register.branch.code}</p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{register.startDate}</span>
+                    <span className="text-sm">{formatDate(register.start_date)}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{register.dueDate}</span>
+                    <span className="text-sm">{formatDate(register.due_date)}</span>
                   </TableCell>
                   <TableCell>
                     <span
@@ -177,20 +190,22 @@ export default function RiskRegistersTable({
                         "rounded-full px-2 py-1 text-xs font-medium capitalize",
                         getStatusColor(register.status)
                       )}>
-                      {register.status}
+                      {register.status.toLowerCase()}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{register.branch}</span>
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-1 text-xs font-medium",
+                        getTimelineStatusColor(register.timeline_status)
+                      )}>
+                      {register.timeline_status.replace("_", " ")}
+                    </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-muted-foreground text-sm">{register.createdAt}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-muted-foreground text-sm">{register.updatedAt}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{register.createdBy}</span>
+                    <span className="text-muted-foreground text-sm">
+                      {formatDate(register.created_at)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" className="cursor-pointer font-normal">
@@ -202,26 +217,29 @@ export default function RiskRegistersTable({
             )}
           </TableBody>
         </Table>
-
-        {/* Pagination */}
-        {paginatedRegisters?.length > 0 && (
+        {registers.length > 0 && (
           <div className="flex items-center justify-between border-t p-4">
             <p className="text-muted-foreground text-sm">
-              Showing {startIndex + 1} to {endIndex} of {registers?.length} risk registers
+              Showing {startIndex} to {endIndex} of {pagination.total} risk registers
             </p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                disabled={currentPage === 1}
-                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}>
+                disabled={pagination.page === 1 || isPending}
+                onClick={() => handlePageChange(pagination.page - 1)}>
                 Previous
               </Button>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">
+                  Page {pagination.page} of {pagination.total_pages}
+                </span>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={currentPage === totalPages}
-                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}>
+                disabled={pagination.page === pagination.total_pages || isPending}
+                onClick={() => handlePageChange(pagination.page + 1)}>
                 Next
               </Button>
             </div>

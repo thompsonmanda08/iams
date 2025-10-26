@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
-import { getRiskRegisters } from "@/app/_actions/risk-module-actions";
 import CreateRiskRegisterDialog from "@/components/forms/create-risk-register-dialog";
+import { getRiskRegisters } from "@/app/_actions/risk-module-actions";
 import RiskRegistersTable from "../_components/risk-registers-table";
 
 type PageProps = {
@@ -14,29 +14,31 @@ type PageProps = {
 };
 
 export default async function RiskRegistersPage({ searchParams }: PageProps) {
-  const search =  "";
-  const status = searchParams.status || "all";
-  const page = 1;
+  const search = searchParams.search || "";
+  const status = searchParams.status || "";
+  const page = Number(searchParams.page) || 1;
 
-  // Fetch data server-side
-  const response = await getRiskRegisters();
-  const registers = response.success ? response.data : [];
-
-  console.log("DATA", registers);
-
-  // Apply filters
-  const filteredRegisters = registers?.filter((register: any) => {
-    const matchesSearch = register.name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = status === "all" || register.status === status;
-    return matchesSearch && matchesStatus;
+  const response = await getRiskRegisters({
+    name: search || undefined,
+    status: status && status !== "all" ? status.toUpperCase() : undefined,
+    page,
+    page_size: 10,
   });
 
-  // Calculate stats
+  const data = response.success && response.data ? response.data : null;
+  const registers = data?.registers || [];
+  const pagination = {
+    total: data?.total || 0,
+    page: data?.page || 1,
+    page_size: data?.page_size || 10,
+    total_pages: data?.total_pages || 0,
+  };
+
   const stats = {
-    total: registers?.length,
-    open: registers?.filter((r: any) => r.status === "Open")?.length,
-    overdue: registers?.filter((r: any) => r.status === "Overdue")?.length,
-    closed: registers?.filter((r: any) => r.status === "Closed")?.length
+    total: pagination.total,
+    open: registers.filter((r:any) => r.status === "OPEN").length,
+    closed: registers.filter((r:any) => r.status === "CLOSED").length,
+    overdue: registers.filter((r:any) => r.timeline_status === "OVERDUE").length,
   };
 
   return (
@@ -104,11 +106,10 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
 
       {/* Filters and Table */}
       <div className="container mx-auto py-8">
-        <Suspense fallback={<div className="container mx-auto">Loading...</div>}>
+        <Suspense fallback={<div>Loading...</div>}>
           <RiskRegistersTable
-            registers={filteredRegisters}
-            currentPage={page}
-            itemsPerPage={10}
+            registers={registers}
+            pagination={pagination}
             currentStatus={status}
             currentSearch={search}
           />
