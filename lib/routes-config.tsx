@@ -68,8 +68,8 @@ export const navItems: NavGroup[] = [
         icon: Building
       },
       {
-        title: "Locations",
-        href: "/dashboard/system-configs/branches",
+        title: "Branches",
+        href: "/dashboard/system-configs/locations",
         icon: MapPin
       },
       {

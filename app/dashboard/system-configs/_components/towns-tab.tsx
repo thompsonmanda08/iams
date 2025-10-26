@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +29,14 @@ import { ErrorState } from "@/lib/types";
 import { createTown, updateTown, deleteTown } from "@/app/_actions/config-actions";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "@/components/ui/empty";
 
 interface Province {
   id: string;
@@ -78,7 +86,9 @@ export function TownsTab({ initialTowns, provinces }: TownsTabProps) {
   });
 
   const handleDeleteTown = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this town?")) return;
+    if (true) {
+      return toast.warning("This action currently is disabled");
+    }
     deleteTownMutation.mutate(id);
   };
 
@@ -109,8 +119,32 @@ export function TownsTab({ initialTowns, provinces }: TownsTabProps) {
         <TableBody>
           {towns.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-muted-foreground text-center">
-                No towns found
+              <TableCell colSpan={4} align="center">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MapPin />
+                    </EmptyMedia>
+                    <EmptyTitle>No Towns Yet</EmptyTitle>
+                    <EmptyDescription>
+                      You haven&apos;t created any towns yet. Get started by creating your first
+                      town.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setEditingTown(null);
+                          setOpenModal(true);
+                        }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Town
+                      </Button>
+                    </div>
+                  </EmptyContent>
+                </Empty>
               </TableCell>
             </TableRow>
           ) : (
@@ -139,6 +173,9 @@ export function TownsTab({ initialTowns, provinces }: TownsTabProps) {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
+                        if (true) {
+                          return toast.warning("This action currently is disabled");
+                        }
                         setEditingTown(town);
                         setOpenModal(true);
                       }}>

@@ -1,7 +1,8 @@
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getBranches, getProvinces, getTowns } from "@/app/_actions/config-actions";
-import { ProvincesTab, TownsTab, BranchesTab } from "./_components";
+import { ProvincesTab } from "../_components/provinces-tab";
+import { TownsTab } from "../_components/towns-tab";
+import { BranchesTab } from "../_components/branches-tab";
 
 export default async function BranchesConfigPage() {
   // Fetch all data server-side
@@ -27,7 +28,7 @@ export default async function BranchesConfigPage() {
         </div>
       </div>
 
-      <Card className="p-4">
+      <div className="">
         <Tabs defaultValue="branches" className="space-y-6">
           <TabsList>
             <TabsTrigger value="provinces">Provinces</TabsTrigger>
@@ -50,7 +51,7 @@ export default async function BranchesConfigPage() {
             <BranchesTab initialBranches={branches} provinces={provinces} towns={towns} />
           </TabsContent>
         </Tabs>
-      </Card>
+      </div>
     </div>
   );
 }

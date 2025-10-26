@@ -34,8 +34,8 @@ POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "username": "john.doe",
-  "password": "securepassword123!"
+  "username": "admin",
+  "password": "Admin@123"
 }
 
 ### Change Password (Protected)

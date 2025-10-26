@@ -1,105 +1,20 @@
-"use client";
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ModuleList } from "./module-list";
+import ModuleConfigForm from "./module-config-form";
 
-export default function Page() {
-  const [moduleName, setModuleName] = useState("");
-  const [pathName, setPathName] = useState("");
-  const [iconName, setIconName] = useState("");
-  const [sidebarOrder, setSidebarOrder] = useState("0");
-  const [hasSubModules, setHasSubModules] = useState(false);
-
-  const handleSave = () => {
-    console.log("Saving module:", { moduleName, pathName, iconName, sidebarOrder, hasSubModules });
-  };
-
+export default async function ModulesConfigPage() {
   return (
-    <div className="container mx-auto flex flex-col p-6">
-      <div className="mb-6 flex items-start justify-between">
-        <aside className="border-border w-md rounded-lg border p-6">
-          <div className="mb-6">
-            <h2 className="text-foreground text-lg font-semibold">Module Management</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Create and edit system modules to customize your organization&apos;s needs.
-            </p>
-          </div>
+    <div className="container mx-auto space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-foreground text-3xl font-bold">System Modules Setup</h1>
+          <p className="text-muted-foreground mt-1">Manage your system modules and routes</p>
+        </div>
+      </div>
 
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="module-name" className="text-foreground text-sm font-medium">
-                Module Name
-              </Label>
-              <Input
-                id="module-name"
-                value={moduleName}
-                onChange={(e) => setModuleName(e.target.value)}
-                placeholder="Enter module name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="path-name" className="text-foreground text-sm font-medium">
-                Path Name
-              </Label>
-              <Input
-                id="path-name"
-                value={pathName}
-                onChange={(e) => setPathName(e.target.value)}
-                placeholder="Enter path name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="icon-name" className="text-foreground text-sm font-medium">
-                Icon Name
-              </Label>
-              <Input
-                id="icon-name"
-                value={iconName}
-                onChange={(e) => setIconName(e.target.value)}
-                placeholder="Enter icon name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sidebar-order" className="text-foreground text-sm font-medium">
-                Sidebar Order
-              </Label>
-              <Input
-                id="sidebar-order"
-                type="number"
-                value={sidebarOrder}
-                onChange={(e) => setSidebarOrder(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="has-sub-modules"
-                checked={hasSubModules}
-                onCheckedChange={(checked) => setHasSubModules(checked as boolean)}
-              />
-              <Label
-                htmlFor="has-sub-modules"
-                className="text-foreground cursor-pointer text-sm font-medium">
-                Has Sub Modules
-              </Label>
-            </div>
-
-            <Button onClick={handleSave} className="w-full">
-              Save
-            </Button>
-          </div>
-        </aside>
-        <main className="flex-1 px-6 pb-6">
-          <ModuleList />
-        </main>
+      <ModuleConfigForm />
+      <div className="grid grid-cols-1 gap-4">
+        <ModuleList />
       </div>
     </div>
   );

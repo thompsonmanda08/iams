@@ -28,6 +28,14 @@ import { ErrorState } from "@/lib/types";
 import { createProvince, updateProvince, deleteProvince } from "@/app/_actions/config-actions";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "@/components/ui/empty";
 
 interface Province {
   id: string;
@@ -65,7 +73,9 @@ export function ProvincesTab({ initialProvinces }: ProvincesTabProps) {
   });
 
   const handleDeleteProvince = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this province?")) return;
+    if (true) {
+      return toast.warning("This action currently is disabled");
+    }
     deleteProvinceMutation.mutate(id);
   };
 
@@ -96,8 +106,32 @@ export function ProvincesTab({ initialProvinces }: ProvincesTabProps) {
         <TableBody>
           {provinces.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-muted-foreground text-center">
-                No provinces found
+              <TableCell colSpan={4} align="center">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MapPin />
+                    </EmptyMedia>
+                    <EmptyTitle>No Provinces Yet</EmptyTitle>
+                    <EmptyDescription>
+                      You haven&apos;t created any provinces yet. Get started by creating your first
+                      province.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setEditingProvince(null);
+                          setOpenModal(true);
+                        }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Province
+                      </Button>
+                    </div>
+                  </EmptyContent>
+                </Empty>
               </TableCell>
             </TableRow>
           ) : (
@@ -129,6 +163,9 @@ export function ProvincesTab({ initialProvinces }: ProvincesTabProps) {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
+                        if (true) {
+                          return toast.warning("This action currently is disabled");
+                        }
                         setEditingProvince(province);
                         setOpenModal(true);
                       }}>
@@ -262,7 +299,12 @@ function CreateOrUpdateProvinceDialog({
           )}
           <div className="flex justify-end gap-3 pt-2">
             <DialogClose asChild>
-              <Button type="button" size="sm" variant="outline" onClick={() => setOpenModal(false)}>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                disabled={saveMutation.isPending}
+                onClick={() => setOpenModal(false)}>
                 Cancel
               </Button>
             </DialogClose>

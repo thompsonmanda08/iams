@@ -11,7 +11,7 @@ All API requests should be prefixed with the base URL:
 
 ## Authentication
 
-All protected endpoints require a JSON Web Token (JWT) in the `Authorization` header.
+All protected endpoints (unless otherwise noted) require a JSON Web Token (JWT) in the `Authorization` header.
 
 **Header Example:**
 `Authorization: Bearer <your_jwt_token>`
@@ -34,7 +34,7 @@ Verifies that the application is running and responsive.
 
 ## Authentication (Public & Protected)
 
-### Register New User (Public)
+### Register New User (Protected)
 
 Registers a new user in the system.
 
@@ -70,7 +70,7 @@ Registers a new user in the system.
 
 ### Login (Public)
 
-Authenticates a user and returns JWT access and refresh tokens.
+Authenticates a user and returns JWT access token or triggers MFA if enabled. The token contains user_id, department_id, role_id, and branch_id in the JWT claims.
 
 -   **Endpoint:** `POST /api/v1/auth/login`
 -   **Request Body:**
@@ -80,15 +80,79 @@ Authenticates a user and returns JWT access and refresh tokens.
       "password": "securepassword123!"
     }
     ```
+    **OR**
+    ```json
+    {
+      "email": "john.doe@example.com",
+      "password": "securepassword123!"
+    }
+    ```
+
+-   **Response (MFA Disabled):** `200 OK`
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "message": "Authentication successful. Welcome back!",
+      "mfa_required": false
+    }
+    ```
+
+-   **Response (MFA Enabled):** `200 OK`
+    ```json
+    {
+      "message": "Multi-factor authentication is enabled. Please check your email for the verification code to complete your sign-in.",
+      "mfa_required": true
+    }
+    ```
+    When MFA is enabled, a 6-digit OTP is sent to the user's email address. The OTP is valid for 10 minutes. Use the **Verify OTP** endpoint to complete authentication.
+
+**JWT Token Claims:**
+The access token contains the following claims:
+- `user_id`: UUID of the authenticated user
+- `username`: Username
+- `email`: User email address
+- `role_id`: UUID of user's role
+- `department_id`: UUID of user's department
+- `branch_id`: UUID of user's branch
+- `exp`: Token expiration timestamp
+- `iat`: Token issued at timestamp
+- `nbf`: Token not before timestamp
+
+### Verify OTP (Protected)
+
+Verifies the one-time password (OTP) sent via email for multi-factor authentication and completes the login process.
+
+-   **Endpoint:** `POST /api/v1/auth/verify-otp`
+-   **Request Body:**
+    ```json
+    {
+      "username": "john.doe",
+      "otp": "123456"
+    }
+    ```
 -   **Response:** `200 OK`
     ```json
     {
       "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "token_type": "Bearer",
-      "expires_in": 3600
+      "message": "Authentication successful. Welcome back!",
+      "mfa_required": false
     }
     ```
+-   **Error Responses:**
+    - `401 Unauthorized`: Invalid OTP or credentials
+      ```json
+      {"error": "invalid or expired OTP"}
+      ```
+    - `410 Gone`: OTP has expired
+      ```json
+      {"error": "OTP has expired"}
+      ```
+
+**Notes:**
+- OTP is valid for 10 minutes from the time it was sent
+- Each OTP can only be used once
+- After successful verification, the OTP is cleared from the system
+- If OTP expires, user must initiate login again to receive a new OTP
 
 ### Change Password (Protected)
 
@@ -110,9 +174,129 @@ Allows an authenticated user to change their own password.
     }
     ```
 
+### User Setup (Protected)
+
+Retrieves complete user profile information including branch, department, role details, and accessible modules with permissions. This endpoint is called after login to set up the user interface with proper permissions and user context.
+
+-   **Endpoint:** `GET /api/v1/auth/setup`
+-   **Authentication:** Required (JWT Bearer token in Authorization header)
+-   **Request Headers:**
+    ```
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+-   **Response:** `200 OK`
+    ```json
+    {
+      "user": {
+        "id": "d4e5f6a7-b8c9-4012-4567-890abcdef123",
+        "username": "john.doe",
+        "email": "john.doe@example.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "branch_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+        "department_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+        "role_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+        "is_active": true,
+        "is_ldap_user": false,
+        "last_login": "2023-10-27T09:45:00Z",
+        "created_at": "2023-10-27T10:00:00Z",
+        "updated_at": "2023-10-27T10:00:00Z"
+      },
+      "branch": {
+        "id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+        "name": "Harare Branch",
+        "code": "HRE",
+        "province_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+        "address": "123 Main Street",
+        "is_active": true
+      },
+      "department": {
+        "id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+        "name": "Internal Audit",
+        "code": "IA",
+        "description": "Internal Audit Department",
+        "is_active": true
+      },
+      "role": {
+        "id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+        "department_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+        "name": "Auditor",
+        "code": "AUDITOR",
+        "description": "Standard auditor role",
+        "is_active": true
+      },
+      "permissions": [
+        {
+          "role_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+          "module_id": "d4e5f6a7-b8c9-4012-4567-890abcdef123",
+          "can_view": true,
+          "can_create": true,
+          "can_edit": true,
+          "can_delete": false,
+          "can_approve": false,
+          "can_export": true,
+          "can_assign": false,
+          "can_configure": false,
+          "custom_permissions": {
+            "can_run_reports": true
+          },
+          "granted_at": "2023-10-27T10:25:00Z",
+          "granted_by": "e5f6a7b8-c9d0-4123-5678-90abcdef1234",
+          "module": {
+            "id": "d4e5f6a7-b8c9-4012-4567-890abcdef123",
+            "module_code": "RISK_MGMT",
+            "name": "Risk Management",
+            "href": "/risks"
+          }
+        },
+        {
+          "role_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+          "module_id": "e5f6a7b8-c9d0-4123-5678-90abcdef1234",
+          "can_view": true,
+          "can_create": false,
+          "can_edit": false,
+          "can_delete": false,
+          "can_approve": false,
+          "can_export": false,
+          "can_assign": false,
+          "can_configure": false,
+          "custom_permissions": null,
+          "granted_at": "2023-10-27T10:25:00Z",
+          "granted_by": "e5f6a7b8-c9d0-4123-5678-90abcdef1234",
+          "module": {
+            "id": "e5f6a7b8-c9d0-4123-5678-90abcdef1234",
+            "module_code": "REPORTS",
+            "name": "Reports",
+            "href": "/reports"
+          }
+        }
+      ]
+    }
+    ```
+
+**Response Fields:**
+- `user`: Complete user profile including all personal and organizational information
+- `branch`: Branch details where the user is assigned
+- `department`: Department details where the user belongs
+- `role`: Role details assigned to the user
+- `permissions`: Array of module permissions where `can_view` is true (only modules the user can access)
+
+**Use Case:**
+This endpoint is typically called immediately after successful login to:
+1. Display user information in the UI
+2. Set up the navigation menu based on accessible modules
+3. Configure role-based access control on the frontend
+4. Display branch and department context
+
+**Notes:**
+- Only returns modules where `can_view` is `true`
+- Password hash is never included in the response
+- User must have a valid JWT token in the Authorization header
+- The user_id is extracted from the JWT token claims
+
 ---
 
-## Branch Management (Currently Unprotected for Development)
+## Branch Management (Protected)
 
 ### List All Branches
 
@@ -246,7 +430,7 @@ Deletes a branch by its ID.
 
 ---
 
-## Department Management (Currently Unprotected for Development)
+## Department Management (Protected)
 
 ### List All Departments
 
@@ -419,7 +603,7 @@ Removes the assignment of a module from a department. The path parameter for dep
 
 ---
 
-## Module Management (Currently Unprotected for Development)
+## Module Management (Protected)
 
 ### List All Modules
 
@@ -592,7 +776,7 @@ Retrieves all sub-modules for a given parent module.
 
 ---
 
-## Role Management (Currently Unprotected for Development)
+## Role Management (Protected)
 
 ### List All Roles
 
@@ -802,56 +986,88 @@ Retrieves a list of modules that can be assigned permissions for a given role. *
 
 ---
 
-## User Management (Placeholder)
+## User Management (Protected)
 
 The following endpoints are defined in the architecture but are currently placeholders.
 
 ### List All Users
 
 -   **Endpoint:** `GET /api/v1/users`
--   **Status:** `501 Not Implemented`
+-   **Authentication:** Required (JWT)
+-   **Status:** ✅ Ready
 
 ### Create User
 
 -   **Endpoint:** `POST /api/v1/users`
+-   **Authentication:** Required (JWT)
 -   **Request Body:** (Same as `POST /api/v1/auth/register`)
--   **Status:** `TODO`
+-   **Status:** ✅ Ready
 
 ### Get User by ID
 
 -   **Endpoint:** `GET /api/v1/users/{id}`
--   **Status:** `TODO`
+-   **Authentication:** Required (JWT)
+-   **Status:** ✅ Ready
 
 ### Update User
 
 -   **Endpoint:** `PUT /api/v1/users/{id}`
--   **Status:** `TODO`
+-   **Authentication:** Required (JWT)
+-   **Status:** ✅ Ready
 
 ### Delete User
 
 -   **Endpoint:** `DELETE /api/v1/users/{id}`
--   **Status:** `TODO`
+-   **Authentication:** Required (JWT)
+-   **Status:** ✅ Ready
+
+### Reset User Password
+
+-   **Endpoint:** `PATCH /api/v1/users/{id}/reset-password`
+-   **Authentication:** Required (JWT)
+-   **Request Body:**
+    ```json
+    {
+      "new_password": "a_new_secure_password"
+    }
+    ```
+-   **Status:** ✅ Ready
+
+### Activate User
+
+-   **Endpoint:** `PATCH /api/v1/users/{id}/activate`
+-   **Authentication:** Required (JWT)
+-   **Status:** ✅ Ready
+
+### Deactivate User
+
+-   **Endpoint:** `PATCH /api/v1/users/{id}/deactivate`
+-   **Authentication:** Required (JWT)
+-   **Status:** ✅ Ready
 
 ### Get User Effective Permissions
 
 -   **Endpoint:** `GET /api/v1/users/{id}/permissions`
--   **Status:** `TODO`
+-   **Authentication:** Required (JWT)
+-   **Status:** ✅ Ready
 
 ### Assign Role to User
 
 -   **Endpoint:** `POST /api/v1/users/{id}/assign-role`
+-   **Authentication:** Required (JWT)
 -   **Request Body:** `{"role_id": "new-role-uuid"}`
--   **Status:** `TODO`
+-   **Status:** ✅ Ready
 
 ### Assign Branch to User
 
 -   **Endpoint:** `POST /api/v1/users/{id}/assign-branch`
+-   **Authentication:** Required (JWT)
 -   **Request Body:** `{"branch_id": "new-branch-uuid"}`
--   **Status:** `TODO`
+-   **Status:** ✅ Ready
 
 ---
 
-## Province & Town Management (Currently Unprotected for Development)
+## Province & Town Management (Protected)
 
 ### Create Province
 
@@ -948,7 +1164,7 @@ Retrieves a list of all provinces, with their associated towns nested within eac
 
 ---
 
-## Risk Category Management (Currently Unprotected for Development)
+## Risk Category Management (Protected)
 
 ### List Risk Categories
 -   **Endpoint:** `GET /api/v1/risk-categories`
@@ -1245,12 +1461,18 @@ Deletes a risk by its ID.
     -   `id` (UUID, required): The ID of the risk to delete
 -   **Response:** `204 No Content`
 
-### Get Risk Matrix
+### Get Risk Matrix (Simple)
 
-Retrieves aggregated risk distribution for dashboard visualization (5x5 matrix).
+> **Note:** This is a lightweight endpoint for simple aggregations. For detailed heatmaps with risk information and supporting context, use [Get Detailed Risk Heatmap](#get-detailed-risk-heatmap) instead.
+
+Retrieves simple aggregated risk counts by rating for lightweight dashboard widgets.
 
 -   **Endpoint:** `GET /api/v1/risks/matrix`
 -   **Authentication:** Required (JWT)
+-   **Use Cases:**
+    - Simple dashboard widgets requiring only counts
+    - Lightweight API calls with minimal data transfer
+    - Quick health checks
 -   **Response:** `200 OK`
     ```json
     {
@@ -1259,6 +1481,8 @@ Retrieves aggregated risk distribution for dashboard visualization (5x5 matrix).
       "high": 8
     }
     ```
+
+**For comprehensive heatmaps with details, see:** [Get Detailed Risk Heatmap](#get-detailed-risk-heatmap)
 
 **Field Descriptions (INFRATEL Framework Mapping):**
 
@@ -1297,6 +1521,180 @@ Retrieves aggregated risk distribution for dashboard visualization (5x5 matrix).
   - `status`: STATUS (OPEN/CLOSED)
   - `overdue_days`: OVERDUE DAYS (calculated)
   - `latest_update`: LATEST STATUS UPDATE / Action Taken
+
+### Get Detailed Risk Heatmap
+
+Retrieves a comprehensive 5x5 risk heatmap with detailed risk information and supporting context for each cell. This enhanced heatmap provides complete transparency into risk distribution, individual risk details, and statistical summaries.
+
+-   **Endpoint:** `GET /api/v1/risks/heatmap`
+-   **Authentication:** Required (JWT)
+-   **Query Parameters:**
+    - `type` (optional): "inherent" or "residual" (default: "inherent")
+    - `register_id` (optional): UUID of specific risk register to filter by
+-   **Response:** `200 OK`
+    ```json
+    {
+      "status": "success",
+      "message": "Heatmap generated successfully",
+      "data": {
+        "type": "inherent",
+        "register_id": null,
+        "metadata": {
+          "title": "Inherent Risk Heatmap",
+          "description": "Comprehensive inherent risk heatmap with detailed risk information",
+          "register_name": null,
+          "date_range": null,
+          "total_risks": 45,
+          "generated_at": "2025-10-24T00:30:00Z"
+        },
+        "matrix": [
+          {
+            "likelihood": 5,
+            "impact": 5,
+            "score": 25,
+            "rating": "VERY_HIGH",
+            "color": "red",
+            "count": 3,
+            "risks": [
+              {
+                "id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+                "title": "Cybersecurity Breach",
+                "description": "Potential data breach affecting customer information",
+                "category_name": "IT Security",
+                "department_name": "Information Technology",
+                "risk_owner_name": "John Doe",
+                "status": "OPEN",
+                "risk_response": "REDUCE",
+                "risk_appetite_status": "ABOVE",
+                "created_at": "2025-01-15T10:00:00Z",
+                "updated_at": "2025-10-20T15:30:00Z",
+                "controls_count": 1,
+                "mitigation_cost": 150000.00,
+                "target_closing_date": "2025-12-31T00:00:00Z"
+              }
+            ]
+          },
+          {
+            "likelihood": 4,
+            "impact": 5,
+            "score": 20,
+            "rating": "VERY_HIGH",
+            "color": "red",
+            "count": 5,
+            "risks": [...]
+          },
+          {
+            "likelihood": 3,
+            "impact": 3,
+            "score": 9,
+            "rating": "HIGH",
+            "color": "orange",
+            "count": 12,
+            "risks": [...]
+          }
+        ],
+        "summary": {
+          "low_count": 8,
+          "medium_count": 15,
+          "high_count": 18,
+          "very_high_count": 4,
+          "average_score": 8.5,
+          "highest_score": 25,
+          "lowest_score": 2,
+          "above_appetite_count": 12,
+          "within_appetite_count": 33
+        }
+      }
+    }
+    ```
+
+**Heatmap Structure:**
+
+- **Metadata**: Contextual information about the heatmap
+  - `title`: Descriptive title
+  - `description`: Detailed description
+  - `register_name`: Name of risk register (if filtered)
+  - `date_range`: Start and end dates (for register-specific heatmaps)
+  - `total_risks`: Total number of risks included
+  - `generated_at`: Timestamp of heatmap generation
+
+- **Matrix**: Array of 25 cells (5x5 grid) containing:
+  - `likelihood`: Y-axis value (1-5)
+  - `impact`: X-axis value (1-5)
+  - `score`: Calculated risk score (likelihood × impact)
+  - `rating`: Risk category (LOW, MEDIUM, HIGH, VERY_HIGH)
+  - `color`: Visual indicator (green, yellow, orange, red)
+  - `count`: Number of risks in this cell
+  - `risks`: Array of detailed risk references
+
+- **Risk References**: Each risk includes:
+  - Core identification (id, title, description)
+  - Categorization (category_name, department_name)
+  - Ownership (risk_owner_name)
+  - Status and response information
+  - Controls and mitigation details
+  - Financial information (mitigation_cost)
+  - Timeline data (target_closing_date)
+
+- **Summary Statistics**:
+  - Risk distribution by rating (low, medium, high, very high)
+  - Average, highest, and lowest scores
+  - Risk appetite compliance (above vs within appetite)
+
+**Use Cases:**
+1. **Executive Dashboard**: High-level risk visualization with drill-down capability
+2. **Risk Committee Reports**: Detailed risk distribution with supporting evidence
+3. **Compliance Documentation**: Complete audit trail with risk context
+4. **Trend Analysis**: Compare inherent vs residual risk heatmaps
+5. **Register-Specific Analysis**: Focus on specific risk registers or timeframes
+
+### Get Register-Specific Heatmap
+
+Retrieves a detailed heatmap for risks within a specific risk register.
+
+-   **Endpoint:** `GET /api/v1/risk-registers/{registerId}/heatmap`
+-   **Authentication:** Required (JWT)
+-   **Path Parameters:**
+    - `registerId`: UUID of the risk register
+-   **Query Parameters:**
+    - `type` (optional): "inherent" or "residual" (default: "inherent")
+-   **Response:** Same structure as detailed heatmap above, but filtered to the specified register
+
+**Example Request:**
+```
+GET /api/v1/risk-registers/f6a7b8c9-d0e1-4234-6789-0abcdef12345/heatmap?type=residual
+```
+
+**Response includes register context:**
+```json
+{
+  "status": "success",
+  "message": "Register heatmap generated successfully",
+  "data": {
+    "type": "residual",
+    "register_id": "f6a7b8c9-d0e1-4234-6789-0abcdef12345",
+    "metadata": {
+      "title": "Residual Risk Heatmap - Q1 2025 Risk Assessment",
+      "description": "Comprehensive residual risk heatmap with detailed risk information for register: Q1 2025 Risk Assessment",
+      "register_name": "Q1 2025 Risk Assessment",
+      "date_range": {
+        "start_date": "2025-01-01T00:00:00Z",
+        "end_date": "2025-03-31T00:00:00Z"
+      },
+      "total_risks": 23,
+      "generated_at": "2025-10-24T00:30:00Z"
+    },
+    "matrix": [...],
+    "summary": {...}
+  }
+}
+```
+
+**Rating Scale (INFRATEL Framework):**
+- **Score 1-3**: LOW (Green) - Acceptable risk appetite
+- **Score 4-6**: MEDIUM (Yellow) - Moderate/cautious tolerance
+- **Score 7-15**: HIGH (Orange) - Close monitoring required
+- **Score 16-25**: VERY_HIGH (Red) - Unacceptable risk tolerance
 
 ---
 

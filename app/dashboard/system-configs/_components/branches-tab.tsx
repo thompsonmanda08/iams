@@ -4,6 +4,14 @@ import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "@/components/ui/empty";
+import {
   Table,
   TableBody,
   TableCell,
@@ -93,7 +101,10 @@ export function BranchesTab({ initialBranches, provinces, towns }: BranchesTabPr
   });
 
   const handleDeleteBranch = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this branch?")) return;
+    // if (!confirm("Are you sure you want to delete this branch?")) return;
+    if (true) {
+      return toast.warning("This action currently is disabled");
+    }
     deleteBranchMutation.mutate(id);
   };
 
@@ -127,8 +138,32 @@ export function BranchesTab({ initialBranches, provinces, towns }: BranchesTabPr
         <TableBody>
           {branches.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-muted-foreground text-center">
-                No branches found
+              <TableCell colSpan={7} align="center">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MapPin />
+                    </EmptyMedia>
+                    <EmptyTitle>No Branches Yet</EmptyTitle>
+                    <EmptyDescription>
+                      You haven&apos;t created any branches yet. Get started by creating your first
+                      branch.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setEditingBranch(null);
+                          setOpenModal(true);
+                        }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Branch
+                      </Button>
+                    </div>
+                  </EmptyContent>
+                </Empty>
               </TableCell>
             </TableRow>
           ) : (
@@ -167,6 +202,9 @@ export function BranchesTab({ initialBranches, provinces, towns }: BranchesTabPr
                       variant="ghost"
                       size="icon"
                       onClick={() => {
+                        if (true) {
+                          return toast.warning("This action currently is disabled");
+                        }
                         setEditingBranch(branch);
                         setOpenModal(true);
                       }}>
@@ -330,7 +368,7 @@ function CreateOrUpdateBranchDialog({
         <DialogHeader>
           <DialogTitle>{initialData ? "Update Branch" : "Create New Branch"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <Input
             label="Branch Name"
             placeholder="e.g. Headquarters, Ndola Branch"
@@ -351,28 +389,32 @@ function CreateOrUpdateBranchDialog({
             }}
             required
           />
-          <SelectField
-            label="Province"
-            placeholder="Select a province"
-            options={provinceOptions}
-            value={formData.province_id}
-            onValueChange={(province_id) => {
-              setError({ status: false, message: "" });
-              // Reset town when province changes
-              setFormData((c) => ({ ...c, province_id, town_id: "" }));
-            }}
-          />
-          <SelectField
-            label="Town"
-            placeholder="Select a town"
-            options={townOptions}
-            value={formData.town_id}
-            onValueChange={(town_id) => {
-              setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, town_id }));
-            }}
-            disabled={!formData.province_id}
-          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <SelectField
+              label="Province"
+              placeholder="Select a province"
+              className="w-full"
+              options={provinceOptions}
+              value={formData.province_id}
+              onValueChange={(province_id) => {
+                setError({ status: false, message: "" });
+                // Reset town when province changes
+                setFormData((c) => ({ ...c, province_id, town_id: "" }));
+              }}
+            />
+            <SelectField
+              label="Town"
+              placeholder="Select a town"
+              className="w-full"
+              options={townOptions}
+              value={formData.town_id}
+              onValueChange={(town_id) => {
+                setError({ status: false, message: "" });
+                setFormData((c) => ({ ...c, town_id }));
+              }}
+              disabled={!formData.province_id}
+            />
+          </div>
           <Input
             label="Physical Address"
             placeholder="e.g. 7th Floor, 4th Street Ibex Hill"
@@ -389,7 +431,12 @@ function CreateOrUpdateBranchDialog({
           )}
           <div className="flex justify-end gap-3 pt-2">
             <DialogClose asChild>
-              <Button type="button" size="sm" variant="outline" onClick={() => setOpenModal(false)}>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                disabled={saveMutation.isPending}
+                onClick={() => setOpenModal(false)}>
                 Cancel
               </Button>
             </DialogClose>

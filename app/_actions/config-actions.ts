@@ -430,34 +430,34 @@ export async function getModuleById(id: string): Promise<APIResponse> {
  * Status: ✅ Documented in API
  */
 export async function createModule({
-  moduleCode,
+  module_code,
   name,
   description,
-  parentModuleId,
+  parent_module_id,
   href,
   icon,
   sortOrder
 }: {
-  moduleCode: string;
+  module_code: string;
   name: string;
   description?: string;
-  parentModuleId?: string | null;
+  parent_module_id?: string | null;
   href?: string | null;
   icon?: string;
   sortOrder?: number;
 }): Promise<APIResponse> {
   const url = `/api/v1/modules`;
 
-  if (!moduleCode || !name) {
+  if (!module_code || !name) {
     return handleBadRequest("Module code and name are required");
   }
 
   try {
     const response = await axios.post(url, {
-      module_code: moduleCode,
+      module_code: module_code,
       name,
       description,
-      parent_module_id: parentModuleId || null,
+      parent_module_id: parent_module_id || null,
       href: href || null,
       icon,
       sort_order: sortOrder
@@ -476,20 +476,20 @@ export async function createModule({
  */
 export async function updateModule({
   id,
-  moduleCode,
+  module_code,
   name,
   description,
-  parentModuleId,
+  parent_module_id,
   href,
   icon,
   sortOrder,
   isActive
 }: {
   id: string;
-  moduleCode: string;
+  module_code: string;
   name: string;
   description?: string;
-  parentModuleId?: string | null;
+  parent_module_id?: string | null;
   href?: string | null;
   icon?: string;
   sortOrder?: number;
@@ -497,16 +497,16 @@ export async function updateModule({
 }): Promise<APIResponse> {
   const url = `/api/v1/modules/${id}`;
 
-  if (!id || !moduleCode || !name) {
+  if (!id || !module_code || !name) {
     return handleBadRequest("ID, module code, and name are required");
   }
 
   try {
     const response = await axios.put(url, {
-      module_code: moduleCode,
+      module_code: module_code,
       name,
       description,
-      parent_module_id: parentModuleId || null,
+      parent_module_id: parent_module_id || null,
       href: href || null,
       icon,
       sort_order: sortOrder,
@@ -544,10 +544,10 @@ export async function deleteModule(id: string): Promise<APIResponse> {
  * Endpoint: GET /api/v1/modules/{id}/submodules
  * Status: ✅ Documented in API
  */
-export async function getSubModules(parentModuleId: string): Promise<APIResponse> {
-  const url = `/api/v1/modules/${parentModuleId}/submodules`;
+export async function getSubModules(parent_module_id: string): Promise<APIResponse> {
+  const url = `/api/v1/modules/${parent_module_id}/submodules`;
 
-  if (!parentModuleId) {
+  if (!parent_module_id) {
     return handleBadRequest("Parent module ID is required");
   }
 
