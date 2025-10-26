@@ -1,4 +1,6 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Building2 } from "lucide-react";
 import {
@@ -21,7 +23,16 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getDepartments } from "@/app/_actions/config-actions";
 import { createRisk, updateRisk } from "@/app/_actions/risk-module-actions";
+
+type Department = {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  is_active: boolean;
+};
 
 interface RiskFormDialogProps {
   open: boolean;
@@ -33,10 +44,12 @@ interface RiskFormDialogProps {
 export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFormDialogProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [formData, setFormData] = useState({
     title: risk?.title || "",
     description: risk?.description || "",
-    category_id: risk?.category_id || "operational",
+    category_id: risk?.category_id || "",
     department_id: risk?.department_id || "",
     inherent_likelihood: risk?.inherent_likelihood || 3,
     inherent_impact: risk?.inherent_impact || 3,
@@ -44,7 +57,55 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
     owner: risk?.owner || ""
   });
 
-  console.log("FORM", formData);
+  console.log("FORM-DATA:", formData);
+
+  useEffect(() => {
+    if (open) {
+      loadDepartments();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (risk) {
+      setFormData({
+        title: risk.title || "",
+        description: risk.description || "",
+        category_id: risk.category_id || "operational",
+        department_id: risk.department_id || "",
+        inherent_likelihood: risk.inherent_likelihood || 3,
+        inherent_impact: risk.inherent_impact || 3,
+        status: risk.status || "open",
+        owner: risk.owner || ""
+      });
+    } else {
+      setFormData({
+        title: "",
+        description: "",
+        category_id: "operational",
+        department_id: "",
+        inherent_likelihood: 3,
+        inherent_impact: 3,
+        status: "open",
+        owner: ""
+      });
+    }
+  }, [risk]);
+
+  const loadDepartments = async () => {
+    setLoadingDepartments(true);
+    try {
+      const response = await getDepartments({ isActive: true });
+      if (response.success && response.data) {
+        setDepartments(response.data);
+      } else {
+        toast.error("Failed to load departments");
+      }
+    } catch (error) {
+      toast.error("Error loading departments");
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +130,7 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
         onOpenChange(false);
         router.refresh();
       } else {
-        toast.error("Failed to save risk");
+        toast.error(response.message || "Failed to save risk");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -132,8 +193,8 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
                   value={formData.category_id}
                   onValueChange={(value) => setFormData({ ...formData, category_id: value })}
                   disabled={isLoading}>
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="w-full flex-1">
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="operational">Operational</SelectItem>
@@ -145,20 +206,40 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
                 </Select>
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="businessUnit">Business Unit</Label>
-                <div className="relative">
-                  <Building2 className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
-                  <Input
-                    id="businessUnit"
-                    placeholder="e.g., Finance"
-                    className="pl-9"
-                    value={formData.department_id}
-                    onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
+              <div className="grid w-full flex-1 gap-2">
+                <Label htmlFor="department">Business Unit</Label>
+                <Select
+                  value={formData.department_id}
+                  onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                  disabled={isLoading || loadingDepartments}>
+                  <SelectTrigger className="w-full flex-1">
+                    <SelectValue placeholder="Select business unit">
+                      {loadingDepartments
+                        ? "Loading business unit..."
+                        : formData.department_id
+                          ? departments.find((d) => d.id === formData.department_id)?.name ||
+                            "Select business unit"
+                          : "Select business unit"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.length === 0 ? (
+                      <div className="text-muted-foreground p-2 text-sm">
+                        No departments available
+                      </div>
+                    ) : (
+                      departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="text-muted-foreground h-4 w-4" />
+                            <span>{dept.name}</span>
+                            <span className="text-muted-foreground text-xs">({dept.code})</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

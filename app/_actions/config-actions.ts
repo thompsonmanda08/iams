@@ -35,7 +35,10 @@ export async function getBranches(params?: {
   const url = `/api/v1/branches${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient( {
+      url: url,
+      method: "GET",
+    });;
     return successResponse(response?.data, "Branches fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -193,7 +196,10 @@ export async function getDepartments(params?: {
   const url = `/api/v1/departments${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient( {
+      url: url,
+      method: "GET",
+    });
     return successResponse(response?.data, "Departments fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -584,7 +590,10 @@ export async function getRoles(params?: {
   const url = `/api/v1/roles${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient( {
+      url: url,
+      method: "GET",
+    });;
     return successResponse(response?.data, "Roles fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);

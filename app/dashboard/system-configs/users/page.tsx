@@ -1,20 +1,13 @@
-"use client";
-import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
 import UsersDataTable from "./data-table";
-import { UserPlus } from "lucide-react";
-import { useState } from "react";
-import { SignUpForm } from "./signup-form";
-import { users } from "./data";
 
-export default function Page() {
-  const [isOpen, setIsOpen] = useState(false);
+import { Card, CardContent } from "@/components/ui/card";
+import { getUsers } from "@/app/_actions/user-actions";
+import CreateUserButton from "../_components/create-user-button";
 
-  const normalizedUsers = users.map((u) => ({
-    ...u,
-    status: ["active", "pending", "inactive"].includes(u.status)
-      ? (u.status as "active" | "pending" | "inactive")
-      : "inactive"
-  }));
+export default async function UsersPage() {
+  const response = await getUsers();
+  const users = response.success && response.data ? response.data : [];
 
   return (
     <div className="container mx-auto flex flex-col space-y-6 p-6">
@@ -25,14 +18,24 @@ export default function Page() {
             Manage your team members and their account permissions
           </p>
         </div>
-        <Button onClick={() => setIsOpen(true)} size="sm">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Create New User
-        </Button>
+        <CreateUserButton />
       </div>
 
-      <UsersDataTable data={normalizedUsers} />
-      <SignUpForm isOpen={isOpen} setIsOpen={setIsOpen} />
+      <Suspense
+        fallback={
+          <Card className="shadow-none">
+            <CardContent>
+              <div className="flex items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+                  <p className="text-sm text-gray-500">Loading users...</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        }>
+        <UsersDataTable data={users} />
+      </Suspense>
     </div>
   );
 }

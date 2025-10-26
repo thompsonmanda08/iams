@@ -1,7 +1,7 @@
 "use server";
 
 import { APIResponse } from "@/lib/types";
-import {
+import authenticatedApiClient, {
   axios,
   handleBadRequest,
   handleError,
@@ -9,6 +9,7 @@ import {
   unauthorizedResponse
 } from "./api-config";
 import { createAuthSession, deleteSession, verifySession } from "@/lib/session";
+import { revalidatePath } from "next/cache";
 
 export async function loginUser({
   username,
@@ -91,34 +92,38 @@ export async function registerUser({
   username,
   email,
   password,
-  firstName,
-  lastName,
-  branchId,
-  departmentId,
-  roleId
+  first_name,
+  last_name,
+  branch_id,
+  department_id,
+  role_id
 }: {
   username: string;
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  branchId: string;
-  departmentId: string;
-  roleId: string;
+  first_name: string;
+  last_name: string;
+  branch_id: string;
+  department_id: string;
+  role_id: string;
 }): Promise<APIResponse> {
   const url = `/api/v1/auth/register`;
 
   try {
-    const response = await axios.post(url, {
+    const response = await authenticatedApiClient({
+       url: url,
+      data:{
       username,
       email,
       password,
-      first_name: firstName,
-      last_name: lastName,
-      branch_id: branchId,
-      department_id: departmentId,
-      role_id: roleId
+      first_name: first_name,
+      last_name: last_name,
+      branch_id: branch_id,
+      department_id: department_id,
+      role_id: role_id},
+      method: "POST",
     });
+    revalidatePath("/dashboard/system-configs/users");
 
     return successResponse(response?.data, "User registered successfully");
   } catch (error: Error | any) {
