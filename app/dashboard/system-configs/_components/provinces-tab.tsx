@@ -36,6 +36,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Province {
   id: string;
@@ -159,26 +160,42 @@ export function ProvincesTab({ initialProvinces }: ProvincesTabProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (true) {
-                          return toast.warning("This action currently is disabled");
-                        }
-                        setEditingProvince(province);
-                        setOpenModal(true);
-                      }}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteProvince(province.id)}
-                      className="text-destructive"
-                      disabled={deleteProvinceMutation.isPending}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            if (true) {
+                              return toast.warning("This action currently is disabled");
+                            }
+                            setEditingProvince(province);
+                            setOpenModal(true);
+                          }}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit Province</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteProvince(province.id)}
+                          className="text-destructive"
+                          disabled={deleteProvinceMutation.isPending}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        classNames={{
+                          content: "bg-destructive text-white",
+                          arrow: "bg-destructive! fill-destructive!"
+                        }}>
+                        Delete Province
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>

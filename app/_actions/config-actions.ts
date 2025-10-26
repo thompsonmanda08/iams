@@ -7,6 +7,7 @@ import authenticatedApiClient, {
   handleError,
   successResponse
 } from "./api-config";
+import { revalidatePath } from "next/cache";
 
 // ============================================================================
 // BRANCH MANAGEMENT
@@ -35,10 +36,7 @@ export async function getBranches(params?: {
   const url = `/api/v1/branches${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
-    const response = await authenticatedApiClient( {
-      url: url,
-      method: "GET",
-    });;
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Branches fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -54,7 +52,7 @@ export async function getBranchById(id: string): Promise<APIResponse> {
   const url = `/api/v1/branches/${id}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Branch fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -91,15 +89,19 @@ export async function createBranch({
   }
 
   try {
-    const response = await axios.post(url, {
-      name,
-      code,
-      town_id: townId,
-      province_id: provinceId,
-      address,
-      is_active: isActive
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        name,
+        code,
+        town_id: townId,
+        province_id: provinceId,
+        address,
+        is_active: isActive
+      }
     });
-
+    revalidatePath("/dashboard/system-configs/locations");
     return successResponse(response?.data, "Branch created successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -135,16 +137,20 @@ export async function updateBranch({
   }
 
   try {
-    const response = await axios.put(url, {
-      name,
-      code,
-      town_id: townId,
-      province_id: provinceId,
-      address,
-      is_active: isActive,
-      manager_id: null // Optional field from API docs
+    const response = await authenticatedApiClient({
+      url,
+      method: "PUT",
+      data: {
+        name,
+        code,
+        town_id: townId,
+        province_id: provinceId,
+        address,
+        is_active: isActive,
+        manager_id: null // Optional field from API docs
+      }
     });
-
+    revalidatePath("/dashboard/system-configs/locations");
     return successResponse(response?.data, "Branch updated successfully");
   } catch (error: Error | any) {
     return handleError(error, "PUT", url);
@@ -164,7 +170,8 @@ export async function deleteBranch(id: string): Promise<APIResponse> {
   }
 
   try {
-    await axios.delete(url);
+    await authenticatedApiClient({ url, method: "DELETE" });
+    revalidatePath("/dashboard/system-configs/locations");
     return successResponse(null, "Branch deleted successfully");
   } catch (error: Error | any) {
     return handleError(error, "DELETE", url);
@@ -196,10 +203,7 @@ export async function getDepartments(params?: {
   const url = `/api/v1/departments${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
-    const response = await authenticatedApiClient( {
-      url: url,
-      method: "GET",
-    });
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Departments fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -215,7 +219,7 @@ export async function getDepartmentById(id: string): Promise<APIResponse> {
   const url = `/api/v1/departments/${id}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Department fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -242,18 +246,22 @@ export async function createDepartment({
 }): Promise<APIResponse> {
   const url = `/api/v1/departments`;
 
-  if (!name || !code) {
+  if (!name) {
     return handleBadRequest("Name and code are required");
   }
 
   try {
-    const response = await axios.post(url, {
-      name,
-      code,
-      description,
-      parent_id: parentId || null
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        name,
+        code: name.toUpperCase().replace(/\s+/g, "_"), // Generate code from name,
+        description,
+        parent_id: parentId || null
+      }
     });
-
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Department created successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -287,14 +295,18 @@ export async function updateDepartment({
   }
 
   try {
-    const response = await axios.put(url, {
-      name,
-      code,
-      description,
-      parent_id: parentId || null,
-      is_active: isActive
+    const response = await authenticatedApiClient({
+      url,
+      method: "PUT",
+      data: {
+        name,
+        code,
+        description,
+        parent_id: parentId || null,
+        is_active: isActive
+      }
     });
-
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Department updated successfully");
   } catch (error: Error | any) {
     return handleError(error, "PUT", url);
@@ -314,7 +326,11 @@ export async function deleteDepartment(id: string): Promise<APIResponse> {
   }
 
   try {
-    await axios.delete(url);
+    await authenticatedApiClient({
+      url,
+      method: "DELETE"
+    });
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(null, "Department deleted successfully");
   } catch (error: Error | any) {
     return handleError(error, "DELETE", url);
@@ -334,7 +350,7 @@ export async function getDepartmentModules(departmentId: string): Promise<APIRes
   }
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Department modules fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -360,7 +376,14 @@ export async function assignModuleToDepartment({
   }
 
   try {
-    const response = await axios.post(url, { module_id: moduleId });
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        module_id: moduleId
+      }
+    });
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Module assigned to department successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -386,7 +409,8 @@ export async function removeModuleFromDepartment({
   }
 
   try {
-    await axios.delete(url);
+    await authenticatedApiClient({ url, method: "DELETE" });
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(null, "Module removed from department successfully");
   } catch (error: Error | any) {
     return handleError(error, "DELETE", url);
@@ -590,10 +614,10 @@ export async function getRoles(params?: {
   const url = `/api/v1/roles${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
-    const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: url,
-      method: "GET",
-    });;
+      method: "GET"
+    });
     return successResponse(response?.data, "Roles fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -725,7 +749,7 @@ export async function getProvincesWithTowns(): Promise<APIResponse> {
   const url = `/api/v1/provinces/with-towns`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Provinces with towns fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -741,7 +765,7 @@ export async function getProvinces(isActive?: boolean): Promise<APIResponse> {
   const url = `/api/v1/provinces${isActive !== undefined ? `?is_active=${isActive}` : ""}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Provinces fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -757,7 +781,7 @@ export async function getProvinceById(id: string): Promise<APIResponse> {
   const url = `/api/v1/provinces/${id}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Province fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -785,11 +809,16 @@ export async function createProvince({
   }
 
   try {
-    const response = await axios.post(url, {
-      name,
-      code,
-      is_active: isActive
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        name,
+        code,
+        is_active: isActive
+      }
     });
+    revalidatePath("/dashboard/system-configs/locations");
     return successResponse(response?.data, "Province created successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -858,15 +887,19 @@ export async function deleteProvince(id: string): Promise<APIResponse> {
 export async function getTowns(params?: {
   provinceId?: string;
   isActive?: boolean;
+  limit?: number;
+  offset?: number;
 }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
   if (params?.provinceId) queryParams.append("province_id", params.provinceId);
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
+  if (params?.limit !== undefined) queryParams.append("limit", String(params.limit));
+  if (params?.offset !== undefined) queryParams.append("offset", String(params.offset));
 
-  const url = `/api/v1/towns${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+  const url = `/api/v1/towns${queryParams.toString() ? `?${queryParams.toString()}` : `?limit=10&offset=`}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Towns fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -894,10 +927,14 @@ export async function createTown({
   }
 
   try {
-    const response = await axios.post(url, {
-      name,
-      province_id: provinceId,
-      is_active: isActive
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        name,
+        province_id: provinceId,
+        is_active: isActive
+      }
     });
     return successResponse(response?.data, "Town created successfully");
   } catch (error: Error | any) {
@@ -957,40 +994,4 @@ export async function deleteTown(id: string): Promise<APIResponse> {
   } catch (error: Error | any) {
     return handleError(error, "DELETE", `/api/v1/towns/${id}`);
   }
-}
-
-// ============================================================================
-// LEGACY FUNCTIONS (Keeping for backward compatibility with existing UI)
-// TODO: Update UI to use new function signatures
-// ============================================================================
-
-/**
- * @deprecated Use createDepartment instead
- */
-export async function createNewDepartment({ name, description }: Department): Promise<APIResponse> {
-  return createDepartment({
-    name,
-    code: name.toUpperCase().replace(/\s+/g, "_"), // Generate code from name
-    description
-  });
-}
-
-/**
- * @deprecated Use createBranch instead with proper townId and provinceId
- */
-export async function createNewBranch({
-  name,
-  code,
-  province,
-  city,
-  physical_address
-}: Branch): Promise<APIResponse> {
-  // This function signature is incompatible with API requirements.
-  // UI needs to be updated to pass townId and provinceId instead of string names.
-  console.warn(
-    "createNewBranch is deprecated. Please update UI to use createBranch with townId and provinceId."
-  );
-  return handleBadRequest(
-    "This function requires townId and provinceId (UUIDs). Please use getProvincesWithTowns to populate dropdowns and pass IDs instead of names."
-  );
 }

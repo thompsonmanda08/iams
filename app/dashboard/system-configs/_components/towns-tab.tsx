@@ -37,6 +37,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
+import { CustomPagination } from "@/components/ui/pagination";
 
 interface Province {
   id: string;
@@ -196,6 +197,11 @@ export function TownsTab({ initialTowns, provinces }: TownsTabProps) {
           )}
         </TableBody>
       </Table>
+
+      {/* Pagination */}
+      {/* {true && (
+        <CustomPagination pagination={pagination} updatePagination={updatePagination} />
+      )} */}
 
       <CreateOrUpdateTownDialog
         openModal={openModal}

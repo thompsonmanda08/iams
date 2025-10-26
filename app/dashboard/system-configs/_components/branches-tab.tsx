@@ -36,6 +36,7 @@ import { ErrorState } from "@/lib/types";
 import { createBranch, updateBranch, deleteBranch } from "@/app/_actions/config-actions";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Province {
   id: string;
@@ -198,26 +199,42 @@ export function BranchesTab({ initialBranches, provinces, towns }: BranchesTabPr
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (true) {
-                          return toast.warning("This action currently is disabled");
-                        }
-                        setEditingBranch(branch);
-                        setOpenModal(true);
-                      }}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteBranch(branch.id)}
-                      className="text-destructive"
-                      disabled={deleteBranchMutation.isPending}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            if (true) {
+                              return toast.warning("This action currently is disabled");
+                            }
+                            setEditingBranch(branch);
+                            setOpenModal(true);
+                          }}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit Branch</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteBranch(branch.id)}
+                          className="text-destructive"
+                          disabled={deleteBranchMutation.isPending}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        classNames={{
+                          content: "bg-destructive text-white",
+                          arrow: "bg-destructive! fill-destructive!"
+                        }}>
+                        Delete Branch
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>

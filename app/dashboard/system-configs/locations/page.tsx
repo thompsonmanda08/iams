@@ -4,17 +4,25 @@ import { ProvincesTab } from "../_components/provinces-tab";
 import { TownsTab } from "../_components/towns-tab";
 import { BranchesTab } from "../_components/branches-tab";
 
-export default async function BranchesConfigPage() {
+type PageProps = {
+  params: Promise<{ [key: string]: string }>;
+  searchParams: Promise<{ [key: string]: string }>;
+};
+
+export default async function BranchesConfigPage({ searchParams }: PageProps) {
   // Fetch all data server-side
+
   const [branchesResponse, provincesResponse, townsResponse] = await Promise.all([
     getBranches(),
     getProvinces(),
-    getTowns()
+    getTowns({ limit: 10 })
   ]);
 
   const branches = branchesResponse.success ? branchesResponse.data : [];
   const provinces = provincesResponse.success ? provincesResponse.data : [];
   const towns = townsResponse.success ? townsResponse.data : [];
+
+  console.log("TOWNS: ", townsResponse);
 
   return (
     <div className="container mx-auto space-y-6 p-6">

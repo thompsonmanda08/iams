@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Building, PencilLine } from "lucide-react";
+import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
@@ -30,7 +30,8 @@ import {
   createNewDepartment,
   updateDepartment,
   getDepartments,
-  deleteDepartment
+  deleteDepartment,
+  createDepartment
 } from "@/app/_actions/config-actions";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +44,8 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
+import CustomAlert from "@/components/ui/custom-alert";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function DepartmentsConfig({
   initialDepartments
@@ -55,6 +58,10 @@ export default function DepartmentsConfig({
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
 
   const [departments, setDepartments] = useState<Department[]>(initialDepartments);
+
+  useEffect(() => {
+    setDepartments(initialDepartments);
+  }, [initialDepartments]);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -100,9 +107,9 @@ export default function DepartmentsConfig({
 
   const handleDeleteConfirm = async () => {
     if (!departmentToDelete) return;
-    if (true) {
-      return toast.warning("This action currently is disabled");
-    }
+    // if (true) {
+    //   return toast.warning("This action currently is disabled");
+    // }
     deleteMutation.mutate(departmentToDelete as any);
   };
 
@@ -128,14 +135,14 @@ export default function DepartmentsConfig({
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Code</TableHead>
-              <TableHead>Status</TableHead>
+              {/* <TableHead>Status</TableHead> */}
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {departments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={4} align="center">
                   <Empty>
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
@@ -184,7 +191,7 @@ export default function DepartmentsConfig({
                   <TableCell>
                     <span className="font-mono text-sm">{department.code}</span>
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <span
                       className={cn(
                         "rounded-full px-2 py-1 text-xs font-medium",
@@ -194,29 +201,61 @@ export default function DepartmentsConfig({
                       )}>
                       {department.isActive ? "Active" : "Inactive"}
                     </span>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          setEditingDepartment(department);
-                          setOpenModal(true);
-                          e.stopPropagation();
-                        }}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          handleDeleteClick(String(department.id));
-                          e.stopPropagation();
-                        }}
-                        className="text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              setEditingDepartment(department);
+                              setOpenModal(true);
+                              e.stopPropagation();
+                            }}>
+                            <Edit className="text-primary h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-primary">Edit Department</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              handleDeleteClick(String(department.id));
+                              e.stopPropagation();
+                            }}
+                            className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          classNames={{
+                            content: "bg-destructive text-white",
+                            arrow: "bg-destructive! fill-destructive!"
+                          }}>
+                          Delete Department
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              handleDeleteClick(String(department.id));
+                              e.stopPropagation();
+                            }}
+                            className="text-primary">
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>View Department Details</TooltipContent>
+                      </Tooltip>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -327,7 +366,7 @@ function CreateOrUpdateDepartment({
     mutationFn: (data: Department) => {
       return initialData
         ? updateDepartment({ ...data, id: String(initialData.id) })
-        : createNewDepartment(data);
+        : createDepartment(data);
     },
     onSuccess: (response) => {
       if (response.success) {
@@ -397,11 +436,8 @@ function CreateOrUpdateDepartment({
               setFormData((c) => ({ ...c, description: e.target.value }));
             }}
           />
-          {error.status && (
-            <Alert variant="destructive">
-              <AlertDescription>{error.message}</AlertDescription>
-            </Alert>
-          )}
+          {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
+
           <div className="flex justify-end gap-3 pt-2">
             <DialogClose asChild>
               <Button
