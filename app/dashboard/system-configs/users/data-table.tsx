@@ -11,19 +11,9 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable
+  useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, Columns3, MoreHorizontal, Search, Filter, X } from "lucide-react";
-
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,152 +31,152 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { generateAvatarFallback } from "@/lib/utils";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { User } from "@/lib/types/account";
+import { deleteUser, toggleUserStatus } from "@/app/_actions/user-actions";
 
-export type User = {
-  id: number;
-  name: string;
-  email: string;
-  image: string;
-  country: string;
-  role: string;
-  status: "active" | "inactive" | "pending";
-  plan_name: string;
-};
-
-export const columns: ColumnDef<User>[] = [
+const getColumns = (
+  onDelete: (id: string) => void,
+  onToggleStatus: (id: string, isActive: boolean) => void
+): ColumnDef<User>[] => [
   {
     id: "#",
     header: "#",
-    cell: ({ row }) => <div className="text-sm font-medium text-gray-500">{row.index + 1}</div>
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
     cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src={row.original.image} alt={row.getValue("name")} />
-          <AvatarFallback className="text-xs font-medium">
-            {generateAvatarFallback(row.getValue("name"))}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="font-medium text-gray-900">{row.getValue("name")}</div>
-          <div className="text-xs text-gray-500">{row.original.email}</div>
-        </div>
-      </div>
-    )
+      <div className="text-sm font-medium text-gray-500">{row.index + 1}</div>
+    ),
   },
   {
-    accessorKey: "role",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="-ml-3 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Role
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="text-sm text-gray-700">{row.getValue("role")}</div>
-  },
-  {
-    accessorKey: "plan_name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="-ml-3 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Department
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="text-sm text-gray-700">{row.getValue("plan_name")}</div>
-  },
-  {
-    accessorKey: "country",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="-ml-3 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Branch
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="text-sm text-gray-700">{row.getValue("country")}</div>
-  },
-  {
-    accessorKey: "status",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="-ml-3 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Status
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    accessorKey: "username",
+    id: "username",
+    header: "Name",
     cell: ({ row }) => {
-      const status = row.original.status;
-
-      const statusConfig = {
-        active: {
-          variant: "default" as const,
-          className: "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
-        },
-        inactive: {
-          variant: "default" as const,
-          className: "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100"
-        },
-        pending: {
-          variant: "default" as const,
-          className: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100"
-        }
-      };
-
-      const config = statusConfig[status];
-
+      const fullName = `${row.original.first_name} ${row.original.last_name}`;
+      return (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback className="text-xs font-medium">
+              {generateAvatarFallback(fullName)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium text-gray-900">{fullName}</div>
+            <div className="text-xs text-gray-500">{row.original.email}</div>
+          </div>
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      const fullName = `${row.original.first_name} ${row.original.last_name}`.toLowerCase();
+      const email = row.original.email.toLowerCase();
+      const username = row.original.username.toLowerCase();
+      const searchValue = value.toLowerCase();
+      return fullName.includes(searchValue) || email.includes(searchValue) || username.includes(searchValue);
+    },
+  },
+  {
+    id: "role",
+    accessorFn: (row) => row.role.name,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="-ml-3 hover:bg-transparent"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Role
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-sm text-gray-700">{row.original.role.name}</div>
+    ),
+    filterFn: (row, id, value) => {
+      return row.original.role.name === value;
+    },
+  },
+  {
+    id: "department",
+    accessorFn: (row) => row.department.name,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="-ml-3 hover:bg-transparent"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Department
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-sm text-gray-700">{row.original.department.name}</div>
+    ),
+  },
+  {
+    id: "branch",
+    accessorFn: (row) => row.branch.name,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="-ml-3 hover:bg-transparent"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Branch
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-sm text-gray-700">{row.original.branch.name}</div>
+    ),
+  },
+  {
+    id: "status",
+    accessorKey: "is_active",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="-ml-3 hover:bg-transparent"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Status
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const isActive = row.original.is_active;
       return (
         <span
-          className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
-            status === "active"
-              ? "bg-green-100 text-green-700"
-              : status === "pending"
-                ? "bg-yellow-100 text-yellow-700"
-                : "bg-gray-100 text-gray-700"
-          }`}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          className={`rounded-full px-2 py-1 text-xs font-medium capitalize ${
+            isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {isActive ? "Active" : "Inactive"}
         </span>
       );
-    }
+    },
+    filterFn: (row, id, value) => {
+      return row.original.is_active === value;
+    },
   },
   {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
     enableHiding: false,
     cell: ({ row }) => {
+      const user = row.original;
       return (
         <div className="text-right">
           <DropdownMenu>
@@ -202,28 +192,64 @@ export const columns: ColumnDef<User>[] = [
               <DropdownMenuItem>Edit User</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Reset Password</DropdownMenuItem>
-              <DropdownMenuItem>
-                {row.original.status === "active" ? "Deactivate" : "Activate"} Account
+              <DropdownMenuItem onClick={() => onToggleStatus(user.id, !user.is_active)}>
+                {user.is_active ? "Deactivate" : "Activate"} Account
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 focus:text-red-600">
+              <DropdownMenuItem
+                onClick={() => onDelete(user.id)}
+                className="text-red-600 focus:text-red-600"
+              >
                 Delete User
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       );
-    }
-  }
+    },
+  },
 ];
 
 export default function UsersDataTable({ data }: { data: User[] }) {
+  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [roleFilter, setRoleFilter] = React.useState<string>("all");
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      const response = await deleteUser(id);
+      if (response.success) {
+        toast.success("User deleted successfully");
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to delete user");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    try {
+      const response = await toggleUserStatus(id, isActive);
+      if (response.success) {
+        toast.success(`User ${isActive ? "activated" : "deactivated"} successfully`);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to update user status");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  const columns = getColumns(handleDelete, handleToggleStatus);
 
   const table = useReactTable({
     data,
@@ -240,14 +266,15 @@ export default function UsersDataTable({ data }: { data: User[] }) {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection
-    }
+      rowSelection,
+    },
   });
 
   // Apply filters
   React.useEffect(() => {
     if (statusFilter !== "all") {
-      table.getColumn("status")?.setFilterValue(statusFilter);
+      const filterValue = statusFilter === "active";
+      table.getColumn("status")?.setFilterValue(filterValue);
     } else {
       table.getColumn("status")?.setFilterValue(undefined);
     }
@@ -266,26 +293,27 @@ export default function UsersDataTable({ data }: { data: User[] }) {
   const clearFilters = () => {
     setStatusFilter("all");
     setRoleFilter("all");
-    table.getColumn("name")?.setFilterValue("");
+    table.getColumn("username")?.setFilterValue("");
   };
 
   // Get unique roles from data
   const uniqueRoles = React.useMemo(() => {
-    return Array.from(new Set(data.map((user) => user.role))).sort();
+    return Array.from(new Set(data.map((user) => user.role.name))).sort();
   }, [data]);
 
   return (
     <Card className="shadow-none">
       <CardContent className="p-0">
-        {/* Search and Filters */}
         <div className="space-y-4 border-b border-gray-200 p-4">
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="Search users by name or email..."
-                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+                value={(table.getColumn("username")?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn("username")?.setFilterValue(event.target.value)
+                }
                 className="pl-10"
               />
             </div>
@@ -299,7 +327,6 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -329,17 +356,16 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                   {table
                     .getAllColumns()
                     .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) => column.toggleVisibility(value)}>
-                          {column.id}
-                        </DropdownMenuCheckboxItem>
-                      );
-                    })}
+                    .map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(value)}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -356,29 +382,25 @@ export default function UsersDataTable({ data }: { data: User[] }) {
               Showing {table.getFilteredRowModel().rows.length} of {data.length} users
             </span>
             {hasFilters && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs text-white">
                 <Filter className="mr-1 h-3 w-3" />
                 Filters active
               </Badge>
             )}
           </div>
         </div>
-
-        {/* Table */}
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} className="bg-gray-50">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    );
-                  })}
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="bg-gray-50">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
                 </TableRow>
               ))}
             </TableHeader>
@@ -388,7 +410,8 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="transition-colors hover:bg-gray-50">
+                    className="transition-colors hover:bg-gray-50"
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -410,17 +433,14 @@ export default function UsersDataTable({ data }: { data: User[] }) {
             </TableBody>
           </Table>
         </div>
-
-        {/* Pagination */}
         <div className="border-t border-gray-200 p-4">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">Rows per page:</span>
               <Select
                 value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}>
+                onValueChange={(value) => table.setPageSize(Number(value))}
+              >
                 <SelectTrigger className="h-8 w-auto">
                   <SelectValue />
                 </SelectTrigger>
@@ -443,14 +463,16 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                   variant="outline"
                   size="sm"
                   onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}>
+                  disabled={!table.getCanPreviousPage()}
+                >
                   Previous
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}>
+                  disabled={!table.getCanNextPage()}
+                >
                   Next
                 </Button>
               </div>

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { BellIcon, CreditCardIcon, LogOutIcon, UserCircle2Icon } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import { logUserOut } from "@/app/_actions/auth-actions";
 
 const userData = {
   name: "Toby Belhome",
@@ -27,6 +28,15 @@ const userData = {
 
 export function NavUser() {
   const { isMobile } = useSidebar();
+
+  const handleUserLogOut = async () => {
+    const isLoggedOut = await logUserOut();
+    if (isLoggedOut) {
+      window.location.href = "/";
+      return isLoggedOut;
+    }
+    return isLoggedOut;
+  };
 
   return (
     <SidebarMenu>
@@ -80,7 +90,7 @@ export function NavUser() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleUserLogOut}>
               <LogOutIcon />
               Log out
             </DropdownMenuItem>

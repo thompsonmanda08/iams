@@ -14,7 +14,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
-import { axios, handleBadRequest, handleError, successResponse } from "./api-config";
+import authenticatedApiClient, { axios, handleBadRequest, handleError, successResponse } from "./api-config";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -163,10 +163,9 @@ export interface RiskRegister {
 }
 
 export interface RiskRegisterInput {
-  branch_id: string;
+  description: string;
   name: string;
-  start_date: Date;
-  due_date: Date;
+  is_active?:boolean;
 }
 
 // KRI Register
@@ -501,12 +500,12 @@ export async function getRiskRegisters(params?: {
   name?: string;
 }): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call when backend is ready
-    // const response = await axios.get("/api/v1/risk-registers", { params });
-    // return successResponse(response.data.data);
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return successResponse(mockRiskRegisters);
+    const response = await authenticatedApiClient( {
+      url: "/api/v1/kri-registers",
+      method: "GET",
+      params,
+    })
+    return successResponse(response.data);
   } catch (error) {
     return handleError(error, "GET | GET RISK REGISTERS", "/api/v1/risk-registers");
   }
@@ -517,15 +516,13 @@ export async function getRiskRegisters(params?: {
  */
 export async function getRiskRegister(id: string): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const register = mockRiskRegisters.find((r) => r.id === id);
-    if (!register) {
-      return handleBadRequest("Risk register not found");
-    }
-    return successResponse(register, "Risk fetched successfully");
+     const response = await authenticatedApiClient( {
+      url: `/api/v1/kri-registers/${id}`,
+      method: "GET",
+    })
+    return successResponse(response.data);
   } catch (error) {
-    return handleError(error, "GET | GET RISK REGISTER", `/api/v1/risk-registers/${id}`);
+    return handleError(error, "GET | GET RISK REGISTER", `/api/v1/kri-registers/${id}`);
   }
 }
 
@@ -534,11 +531,17 @@ export async function getRiskRegister(id: string): Promise<APIResponse> {
  */
 export async function createRiskRegister(input: RiskRegisterInput): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/risk-registers", input);
+    const response = await authenticatedApiClient( {
+      url: "/api/v1/kri-registers",
+      method: "POST",
+      data: input,
+    });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
-    return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/risk-registers");
+    console.log('ERROR', error);
+    
+    return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/kri-registers");
   }
 }
 
@@ -550,11 +553,11 @@ export async function updateRiskRegister(
   input: Partial<RiskRegisterInput>
 ): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/risk-registers/${id}`, input);
+    const response = await axios.put(`/api/v1/kri-registers/${id}`, input);
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
-    return handleError(error, "PUT | UPDATE RISK REGISTER", `/api/v1/risk-registers/${id}`);
+    return handleError(error, "PUT | UPDATE RISK REGISTER", `/api/v1/kri-registers/${id}`);
   }
 }
 
@@ -751,19 +754,9 @@ export async function getRisk(id: string): Promise<APIResponse> {
  */
 export async function createRisk(input: any): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const newRisk: Risk = {
-      id: String(mockRisks.length + 1),
-      riskId: `RSK-2024-${String(mockRisks.length + 1).padStart(3, "0")}`,
-      ...input,
-      status: "OPEN",
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-    mockRisks.push(newRisk);
+    const response = await axios.post("/api/v1/risks");
     revalidatePath("/dashboard/(modules)/risks");
-    return successResponse(newRisk);
+   return successResponse(response.data);
   } catch (error) {
     return handleError(error, "POST | CREATE RISK", "/api/v1/risks");
   }
