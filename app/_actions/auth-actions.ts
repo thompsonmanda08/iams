@@ -8,7 +8,7 @@ import {
   successResponse,
   unauthorizedResponse
 } from "./api-config";
-import { createAuthSession } from "@/lib/session";
+import { createAuthSession, deleteSession, verifySession } from "@/lib/session";
 
 export async function loginUser({
   username,
@@ -23,10 +23,9 @@ export async function loginUser({
     const response = await axios.post(url, { username, password });
 
     // Set authentication cookie
-    await createAuthSession(response.data.tokenData);
-
+    await createAuthSession(response.data.access_token);
     return successResponse(response?.data, "Login successful");
-  } catch (error: Error | any) {
+  } catch (error: Error | any) {    
     return handleError(error, "POST", url);
   }
 }
@@ -125,4 +124,13 @@ export async function registerUser({
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }
+}
+
+export async function logUserOut() {
+  const isLoggedIn = await verifySession();
+  if (isLoggedIn) {
+    deleteSession();
+    return true;
+  }
+  return false;
 }

@@ -13,8 +13,17 @@ import {
 import Link from "next/link";
 import * as React from "react";
 import { Progress } from "@/components/ui/progress";
+import { logUserOut } from "@/app/_actions/auth-actions";
 
 export default function UserMenu() {
+  const handleUserLogOut = async () => {
+    const isLoggedOut = await logUserOut();
+    if (isLoggedOut) {
+      window.location.href = "/";
+      return isLoggedOut;
+    }
+    return isLoggedOut;
+  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -65,7 +74,7 @@ export default function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleUserLogOut}>
           <LogOut />
           Log out
         </DropdownMenuItem>
