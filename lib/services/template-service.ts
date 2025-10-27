@@ -11,16 +11,12 @@
 
 import type { WorkpaperTemplateDefinition, TemplateCategory } from "@/lib/types/audit-types";
 import {
-  ISO27001_2022_TEMPLATE,
-  getAvailableTemplates as getTemplates,
-  getTemplateById as getTemplate,
-  getTemplateCategoriesById as getCategories,
-  getCategoryById as getCategory,
+  // ISO27001_2022_TEMPLATE,
   fetchAvailableTemplates,
   fetchTemplateById,
   fetchTemplateCategoriesById,
   fetchCategoryById
-} from "@/lib/templates/iso27001-2022-template";
+} from "@/lib/templates/iso27001-template";
 
 /**
  * Template Service Class
@@ -101,44 +97,7 @@ export class TemplateService {
     const category = await fetchCategoryById(categoryId);
     if (category) return category;
 
-    // Fallback to static lookup
-    return getCategory(templateId, categoryId);
-  }
-
-  // ============================================================================
-  // SYNC METHODS (Static Fallback) - For backward compatibility
-  // ============================================================================
-
-  /**
-   * Get all available workpaper templates (static fallback - synchronous)
-   * @deprecated Use fetchTemplates() for DB data in server components, or useWorkpaperTemplates() hook in client components
-   */
-  static getAvailableTemplates(): WorkpaperTemplateDefinition[] {
-    return getTemplates();
-  }
-
-  /**
-   * Get a specific template by ID (static fallback - synchronous)
-   * @deprecated Use fetchTemplate() for DB data in server components, or useWorkpaperTemplatesWithCategories() hook in client components
-   */
-  static getTemplate(templateId: string): WorkpaperTemplateDefinition | null {
-    return getTemplate(templateId);
-  }
-
-  /**
-   * Get all categories for a specific template (static fallback - synchronous)
-   * @deprecated Use fetchCategories() for DB data in server components, or useTemplateCategories() hook in client components
-   */
-  static getTemplateCategories(templateId: string): TemplateCategory[] {
-    return getCategories(templateId);
-  }
-
-  /**
-   * Get a specific category by template ID and category ID (static fallback - synchronous)
-   * @deprecated Use fetchCategoryByTemplateAndId() for DB data in server components, or useTemplateCategory() hook in client components
-   */
-  static getCategoryById(templateId: string, categoryId: string): TemplateCategory | null {
-    return getCategory(templateId, categoryId);
+    return null;
   }
 
   /**
@@ -149,7 +108,7 @@ export class TemplateService {
     categoryIds: string[]
   ): Promise<TemplateCategory[]> {
     const allCategories = await this.fetchCategories(templateId);
-    return allCategories.filter((cat) => categoryIds.includes(cat.id));
+    return allCategories.filter((cat) => categoryIds.includes(cat.id as string));
   }
 
   /**
@@ -191,7 +150,7 @@ export class TemplateService {
       .map((cat) => cat.id);
 
     const missingRequired = requiredCategories.filter(
-      (catId) => !selectedCategories.includes(catId)
+      (catId) => !selectedCategories.includes(catId as string)
     );
 
     if (missingRequired.length > 0) {
@@ -277,13 +236,19 @@ export class TemplateService {
   /**
    * Get default/recommended category selection for a template
    */
-  static async getRecommendedCategories(templateId: string): Promise<string[]> {
+  static async getRecommendedCategories(templateId: string): Promise<any[]> {
     const template = await this.fetchTemplate(templateId);
     if (!template) return [];
 
     // For ISO 27001, recommend all main clauses as they are fundamental
-    if (templateId === "iso27001-2022") {
-      return template.categories.filter((cat) => cat.group === "main-clauses").map((cat) => cat.id);
+    if (
+      (templateId &&
+        template &&
+        (template?.name.toLowerCase().replace(" ", "-").split("-").includes("iso27001") ||
+          template?.name.toLowerCase().replace(" ", "-").startsWith("iso27001"))) ||
+      template?.name.toLowerCase().replace(" ", "-").startsWith("iso-27001")
+    ) {
+      return template.categories.filter((cat) => cat.group == "main-clauses").map((cat) => cat.id);
     }
 
     // For other templates, return required categories
@@ -307,13 +272,6 @@ export class TemplateService {
   static async hasRequiredCategories(templateId: string): Promise<boolean> {
     const categories = await this.fetchCategories(templateId);
     return categories.some((cat) => cat.isRequired);
-  }
-
-  /**
-   * Get ISO 27001:2022 template directly (convenience method)
-   */
-  static getISO27001Template(): WorkpaperTemplateDefinition {
-    return ISO27001_2022_TEMPLATE;
   }
 
   /**

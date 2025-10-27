@@ -139,7 +139,7 @@ export function TemplateCategoriesTable({
             <TableHead>Objectives</TableHead>
             <TableHead>Clause Range</TableHead>
             <TableHead>Scope</TableHead>
-            <TableHead className="w-[80px]">Actions</TableHead>
+            <TableHead className="w-20">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
