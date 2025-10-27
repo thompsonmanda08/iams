@@ -20,9 +20,10 @@ interface AuditFindingsTabProps {
     resolved: number;
   };
   findings: Finding[];
+  auditPlanId?: string;
 }
 
-export function AuditFindingsTab({ stats, findings }: AuditFindingsTabProps) {
+export function AuditFindingsTab({ stats, findings, auditPlanId }: AuditFindingsTabProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSeverities, setSelectedSeverities] = useState<FindingSeverity[]>([]);
@@ -177,7 +178,7 @@ export function AuditFindingsTab({ stats, findings }: AuditFindingsTabProps) {
                   </Card>
 
                   {/* Table */}
-                  <FindingsTable findings={filteredFindings} />
+                  <FindingsTable findings={filteredFindings} onCreateClick={() => setIsCreateModalOpen(true)} />
                   {/* Results Count */}
                   <div className="text-muted-foreground text-sm">
                     Showing {filteredFindings.length} of {findings.length} finding
@@ -195,11 +196,13 @@ export function AuditFindingsTab({ stats, findings }: AuditFindingsTabProps) {
       </div>
 
       {/* Create Finding Modal */}
-      <CreateFindingModal
-        open={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
-        auditPlanId="1"
-      />
+      {auditPlanId && (
+        <CreateFindingModal
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+          auditPlanId={auditPlanId}
+        />
+      )}
     </div>
   );
 }

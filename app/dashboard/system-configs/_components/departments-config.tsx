@@ -174,7 +174,6 @@ export default function DepartmentsConfig({
                 <TableRow
                   key={department.id}
                   onClick={() => {
-                    console.info("Row Clicked...", department?.code);
                     router.push(`/dashboard/system-configs/departments/${department.id}`);
                   }}>
                   <TableCell>

@@ -4,10 +4,10 @@ import { getWorkpapers, getAuditPlans } from "@/app/_actions/audit-module-action
 
 export default async function WorkpapersPage() {
   const workpapersResponse = await getWorkpapers();
-  const workpapers = workpapersResponse.success ? workpapersResponse.data?.data?.data : [];
+  const workpapers = workpapersResponse.success ? workpapersResponse.data : [];
 
   const auditsResponse = await getAuditPlans();
-  const audits = auditsResponse.success ? auditsResponse.data?.data?.data : [];
+  const audits = auditsResponse.success ? auditsResponse.data : [];
 
   return (
     <Suspense fallback={<TableLoading />}>
@@ -20,7 +20,7 @@ function TableLoading() {
   return (
     <div className="space-y-3">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
+        <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
       ))}
     </div>
   );

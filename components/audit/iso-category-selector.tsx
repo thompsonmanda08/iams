@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronsUpDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TemplateService } from "@/lib/services/template-service";
+import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
 import type { TemplateCategory } from "@/lib/types/audit-types";
 
 interface IsoCategorySelectorProps {
@@ -33,9 +34,38 @@ export function IsoCategorySelector({
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  // Get categories from template service
-  const categories = TemplateService.getTemplateCategories(templateId);
-  const groupedCategories = TemplateService.getCategoriesGrouped(templateId);
+  // Fetch template with categories from database
+  const { data: templateResponse, isLoading, error } = useWorkpaperTemplatesWithCategories(templateId);
+
+  // Extract categories from response with fallback to static data
+  const categories: TemplateCategory[] = templateResponse?.success && templateResponse.data?.data?.categories
+    ? templateResponse.data.data.categories
+    : TemplateService.getTemplateCategories(templateId);
+
+  // Group categories
+  const mainClauses = categories.filter((cat) => cat.group === 'main-clauses');
+  const annexAControls = categories.filter((cat) => cat.group === 'annex-a-controls');
+  const groupedCategories = {
+    mainClauses,
+    annexAControls,
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Loading categories...</span>
+        </div>
+      </Card>
+    );
+  }
+
+  // Error state - fall back to static data
+  if (error) {
+    console.warn('Failed to load categories from database, using static fallback:', error);
+  }
 
   if (categories.length === 0) {
     return (
@@ -63,7 +93,7 @@ export function IsoCategorySelector({
                 className="w-full justify-between"
               >
                 {selectedCategory
-                  ? selectedCategory.displayName
+                  ? (selectedCategory.display_name || selectedCategory.name)
                   : "Select category..."}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -84,7 +114,7 @@ export function IsoCategorySelector({
                         {groupCategories.map((category) => (
                         <CommandItem
                           key={category.id}
-                          value={`${category.name} ${category.displayName}`}
+                          value={`${category.name} ${category.display_name || category.name}`}
                           onSelect={() => {
                             onCategorySelect(category);
                             setOpen(false);
@@ -98,13 +128,13 @@ export function IsoCategorySelector({
                           />
                           <div className="flex flex-col flex-1">
                             <span className="font-medium">
-                              {category.displayName}
+                              {category.display_name || category.name}
                             </span>
                             <span className="text-xs text-muted-foreground line-clamp-1">
                               {category.description || category.objectives}
                             </span>
                           </div>
-                          {category.isRequired && (
+                          {category.is_required && (
                             <Badge variant="secondary" className="ml-2 text-xs">
                               Required
                             </Badge>
@@ -126,8 +156,8 @@ export function IsoCategorySelector({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">{selectedCategory.group === 'main-clauses' ? 'Main Clause' : 'Annex A Control'}</Badge>
-                {selectedCategory.clauseRange && (
-                  <Badge variant="outline">{selectedCategory.clauseRange}</Badge>
+                {selectedCategory.clause_range && (
+                  <Badge variant="outline">{selectedCategory.clause_range}</Badge>
                 )}
               </div>
               <Button
@@ -167,11 +197,11 @@ export function IsoCategorySelector({
                   </div>
                 )}
 
-                {selectedCategory.auditProcedure && (
+                {selectedCategory.audit_procedure && (
                   <div>
                     <p className="text-xs font-medium text-slate-600 mb-1">Audit Procedure</p>
                     <p className="text-sm text-slate-700 whitespace-pre-wrap">
-                      {selectedCategory.auditProcedure}
+                      {selectedCategory.audit_procedure}
                     </p>
                   </div>
                 )}

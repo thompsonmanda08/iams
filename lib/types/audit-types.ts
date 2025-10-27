@@ -14,47 +14,58 @@
 /**
  * Audit status types representing the lifecycle of an audit
  */
-export type AuditStatus = 'draft' | 'under-review' | 'planned' | 'in-progress' | 'completed' | 'cancelled';
+export type AuditStatus =
+  | "draft"
+  | "under-review"
+  | "planned"
+  | "in-progress"
+  | "completed"
+  | "cancelled";
 
 /**
  * Test result types for workpaper testing
  */
-export type TestResult = 'conformity' | 'partial-conformity' | 'non-conformity';
+export type TestResult = "conformity" | "partial-conformity" | "non-conformity";
 
 /**
  * Finding severity levels
  */
-export type FindingSeverity = 'critical' | 'high' | 'medium' | 'low';
+export type FindingSeverity = "critical" | "high" | "medium" | "low";
 
 /**
  * Finding status types representing the lifecycle of a finding
  */
-export type FindingStatus = 'open' | 'in-progress' | 'resolved' | 'closed';
+export type FindingStatus = "open" | "in-progress" | "resolved" | "closed";
 
 /**
  * Report types available for generation
  */
-export type ReportType = 'summary' | 'detailed' | 'non-conformity' | 'management-review' | 'compliance';
+export type ReportType =
+  | "summary"
+  | "detailed"
+  | "non-conformity"
+  | "management-review"
+  | "compliance";
 
 /**
  * Export formats for reports
  */
-export type ReportFormat = 'pdf' | 'excel' | 'csv';
+export type ReportFormat = "pdf" | "excel" | "csv";
 
 /**
  * View mode options for lists
  */
-export type ViewMode = 'list' | 'grid' | 'timeline';
+export type ViewMode = "list" | "grid" | "timeline";
 
 /**
  * Template category group types
  */
-export type TemplateCategoryGroup = 'main-clauses' | 'annex-a-controls';
+export type TemplateCategoryGroup = "main-clauses" | "annex-a-controls";
 
 /**
  * Workpaper status types
  */
-export type WorkpaperStatus = 'unlinked' | 'linked' | 'in-progress' | 'completed';
+export type WorkpaperStatus = "unlinked" | "linked" | "in-progress" | "completed";
 
 // ============================================================================
 // TEMPLATE TYPES
@@ -64,17 +75,18 @@ export type WorkpaperStatus = 'unlinked' | 'linked' | 'in-progress' | 'completed
  * Template category definition for ISO standards
  */
 export interface TemplateCategory {
-  id: string;
+  id?: string;
   name: string;
-  displayName: string;
+  display_name: string;
   clauses: string[];
-  clauseRange?: string;
+  clause_range?: string;
   group: TemplateCategoryGroup;
   objectives: string;
   scope: string;
-  auditProcedure: string;
+  audit_procedure: string;
   description?: string;
-  isRequired?: boolean;
+  is_required?: boolean;
+  [key: string]: any;
 }
 
 /**
@@ -253,7 +265,15 @@ export interface WorkpaperDraft {
 /**
  * Clause template category types
  */
-export type ClauseCategory = 'Context' | 'Leadership' | 'Planning' | 'Support' | 'Operation' | 'Evaluation' | 'Improvement' | 'Annex A';
+export type ClauseCategory =
+  | "Context"
+  | "Leadership"
+  | "Planning"
+  | "Support"
+  | "Operation"
+  | "Evaluation"
+  | "Improvement"
+  | "Annex A";
 
 /**
  * Clause template for workpaper creation
@@ -284,18 +304,28 @@ export interface ClauseTemplateInput {
  * Workpaper template for pre-filled testing procedures (deprecated - use ClauseTemplate)
  */
 export interface WorkpaperTemplate {
-  id: string;
-  clause: string;
-  clauseTitle: string;
-  category: string;
-  objectives: string[];
-  testProcedures: string[];
+  id?: string; // old
+  clause: string; // old
+  clauseTitle: string; // old
+  category: string; // old
+  objectives: string[]; // old
+  testProcedures: string[]; // old
+
+  // New fields for comprehensive audit documentation
+  name: string;
+  standard: string;
+  description: string;
+  version: string;
+  is_active: boolean;
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**
  * Evidence type categories
  */
-export type EvidenceType = 'Policy' | 'Screenshot' | 'Minutes' | 'Report' | 'Other';
+export type EvidenceType = "Policy" | "Screenshot" | "Minutes" | "Report" | "Other";
 
 /**
  * Evidence input for uploading
@@ -371,7 +401,7 @@ export interface GeneralWorkpaper {
   conclusion?: string;
   evidenceRows: EvidenceRow[];
   selectedTickMarks: string[]; // Array of tick mark codes to display
-  status: 'draft' | 'in-review' | 'completed';
+  status: "draft" | "in-review" | "completed";
   createdAt: Date;
   updatedAt: Date;
 
@@ -404,7 +434,7 @@ export interface GeneralWorkpaperInput {
 /**
  * Custom workpaper template type
  */
-export type CustomTemplateType = 'standard' | 'iso27001' | 'general' | 'custom';
+export type CustomTemplateType = "standard" | "iso27001" | "general" | "custom";
 
 /**
  * Custom field definition for flexible templates
@@ -412,7 +442,7 @@ export type CustomTemplateType = 'standard' | 'iso27001' | 'general' | 'custom';
 export interface CustomField {
   id: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'file';
+  type: "text" | "textarea" | "number" | "date" | "select" | "checkbox" | "file";
   required: boolean;
   placeholder?: string;
   options?: string[]; // For select fields
@@ -468,7 +498,7 @@ export interface CustomTemplateInput {
   includeEvidenceGrid?: boolean;
   includeTickMarks?: boolean;
   defaultTickMarks?: string[];
-  sections: Omit<CustomTemplateSection, 'id'>[];
+  sections: Omit<CustomTemplateSection, "id">[];
 }
 
 /**
@@ -492,7 +522,7 @@ export interface CustomWorkpaper {
   evidenceRows?: EvidenceRow[];
   selectedTickMarks?: string[];
 
-  status: 'draft' | 'in-review' | 'completed';
+  status: "draft" | "in-review" | "completed";
   createdAt: Date;
   updatedAt: Date;
 
@@ -555,7 +585,7 @@ export interface Finding {
   workpaperId?: string;
   workpaperReference?: string;
   evidenceRowId?: string; // For general workpapers - links to specific row
-  sourceType?: 'workpaper' | 'manual' | 'external'; // How the finding was created
+  sourceType?: "workpaper" | "manual" | "external"; // How the finding was created
 }
 
 /**
@@ -580,7 +610,7 @@ export interface FindingInput {
   // Workpaper relationship
   workpaperId?: string;
   evidenceRowId?: string;
-  sourceType?: 'workpaper' | 'manual' | 'external';
+  sourceType?: "workpaper" | "manual" | "external";
 }
 
 /**
@@ -599,7 +629,7 @@ export interface FindingFilters {
  */
 export interface FindingTimelineEvent {
   id: string;
-  type: 'created' | 'updated' | 'status_change' | 'comment' | 'resolved';
+  type: "created" | "updated" | "status_change" | "comment" | "resolved";
   description: string;
   user: string;
   timestamp: Date;
@@ -653,7 +683,7 @@ export interface ScheduledReport {
   id: string;
   templateId: string;
   templateName: string;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: "daily" | "weekly" | "monthly";
   format: ReportFormat;
   recipients: string[];
   lastGenerated?: Date;
@@ -791,7 +821,7 @@ export interface DateRange {
  */
 export interface ActivityItem {
   id: string;
-  type: 'audit_created' | 'audit_updated' | 'finding_created' | 'workpaper_submitted';
+  type: "audit_created" | "audit_updated" | "finding_created" | "workpaper_submitted";
   title: string;
   description: string;
   user: string;

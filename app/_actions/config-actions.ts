@@ -431,7 +431,7 @@ export async function getModules(hierarchy: boolean = false): Promise<APIRespons
   const url = `/api/v1/modules${hierarchy ? "?hierarchy=true" : ""}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Modules fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -447,7 +447,7 @@ export async function getModuleById(id: string): Promise<APIResponse> {
   const url = `/api/v1/modules/${id}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Module fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -483,14 +483,18 @@ export async function createModule({
   }
 
   try {
-    const response = await axios.post(url, {
-      module_code: module_code,
-      name,
-      description,
-      parent_module_id: parent_module_id || null,
-      href: href || null,
-      icon,
-      sort_order: sortOrder
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        module_code: module_code,
+        name,
+        description,
+        parent_module_id: parent_module_id || null,
+        href: href || null,
+        icon,
+        sort_order: sortOrder
+      }
     });
 
     return successResponse(response?.data, "Module created successfully");
@@ -532,15 +536,19 @@ export async function updateModule({
   }
 
   try {
-    const response = await axios.put(url, {
-      module_code: module_code,
-      name,
-      description,
-      parent_module_id: parent_module_id || null,
-      href: href || null,
-      icon,
-      sort_order: sortOrder,
-      is_active: isActive
+    const response = await authenticatedApiClient({
+      url,
+      method: "PUT",
+      data: {
+        module_code: module_code,
+        name,
+        description,
+        parent_module_id: parent_module_id || null,
+        href: href || null,
+        icon,
+        sort_order: sortOrder,
+        is_active: isActive
+      }
     });
 
     return successResponse(response?.data, "Module updated successfully");
@@ -562,7 +570,7 @@ export async function deleteModule(id: string): Promise<APIResponse> {
   }
 
   try {
-    await axios.delete(url);
+    await authenticatedApiClient({ url });
     return successResponse(null, "Module deleted successfully");
   } catch (error: Error | any) {
     return handleError(error, "DELETE", url);
@@ -582,7 +590,7 @@ export async function getSubModules(parent_module_id: string): Promise<APIRespon
   }
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Sub-modules fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -887,16 +895,16 @@ export async function deleteProvince(id: string): Promise<APIResponse> {
 export async function getTowns(params?: {
   provinceId?: string;
   isActive?: boolean;
-  limit?: number;
-  offset?: number;
+  page_size?: number;
+  page?: number;
 }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
   if (params?.provinceId) queryParams.append("province_id", params.provinceId);
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
-  if (params?.limit !== undefined) queryParams.append("limit", String(params.limit));
-  if (params?.offset !== undefined) queryParams.append("offset", String(params.offset));
+  if (params?.page_size !== undefined) queryParams.append("page_size", String(params.page_size));
+  if (params?.page !== undefined) queryParams.append("page", String(params.page));
 
-  const url = `/api/v1/towns${queryParams.toString() ? `?${queryParams.toString()}` : `?limit=10&offset=`}`;
+  const url = `/api/v1/towns${queryParams.toString() ? `?${queryParams.toString()}` : ``}`;
 
   try {
     const response = await authenticatedApiClient({ url });

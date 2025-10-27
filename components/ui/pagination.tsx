@@ -3,6 +3,7 @@ import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-re
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Pagination } from "@/lib/types";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -108,13 +109,7 @@ const CustomPagination = ({
     pagesWrapper: string;
   };
   showDetails?: boolean;
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-    hasPrevPage: boolean;
-    hasNextPage: boolean;
-  };
+  pagination: Pagination;
   updatePagination: (page: { page: number }) => void;
 }) => {
   return (
@@ -128,15 +123,15 @@ const CustomPagination = ({
         classNames?.wrapper
       )}>
       {showDetails && (
-        <div className="order-2 text-sm text-gray-700 sm:order-1">
-          Showing page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount}{" "}
-          total products)
+        <div className="text-foreground/80 order-2 text-sm sm:order-1">
+          Showing page {pagination.page} of {pagination?.total_pages} ({pagination.totalCount} total
+          products)
         </div>
       )}
       <div className="order-1 flex items-center space-x-1 sm:order-2 sm:space-x-2">
         <button
-          onClick={() => updatePagination({ page: pagination?.currentPage - 1 })}
-          disabled={!pagination.hasPrevPage}
+          onClick={() => updatePagination({ page: pagination?.page - 1 })}
+          disabled={!pagination.has_prev}
           className={cn(
             "rounded-md border border-gray-300 px-2 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3",
             classNames?.previous
@@ -146,16 +141,16 @@ const CustomPagination = ({
         </button>
 
         <div className={cn("flex items-center space-x-1", classNames?.pagesWrapper)}>
-          {Array.from({ length: Math.min(3, pagination.totalPages) }, (_, i) => {
+          {Array.from({ length: Math.min(3, pagination?.total_pages) }, (_, i) => {
             let pageNum;
-            if (pagination.totalPages <= 3) {
+            if (pagination?.total_pages <= 3) {
               pageNum = i + 1;
-            } else if (pagination.currentPage <= 2) {
+            } else if (pagination.page <= 2) {
               pageNum = i + 1;
-            } else if (pagination.currentPage >= pagination.totalPages - 1) {
-              pageNum = pagination.totalPages - 2 + i;
+            } else if (pagination.page >= pagination?.total_pages - 1) {
+              pageNum = pagination?.total_pages - 2 + i;
             } else {
-              pageNum = pagination.currentPage - 1 + i;
+              pageNum = pagination.page - 1 + i;
             }
 
             return (
@@ -164,7 +159,7 @@ const CustomPagination = ({
                 onClick={() => updatePagination({ page: pageNum })}
                 className={cn(
                   `rounded-md px-2 py-1 text-sm sm:px-3 ${
-                    pagination.currentPage === pageNum
+                    pagination.page === pageNum
                       ? "bg-primary text-white"
                       : "border border-gray-300 hover:bg-gray-50"
                   }`,
@@ -177,8 +172,8 @@ const CustomPagination = ({
         </div>
 
         <button
-          onClick={() => updatePagination({ page: pagination.currentPage + 1 })}
-          disabled={!pagination.hasNextPage}
+          onClick={() => updatePagination({ page: pagination.page + 1 })}
+          disabled={!pagination.has_next}
           className={cn(
             "rounded-md border border-gray-300 px-2 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3",
             classNames?.next

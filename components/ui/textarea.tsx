@@ -39,7 +39,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div className={cn("w-full", classNames?.wrapper)}>
         {label && (
           <label
-            className={cn("text-foreground/70 pl-1 text-sm font-medium text-nowrap", {
+            className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap", {
               "text-red-500": onError || props?.isInvalid,
               "opacity-50": props?.disabled
             })}
@@ -53,7 +53,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           data-slot="textarea"
           disabled={props?.disabled}
           className={cn(
-            "flex min-h-[60px] w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-black ring-offset-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            "bg-input/20 border-input text-foreground ring-offset-foreground placeholder:text-foreground/50 flex min-h-[60px] w-full rounded-lg border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
             {
               "border-red-500 focus:border-red-500/70 focus-visible:ring-red-500/30": onError,
               "opacity-50": props?.disabled

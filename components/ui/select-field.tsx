@@ -70,7 +70,7 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
         )}>
         {label && (
           <label
-            className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap text-slate-900/80", {
+            className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap", {
               "text-red-500": onError || isInvalid,
               "opacity-50": isDisabled || props?.disabled
             })}

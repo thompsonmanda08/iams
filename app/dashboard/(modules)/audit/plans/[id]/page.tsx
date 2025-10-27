@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AuditStatusBadge } from "@/components/audit/audit-status-badge";
 import Link from "next/link";
-import { getAuditPlan, getWorkpapers, getFindings } from "@/app/_actions/audit-module-actions";
+import { getAuditPlan, getWorkpapers, getFindings, getAuditLogsByEntity } from "@/app/_actions/audit-module-actions";
 import { format } from "date-fns";
 import { AuditFindingsTab } from "@/components/audit/audit-findings-tab";
 import { AuditWorkpapersTab } from "@/components/audit/audit-workpapers-tab";
+import { AuditLogsTable } from "@/components/audit/audit-logs-table";
 import { AuditPlan } from "@/lib/types/audit-types";
 import { TemplateService } from "@/lib/services/template-service";
 import { SubmitForReviewButton } from "@/components/audit/submit-for-review-button";
@@ -25,10 +26,11 @@ interface AuditDetailPageProps {
 export default async function AuditDetailPage({ params }: AuditDetailPageProps) {
   const { id } = await params;
 
-  const [auditResponse, workpapersResponse, findingsResponse] = await Promise.all([
+  const [auditResponse, workpapersResponse, findingsResponse, auditLogsResponse] = await Promise.all([
     getAuditPlan(id),
     getWorkpapers(id),
-    getFindings({ search: "" })
+    getFindings({ audit_plan_id: id }),
+    getAuditLogsByEntity("audit_plan", id)
   ]);
 
   if (!auditResponse.success || !auditResponse.data) {
@@ -37,9 +39,8 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
   const auditPlan = auditResponse.data as AuditPlan;
   const workpapers = workpapersResponse.success ? workpapersResponse.data : [];
-
-  const allFindings = findingsResponse.success ? findingsResponse.data : [];
-  const findings = allFindings.filter((f: any) => f.auditId === id);
+  const findings = findingsResponse.success ? findingsResponse.data : [];
+  const auditLogs = auditLogsResponse.success ? auditLogsResponse.data : [];
 
   // Calculate stats
   const stats = {
@@ -262,14 +263,16 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
             </TabsContent>
 
             <TabsContent value="findings" className="space-y-4">
-              <AuditFindingsTab stats={stats} findings={findings} />
+              <AuditFindingsTab stats={stats} findings={findings} auditPlanId={id} />
             </TabsContent>
 
-            <TabsContent value="history">
-              <Card className="p-12 text-center">
-                <FileText className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                <h3 className="mb-2 text-lg font-semibold">Audit History</h3>
-                <p className="text-muted-foreground text-sm">Activity timeline coming soon</p>
+            <TabsContent value="history" className="space-y-4">
+              <Card className="p-6">
+                <h3 className="mb-4 text-lg font-semibold">Activity History</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Track all changes and actions performed on this audit plan.
+                </p>
+                <AuditLogsTable logs={auditLogs} />
               </Card>
             </TabsContent>
           </Tabs>

@@ -101,10 +101,10 @@ export type DateRangeFilter = {
 
 export type Pagination = {
   page: number;
-  limit: number;
-  total?: number; // TOTAL NUMBER OF RECORDS
-  total_pages?: number;
-  hasNext?: boolean;
-  hasPrev?: boolean;
+  page_size: number;
+  total: number; // TOTAL NUMBER OF RECORDS
+  total_pages: number;
+  has_next?: boolean;
+  has_prev?: boolean;
   [x: string]: any;
 };

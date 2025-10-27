@@ -16,8 +16,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-react';
 import { TemplateService, getGroupDisplayName } from '@/lib/services/template-service';
+import { useWorkpaperTemplatesWithCategories } from '@/hooks/use-audit-query-data';
 import type { TemplateCategory } from '@/lib/types/audit-types';
 
 interface CategorySelectorProps {
@@ -35,15 +36,15 @@ export function CategorySelector({
   disabled = false,
   showRecommended = true,
 }: CategorySelectorProps) {
-  const [categories, setCategories] = useState<TemplateCategory[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  useEffect(() => {
-    const template = TemplateService.getTemplate(templateId);
-    if (template) {
-      setCategories(template.categories);
-    }
-  }, [templateId]);
+  // Fetch template with categories from database
+  const { data: templateResponse, isLoading, error } = useWorkpaperTemplatesWithCategories(templateId);
+
+  // Extract categories from response with fallback to static data
+  const categories: TemplateCategory[] = templateResponse?.success && templateResponse.data?.data?.categories
+    ? templateResponse.data.data.categories
+    : TemplateService.getTemplate(templateId)?.categories || [];
 
   useEffect(() => {
     setSelectAll(
@@ -55,12 +56,12 @@ export function CategorySelector({
     if (selectAll) {
       // Deselect all except required categories
       const requiredCategories = categories
-        .filter((cat) => cat.isRequired)
-        .map((cat) => cat.id);
+        .filter((cat) => cat.is_required)
+        .map((cat) => cat.id!);
       onCategoriesChange(requiredCategories);
     } else {
       // Select all categories
-      onCategoriesChange(categories.map((cat) => cat.id));
+      onCategoriesChange(categories.map((cat) => cat.id!));
     }
   };
 
@@ -68,7 +69,7 @@ export function CategorySelector({
     const category = categories.find((cat) => cat.id === categoryId);
 
     // Don't allow deselecting required categories
-    if (category?.isRequired && selectedCategories.includes(categoryId)) {
+    if (category?.is_required && selectedCategories.includes(categoryId)) {
       return;
     }
 
@@ -88,6 +89,21 @@ export function CategorySelector({
   const annexAControls = categories.filter(
     (cat) => cat.group === 'annex-a-controls'
   );
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">Loading categories...</span>
+      </div>
+    );
+  }
+
+  // Error state - fall back to static data
+  if (error) {
+    console.warn('Failed to load categories from database, using static fallback:', error);
+  }
 
   if (categories.length === 0) {
     return (
@@ -253,15 +269,15 @@ function CategoryItem({
       className={`
         border rounded-lg p-4 transition-colors
         ${selected ? 'bg-primary/5 border-primary/20' : 'hover:bg-muted/50'}
-        ${category.isRequired ? 'border-orange-300 dark:border-orange-700' : ''}
+        ${category.is_required ? 'border-orange-300 dark:border-orange-700' : ''}
       `}
     >
       <div className="flex items-start space-x-3">
         <Checkbox
           id={category.id}
           checked={selected}
-          onCheckedChange={() => onToggle(category.id)}
-          disabled={disabled || category.isRequired}
+          onCheckedChange={() => onToggle(category.id!)}
+          disabled={disabled || category.is_required}
           className="mt-1"
         />
 
@@ -270,14 +286,14 @@ function CategoryItem({
             <Label
               htmlFor={category.id}
               className={`font-medium cursor-pointer ${
-                category.isRequired ? 'cursor-not-allowed' : ''
+                category.is_required ? 'cursor-not-allowed' : ''
               }`}
             >
-              {category.displayName}
+              {category.display_name || category.name}
             </Label>
 
             <div className="flex items-center gap-2">
-              {category.isRequired && (
+              {category.is_required && (
                 <Badge variant="destructive" className="text-xs">
                   Required
                 </Badge>
@@ -336,14 +352,14 @@ function CategoryItem({
                   Audit Procedure:
                 </span>
                 <pre className="text-muted-foreground mt-1 whitespace-pre-wrap font-sans">
-                  {category.auditProcedure}
+                  {category.audit_procedure}
                 </pre>
               </div>
 
               <div>
                 <span className="font-medium text-foreground">Clauses:</span>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {category.clauses.map((clause) => (
+                  {category.clauses?.map((clause) => (
                     <Badge key={clause} variant="outline" className="text-xs">
                       {clause}
                     </Badge>

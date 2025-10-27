@@ -3,26 +3,28 @@ import { getBranches, getProvinces, getTowns } from "@/app/_actions/config-actio
 import { ProvincesTab } from "../_components/provinces-tab";
 import { TownsTab } from "../_components/towns-tab";
 import { BranchesTab } from "../_components/branches-tab";
+import { Pagination } from "@/lib/types";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;
-  searchParams: Promise<{ [key: string]: string }>;
+  searchParams: Promise<Pagination & { [key: string]: string }>;
 };
 
 export default async function BranchesConfigPage({ searchParams }: PageProps) {
-  // Fetch all data server-side
+  const urlParams = await searchParams;
+  const page = urlParams.page ? Number(urlParams.page) : 1;
+  const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
 
   const [branchesResponse, provincesResponse, townsResponse] = await Promise.all([
     getBranches(),
     getProvinces(),
-    getTowns({ limit: 10 })
+    getTowns({ page, page_size })
   ]);
 
-  const branches = branchesResponse.success ? branchesResponse.data : [];
-  const provinces = provincesResponse.success ? provincesResponse.data : [];
-  const towns = townsResponse.success ? townsResponse.data : [];
-
-  console.log("TOWNS: ", townsResponse);
+  const branches = branchesResponse.success ? branchesResponse.data?.data?.data : [];
+  const provinces = provincesResponse.success ? provincesResponse.data?.data?.data : [];
+  const towns = townsResponse.success ? townsResponse.data?.data?.data : [];
+  const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
 
   return (
     <div className="container mx-auto space-y-6 p-6">
@@ -51,7 +53,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
 
           {/* Towns Tab */}
           <TabsContent value="towns">
-            <TownsTab initialTowns={towns} provinces={provinces} />
+            <TownsTab initialTowns={towns} provinces={provinces} pagination={townsPagination} />
           </TabsContent>
 
           {/* Branches Tab */}

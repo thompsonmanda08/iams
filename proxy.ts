@@ -22,8 +22,9 @@ export async function proxy(request: NextRequest) {
 
   const { session, isAuthenticated } = await verifySession();
 
-  const urlRouteParams = pathname.match(/^\/dashboard\/([^\/]+)\/?$/);
-  const accessToken = session?.accessToken || "";
+  if (session) {
+    response.headers.set("X-Auth-Token", session.accessToken || "");
+  }
 
   // Exclude public assets like icons, manifest, and images
   if (
@@ -40,19 +41,15 @@ export async function proxy(request: NextRequest) {
   // CHECK FOR  ROUTES
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
 
-  if (isAuthPage && !accessToken && !isAuthenticated) return response;
-
   // IF NO ACCESS TOKEN AT ALL>>> REDIRECT BACK TO AUTH PAGE
-  if (!accessToken && isAuthPage) {
+  if (!isAuthenticated && !isAuthPage) {
     url.pathname = "/login";
-
     return NextResponse.redirect(url);
   }
 
   // IF AN ACCESS TOKEN EXISTS - REDIRECT TO DASHBOARD
-  if (accessToken && isAuthPage) {
+  if (isAuthenticated && isAuthPage) {
     url.pathname = `/`;
-
     return NextResponse.redirect(url);
   }
 

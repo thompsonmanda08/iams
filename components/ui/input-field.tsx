@@ -44,7 +44,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div
         className={cn(
-          "flex w-full max-w-lg flex-col",
+          "flex w-full flex-col",
 
           classNames?.wrapper,
           {

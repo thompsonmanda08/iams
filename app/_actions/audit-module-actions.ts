@@ -33,7 +33,8 @@ import type {
   AuditSettings,
   SettingsInput,
   TeamMember,
-  TeamMemberInput
+  TeamMemberInput,
+  TemplateCategory
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import { TemplateService } from "@/lib/services/template-service";
@@ -234,8 +235,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "4.1",
     clauseTitle: "Understanding the Organization and its Context",
     category: "Context",
-    objective: "Verify that the organization has identified and documented internal and external issues that are relevant to its purpose and affect its ability to achieve the intended outcomes of its ISMS.",
-    testProcedure: "Review the organization's context analysis documentation, interview management regarding internal and external issues, verify the stakeholder identification process, and confirm the frequency of context reviews.",
+    objective:
+      "Verify that the organization has identified and documented internal and external issues that are relevant to its purpose and affect its ability to achieve the intended outcomes of its ISMS.",
+    testProcedure:
+      "Review the organization's context analysis documentation, interview management regarding internal and external issues, verify the stakeholder identification process, and confirm the frequency of context reviews.",
     createdAt: new Date("2024-01-10"),
     updatedAt: new Date("2024-01-10")
   },
@@ -244,8 +247,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "5.1",
     clauseTitle: "Leadership and Commitment",
     category: "Leadership",
-    objective: "Confirm that top management demonstrates leadership and commitment with respect to the ISMS by taking accountability, ensuring resources are available, and communicating the importance of effective information security management.",
-    testProcedure: "Review management meeting minutes, interview the CISO and senior management, verify policy approval documentation, examine resource allocation records, and assess communication effectiveness.",
+    objective:
+      "Confirm that top management demonstrates leadership and commitment with respect to the ISMS by taking accountability, ensuring resources are available, and communicating the importance of effective information security management.",
+    testProcedure:
+      "Review management meeting minutes, interview the CISO and senior management, verify policy approval documentation, examine resource allocation records, and assess communication effectiveness.",
     createdAt: new Date("2024-01-10"),
     updatedAt: new Date("2024-01-10")
   },
@@ -254,8 +259,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "6.1",
     clauseTitle: "Actions to Address Risks and Opportunities",
     category: "Planning",
-    objective: "Verify that the organization has established a process to identify risks and opportunities related to the ISMS and has planned actions to address them.",
-    testProcedure: "Review risk assessment methodology, examine risk register, verify risk treatment plans, interview risk owners, and assess the integration of risk management into business processes.",
+    objective:
+      "Verify that the organization has established a process to identify risks and opportunities related to the ISMS and has planned actions to address them.",
+    testProcedure:
+      "Review risk assessment methodology, examine risk register, verify risk treatment plans, interview risk owners, and assess the integration of risk management into business processes.",
     createdAt: new Date("2024-01-11"),
     updatedAt: new Date("2024-01-11")
   },
@@ -264,8 +271,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "7.2",
     clauseTitle: "Competence",
     category: "Support",
-    objective: "Ensure that persons doing work under the organization's control are competent on the basis of appropriate education, training, or experience.",
-    testProcedure: "Review personnel competency records, examine training programs and completion rates, verify job descriptions include security responsibilities, and assess awareness program effectiveness.",
+    objective:
+      "Ensure that persons doing work under the organization's control are competent on the basis of appropriate education, training, or experience.",
+    testProcedure:
+      "Review personnel competency records, examine training programs and completion rates, verify job descriptions include security responsibilities, and assess awareness program effectiveness.",
     createdAt: new Date("2024-01-12"),
     updatedAt: new Date("2024-01-12")
   },
@@ -274,8 +283,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "8.2",
     clauseTitle: "Information Security Risk Assessment",
     category: "Operation",
-    objective: "Verify that information security risk assessments are performed at planned intervals or when significant changes occur, and that they produce consistent, valid, and comparable results.",
-    testProcedure: "Review risk assessment schedule and completed assessments, verify assessment criteria and methodology, examine change management triggers, and validate risk assessment outputs.",
+    objective:
+      "Verify that information security risk assessments are performed at planned intervals or when significant changes occur, and that they produce consistent, valid, and comparable results.",
+    testProcedure:
+      "Review risk assessment schedule and completed assessments, verify assessment criteria and methodology, examine change management triggers, and validate risk assessment outputs.",
     createdAt: new Date("2024-01-13"),
     updatedAt: new Date("2024-01-13")
   },
@@ -284,8 +295,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "9.2",
     clauseTitle: "Internal Audit",
     category: "Evaluation",
-    objective: "Confirm that the organization conducts internal audits at planned intervals to provide information on whether the ISMS conforms to requirements and is effectively implemented and maintained.",
-    testProcedure: "Review internal audit program and schedule, examine audit reports and findings, verify auditor competence and independence, and assess follow-up on audit findings.",
+    objective:
+      "Confirm that the organization conducts internal audits at planned intervals to provide information on whether the ISMS conforms to requirements and is effectively implemented and maintained.",
+    testProcedure:
+      "Review internal audit program and schedule, examine audit reports and findings, verify auditor competence and independence, and assess follow-up on audit findings.",
     createdAt: new Date("2024-01-14"),
     updatedAt: new Date("2024-01-14")
   },
@@ -294,8 +307,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "10.1",
     clauseTitle: "Continual Improvement",
     category: "Improvement",
-    objective: "Verify that the organization continually improves the suitability, adequacy, and effectiveness of the ISMS.",
-    testProcedure: "Review improvement initiatives and their outcomes, examine management review records, verify corrective action effectiveness, and assess performance trends over time.",
+    objective:
+      "Verify that the organization continually improves the suitability, adequacy, and effectiveness of the ISMS.",
+    testProcedure:
+      "Review improvement initiatives and their outcomes, examine management review records, verify corrective action effectiveness, and assess performance trends over time.",
     createdAt: new Date("2024-01-15"),
     updatedAt: new Date("2024-01-15")
   },
@@ -304,8 +319,10 @@ const mockClauseTemplates: ClauseTemplate[] = [
     clause: "A.8.2",
     clauseTitle: "Privileged Access Rights",
     category: "Annex A",
-    objective: "Verify that the allocation and use of privileged access rights are restricted and controlled through a formal authorization process.",
-    testProcedure: "Review privileged access management procedures, examine access rights allocation and approval records, verify periodic access reviews, and test authentication mechanisms for privileged accounts.",
+    objective:
+      "Verify that the allocation and use of privileged access rights are restricted and controlled through a formal authorization process.",
+    testProcedure:
+      "Review privileged access management procedures, examine access rights allocation and approval records, verify periodic access reviews, and test authentication mechanisms for privileged accounts.",
     createdAt: new Date("2024-01-16"),
     updatedAt: new Date("2024-01-16")
   }
@@ -324,11 +341,11 @@ export async function getAuditPlans(filters?: {
 }): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
-    if (filters?.year) params.append('year', String(filters.year));
-    if (filters?.status) params.append('status', filters.status);
+    if (filters?.year) params.append("year", String(filters.year));
+    if (filters?.status) params.append("status", filters.status);
 
     const queryString = params.toString();
-    const url = `/api/v1/audit-plans${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/audit-plans${queryString ? `?${queryString}` : ""}`;
 
     const response = await authenticatedApiClient({
       method: "GET",
@@ -409,7 +426,7 @@ export async function createAuditPlan(data: {
  */
 function getTemplateName(templateId: string): string {
   const templates: Record<string, string> = {
-    'iso27001-2022': 'ISO 27001:2022',
+    "iso27001-2022": "ISO 27001:2022"
   };
   return templates[templateId] || templateId;
 }
@@ -500,7 +517,7 @@ export async function submitAuditPlanForReview(auditPlanId: string): Promise<API
     // Create workpapers from selected categories
     const workpapersResult = await createWorkpapersFromTemplate(
       auditPlanId,
-      auditPlan.templateId,
+      auditPlan.templateId!, // Assert non-null after check
       auditPlan.selectedCategories
     );
 
@@ -551,12 +568,10 @@ export async function createWorkpapersFromTemplate(
   auditPlanId: string,
   templateId: string,
   selectedCategoryIds: string[]
-): Promise<APIResponse<Workpaper[]>> {
+): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
     // Get template
-    const template = TemplateService.getTemplate(templateId);
+    const template = await TemplateService.fetchTemplate(templateId);
     if (!template) {
       return {
         success: false,
@@ -613,7 +628,7 @@ export async function createWorkpapersFromTemplate(
         sourceDocuments: "",
         sampleSize: "",
         controlFrequency: "",
-        samplingMethodology: "",
+        samplingMethodology: ""
       };
 
       createdWorkpapers.push(workpaper);
@@ -630,22 +645,29 @@ export async function createWorkpapersFromTemplate(
       };
     }
 
-    return {
-      success: true,
-      message: `${createdWorkpapers.length} workpapers created successfully`,
-      data: createdWorkpapers
-    };
-  } catch (error: any) {
-    console.error({
-      endpoint: "POST | CREATE WORKPAPERS FROM TEMPLATE",
-      error: error?.message || error
-    });
+    return successResponse(
+      createdWorkpapers,
+      `${createdWorkpapers.length} workpapers created successfully`
+    );
 
-    return {
-      success: false,
-      message: error?.message || "Failed to create workpapers from template",
-      data: null
-    };
+    // return {
+    //   success: true,
+    //   message: `${createdWorkpapers.length} workpapers created successfully`,
+    //   data: createdWorkpapers
+    // };
+  } catch (error: any) {
+    // console.error({
+    //   endpoint: "POST | CREATE WORKPAPERS FROM TEMPLATE",
+    //   error: error?.message || error
+    // });
+
+    // return {
+    //   success: false,
+    //   message: error?.message || "Failed to create workpapers from template",
+    //   data: null
+    // };
+
+    return handleError(error, "POST | CREATE WORKPAPERS FROM TEMPLATE", "/api/v1/audit-plans");
   }
 }
 
@@ -656,18 +678,21 @@ export async function createWorkpapersFromTemplate(
 /**
  * Get all workpapers, optionally filtered by audit
  */
-export async function getWorkpapers(auditPlanId?: string, filters?: {
-  status?: string;
-  prepared_by?: string;
-}): Promise<APIResponse> {
+export async function getWorkpapers(
+  auditPlanId?: string,
+  filters?: {
+    status?: string;
+    prepared_by?: string;
+  }
+): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
-    if (auditPlanId) params.append('audit_plan_id', auditPlanId);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.prepared_by) params.append('prepared_by', filters.prepared_by);
+    if (auditPlanId) params.append("audit_plan_id", auditPlanId);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.prepared_by) params.append("prepared_by", filters.prepared_by);
 
     const queryString = params.toString();
-    const url = `/api/v1/working-papers${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/working-papers${queryString ? `?${queryString}` : ""}`;
 
     const response = await authenticatedApiClient({
       method: "GET",
@@ -716,7 +741,11 @@ export async function getWorkpaperStatistics(id: string): Promise<APIResponse> {
 
     return successResponse(response.data, "Working paper statistics fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | WORKPAPER STATISTICS", `/api/v1/working-papers/${id}/statistics`);
+    return handleError(
+      error,
+      "GET | WORKPAPER STATISTICS",
+      `/api/v1/working-papers/${id}/statistics`
+    );
   }
 }
 
@@ -736,7 +765,11 @@ export async function getAuditPlanWorkpaperSummary(auditPlanId: string): Promise
 
     return successResponse(response.data, "Audit plan workpaper summary fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | AUDIT PLAN WP SUMMARY", `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`);
+    return handleError(
+      error,
+      "GET | AUDIT PLAN WP SUMMARY",
+      `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
+    );
   }
 }
 
@@ -795,7 +828,11 @@ export async function createWorkpaperFromTemplate(data: {
 
     return successResponse(response.data, "Workpaper created from template successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE WORKPAPER FROM TEMPLATE", "/api/v1/working-papers/from-template");
+    return handleError(
+      error,
+      "POST | CREATE WORKPAPER FROM TEMPLATE",
+      "/api/v1/working-papers/from-template"
+    );
   }
 }
 
@@ -833,10 +870,7 @@ export async function updateWorkpaper(
 /**
  * Update workpaper status only
  */
-export async function updateWorkpaperStatus(
-  id: string,
-  status: string
-): Promise<APIResponse> {
+export async function updateWorkpaperStatus(id: string, status: string): Promise<APIResponse> {
   if (!id || !status) {
     return handleBadRequest("Working paper ID and status are required");
   }
@@ -853,7 +887,11 @@ export async function updateWorkpaperStatus(
 
     return successResponse(response.data, "Workpaper status updated successfully");
   } catch (error: any) {
-    return handleError(error, "PATCH | UPDATE WORKPAPER STATUS", `/api/v1/working-papers/${id}/status`);
+    return handleError(
+      error,
+      "PATCH | UPDATE WORKPAPER STATUS",
+      `/api/v1/working-papers/${id}/status`
+    );
   }
 }
 
@@ -1031,12 +1069,12 @@ export async function getFindings(filters?: {
 }): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
-    if (filters?.working_paper_id) params.append('working_paper_id', filters.working_paper_id);
-    if (filters?.severity) params.append('severity', filters.severity);
-    if (filters?.status) params.append('status', filters.status);
+    if (filters?.working_paper_id) params.append("working_paper_id", filters.working_paper_id);
+    if (filters?.severity) params.append("severity", filters.severity);
+    if (filters?.status) params.append("status", filters.status);
 
     const queryString = params.toString();
-    const url = `/api/v1/working-paper-findings${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/working-paper-findings${queryString ? `?${queryString}` : ""}`;
 
     const response = await authenticatedApiClient({
       method: "GET",
@@ -1052,7 +1090,10 @@ export async function getFindings(filters?: {
 /**
  * Get findings by category within a working paper
  */
-export async function getFindingsByCategory(workingPaperId: string, categoryName: string): Promise<APIResponse> {
+export async function getFindingsByCategory(
+  workingPaperId: string,
+  categoryName: string
+): Promise<APIResponse> {
   if (!workingPaperId || !categoryName) {
     return handleBadRequest("Working paper ID and category name are required");
   }
@@ -1065,7 +1106,11 @@ export async function getFindingsByCategory(workingPaperId: string, categoryName
 
     return successResponse(response.data, "Category findings fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | CATEGORY FINDINGS", `/api/v1/working-papers/${workingPaperId}/categories/${categoryName}/findings`);
+    return handleError(
+      error,
+      "GET | CATEGORY FINDINGS",
+      `/api/v1/working-papers/${workingPaperId}/categories/${categoryName}/findings`
+    );
   }
 }
 
@@ -1109,8 +1154,15 @@ export async function createFinding(data: {
   status?: string;
   evidence_links?: string;
 }): Promise<APIResponse> {
-  if (!data.audit_plan_id || !data.working_paper_id || !data.category_name || !data.finding_number) {
-    return handleBadRequest("Audit plan ID, working paper ID, category name, and finding number are required");
+  if (
+    !data.audit_plan_id ||
+    !data.working_paper_id ||
+    !data.category_name ||
+    !data.finding_number
+  ) {
+    return handleBadRequest(
+      "Audit plan ID, working paper ID, category name, and finding number are required"
+    );
   }
 
   try {
@@ -1133,16 +1185,19 @@ export async function createFinding(data: {
 /**
  * Update existing finding
  */
-export async function updateFinding(id: string, data: {
-  management_response?: string;
-  action_plan?: string;
-  responsible_person?: string;
-  due_date?: string;
-  status?: string;
-  severity?: string;
-  recommendation?: string;
-  [key: string]: any;
-}): Promise<APIResponse> {
+export async function updateFinding(
+  id: string,
+  data: {
+    management_response?: string;
+    action_plan?: string;
+    responsible_person?: string;
+    due_date?: string;
+    status?: string;
+    severity?: string;
+    recommendation?: string;
+    [key: string]: any;
+  }
+): Promise<APIResponse> {
   if (!id) {
     return handleBadRequest("Finding ID is required");
   }
@@ -1183,7 +1238,11 @@ export async function updateFindingStatus(id: string, status: string): Promise<A
 
     return successResponse(response.data, "Finding status updated successfully");
   } catch (error: any) {
-    return handleError(error, "PATCH | UPDATE FINDING STATUS", `/api/v1/working-paper-findings/${id}/status`);
+    return handleError(
+      error,
+      "PATCH | UPDATE FINDING STATUS",
+      `/api/v1/working-paper-findings/${id}/status`
+    );
   }
 }
 
@@ -1563,14 +1622,17 @@ export async function removeTeamMember(id: string): Promise<APIResponse> {
 /**
  * Get all working paper templates
  */
-export async function getWorkingPaperTemplates(standard?: string, isActive?: boolean): Promise<APIResponse> {
+export async function getWorkingPaperTemplates(
+  standard?: string,
+  isActive?: boolean
+): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
-    if (standard) params.append('standard', standard);
-    if (isActive !== undefined) params.append('is_active', String(isActive));
+    if (standard) params.append("standard", standard);
+    if (isActive !== undefined) params.append("is_active", String(isActive));
 
     const queryString = params.toString();
-    const url = `/api/v1/working-paper-templates${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/working-paper-templates${queryString ? `?${queryString}` : ""}`;
 
     const response = await authenticatedApiClient({
       method: "GET",
@@ -1599,14 +1661,20 @@ export async function getWorkingPaperTemplate(templateId: string): Promise<APIRe
 
     return successResponse(response.data, "Working paper template fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | WORKING PAPER TEMPLATE", `/api/v1/working-paper-templates/${templateId}`);
+    return handleError(
+      error,
+      "GET | WORKING PAPER TEMPLATE",
+      `/api/v1/working-paper-templates/${templateId}`
+    );
   }
 }
 
 /**
  * Get working paper template with categories
  */
-export async function getWorkingPaperTemplateWithCategories(templateId: string): Promise<APIResponse> {
+export async function getWorkingPaperTemplateWithCategories(
+  templateId: string
+): Promise<APIResponse> {
   if (!templateId) {
     return handleBadRequest("Template ID is required");
   }
@@ -1619,7 +1687,11 @@ export async function getWorkingPaperTemplateWithCategories(templateId: string):
 
     return successResponse(response.data, "Template with categories fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | TEMPLATE WITH CATEGORIES", `/api/v1/working-paper-templates/${templateId}/categories`);
+    return handleError(
+      error,
+      "GET | TEMPLATE WITH CATEGORIES",
+      `/api/v1/working-paper-templates/${templateId}/categories`
+    );
   }
 }
 
@@ -1648,7 +1720,11 @@ export async function createWorkingPaperTemplate(data: {
 
     return successResponse(response.data, "Working paper template created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE WORKING PAPER TEMPLATE", "/api/v1/working-paper-templates");
+    return handleError(
+      error,
+      "POST | CREATE WORKING PAPER TEMPLATE",
+      "/api/v1/working-paper-templates"
+    );
   }
 }
 
@@ -1681,7 +1757,11 @@ export async function updateWorkingPaperTemplate(
 
     return successResponse(response.data, "Working paper template updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE WORKING PAPER TEMPLATE", `/api/v1/working-paper-templates/${templateId}`);
+    return handleError(
+      error,
+      "PUT | UPDATE WORKING PAPER TEMPLATE",
+      `/api/v1/working-paper-templates/${templateId}`
+    );
   }
 }
 
@@ -1703,7 +1783,11 @@ export async function deleteWorkingPaperTemplate(templateId: string): Promise<AP
 
     return successResponse(null, "Working paper template deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | WORKING PAPER TEMPLATE", `/api/v1/working-paper-templates/${templateId}`);
+    return handleError(
+      error,
+      "DELETE | WORKING PAPER TEMPLATE",
+      `/api/v1/working-paper-templates/${templateId}`
+    );
   }
 }
 
@@ -1727,7 +1811,11 @@ export async function getTemplateCategories(templateId: string): Promise<APIResp
 
     return successResponse(response.data, "Template categories fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | TEMPLATE CATEGORIES", `/api/v1/working-paper-templates/${templateId}/categories-list`);
+    return handleError(
+      error,
+      "GET | TEMPLATE CATEGORIES",
+      `/api/v1/working-paper-templates/${templateId}/categories-list`
+    );
   }
 }
 
@@ -1747,26 +1835,18 @@ export async function getTemplateCategory(categoryId: string): Promise<APIRespon
 
     return successResponse(response.data, "Template category fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | TEMPLATE CATEGORY", `/api/v1/working-paper-categories/${categoryId}`);
+    return handleError(
+      error,
+      "GET | TEMPLATE CATEGORY",
+      `/api/v1/working-paper-categories/${categoryId}`
+    );
   }
 }
 
 /**
  * Create new template category
  */
-export async function createTemplateCategory(data: {
-  template_id: string;
-  name: string;
-  objectives?: string;
-  scope?: string;
-  documents_obtained?: string;
-  source_documents?: string;
-  sample_size?: string;
-  frequency_of_control?: string;
-  sampling_methodology?: string;
-  audit_procedure?: string;
-  sort_order?: number;
-}): Promise<APIResponse> {
+export async function createTemplateCategory(data: TemplateCategory): Promise<APIResponse> {
   if (!data.template_id || !data.name) {
     return handleBadRequest("Template ID and category name are required");
   }
@@ -1783,7 +1863,11 @@ export async function createTemplateCategory(data: {
 
     return successResponse(response.data, "Template category created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE TEMPLATE CATEGORY", "/api/v1/working-paper-categories");
+    return handleError(
+      error,
+      "POST | CREATE TEMPLATE CATEGORY",
+      "/api/v1/working-paper-categories"
+    );
   }
 }
 
@@ -1820,7 +1904,11 @@ export async function updateTemplateCategory(
 
     return successResponse(response.data, "Template category updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE TEMPLATE CATEGORY", `/api/v1/working-paper-categories/${categoryId}`);
+    return handleError(
+      error,
+      "PUT | UPDATE TEMPLATE CATEGORY",
+      `/api/v1/working-paper-categories/${categoryId}`
+    );
   }
 }
 
@@ -1842,7 +1930,11 @@ export async function deleteTemplateCategory(categoryId: string): Promise<APIRes
 
     return successResponse(null, "Template category deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | TEMPLATE CATEGORY", `/api/v1/working-paper-categories/${categoryId}`);
+    return handleError(
+      error,
+      "DELETE | TEMPLATE CATEGORY",
+      `/api/v1/working-paper-categories/${categoryId}`
+    );
   }
 }
 
@@ -1869,14 +1961,21 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
 
     return successResponse(response.data, "Audit plan submitted for approval successfully");
   } catch (error: any) {
-    return handleError(error, "POST | SUBMIT AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/submit`);
+    return handleError(
+      error,
+      "POST | SUBMIT AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/submit`
+    );
   }
 }
 
 /**
  * HIAR approval for audit plan
  */
-export async function hiarApproveAuditPlan(auditPlanId: string, comments?: string): Promise<APIResponse> {
+export async function hiarApproveAuditPlan(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
   }
@@ -1893,14 +1992,21 @@ export async function hiarApproveAuditPlan(auditPlanId: string, comments?: strin
 
     return successResponse(response.data, "Audit plan approved by HIAR successfully");
   } catch (error: any) {
-    return handleError(error, "POST | HIAR APPROVE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/approve/hiar`);
+    return handleError(
+      error,
+      "POST | HIAR APPROVE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/approve/hiar`
+    );
   }
 }
 
 /**
  * CEO approval for audit plan
  */
-export async function ceoApproveAuditPlan(auditPlanId: string, comments?: string): Promise<APIResponse> {
+export async function ceoApproveAuditPlan(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
   }
@@ -1917,14 +2023,21 @@ export async function ceoApproveAuditPlan(auditPlanId: string, comments?: string
 
     return successResponse(response.data, "Audit plan approved by CEO successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CEO APPROVE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/approve/ceo`);
+    return handleError(
+      error,
+      "POST | CEO APPROVE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/approve/ceo`
+    );
   }
 }
 
 /**
  * Audit Chair approval for audit plan
  */
-export async function auditChairApproveAuditPlan(auditPlanId: string, comments?: string): Promise<APIResponse> {
+export async function auditChairApproveAuditPlan(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
   }
@@ -1941,7 +2054,11 @@ export async function auditChairApproveAuditPlan(auditPlanId: string, comments?:
 
     return successResponse(response.data, "Audit plan approved by Audit Chair successfully");
   } catch (error: any) {
-    return handleError(error, "POST | AUDIT CHAIR APPROVE", `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`);
+    return handleError(
+      error,
+      "POST | AUDIT CHAIR APPROVE",
+      `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`
+    );
   }
 }
 
@@ -1968,7 +2085,11 @@ export async function rejectAuditPlan(auditPlanId: string, reason: string): Prom
 
     return successResponse(response.data, "Audit plan rejected successfully");
   } catch (error: any) {
-    return handleError(error, "POST | REJECT AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/reject`);
+    return handleError(
+      error,
+      "POST | REJECT AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/reject`
+    );
   }
 }
 
@@ -1991,7 +2112,11 @@ export async function activateAuditPlan(auditPlanId: string): Promise<APIRespons
 
     return successResponse(response.data, "Audit plan activated successfully");
   } catch (error: any) {
-    return handleError(error, "POST | ACTIVATE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/activate`);
+    return handleError(
+      error,
+      "POST | ACTIVATE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/activate`
+    );
   }
 }
 
@@ -2014,7 +2139,11 @@ export async function completeAuditPlan(auditPlanId: string): Promise<APIRespons
 
     return successResponse(response.data, "Audit plan completed successfully");
   } catch (error: any) {
-    return handleError(error, "POST | COMPLETE AUDIT PLAN", `/api/v1/audit-plans/${auditPlanId}/complete`);
+    return handleError(
+      error,
+      "POST | COMPLETE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/complete`
+    );
   }
 }
 
@@ -2036,16 +2165,16 @@ export async function getAuditLogs(filters?: {
 }): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
-    if (filters?.action) params.append('action', filters.action);
-    if (filters?.entity_type) params.append('entity_type', filters.entity_type);
-    if (filters?.user_id) params.append('user_id', filters.user_id);
-    if (filters?.start_date) params.append('start_date', filters.start_date);
-    if (filters?.end_date) params.append('end_date', filters.end_date);
-    if (filters?.limit) params.append('limit', String(filters.limit));
-    if (filters?.offset) params.append('offset', String(filters.offset));
+    if (filters?.action) params.append("action", filters.action);
+    if (filters?.entity_type) params.append("entity_type", filters.entity_type);
+    if (filters?.user_id) params.append("user_id", filters.user_id);
+    if (filters?.start_date) params.append("start_date", filters.start_date);
+    if (filters?.end_date) params.append("end_date", filters.end_date);
+    if (filters?.limit) params.append("limit", String(filters.limit));
+    if (filters?.offset) params.append("offset", String(filters.offset));
 
     const queryString = params.toString();
-    const url = `/api/v1/audit-logs${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/audit-logs${queryString ? `?${queryString}` : ""}`;
 
     const response = await authenticatedApiClient({
       method: "GET",
@@ -2061,18 +2190,22 @@ export async function getAuditLogs(filters?: {
 /**
  * Get audit logs by user
  */
-export async function getAuditLogsByUser(userId: string, limit?: number, offset?: number): Promise<APIResponse> {
+export async function getAuditLogsByUser(
+  userId: string,
+  limit?: number,
+  offset?: number
+): Promise<APIResponse> {
   if (!userId) {
     return handleBadRequest("User ID is required");
   }
 
   try {
     const params = new URLSearchParams();
-    if (limit) params.append('limit', String(limit));
-    if (offset) params.append('offset', String(offset));
+    if (limit) params.append("limit", String(limit));
+    if (offset) params.append("offset", String(offset));
 
     const queryString = params.toString();
-    const url = `/api/v1/audit-logs/user/${userId}${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/audit-logs/user/${userId}${queryString ? `?${queryString}` : ""}`;
 
     const response = await authenticatedApiClient({
       method: "GET",
@@ -2088,7 +2221,10 @@ export async function getAuditLogsByUser(userId: string, limit?: number, offset?
 /**
  * Get audit logs by entity
  */
-export async function getAuditLogsByEntity(entityType: string, entityId: string): Promise<APIResponse> {
+export async function getAuditLogsByEntity(
+  entityType: string,
+  entityId: string
+): Promise<APIResponse> {
   if (!entityType || !entityId) {
     return handleBadRequest("Entity type and ID are required");
   }
@@ -2101,6 +2237,10 @@ export async function getAuditLogsByEntity(entityType: string, entityId: string)
 
     return successResponse(response.data, "Entity audit logs fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | ENTITY AUDIT LOGS", `/api/v1/audit-logs/entity/${entityType}/${entityId}`);
+    return handleError(
+      error,
+      "GET | ENTITY AUDIT LOGS",
+      `/api/v1/audit-logs/entity/${entityType}/${entityId}`
+    );
   }
 }

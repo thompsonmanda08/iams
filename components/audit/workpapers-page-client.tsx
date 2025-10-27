@@ -2,14 +2,24 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, FileCode } from "lucide-react";
 import { WorkpapersTable } from "./workpapers-table";
 import { WorkpaperTemplateDialog } from "./workpaper-template-dialog";
 import type { Workpaper, AuditPlan, CustomTemplate } from "@/lib/types/audit-types";
+import Link from "next/link";
+
+interface WorkingPaperTemplate {
+  id: string;
+  name: string;
+  standard: string;
+  description?: string;
+  is_active?: boolean;
+}
 
 interface WorkpapersPageClientProps {
   workpapers: Workpaper[];
   audits: AuditPlan[];
+  templates?: WorkingPaperTemplate[];
 }
 
 // Mock custom templates - replace with actual data fetch
@@ -54,7 +64,11 @@ const mockCustomTemplates: CustomTemplate[] = [
   }
 ];
 
-export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClientProps) {
+export function WorkpapersPageClient({
+  workpapers,
+  audits,
+  templates = []
+}: WorkpapersPageClientProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleOpenCreateDialog = () => {
@@ -74,10 +88,16 @@ export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClien
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
+              <Link href="/dashboard/audit/workpapers/templates">
+                <Button variant="outline" className="gap-2">
+                  <FileCode className="h-4 w-4" />
+                  Manage Templates
+                </Button>
+              </Link>
+              {/* <Button variant="outline" className="gap-2">
                 <Download className="h-4 w-4" />
                 Export
-              </Button>
+              </Button> */}
               <Button className="gap-2" onClick={handleOpenCreateDialog}>
                 <Plus className="h-4 w-4" />
                 Create Workpaper
@@ -100,7 +120,7 @@ export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClien
           )}
 
           {/* Table */}
-          <WorkpapersTable workpapers={workpapers || []} />
+          <WorkpapersTable workpapers={workpapers || []} onCreateClick={handleOpenCreateDialog} />
         </div>
       </div>
 

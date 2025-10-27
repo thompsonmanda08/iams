@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input-field";
 import { SelectField } from "@/components/ui/select-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ErrorState } from "@/lib/types";
+import { ErrorState, Pagination } from "@/lib/types";
 import { createTown, updateTown, deleteTown } from "@/app/_actions/config-actions";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -56,9 +57,12 @@ interface Town {
 interface TownsTabProps {
   initialTowns: Town[];
   provinces: Province[];
+  pagination: Pagination | null;
 }
 
-export function TownsTab({ initialTowns, provinces }: TownsTabProps) {
+export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [towns, setTowns] = useState<Town[]>(initialTowns);
   const [openModal, setOpenModal] = useState(false);
@@ -92,6 +96,13 @@ export function TownsTab({ initialTowns, provinces }: TownsTabProps) {
     }
     deleteTownMutation.mutate(id);
   };
+
+  function handlePageChange({ page }: { page: number }) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(page));
+    params.set("page_size", String(pagination?.page_size || 10));
+    router.push(`?${params.toString()}`);
+  }
 
   return (
     <Card className="p-4">
@@ -199,9 +210,9 @@ export function TownsTab({ initialTowns, provinces }: TownsTabProps) {
       </Table>
 
       {/* Pagination */}
-      {/* {true && (
-        <CustomPagination pagination={pagination} updatePagination={updatePagination} />
-      )} */}
+      {pagination && (
+        <CustomPagination pagination={pagination} showDetails updatePagination={handlePageChange} />
+      )}
 
       <CreateOrUpdateTownDialog
         openModal={openModal}
