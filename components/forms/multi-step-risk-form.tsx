@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Building2, CalendarIcon, ChevronLeft, ChevronRight, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,11 @@ import {
   updateRiskStepThree,
   getRiskCategories
 } from "@/app/_actions/risk-module-actions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format, formatISO } from "date-fns";
+import { getUsers } from "@/app/_actions/user-actions";
 
 type Department = {
   id: string;
@@ -66,7 +71,7 @@ type StepOneData = {
   sub_process: string;
   strategic_objective: string;
   root_cause: string;
-  recurrence: string;
+  recurrence: "ongoing" | "one-time";
 };
 
 type StepTwoData = {
@@ -87,6 +92,16 @@ type StepThreeData = {
   mitigation_cost: number;
 };
 
+type User = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  username: string;
+  department_id: string;
+  is_active: boolean;
+};
+
 export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepRiskFormProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -95,8 +110,14 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
+
   const [categories, setCategories] = useState<RiskCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  const [closeDate, setCloseDate] = useState<Date | undefined>();
 
   // Step 1 state
   const [stepOneData, setStepOneData] = useState<StepOneData>({
@@ -110,8 +131,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
     root_cause: "",
     recurrence: "ongoing"
   });
-
-  console.log("1ST FORMDATA:", stepOneData);
 
   // Step 2 state
   const [stepTwoData, setStepTwoData] = useState<StepTwoData>({
@@ -133,12 +152,20 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
     mitigation_cost: 0
   });
 
+  console.log("FORMDATA:", stepThreeData);
+
   useEffect(() => {
     if (open) {
       loadDepartments();
       loadCategories();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (stepOneData.department_id) {
+      loadUsers(stepOneData.department_id);
+    }
+  }, [stepOneData.department_id]);
 
   useEffect(() => {
     if (!open) {
@@ -152,8 +179,8 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
     setLoadingDepartments(true);
     try {
       const response = await getDepartments({ isActive: true });
-      if (response.success && response.data) {
-        setDepartments(response.data);
+      if (response.success && response.data?.data) {
+        setDepartments(response.data?.data);
       } else {
         toast.error("Failed to load departments");
       }
@@ -171,8 +198,8 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
         is_active: true,
         department_id: departmentId
       });
-      if (response.success && response.data) {
-        setCategories(response.data);
+      if (response.success && response.data.data) {
+        setCategories(response.data.data);
       } else {
         toast.error("Failed to load risk categories");
       }
@@ -180,6 +207,26 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
       toast.error("Error loading risk categories");
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const loadUsers = async (departmentId: string) => {
+    setLoadingUsers(true);
+    try {
+      const response = await getUsers({
+        departmentId: departmentId,
+        isActive: true
+      });
+      if (response.success && response.data?.data) {
+        setUsers(response.data.data);
+      } else {
+        setUsers([]);
+      }
+    } catch (error) {
+      toast.error("Error loading users");
+      setUsers([]);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -211,6 +258,8 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
       target_closing_date: "",
       mitigation_cost: 0
     });
+    setCloseDate(undefined);
+    setUsers([]);
   };
 
   const handleStepOne = async () => {
@@ -314,6 +363,11 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
       return stepThreeData.risk_owner_id && stepThreeData.treatment_plan;
     }
     return false;
+  };
+
+  const getUserDisplayName = (user: User) => {
+    const fullName = `${user.first_name} ${user.last_name}`.trim();
+    return fullName || user.username || user.email;
   };
 
   const getRiskLevel = (score: number) => {
@@ -451,7 +505,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {departments.map((dept) => (
+                      {departments?.map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
@@ -522,7 +576,9 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                 <Label htmlFor="recurrence">Recurrence</Label>
                 <Select
                   value={stepOneData.recurrence}
-                  onValueChange={(value) => setStepOneData({ ...stepOneData, recurrence: value })}
+                  onValueChange={(value) =>
+                    setStepOneData({ ...stepOneData, recurrence: value as "ongoing" | "one-time" })
+                  }
                   disabled={isLoading}>
                   <SelectTrigger>
                     <SelectValue />
@@ -634,7 +690,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                     setStepTwoData({ ...stepTwoData, control_effectiveness: Number(value) })
                   }
                   disabled={isLoading}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -743,7 +799,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                       setStepThreeData({ ...stepThreeData, risk_response: value })
                     }
                     disabled={isLoading}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -763,43 +819,99 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                       setStepThreeData({ ...stepThreeData, risk_appetite_status: value })
                     }
                     disabled={isLoading}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="WITHIN">Within Appetite</SelectItem>
                       <SelectItem value="ABOVE">Above Appetite</SelectItem>
-                      <SelectItem value="BELOW">Below Appetite</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-
               <div className="grid gap-2">
                 <Label htmlFor="risk_owner_id">Risk Owner *</Label>
-                <Input
-                  id="risk_owner_id"
-                  placeholder="Enter risk owner ID or name"
+                <Select
                   value={stepThreeData.risk_owner_id}
-                  onChange={(e) =>
-                    setStepThreeData({ ...stepThreeData, risk_owner_id: e.target.value })
+                  onValueChange={(value) =>
+                    setStepThreeData({ ...stepThreeData, risk_owner_id: value })
                   }
-                  disabled={isLoading}
-                />
+                  disabled={isLoading || loadingUsers || !stepOneData.department_id}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select risk owner">
+                      {loadingUsers
+                        ? "Loading users..."
+                        : !stepOneData.department_id
+                          ? "Select department first"
+                          : stepThreeData.risk_owner_id
+                            ? users.find((u) => u.id === stepThreeData.risk_owner_id)
+                              ? getUserDisplayName(
+                                  users.find((u) => u.id === stepThreeData.risk_owner_id)!
+                                )
+                              : "Select risk owner"
+                            : "Select risk owner"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.length === 0 ? (
+                      <div className="text-muted-foreground p-2 text-sm">
+                        {stepOneData.department_id
+                          ? "No users found in this department"
+                          : "Please select a department first"}
+                      </div>
+                    ) : (
+                      users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            <span>{getUserDisplayName(user)}</span>
+                            <span className="text-muted-foreground text-xs">({user.email})</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {!stepOneData.department_id && (
+                  <p className="text-muted-foreground text-xs">
+                    Please select a department in Step 1 to load users
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="target_closing_date">Target Closing Date</Label>
-                  <Input
-                    id="target_closing_date"
-                    type="date"
-                    value={stepThreeData.target_closing_date}
-                    onChange={(e) =>
-                      setStepThreeData({ ...stepThreeData, target_closing_date: e.target.value })
-                    }
-                    disabled={isLoading}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !closeDate && "text-muted-foreground"
+                        )}
+                        disabled={isLoading}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {closeDate ? format(closeDate, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={closeDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            setCloseDate(date);
+                            setStepThreeData((prev) => ({
+                              ...prev,
+                              target_closing_date: formatISO(date)
+                            }));
+                          }
+                        }}
+                        disabled={isLoading}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="grid gap-2">

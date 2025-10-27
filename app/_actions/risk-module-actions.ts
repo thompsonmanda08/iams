@@ -26,7 +26,7 @@ export type RiskRating = "LOW" | "MEDIUM" | "HIGH";
 export type RegisterStatus = "OPEN" | "CLOSED";
 export type TimelineStatus = "ON_TRACK" | "AT_RISK" | "OVERDUE";
 export type KRIStatus = "Green" | "Amber" | "Red";
-export type KRIFrequency = "Daily" | "Weekly" | "Monthly" | "Quarterly" | "Annually";
+export type KRIFrequency = "Daily" | "Weekly" | "Monthly" | "Quarterly" | "Annually" | "";
 
 // Risk Category
 export interface RiskCategory {
@@ -185,8 +185,6 @@ export interface KRIRegister {
 export interface KRIRegisterInput {
   name: string;
   description?: string;
-  start_date: Date;
-  end_date: Date;
   is_active?: boolean;
 }
 
@@ -363,7 +361,7 @@ export async function getRiskCategories(params?: {
       params,
       method: "GET",
     })
-    return successResponse(response.data);
+    return successResponse(response.data?.data);
   } catch (error) {
     console.log('ERROR:', error);
     
@@ -630,6 +628,8 @@ export async function getRisksInRegister(registerId: string): Promise<APIRespons
       url: `/api/v1/risk-registers/${registerId}/risks`,
       method: "GET",
     });
+    console.log("RISK RES:", response);
+    
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(
@@ -830,7 +830,11 @@ export async function getHeatMap(): Promise<APIResponse> {
  */
 export async function getKRIRegisters(params?: { is_active?: boolean }): Promise<APIResponse> {
   try {
-    const response = await axios.get("/api/v1/kri-registers", { params });
+    const response = await authenticatedApiClient({
+      url:"/api/v1/kri-registers", 
+      params,
+      method:"GET"
+    });;
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI REGISTERS", "/api/v1/kri-registers");
@@ -842,7 +846,10 @@ export async function getKRIRegisters(params?: { is_active?: boolean }): Promise
  */
 export async function getKRIRegister(id: string): Promise<APIResponse> {
   try {
-    const response = await axios.get(`/api/v1/kri-registers/${id}`);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kri-registers/${id}`, 
+      method:"GET"
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI REGISTER", `/api/v1/kri-registers/${id}`);
@@ -854,7 +861,11 @@ export async function getKRIRegister(id: string): Promise<APIResponse> {
  */
 export async function createKRIRegister(input: KRIRegisterInput): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/kri-registers", input);
+    const response = await authenticatedApiClient({
+      url:"/api/v1/kri-registers", 
+      data:input,
+      method:"POST"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {
@@ -938,7 +949,11 @@ export async function getKRI(id: string): Promise<APIResponse> {
  */
 export async function createKRI(input: KRIInput): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/kris", input);
+    const response = await authenticatedApiClient({
+      url:"/api/v1/kris", 
+      data:input,
+      method:"POST"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {

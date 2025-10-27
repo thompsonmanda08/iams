@@ -7,7 +7,7 @@ import CreateUserButton from "../_components/create-user-button";
 
 export default async function UsersPage() {
   const response = await getUsers();
-  const users = response.success && response.data ? response.data : [];
+  const users = response.success && response.data.data ? response.data.data : [];
 
   return (
     <div className="container mx-auto flex flex-col space-y-6 p-6">

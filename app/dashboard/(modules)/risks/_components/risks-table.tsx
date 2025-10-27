@@ -226,7 +226,7 @@ export default function RisksTable({
       </Card>
 
       {/* Table */}
-      <Card className="container mx-auto px-4">
+      <Card className="container mx-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -242,14 +242,14 @@ export default function RisksTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {risks.length === 0 ? (
+            {risks?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="py-12 text-center">
                   <p className="text-muted-foreground">No risks found</p>
                 </TableCell>
               </TableRow>
             ) : (
-              risks.map((risk) => (
+              risks?.map((risk) => (
                 <TableRow key={risk.id}>
                   <TableCell>
                     <span className="font-mono text-sm font-medium">{risk.riskId}</span>
@@ -346,25 +346,25 @@ export default function RisksTable({
         </Table>
 
         {/* Pagination */}
-        {risks.length > 0 && (
+        {risks?.length > 0 && (
           <div className="flex items-center justify-between border-t p-4">
             <p className="text-muted-foreground text-sm">
-              Showing {(meta.page - 1) * meta.limit + 1} to{" "}
-              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} risks
+              Showing {(meta?.page - 1) * meta?.limit + 1} to{" "}
+              {Math.min(meta?.page * meta?.limit, meta?.total)} of {meta?.total} risks
             </p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                disabled={meta.page === 1}
-                onClick={() => handlePageChange(meta.page - 1)}>
+                disabled={meta?.page === 1}
+                onClick={() => handlePageChange(meta?.page - 1)}>
                 Previous
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={meta.page === meta.totalPages}
-                onClick={() => handlePageChange(meta.page + 1)}>
+                disabled={meta?.page === meta?.totalPages}
+                onClick={() => handlePageChange(meta?.page + 1)}>
                 Next
               </Button>
             </div>

@@ -16,7 +16,7 @@ type PageProps = {
 export default async function RiskRegistersPage({ searchParams }: PageProps) {
   const search = searchParams.search || "";
   const status = searchParams.status || "";
-  const page = Number(searchParams.page) || 1;
+  const page =  1;
 
   const response = await getRiskRegisters({
     name: search || undefined,
@@ -26,7 +26,7 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
   });
 
   const data = response.success && response.data ? response.data : null;
-  const registers = data?.registers || [];
+  const registers = data?.data || [];
   const pagination = {
     total: data?.total || 0,
     page: data?.page || 1,

@@ -39,7 +39,7 @@ export async function getBranches(params?: {
       url: url,
       method: "GET",
     });;
-    return successResponse(response?.data, "Branches fetched successfully");
+    return successResponse(response?.data?.data, "Branches fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -200,8 +200,10 @@ export async function getDepartments(params?: {
       url: url,
       method: "GET",
     });
-    return successResponse(response?.data, "Departments fetched successfully");
+    return successResponse(response?.data?.data, "Departments fetched successfully");
   } catch (error: Error | any) {
+    console.log('DEPT:', error);
+    
     return handleError(error, "GET", url);
   }
 }
@@ -594,7 +596,7 @@ export async function getRoles(params?: {
       url: url,
       method: "GET",
     });;
-    return successResponse(response?.data, "Roles fetched successfully");
+    return successResponse(response?.data?.data, "Roles fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }

@@ -23,7 +23,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Building2, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -61,8 +60,8 @@ export default function CreateRiskRegisterDialog() {
     setLoadingBranches(true);
     try {
       const response = await getBranches({ isActive: true });
-      if (response.success && response.data) {
-        setBranches(response.data);
+      if (response.success && response.data?.data) {
+        setBranches(response.data?.data);
       } else {
         toast.error("Failed to load branches");
       }

@@ -78,7 +78,7 @@ export async function deleteUser(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({ url: url, method: "DELETE" });
     revalidatePath("/dashboard/system-configs/users");
-    return successResponse(response.data, "User deleted successfully");
+    return successResponse(response.data.data, "User deleted successfully");
   } catch (error) {
     return handleError(error, "DELETE", url);
   }
