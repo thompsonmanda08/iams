@@ -7,9 +7,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  createClauseTemplate,
-  updateClauseTemplate,
-  deleteClauseTemplate,
   getWorkpapers,
   getWorkpaper,
   createWorkpaper,
@@ -43,107 +40,6 @@ export const AUDIT_QUERY_KEYS = {
   TEMPLATE_CATEGORIES: "templateCategories",
   TEMPLATE_CATEGORY: "templateCategory"
 } as const;
-
-// ============================================================================
-// CLAUSE TEMPLATE HOOKS
-// ============================================================================
-
-/**
- * Hook to create a new clause template
- */
-export const useCreateClauseTemplate = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (input: ClauseTemplateInput) => {
-      const response = await createClauseTemplate(input);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.CLAUSE_TEMPLATES] });
-      toast({
-        title: "Success",
-        description: "Clause template created successfully"
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create clause template",
-        variant: "destructive"
-      });
-    }
-  });
-};
-
-/**
- * Hook to update an existing clause template
- */
-export const useUpdateClauseTemplate = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<ClauseTemplateInput> }) => {
-      const response = await updateClauseTemplate(id, data);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.CLAUSE_TEMPLATES] });
-      queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.CLAUSE_TEMPLATE, variables.id] });
-      toast({
-        title: "Success",
-        description: "Clause template updated successfully"
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update clause template",
-        variant: "destructive"
-      });
-    }
-  });
-};
-
-/**
- * Hook to delete a clause template
- */
-export const useDeleteClauseTemplate = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await deleteClauseTemplate(id);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.CLAUSE_TEMPLATES] });
-      toast({
-        title: "Success",
-        description: "Clause template deleted successfully"
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete clause template",
-        variant: "destructive"
-      });
-    }
-  });
-};
 
 // ============================================================================
 // WORKPAPER HOOKS

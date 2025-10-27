@@ -16,9 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ChevronDown, ChevronUp, Info, Loader2 } from "lucide-react";
-import { TemplateService, getGroupDisplayName } from "@/lib/services/template-service";
-import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import type { TemplateCategory, WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import { getRecommendedCategories } from "@/lib/utils/audit-helpers";
 import { Spinner } from "../ui/spinner";
@@ -73,6 +71,10 @@ export function CategorySelector({
   const handleSelectRecommended = () => {
     const recommended = getRecommendedCategories(selectedTemplate);
     onCategoriesChange(recommended);
+  };
+
+  const getGroupDisplayName = (group: "main-clauses" | "annex-a-controls"): string => {
+    return group === "main-clauses" ? "Main Clauses" : "Annex A Controls";
   };
 
   const mainClauses = categories.filter((cat) => cat.group === "main-clauses");

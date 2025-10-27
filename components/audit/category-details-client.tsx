@@ -17,7 +17,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, FileText, Target, Clipboard, CheckCircle2, AlertCircle } from "lucide-react";
 import type { TemplateCategory } from "@/lib/types/audit-types";
-import { getGroupDisplayName } from "@/lib/services/template-service";
 
 interface CategoryDetailsClientProps {
   category: TemplateCategory;
@@ -29,6 +28,10 @@ export function CategoryDetailsClient({ category, templateId }: CategoryDetailsC
 
   const handleBack = () => {
     router.push(`/dashboard/audit/workpapers/templates/${templateId}`);
+  };
+
+  const getGroupDisplayName = (group: "main-clauses" | "annex-a-controls"): string => {
+    return group === "main-clauses" ? "Main Clauses" : "Annex A Controls";
   };
 
   return (

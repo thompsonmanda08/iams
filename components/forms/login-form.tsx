@@ -23,22 +23,16 @@ export default function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      const response = await loginUser({
-        username: email,
-        password: password
-      });
+    const response = await loginUser({
+      username: email,
+      password: password
+    });
 
-      if (response.success) {
-        toast.success(response.message || "Login successful");
-        router.push("/dashboard/home");
-        router.refresh();
-      } else {
-        toast.error(response.message || "Invalid credentials");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
+    if (response.success) {
+      toast.success(response.message || "Login successful");
+      router.push("/dashboard/home");
+    } else {
+      toast.error(response.message || "Invalid credentials");
       setIsLoading(false);
     }
   };

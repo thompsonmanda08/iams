@@ -24,7 +24,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="text-foreground/80 mt-6 flex items-center justify-center gap-2 text-center text-sm sm:text-base">
+      <div className="text-white/80 mt-6 flex items-center justify-center gap-2 text-center text-sm sm:text-base">
         <Lock className="h-4 w-4 text-green-400" />
         <p>Secured access for authorized personnel only</p>
       </div>

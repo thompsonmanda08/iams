@@ -13,9 +13,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { FileText, CheckCircle2, AlertCircle, FileType2, Plus } from "lucide-react";
-import { TemplateService } from "@/lib/services/template-service";
 import type { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import {
   useWorkpaperTemplates,
@@ -23,6 +21,7 @@ import {
 } from "@/hooks/use-audit-query-data";
 import { getTemplateSummary } from "@/lib/utils/audit-helpers";
 import { Alert, AlertDescription } from "../ui/alert";
+import { Badge } from "../ui/badge";
 import { Spinner } from "../ui/spinner";
 import { cn } from "@/lib/utils";
 import {
@@ -66,11 +65,13 @@ export function TemplateSelectorSimple({
   }, [selectedTemplateId, selectedTemplate]);
 
   useEffect(() => {
-    if (!value && templates.length > 0) {
-      onChange(templates[0].id);
-      setSelectedTemplateId(templates[0].id);
+    // Auto-select first template if none selected and templates are loaded
+    if (!value && templateResponse?.success && templates.length > 0) {
+      const firstTemplateId = templates[0].id as string;
+      onChange(firstTemplateId);
+      setSelectedTemplateId(firstTemplateId);
     }
-  }, [value, templates, onChange]);
+  }, [value, templates, onChange, templateResponse?.success]);
 
   if (loadingTemplates) {
     return (

@@ -14,7 +14,7 @@ export function getTemplateSummary(template: WorkpaperTemplateDefinition): {
 
   const mainClauses = template?.categories?.filter((cat) => cat.group === "main-clauses");
   const annexA = template?.categories?.filter((cat) => cat.group === "annex-a-controls");
-  const required = template?.categories?.filter((cat) => cat.isRequired);
+  const required = template?.categories?.filter((cat) => cat.is_required);
 
   return {
     id: template.id,
@@ -29,20 +29,15 @@ export function getTemplateSummary(template: WorkpaperTemplateDefinition): {
 
 export function getRecommendedCategories(template: WorkpaperTemplateDefinition): string[] {
   // const template = await this.fetchTemplate(templateId);
-  if (!template) return [];
+  if (!template || !template.categories) return [];
 
   // For ISO 27001, recommend all main clauses as they are fundamental
-  if (
-    (template &&
-      (template?.name.toLowerCase().replace(" ", "-").split("-").includes("iso27001") ||
-        template?.name.toLowerCase().replace(" ", "-").startsWith("iso27001"))) ||
-    template?.name.toLowerCase().replace(" ", "-").startsWith("iso-27001")
-  ) {
+  if (template.name.toLowerCase().includes("iso 27001")) {
     return template.categories
-      .filter((cat) => cat.group == "main-clauses")
+      .filter((cat) => cat.group === "main-clauses")
       .map((cat) => cat.id as string);
   }
 
   // For other templates, return required categories
-  return template.categories.filter((cat) => cat.isRequired).map((cat) => cat.id as string);
+  return template.categories.filter((cat) => cat.is_required).map((cat) => cat.id as string);
 }
