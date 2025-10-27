@@ -62,7 +62,7 @@ export default function AuditDashboard() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl">
+      <header className="bg-card/80 sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
