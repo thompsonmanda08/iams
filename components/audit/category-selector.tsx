@@ -22,13 +22,16 @@ import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-dat
 import type { TemplateCategory, WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import { getRecommendedCategories } from "@/lib/utils/audit-helpers";
 import { Spinner } from "../ui/spinner";
+import CustomAlert from "../ui/custom-alert";
 
 interface CategorySelectorProps {
   templateId: string;
   selectedCategories: string[];
   onCategoriesChange: (categoryIds: string[]) => void;
   disabled?: boolean;
+  loadingTemplateDetails?: boolean;
   showRecommended?: boolean;
+  selectedTemplate: WorkpaperTemplateDefinition;
 }
 
 export function CategorySelector({
@@ -36,23 +39,13 @@ export function CategorySelector({
   selectedCategories,
   onCategoriesChange,
   disabled = false,
-  showRecommended = true
+  showRecommended = true,
+  loadingTemplateDetails,
+  selectedTemplate
 }: CategorySelectorProps) {
   const [selectAll, setSelectAll] = useState(false);
 
-  // Fetch template with categories from database
-  const {
-    data: templateResponse,
-    isLoading,
-    error
-  } = useWorkpaperTemplatesWithCategories(templateId);
-
-  const selectedTemplate = templateResponse?.success
-    ? (templateResponse.data?.data?.data as WorkpaperTemplateDefinition)
-    : ({} as WorkpaperTemplateDefinition);
-
-  // Extract categories from response with fallback to static data
-  const categories: TemplateCategory[] = selectedTemplate.categories || [];
+  const categories: TemplateCategory[] = selectedTemplate?.categories || [];
 
   useEffect(() => {
     setSelectAll(categories.length > 0 && selectedCategories.length === categories.length);
@@ -70,13 +63,6 @@ export function CategorySelector({
   };
 
   const handleCategoryToggle = (categoryId: string) => {
-    const category = categories.find((cat) => cat.id === categoryId);
-
-    // Don't allow deselecting required categories
-    if (category?.is_required && selectedCategories.includes(categoryId)) {
-      return;
-    }
-
     if (selectedCategories.includes(categoryId)) {
       onCategoriesChange(selectedCategories.filter((id) => id !== categoryId));
     } else {
@@ -93,7 +79,7 @@ export function CategorySelector({
   const annexAControls = categories.filter((cat) => cat.group === "annex-a-controls");
 
   // Loading state
-  if (isLoading) {
+  if (loadingTemplateDetails) {
     return (
       <div className="flex items-center justify-center py-8">
         <Spinner className="h-6 w-6 animate-spin" />
@@ -102,17 +88,14 @@ export function CategorySelector({
     );
   }
 
-  // Error state - fall back to static data
-  if (error) {
-    console.warn("Failed to load categories from database, using static fallback:", error);
-  }
-
   if (categories.length === 0) {
     return (
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>No categories available for this template.</AlertDescription>
-      </Alert>
+      <CustomAlert
+        type="info"
+        Icon={Info}
+        title="Categories unavailable"
+        message="No categories available for this template."
+      />
     );
   }
 
@@ -256,18 +239,14 @@ function CategoryItem({ category, selected, onToggle, disabled }: CategoryItemPr
         <Checkbox
           id={category.id}
           checked={selected}
-          onCheckedChange={() => onToggle(category.id!)}
-          disabled={disabled || category.is_required}
+          onCheckedChange={() => onToggle(category.id as string)}
+          disabled={disabled}
           className="mt-1"
         />
 
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between gap-2">
-            <Label
-              htmlFor={category.id}
-              className={`cursor-pointer font-medium ${
-                category.is_required ? "cursor-not-allowed" : ""
-              }`}>
+            <Label htmlFor={category.id} className="cursor-pointer font-medium">
               {category.display_name || category.name}
             </Label>
 
@@ -321,7 +300,7 @@ function CategoryItem({ category, selected, onToggle, disabled }: CategoryItemPr
               <div>
                 <span className="text-foreground font-medium">Clauses:</span>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {category.clauses?.map((clause) => (
+                  {(category.clauses as unknown as string).split(",")?.map((clause) => (
                     <Badge key={clause} variant="outline" className="text-xs">
                       {clause}
                     </Badge>

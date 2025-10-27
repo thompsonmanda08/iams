@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
   Users,
+  AlertCircle,
   FileText,
   CheckCircle2,
   ChevronLeft,
@@ -13,24 +14,20 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import Link from "next/link";
 import { createAuditPlan } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
 import { TemplateSelectorSimple } from "@/components/audit/template-selector-simple";
 import { CategorySelector } from "@/components/audit/category-selector";
-import { TemplateService } from "@/lib/services/template-service";
 import { SelectField } from "@/components/ui/select-field";
+import { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
+import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
+import { notify } from "@/lib/utils";
 
 const STEPS = [
   { id: 1, name: "Basic Details", icon: Calendar },
@@ -40,9 +37,9 @@ const STEPS = [
 
 export default function NewAuditPlanPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -54,18 +51,24 @@ export default function NewAuditPlanPage() {
     audit_scope: "",
     audit_criteria: "",
     audit_objective: "",
-    management_standard: "ISO IEC 27001:2022",
+    management_standard: "ISO IEC 27001",
     audit_team_leader: "",
     audit_team_member: "",
     client_representative: "",
     audit_language: "English",
-    start_date: "",
-    end_date: "",
-    opening_meeting_datetime: "",
-    closing_meeting_datetime: "",
+    start_date: null as Date | null,
+    end_date: null as Date | null,
+    opening_meeting_datetime: null as Date | null,
+    closing_meeting_datetime: null as Date | null,
     working_paper_template_id: "",
     selectedCategories: [] as string[]
   });
+
+  const { data: fullTemplateResponse, isLoading: loadingTemplateDetails } =
+    useWorkpaperTemplatesWithCategories(formData.working_paper_template_id);
+
+  const selectedTemplate: WorkpaperTemplateDefinition =
+    fullTemplateResponse?.data ?? ({} as WorkpaperTemplateDefinition);
 
   const handleNext = () => {
     // Validate current step before proceeding
@@ -81,24 +84,26 @@ export default function NewAuditPlanPage() {
         !formData.audit_area ||
         !formData.audit_criteria
       ) {
-        toast({
-          title: "Validation Error",
+        setValidationError("Please fill in all required fields on this step.");
+        notify({
+          // title: "Validation Error",
           description: "Please fill in all required fields",
-          variant: "destructive"
+          type: "error"
         });
         return;
       }
     } else if (currentStep === 2) {
       if (!formData.working_paper_template_id) {
-        toast({
-          title: "Validation Error",
+        setValidationError("Please select a working paper template.");
+        notify({
+          // title: "Validation Error",
           description: "Please select a template",
-          variant: "destructive"
+          type: "error"
         });
         return;
       }
     }
-
+    setValidationError(null);
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   };
 
@@ -106,21 +111,43 @@ export default function NewAuditPlanPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleTemplateChange = (templateId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      working_paper_template_id: templateId,
-      selectedCategories: [] // Reset categories when template changes
-    }));
-  };
+  const handleTemplateChange = useCallback(
+    (templateId: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        working_paper_template_id: templateId,
+        // selectedCategories: [] // Reset categories when template changes
+        selectedCategories:
+          selectedTemplate != null && selectedTemplate.categories
+            ? selectedTemplate.categories?.map((cat) => cat.id as string)
+            : []
+      }));
+    },
+    [selectedTemplate]
+  );
 
   async function handleSubmit() {
-    // Validate category selection
-    if (formData.selectedCategories.length === 0) {
-      toast({
+    setValidationError(null);
+
+    // Validate that all required categories are selected
+    const requiredCategoryIds =
+      selectedTemplate.categories?.filter((c) => c.is_required).map((c) => c.id) ?? [];
+
+    const missingRequired = requiredCategoryIds.filter(
+      (id) => !formData.selectedCategories.includes(id as string)
+    );
+
+    if (missingRequired.length > 0) {
+      const missingNames = missingRequired
+        .map((id) => selectedTemplate.categories?.find((c) => c.id === id)?.name)
+        .filter(Boolean)
+        .join(", ");
+      const errorMsg = `You must select all required categories. Missing: ${missingNames}`;
+      setValidationError(errorMsg);
+      notify({
         title: "Validation Error",
-        description: "Please select at least one category",
-        variant: "destructive"
+        description: errorMsg,
+        type: "error"
       });
       return;
     }
@@ -132,8 +159,8 @@ export default function NewAuditPlanPage() {
       year: formData.year,
       title: formData.title,
       description: formData.description || undefined,
-      start_date: formData.start_date,
-      end_date: formData.end_date,
+      start_date: formData.start_date?.toISOString() as string,
+      end_date: formData.end_date?.toISOString() as string,
       ref_no: formData.ref_no,
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
@@ -144,8 +171,8 @@ export default function NewAuditPlanPage() {
       audit_team_member: formData.audit_team_member || undefined,
       client_representative: formData.client_representative || undefined,
       audit_language: formData.audit_language || undefined,
-      opening_meeting_datetime: formData.opening_meeting_datetime || undefined,
-      closing_meeting_datetime: formData.closing_meeting_datetime || undefined,
+      opening_meeting_datetime: formData.opening_meeting_datetime?.toISOString() || undefined,
+      closing_meeting_datetime: formData.closing_meeting_datetime?.toISOString() || undefined,
       working_paper_template_id: formData.working_paper_template_id || undefined
     };
 
@@ -153,24 +180,24 @@ export default function NewAuditPlanPage() {
       const result = await createAuditPlan(auditData);
 
       if (result.success) {
-        toast({
+        notify({
           title: "Success",
           description:
             "Audit plan created successfully as Draft. You can submit it for approval when ready."
         });
         router.push("/dashboard/audit/plans");
       } else {
-        toast({
+        notify({
           title: "Error",
           description: result.message || "Failed to create audit plan",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsSubmitting(false);
@@ -238,9 +265,16 @@ export default function NewAuditPlanPage() {
 
           {/* Form Content */}
           <Card className="p-6">
+            {validationError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Validation Error</AlertTitle>
+                <AlertDescription>{validationError}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-6">
               {/* Step 1: Basic Details */}
-              {currentStep === 11 && (
+              {currentStep === 1 && (
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <h3 className="flex items-center gap-2 text-lg font-semibold">
@@ -299,10 +333,7 @@ export default function NewAuditPlanPage() {
                           onValueChange={(v) =>
                             setFormData({ ...formData, management_standard: v })
                           }
-                          options={[
-                            { id: "ISO IEC 27001:2022", name: "ISO IEC 27001:2022" },
-                            { id: "ISO IEC 27001:2013", name: "ISO IEC 27001:2013" }
-                          ]}
+                          options={[{ id: "ISO IEC 27001", name: "ISO IEC 27001" }]}
                         />
                       </div>
 
@@ -355,53 +386,41 @@ export default function NewAuditPlanPage() {
                     </h3>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="start_date">Start Date *</Label>
-                        <Input
-                          id="start_date"
-                          type="date"
-                          value={formData.start_date}
-                          onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                          required
-                        />
-                      </div>
+                      <DatePicker
+                        label="Start Date"
+                        required
+                        value={(formData.start_date ?? undefined) as any}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, start_date: date || null })
+                        }
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="end_date">End Date *</Label>
-                        <Input
-                          id="end_date"
-                          type="date"
-                          value={formData.end_date}
-                          onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                          required
-                        />
-                      </div>
+                      <DatePicker
+                        label="End Date"
+                        required
+                        value={(formData.end_date ?? undefined) as any}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, end_date: date || null })
+                        }
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="opening_meeting_datetime">Opening Meeting</Label>
-                        <Input
-                          id="opening_meeting_datetime"
-                          type="datetime-local"
-                          value={formData.opening_meeting_datetime}
-                          onChange={(e) =>
-                            setFormData({ ...formData, opening_meeting_datetime: e.target.value })
-                          }
-                        />
-                      </div>
+                      <DateTimePicker
+                        label="Opening Meeting"
+                        value={formData.opening_meeting_datetime ?? undefined}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, opening_meeting_datetime: date || null })
+                        }
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="closing_meeting_datetime">Closing Meeting</Label>
-                        <Input
-                          id="closing_meeting_datetime"
-                          type="datetime-local"
-                          value={formData.closing_meeting_datetime}
-                          onChange={(e) =>
-                            setFormData({ ...formData, closing_meeting_datetime: e.target.value })
-                          }
-                        />
-                      </div>
+                      <DateTimePicker
+                        label="Closing Meeting"
+                        value={formData.closing_meeting_datetime ?? undefined}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, closing_meeting_datetime: date || null })
+                        }
+                      />
                     </div>
                   </div>
 
@@ -420,9 +439,9 @@ export default function NewAuditPlanPage() {
                           className="w-full"
                           placeholder="Choose team leader"
                           value={formData.audit_team_leader}
-                          onChange={(e) =>
-                            setFormData({ ...formData, audit_team_leader: e.target.value })
-                          }
+                          onValueChange={(v) => {
+                            setFormData({ ...formData, audit_team_leader: v });
+                          }}
                           options={[{ id: "team_leader", name: "Team Leader" }]}
                         />
                       </div>
@@ -433,9 +452,9 @@ export default function NewAuditPlanPage() {
                         required
                         placeholder="Choose team member"
                         value={formData.audit_team_member}
-                        onChange={(e) =>
-                          setFormData({ ...formData, audit_team_member: e.target.value })
-                        }
+                        onValueChange={(v) => {
+                          setFormData({ ...formData, audit_team_member: v });
+                        }}
                         options={[{ id: "team_leader", name: "Team Member" }]}
                       />
                     </div>
@@ -468,18 +487,22 @@ export default function NewAuditPlanPage() {
               )}
 
               {/* Step 2: Template Selection */}
-              {currentStep === 1 && (
+              {currentStep === 2 && (
                 <TemplateSelectorSimple
                   value={formData.working_paper_template_id}
                   onChange={handleTemplateChange}
+                  selectedTemplate={selectedTemplate}
+                  loadingTemplateDetails={loadingTemplateDetails}
                 />
               )}
 
               {/* Step 3: Category Selection */}
-              {currentStep === 1 && formData.working_paper_template_id && (
+              {currentStep === 3 && formData.working_paper_template_id && (
                 <CategorySelector
                   templateId={formData.working_paper_template_id}
                   selectedCategories={formData.selectedCategories}
+                  loadingTemplateDetails={loadingTemplateDetails}
+                  selectedTemplate={selectedTemplate}
                   onCategoriesChange={(categories) =>
                     setFormData({ ...formData, selectedCategories: categories })
                   }

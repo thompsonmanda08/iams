@@ -44,7 +44,7 @@ function CustomAlert({ type, className, title, message, Icon, children }: Custom
       <div>
         {message ? (
           <>
-            {title && <AlertTitle>{title}</AlertTitle>}
+            {title && <AlertTitle className="font-semibold tracking-tight">{title}</AlertTitle>}
             {message}
             {/* <AlertDescription
               className={cn(

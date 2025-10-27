@@ -7,8 +7,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getClauseTemplates,
-  getClauseTemplate,
   createClauseTemplate,
   updateClauseTemplate,
   deleteClauseTemplate,
@@ -24,9 +22,13 @@ import {
   getTemplateCategory,
   createTemplateCategory,
   updateTemplateCategory,
-  deleteTemplateCategory,
+  deleteTemplateCategory
 } from "@/app/_actions/audit-module-actions";
-import type { ClauseTemplateInput, WorkpaperInput, TemplateCategory } from "@/lib/types/audit-types";
+import type {
+  ClauseTemplateInput,
+  WorkpaperInput,
+  TemplateCategory
+} from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
 
 // Query Keys
@@ -39,47 +41,12 @@ export const AUDIT_QUERY_KEYS = {
   AUDIT_PLANS: "auditPlans",
   WORKPAPER_TEMPLATES: "workpaperTemplates",
   TEMPLATE_CATEGORIES: "templateCategories",
-  TEMPLATE_CATEGORY: "templateCategory",
+  TEMPLATE_CATEGORY: "templateCategory"
 } as const;
 
 // ============================================================================
 // CLAUSE TEMPLATE HOOKS
 // ============================================================================
-
-/**
- * Hook to fetch all clause templates
- */
-export const useClauseTemplates = (category?: string) => {
-  return useQuery({
-    queryKey: [AUDIT_QUERY_KEYS.CLAUSE_TEMPLATES, category],
-    queryFn: async () => {
-      const response = await getClauseTemplates(category);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
-    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
-  });
-};
-
-/**
- * Hook to fetch a single clause template by ID
- */
-export const useClauseTemplate = (id: string) => {
-  return useQuery({
-    queryKey: [AUDIT_QUERY_KEYS.CLAUSE_TEMPLATE, id],
-    queryFn: async () => {
-      const response = await getClauseTemplate(id);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000
-  });
-};
 
 /**
  * Hook to create a new clause template
@@ -371,7 +338,7 @@ export const useTemplateCategories = (templateId: string) => {
       return response.data;
     },
     enabled: !!templateId,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };
 
@@ -389,7 +356,7 @@ export const useTemplateCategory = (categoryId: string) => {
       return response.data;
     },
     enabled: !!categoryId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 };
 
@@ -413,16 +380,16 @@ export const useCreateTemplateCategory = () => {
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
       toast({
         title: "Success",
-        description: "Template category created successfully",
+        description: "Template category created successfully"
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to create template category",
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
 };
 
@@ -434,7 +401,13 @@ export const useUpdateTemplateCategory = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ categoryId, data }: { categoryId: string; data: Partial<TemplateCategory> }) => {
+    mutationFn: async ({
+      categoryId,
+      data
+    }: {
+      categoryId: string;
+      data: Partial<TemplateCategory>;
+    }) => {
       const response = await updateTemplateCategory(categoryId, data);
       if (!response.success) {
         throw new Error(response.message);
@@ -443,20 +416,22 @@ export const useUpdateTemplateCategory = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.TEMPLATE_CATEGORIES] });
-      queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.TEMPLATE_CATEGORY, variables.categoryId] });
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.TEMPLATE_CATEGORY, variables.categoryId]
+      });
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
       toast({
         title: "Success",
-        description: "Template category updated successfully",
+        description: "Template category updated successfully"
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update template category",
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
 };
 
@@ -480,15 +455,15 @@ export const useDeleteTemplateCategory = () => {
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
       toast({
         title: "Success",
-        description: "Template category deleted successfully",
+        description: "Template category deleted successfully"
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to delete template category",
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
 };

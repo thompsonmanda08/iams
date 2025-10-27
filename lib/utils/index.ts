@@ -1,10 +1,42 @@
 import { Metadata } from "next";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { toast } from "sonner";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const notify = ({
+  title,
+  description,
+  action,
+  type = "default"
+}: {
+  title?: string;
+  description?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  type?: "default" | "success" | "warning" | "error";
+}) => {
+  const options = {
+    description,
+    action
+  };
+
+  switch (type) {
+    case "success":
+      return toast.success(title ?? "", options);
+    case "warning":
+      return toast.warning(title ?? "", options);
+    case "error":
+      return toast.error(title ?? "", options);
+    default:
+      return toast(title ?? "", options);
+  }
+};
 
 export function generateAvatarFallback(string: string) {
   const names = string.split(" ").filter((name: string) => name);

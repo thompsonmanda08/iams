@@ -10,20 +10,20 @@ export function getTemplateSummary(template: WorkpaperTemplateDefinition): {
   requiredCategoriesCount: number;
 } | null {
   // const template = await this.fetchTemplate(templateId);
-  if (!template) return null;
+  if (!template?.id) return null;
 
-  const mainClauses = template.categories.filter((cat) => cat.group === "main-clauses");
-  const annexA = template.categories.filter((cat) => cat.group === "annex-a-controls");
-  const required = template.categories.filter((cat) => cat.isRequired);
+  const mainClauses = template?.categories?.filter((cat) => cat.group === "main-clauses");
+  const annexA = template?.categories?.filter((cat) => cat.group === "annex-a-controls");
+  const required = template?.categories?.filter((cat) => cat.isRequired);
 
   return {
     id: template.id,
     name: template.name,
     description: template.description,
-    totalCategories: template.categories.length,
-    mainClausesCount: mainClauses.length,
-    annexAControlsCount: annexA.length,
-    requiredCategoriesCount: required.length
+    totalCategories: template.categories?.length || 0,
+    mainClausesCount: mainClauses?.length || 0,
+    annexAControlsCount: annexA?.length || 0,
+    requiredCategoriesCount: required?.length || 0
   };
 }
 

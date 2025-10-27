@@ -16,7 +16,7 @@ import {
   fetchTemplateById,
   fetchTemplateCategoriesById,
   fetchCategoryById
-} from "@/lib/templates/iso27001-template";
+} from "@/lib/templates/iso27001-2022-template";
 
 /**
  * Template Service Class
@@ -245,7 +245,8 @@ export class TemplateService {
       (templateId &&
         template &&
         (template?.name.toLowerCase().replace(" ", "-").split("-").includes("iso27001") ||
-          template?.name.toLowerCase().replace(" ", "-").startsWith("iso27001"))) ||
+          template?.name.toLowerCase().replace(" ", "-").startsWith("iso") ||
+          template?.name.toLowerCase().replace(" ", "-").startsWith("iso-27001"))) ||
       template?.name.toLowerCase().replace(" ", "-").startsWith("iso-27001")
     ) {
       return template.categories.filter((cat) => cat.group == "main-clauses").map((cat) => cat.id);

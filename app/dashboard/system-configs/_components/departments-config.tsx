@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, PropsWithChildren, useMemo } from "react";
+import { useState, useEffect, PropsWithChildren } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department } from "@/lib/types";
 import {
@@ -25,16 +24,13 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input-field";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  createNewDepartment,
   updateDepartment,
-  getDepartments,
   deleteDepartment,
   createDepartment
 } from "@/app/_actions/config-actions";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
