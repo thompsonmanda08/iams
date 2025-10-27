@@ -14,13 +14,17 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, CheckCircle2 } from "lucide-react";
+import { FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import { TemplateService } from "@/lib/services/template-service";
 import type { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import {
   useWorkpaperTemplates,
   useWorkpaperTemplatesWithCategories
 } from "@/hooks/use-audit-query-data";
+import { getTemplateSummary } from "@/lib/utils/audit-helpers";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
 
 interface TemplateSelectorSimpleProps {
   value: string;
@@ -45,28 +49,29 @@ export function TemplateSelectorSimple({
     useWorkpaperTemplatesWithCategories(selectedTemplateId);
 
   useEffect(() => {
-    const availableTemplates = TemplateService.getAvailableTemplates();
+    // const availableTemplates = TemplateService.fetchTemplates();
     // setTemplates([...availableTemplates, ...workpaperTemplates]);
     // setTemplates(availableTemplates);
     // setTemplates(workpaperTemplates);
 
     // Auto-select first template if none selected
-    if (!value && availableTemplates.length > 0) {
+    if (!value && templates.length > 0) {
       onChange(templates[0].id);
       // onChange(workpaperTemplates[0].id);
     }
-  }, [value, onChange]);
+  }, []);
 
-  // console.log(workpaperTemplates);
-  console.log("TEMPLATES", templates);
-
-  if (isLoading) {
+  if (loadingTemplates) {
     return <div className="text-muted-foreground py-8 text-center">Templates Loading...</div>;
   }
 
   if (templates.length === 0) {
     return <div className="text-muted-foreground py-8 text-center">No templates available</div>;
   }
+
+  const selectedTemplate = fullTemplateResponse?.success
+    ? (fullTemplateResponse.data?.data?.data as WorkpaperTemplateDefinition)
+    : ({} as WorkpaperTemplateDefinition);
 
   return (
     <div className="space-y-4">
@@ -77,9 +82,16 @@ export function TemplateSelectorSimple({
         </p>
       </div>
 
-      <RadioGroup value={value} onValueChange={onChange} disabled={disabled} className="grid gap-4">
+      <RadioGroup
+        value={value}
+        onValueChange={(selected) => {
+          setSelectedTemplateId(selected);
+          onChange(selected);
+        }}
+        disabled={disabled}
+        className="grid gap-4">
         {templates.map((template, index) => {
-          const summary = TemplateService.getTemplateSummary(template.id);
+          const summary = getTemplateSummary(selectedTemplate);
           const isSelected = value === template.id;
 
           return (
@@ -107,17 +119,33 @@ export function TemplateSelectorSimple({
                   </div>
                 </CardHeader>
 
-                {summary && (
+                {
                   <CardContent className="pt-0">
-                    <div className="flex flex-wrap gap-2 text-xs">
-                      <Badge variant="secondary">{summary.totalCategories} categories</Badge>
-                      <Badge variant="secondary">{summary.mainClausesCount} main clauses</Badge>
-                      <Badge variant="secondary">
-                        {summary.annexAControlsCount} control groups
-                      </Badge>
-                    </div>
+                    {loadingTemplateDetails ? (
+                      <span className="flex gap-2">
+                        <Spinner
+                          className={cn("dark:text-primary-foreground text-primary size-4")}
+                        />{" "}
+                        Loading...
+                      </span>
+                    ) : summary && selectedTemplate && selectedTemplateId ? (
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <Badge variant="secondary">{summary?.totalCategories} categories</Badge>
+                        <Badge variant="secondary">{summary?.mainClausesCount} main clauses</Badge>
+                        <Badge variant="secondary">
+                          {summary?.annexAControlsCount} control groups
+                        </Badge>
+                      </div>
+                    ) : (
+                      <Alert variant={"default"}>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          There are no details available for this template
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </CardContent>
-                )}
+                }
               </Card>
             </Label>
           );

@@ -7,19 +7,21 @@
  * @module category-selector
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-react';
-import { TemplateService, getGroupDisplayName } from '@/lib/services/template-service';
-import { useWorkpaperTemplatesWithCategories } from '@/hooks/use-audit-query-data';
-import type { TemplateCategory } from '@/lib/types/audit-types';
+import { useState, useEffect } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ChevronDown, ChevronUp, Info, Loader2 } from "lucide-react";
+import { TemplateService, getGroupDisplayName } from "@/lib/services/template-service";
+import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
+import type { TemplateCategory, WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
+import { getRecommendedCategories } from "@/lib/utils/audit-helpers";
+import { Spinner } from "../ui/spinner";
 
 interface CategorySelectorProps {
   templateId: string;
@@ -34,30 +36,32 @@ export function CategorySelector({
   selectedCategories,
   onCategoriesChange,
   disabled = false,
-  showRecommended = true,
+  showRecommended = true
 }: CategorySelectorProps) {
   const [selectAll, setSelectAll] = useState(false);
 
   // Fetch template with categories from database
-  const { data: templateResponse, isLoading, error } = useWorkpaperTemplatesWithCategories(templateId);
+  const {
+    data: templateResponse,
+    isLoading,
+    error
+  } = useWorkpaperTemplatesWithCategories(templateId);
+
+  const selectedTemplate = templateResponse?.success
+    ? (templateResponse.data?.data?.data as WorkpaperTemplateDefinition)
+    : ({} as WorkpaperTemplateDefinition);
 
   // Extract categories from response with fallback to static data
-  const categories: TemplateCategory[] = templateResponse?.success && templateResponse.data?.data?.categories
-    ? templateResponse.data.data.categories
-    : TemplateService.getTemplate(templateId)?.categories || [];
+  const categories: TemplateCategory[] = selectedTemplate.categories || [];
 
   useEffect(() => {
-    setSelectAll(
-      categories.length > 0 && selectedCategories.length === categories.length
-    );
+    setSelectAll(categories.length > 0 && selectedCategories.length === categories.length);
   }, [selectedCategories, categories]);
 
   const handleSelectAll = () => {
     if (selectAll) {
       // Deselect all except required categories
-      const requiredCategories = categories
-        .filter((cat) => cat.is_required)
-        .map((cat) => cat.id!);
+      const requiredCategories = categories.filter((cat) => cat.is_required).map((cat) => cat.id!);
       onCategoriesChange(requiredCategories);
     } else {
       // Select all categories
@@ -81,37 +85,33 @@ export function CategorySelector({
   };
 
   const handleSelectRecommended = () => {
-    const recommended = TemplateService.getRecommendedCategories(templateId);
+    const recommended = getRecommendedCategories(selectedTemplate);
     onCategoriesChange(recommended);
   };
 
-  const mainClauses = categories.filter((cat) => cat.group === 'main-clauses');
-  const annexAControls = categories.filter(
-    (cat) => cat.group === 'annex-a-controls'
-  );
+  const mainClauses = categories.filter((cat) => cat.group === "main-clauses");
+  const annexAControls = categories.filter((cat) => cat.group === "annex-a-controls");
 
   // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Loading categories...</span>
+        <Spinner className="h-6 w-6 animate-spin" />
+        <span className="text-muted-foreground ml-2">Loading categories...</span>
       </div>
     );
   }
 
   // Error state - fall back to static data
   if (error) {
-    console.warn('Failed to load categories from database, using static fallback:', error);
+    console.warn("Failed to load categories from database, using static fallback:", error);
   }
 
   if (categories.length === 0) {
     return (
       <Alert>
         <Info className="h-4 w-4" />
-        <AlertDescription>
-          No categories available for this template.
-        </AlertDescription>
+        <AlertDescription>No categories available for this template.</AlertDescription>
       </Alert>
     );
   }
@@ -121,12 +121,10 @@ export function CategorySelector({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold">
-            Select Categories for Working Papers
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Choose which categories to include in your audit plan. Working
-            papers will be automatically generated for selected categories.
+          <h3 className="text-lg font-semibold">Select Categories for Working Papers</h3>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Choose which categories to include in your audit plan. Working papers will be
+            automatically generated for selected categories.
           </p>
         </div>
         <Badge variant="secondary" className="ml-4">
@@ -135,18 +133,15 @@ export function CategorySelector({
       </div>
 
       {/* Quick Actions */}
-      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-        <div className="flex items-center space-x-2 flex-1">
+      <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-4">
+        <div className="flex flex-1 items-center space-x-2">
           <Checkbox
             id="select-all"
             checked={selectAll}
             onCheckedChange={handleSelectAll}
             disabled={disabled}
           />
-          <Label
-            htmlFor="select-all"
-            className="font-medium cursor-pointer flex-1"
-          >
+          <Label htmlFor="select-all" className="flex-1 cursor-pointer font-medium">
             Select All Categories
           </Label>
         </div>
@@ -157,8 +152,7 @@ export function CategorySelector({
             variant="outline"
             size="sm"
             onClick={handleSelectRecommended}
-            disabled={disabled}
-          >
+            disabled={disabled}>
             Select Recommended
           </Button>
         )}
@@ -169,7 +163,7 @@ export function CategorySelector({
       {/* Main Clauses */}
       {mainClauses.length > 0 && (
         <CategoryGroup
-          title={getGroupDisplayName('main-clauses')}
+          title={getGroupDisplayName("main-clauses")}
           description="Fundamental requirements of the management system"
           categories={mainClauses}
           selectedCategories={selectedCategories}
@@ -183,7 +177,7 @@ export function CategorySelector({
       {/* Annex A Controls */}
       {annexAControls.length > 0 && (
         <CategoryGroup
-          title={getGroupDisplayName('annex-a-controls')}
+          title={getGroupDisplayName("annex-a-controls")}
           description="Control categories for information security"
           categories={annexAControls}
           selectedCategories={selectedCategories}
@@ -210,24 +204,20 @@ function CategoryGroup({
   categories,
   selectedCategories,
   onCategoryToggle,
-  disabled,
+  disabled
 }: CategoryGroupProps) {
   const selectedCount = categories.filter((cat) =>
-    selectedCategories.includes(cat.id)
+    selectedCategories.includes(cat.id as string)
   ).length;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">
+          <h4 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
             {title}
           </h4>
-          {description && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {description}
-            </p>
-          )}
+          {description && <p className="text-muted-foreground mt-0.5 text-xs">{description}</p>}
         </div>
         <Badge variant="outline" className="text-xs">
           {selectedCount}/{categories.length}
@@ -239,7 +229,7 @@ function CategoryGroup({
           <CategoryItem
             key={category.id}
             category={category}
-            selected={selectedCategories.includes(category.id)}
+            selected={selectedCategories.includes(category.id as string)}
             onToggle={onCategoryToggle}
             disabled={disabled}
           />
@@ -256,22 +246,12 @@ interface CategoryItemProps {
   disabled?: boolean;
 }
 
-function CategoryItem({
-  category,
-  selected,
-  onToggle,
-  disabled,
-}: CategoryItemProps) {
+function CategoryItem({ category, selected, onToggle, disabled }: CategoryItemProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
     <div
-      className={`
-        border rounded-lg p-4 transition-colors
-        ${selected ? 'bg-primary/5 border-primary/20' : 'hover:bg-muted/50'}
-        ${category.is_required ? 'border-orange-300 dark:border-orange-700' : ''}
-      `}
-    >
+      className={`rounded-lg border p-4 transition-colors ${selected ? "bg-primary/5 border-primary/20" : "hover:bg-muted/50"} ${category.is_required ? "border-orange-300 dark:border-orange-700" : ""} `}>
       <div className="flex items-start space-x-3">
         <Checkbox
           id={category.id}
@@ -285,10 +265,9 @@ function CategoryItem({
           <div className="flex items-center justify-between gap-2">
             <Label
               htmlFor={category.id}
-              className={`font-medium cursor-pointer ${
-                category.is_required ? 'cursor-not-allowed' : ''
-              }`}
-            >
+              className={`cursor-pointer font-medium ${
+                category.is_required ? "cursor-not-allowed" : ""
+              }`}>
               {category.display_name || category.name}
             </Label>
 
@@ -303,62 +282,45 @@ function CategoryItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => setExpanded(!expanded)}
-                className="h-6 w-6 p-0"
-              >
-                {expanded ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
+                className="h-6 w-6 p-0">
+                {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
               </Button>
             </div>
           </div>
 
           {category.description && !expanded && (
-            <p className="text-sm text-muted-foreground line-clamp-1">
-              {category.description}
-            </p>
+            <p className="text-muted-foreground line-clamp-1 text-sm">{category.description}</p>
           )}
 
           {expanded && (
-            <div className="mt-3 space-y-3 text-sm border-t pt-3">
+            <div className="mt-3 space-y-3 border-t pt-3 text-sm">
               {category.description && (
                 <div>
-                  <span className="font-medium text-foreground">
-                    Description:
-                  </span>
-                  <p className="text-muted-foreground mt-1">
-                    {category.description}
-                  </p>
+                  <span className="text-foreground font-medium">Description:</span>
+                  <p className="text-muted-foreground mt-1">{category.description}</p>
                 </div>
               )}
 
               <div>
-                <span className="font-medium text-foreground">Scope:</span>
+                <span className="text-foreground font-medium">Scope:</span>
                 <p className="text-muted-foreground mt-1">{category.scope}</p>
               </div>
 
               <div>
-                <span className="font-medium text-foreground">
-                  Objectives:
-                </span>
-                <p className="text-muted-foreground mt-1">
-                  {category.objectives}
-                </p>
+                <span className="text-foreground font-medium">Objectives:</span>
+                <p className="text-muted-foreground mt-1">{category.objectives}</p>
               </div>
 
               <div>
-                <span className="font-medium text-foreground">
-                  Audit Procedure:
-                </span>
-                <pre className="text-muted-foreground mt-1 whitespace-pre-wrap font-sans">
+                <span className="text-foreground font-medium">Audit Procedure:</span>
+                <pre className="text-muted-foreground mt-1 font-sans whitespace-pre-wrap">
                   {category.audit_procedure}
                 </pre>
               </div>
 
               <div>
-                <span className="font-medium text-foreground">Clauses:</span>
-                <div className="flex flex-wrap gap-1 mt-1">
+                <span className="text-foreground font-medium">Clauses:</span>
+                <div className="mt-1 flex flex-wrap gap-1">
                   {category.clauses?.map((clause) => (
                     <Badge key={clause} variant="outline" className="text-xs">
                       {clause}
