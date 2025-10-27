@@ -44,7 +44,7 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
       <div className="space-y-2">
         <div className="relative">
           <Mail className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
