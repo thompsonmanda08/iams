@@ -126,16 +126,16 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
         getRoles({ isActive: true })
       ]);
 
-      if (branchesRes.success && branchesRes.data) {
-        setBranches(branchesRes.data);
+      if (branchesRes.success && branchesRes.data?.data) {
+        setBranches(branchesRes.data?.data);
       }
 
-      if (departmentsRes.success && departmentsRes.data) {
-        setDepartments(departmentsRes.data);
+      if (departmentsRes.success && departmentsRes.data?.data) {
+        setDepartments(departmentsRes.data?.data);
       }
 
-      if (rolesRes.success && rolesRes.data) {
-        setRoles(rolesRes.data);
+      if (rolesRes.success && rolesRes.data?.data) {
+        setRoles(rolesRes.data?.data);
       }
     } catch (error) {
       toast.error("Failed to load form data");

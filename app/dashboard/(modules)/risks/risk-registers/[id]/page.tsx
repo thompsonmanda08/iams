@@ -1,170 +1,148 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, TrendingUp, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-
-import { getRiskRegister, getRisks } from "@/app/_actions/risk-module-actions";
+import { getRisksInRegister } from "@/app/_actions/risk-module-actions";
+import { RisksPageHeader } from "../../_components/risks-page-header";
 import RisksTable from "../../_components/risks-table";
-import CreateRiskDialog from "../../_components/create-risk-dialog";
 
-type PageProps = {
-  params: {
+type ApiRisk = {
+  id: string;
+  title: string;
+  description: string;
+  category: {
     id: string;
+    name: string;
+    code: string;
   };
-  searchParams: {
-    search?: string;
-    category?: string;
-    status?: string;
-    page?: string;
+  inherent_score: number;
+  inherent_impact: number;
+  inherent_likelihood: number;
+  residual_score: number;
+  residual_impact: number;
+  residual_likelihood: number;
+  inherent_rating: string;
+  status: string;
+  risk_owner?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
   };
+  step?: number;
 };
 
-export default async function RisksPage({ params, searchParams }: PageProps) {
-  const { id } = params;
-  const search =  "";
-  const category =  "all";
-  const status = searchParams.status || "all";
-  const page =  1;
-  const limit = 10;
+type TransformedRisk = {
+  id: string;
+  riskId: string;
+  title: string;
+  description: string;
+  category: string;
+  inherentScore: number;
+  inherentImpact: number;
+  inherentLikelihood: number;
+  residualScore: number;
+  residualImpact: number;
+  residualLikelihood: number;
+  riskMagnitude: string;
+  status: string;
+  owner: string;
+  step?: number;
+};
 
-  // Fetch register and risks data server-side
-  const [registerResponse, risksResponse] = await Promise.all([
-    getRiskRegister(id),
-    getRisks({
-      page,
-      limit,
-      search,
-      category: category === "all" ? undefined : category,
-      status: status === "all" ? undefined : status,
-      sortBy: "updatedAt",
-      sortOrder: "desc"
-    })
-  ]);
-
-  if (!registerResponse.success || !registerResponse.data) {
-    notFound();
+function transformRiskData(apiRisks: ApiRisk[]): TransformedRisk[] {
+  if (!Array.isArray(apiRisks) || apiRisks.length === 0) {
+    return [];
   }
 
-  const register = registerResponse.data;
-  const risks = risksResponse.success && risksResponse.data ? risksResponse.data.data : [];
-  const meta =
-    risksResponse.success && risksResponse.data
-      ? risksResponse.data.meta
-      : {
-          total: 0,
-          page: 1,
-          limit: 10,
-          totalPages: 0
-        };
+  return apiRisks.map((risk) => {
+    const ownerName = risk.risk_owner
+      ? `${risk.risk_owner.first_name} ${risk.risk_owner.last_name}`.trim() ||
+        risk.risk_owner.email ||
+        "Unassigned"
+      : "Unassigned";
 
-  // Calculate stats
-  const stats = {
-    total: meta.total,
-    critical: risks.filter((r: any) => r.riskMagnitude === "critical").length,
-    high: risks.filter((r: any) => r.riskMagnitude === "high").length,
-    open: risks.filter((r: any) => r.status === "open").length
+    return {
+      id: risk.id,
+      riskId: `${risk.category?.code}-${risk.id.slice(0, 4).toUpperCase()}`,
+      title: risk.title || "Untitled Risk",
+      description: risk.description || "No description provided",
+      category: risk.category?.name || "Uncategorized",
+      inherentScore: risk.inherent_score || 0,
+      inherentImpact: risk.inherent_impact || 0,
+      inherentLikelihood: risk.inherent_likelihood || 0,
+      residualScore: risk.residual_score || 0,
+      residualImpact: risk.residual_impact || 0,
+      residualLikelihood: risk.residual_likelihood || 0,
+      riskMagnitude: (risk.inherent_rating || "low").toLowerCase(),
+      status: (risk.status || "draft").toLowerCase(),
+      owner: ownerName,
+      step: risk.step
+    };
+  });
+}
+
+function transformMeta(apiMeta: any) {
+  const total = apiMeta?.total || 0;
+  const page = apiMeta?.page || 1;
+  const limit = apiMeta?.limit || 10;
+  const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+
+  return {
+    total,
+    page,
+    limit,
+    totalPages
   };
+}
 
-  return (
-    <div className="bg-background min-h-screen">
-      {/* Header */}
-      <div className="bg-card border-b">
-        <div className="container mx-auto py-6">
-          <div className="mb-2">
-            <Link href="/dashboard/risks/risk-registers">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Registers
-              </Button>
-            </Link>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-foreground text-3xl font-bold">{register.name}</h1>
-              <p className="text-muted-foreground mt-1">Manage and monitor organizational risks</p>
-            </div>
-            <div className="flex gap-2">
-              <Link href={`/dashboard/risks/risk-registers/${id}/heat-map`}>
-                <Button variant="outline" size="sm">
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  Heat Map
-                </Button>
-              </Link>
-              <Link href={`/dashboard/risks/risk-registers/${id}/kri`}>
-                <Button variant="outline" size="sm">
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  KRI Dashboard
-                </Button>
-              </Link>
-              <CreateRiskDialog registerId={id} />
-            </div>
-          </div>
-        </div>
-      </div>
+export default async function RisksPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
-      {/* Stats */}
-      <div className="container mx-auto grid grid-cols-1 gap-4  py-8 md:grid-cols-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm">Total Risks</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
-            </div>
-            <div className="rounded-lg bg-blue-50 p-3">
-              <AlertTriangle className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm">Critical Risks</p>
-              <p className="text-2xl font-bold">{stats.critical}</p>
-            </div>
-            <div className="rounded-lg bg-red-50 p-3">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm">High Risks</p>
-              <p className="text-2xl font-bold">{stats.high}</p>
-            </div>
-            <div className="rounded-lg bg-orange-50 p-3">
-              <AlertTriangle className="h-6 w-6 text-orange-600" />
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm">Open Risks</p>
-              <p className="text-2xl font-bold">{stats.open}</p>
-            </div>
-            <div className="rounded-lg bg-amber-50 p-3">
-              <AlertTriangle className="h-6 w-6 text-amber-600" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Filters and Table */}
-      <div className="py-8">
-        <Suspense fallback={<div className="container mx-auto px-4">Loading...</div>}>
+  try {
+    const response = await getRisksInRegister(id);
+    if (!response?.data?.data) {
+      return (
+        <div className="space-y-6">
+          <RisksPageHeader registerId={id} registerName="Manage and monitor organizational risks" />
           <RisksTable
-            risks={risks}
-            meta={meta}
+            risks={[]}
+            meta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
             registerId={id}
-            currentSearch={search}
-            currentCategory={category}
-            currentStatus={status}
+            currentSearch=""
+            currentCategory="all"
+            currentStatus="all"
           />
-        </Suspense>
+        </div>
+      );
+    }
+
+    const transformedRisks = transformRiskData(response.data.data);
+    const transformedMeta = transformMeta(response.data);
+
+    return (
+      <div className="space-y-6">
+        <RisksPageHeader registerId={id} registerName="Manage and monitor organizational risks" />
+        <RisksTable
+          risks={transformedRisks}
+          meta={transformedMeta}
+          registerId={id}
+          currentSearch=""
+          currentCategory="all"
+          currentStatus="all"
+        />
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error("Error loading risks:", error);
+    return (
+      <div className="space-y-6">
+        <RisksPageHeader registerId={id} registerName="Manage and monitor organizational risks" />
+        <RisksTable
+          risks={[]}
+          meta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
+          registerId={id}
+          currentSearch=""
+          currentCategory="all"
+          currentStatus="all"
+        />
+      </div>
+    );
+  }
 }

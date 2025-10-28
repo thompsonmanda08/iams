@@ -30,8 +30,9 @@ import { Search, MoreVertical, Edit, Trash2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { deleteRisk } from "@/app/_actions/risk-module-actions";
-import { RiskFormDialog } from "@/components/forms/risk-form-dialog";
+import { RiskFormDialog } from "@/components/forms/risk-form-dialog"; // Keep for editing
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
+import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 
 type Risk = {
   id: string;
@@ -48,6 +49,7 @@ type Risk = {
   riskMagnitude: string;
   status: string;
   owner: string;
+  step?: number; // Add this to track which step the risk is on
 };
 
 type Meta = {
@@ -78,8 +80,11 @@ export default function RisksTable({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const [riskDialogOpen, setRiskDialogOpen] = useState(false);
+  // Separate states for create and edit dialogs
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState<Risk | undefined>();
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [riskToDelete, setRiskToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -121,7 +126,7 @@ export default function RisksTable({
 
   const handleEdit = (risk: Risk) => {
     setSelectedRisk(risk);
-    setRiskDialogOpen(true);
+    setEditDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -164,9 +169,10 @@ export default function RisksTable({
     const colors = {
       open: "bg-blue-100 text-blue-700",
       monitoring: "bg-purple-100 text-purple-700",
-      closed: "bg-gray-100 text-gray-700"
+      closed: "bg-gray-100 text-gray-700",
+      draft: "bg-slate-100 text-slate-700" // Add draft status
     };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
+    return colors[status.toLowerCase() as keyof typeof colors] || "bg-gray-100 text-gray-700";
   };
 
   const getRiskScoreColor = (score: number) => {
@@ -210,6 +216,7 @@ export default function RisksTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
               <SelectItem value="open">Open</SelectItem>
               <SelectItem value="monitoring">Monitoring</SelectItem>
               <SelectItem value="closed">Closed</SelectItem>
@@ -219,7 +226,7 @@ export default function RisksTable({
       </Card>
 
       {/* Table */}
-      <Card className="container mx-auto px-4">
+      <Card className="container mx-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -235,14 +242,14 @@ export default function RisksTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {risks.length === 0 ? (
+            {risks?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="py-12 text-center">
                   <p className="text-muted-foreground">No risks found</p>
                 </TableCell>
               </TableRow>
             ) : (
-              risks.map((risk) => (
+              risks?.map((risk) => (
                 <TableRow key={risk.id}>
                   <TableCell>
                     <span className="font-mono text-sm font-medium">{risk.riskId}</span>
@@ -339,25 +346,25 @@ export default function RisksTable({
         </Table>
 
         {/* Pagination */}
-        {risks.length > 0 && (
+        {risks?.length > 0 && (
           <div className="flex items-center justify-between border-t p-4">
             <p className="text-muted-foreground text-sm">
-              Showing {(meta.page - 1) * meta.limit + 1} to{" "}
-              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total} risks
+              Showing {(meta?.page - 1) * meta?.limit + 1} to{" "}
+              {Math.min(meta?.page * meta?.limit, meta?.total)} of {meta?.total} risks
             </p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                disabled={meta.page === 1}
-                onClick={() => handlePageChange(meta.page - 1)}>
+                disabled={meta?.page === 1}
+                onClick={() => handlePageChange(meta?.page - 1)}>
                 Previous
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={meta.page === meta.totalPages}
-                onClick={() => handlePageChange(meta.page + 1)}>
+                disabled={meta?.page === meta?.totalPages}
+                onClick={() => handlePageChange(meta?.page + 1)}>
                 Next
               </Button>
             </div>
@@ -365,9 +372,17 @@ export default function RisksTable({
         )}
       </Card>
 
+      {/* Multi-step form for creating new risks */}
+      <MultiStepRiskForm
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        registerId={registerId}
+      />
+
+      {/* Keep the old form dialog for editing existing risks */}
       <RiskFormDialog
-        open={riskDialogOpen}
-        onOpenChange={setRiskDialogOpen}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
         risk={selectedRisk}
         registerId={registerId}
       />

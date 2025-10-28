@@ -1,0 +1,326 @@
+"use client";
+
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Plus, Search, FileText, Archive, FolderOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { createKRIRegister } from "@/app/_actions/risk-module-actions";
+import { toast } from "sonner";
+
+type KRIRegister = {
+  id: string;
+  name: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type CreateRegisterForm = {
+  name: string;
+  description: string;
+};
+
+type Props = {
+  initialRegisters: KRIRegister[];
+};
+
+export default function KRIRegistersClient({ initialRegisters }: Props) {
+  const router = useRouter();
+  const [registers, setRegisters] = useState<KRIRegister[]>(initialRegisters);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<CreateRegisterForm>({
+    name: "",
+    description: ""
+  });
+  const [errors, setErrors] = useState<Partial<CreateRegisterForm>>({});
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await createKRIRegister(formData);
+
+      if (response.success && response.data) {
+        setRegisters([response.data, ...registers]);
+        setDialogOpen(false);
+        setFormData({ name: "", description: "" });
+        setErrors({});
+        toast.success(response.message || "KRI Register created successfully");
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to create register");
+      }
+    } catch (error) {
+      console.error("Failed to create register:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const filteredRegisters = registers?.filter(
+    (register) =>
+      register.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      register.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalRegisters = registers?.length;
+  const activeCount = registers?.filter((r) => r.is_active).length;
+  const inactiveCount = registers?.filter((r) => !r.is_active).length;
+
+  const handleNavigateToRegister = (registerId: string) => {
+    router.push(`/dashboard/risks/kri/${registerId}`);
+  };
+
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700";
+  };
+
+  return (
+    <div className="bg-background min-h-screen">
+      {/* Header */}
+      <div className="bg-card border-b">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">KRI Registers</h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Manage your Key Risk Indicator registers and reports
+              </p>
+            </div>
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Register
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="container mx-auto grid grid-cols-1 gap-4 px-4 pt-6 md:grid-cols-3">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Total Registers</p>
+              <p className="text-2xl font-bold text-blue-600">{totalRegisters}</p>
+            </div>
+            <div className="rounded-lg bg-blue-50 p-3">
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Active</p>
+              <p className="text-2xl font-bold text-green-600">{activeCount}</p>
+            </div>
+            <div className="rounded-lg bg-green-50 p-3">
+              <FolderOpen className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Inactive</p>
+              <p className="text-2xl font-bold text-gray-600">{inactiveCount}</p>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-3">
+              <Archive className="h-6 w-6 text-gray-600" />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="container mx-auto px-4 pt-6">
+        <Card className="p-4">
+          <div className="relative">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              placeholder="Search registers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </Card>
+      </div>
+
+      {/* Table */}
+      <div className="container mx-auto px-4 py-6">
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead>Last Updated</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRegisters?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <FolderOpen className="text-muted-foreground mx-auto h-12 w-12" />
+                      <h3 className="mt-4 text-lg font-semibold">No registers found</h3>
+                      <p className="text-muted-foreground mt-2 text-sm">
+                        {searchQuery
+                          ? "Try adjusting your search criteria"
+                          : "Get started by creating your first KRI register"}
+                      </p>
+                      {!searchQuery && (
+                        <Button className="mt-4" onClick={() => setDialogOpen(true)}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Create Register
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredRegisters?.map((register) => (
+                  <TableRow
+                    key={register.id}
+                    onClick={() => handleNavigateToRegister(register.id)}
+                    className="cursor-pointer">
+                    <TableCell>
+                      <p className="text-foreground font-medium">{register.name}</p>
+                      {register.description && (
+                        <div className="mt-1 flex items-center gap-1">
+                          <p className="line-clamp-1 text-xs text-gray-500">
+                            {register.description}
+                          </p>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-1 text-xs font-medium capitalize",
+                          getStatusColor(register.is_active)
+                        )}>
+                        {register.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">
+                        {formatDate(register.created_at)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">
+                        {formatDate(register.updated_at)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" className="cursor-pointer font-normal">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          {filteredRegisters?.length > 0 && (
+            <div className="flex items-center justify-between border-t p-4">
+              <p className="text-muted-foreground text-sm">
+                Showing {filteredRegisters?.length} of {totalRegisters} registers
+              </p>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Create Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create New KRI Register</DialogTitle>
+            <DialogDescription>
+              Create a new register to organize and track your Key Risk Indicators
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Register Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="name"
+                placeholder="e.g., Quarterly EMC Report Q1 2025"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={cn(errors.name && "border-destructive")}
+                disabled={isSubmitting}
+              />
+              {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">
+                Description <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Describe the purpose and scope of this register..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
+                className={cn(errors.description && "border-destructive")}
+                disabled={isSubmitting}
+              />
+              {errors.description && (
+                <p className="text-destructive text-sm">{errors.description}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+              disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Register"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

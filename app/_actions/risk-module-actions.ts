@@ -26,7 +26,7 @@ export type RiskRating = "LOW" | "MEDIUM" | "HIGH";
 export type RegisterStatus = "OPEN" | "CLOSED";
 export type TimelineStatus = "ON_TRACK" | "AT_RISK" | "OVERDUE";
 export type KRIStatus = "Green" | "Amber" | "Red";
-export type KRIFrequency = "Daily" | "Weekly" | "Monthly" | "Quarterly" | "Annually";
+export type KRIFrequency = "Daily" | "Weekly" | "Monthly" | "Quarterly" | "Annually" | "";
 
 // Risk Category
 export interface RiskCategory {
@@ -163,8 +163,10 @@ export interface RiskRegister {
 }
 
 export interface RiskRegisterInput {
-  description: string;
+  branch_id: string;
   name: string;
+  start_date: string;
+  due_date:string;
   is_active?:boolean;
 }
 
@@ -183,8 +185,6 @@ export interface KRIRegister {
 export interface KRIRegisterInput {
   name: string;
   description?: string;
-  start_date: Date;
-  end_date: Date;
   is_active?: boolean;
 }
 
@@ -273,31 +273,13 @@ export interface RiskMatrix {
 // MOCK DATA
 // ============================================================================
 
-const mockRiskRegisters: RiskRegister[] = [
-  {
-    id: "1",
-    name: "Q4 2024 Enterprise Risk Assessment",
-    startDate: "2024-10-01",
-    dueDate: "2024-12-31",
-    status: "Open",
-    branch: "Corporate",
-    createdAt: "2024-09-15",
-    updatedAt: "2024-10-20",
-    createdBy: "Sarah Williams"
-  },
-  {
-    id: "2",
-    name: "Q1 2025 Risk Review",
-    startDate: "2025-01-01",
-    dueDate: "2025-03-31",
-    status: "Open",
-    branch: "Operations",
-    createdAt: "2024-12-01",
-    updatedAt: "2025-01-05",
-    createdBy: "John Doe"
-  }
-];
-
+type RiskRegisterParams = {
+  branch_id?: string;
+  status?: string;
+  name?: string;
+  page?: number;
+  page_size?: number;
+};
 const mockRisks: Risk[] = [
   {
     id: "1",
@@ -374,44 +356,15 @@ export async function getRiskCategories(params?: {
   is_active?: boolean;
 }): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call when backend is ready
-    // const response = await axios.get("/api/v1/risk-categories", { params });
-    // return successResponse(response.data.data);
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const mockCategories: RiskCategory[] = [
-      {
-        id: "1",
-        name: "Technology Risk",
-        code: "TECH",
-        color: "#3B82F6",
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: "2",
-        name: "Compliance Risk",
-        code: "COMP",
-        color: "#10B981",
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: "3",
-        name: "Operational Risk",
-        code: "OPS",
-        color: "#F59E0B",
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      }
-    ];
-
-    return successResponse(mockCategories);
+    const response = await authenticatedApiClient( {
+      url: "/api/v1/risk-categories",
+      params,
+      method: "GET",
+    })
+    return successResponse(response.data?.data);
   } catch (error) {
+    console.log('ERROR:', error);
+    
     return handleError(error, "GET | GET RISK CATEGORIES", "/api/v1/risk-categories");
   }
 }
@@ -494,18 +447,23 @@ export async function getDepartmentRiskCategories(departmentId: string): Promise
 /**
  * Get all risk registers
  */
-export async function getRiskRegisters(params?: {
-  branch_id?: string;
-  status?: string;
-  name?: string;
-}): Promise<APIResponse> {
+export async function getRiskRegisters(params?: RiskRegisterParams): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.branch_id) queryParams.append("branch_id", params.branch_id);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.name) queryParams.append("name", params.name);
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
+    const url = `/api/v1/risk-registers${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     const response = await authenticatedApiClient( {
-      url: "/api/v1/kri-registers",
+      url: url,
       method: "GET",
-      params,
-    })
-    return successResponse(response.data);
+    });
+    
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET RISK REGISTERS", "/api/v1/risk-registers");
   }
@@ -517,12 +475,12 @@ export async function getRiskRegisters(params?: {
 export async function getRiskRegister(id: string): Promise<APIResponse> {
   try {
      const response = await authenticatedApiClient( {
-      url: `/api/v1/kri-registers/${id}`,
+      url: `/api/v1/risk-registers/${id}`,
       method: "GET",
     })
     return successResponse(response.data);
   } catch (error) {
-    return handleError(error, "GET | GET RISK REGISTER", `/api/v1/kri-registers/${id}`);
+    return handleError(error, "GET | GET RISK REGISTER", `/api/v1/risk-registers/${id}`);
   }
 }
 
@@ -532,7 +490,7 @@ export async function getRiskRegister(id: string): Promise<APIResponse> {
 export async function createRiskRegister(input: RiskRegisterInput): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient( {
-      url: "/api/v1/kri-registers",
+      url: "/api/v1/risk-registers",
       method: "POST",
       data: input,
     });
@@ -541,7 +499,7 @@ export async function createRiskRegister(input: RiskRegisterInput): Promise<APIR
   } catch (error) {
     console.log('ERROR', error);
     
-    return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/kri-registers");
+    return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/risk-registers");
   }
 }
 
@@ -553,11 +511,11 @@ export async function updateRiskRegister(
   input: Partial<RiskRegisterInput>
 ): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/kri-registers/${id}`, input);
+    const response = await axios.put(`/api/v1/risk-registers/${id}`, input);
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
-    return handleError(error, "PUT | UPDATE RISK REGISTER", `/api/v1/kri-registers/${id}`);
+    return handleError(error, "PUT | UPDATE RISK REGISTER", `/api/v1/risk-registers/${id}`);
   }
 }
 
@@ -612,8 +570,12 @@ export async function getBranchRiskRegisters(branchId: string): Promise<APIRespo
  */
 export async function createRiskStepOne(input: RiskInput): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/risks/step-one", input);
-    revalidatePath("/dashboard/(modules)/risks");
+     const response = await authenticatedApiClient( {
+      url: "/api/v1/risks/step-one",
+      data: input,
+      method: "POST",
+    })
+    revalidatePath("/dashboard/(modules)/risks/[id]");
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "POST | CREATE RISK STEP ONE", "/api/v1/risks/step-one");
@@ -625,8 +587,12 @@ export async function createRiskStepOne(input: RiskInput): Promise<APIResponse> 
  */
 export async function updateRiskStepTwo(id: string, input: RiskStepTwoInput): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/risks/${id}/step-two`, input);
-    revalidatePath("/dashboard/(modules)/risks");
+     const response = await authenticatedApiClient( {
+      url: `/api/v1/risks/${id}/step-two`,
+      data: input,
+      method: "PUT",
+    })
+    revalidatePath("/dashboard/(modules)/risks/[id]");
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "PUT | UPDATE RISK STEP TWO", `/api/v1/risks/${id}/step-two`);
@@ -641,8 +607,12 @@ export async function updateRiskStepThree(
   input: RiskStepThreeInput
 ): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/risks/${id}/step-three`, input);
-    revalidatePath("/dashboard/(modules)/risks");
+    const response = await authenticatedApiClient( {
+      url: `/api/v1/risks/${id}/step-three`,
+      data: input,
+      method: "PUT",
+    })
+    revalidatePath("/dashboard/(modules)/risks/[id]");
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "PUT | UPDATE RISK STEP THREE", `/api/v1/risks/${id}/step-three`);
@@ -654,7 +624,12 @@ export async function updateRiskStepThree(
  */
 export async function getRisksInRegister(registerId: string): Promise<APIResponse> {
   try {
-    const response = await axios.get(`/api/v1/risk-registers/${registerId}/risks`);
+    const response = await authenticatedApiClient( {
+      url: `/api/v1/risk-registers/${registerId}/risks`,
+      method: "GET",
+    });
+    console.log("RISK RES:", response);
+    
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(
@@ -855,7 +830,11 @@ export async function getHeatMap(): Promise<APIResponse> {
  */
 export async function getKRIRegisters(params?: { is_active?: boolean }): Promise<APIResponse> {
   try {
-    const response = await axios.get("/api/v1/kri-registers", { params });
+    const response = await authenticatedApiClient({
+      url:"/api/v1/kri-registers", 
+      params,
+      method:"GET"
+    });;
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI REGISTERS", "/api/v1/kri-registers");
@@ -867,7 +846,10 @@ export async function getKRIRegisters(params?: { is_active?: boolean }): Promise
  */
 export async function getKRIRegister(id: string): Promise<APIResponse> {
   try {
-    const response = await axios.get(`/api/v1/kri-registers/${id}`);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kri-registers/${id}`, 
+      method:"GET"
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI REGISTER", `/api/v1/kri-registers/${id}`);
@@ -879,7 +861,11 @@ export async function getKRIRegister(id: string): Promise<APIResponse> {
  */
 export async function createKRIRegister(input: KRIRegisterInput): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/kri-registers", input);
+    const response = await authenticatedApiClient({
+      url:"/api/v1/kri-registers", 
+      data:input,
+      method:"POST"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {
@@ -963,7 +949,11 @@ export async function getKRI(id: string): Promise<APIResponse> {
  */
 export async function createKRI(input: KRIInput): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/kris", input);
+    const response = await authenticatedApiClient({
+      url:"/api/v1/kris", 
+      data:input,
+      method:"POST"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {

@@ -95,8 +95,8 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
     setLoadingDepartments(true);
     try {
       const response = await getDepartments({ isActive: true });
-      if (response.success && response.data) {
-        setDepartments(response.data);
+      if (response.success && response.data?.data) {
+        setDepartments(response.data?.data);
       } else {
         toast.error("Failed to load departments");
       }
