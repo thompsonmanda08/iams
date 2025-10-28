@@ -16,7 +16,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
 
   const [branchesResponse, provincesResponse, townsResponse] = await Promise.all([
-    getBranches(),
+    getBranches({ page, page_size }),
     getProvinces(),
     getTowns({ page, page_size })
   ]);

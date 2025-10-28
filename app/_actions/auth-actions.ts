@@ -162,7 +162,7 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
 
     return successResponse(response?.data, response?.data?.message);
   } catch (error: Error | any) {
-    return handleError(error, "POST | REFRESH TOKEN", url);
+    return handleError(error, "GET | SYSTEM SETUP", url);
   }
 }
 /**
@@ -172,17 +172,15 @@ export async function getRefreshToken(): Promise<APIResponse> {
   const url = `api/v1/auth/refresh-token`;
 
   try {
-    const res = await authenticatedApiClient({ url });
+    const response = await authenticatedApiClient({ url });
 
-    const response = res.data;
-
-    const accessToken = response?.token;
+    const accessToken = response.data?.access_token;
 
     await createAuthSession(accessToken);
 
-    return successResponse({ accessToken }, res.data?.message);
+    return successResponse({ accessToken }, response.data?.message);
   } catch (error: Error | any) {
-    return handleError(error, "POST | REFRESH TOKEN", url);
+    return handleError(error, "GET | REFRESH TOKEN", url);
   }
 }
 

@@ -1,9 +1,17 @@
 import { getDepartments } from "@/app/_actions/config-actions";
 import DepartmentsConfig from "../_components/departments-config";
+import { Pagination } from "@/lib/types";
 
-export default async function DepartmentsConfigPage() {
+type PageProps = {
+  params: Promise<{ [key: string]: string }>;
+  searchParams: Promise<Pagination & { [key: string]: string }>;
+};
+export default async function DepartmentsConfigPage({ searchParams }: PageProps) {
+  const urlParams = await searchParams;
+  const page = urlParams.page ? Number(urlParams.page) : 1;
+  const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
   // Fetch all data server-side
-  const [departmentsResponse] = await Promise.all([getDepartments()]);
+  const [departmentsResponse] = await Promise.all([getDepartments({ page, page_size })]);
 
   const departments = departmentsResponse.success ? departmentsResponse.data?.data : [];
 

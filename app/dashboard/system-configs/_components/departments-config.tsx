@@ -42,6 +42,8 @@ import {
 } from "@/components/ui/empty";
 import CustomAlert from "@/components/ui/custom-alert";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SearchSelectField } from "@/components/ui/search-select-field";
+import { useDepartments } from "@/hooks/use-query-data";
 
 export default function DepartmentsConfig({
   initialDepartments
@@ -61,19 +63,6 @@ export default function DepartmentsConfig({
 
   const router = useRouter();
   const queryClient = useQueryClient();
-
-  // Fetch departments with TanStack Query
-  // const { data: departmentsResponse, isLoading } = useQuery({
-  //   queryKey: [QUERY_KEYS.DEPARTMENTS],
-  //   queryFn: () => getDepartments(),
-  //   staleTime: 5 * 60 * 1000 // 5 minutes
-  // });
-
-  // const departments: Department[] = useMemo(
-  //   () =>
-  //     departmentsResponse?.success && departmentsResponse?.data ? departmentsResponse.data : [],
-  //   [departmentsResponse]
-  // );
 
   // Delete department mutation
   const deleteMutation = useMutation({
@@ -96,6 +85,12 @@ export default function DepartmentsConfig({
     }
   });
 
+  /*************  ✨ Windsurf Command ⭐  *************/
+  /**
+   * Opens the delete department dialog for the department with the given id.
+   * @param {string} id - The id of the department to delete.
+   */
+  /*******  7df535e1-228a-4281-91c5-50dc0fe4cb5b  *******/
   const handleDeleteClick = (id: string) => {
     setDepartmentToDelete(id);
     setDeleteDialogOpen(true);
@@ -132,7 +127,9 @@ export default function DepartmentsConfig({
               <TableHead>Description</TableHead>
               <TableHead>Code</TableHead>
               {/* <TableHead>Status</TableHead> */}
-              <TableHead className="w-24">Actions</TableHead>
+              <TableHead className="w-24" align="center">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -169,6 +166,7 @@ export default function DepartmentsConfig({
               departments.map((department) => (
                 <TableRow
                   key={department.id}
+                  className="cursor-pointer"
                   onClick={() => {
                     router.push(`/dashboard/system-configs/departments/${department.id}`);
                   }}>
@@ -197,36 +195,32 @@ export default function DepartmentsConfig({
                       {department.isActive ? "Active" : "Inactive"}
                     </span>
                   </TableCell> */}
-                  <TableCell>
-                    <div className="flex gap-2">
+                  <TableCell align="center">
+                    <div className="flex gap-4">
                       <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
+                        <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
+                          <div
                             onClick={(e) => {
                               setEditingDepartment(department);
                               setOpenModal(true);
                               e.stopPropagation();
                             }}>
                             <Edit className="text-primary h-4 w-4" />
-                          </Button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent className="bg-primary">Edit Department</TooltipContent>
                       </Tooltip>
 
                       <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
+                        <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
+                          <div
                             onClick={(e) => {
                               handleDeleteClick(String(department.id));
                               e.stopPropagation();
                             }}
                             className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent
                           classNames={{
@@ -237,17 +231,15 @@ export default function DepartmentsConfig({
                         </TooltipContent>
                       </Tooltip>
                       <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
+                        <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
+                          <div
                             onClick={(e) => {
-                              handleDeleteClick(String(department.id));
+                              router.push(`/dashboard/system-configs/departments/${department.id}`);
                               e.stopPropagation();
                             }}
                             className="text-primary">
                             <ArrowRight className="h-4 w-4" />
-                          </Button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent>View Department Details</TooltipContent>
                       </Tooltip>
@@ -311,6 +303,16 @@ function CreateOrUpdateDepartment({
       description: ""
     }
   );
+
+  const { data } = useDepartments({
+    isActive: true,
+    page_size: 100,
+    page: 1
+  });
+
+  const departments = data?.data || [];
+
+  console.log("[DEPARTMENTS]", data);
 
   // Improved useEffect to handle initialData changes
   useEffect(() => {
@@ -411,6 +413,27 @@ function CreateOrUpdateDepartment({
           <DialogTitle>{initialData ? "Update Department" : "Create New Department"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleCreateOrUpdate} className="space-y-4">
+          <SearchSelectField
+            label="Parent Unit"
+            placeholder="Name of parent unit (optional)"
+            value={formData.name}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, name: e.target.value }));
+            }}
+            options={[
+              {
+                id: null,
+                name: "None",
+                ...departments.map((item) => {
+                  return {
+                    id: item?.id,
+                    name: item?.name
+                  };
+                })
+              }
+            ]}
+          />
           <Input
             label="Name"
             placeholder="Department Name"

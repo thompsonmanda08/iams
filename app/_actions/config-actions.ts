@@ -1,6 +1,6 @@
 "use server";
 
-import { APIResponse, Branch, Department } from "@/lib/types";
+import { APIResponse, Branch, Department, Pagination } from "@/lib/types";
 import authenticatedApiClient, {
   axios,
   handleBadRequest,
@@ -19,19 +19,20 @@ import { revalidatePath } from "next/cache";
  * Status: ✅ Documented in API
  * Query Parameters: province_id, town_id, is_active, limit, offset
  */
-export async function getBranches(params?: {
-  provinceId?: string;
-  townId?: string;
-  isActive?: boolean;
-  limit?: number;
-  offset?: number;
-}): Promise<APIResponse> {
+export async function getBranches(
+  params?: Pagination & {
+    provinceId?: string;
+    townId?: string;
+    isActive?: boolean;
+  }
+): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
+  queryParams.append("page_size", String(params?.page_size || 10));
+  queryParams.append("page", String(params?.page || 1));
+
   if (params?.provinceId) queryParams.append("province_id", params.provinceId);
   if (params?.townId) queryParams.append("town_id", params.townId);
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
-  if (params?.limit) queryParams.append("limit", String(params.limit));
-  if (params?.offset) queryParams.append("offset", String(params.offset));
 
   const url = `/api/v1/branches${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
@@ -191,29 +192,25 @@ export async function deleteBranch(id: string): Promise<APIResponse> {
  * Status: ✅ Documented in API
  * Query Parameters: parent_id, is_active, limit, offset
  */
-export async function getDepartments(params?: {
-  parentId?: string;
-  isActive?: boolean;
-  limit?: number;
-  offset?: number;
-}): Promise<APIResponse> {
+export async function getDepartments(
+  params?: Pagination & {
+    parentId?: string;
+    isActive?: boolean;
+  }
+): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
+  queryParams.append("page_size", String(params?.page_size || 10));
+  queryParams.append("page", String(params?.page || 1));
+
   if (params?.parentId) queryParams.append("parent_id", params.parentId);
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
-  if (params?.limit) queryParams.append("limit", String(params.limit));
-  if (params?.offset) queryParams.append("offset", String(params.offset));
 
   const url = `/api/v1/departments${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
-    const response = await authenticatedApiClient({
-      url: url,
-      method: "GET"
-    });
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data?.data, "Departments fetched successfully");
   } catch (error: Error | any) {
-    console.log("DEPT:", error);
-
     return handleError(error, "GET", url);
   }
 }
