@@ -7,9 +7,9 @@
  * @module audit-utils
  */
 
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { format, differenceInDays, isAfter, isBefore, isWithinInterval, addDays } from 'date-fns';
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { format, differenceInDays, isAfter, isBefore, isWithinInterval, addDays } from "date-fns";
 import type {
   AuditStatus,
   FindingSeverity,
@@ -20,19 +20,12 @@ import type {
   Finding,
   ConformityTrend,
   FindingsByClause,
-  ClauseInfo,
-} from '@/lib/types/audit-types';
+  ClauseInfo
+} from "@/lib/types/audit-types";
 
 // ============================================================================
 // GENERAL UTILITIES
 // ============================================================================
-
-/**
- * Merge className strings with Tailwind CSS classes
- */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 // ============================================================================
 // DATE UTILITIES
@@ -41,7 +34,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format a date to a readable string
  */
-export function formatDate(date: Date, formatStr: string = 'MMM dd, yyyy'): string {
+export function formatDate(date: Date, formatStr: string = "MMM dd, yyyy"): string {
   return format(date, formatStr);
 }
 
@@ -49,7 +42,7 @@ export function formatDate(date: Date, formatStr: string = 'MMM dd, yyyy'): stri
  * Format a date range
  */
 export function formatDateRange(start: Date, end: Date): string {
-  return `${format(start, 'MMM dd, yyyy')} - ${format(end, 'MMM dd, yyyy')}`;
+  return `${format(start, "MMM dd, yyyy")} - ${format(end, "MMM dd, yyyy")}`;
 }
 
 /**
@@ -84,10 +77,10 @@ export function isOverdue(date: Date): boolean {
  */
 export function getAuditStatusColor(status: AuditStatus): string {
   const colors: Record<AuditStatus, string> = {
-    planned: 'blue',
-    'in-progress': 'amber',
-    completed: 'emerald',
-    cancelled: 'slate',
+    planned: "blue",
+    "in-progress": "amber",
+    completed: "emerald",
+    cancelled: "slate"
   };
   return colors[status];
 }
@@ -97,10 +90,10 @@ export function getAuditStatusColor(status: AuditStatus): string {
  */
 export function getAuditStatusLabel(status: AuditStatus): string {
   const labels: Record<AuditStatus, string> = {
-    planned: 'Planned',
-    'in-progress': 'In Progress',
-    completed: 'Completed',
-    cancelled: 'Cancelled',
+    planned: "Planned",
+    "in-progress": "In Progress",
+    completed: "Completed",
+    cancelled: "Cancelled"
   };
   return labels[status];
 }
@@ -110,10 +103,10 @@ export function getAuditStatusLabel(status: AuditStatus): string {
  */
 export function getSeverityColor(severity: FindingSeverity): string {
   const colors: Record<FindingSeverity, string> = {
-    critical: 'red',
-    high: 'orange',
-    medium: 'yellow',
-    low: 'blue',
+    critical: "red",
+    high: "orange",
+    medium: "yellow",
+    low: "blue"
   };
   return colors[severity];
 }
@@ -123,10 +116,10 @@ export function getSeverityColor(severity: FindingSeverity): string {
  */
 export function getSeverityLabel(severity: FindingSeverity): string {
   const labels: Record<FindingSeverity, string> = {
-    critical: 'Critical',
-    high: 'High',
-    medium: 'Medium',
-    low: 'Low',
+    critical: "Critical",
+    high: "High",
+    medium: "Medium",
+    low: "Low"
   };
   return labels[severity];
 }
@@ -136,10 +129,10 @@ export function getSeverityLabel(severity: FindingSeverity): string {
  */
 export function getFindingStatusColor(status: FindingStatus): string {
   const colors: Record<FindingStatus, string> = {
-    open: 'red',
-    'in-progress': 'amber',
-    resolved: 'emerald',
-    closed: 'slate',
+    open: "red",
+    "in-progress": "amber",
+    resolved: "emerald",
+    closed: "slate"
   };
   return colors[status];
 }
@@ -149,10 +142,10 @@ export function getFindingStatusColor(status: FindingStatus): string {
  */
 export function getFindingStatusLabel(status: FindingStatus): string {
   const labels: Record<FindingStatus, string> = {
-    open: 'Open',
-    'in-progress': 'In Progress',
-    resolved: 'Resolved',
-    closed: 'Closed',
+    open: "Open",
+    "in-progress": "In Progress",
+    resolved: "Resolved",
+    closed: "Closed"
   };
   return labels[status];
 }
@@ -162,9 +155,9 @@ export function getFindingStatusLabel(status: FindingStatus): string {
  */
 export function getTestResultColor(result: TestResult): string {
   const colors: Record<TestResult, string> = {
-    conformity: 'emerald',
-    'partial-conformity': 'amber',
-    'non-conformity': 'red',
+    conformity: "emerald",
+    "partial-conformity": "amber",
+    "non-conformity": "red"
   };
   return colors[result];
 }
@@ -174,9 +167,9 @@ export function getTestResultColor(result: TestResult): string {
  */
 export function getTestResultLabel(result: TestResult): string {
   const labels: Record<TestResult, string> = {
-    conformity: 'Conformity',
-    'partial-conformity': 'Partial Conformity',
-    'non-conformity': 'Non-Conformity',
+    conformity: "Conformity",
+    "partial-conformity": "Partial Conformity",
+    "non-conformity": "Non-Conformity"
   };
   return labels[result];
 }
@@ -190,7 +183,7 @@ export function getTestResultLabel(result: TestResult): string {
  */
 export function calculateConformityRate(workpapers: Workpaper[]): number {
   if (workpapers.length === 0) return 0;
-  const conforming = workpapers.filter((w) => w.testResult === 'conformity').length;
+  const conforming = workpapers.filter((w) => w.testResult === "conformity").length;
   return Math.round((conforming / workpapers.length) * 100);
 }
 
@@ -209,15 +202,17 @@ export function calculateAuditProgress(workpapers: Workpaper[]): number {
 export function calculateFindingsSummary(findings: Finding[]) {
   return {
     total: findings.length,
-    critical: findings.filter((f) => f.severity === 'critical').length,
-    high: findings.filter((f) => f.severity === 'high').length,
-    medium: findings.filter((f) => f.severity === 'medium').length,
-    low: findings.filter((f) => f.severity === 'low').length,
-    open: findings.filter((f) => f.status === 'open').length,
-    inProgress: findings.filter((f) => f.status === 'in-progress').length,
-    resolved: findings.filter((f) => f.status === 'resolved').length,
-    closed: findings.filter((f) => f.status === 'closed').length,
-    overdue: findings.filter((f) => f.dueDate && isOverdue(f.dueDate) && f.status !== 'resolved' && f.status !== 'closed').length,
+    critical: findings.filter((f) => f.severity === "critical").length,
+    high: findings.filter((f) => f.severity === "high").length,
+    medium: findings.filter((f) => f.severity === "medium").length,
+    low: findings.filter((f) => f.severity === "low").length,
+    open: findings.filter((f) => f.status === "open").length,
+    inProgress: findings.filter((f) => f.status === "in-progress").length,
+    resolved: findings.filter((f) => f.status === "resolved").length,
+    closed: findings.filter((f) => f.status === "closed").length,
+    overdue: findings.filter(
+      (f) => f.dueDate && isOverdue(f.dueDate) && f.status !== "resolved" && f.status !== "closed"
+    ).length
   };
 }
 
@@ -229,7 +224,7 @@ export function calculateFindingsSummary(findings: Finding[]) {
  * Generate finding reference code
  */
 export function generateFindingReferenceCode(year: number, sequence: number): string {
-  return `FND-${year}-${String(sequence).padStart(3, '0')}`;
+  return `FND-${year}-${String(sequence).padStart(3, "0")}`;
 }
 
 /**
@@ -271,7 +266,10 @@ export function filterAuditsByDateRange(audits: AuditPlan[], dateRange: [Date, D
 /**
  * Filter findings by severity
  */
-export function filterFindingsBySeverity(findings: Finding[], severities: FindingSeverity[]): Finding[] {
+export function filterFindingsBySeverity(
+  findings: Finding[],
+  severities: FindingSeverity[]
+): Finding[] {
   if (severities.length === 0) return findings;
   return findings.filter((finding) => severities.includes(finding.severity));
 }
@@ -291,10 +289,10 @@ export function filterFindingsByStatus(findings: Finding[], statuses: FindingSta
 /**
  * Sort audits by date
  */
-export function sortAuditsByDate(audits: AuditPlan[], order: 'asc' | 'desc' = 'desc'): AuditPlan[] {
+export function sortAuditsByDate(audits: AuditPlan[], order: "asc" | "desc" = "desc"): AuditPlan[] {
   return [...audits].sort((a, b) => {
     const comparison = a.startDate.getTime() - b.startDate.getTime();
-    return order === 'asc' ? comparison : -comparison;
+    return order === "asc" ? comparison : -comparison;
   });
 }
 
@@ -306,7 +304,7 @@ export function sortFindingsBySeverity(findings: Finding[]): Finding[] {
     critical: 0,
     high: 1,
     medium: 2,
-    low: 3,
+    low: 3
   };
   return [...findings].sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 }
@@ -322,28 +320,28 @@ export function validateAuditPlan(data: Partial<AuditPlan>): { valid: boolean; e
   const errors: string[] = [];
 
   if (!data.title || data.title.trim().length === 0) {
-    errors.push('Title is required');
+    errors.push("Title is required");
   }
 
   if (!data.scope || data.scope.length === 0) {
-    errors.push('At least one scope item is required');
+    errors.push("At least one scope item is required");
   }
 
   if (!data.objectives || data.objectives.trim().length === 0) {
-    errors.push('Objectives are required');
+    errors.push("Objectives are required");
   }
 
   if (!data.teamLeader || data.teamLeader.trim().length === 0) {
-    errors.push('Team leader is required');
+    errors.push("Team leader is required");
   }
 
   if (data.startDate && data.endDate && isAfter(data.startDate, data.endDate)) {
-    errors.push('End date must be after start date');
+    errors.push("End date must be after start date");
   }
 
   return {
     valid: errors.length === 0,
-    errors,
+    errors
   };
 }
 
@@ -354,24 +352,24 @@ export function validateFinding(data: Partial<Finding>): { valid: boolean; error
   const errors: string[] = [];
 
   if (!data.description || data.description.trim().length === 0) {
-    errors.push('Description is required');
+    errors.push("Description is required");
   }
 
   if (!data.recommendation || data.recommendation.trim().length === 0) {
-    errors.push('Recommendation is required');
+    errors.push("Recommendation is required");
   }
 
   if (!data.clause) {
-    errors.push('Clause is required');
+    errors.push("Clause is required");
   }
 
   if (!data.severity) {
-    errors.push('Severity is required');
+    errors.push("Severity is required");
   }
 
   return {
     valid: errors.length === 0,
-    errors,
+    errors
   };
 }
 
@@ -382,28 +380,28 @@ export function validateWorkpaper(data: Partial<Workpaper>): { valid: boolean; e
   const errors: string[] = [];
 
   if (!data.clause) {
-    errors.push('Clause is required');
+    errors.push("Clause is required");
   }
 
   if (!data.objectives || data.objectives.trim().length === 0) {
-    errors.push('Objectives are required');
+    errors.push("Objectives are required");
   }
 
   if (!data.testProcedures || data.testProcedures.trim().length === 0) {
-    errors.push('Test procedures are required');
+    errors.push("Test procedures are required");
   }
 
   if (!data.testResults || data.testResults.trim().length === 0) {
-    errors.push('Test results are required');
+    errors.push("Test results are required");
   }
 
   if (!data.testResult) {
-    errors.push('Test result selection is required');
+    errors.push("Test result selection is required");
   }
 
   return {
     valid: errors.length === 0,
-    errors,
+    errors
   };
 }
 
@@ -419,18 +417,20 @@ export function exportToCSV(data: any[], filename: string): void {
 
   const headers = Object.keys(data[0]);
   const csvContent = [
-    headers.join(','),
+    headers.join(","),
     ...data.map((row) =>
-      headers.map((header) => {
-        const value = row[header];
-        const stringValue = value instanceof Date ? formatDate(value) : String(value);
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }).join(',')
-    ),
-  ].join('\n');
+      headers
+        .map((header) => {
+          const value = row[header];
+          const stringValue = value instanceof Date ? formatDate(value) : String(value);
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        })
+        .join(",")
+    )
+  ].join("\n");
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = filename;
   link.click();
@@ -481,15 +481,23 @@ export function searchFindings(findings: Finding[], searchText: string): Finding
  */
 export function prepareConformityTrendData(workpapers: Workpaper[]): ConformityTrend[] {
   // Group workpapers by month
-  const monthlyData = new Map<string, { conformity: number; partial: number; nonConformity: number; total: number }>();
+  const monthlyData = new Map<
+    string,
+    { conformity: number; partial: number; nonConformity: number; total: number }
+  >();
 
   workpapers.forEach((wp) => {
-    const monthKey = format(wp.createdAt, 'yyyy-MM');
-    const existing = monthlyData.get(monthKey) || { conformity: 0, partial: 0, nonConformity: 0, total: 0 };
+    const monthKey = format(wp.createdAt, "yyyy-MM");
+    const existing = monthlyData.get(monthKey) || {
+      conformity: 0,
+      partial: 0,
+      nonConformity: 0,
+      total: 0
+    };
 
-    if (wp.testResult === 'conformity') existing.conformity++;
-    else if (wp.testResult === 'partial-conformity') existing.partial++;
-    else if (wp.testResult === 'non-conformity') existing.nonConformity++;
+    if (wp.testResult === "conformity") existing.conformity++;
+    else if (wp.testResult === "partial-conformity") existing.partial++;
+    else if (wp.testResult === "non-conformity") existing.nonConformity++;
 
     existing.total++;
     monthlyData.set(monthKey, existing);
@@ -498,10 +506,10 @@ export function prepareConformityTrendData(workpapers: Workpaper[]): ConformityT
   // Convert to trend data
   return Array.from(monthlyData.entries())
     .map(([dateStr, data]) => ({
-      date: new Date(dateStr + '-01'),
+      date: new Date(dateStr + "-01"),
       conformityRate: data.total > 0 ? Math.round((data.conformity / data.total) * 100) : 0,
       partialConformityRate: data.total > 0 ? Math.round((data.partial / data.total) * 100) : 0,
-      nonConformityRate: data.total > 0 ? Math.round((data.nonConformity / data.total) * 100) : 0,
+      nonConformityRate: data.total > 0 ? Math.round((data.nonConformity / data.total) * 100) : 0
     }))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
@@ -520,7 +528,7 @@ export function prepareFindingsByClauseData(findings: Finding[]): FindingsByClau
       high: 0,
       medium: 0,
       low: 0,
-      total: 0,
+      total: 0
     };
 
     existing[finding.severity]++;
@@ -536,10 +544,10 @@ export function prepareFindingsByClauseData(findings: Finding[]): FindingsByClau
  */
 export function prepareSeverityDistribution(findings: Finding[]) {
   return {
-    critical: findings.filter((f) => f.severity === 'critical').length,
-    high: findings.filter((f) => f.severity === 'high').length,
-    medium: findings.filter((f) => f.severity === 'medium').length,
-    low: findings.filter((f) => f.severity === 'low').length,
+    critical: findings.filter((f) => f.severity === "critical").length,
+    high: findings.filter((f) => f.severity === "high").length,
+    medium: findings.filter((f) => f.severity === "medium").length,
+    low: findings.filter((f) => f.severity === "low").length
   };
 }
 
@@ -551,45 +559,65 @@ export function prepareSeverityDistribution(findings: Finding[]) {
  * ISO 27001:2022 Clauses
  */
 export const ISO_27001_CLAUSES: Record<string, ClauseInfo> = {
-  '4': { code: '4', title: 'Context of the Organization', category: 'Context' },
-  '4.1': { code: '4.1', title: 'Understanding the Organization and its Context', category: 'Context' },
-  '4.2': { code: '4.2', title: 'Understanding the Needs and Expectations of Interested Parties', category: 'Context' },
-  '4.3': { code: '4.3', title: 'Determining the Scope of the ISMS', category: 'Context' },
-  '4.4': { code: '4.4', title: 'Information Security Management System', category: 'Context' },
+  "4": { code: "4", title: "Context of the Organization", category: "Context" },
+  "4.1": {
+    code: "4.1",
+    title: "Understanding the Organization and its Context",
+    category: "Context"
+  },
+  "4.2": {
+    code: "4.2",
+    title: "Understanding the Needs and Expectations of Interested Parties",
+    category: "Context"
+  },
+  "4.3": { code: "4.3", title: "Determining the Scope of the ISMS", category: "Context" },
+  "4.4": { code: "4.4", title: "Information Security Management System", category: "Context" },
 
-  '5': { code: '5', title: 'Leadership', category: 'Leadership' },
-  '5.1': { code: '5.1', title: 'Leadership and Commitment', category: 'Leadership' },
-  '5.2': { code: '5.2', title: 'Policy', category: 'Leadership' },
-  '5.3': { code: '5.3', title: 'Organizational Roles, Responsibilities and Authorities', category: 'Leadership' },
+  "5": { code: "5", title: "Leadership", category: "Leadership" },
+  "5.1": { code: "5.1", title: "Leadership and Commitment", category: "Leadership" },
+  "5.2": { code: "5.2", title: "Policy", category: "Leadership" },
+  "5.3": {
+    code: "5.3",
+    title: "Organizational Roles, Responsibilities and Authorities",
+    category: "Leadership"
+  },
 
-  '6': { code: '6', title: 'Planning', category: 'Planning' },
-  '6.1': { code: '6.1', title: 'Actions to Address Risks and Opportunities', category: 'Planning' },
-  '6.1.1': { code: '6.1.1', title: 'General', category: 'Planning' },
-  '6.1.2': { code: '6.1.2', title: 'Information Security Risk Assessment', category: 'Planning' },
-  '6.1.3': { code: '6.1.3', title: 'Information Security Risk Treatment', category: 'Planning' },
-  '6.2': { code: '6.2', title: 'Information Security Objectives and Planning to Achieve Them', category: 'Planning' },
-  '6.3': { code: '6.3', title: 'Planning of Changes', category: 'Planning' },
+  "6": { code: "6", title: "Planning", category: "Planning" },
+  "6.1": { code: "6.1", title: "Actions to Address Risks and Opportunities", category: "Planning" },
+  "6.1.1": { code: "6.1.1", title: "General", category: "Planning" },
+  "6.1.2": { code: "6.1.2", title: "Information Security Risk Assessment", category: "Planning" },
+  "6.1.3": { code: "6.1.3", title: "Information Security Risk Treatment", category: "Planning" },
+  "6.2": {
+    code: "6.2",
+    title: "Information Security Objectives and Planning to Achieve Them",
+    category: "Planning"
+  },
+  "6.3": { code: "6.3", title: "Planning of Changes", category: "Planning" },
 
-  '7': { code: '7', title: 'Support', category: 'Support' },
-  '7.1': { code: '7.1', title: 'Resources', category: 'Support' },
-  '7.2': { code: '7.2', title: 'Competence', category: 'Support' },
-  '7.3': { code: '7.3', title: 'Awareness', category: 'Support' },
-  '7.4': { code: '7.4', title: 'Communication', category: 'Support' },
-  '7.5': { code: '7.5', title: 'Documented Information', category: 'Support' },
+  "7": { code: "7", title: "Support", category: "Support" },
+  "7.1": { code: "7.1", title: "Resources", category: "Support" },
+  "7.2": { code: "7.2", title: "Competence", category: "Support" },
+  "7.3": { code: "7.3", title: "Awareness", category: "Support" },
+  "7.4": { code: "7.4", title: "Communication", category: "Support" },
+  "7.5": { code: "7.5", title: "Documented Information", category: "Support" },
 
-  '8': { code: '8', title: 'Operation', category: 'Operation' },
-  '8.1': { code: '8.1', title: 'Operational Planning and Control', category: 'Operation' },
-  '8.2': { code: '8.2', title: 'Information Security Risk Assessment', category: 'Operation' },
-  '8.3': { code: '8.3', title: 'Information Security Risk Treatment', category: 'Operation' },
+  "8": { code: "8", title: "Operation", category: "Operation" },
+  "8.1": { code: "8.1", title: "Operational Planning and Control", category: "Operation" },
+  "8.2": { code: "8.2", title: "Information Security Risk Assessment", category: "Operation" },
+  "8.3": { code: "8.3", title: "Information Security Risk Treatment", category: "Operation" },
 
-  '9': { code: '9', title: 'Performance Evaluation', category: 'Evaluation' },
-  '9.1': { code: '9.1', title: 'Monitoring, Measurement, Analysis and Evaluation', category: 'Evaluation' },
-  '9.2': { code: '9.2', title: 'Internal Audit', category: 'Evaluation' },
-  '9.3': { code: '9.3', title: 'Management Review', category: 'Evaluation' },
+  "9": { code: "9", title: "Performance Evaluation", category: "Evaluation" },
+  "9.1": {
+    code: "9.1",
+    title: "Monitoring, Measurement, Analysis and Evaluation",
+    category: "Evaluation"
+  },
+  "9.2": { code: "9.2", title: "Internal Audit", category: "Evaluation" },
+  "9.3": { code: "9.3", title: "Management Review", category: "Evaluation" },
 
-  '10': { code: '10', title: 'Improvement', category: 'Improvement' },
-  '10.1': { code: '10.1', title: 'Continual Improvement', category: 'Improvement' },
-  '10.2': { code: '10.2', title: 'Nonconformity and Corrective Action', category: 'Improvement' },
+  "10": { code: "10", title: "Improvement", category: "Improvement" },
+  "10.1": { code: "10.1", title: "Continual Improvement", category: "Improvement" },
+  "10.2": { code: "10.2", title: "Nonconformity and Corrective Action", category: "Improvement" }
 };
 
 /**
@@ -603,7 +631,7 @@ export function getClauseTitle(code: string): string {
  * Get clause category by code
  */
 export function getClauseCategory(code: string): string {
-  return ISO_27001_CLAUSES[code]?.category || 'Unknown';
+  return ISO_27001_CLAUSES[code]?.category || "Unknown";
 }
 
 /**
@@ -642,7 +670,7 @@ export function getUpcomingAudits(audits: AuditPlan[], days: number = 30): Audit
   return audits
     .filter((audit) => {
       return (
-        audit.status === 'planned' &&
+        audit.status === "planned" &&
         isAfter(audit.startDate, today) &&
         isBefore(audit.startDate, futureDate)
       );

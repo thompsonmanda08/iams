@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { InfoIcon, ShieldIcon, Plus } from "lucide-react";
+import { InfoIcon, ShieldIcon, Plus, Edit } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
@@ -18,9 +18,33 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
-import { getRoles, getDepartmentModules } from "@/app/_actions/config-actions";
+import {
+  getRoles,
+  getDepartmentModules,
+  createRole,
+  updateRole,
+  deleteRole
+} from "@/app/_actions/config-actions";
 import { getRolePermissions, bulkUpdateRolePermissions } from "@/app/_actions/permissions-actions";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input-field";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "@/components/ui/empty";
 
 interface RolesPermissionsProps {
   departmentId?: string;
@@ -31,7 +55,8 @@ interface Role {
   name: string;
   code: string;
   department_id: string;
-  description?: string;
+  description: string;
+  is_active: boolean;
 }
 
 interface Module {
@@ -82,6 +107,8 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
     Record<string, Record<PermissionType, boolean>>
   >({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [openRoleModal, setOpenRoleModal] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
 
   // Fetch roles for this department
   const { data: rolesResponse, isLoading: rolesLoading } = useQuery({
@@ -100,12 +127,12 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
   });
 
   const roles: Role[] = useMemo(
-    () => (rolesResponse?.success && rolesResponse?.data?.data ? rolesResponse.data : []),
+    () => (rolesResponse?.success && rolesResponse?.data?.data ? rolesResponse.data.data : []),
     [rolesResponse]
   );
 
   const modules: Module[] = useMemo(
-    () => (modulesResponse?.success && modulesResponse?.data?.data ? modulesResponse.data : []),
+    () => (modulesResponse?.success && modulesResponse?.data ? modulesResponse.data.data : []),
     [modulesResponse]
   );
 
@@ -239,17 +266,39 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
 
   if (roles.length === 0) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">No roles found for this department.</p>
-            <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Create First Role
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <>
+        <div className="col-span-full rounded-lg border border-dashed">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <ShieldIcon className="h-6 w-6" />
+              </EmptyMedia>
+              <EmptyTitle>No User Roles</EmptyTitle>
+              <EmptyDescription>No roles found for this department.</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setEditingRole(null);
+                    setOpenRoleModal(true);
+                  }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create First Role
+                </Button>
+              </div>
+            </EmptyContent>
+          </Empty>
+        </div>
+        <CreateOrUpdateRoleDialog
+          openModal={openRoleModal}
+          setOpenModal={setOpenRoleModal}
+          departmentId={departmentId}
+          initialData={editingRole}
+          setInitialData={setEditingRole}
+        />
+      </>
     );
   }
 
@@ -275,7 +324,12 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
               List of all the roles and permissions in this department
             </p>
           </div>
-          <Button size="sm" disabled>
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditingRole(null);
+              setOpenRoleModal(true);
+            }}>
             <Plus className="mr-2 h-4 w-4" />
             Add New Role
           </Button>
@@ -315,10 +369,24 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
                       setSelectedRole(role.id);
                       setHasChanges(false);
                     }}
-                    className={`hover:bg-accent rounded-md border p-4 text-left transition-colors ${
+                    className={cn(
+                      "hover:bg-accent group relative rounded-md border p-4 text-left transition-colors",
                       selectedRole === role.id ? "border-primary bg-accent" : ""
-                    }`}>
-                    <div className="mb-2 flex items-center gap-2">
+                    )}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingRole(role);
+                        setOpenRoleModal(true);
+                      }}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <div
+                      className="mb-2 flex items-center gap-2"
+                      title={role.is_active ? "Active" : "Inactive"}>
                       <ShieldIcon className="h-5 w-5" />
                       <h3 className="font-medium">{role.name}</h3>
                     </div>
@@ -421,6 +489,142 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
           )}
         </div>
       </Card>
+
+      <CreateOrUpdateRoleDialog
+        openModal={openRoleModal}
+        setOpenModal={setOpenRoleModal}
+        departmentId={departmentId}
+        initialData={editingRole}
+        setInitialData={setEditingRole}
+      />
     </>
+  );
+}
+
+const ROLE_INITIAL_STATE: Omit<Role, "id" | "department_id"> = {
+  name: "",
+  code: "",
+  description: "",
+  is_active: true
+};
+
+interface CreateOrUpdateRoleDialogProps {
+  openModal: boolean;
+  setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
+  departmentId: string;
+  initialData: Role | null;
+  setInitialData: React.Dispatch<React.SetStateAction<Role | null>>;
+}
+
+function CreateOrUpdateRoleDialog({
+  openModal,
+  setOpenModal,
+  departmentId,
+  initialData,
+  setInitialData
+}: CreateOrUpdateRoleDialogProps) {
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState(initialData || ROLE_INITIAL_STATE);
+  const [error, setError] = useState<{ status: boolean; message: string }>({
+    status: false,
+    message: ""
+  });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData(ROLE_INITIAL_STATE);
+    }
+  }, [initialData, openModal]);
+
+  const saveMutation = useMutation({
+    mutationFn: (data: any) => {
+      const payload = {
+        name: data.name,
+        code: data.code,
+        description: data.description,
+        departmentId: departmentId,
+        isActive: data.is_active
+      };
+      return initialData ? updateRole({ ...payload, id: initialData.id }) : createRole(payload);
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(`Role ${initialData ? "updated" : "created"} successfully`);
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLES, departmentId] });
+        setOpenModal(false);
+      } else {
+        toast.error(response.message);
+        setError({ status: true, message: response.message });
+      }
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "An error occurred");
+      setError({ status: true, message: err.message });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveMutation.mutate(formData);
+  };
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setOpenModal(open);
+      if (!open) {
+        setInitialData(null);
+        setFormData(ROLE_INITIAL_STATE);
+        setError({ status: false, message: "" });
+      }
+    },
+    [setOpenModal, setInitialData]
+  );
+
+  return (
+    <Dialog open={openModal} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{initialData ? "Update Role" : "Create New Role"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Role Name"
+            placeholder="e.g., Auditor, Manager"
+            value={formData.name}
+            onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+            required
+          />
+          <Input
+            label="Role Code"
+            placeholder="e.g., AUD, MGR"
+            value={formData.code}
+            onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
+            required
+          />
+          <Textarea
+            label="Description"
+            placeholder="A short description of the role (optional)"
+            value={formData.description}
+            onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="submit"
+              disabled={saveMutation.isPending || !formData.name || !formData.code}
+              isLoading={saveMutation.isPending}>
+              {initialData ? "Update Role" : "Create Role"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
