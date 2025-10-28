@@ -91,7 +91,7 @@ export function MultiSelectField({
                 {option.label}
                 <button
                   type="button"
-                  className="ring-offset-background focus:ring-ring ml-1 h-5 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+                  className="ring-offset-background focus:ring-ring ml-1 h-6 cursor-pointer rounded-full outline-none focus:ring-2 focus:ring-offset-2"
                   onKeyDown={(e) => e.key === "Enter" && handleUnselect(option.value)}
                   onMouseDown={(e) => {
                     e.preventDefault();
@@ -99,7 +99,7 @@ export function MultiSelectField({
                   }}
                   onClick={() => handleUnselect(option.value)}
                   aria-label={`Remove ${option.label}`}>
-                  <X className="text-foreground/70 hover:text-secondary h-3 w-3" />
+                  <X className="h-3 w-3 text-white/70 hover:text-red-500" />
                 </button>
               </Badge>
             ))}

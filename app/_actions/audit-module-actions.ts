@@ -672,14 +672,7 @@ export async function getAuditMetrics(): Promise<APIResponse> {
     return successResponse(response.data, "Audit metrics fetched successfully");
   } catch (error: any) {
     // Providing mock data on error for development purposes
-    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-plans/metrics", {
-      totalAudits: 0,
-      activeAudits: 0,
-      openFindings: 0,
-      criticalFindings: 0,
-      upcomingAudits: 0,
-      conformityRate: 0
-    });
+    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-plans/metrics");
   }
 }
 

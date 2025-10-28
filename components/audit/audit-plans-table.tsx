@@ -144,18 +144,19 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                     {plan.title}
                   </Link>
                   <p className="text-muted-foreground line-clamp-1 text-xs">
-                    {plan.scope.join(", ")}
+                    {plan.scope ? plan.scope.join(", ") : "-"}
                   </p>
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-sm">{plan.standard}</span>
+                <span className="text-sm">{plan.standard || " - "}</span>
               </TableCell>
               <TableCell>
                 <div className="space-y-1">
                   <p className="text-sm font-medium">{plan.teamLeader}</p>
                   <p className="text-muted-foreground text-xs">
-                    {plan.teamMembers.length} member{plan.teamMembers.length !== 1 ? "s" : ""}
+                    {plan.teamMembers?.length || 0} member
+                    {plan.teamMembers?.length !== 1 ? "s" : ""}
                   </p>
                 </div>
               </TableCell>

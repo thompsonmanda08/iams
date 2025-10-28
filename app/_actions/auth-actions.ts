@@ -8,8 +8,15 @@ import authenticatedApiClient, {
   successResponse,
   unauthorizedResponse
 } from "./api-config";
-import { createAuthSession, deleteSession, verifySession } from "@/lib/session";
+import {
+  createAuthSession,
+  createUserSession,
+  deleteSession,
+  updateAuthSession,
+  verifySession
+} from "@/lib/session";
 import { revalidatePath } from "next/cache";
+import { ChangePassword } from "@/lib/types/stores";
 
 export async function loginUser({
   username,
@@ -26,7 +33,7 @@ export async function loginUser({
     // Set authentication cookie
     await createAuthSession(response.data.access_token);
     return successResponse(response?.data, "Login successful");
-  } catch (error: Error | any) {    
+  } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }
 }
@@ -65,10 +72,7 @@ export async function resetPassword({
 export async function changePassword({
   oldPassword,
   newPassword
-}: {
-  oldPassword: string;
-  newPassword: string;
-}): Promise<APIResponse> {
+}: ChangePassword): Promise<APIResponse> {
   const url = `/api/v1/auth/change-password`;
 
   try {
@@ -111,17 +115,18 @@ export async function registerUser({
 
   try {
     const response = await authenticatedApiClient({
-       url: url,
-      data:{
-      username,
-      email,
-      password,
-      first_name: first_name,
-      last_name: last_name,
-      branch_id: branch_id,
-      department_id: department_id,
-      role_id: role_id},
-      method: "POST",
+      url: url,
+      data: {
+        username,
+        email,
+        password,
+        first_name: first_name,
+        last_name: last_name,
+        branch_id: branch_id,
+        department_id: department_id,
+        role_id: role_id
+      },
+      method: "POST"
     });
     revalidatePath("/dashboard/system-configs/users");
 
@@ -131,11 +136,64 @@ export async function registerUser({
   }
 }
 
-export async function logUserOut() {
+export async function logUserOut(reason: string): Promise<boolean> {
   const isLoggedIn = await verifySession();
   if (isLoggedIn) {
-    deleteSession();
+    const res = await authenticatedApiClient({
+      url: "/api/v1/auth/logout",
+      method: "POST",
+      data: { reason }
+    });
     return true;
   }
   return false;
+}
+
+/**
+ * Create initial system setup
+ */
+export async function InitializeSystemSetup(): Promise<APIResponse> {
+  const url = `/api/v1/auth/setup`;
+
+  try {
+    const response = await authenticatedApiClient({ url });
+
+    await createUserSession(response?.data);
+
+    return successResponse(response?.data, response?.data?.message);
+  } catch (error: Error | any) {
+    return handleError(error, "POST | REFRESH TOKEN", url);
+  }
+}
+/**
+ * Refresh user Token
+ */
+export async function getRefreshToken(): Promise<APIResponse> {
+  const url = `api/v1/auth/refresh-token`;
+
+  try {
+    const res = await authenticatedApiClient({ url });
+
+    const response = res.data;
+
+    const accessToken = response?.token;
+
+    await createAuthSession(accessToken);
+
+    return successResponse({ accessToken }, res.data?.message);
+  } catch (error: Error | any) {
+    return handleError(error, "POST | REFRESH TOKEN", url);
+  }
+}
+
+export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
+  const { isAuthenticated } = await verifySession();
+
+  if (isAuthenticated) {
+    await updateAuthSession({ screenLocked: state });
+
+    return isAuthenticated;
+  }
+
+  return isAuthenticated;
 }

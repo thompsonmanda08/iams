@@ -1,17 +1,18 @@
-import { AccountOwner, LoginPayload } from './account';
+import { AccountOwner, LoginPayload } from "./account";
 
-import { ErrorState } from '.';
+import { ErrorState } from ".";
 import {
   BankAccountDetails,
   BusinessDetails,
   RequiredKYCInfo,
   Section,
-  SectionStatus,
-} from './account-verification';
+  SectionStatus
+} from "./account-verification";
 
 export type ChangePassword = {
+  oldPassword: string;
   newPassword: string;
-  confirmPassword: string;
+  confirmPassword?: string;
 };
 
 export type AuthStoreType = {
@@ -150,10 +151,7 @@ export type AccountVerificationStore = {
 
   // Actions - KYC Validation
   setRequiredKYCInfo: (info: RequiredKYCInfo) => void;
-  updateRequiredKYCField: (
-    field: keyof RequiredKYCInfo,
-    value: boolean,
-  ) => void;
+  updateRequiredKYCField: (field: keyof RequiredKYCInfo, value: boolean) => void;
 
   // Actions - Submission
   setIsSubmittingKYC: (isSubmitting: boolean) => void;

@@ -45,6 +45,12 @@ export function generateAvatarFallback(string: string) {
   return mapped.join("");
 }
 
+export function getAvatarSrc(name: string) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name
+  )}&background=1a2982&color=ffffff&size=128`;
+}
+
 export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -59,14 +65,14 @@ export function generateMeta({
   canonical: string;
 }): Metadata {
   return {
-    title: `${title} - Shadcn UI Kit`,
+    title: `${title} - INFRATEL IAMS`,
     description: description,
-    metadataBase: new URL(`https://shadcnuikit.com`),
+    metadataBase: new URL(`https://infratel.co.zm/`),
     alternates: {
       canonical: `/dashboard${canonical}`
     },
     openGraph: {
-      images: [`https://bundui-images.netlify.app/seo.jpg`]
+      images: [`https://infratel.co.zm/wp-content/uploads/2024/04/logo.png`]
     }
   };
 }

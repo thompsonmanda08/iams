@@ -1,72 +1,56 @@
 // Enhanced logout API route
 import { NextRequest, NextResponse } from "next/server";
-
-import { deleteSession } from "@/lib/session";
+import { deleteSession, verifySession } from "@/lib/session";
+import authenticatedApiClient from "@/app/_actions/api-config";
 
 /**
- * GET /api/logout - Logout endpoint for AJAX calls
+ * POST /api/logout - Logout endpoint for AJAX calls
  * Handles server-side session cleanup without redirect
  */
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     // Extract optional callback URL from query params
     const { searchParams } = new URL(request.url);
     const callbackUrl = searchParams.get("callback") || "/login";
 
-    // Delete server-side sessions (cookies)
-    const result = await deleteSession();
+    // Get the current session to extract the access token
+    const { session } = await verifySession();
 
-    if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Failed to logout properly",
-          redirect: callbackUrl
-        },
-        { status: 500 }
-      );
+    if (!session?.accessToken) {
+      // If no session exists, just return success (already logged out)
+      return NextResponse.json({
+        success: true,
+        message: "Already logged out",
+        redirect: callbackUrl
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Logout successful",
-      redirect: callbackUrl
-    });
-  } catch (error: any) {
-    console.error({
-      endpoint: "GET | LOGOUT ~ /api/logout",
-      error: error?.message || error,
-      stack: error?.stack
-    });
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: error?.message || "Logout failed",
-        redirect: "/login"
-      },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * POST /api/logout - Logout endpoint for form submissions
- * Handles server-side session cleanup without redirect
- */
-export async function POST(request: NextRequest) {
-  try {
+    // Parse request body for optional logout reason
     const body = await request.json().catch(() => ({}));
-    const callbackUrl = body?.callback || "/login";
+    const reason = body?.reason;
 
-    // Delete server-side sessions (cookies)
+    const response = await authenticatedApiClient({
+      url: "/api/v1/auth/logout",
+      method: "POST",
+      data: { reason }
+    });
+
+    // Check if backend logout succeeded (optional - proceed anyway)
+    if (!response.status || response.status !== 200) {
+      console.warn("Backend logout failed, proceeding with local session cleanup", {
+        status: response.status,
+        statusText: response.statusText
+      });
+    }
+
+    // Delete server-side session (cookies) - this is the critical part
     const result = await deleteSession();
 
     if (!result.success) {
       return NextResponse.json(
         {
           success: false,
-          message: "Failed to logout properly",
+          message: "Failed to clear session",
           redirect: callbackUrl
         },
         { status: 500 }
@@ -83,6 +67,11 @@ export async function POST(request: NextRequest) {
       endpoint: "POST | LOGOUT ~ /api/logout",
       error: error?.message || error,
       stack: error?.stack
+    });
+
+    // Even if there's an error, try to delete the session
+    await deleteSession().catch(() => {
+      console.warn("Error Occurred: Proceeding with local session cleanup");
     });
 
     return NextResponse.json(

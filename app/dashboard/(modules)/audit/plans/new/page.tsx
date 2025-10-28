@@ -45,7 +45,7 @@ export default function NewAuditPlanPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
-  const teamMembers = (teamMemberResponse.data as User[]) ?? [];
+  const teamMembers = ((teamMemberResponse?.data || []) as User[]) ?? [];
 
   // Form state
   const [formData, setFormData] = useState({
@@ -174,7 +174,7 @@ export default function NewAuditPlanPage() {
       audit_objective: formData.audit_objective,
       management_standard: formData.management_standard,
       audit_team_leader: formData.audit_team_leader,
-      audit_team_member: formData.audit_team_member.join(",") || undefined,
+      audit_team_members: formData.audit_team_member || undefined,
       client_representative: formData.client_representative || undefined,
       audit_language: formData.audit_language || undefined,
       opening_meeting_datetime: formData.opening_meeting_datetime?.toISOString() || undefined,

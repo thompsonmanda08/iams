@@ -19,6 +19,9 @@ import {
 import { BellIcon, CreditCardIcon, LogOutIcon, UserCircle2Icon } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { logUserOut } from "@/app/_actions/auth-actions";
+import { useSystemSetup } from "@/hooks/use-users-query-data";
+import { User } from "@/lib/types/account";
+import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 
 const userData = {
   name: "Toby Belhome",
@@ -29,8 +32,13 @@ const userData = {
 export function NavUser() {
   const { isMobile } = useSidebar();
 
+  const { data: setup } = useSystemSetup();
+  const user = setup?.data?.user as User;
+  const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
+  const userEmail = user?.email || "example@mail.com";
+
   const handleUserLogOut = async () => {
-    const isLoggedOut = await logUserOut();
+    const isLoggedOut = await logUserOut("User initiated logout");
     if (isLoggedOut) {
       window.location.href = "/";
       return isLoggedOut;
@@ -46,13 +54,15 @@ export function NavUser() {
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <Avatar className="rounded-full">
-                <AvatarImage src={userData.avatar} alt={userData.name} />
-                <AvatarFallback className="rounded-lg">JS</AvatarFallback>
+              <Avatar>
+                <AvatarImage src={getAvatarSrc(fullName)} alt={`${fullName} - Image`} />
+                <AvatarFallback className="rounded-lg">
+                  {generateAvatarFallback(fullName)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{userData.name}</span>
-                <span className="text-muted-foreground truncate text-xs">{userData.email}</span>
+                <span className="truncate font-medium">{fullName}</span>
+                <span className="text-muted-foreground truncate text-xs">{userEmail}</span>
               </div>
               <DotsVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -65,12 +75,12 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={userData.avatar} alt={userData.name} />
+                  <AvatarImage src={userData.avatar} alt={fullName} />
                   <AvatarFallback className="rounded-lg">TB</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{userData.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">{userData.email}</span>
+                  <span className="truncate font-medium">{fullName}</span>
+                  <span className="text-muted-foreground truncate text-xs">{userEmail}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

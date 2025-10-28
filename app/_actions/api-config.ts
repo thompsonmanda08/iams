@@ -1,3 +1,4 @@
+import { AUTH_SESSION } from "@/lib/constants";
 import { verifySession } from "@/lib/session";
 import { APIResponse } from "@/lib/types";
 import axiosClient, { AxiosRequestConfig, AxiosRequestHeaders } from "axios";
@@ -71,11 +72,16 @@ export type RequestType = AxiosRequestConfig & {
 const authenticatedApiClient = async (request: RequestType) => {
   const { session } = await verifySession();
 
+  if (!session?.accessToken) {
+    throw new Error("No valid session found");
+  }
+
   const config = {
     method: "GET",
     headers: {
       "Content-type": request.contentType ? request.contentType : "application/json",
-      Authorization: `Bearer ${session?.accessToken}`
+      Authorization: `Bearer ${session?.accessToken}`,
+      Cookie: `${AUTH_SESSION}=${session.accessToken}` // Forward the session cookie to API
     },
     withCredentials: true,
     ...request
