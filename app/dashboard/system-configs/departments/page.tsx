@@ -5,7 +5,8 @@ export default async function DepartmentsConfigPage() {
   // Fetch all data server-side
   const [departmentsResponse] = await Promise.all([getDepartments()]);
 
-  const departments = departmentsResponse.success ? departmentsResponse.data : [];
+  const departments = departmentsResponse.success ? departmentsResponse.data?.data : [];
+
   return (
     <div className="container mx-auto space-y-6 p-6">
       {/* Header */}

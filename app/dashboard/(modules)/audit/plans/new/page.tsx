@@ -28,6 +28,9 @@ import { SelectField } from "@/components/ui/select-field";
 import { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
 import { notify } from "@/lib/utils";
+import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { User } from "@/lib/types/account";
+import { MultiSelectField } from "@/components/ui/multi-select-field";
 
 const STEPS = [
   { id: 1, name: "Basic Details", icon: Calendar },
@@ -41,6 +44,9 @@ export default function NewAuditPlanPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
+  const teamMembers = (teamMemberResponse.data as User[]) ?? [];
+
   // Form state
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
@@ -53,7 +59,7 @@ export default function NewAuditPlanPage() {
     audit_objective: "",
     management_standard: "ISO IEC 27001",
     audit_team_leader: "",
-    audit_team_member: "",
+    audit_team_member: [] as string[],
     client_representative: "",
     audit_language: "English",
     start_date: null as Date | null,
@@ -159,8 +165,8 @@ export default function NewAuditPlanPage() {
       year: formData.year,
       title: formData.title,
       description: formData.description || undefined,
-      start_date: formData.start_date?.toISOString() as string,
-      end_date: formData.end_date?.toISOString() as string,
+      start_date: formData.start_date?.toISOString().split("T")[0] as string,
+      end_date: formData.end_date?.toISOString().split("T")[0] as string,
       ref_no: formData.ref_no,
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
@@ -168,7 +174,7 @@ export default function NewAuditPlanPage() {
       audit_objective: formData.audit_objective,
       management_standard: formData.management_standard,
       audit_team_leader: formData.audit_team_leader,
-      audit_team_member: formData.audit_team_member || undefined,
+      audit_team_member: formData.audit_team_member.join(",") || undefined,
       client_representative: formData.client_representative || undefined,
       audit_language: formData.audit_language || undefined,
       opening_meeting_datetime: formData.opening_meeting_datetime?.toISOString() || undefined,
@@ -442,32 +448,37 @@ export default function NewAuditPlanPage() {
                           onValueChange={(v) => {
                             setFormData({ ...formData, audit_team_leader: v });
                           }}
-                          options={[{ id: "team_leader", name: "Team Leader" }]}
+                          options={teamMembers.map((member) => ({
+                            id: member.id,
+                            name: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                          }))}
                         />
                       </div>
-                      <SelectField
-                        id="audit_team_member"
-                        label="Audit Team Member"
-                        className="w-full"
-                        required
-                        placeholder="Choose team member"
-                        value={formData.audit_team_member}
-                        onValueChange={(v) => {
-                          setFormData({ ...formData, audit_team_member: v });
-                        }}
-                        options={[{ id: "team_leader", name: "Team Member" }]}
-                      />
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="client_representative">Client Representative</Label>
                       <Input
                         id="client_representative"
+                        label="Client Representative"
                         value={formData.client_representative}
                         onChange={(e) =>
                           setFormData({ ...formData, client_representative: e.target.value })
                         }
                         placeholder="e.g., John Doe, CISO"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <MultiSelectField
+                        label="Audit Team Members"
+                        required
+                        placeholder="Choose team member"
+                        value={formData.audit_team_member}
+                        onValueChange={(values) => {
+                          setFormData({ ...formData, audit_team_member: values });
+                        }}
+                        options={teamMembers.map((member) => ({
+                          value: member.id,
+                          label: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                        }))}
                       />
                     </div>
 

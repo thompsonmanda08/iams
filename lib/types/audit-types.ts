@@ -765,28 +765,6 @@ export interface AuditAnalytics {
 // ============================================================================
 
 /**
- * Team member information
- */
-export interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  isActive: boolean;
-}
-
-/**
- * Input type for adding a team member
- */
-export interface TeamMemberInput {
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-}
-
-/**
  * Audit module settings
  */
 export interface AuditSettings {

@@ -21,7 +21,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
     getTowns({ page, page_size })
   ]);
 
-  const branches = branchesResponse.success ? branchesResponse.data?.data?.data : [];
+  const branches = branchesResponse.success ? branchesResponse.data?.data : [];
   const provinces = provincesResponse.success ? provincesResponse.data?.data?.data : [];
   const towns = townsResponse.success ? townsResponse.data?.data?.data : [];
   const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;

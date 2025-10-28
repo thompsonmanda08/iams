@@ -3,17 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
 import authenticatedApiClient, { axios, handleError, successResponse } from "./api-config";
-
-
-type UserQueryParams = {
-  branchId?: string;
-  departmentId?: string;
-  roleId?: string;
-  isActive?: boolean;
-  isLdapUser?: boolean;
-  limit?: number;
-  offset?: number;
-};
+import { User, UserQueryParams } from "@/lib/types/account";
 
 export async function getUsers(params?: UserQueryParams): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
@@ -22,9 +12,10 @@ export async function getUsers(params?: UserQueryParams): Promise<APIResponse> {
   if (params?.departmentId) queryParams.append("department_id", params.departmentId);
   if (params?.roleId) queryParams.append("role_id", params.roleId);
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
-  if (params?.isLdapUser !== undefined) queryParams.append("is_ldap_user", String(params.isLdapUser));
-  if (params?.limit) queryParams.append("limit", String(params.limit));
-  if (params?.offset) queryParams.append("offset", String(params.offset));
+  if (params?.isLdapUser !== undefined)
+    queryParams.append("is_ldap_user", String(params.isLdapUser));
+  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+  if (params?.page) queryParams.append("page", String(params.page));
 
   const url = `/api/v1/users${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
@@ -47,20 +38,7 @@ export async function getUserById(id: string): Promise<APIResponse> {
   }
 }
 
-export async function updateUser(
-  id: string,
-  data: {
-    username?: string;
-    email?: string;
-    first_name?: string;
-    last_name?: string;
-    branch_id?: string;
-    department_id?: string;
-    role_id?: string;
-    is_active?: boolean;
-    mfa_enabled?: boolean;
-  }
-): Promise<APIResponse> {
+export async function updateUser(id: string, data: Partial<User>): Promise<APIResponse> {
   const url = `/api/v1/users/${id}`;
 
   try {
@@ -90,8 +68,6 @@ export async function deleteUser(id: string): Promise<APIResponse> {
 export async function toggleUserStatus(id: string, isActive: boolean): Promise<APIResponse> {
   return updateUser(id, { is_active: isActive });
 }
-
-
 
 /**
  * Toggle user MFA

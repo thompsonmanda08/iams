@@ -23,6 +23,7 @@ import type {
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
+import { getUsers } from "./user-actions";
 
 // ============================================================================
 // AUDIT PLAN ACTIONS
@@ -48,7 +49,7 @@ export async function getAuditPlans(filters?: {
       url
     });
 
-    return successResponse(response.data, "Audit plans fetched successfully");
+    return successResponse(response.data?.data, "Audit plans fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | AUDIT PLANS", "/api/v1/audit-plans");
   }
@@ -101,12 +102,32 @@ export async function createAuditPlan(data: {
     return handleBadRequest("Year, title, start date, end date, and reference number are required");
   }
 
+  if (!data?.working_paper_template_id) {
+    return handleBadRequest("Working paper template ID is required");
+  }
+
+  if (
+    !data.audit_area ||
+    !data.audit_scope ||
+    !data.audit_criteria ||
+    !data.audit_objective ||
+    !data.audit_team_leader
+  ) {
+    return handleBadRequest("Audit area, scope, criteria, objective, and team leader are required");
+  }
+
+  if (!data.management_standard) {
+    return handleBadRequest("Management standard is required");
+  }
+
   try {
     const response = await authenticatedApiClient({
       method: "POST",
       url: "/api/v1/audit-plans",
       data
     });
+
+    console.log(response);
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath("/dashboard/home/audit");
@@ -638,6 +659,30 @@ export async function deleteFinding(id: string): Promise<APIResponse> {
 // ANALYTICS ACTIONS
 // ============================================================================
 
+/**
+ * Get audit metrics
+ */
+export async function getAuditMetrics(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: "/api/v1/audit-plans/metrics"
+    });
+
+    return successResponse(response.data, "Audit metrics fetched successfully");
+  } catch (error: any) {
+    // Providing mock data on error for development purposes
+    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-plans/metrics", {
+      totalAudits: 0,
+      activeAudits: 0,
+      openFindings: 0,
+      criticalFindings: 0,
+      upcomingAudits: 0,
+      conformityRate: 0
+    });
+  }
+}
+
 // ============================================================================
 // REPORT ACTIONS
 // ============================================================================
@@ -746,82 +791,6 @@ export async function updateAuditSettings(data: SettingsInput): Promise<APIRespo
     return successResponse(null, "Settings updated successfully");
   } catch (error: any) {
     return handleError(error, "PUT | UPDATE AUDIT SETTINGS", "/api/audits/settings");
-  }
-}
-
-/**
- * Get team members
- */
-export async function getTeamMembers(): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const members: TeamMember[] = [
-      {
-        id: "1",
-        name: "John Doe",
-        email: "john.doe@company.com",
-        role: "Lead Auditor",
-        department: "Compliance",
-        isActive: true
-      },
-      {
-        id: "2",
-        name: "Jane Smith",
-        email: "jane.smith@company.com",
-        role: "Auditor",
-        department: "IT Security",
-        isActive: true
-      },
-      {
-        id: "3",
-        name: "Mike Johnson",
-        email: "mike.johnson@company.com",
-        role: "Auditor",
-        department: "Risk Management",
-        isActive: true
-      }
-    ];
-
-    return successResponse(members, "Team members fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | TEAM MEMBERS", "/api/audits/settings/team");
-  }
-}
-
-/**
- * Add team member
- */
-export async function addTeamMember(data: TeamMemberInput): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    const newMember: TeamMember = {
-      id: String(Date.now()),
-      ...data,
-      isActive: true
-    };
-
-    revalidatePath("/dashboard/audit/settings");
-
-    return successResponse(newMember, "Team member added successfully");
-  } catch (error: any) {
-    return handleError(error, "POST | ADD TEAM MEMBER", "/api/audits/settings/team");
-  }
-}
-
-/**
- * Remove team member
- */
-export async function removeTeamMember(id: string): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    revalidatePath("/dashboard/audit/settings");
-
-    return successResponse(null, "Team member removed successfully");
-  } catch (error: any) {
-    return handleError(error, "DELETE | REMOVE TEAM MEMBER", `/api/audits/settings/team/${id}`);
   }
 }
 

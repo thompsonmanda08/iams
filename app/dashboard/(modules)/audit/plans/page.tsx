@@ -10,14 +10,14 @@ export default async function AuditPlansPage() {
   const plans = plansResponse.success ? plansResponse.data : [];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="border-b bg-card">
+      <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Audit Plans</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Manage and track all audit plans and schedules
               </p>
             </div>
@@ -43,7 +43,7 @@ export default async function AuditPlansPage() {
           {/* Results Summary */}
           {plans && plans.length > 0 && (
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Showing {plans.length} audit plan{plans.length !== 1 ? "s" : ""}
               </p>
             </div>
@@ -63,7 +63,7 @@ function TableLoading() {
   return (
     <div className="space-y-3">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+        <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
       ))}
     </div>
   );

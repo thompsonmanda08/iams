@@ -64,7 +64,17 @@ export type User = {
 };
 
 export type AccountOwner = User & {
-  role: 'owner';
+  role: "owner";
   password: string;
   changePassword: string;
+};
+
+export type UserQueryParams = {
+  branchId?: string;
+  departmentId?: string;
+  roleId?: string;
+  isActive?: boolean;
+  isLdapUser?: boolean;
+  page_size?: number;
+  page?: number;
 };

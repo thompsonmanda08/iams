@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "next-themes";
 import GoogleAnalyticsInit from "@/lib/ga";
-import { fontVariables } from "@/lib/fonts";
 import NextTopLoader from "nextjs-toploader";
 
 import "./globals.css";
@@ -13,6 +12,61 @@ import { DEFAULT_THEME } from "@/lib/themes";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
 import { Metadata } from "next";
+import localFont from "next/font/local";
+
+const inter = localFont({
+  src: [
+    {
+      path: "fonts/inter/100.ttf",
+      weight: "100",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/200.ttf",
+      weight: "200",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/300.ttf",
+      weight: "300",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/400.ttf",
+      weight: "400",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/500.ttf",
+      weight: "500",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/600.ttf",
+      weight: "600",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/700.ttf",
+      weight: "700",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/800.ttf",
+      weight: "800",
+      style: "normal"
+    },
+    {
+      path: "fonts/inter/900.ttf",
+      weight: "900",
+      style: "normal"
+    }
+  ],
+  variable: "--font-inter",
+  display: "swap",
+  preload: true,
+  fallback: ["inter", "system-ui", "arial"]
+});
 
 export const metadata: Metadata = {
   title: "Infratel IAMS",
@@ -43,7 +97,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={cn("bg-background group/layout font-sans", fontVariables)}
+        className={cn("bg-background group/layout font-inter", inter.variable)}
         {...bodyAttributes}>
         <ThemeProvider
           attribute="class"

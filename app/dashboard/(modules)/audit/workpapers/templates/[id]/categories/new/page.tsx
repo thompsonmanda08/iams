@@ -381,7 +381,6 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
                   <div className="flex items-center space-x-2 self-end">
                     <Checkbox
                       id="is_required"
-                      required
                       checked={formData?.is_required}
                       title="Define whether this category is a required audit category"
                       onCheckedChange={(checked) =>

@@ -26,6 +26,8 @@ import type {
   TemplateCategory
 } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
+import { getUsers } from "@/app/_actions/user-actions";
+import { User, UserQueryParams } from "@/lib/types/account";
 
 // Query Keys
 export const AUDIT_QUERY_KEYS = {
@@ -147,6 +149,23 @@ export const useUpdateWorkpaper = () => {
 // ============================================================================
 // OTHER HOOKS
 // ============================================================================
+
+/**
+ * Hook to fetch team members
+ */
+export const useTeamMembers = (params: UserQueryParams | undefined) => {
+  return useQuery({
+    queryKey: [AUDIT_QUERY_KEYS.TEAM_MEMBERS, params],
+    queryFn: async () => {
+      const response = await getUsers(params);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000 // Cache for 10 minutes
+  });
+};
 
 /**
  * Hook to fetch audit plans
