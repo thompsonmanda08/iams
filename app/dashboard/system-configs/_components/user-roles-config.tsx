@@ -1,9 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { InfoIcon, ShieldIcon, Plus } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
@@ -19,11 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import { getRoles, getDepartmentModules } from "@/app/_actions/config-actions";
-import {
-  getRolePermissions,
-  grantOrUpdateRolePermission,
-  bulkUpdateRolePermissions
-} from "@/app/_actions/permissions-actions";
+import { getRolePermissions, bulkUpdateRolePermissions } from "@/app/_actions/permissions-actions";
 import { toast } from "sonner";
 
 interface RolesPermissionsProps {
@@ -78,7 +74,8 @@ const PERMISSION_LABELS: Record<PermissionType, string> = {
   can_configure: "Configure"
 };
 
-export default function RolesPermissions({ departmentId }: RolesPermissionsProps) {
+export default function UserRolesConfig({ departmentId }: { departmentId: string }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [permissionsMatrix, setPermissionsMatrix] = useState<
@@ -103,12 +100,12 @@ export default function RolesPermissions({ departmentId }: RolesPermissionsProps
   });
 
   const roles: Role[] = useMemo(
-    () => (rolesResponse?.success && rolesResponse?.data ? rolesResponse.data : []),
+    () => (rolesResponse?.success && rolesResponse?.data?.data ? rolesResponse.data : []),
     [rolesResponse]
   );
 
   const modules: Module[] = useMemo(
-    () => (modulesResponse?.success && modulesResponse?.data ? modulesResponse.data : []),
+    () => (modulesResponse?.success && modulesResponse?.data?.data ? modulesResponse.data : []),
     [modulesResponse]
   );
 
@@ -269,139 +266,161 @@ export default function RolesPermissions({ departmentId }: RolesPermissionsProps
   }
 
   return (
-    <div className="space-y-6">
-      {isSaving && (
-        <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-3">
-          <Spinner className="h-4 w-4 text-blue-600" />
-          <span className="text-sm text-blue-600">Saving permissions...</span>
-        </div>
-      )}
-
-      {/* Roles Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Roles in This Department</CardTitle>
-          <CardDescription>
-            Select a role to configure its permissions for assigned modules
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {roles.map((role) => (
-              <button
-                key={role.id}
-                onClick={() => {
-                  if (hasChanges) {
-                    if (
-                      !confirm("You have unsaved changes. Are you sure you want to switch roles?")
-                    ) {
-                      return;
-                    }
-                  }
-                  setSelectedRole(role.id);
-                  setHasChanges(false);
-                }}
-                className={`hover:bg-accent rounded-md border p-4 text-left transition-colors ${
-                  selectedRole === role.id ? "border-primary bg-accent" : ""
-                }`}>
-                <div className="mb-2 flex items-center gap-2">
-                  <ShieldIcon className="h-5 w-5" />
-                  <h3 className="font-medium">{role.name}</h3>
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  {role.description || `Code: ${role.code}`}
-                </p>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Permissions Matrix */}
-      {selectedRole && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Permissions for {roles.find((r) => r.id === selectedRole)?.name}</CardTitle>
-            <CardDescription>
-              Configure which modules and actions this role can access
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {permissionsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Spinner className="h-6 w-6" />
-                <span className="text-muted-foreground ml-2">Loading permissions...</span>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Module</TableHead>
-                      {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
-                        <TableHead key={key} className="text-center">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <div className="flex items-center justify-center gap-1">
-                                  {label}
-                                  <InfoIcon className="text-muted-foreground h-3 w-3" />
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{key}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {modules.map((module) => (
-                      <TableRow key={module.id}>
-                        <TableCell className="font-medium">{module.name}</TableCell>
-                        {Object.keys(PERMISSION_LABELS).map((permType) => (
-                          <TableCell key={permType} className="text-center">
-                            <Switch
-                              checked={
-                                permissionsMatrix[module.id]?.[permType as PermissionType] || false
-                              }
-                              onCheckedChange={() =>
-                                togglePermission(module.id, permType as PermissionType)
-                              }
-                              disabled={isSaving}
-                            />
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Save Button */}
-      {selectedRole && (
-        <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-4">
-          <div>
-            <p className="text-sm font-medium text-amber-900">
-              {hasChanges ? "You have unsaved changes" : "All changes saved"}
-            </p>
+    <>
+      <Card className="p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold">Roles & Permissions</h3>
             <p className="text-muted-foreground text-sm">
-              {hasChanges
-                ? "Click 'Save Permissions' to apply your changes"
-                : "Permissions are up to date"}
+              List of all the roles and permissions in this department
             </p>
           </div>
-          <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm">
-            {isSaving ? "Saving..." : "Save Permissions"}
+          <Button size="sm" disabled>
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Role
           </Button>
         </div>
-      )}
-    </div>
+
+        <div className="space-y-6">
+          {isSaving && (
+            <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-3">
+              <Spinner className="h-4 w-4 text-blue-600" />
+              <span className="text-sm text-blue-600">Saving permissions...</span>
+            </div>
+          )}
+
+          {/* Roles Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Roles in This Department</CardTitle>
+              <CardDescription>
+                Select a role to configure its permissions for assigned modules
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {roles.map((role) => (
+                  <button
+                    key={role.id}
+                    onClick={() => {
+                      if (hasChanges) {
+                        if (
+                          !confirm(
+                            "You have unsaved changes. Are you sure you want to switch roles?"
+                          )
+                        ) {
+                          return;
+                        }
+                      }
+                      setSelectedRole(role.id);
+                      setHasChanges(false);
+                    }}
+                    className={`hover:bg-accent rounded-md border p-4 text-left transition-colors ${
+                      selectedRole === role.id ? "border-primary bg-accent" : ""
+                    }`}>
+                    <div className="mb-2 flex items-center gap-2">
+                      <ShieldIcon className="h-5 w-5" />
+                      <h3 className="font-medium">{role.name}</h3>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      {role.description || `Code: ${role.code}`}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Permissions Matrix */}
+          {selectedRole && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Permissions for {roles.find((r) => r.id === selectedRole)?.name}
+                </CardTitle>
+                <CardDescription>
+                  Configure which modules and actions this role can access
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {permissionsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Spinner className="h-6 w-6" />
+                    <span className="text-muted-foreground ml-2">Loading permissions...</span>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Module</TableHead>
+                          {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
+                            <TableHead key={key} className="text-center">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <div className="flex items-center justify-center gap-1">
+                                      {label}
+                                      <InfoIcon className="text-muted-foreground h-3 w-3" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{key}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {modules.map((module) => (
+                          <TableRow key={module.id}>
+                            <TableCell className="font-medium">{module.name}</TableCell>
+                            {Object.keys(PERMISSION_LABELS).map((permType) => (
+                              <TableCell key={permType} className="text-center">
+                                <Switch
+                                  checked={
+                                    permissionsMatrix[module.id]?.[permType as PermissionType] ||
+                                    false
+                                  }
+                                  onCheckedChange={() =>
+                                    togglePermission(module.id, permType as PermissionType)
+                                  }
+                                  disabled={isSaving}
+                                />
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Save Button */}
+          {selectedRole && (
+            <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-4">
+              <div>
+                <p className="text-sm font-medium text-amber-900">
+                  {hasChanges ? "You have unsaved changes" : "All changes saved"}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {hasChanges
+                    ? "Click 'Save Permissions' to apply your changes"
+                    : "Permissions are up to date"}
+                </p>
+              </div>
+              <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm">
+                {isSaving ? "Saving..." : "Save Permissions"}
+              </Button>
+            </div>
+          )}
+        </div>
+      </Card>
+    </>
   );
 }

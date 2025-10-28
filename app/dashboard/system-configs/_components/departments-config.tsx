@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, PropsWithChildren } from "react";
+import { useState, useEffect, PropsWithChildren, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +44,9 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function DepartmentsConfig({
   initialDepartments
@@ -256,6 +259,7 @@ export default function DepartmentsConfig({
         openModal={openModal}
         setOpenModal={setOpenModal}
         initialData={editingDepartment}
+        departmentId={editingDepartment?.id}
         setInitialData={setEditingDepartment}
       />
 
@@ -277,15 +281,26 @@ type ErrorState = {
   onParentId?: boolean;
 };
 
-function CreateOrUpdateDepartment({
+const INIT_DEPARTMENT: Department = {
+  id: undefined,
+  name: "",
+  code: "",
+  description: "",
+  parent_id: null,
+  is_active: true
+};
+
+export function CreateOrUpdateDepartment({
   showTrigger,
   openModal,
   setOpenModal,
   initialData = null,
+  departmentId,
   setInitialData
-}: PropsWithChildren & {
+}: {
   showTrigger?: boolean;
   openModal?: boolean;
+  departmentId?: string;
   initialData?: Department | null;
   setInitialData?: React.Dispatch<React.SetStateAction<Department | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -295,14 +310,21 @@ function CreateOrUpdateDepartment({
     status: false,
     message: ""
   });
-  const [formData, setFormData] = useState<Department>(
-    initialData ?? {
-      id: undefined,
-      name: "",
-      code: "",
-      description: ""
+
+  // Initialize with initialData if provided, otherwise use INIT_DEPARTMENT
+  const [formData, setFormData] = useState<Department>(() => {
+    if (initialData && departmentId) {
+      return {
+        id: initialData.id,
+        name: initialData.name || "",
+        code: initialData.code || "",
+        description: initialData.description || "",
+        parent_id: initialData.parent_id || undefined,
+        is_active: initialData.is_active || true
+      } as Department;
     }
-  );
+    return INIT_DEPARTMENT;
+  });
 
   const { data } = useDepartments({
     isActive: true,
@@ -310,59 +332,49 @@ function CreateOrUpdateDepartment({
     page: 1
   });
 
-  const departments = data?.data || [];
+  const departments = (data?.data?.data || []) as Department[];
 
-  console.log("[DEPARTMENTS]", data);
-
-  // Improved useEffect to handle initialData changes
+  // Update form when initialData changes
   useEffect(() => {
+    console.log("🔄 Effect triggered:", { initialData, departmentId, openModal });
+
     if (openModal) {
-      if (initialData) {
-        // Update form when editing existing department
+      if (initialData && departmentId) {
         setFormData({
           id: initialData.id,
           name: initialData.name || "",
           code: initialData.code || "",
-          description: initialData.description || ""
+          description: initialData.description || "",
+          parent_id: initialData.parent_id || null,
+          is_active: initialData.is_active || true
         });
-      } else {
-        // Reset form when creating new department
-        setFormData({
-          id: undefined,
-          name: "",
-          code: "",
-          description: ""
-        });
+      } else if (!initialData) {
+        // Only reset if no initialData (create mode)
+        setFormData(INIT_DEPARTMENT);
       }
-      // Reset error state when modal opens
       setError({ status: false, message: "" });
     }
-  }, [openModal, initialData]); // Added openModal as dependency
+  }, [initialData, departmentId]);
 
-  // Reset form when modal closes
+  // Reset form when modal closes (only for client-side modal usage)
   useEffect(() => {
-    if (!openModal) {
-      // Small delay to allow animation to complete
+    if (!openModal && setOpenModal) {
+      // Only run cleanup if we have modal control (client-side)
       const timer = setTimeout(() => {
-        setFormData({
-          id: undefined,
-          name: "",
-          code: "",
-          description: ""
-        });
+        setFormData(INIT_DEPARTMENT);
         setError({ status: false, message: "" });
         setInitialData?.(null);
-      }, 300);
+      }, 200);
 
       return () => clearTimeout(timer);
     }
-  }, [openModal, setInitialData]);
+  }, [openModal, setOpenModal, setInitialData]);
 
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: (data: Department) => {
-      return initialData
-        ? updateDepartment({ ...data, id: String(initialData.id) })
+      return initialData && departmentId
+        ? updateDepartment({ ...data, id: String(departmentId) })
         : createDepartment(data);
     },
     onSuccess: (response) => {
@@ -371,7 +383,7 @@ function CreateOrUpdateDepartment({
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         setOpenModal?.(false);
         setInitialData?.(null);
-        setFormData({ id: undefined, name: "", code: "", description: "" });
+        setFormData(INIT_DEPARTMENT);
         setError({ status: false, message: "" });
       } else {
         toast.error(response.message);
@@ -390,12 +402,20 @@ function CreateOrUpdateDepartment({
     saveMutation.mutate(formData);
   }
 
+  const departmentOptions = useMemo(() => {
+    return departments
+      .filter((dept) => dept.id !== departmentId) // Prevent self-parenting
+      .map((item) => ({
+        id: item?.id as string,
+        name: item?.name
+      }));
+  }, [departments, departmentId]);
+
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       {showTrigger && (
         <DialogTrigger asChild>
           <Button size="sm">
-            {" "}
             {initialData ? (
               <>
                 <PencilLine className="mr-2 h-4 w-4" /> Update Department
@@ -412,27 +432,16 @@ function CreateOrUpdateDepartment({
         <DialogHeader>
           <DialogTitle>{initialData ? "Update Department" : "Create New Department"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleCreateOrUpdate} className="space-y-4">
+        <form onSubmit={handleCreateOrUpdate} className="space-y-3">
           <SearchSelectField
             label="Parent Unit"
-            placeholder="Name of parent unit (optional)"
-            value={formData.name}
-            onChange={(e) => {
+            placeholder="Select parent unit (optional)"
+            value={formData.parent_id || ""}
+            onValueChange={(value) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, name: e.target.value }));
+              setFormData((c) => ({ ...c, parent_id: value || null }));
             }}
-            options={[
-              {
-                id: null,
-                name: "None",
-                ...departments.map((item) => {
-                  return {
-                    id: item?.id,
-                    name: item?.name
-                  };
-                })
-              }
-            ]}
+            options={departmentOptions}
           />
           <Input
             label="Name"
@@ -443,17 +452,32 @@ function CreateOrUpdateDepartment({
               setFormData((c) => ({ ...c, name: e.target.value }));
             }}
             required
-            // descriptionText="A unique code will be automatically generated from the name"
+            descriptionText="A unique code will be automatically generated from the name"
           />
-          <Input
+          <Textarea
             label="Description"
             placeholder="Department description (optional)"
-            value={formData.description}
+            value={formData.description || ""}
             onChange={(e) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, description: e.target.value }));
             }}
           />
+          <div className="flex items-center space-x-2 self-end pl-2">
+            <Checkbox
+              id="is_active"
+              checked={formData?.is_active}
+              title="Define whether this department is currently active"
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({ ...prev, is_active: checked }) as any)
+              }
+            />
+            <Label
+              htmlFor="is_active"
+              className="text-foreground cursor-pointer text-sm font-medium text-nowrap">
+              Is Active Department
+            </Label>
+          </div>
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
 
           <div className="flex justify-end gap-3 pt-2">
@@ -461,20 +485,22 @@ function CreateOrUpdateDepartment({
               <Button
                 type="button"
                 size="sm"
-                variant="destructive"
-                onClick={() => setOpenModal?.(false)}
-                className="">
+                variant="outline"
+                onClick={() => {
+                  setOpenModal?.(false);
+                  setFormData(INIT_DEPARTMENT);
+                  setError({ status: false, message: "" });
+                }}>
                 Cancel
               </Button>
             </DialogClose>
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name}
+              disabled={saveMutation.isPending || !formData.name.trim()}
               isLoading={saveMutation.isPending}
-              loadingText="Saving..."
-              className="">
-              Save
+              loadingText="Saving...">
+              {initialData ? "Update" : "Create"}
             </Button>
           </div>
         </form>

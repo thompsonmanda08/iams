@@ -20,11 +20,7 @@ import {
   updateTemplateCategory,
   deleteTemplateCategory
 } from "@/app/_actions/audit-module-actions";
-import type {
-  ClauseTemplateInput,
-  WorkpaperInput,
-  TemplateCategory
-} from "@/lib/types/audit-types";
+import type { WorkpaperInput, TemplateCategory } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
 
 // Query Keys

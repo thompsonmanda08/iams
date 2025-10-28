@@ -61,6 +61,10 @@ export type Department = {
   name: string;
   code: string;
   description: string;
+  parent_id: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
   [key: string]: any;
 };
 
