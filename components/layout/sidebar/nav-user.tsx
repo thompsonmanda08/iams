@@ -62,7 +62,7 @@ export function NavUser() {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{fullName}</span>
-                <span className="text-muted-foreground truncate text-xs">{userEmail}</span>
+                <span className="text-muted-foreground truncate text-xs">{user?.role?.name}</span>
               </div>
               <DotsVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -75,8 +75,10 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={userData.avatar} alt={fullName} />
-                  <AvatarFallback className="rounded-lg">TB</AvatarFallback>
+                  <AvatarImage src={getAvatarSrc(fullName)} alt={`${fullName} - Image`} />
+                  <AvatarFallback className="rounded-lg">
+                    {generateAvatarFallback(fullName)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{fullName}</span>

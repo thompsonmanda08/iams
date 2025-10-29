@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
 import { Metadata } from "next";
 import localFont from "next/font/local";
+import { verifySession } from "@/lib/session";
 
 const inter = localFont({
   src: [
@@ -93,6 +94,8 @@ export default async function RootLayout({
       .map(([key, value]) => [`data-theme-${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`, value])
   );
 
+  const { session } = await verifySession();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -106,7 +109,7 @@ export default async function RootLayout({
           disableTransitionOnChange>
           <ActiveThemeProvider initialTheme={themeSettings}>
             {/* REST OF THE CLIENT SIDE PROVIDERS */}
-            <Providers>{children}</Providers>
+            <Providers session={session}>{children}</Providers>
             <Toaster position="top-center" richColors />
             <NextTopLoader color="var(--primary)" showSpinner={false} height={2} shadow-sm="none" />
             {process.env.NODE_ENV === "production" ? <GoogleAnalyticsInit /> : null}

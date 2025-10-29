@@ -157,10 +157,12 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url });
+    const session = response?.data;
+    const user = session?.user;
 
     await createUserSession(response?.data);
 
-    return successResponse(response?.data, response?.data?.message);
+    return successResponse({ user }, response?.data?.message);
   } catch (error: Error | any) {
     return handleError(error, "GET | SYSTEM SETUP", url);
   }

@@ -33,6 +33,7 @@ export const useRefreshToken = (enabled: boolean) =>
     queryFn: getRefreshToken,
     retry: 3,
     retryDelay: 3000,
+    refetchOnMount: false,
     refetchInterval: 1000 * 60 * 3, // 3minutes
     staleTime: 60 * 1000 * 3,
     enabled

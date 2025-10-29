@@ -8,11 +8,20 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Eye, Edit, Trash2, AlertCircle, Loader2, FileText, Plus } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  AlertCircle,
+  Loader2,
+  FileText,
+  Plus
+} from "lucide-react";
 import type { Workpaper } from "@/lib/types/audit-types";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -21,7 +30,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -31,7 +40,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { deleteWorkpaper } from "@/app/_actions/audit-module-actions";
@@ -46,16 +55,16 @@ interface WorkpapersTableProps {
 const testResultConfig = {
   conformity: {
     label: "Conformity",
-    className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
+    className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
   },
   "partial-conformity": {
     label: "Partial Conformity",
-    className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
   },
   "non-conformity": {
     label: "Non-Conformity",
-    className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
-  },
+    className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+  }
 };
 
 export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: WorkpapersTableProps) {
@@ -80,7 +89,7 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
       if (result.success) {
         toast({
           title: "Success",
-          description: "Workpaper deleted successfully",
+          description: "Workpaper deleted successfully"
         });
         setDeleteDialogOpen(false);
         setWorkpaperToDelete(null);
@@ -89,14 +98,14 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
         toast({
           title: "Error",
           description: result.message || "Failed to delete workpaper",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsDeleting(false);
@@ -107,7 +116,7 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+          <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
         ))}
       </div>
     );
@@ -115,16 +124,16 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
 
   if (workpapers.length === 0) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center rounded-lg border border-dashed bg-card">
-        <div className="text-center space-y-4 p-8 max-w-md">
+      <div className="bg-card flex min-h-[400px] items-center justify-center rounded-lg border border-dashed">
+        <div className="max-w-md space-y-4 p-8 text-center">
           <div className="flex justify-center">
-            <div className="rounded-full bg-primary/10 p-4">
-              <FileText className="h-10 w-10 text-primary" />
+            <div className="bg-primary/10 rounded-full p-4">
+              <FileText className="text-primary h-10 w-10" />
             </div>
           </div>
           <div className="space-y-2">
             <h3 className="text-xl font-semibold">No workpapers yet</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Get started by creating your first workpaper. Working papers help document audit
               testing procedures and evidence collection.
             </p>
@@ -141,7 +150,7 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
   }
 
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="bg-card rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -158,14 +167,15 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
         </TableHeader>
         <TableBody>
           {workpapers.map((workpaper) => {
-            const testResult = testResultConfig[workpaper.testResult] || testResultConfig.conformity;
+            const testResult =
+              testResultConfig[workpaper.testResult] || testResultConfig.conformity;
 
             return (
               <TableRow key={workpaper.id}>
                 <TableCell>
                   <div className="space-y-1">
                     <p className="font-medium">{workpaper.clause}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
+                    <p className="text-muted-foreground line-clamp-1 text-xs">
                       {workpaper.clauseTitle}
                     </p>
                   </div>
@@ -173,13 +183,12 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
                 <TableCell>
                   <Link
                     href={`/dashboard/audit/plans/${workpaper.auditId}`}
-                    className="text-sm hover:text-primary hover:underline line-clamp-1"
-                  >
+                    className="hover:text-primary line-clamp-1 text-sm hover:underline">
                     {workpaper.auditTitle}
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <p className="text-sm line-clamp-2 max-w-md">{workpaper.objectives}</p>
+                  <p className="line-clamp-2 max-w-md text-sm">{workpaper.objectives}</p>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={cn(testResult.className)}>
@@ -190,10 +199,10 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
                   {workpaper.findingsCount && workpaper.findingsCount > 0 ? (
                     <Badge variant="destructive" className="gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      {workpaper.findingsCount} Finding{workpaper.findingsCount > 1 ? 's' : ''}
+                      {workpaper.findingsCount} Finding{workpaper.findingsCount > 1 ? "s" : ""}
                     </Badge>
                   ) : (
-                    <span className="text-sm text-muted-foreground">None</span>
+                    <span className="text-muted-foreground text-sm">None</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -208,7 +217,7 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
                 </TableCell>
                 <TableCell>
                   <span className="text-sm">
-                    {format(new Date(workpaper.preparedDate), "MMM d, yyyy")}
+                    {/* {format(new Date(workpaper.preparedDate), "MMM d, yyyy")} */}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -222,26 +231,23 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
                       <DropdownMenuItem asChild>
                         <Link
                           href={`/dashboard/audit/workpapers/${workpaper.id}`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
+                          className="flex cursor-pointer items-center gap-2">
                           <Eye className="h-4 w-4" />
                           View Details
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="gap-2 cursor-pointer"
+                        className="cursor-pointer gap-2"
                         onClick={() =>
                           router.push(`/dashboard/audit/workpapers/${workpaper.id}/edit`)
-                        }
-                      >
+                        }>
                         <Edit className="h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className="gap-2 text-destructive cursor-pointer"
-                        onClick={() => handleDeleteClick(workpaper)}
-                      >
+                        className="text-destructive cursor-pointer gap-2"
+                        onClick={() => handleDeleteClick(workpaper)}>
                         <Trash2 className="h-4 w-4" />
                         Delete
                       </DropdownMenuItem>
@@ -260,8 +266,8 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Workpaper</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete workpaper for clause &quot;{workpaperToDelete?.clause}&quot;?
-              This action cannot be undone and will remove all associated data.
+              Are you sure you want to delete workpaper for clause &quot;{workpaperToDelete?.clause}
+              &quot;? This action cannot be undone and will remove all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -269,8 +275,7 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -5,7 +5,10 @@ import {
   MapPin,
   Users,
   Package,
-  type LucideIcon
+  type LucideIcon,
+  Settings,
+  BookTemplate,
+  Sliders
 } from "lucide-react";
 
 export type NavGroup = {
@@ -58,24 +61,43 @@ export const navItems: NavGroup[] = [
     title: "System Configuration",
     items: [
       {
-        title: "Users",
-        href: "/dashboard/system-configs/users",
-        icon: Users
+        title: "Configurations",
+        href: "/dashboard/system-configs",
+        icon: Settings,
+        items: [
+          {
+            title: "Users",
+            href: "/dashboard/system-configs/users",
+            icon: Users
+          },
+          {
+            title: "Departments",
+            href: "/dashboard/system-configs/departments",
+            icon: Building
+          },
+          {
+            title: "Branches",
+            href: "/dashboard/system-configs/branches",
+            icon: MapPin
+          }
+        ]
       },
       {
-        title: "Departments",
-        href: "/dashboard/system-configs/departments",
-        icon: Building
-      },
-      {
-        title: "Branches",
-        href: "/dashboard/system-configs/locations",
-        icon: MapPin
-      },
-      {
-        title: "Modules",
-        href: "/dashboard/system-configs/modules",
-        icon: Package
+        title: "Modules Settings",
+        href: "/dashboard/system-configs",
+        icon: Sliders,
+        items: [
+          {
+            title: "Audit Module",
+            href: "/dashboard/system-configs/audit-settings",
+            icon: BookTemplate
+          },
+          {
+            title: "Risk Module",
+            href: "/dashboard/system-configs/risk-settings",
+            icon: Package
+          }
+        ]
       }
     ]
   }

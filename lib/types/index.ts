@@ -112,3 +112,12 @@ export type Pagination = {
   has_prev?: boolean;
   [x: string]: any;
 };
+
+export type AuditableArea = {
+  id: string | undefined;
+  name: string;
+  description: string;
+  department_id: string | null;
+  // code: string;
+  // is_active: boolean;
+};
