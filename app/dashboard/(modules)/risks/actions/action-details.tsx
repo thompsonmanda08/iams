@@ -53,7 +53,6 @@ export function ActionDetails({ action }: ActionDetailsProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [updates, setUpdates] = useState<Update[]>([]);
 
   const handleMitigationSelect = (option: string) => {
@@ -88,7 +87,8 @@ export function ActionDetails({ action }: ActionDetailsProps) {
               <DropdownMenuItem onClick={() => handleMitigationSelect("Mitigate")}>
                 Mitigate
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMitigationSelect("Accept")}>
+              <DropdownMenuItem
+                onClick={() => router.push(`/dashboard/risks/actions/${action.id}/1`)}>
                 Accept
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleMitigationSelect("Avoid")}>

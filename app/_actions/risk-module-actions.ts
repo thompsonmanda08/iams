@@ -131,7 +131,7 @@ export interface RiskStepThreeInput {
   risk_response: RiskResponse;
   risk_owner_id: string;
   risk_appetite_status: "WITHIN" | "ABOVE";
-  target_closing_date: Date;
+  target_closing_date: Date | string;
   mitigation_cost?: number;
 }
 
@@ -189,36 +189,71 @@ export interface KRIRegisterInput {
 }
 
 // KRI (Key Risk Indicator)
-export interface KRI {
+export type KRI = {
+  // Original API fields
   id: string;
   name: string;
   description: string;
-  category: string;
+  kri_register_id: string;
+  category_id: string;
+  department_id: string;
+  target_value: string;
+  trigger_value: string;
+  limit_value: string;
+  monitoring_frequency: string;
+  owner_id: string;
+  is_active: boolean;
+  last_measured_date: string | null;
+  last_measured_value: number | null;
+  last_status: KRIStatus | null;
+  commentary: string;
+  mitigant_plan: string;
+  average_risk_score: number | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  
+  // Nested objects
+  category: {
+    id: string;
+    name: string;
+    code: string;
+    description: string | null;
+    color: string;
+    sort_order: number;
+    is_active: boolean;
+  };
+  department: {
+    id: string;
+    name: string;
+    code: string;
+    description: string | null;
+    parent_id: string | null;
+    is_active: boolean;
+  };
+  owner: {
+    id: string;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    branch_id: string | null;
+    department_id: string | null;
+    role_id: string | null;
+    is_active: boolean;
+  };
+  
+  // Computed fields for UI (added by transformation)
   currentValue: number;
   targetValue: number;
   threshold: number;
+  triggerValue: number;
+  status: "normal" | "warning" | "critical";
+  trend: "up" | "down" | "stable";
   unit: string;
-  status: string;
-  trend: string;
-  lastUpdated: Date;
-  kri_register_id?: string;
-  category_id?: string;
-  department_id?: string;
-  target_value?: string;
-  trigger_value?: string;
-  limit_value?: string;
-  monitoring_frequency?: KRIFrequency;
-  owner_id?: string;
-  is_active?: boolean;
-  last_measured_date?: Date;
-  last_measured_value?: number;
-  last_status?: KRIStatus;
-  commentary?: string;
-  mitigant_plan?: string;
-  average_risk_score?: number;
-  created_at?: Date;
-  updated_at?: Date;
-}
+  lastUpdated: string;
+};
 
 export interface KRIInput {
   name: string;
@@ -315,34 +350,6 @@ const mockRisks: Risk[] = [
   }
 ];
 
-const mockKRIs: KRI[] = [
-  {
-    id: "1",
-    name: "System Downtime",
-    description: "Percentage of system downtime",
-    category: "Technology",
-    currentValue: 1.8,
-    targetValue: 1.0,
-    threshold: 3.0,
-    unit: "%",
-    status: "warning",
-    trend: "stable",
-    lastUpdated: new Date("2024-10-20")
-  },
-  {
-    id: "2",
-    name: "Compliance Incidents",
-    description: "Number of compliance violations",
-    category: "Compliance",
-    currentValue: 2,
-    targetValue: 0,
-    threshold: 5,
-    unit: "incidents",
-    status: "success",
-    trend: "improving",
-    lastUpdated: new Date("2024-10-18")
-  }
-];
 
 // ============================================================================
 // RISK CATEGORY MANAGEMENT
@@ -912,16 +919,45 @@ export async function deleteKRIRegister(id: string): Promise<APIResponse> {
 export async function getKRIs(params?: {
   category_id?: string;
   department_id?: string;
+  kri_register_id?: string;
   status?: string;
   frequency?: KRIFrequency;
 }): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call when backend is ready
-    // const response = await axios.get("/api/v1/kris", { params });
-    // return successResponse(response.data.data);
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return successResponse(mockKRIs);
+    const response = await authenticatedApiClient({
+      url: "/api/v1/kris", 
+      params,
+      method: "GET" 
+    });
+    const transformedData = response.data.data.data.map((kri: any) => {
+      const targetValue = parseFloat(kri.target_value);
+      const triggerValue = parseFloat(kri.trigger_value);
+      const limitValue = parseFloat(kri.limit_value);
+      const currentValue = kri.last_measured_value || targetValue;
+      
+      let status: "normal" | "warning" | "critical" = "normal";
+      if (currentValue <= limitValue) {
+        status = "critical";
+      } else if (currentValue <= triggerValue) {
+        status = "warning";
+      }
+      
+      const trend = currentValue >= targetValue ? "up" : "down";
+      
+      return {
+        ...kri,
+        currentValue,
+        targetValue,
+        threshold: limitValue,
+        triggerValue,
+        status,
+        trend,
+        unit: "%",
+        lastUpdated: kri.updated_at || kri.created_at,
+      };
+    });
+    
+    return successResponse(transformedData);
   } catch (error) {
     return handleError(error, "GET | GET KRIs", "/api/v1/kris");
   }
@@ -934,11 +970,11 @@ export async function getKRI(id: string): Promise<APIResponse> {
   try {
     // TODO: Replace with real API call
     await new Promise((resolve) => setTimeout(resolve, 300));
-    const kri = mockKRIs.find((k) => k.id === id);
-    if (!kri) {
-      return handleBadRequest("KRI not found");
-    }
-    return successResponse(kri);
+    // const kri = mockKRIs.find((k) => k.id === id);
+    // if (!kri) {
+    //   return handleBadRequest("KRI not found");
+    // }
+    return successResponse([]);
   } catch (error) {
     return handleError(error, "GET | GET KRI", `/api/v1/kris/${id}`);
   }

@@ -15,6 +15,14 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,7 +30,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Archive, FolderOpen } from "lucide-react";
+import { Plus, Search, FileText, Archive, FolderOpen, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { createKRIRegister } from "@/app/_actions/risk-module-actions";
@@ -186,7 +194,7 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
                 <TableHead>Status</TableHead>
                 <TableHead>Created At</TableHead>
                 <TableHead>Last Updated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">OPTIONS</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -212,10 +220,7 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
                 </TableRow>
               ) : (
                 filteredRegisters?.map((register) => (
-                  <TableRow
-                    key={register.id}
-                    onClick={() => handleNavigateToRegister(register.id)}
-                    className="cursor-pointer">
+                  <TableRow key={register.id}>
                     <TableCell>
                       <p className="text-foreground font-medium">{register.name}</p>
                       {register.description && (
@@ -246,9 +251,25 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" className="cursor-pointer font-normal">
-                        View
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleNavigateToRegister(register.id)}>
+                            View KRI Register
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>Edit KRI Register</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                            Delete KRI Register
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))

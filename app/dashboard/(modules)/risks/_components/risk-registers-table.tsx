@@ -20,7 +20,15 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Notebook, Search } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Notebook, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { RiskRegister } from "@/lib/types/risk-types";
@@ -159,10 +167,7 @@ export default function RiskRegistersTable({
               </TableRow>
             ) : (
               registers.map((register) => (
-                <TableRow
-                  key={register.id}
-                  onClick={() => router.push(`/dashboard/risks/risk-registers/${register.id}`)}
-                  className="cursor-pointer">
+                <TableRow key={register.id} className="cursor-pointer">
                   <TableCell>
                     <p className="text-foreground font-medium">{register.name}</p>
                     {register.description && (
@@ -208,9 +213,28 @@ export default function RiskRegistersTable({
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" className="cursor-pointer font-normal">
-                      View
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(`/dashboard/risks/risk-registers/${register.id}`)
+                          }>
+                          View Register
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>Edit Register</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                          Delete Register
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
