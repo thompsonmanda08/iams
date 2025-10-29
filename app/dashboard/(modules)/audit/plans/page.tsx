@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import Link from "next/link";
-import { AuditPlansTable } from "@/components/audit/audit-plans-table";
+import { AuditPlansTable } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plans-table";
 import { getAuditPlans } from "@/app/_actions/audit-module-actions";
 
 export default async function AuditPlansPage() {

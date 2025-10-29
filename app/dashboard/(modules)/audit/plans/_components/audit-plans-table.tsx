@@ -11,7 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { AuditStatusBadge } from "./audit-status-badge";
+import { AuditStatusBadge } from "../../../../../../components/audit/audit-status-badge";
 import { MoreHorizontal, Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { format } from "date-fns";

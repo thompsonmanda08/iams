@@ -20,7 +20,7 @@ function TableLoading() {
   return (
     <div className="space-y-3">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+        <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
       ))}
     </div>
   );

@@ -178,7 +178,10 @@ export function AuditFindingsTab({ stats, findings, auditPlanId }: AuditFindings
                   </Card>
 
                   {/* Table */}
-                  <FindingsTable findings={filteredFindings} onCreateClick={() => setIsCreateModalOpen(true)} />
+                  <FindingsTable
+                    findings={filteredFindings}
+                    onCreateClick={() => setIsCreateModalOpen(true)}
+                  />
                   {/* Results Count */}
                   <div className="text-muted-foreground text-sm">
                     Showing {filteredFindings.length} of {findings.length} finding

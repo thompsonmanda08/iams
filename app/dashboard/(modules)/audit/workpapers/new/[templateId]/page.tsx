@@ -3,10 +3,10 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreateWorkpaperForm } from "@/components/audit/create-workpaper-form";
+import { CreateWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/create-workpaper-form";
 import { GeneralWorkpaperForm } from "@/components/audit/general-workpaper-form";
 import { CustomWorkpaperForm } from "@/components/audit/custom-workpaper-form";
-import { CustomTemplateBuilder } from "@/components/audit/custom-template-builder";
+import { CustomTemplateBuilder } from "@/app/dashboard/system-configs/audit-settings/_components/custom-template-builder";
 import { ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -59,7 +59,9 @@ export default function NewWorkpaperPage() {
 
   const handleTemplateCreated = (template: any) => {
     toast.success("Custom template created successfully");
-    router.push(`/dashboard/audit/workpapers/new/${template.id}?auditId=${auditId}&auditTitle=${auditTitle}`);
+    router.push(
+      `/dashboard/audit/workpapers/new/${template.id}?auditId=${auditId}&auditTitle=${auditTitle}`
+    );
   };
 
   return (
@@ -108,46 +110,43 @@ export default function NewWorkpaperPage() {
       {templateId === "custom-new" && (
         <Card>
           <CardContent className="pt-6">
-            <CustomTemplateBuilder
-              onSuccess={handleTemplateCreated}
-              onCancel={handleCancel}
-            />
+            <CustomTemplateBuilder onSuccess={handleTemplateCreated} onCancel={handleCancel} />
           </CardContent>
         </Card>
       )}
 
       {selectedCustomTemplate &&
-       templateId !== "iso27001" &&
-       templateId !== "iso27001-2022" &&
-       templateId !== "general" &&
-       templateId !== "custom-new" && (
-        <CustomWorkpaperForm
-          auditId={auditId}
-          auditTitle={auditTitle}
-          template={selectedCustomTemplate}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
-      )}
+        templateId !== "iso27001" &&
+        templateId !== "iso27001-2022" &&
+        templateId !== "general" &&
+        templateId !== "custom-new" && (
+          <CustomWorkpaperForm
+            auditId={auditId}
+            auditTitle={auditTitle}
+            template={selectedCustomTemplate}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
+        )}
 
       {/* Invalid template */}
       {!["iso27001", "iso27001-2022", "general", "custom-new"].includes(templateId) &&
-       !selectedCustomTemplate && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Template Not Found</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              The selected template could not be found.
-            </p>
-            <Button onClick={() => router.push("/dashboard/audit/workpapers")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Workpapers
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        !selectedCustomTemplate && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Template Not Found</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                The selected template could not be found.
+              </p>
+              <Button onClick={() => router.push("/dashboard/audit/workpapers")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Workpapers
+              </Button>
+            </CardContent>
+          </Card>
+        )}
     </div>
   );
 }

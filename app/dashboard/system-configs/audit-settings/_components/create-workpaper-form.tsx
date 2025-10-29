@@ -26,10 +26,10 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { TemplateSelector } from "./template-selector";
-import { IsoCategorySelector } from "./iso-category-selector";
-import { EvidenceUpload } from "./evidence-upload";
-import { CreateFindingModal } from "./create-finding-modal";
+import { TemplateSelector } from "../../../../../components/audit/template-selector";
+import { IsoCategorySelector } from "../../../../../components/audit/iso-category-selector";
+import { EvidenceUpload } from "../../../../../components/audit/evidence-upload";
+import { CreateFindingModal } from "../../../../../components/audit/create-finding-modal";
 import { useCreateWorkpaper } from "@/hooks/use-audit-query-data";
 import useWorkpaperDraftStore from "@/store/useWorkpaperDraftStore";
 import type {
@@ -41,7 +41,7 @@ import type {
 } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
-import { SelectField } from "../ui/select-field";
+import { SelectField } from "../../../../../components/ui/select-field";
 import { useTeamMembers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 

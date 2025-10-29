@@ -29,7 +29,7 @@ import { AuditWorkpapersTab } from "@/components/audit/audit-workpapers-tab";
 import { AuditLogsTable } from "@/components/audit/audit-logs-table";
 import { AuditPlan, WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import { SubmitForReviewButton } from "@/components/audit/submit-for-review-button";
-import { AuditPlanActions } from "@/components/audit/audit-plan-actions";
+import { AuditPlanActions } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plan-actions";
 
 interface AuditDetailPageProps {
   params: Promise<{

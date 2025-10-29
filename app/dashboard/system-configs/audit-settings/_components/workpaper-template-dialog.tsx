@@ -115,7 +115,7 @@ export function WorkpaperTemplateDialog({
 
               {/* ISO 27001:2022 Comprehensive Template */}
               <Card
-                className="hover:border-primary cursor-pointer p-6 transition-all hover:bg-slate-50 border-2"
+                className="hover:border-primary cursor-pointer border-2 p-6 transition-all hover:bg-slate-50"
                 onClick={() => handleTemplateSelect("iso27001-2022")}>
                 <div className="flex flex-col items-center space-y-4 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
@@ -124,7 +124,9 @@ export function WorkpaperTemplateDialog({
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
                       <h3 className="text-lg font-semibold">ISO 27001:2022</h3>
-                      <Badge variant="secondary" className="text-xs">New</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        New
+                      </Badge>
                     </div>
                     <p className="text-muted-foreground text-sm">
                       Category-based template with comprehensive audit documentation
@@ -246,7 +248,7 @@ export function WorkpaperTemplateDialog({
         }
 
         {/* No audits message */}
-        {audits.length === 0 && (
+        {/* {audits.length === 0 && (
           <div className="py-8 text-center">
             <p className="text-muted-foreground text-sm">
               No audit plans available. Please create an audit plan first.
@@ -255,7 +257,7 @@ export function WorkpaperTemplateDialog({
               Close
             </Button>
           </div>
-        )}
+        )} */}
       </DialogContent>
     </Dialog>
   );

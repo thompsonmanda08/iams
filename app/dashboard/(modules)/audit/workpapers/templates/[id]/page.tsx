@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import {
   getWorkingPaperTemplate,
-  getTemplateCategories,
+  getTemplateCategories
 } from "@/app/_actions/audit-module-actions";
 import { format } from "date-fns";
 import { TemplateCategoriesTable } from "@/components/audit/template-categories-table";
@@ -23,7 +23,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
 
   const [templateResponse, categoriesResponse] = await Promise.all([
     getWorkingPaperTemplate(id),
-    getTemplateCategories(id),
+    getTemplateCategories(id)
   ]);
 
   if (!templateResponse.success || !templateResponse.data) {

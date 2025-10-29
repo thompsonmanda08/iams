@@ -36,7 +36,7 @@ import { deleteWorkingPaperTemplate } from "@/app/_actions/audit-module-actions"
 import { useToast } from "@/hooks/use-toast";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Spinner } from "../ui/spinner";
+import { Spinner } from "../../../../../components/ui/spinner";
 
 interface WorkingPaperTemplate {
   id: string;

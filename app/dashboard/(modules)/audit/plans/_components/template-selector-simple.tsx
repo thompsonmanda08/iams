@@ -20,9 +20,9 @@ import {
   useWorkpaperTemplatesWithCategories
 } from "@/hooks/use-audit-query-data";
 import { getTemplateSummary } from "@/lib/utils/audit-helpers";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Badge } from "../ui/badge";
-import { Spinner } from "../ui/spinner";
+import { Alert, AlertDescription } from "../../../../../../components/ui/alert";
+import { Badge } from "../../../../../../components/ui/badge";
+import { Spinner } from "../../../../../../components/ui/spinner";
 import { cn } from "@/lib/utils";
 import {
   Empty,
@@ -31,8 +31,8 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle
-} from "../ui/empty";
-import { Button } from "../ui/button";
+} from "../../../../../../components/ui/empty";
+import { Button } from "../../../../../../components/ui/button";
 import Link from "next/link";
 
 interface TemplateSelectorSimpleProps {

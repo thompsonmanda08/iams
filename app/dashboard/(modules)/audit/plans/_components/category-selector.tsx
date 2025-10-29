@@ -19,8 +19,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import type { TemplateCategory, WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import { getRecommendedCategories } from "@/lib/utils/audit-helpers";
-import { Spinner } from "../ui/spinner";
-import CustomAlert from "../ui/custom-alert";
+import { Spinner } from "../../../../../../components/ui/spinner";
+import CustomAlert from "../../../../../../components/ui/custom-alert";
 
 interface CategorySelectorProps {
   templateId: string;

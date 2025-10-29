@@ -48,11 +48,13 @@ export const navItems: NavGroup[] = [
         href: "/dashboard/audit",
         icon: ClipboardCheck,
         items: [
-          { title: "Dashboard", href: "/dashboard/audit" },
+          { title: "Overview", href: "/dashboard/audit" },
+          { title: "Universes", href: "/dashboard/audit/universe" },
+          { title: "Budget", href: "/dashboard/audit/budgets" },
           { title: "Plans", href: "/dashboard/audit/plans" },
-          { title: "Workpapers", href: "/dashboard/audit/workpapers" },
-          { title: "Findings", href: "/dashboard/audit/findings" },
-          { title: "Reports", href: "/dashboard/audit/reports" }
+          { title: "Workpapers", href: "/dashboard/audit/workpapers" }
+          // { title: "Findings", href: "/dashboard/audit/findings" },
+          // { title: "Reports", href: "/dashboard/audit/reports" }
         ]
       }
     ]
@@ -61,7 +63,7 @@ export const navItems: NavGroup[] = [
     title: "System Configuration",
     items: [
       {
-        title: "Core",
+        title: "Core Settings",
         href: "/dashboard/system-configs",
         icon: Settings,
         items: [

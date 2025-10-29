@@ -740,6 +740,32 @@ export interface FindingsByClause {
   total: number;
 }
 
+export type AuditUniverseStatus = "UNDER_REVIEW" | "UNIVERSE_CREATION" | "APPROVED";
+
+export interface AuditUniverseEntry {
+  id: string;
+  entryName: string;
+  functionalArea: string;
+  strategicPillar: string;
+  auditableArea: string;
+  associatedRisk: string;
+  indicativeTarget: string;
+  strategicInitiative: string;
+  processActivity: string;
+}
+
+export interface AuditUniverse {
+  id: string;
+  universeName: string;
+  functionalAreas: string[];
+  auditableAreas: string[];
+  status: AuditUniverseStatus;
+  dateCreated: string;
+  startDate?: string;
+  endDate?: string;
+  entries: AuditUniverseEntry[];
+}
+
 /**
  * Complete analytics data
  */
@@ -763,7 +789,6 @@ export interface AuditAnalytics {
 // ============================================================================
 // SETTINGS TYPES
 // ============================================================================
-
 
 /**
  * Audit module settings
@@ -816,4 +841,35 @@ export interface ClauseInfo {
   title: string;
   category: string;
   description?: string;
+}
+
+export type BudgetStatus = "BUDGET_CREATION" | "UNDER_REVIEW" | "APPROVED";
+
+export interface BudgetLine {
+  id: string;
+  name: string;
+  amount: number;
+  description: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface Budget {
+  id: string;
+  name: string;
+  amount: number;
+  description: string;
+  status: BudgetStatus;
+  startDate: string;
+  endDate: string;
+  budgetLines: BudgetLine[];
+}
+
+export interface BudgetItem {
+  id: string;
+  budgetLineId: string;
+  name: string;
+  amount: number;
+  description: string;
+  date: string;
 }
