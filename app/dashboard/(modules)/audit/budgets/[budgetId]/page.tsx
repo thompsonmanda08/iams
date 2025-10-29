@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, Plus } from "lucide-react";
+import { Wallet, Plus, ListCheck } from "lucide-react";
 import Link from "next/link";
-import BudgetList from "./_components/budget-list";
 import PageHeader from "@/components/page-header";
+import BudgetDetails from "../_components/budget-details";
 
 const BudgetsPage = () => {
   return (
@@ -12,25 +12,25 @@ const BudgetsPage = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
-              title="Budget Management"
-              description="Track and manage all your organizational budgets"
-              Icon={Wallet}
+              title="Budget Details"
+              description="Manage budget items and track allocations"
+              Icon={ListCheck}
             />
-            <div className="flex gap-2">
+            {/* <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   New Budget
                 </Button>
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <BudgetList />
+        <BudgetDetails />
       </div>
     </div>
   );

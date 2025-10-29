@@ -1,5 +1,5 @@
 "use client";
-import { FileText } from "lucide-react";
+import { FileText, Wallet } from "lucide-react";
 import BudgetForm from "../_components/budget-form";
 import PageHeader from "@/components/page-header";
 
@@ -11,18 +11,10 @@ const NewBudgetsPage = async () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
-              title="[Budget Name]"
+              title="Create New Budget"
               description="ISO 27001 compliance monitoring and audit tracking"
-              Icon={FileText}
+              Icon={Wallet}
             />
-            {/* <div className="flex gap-2">
-              <Link href="/dashboard/audit/budgets/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create New Budget
-                </Button>
-              </Link>
-            </div> */}
           </div>
         </div>
       </div>

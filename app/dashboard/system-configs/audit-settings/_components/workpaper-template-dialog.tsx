@@ -38,7 +38,8 @@ export function WorkpaperTemplateDialog({
 
   const handleTemplateSelect = (templateId: string) => {
     // Build the URL without audit info - users will attach to audit plan later
-    const url = `/dashboard/audit/workpapers/new/${templateId}`;
+    // const url = `/dashboard/system-configs/audit-settings/templates/new/${templateId}`;
+    const url = `/dashboard/system-configs/audit-settings/templates/new`; // ISO IEC 27001
 
     // Navigate to the creation page
     router.push(url);

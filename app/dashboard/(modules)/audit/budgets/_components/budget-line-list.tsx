@@ -1,5 +1,5 @@
-import { BudgetLine } from "@/types/budget";
 import { Badge } from "@/components/ui/badge";
+import { BudgetLine } from "@/lib/types/audit-types";
 
 interface BudgetLinesListProps {
   budgetLines: BudgetLine[];

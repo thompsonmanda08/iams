@@ -4,7 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/create-workpaper-form";
-import { GeneralWorkpaperForm } from "@/components/audit/general-workpaper-form";
+import { GeneralWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/general-workpaper-form";
 import { CustomWorkpaperForm } from "@/components/audit/custom-workpaper-form";
 import { CustomTemplateBuilder } from "@/app/dashboard/system-configs/audit-settings/_components/custom-template-builder";
 import { ArrowLeft } from "lucide-react";
@@ -73,7 +73,7 @@ export default function NewWorkpaperPage() {
             <Button variant="ghost" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-3xl font-bold">Create Workpaper</h1>
+            <h1 className="text-3xl font-bold">Create Workpaper Template</h1>
           </div>
           {auditTitle ? (
             <p className="text-muted-foreground">
@@ -100,10 +100,10 @@ export default function NewWorkpaperPage() {
 
       {templateId === "general" && (
         <GeneralWorkpaperForm
-          auditId={auditId}
-          auditTitle={auditTitle}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
+          // auditId={auditId}
+          // auditTitle={auditTitle}
+          // onSuccess={handleSuccess}
+          // onCancel={handleCancel}
         />
       )}
 

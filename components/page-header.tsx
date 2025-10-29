@@ -1,5 +1,3 @@
-import React, { ReactElement } from "react";
-
 function PageHeader({
   title,
   description,
@@ -8,7 +6,7 @@ function PageHeader({
 }: {
   title: string;
   description: string;
-  Icon: React.ReactElement;
+  Icon: any;
   hideBackButton?: boolean;
 }) {
   return (

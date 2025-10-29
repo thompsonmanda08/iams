@@ -13,7 +13,7 @@ import StrategicPillarsTab from "../_components/strategic-pillars-tab";
 import StrategicInitiativeTab from "../_components/strategic-initiative-tab";
 import FindingsCategoryTab from "../_components/findings-categories-tab";
 import ProcessActivityTab from "../_components/process-activity-tab";
-import WorkpaperTemplatesTab from "../_components/workpaper-templates-tab";
+import WorkpaperTemplatesTab from "./_components/workpaper-templates-tab";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;

@@ -1,47 +1,30 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { Save, Loader2, AlertCircle, FileText, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { EvidenceGrid } from "./evidence-grid";
-import { CreateFindingModal } from "./create-finding-modal";
+import { EvidenceGrid } from "../../../../../components/audit/evidence-grid";
+import { CreateFindingModal } from "../../../../../components/audit/create-finding-modal";
 import type { GeneralWorkpaperInput, EvidenceRow } from "@/lib/types/audit-types";
-import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/data/tick-marks";
-import { SelectField } from "../ui/select-field";
+import { SelectField } from "../../../../../components/ui/select-field";
 import { useTeamMembers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
+import { notify } from "@/lib/utils";
 
 interface GeneralWorkpaperFormProps {
-  auditId?: string; // Optional - can be attached to audit plan later
-  auditTitle?: string;
-  onSuccess?: () => void;
-  onCancel?: () => void;
-  initialData?: Partial<GeneralWorkpaperInput>;
+  templateId?: string | null;
+  initialData?: Partial<GeneralWorkpaperInput> | null;
 }
 
-export function GeneralWorkpaperForm({
-  auditId,
-  auditTitle,
-  onSuccess,
-  onCancel,
-  initialData
-}: GeneralWorkpaperFormProps) {
+export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpaperFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers({ page_size: 100 });
 
   const teamMemberOptions = useMemo(() => {
@@ -102,16 +85,16 @@ export function GeneralWorkpaperForm({
 
   // Handle save draft manually
   const handleSaveDraft = () => {
-    if (!auditId) {
-      toast({
+    if (!templateId) {
+      notify({
         title: "Cannot Save Draft",
         description: "Drafts can only be saved when attached to an audit plan.",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
 
-    toast({
+    notify({
       title: "Draft Saved",
       description: "Your work has been saved as a draft."
     });
@@ -121,10 +104,10 @@ export function GeneralWorkpaperForm({
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
-      toast({
+      notify({
         title: "Validation Error",
         description: error,
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -132,7 +115,7 @@ export function GeneralWorkpaperForm({
     setIsSaving(true);
 
     const workpaperData: GeneralWorkpaperInput = {
-      auditId,
+      // auditId,
       processUnderReview: formData.processUnderReview,
       preparedBy: formData.preparedBy,
       preparedDate: formData.preparedDate,
@@ -153,7 +136,7 @@ export function GeneralWorkpaperForm({
       const mockWorkpaperId = `GWP-${Date.now()}`;
       setCreatedWorkpaperId(mockWorkpaperId);
 
-      toast({
+      notify({
         title: "Success",
         description: "General workpaper created successfully"
       });
@@ -168,14 +151,14 @@ export function GeneralWorkpaperForm({
         setShowCreateFinding(true);
         // Don't close yet
       } else {
-        router.refresh();
-        onSuccess?.();
+        router.back();
+        //
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "Failed to create general workpaper",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsSaving(false);
@@ -185,10 +168,10 @@ export function GeneralWorkpaperForm({
   // Handle create finding from specific row
   const handleCreateFindingFromRow = (row: EvidenceRow) => {
     if (!createdWorkpaperId) {
-      toast({
+      notify({
         title: "Error",
         description: "Please save the workpaper first",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -200,16 +183,14 @@ export function GeneralWorkpaperForm({
   const handleFindingCreated = () => {
     setShowCreateFinding(false);
     setSelectedRowForFinding(null);
-    router.refresh();
-    onSuccess?.();
+    router.back();
   };
 
   // Handle skip finding creation
   const handleSkipFinding = () => {
     setShowCreateFinding(false);
     setSelectedRowForFinding(null);
-    router.refresh();
-    onSuccess?.();
+    router.back();
   };
 
   // Handle cancel
@@ -218,7 +199,7 @@ export function GeneralWorkpaperForm({
       "Are you sure you want to cancel? Any unsaved changes will be lost."
     );
     if (confirmLeave) {
-      onCancel?.();
+      router.back();
     }
   };
 
@@ -231,13 +212,13 @@ export function GeneralWorkpaperForm({
         </div>
         <div className="flex-1">
           <h2 className="text-2xl font-bold">General Work Paper (B.1.1.2)</h2>
-          {auditTitle ? (
+          {/* {auditTitle ? (
             <p className="text-muted-foreground mt-1 text-sm">For Audit: {auditTitle}</p>
           ) : (
             <p className="text-muted-foreground mt-1 text-sm">
               You can attach this workpaper to an audit plan later
             </p>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -449,13 +430,13 @@ export function GeneralWorkpaperForm({
       </div>
 
       {/* Create Finding Modal */}
-      {showCreateFinding && createdWorkpaperId && auditId && (
+      {showCreateFinding && createdWorkpaperId && (
         <CreateFindingModal
           open={showCreateFinding}
           onOpenChange={(open) => {
             if (!open) handleSkipFinding();
           }}
-          auditPlanId={auditId}
+          auditPlanId={""}
           workpaperId={createdWorkpaperId}
           evidenceRowId={selectedRowForFinding?.id}
           preFilledData={{

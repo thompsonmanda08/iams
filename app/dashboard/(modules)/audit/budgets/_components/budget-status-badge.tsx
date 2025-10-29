@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { BudgetStatus } from "@/types/budget";
+import { BudgetStatus } from "@/lib/types/audit-types";
 import { Clock, CheckCircle2, FileSearch } from "lucide-react";
 
 interface BudgetStatusBadgeProps {

@@ -860,16 +860,16 @@ export interface Budget {
   amount: number;
   description: string;
   status: BudgetStatus;
-  startDate: string;
-  endDate: string;
-  budgetLines: BudgetLine[];
+  start_date: Date | null;
+  end_date: Date | null;
+  budget_lines: BudgetLine[];
 }
 
 export interface BudgetItem {
   id: string;
-  budgetLineId: string;
+  budget_line_id: string;
   name: string;
   amount: number;
   description: string;
-  date: string;
+  date: Date | null;
 }

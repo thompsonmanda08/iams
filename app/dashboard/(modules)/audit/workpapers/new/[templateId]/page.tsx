@@ -4,7 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/create-workpaper-form";
-import { GeneralWorkpaperForm } from "@/components/audit/general-workpaper-form";
+import { GeneralWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/general-workpaper-form";
 import { CustomWorkpaperForm } from "@/components/audit/custom-workpaper-form";
 import { CustomTemplateBuilder } from "@/app/dashboard/system-configs/audit-settings/_components/custom-template-builder";
 import { ArrowLeft } from "lucide-react";
