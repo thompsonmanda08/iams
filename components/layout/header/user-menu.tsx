@@ -15,11 +15,11 @@ import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 
-export default function UserMenu() {
+export default function UserMenu({ user }: any) {
   const { data: setup } = useSystemSetup();
-  const user = setup?.data?.user as User;
-  const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
-  const userEmail = user?.email || "example@mail.com";
+  const userData = (user || setup?.data?.user) as User;
+  const fullName = `${userData?.first_name || "No"} ${userData?.last_name || "Session"}`;
+  const userEmail = userData?.email || "example@mail.com";
 
   const handleUserLogOut = async () => {
     const response = await logUserOut("User initiated logout");

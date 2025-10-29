@@ -152,31 +152,9 @@ export async function updateAuthSession(fields: any): Promise<void> {
   }
 }
 
-export async function createUserSession({ user, permissions }: UserSession): Promise<void> {
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const session = await encrypt({
-    user,
-    permissions
-  });
-
-  if (session) {
-    (await cookies()).set(USER_SESSION, session, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      expires: expiresAt,
-      sameSite: "strict",
-      path: "/"
-    });
-  } else {
-    throw new Error("Failed to create user session token.");
-  }
-}
-
 export async function verifySession(): Promise<{
   isAuthenticated: boolean;
   session: AuthSession | null;
-  user?: UserSession | null;
-  permissions?: any[];
 }> {
   const cookie = (await cookies()).get(AUTH_SESSION)?.value;
   const session = await decrypt(cookie);

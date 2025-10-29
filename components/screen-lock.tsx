@@ -151,7 +151,7 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
     onIdle,
     onActive,
     onAction,
-    timeout: 1 * 1000 * 5, // 5MINS
+    timeout: 60 * 1000 * 5, // 5MINS
     throttle: 500,
     disabled: !loggedIn
   });

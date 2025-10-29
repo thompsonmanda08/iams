@@ -10,7 +10,6 @@ import authenticatedApiClient, {
 } from "./api-config";
 import {
   createAuthSession,
-  createUserSession,
   deleteSession,
   updateAuthSession,
   verifySession
@@ -186,7 +185,7 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
     const session = response?.data;
     const user = session?.user;
 
-    await createUserSession(response?.data);
+    await updateAuthSession({ user, permissions: session?.permissions });
 
     return successResponse({ user }, response?.data?.message);
   } catch (error: Error | any) {

@@ -11,7 +11,7 @@ import UserMenu from "@/components/layout/header/user-menu";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 
-export function SiteHeader() {
+export function SiteHeader({ user }: any) {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -28,7 +28,7 @@ export function SiteHeader() {
           <ThemeSwitch />
           {/* <ThemeCustomizerPanel /> */}
           <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
-          <UserMenu />
+          <UserMenu user={user} />
         </div>
       </div>
     </header>

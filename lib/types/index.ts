@@ -47,6 +47,8 @@ export type AuthSession = JWTPayload & {
   accessToken: string;
   refreshToken?: string;
   screenLocked?: boolean;
+  user?: UserSession | null;
+  permissions?: any[];
   [x: string]: any;
 };
 
