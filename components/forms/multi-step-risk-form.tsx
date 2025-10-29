@@ -28,7 +28,8 @@ import {
   createRiskStepOne,
   updateRiskStepTwo,
   updateRiskStepThree,
-  getRiskCategories
+  getRiskCategories,
+  RiskResponse
 } from "@/app/_actions/risk-module-actions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -85,9 +86,9 @@ type StepThreeData = {
   residual_likelihood: number;
   residual_impact: number;
   treatment_plan: string;
-  risk_response: string;
+  risk_response: RiskResponse;
   risk_owner_id: string;
-  risk_appetite_status: string;
+  risk_appetite_status: "WITHIN" | "ABOVE";
   target_closing_date: string;
   mitigation_cost: number;
 };
@@ -152,7 +153,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
     mitigation_cost: 0
   });
 
-  console.log("FORMDATA:", stepThreeData);
 
   useEffect(() => {
     if (open) {
@@ -796,7 +796,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                   <Select
                     value={stepThreeData.risk_response}
                     onValueChange={(value) =>
-                      setStepThreeData({ ...stepThreeData, risk_response: value })
+                      setStepThreeData({ ...stepThreeData, risk_response: value as RiskResponse })
                     }
                     disabled={isLoading}>
                     <SelectTrigger className="w-full">
@@ -816,7 +816,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                   <Select
                     value={stepThreeData.risk_appetite_status}
                     onValueChange={(value) =>
-                      setStepThreeData({ ...stepThreeData, risk_appetite_status: value })
+                      setStepThreeData({ ...stepThreeData, risk_appetite_status: value as "WITHIN" | "ABOVE"})
                     }
                     disabled={isLoading}>
                     <SelectTrigger className="w-full">

@@ -3,10 +3,9 @@ import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Minus, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-
-
 import { KRIConfigureDialog } from "../../_components/kri-configure-dialog";
 import { KRIHistoryButton } from "../../_components/kri-history-button";
+import BackButton from "@/components/back-button";
 
 function getStatusColor(status: string) {
   const colors = {
@@ -23,18 +22,23 @@ function getTrendIcon(trend: string) {
   return <Minus className="h-4 w-4 text-gray-600" />;
 }
 
-function getProgressPercentage(current: number, target: number, threshold: number) {
-  const range = threshold - target;
-  const progress = ((current - target) / range) * 100;
-  return Math.min(Math.max(progress, 0), 100);
+function getProgressPercentage(current: number, target: number, limit: number) {
+  if (current < target) {
+    const range = target - limit;
+    const progress = ((target - current) / range) * 100;
+    return Math.min(Math.max(progress, 0), 100);
+  }
+  return 0;
 }
 
 export default async function KRIPage({ params }: { params: Promise<{ id: string }> }) {
-  const response = await getKRIs();
   const { id } = await params;
-  
+
+  // Pass the kri_register_id to filter KRIs
+  const response = await getKRIs({ kri_register_id: id });
   const kris: KRI[] = response.success && response.data ? response.data : [];
 
+  console.log("KRI:", kris);
 
   const normalCount = kris.filter((k) => k.status === "normal").length;
   const warningCount = kris.filter((k) => k.status === "warning").length;
@@ -46,6 +50,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
       <div className="bg-card border-b">
         <div className="container mx-auto flex items-center justify-between px-4 py-6">
           <div>
+            <BackButton title="Back to KRI Registers" />
             <h1 className="text-3xl font-bold tracking-tight">Key Risk Indicators (KRI)</h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Monitor critical risk metrics and thresholds
@@ -110,7 +115,9 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                       {getTrendIcon(kri.trend)}
                     </div>
                     <p className="text-muted-foreground text-sm">{kri.description}</p>
-                    <p className="text-muted-foreground mt-1 text-xs">Category: {kri.category}</p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Category: {kri.category?.name || "N/A"}
+                    </p>
                   </div>
                   <span
                     className={cn(
@@ -171,7 +178,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
 
                 {/* Footer */}
                 <div className="text-muted-foreground flex items-center justify-between border-t pt-2 text-xs">
-                  <span>Last updated: {format(kri.lastUpdated, "MMM dd, yyyy HH:mm")}</span>
+                  {/* <span>Last updated: {format(kri.lastUpdated, "MMM dd, yyyy HH:mm")}</span> */}
                   <KRIHistoryButton kriId={kri.id} />
                 </div>
               </div>
