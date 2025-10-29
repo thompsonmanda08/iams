@@ -15,12 +15,14 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-[99vh] flex-col items-start gap-4 px-2 py-8">
-      <div className="space-y-2 lg:space-y-4">
-        <h2 className="text-3xl font-bold lg:text-5xl">Oops!</h2>
-        <p className="text-muted-foreground">Something went wrong!</p>
+    <div className="grid min-h-[99vh] flex-col place-items-center gap-4 px-2 py-8">
+      <div>
+        <div className="space-y-2 lg:space-y-4">
+          <h2 className="text-3xl font-bold lg:text-5xl">Oops!</h2>
+          <p className="text-muted-foreground">Something went wrong!</p>
+        </div>
+        <Button onClick={() => reset()}>Reload</Button>
       </div>
-      <Button onClick={() => reset()}>Try again</Button>
     </div>
   );
 }

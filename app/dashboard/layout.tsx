@@ -5,6 +5,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 
+export const dynamic = "force-dynamic";
+
 export default async function AuthLayout({
   children
 }: Readonly<{
