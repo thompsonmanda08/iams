@@ -32,6 +32,11 @@ function ScreenLock({ open }: { open: boolean }) {
 
     try {
       const res = await fetch("/api/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ reason: "User session timed out." }),
         signal: controller.signal
       });
 

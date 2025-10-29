@@ -38,12 +38,11 @@ export function NavUser() {
   const userEmail = user?.email || "example@mail.com";
 
   const handleUserLogOut = async () => {
-    const isLoggedOut = await logUserOut("User initiated logout");
-    if (isLoggedOut) {
+    const response = await logUserOut("User initiated logout");
+    if (response.success) {
       window.location.href = "/";
-      return isLoggedOut;
+      return;
     }
-    return isLoggedOut;
   };
 
   return (

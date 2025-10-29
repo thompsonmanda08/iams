@@ -61,7 +61,7 @@ export const navItems: NavGroup[] = [
     title: "System Configuration",
     items: [
       {
-        title: "Configurations",
+        title: "Core",
         href: "/dashboard/system-configs",
         icon: Settings,
         items: [
@@ -83,7 +83,7 @@ export const navItems: NavGroup[] = [
         ]
       },
       {
-        title: "Modules Settings",
+        title: "Modules",
         href: "/dashboard/system-configs",
         icon: Sliders,
         items: [

@@ -176,6 +176,7 @@ export async function verifySession(): Promise<{
   isAuthenticated: boolean;
   session: AuthSession | null;
   user?: UserSession | null;
+  permissions?: any[];
 }> {
   const cookie = (await cookies()).get(AUTH_SESSION)?.value;
   const session = await decrypt(cookie);

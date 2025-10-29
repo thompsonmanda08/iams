@@ -136,17 +136,43 @@ export async function registerUser({
   }
 }
 
-export async function logUserOut(reason: string): Promise<boolean> {
-  const isLoggedIn = await verifySession();
-  if (isLoggedIn) {
-    const res = await authenticatedApiClient({
+export async function logUserOut(reason: string): Promise<APIResponse> {
+  const { isAuthenticated } = await verifySession();
+  if (isAuthenticated) {
+    const response = await authenticatedApiClient({
       url: "/api/v1/auth/logout",
       method: "POST",
       data: { reason }
     });
-    return true;
+
+    // Check if backend logout succeeded (optional - proceed anyway)
+    if (!response.status || response.status !== 200) {
+      console.warn("Backend logout failed, proceeding with local session cleanup", {
+        status: response.status,
+        statusText: response.statusText
+      });
+    }
+
+    // Delete server-side session (cookies) - this is the critical part
+    const result = await deleteSession();
+
+    if (!result.success) {
+      return {
+        success: false,
+        message: "Failed to clear session",
+        data: null,
+        status: 500,
+        statusText: "INTERNAL SERVER ERROR"
+      };
+    }
+    return successResponse(null, response?.data?.message);
   }
-  return false;
+  return {
+    success: false,
+    message: "User not authenticated",
+    data: null,
+    status: 401
+  };
 }
 
 /**
