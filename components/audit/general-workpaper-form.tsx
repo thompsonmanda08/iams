@@ -18,11 +18,12 @@ import { Save, Loader2, AlertCircle, FileText, AlertTriangle } from "lucide-reac
 import { useRouter } from "next/navigation";
 import { EvidenceGrid } from "./evidence-grid";
 import { CreateFindingModal } from "./create-finding-modal";
-import { useTeamMembers } from "@/hooks/use-audit-query-data";
-import type { GeneralWorkpaperInput, EvidenceRow, TeamMember } from "@/lib/types/audit-types";
+import type { GeneralWorkpaperInput, EvidenceRow } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/data/tick-marks";
 import { SelectField } from "../ui/select-field";
+import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { User } from "@/lib/types/account";
 
 interface GeneralWorkpaperFormProps {
   auditId?: string; // Optional - can be attached to audit plan later
@@ -41,13 +42,13 @@ export function GeneralWorkpaperForm({
 }: GeneralWorkpaperFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers();
+  const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers({ page_size: 100 });
 
   const teamMemberOptions = useMemo(() => {
     return teamMembers && teamMembers.length > 0
-      ? teamMembers?.map((m: TeamMember, i: number) => ({
-          id: m.id || `${i}-${m.name}-${m.role}`,
-          name: `${m.name} - ${m.role}`
+      ? teamMembers?.map((m: User, i: number) => ({
+          id: m.id || `${i}-${m.first_name}-${m.last_name}-${m.role}`,
+          name: `${m.first_name} ${m.last_name} - ${m.role}`
         }))
       : [];
   }, [teamMembers]);

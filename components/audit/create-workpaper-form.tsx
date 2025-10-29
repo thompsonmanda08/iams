@@ -31,19 +31,19 @@ import { IsoCategorySelector } from "./iso-category-selector";
 import { EvidenceUpload } from "./evidence-upload";
 import { CreateFindingModal } from "./create-finding-modal";
 import { useCreateWorkpaper } from "@/hooks/use-audit-query-data";
-import { useTeamMembers } from "@/hooks/use-audit-query-data";
 import useWorkpaperDraftStore from "@/store/useWorkpaperDraftStore";
 import type {
   ClauseTemplate,
   TemplateCategory,
   TestResult,
   EvidenceInput,
-  WorkpaperInput,
-  TeamMember
+  WorkpaperInput
 } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SelectField } from "../ui/select-field";
+import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { User } from "@/lib/types/account";
 
 interface CreateWorkpaperFormProps {
   auditId?: string; // Now optional - can be attached to audit plan later
@@ -65,7 +65,7 @@ export function CreateWorkpaperForm({
   const router = useRouter();
   const { toast } = useToast();
   const createMutation = useCreateWorkpaper();
-  const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers();
+  const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers({ page_size: 100 });
 
   // Draft store
   const { getDraft, saveDraft, deleteDraft } = useWorkpaperDraftStore();
@@ -119,7 +119,7 @@ export function CreateWorkpaperForm({
     sourceDocuments: (initialData as any)?.sourceDocuments || "",
     sampleSize: (initialData as any)?.sampleSize || "",
     controlFrequency: (initialData as any)?.controlFrequency || "",
-    samplingMethodology: (initialData as any)?.samplingMethodology || "",
+    samplingMethodology: (initialData as any)?.samplingMethodology || ""
   });
 
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -142,7 +142,16 @@ export function CreateWorkpaperForm({
         conclusion: draft.conclusion || "",
         evidence: draft.evidence || [],
         preparedBy: draft.preparedBy || currentUser,
-        reviewedBy: draft.reviewedBy || ""
+        reviewedBy: draft.reviewedBy || "",
+        // New fields for comprehensive audit documentation - ensure they are initialized
+        categoryId: (draft as any)?.categoryId || undefined,
+        category: (draft as any)?.category || "",
+        scope: (draft as any)?.scope || "",
+        documentsObtained: (draft as any)?.documentsObtained || "",
+        sourceDocuments: (draft as any)?.sourceDocuments || "",
+        sampleSize: (draft as any)?.sampleSize || "",
+        controlFrequency: (draft as any)?.controlFrequency || "",
+        samplingMethodology: (draft as any)?.samplingMethodology || ""
       });
       setLastSaved(draft.lastSaved || null);
       toast({
@@ -270,7 +279,7 @@ export function CreateWorkpaperForm({
       sourceDocuments: formData.sourceDocuments || undefined,
       sampleSize: formData.sampleSize || undefined,
       controlFrequency: formData.controlFrequency || undefined,
-      samplingMethodology: formData.samplingMethodology || undefined,
+      samplingMethodology: formData.samplingMethodology || undefined
     };
 
     try {
@@ -349,9 +358,9 @@ export function CreateWorkpaperForm({
 
   const teamMemberOptions = useMemo(() => {
     return teamMembers && teamMembers.length > 0
-      ? teamMembers?.map((m: TeamMember, i: number) => ({
-          id: m.id || `${i}-${m.name}-${m.role}`,
-          name: `${m.name} - ${m.role}`
+      ? teamMembers?.map((m: User, i: number) => ({
+          id: m.id || `${m.first_name} ${m.last_name} - ${m.role}`,
+          name: `${m.first_name} ${m.last_name} - ${m.role}`
         }))
       : [];
   }, [teamMembers]);
@@ -465,14 +474,12 @@ export function CreateWorkpaperForm({
                 id="scope"
                 placeholder="ISO clauses covered..."
                 rows={2}
-                className="resize-none bg-muted"
+                className="bg-muted resize-none"
                 value={formData.scope}
                 onChange={(e) => updateField("scope", e.target.value)}
                 disabled
               />
-              <p className="text-muted-foreground text-xs">
-                Pre-filled from template
-              </p>
+              <p className="text-muted-foreground text-xs">Pre-filled from template</p>
             </div>
           )}
 
@@ -503,13 +510,11 @@ export function CreateWorkpaperForm({
               value={formData.sourceDocuments}
               onChange={(e) => updateField("sourceDocuments", e.target.value)}
             />
-            <p className="text-muted-foreground text-xs">
-              Reference materials and standards used
-            </p>
+            <p className="text-muted-foreground text-xs">Reference materials and standards used</p>
           </div>
 
           {/* Sample Size and Control Frequency */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="sampleSize">Sample Size</Label>
               <Input

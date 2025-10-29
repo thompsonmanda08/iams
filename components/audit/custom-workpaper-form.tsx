@@ -13,20 +13,20 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 import { Save, Loader2, AlertCircle, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EvidenceGrid } from "./evidence-grid";
-import { useTeamMembers } from "@/hooks/use-audit-query-data";
 import type {
   CustomTemplate,
   CustomWorkpaperInput,
   CustomField,
-  EvidenceRow,
+  EvidenceRow
 } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS } from "@/lib/data/tick-marks";
+import { useTeamMembers } from "@/hooks/use-users-query-data";
 
 interface CustomWorkpaperFormProps {
   auditId?: string; // Optional - can be attached to audit plan later
@@ -41,11 +41,11 @@ export function CustomWorkpaperForm({
   auditTitle,
   template,
   onSuccess,
-  onCancel,
+  onCancel
 }: CustomWorkpaperFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { data: teamMembers } = useTeamMembers();
+  const { data: teamMembers } = useTeamMembers({ page_size: 100 });
   const [isSaving, setIsSaving] = useState(false);
 
   const currentUser = teamMembers?.[0]?.name || "Current User";
@@ -120,10 +120,7 @@ export function CustomWorkpaperForm({
 
       case "select":
         return (
-          <Select
-            value={value}
-            onValueChange={(v) => updateFieldValue(field.id, v)}
-          >
+          <Select value={value} onValueChange={(v) => updateFieldValue(field.id, v)}>
             <SelectTrigger id={field.id}>
               <SelectValue placeholder={field.placeholder || "Select..."} />
             </SelectTrigger>
@@ -145,7 +142,7 @@ export function CustomWorkpaperForm({
               checked={value || false}
               onCheckedChange={(checked) => updateFieldValue(field.id, checked)}
             />
-            <Label htmlFor={field.id} className="font-normal cursor-pointer">
+            <Label htmlFor={field.id} className="cursor-pointer font-normal">
               {field.placeholder || "Enable"}
             </Label>
           </div>
@@ -198,7 +195,7 @@ export function CustomWorkpaperForm({
       toast({
         title: "Validation Error",
         description: error,
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -214,7 +211,7 @@ export function CustomWorkpaperForm({
       reviewedDate,
       fieldValues,
       evidenceRows: template.includeEvidenceGrid ? evidenceRows : undefined,
-      selectedTickMarks: template.includeTickMarks ? selectedTickMarks : undefined,
+      selectedTickMarks: template.includeTickMarks ? selectedTickMarks : undefined
     };
 
     try {
@@ -223,7 +220,7 @@ export function CustomWorkpaperForm({
 
       toast({
         title: "Success",
-        description: "Workpaper created successfully",
+        description: "Workpaper created successfully"
       });
 
       router.refresh();
@@ -232,7 +229,7 @@ export function CustomWorkpaperForm({
       toast({
         title: "Error",
         description: "Failed to create workpaper",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
@@ -243,19 +240,19 @@ export function CustomWorkpaperForm({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-purple-100">
           <FileText className="h-5 w-5 text-purple-600" />
         </div>
         <div className="flex-1">
           <h2 className="text-2xl font-bold">{template.name}</h2>
           {auditTitle ? (
-            <p className="text-sm text-muted-foreground mt-1">For Audit: {auditTitle}</p>
+            <p className="text-muted-foreground mt-1 text-sm">For Audit: {auditTitle}</p>
           ) : (
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-sm">
               You can attach this workpaper to an audit plan later
             </p>
           )}
-          <p className="text-sm text-muted-foreground">{template.description}</p>
+          <p className="text-muted-foreground text-sm">{template.description}</p>
         </div>
       </div>
 
@@ -297,7 +294,9 @@ export function CustomWorkpaperForm({
 
             <div className="space-y-2">
               <Label htmlFor="reviewedBy">Reviewed By (Optional)</Label>
-              <Select value={reviewedBy} onValueChange={(value) => setReviewedBy(value === "none" ? undefined : value)}>
+              <Select
+                value={reviewedBy}
+                onValueChange={(value) => setReviewedBy(value === "none" ? undefined : value)}>
                 <SelectTrigger id="reviewedBy">
                   <SelectValue placeholder="Select reviewer..." />
                 </SelectTrigger>
@@ -334,7 +333,7 @@ export function CustomWorkpaperForm({
             <div>
               <h3 className="text-lg font-semibold">{section.title}</h3>
               {section.description && (
-                <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+                <p className="text-muted-foreground mt-1 text-sm">{section.description}</p>
               )}
             </div>
 
@@ -372,8 +371,8 @@ export function CustomWorkpaperForm({
       {(() => {
         const error = validateForm();
         return error ? (
-          <Card className="p-4 bg-destructive/10 border-destructive">
-            <div className="flex items-center gap-2 text-destructive">
+          <Card className="bg-destructive/10 border-destructive p-4">
+            <div className="text-destructive flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               <p className="text-sm font-medium">{error}</p>
             </div>
@@ -382,7 +381,7 @@ export function CustomWorkpaperForm({
       })()}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex items-center justify-between border-t pt-4">
         <Button variant="outline" onClick={onCancel} disabled={isSaving}>
           Cancel
         </Button>
@@ -390,7 +389,7 @@ export function CustomWorkpaperForm({
         <Button onClick={handleSubmit} disabled={isSaving || !!validateForm()}>
           {isSaving ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Creating...
             </>
           ) : (

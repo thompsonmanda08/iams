@@ -612,7 +612,7 @@ function CreateOrUpdateRoleDialog({
 
           <div className="flex justify-end gap-3 pt-2">
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="destructive">
                 Cancel
               </Button>
             </DialogClose>
