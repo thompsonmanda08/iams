@@ -77,12 +77,12 @@ function ScreenLock({ open }: { open: boolean }) {
         <DialogHeader>
           <DialogTitle>Are you still there?</DialogTitle>
           <DialogDescription>
-            You have been idle for some time. You will be logged out soon.
+            You have been idle for some time now, you will be logged out automatically in
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center gap-4 py-4">
           <div className="relative h-36 w-36">
-            <svg className="h-full w-full" width="36" height="36" viewBox="0 0 36 36">
+            <svg className="h-full w-full" width="32" height="32" viewBox="0 0 36 36">
               <circle
                 className="stroke-slate-200 dark:stroke-slate-700"
                 strokeWidth="4"
@@ -103,13 +103,13 @@ function ScreenLock({ open }: { open: boolean }) {
                 style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }}
               />
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-3xl font-semibold">{seconds}</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-5xl font-black">{seconds}</span>
+              <span className="text-muted-foreground border-input/50 mt-1 rounded-full border p-2 py-1 text-xs font-medium">
+                {"seconds"}
+              </span>
             </div>
           </div>
-          <p className="text-muted-foreground text-center text-sm">
-            To protect your account, you will be logged out automatically.
-          </p>
         </div>
         <DialogFooter className="sm:justify-end">
           <Button variant="destructive" disabled={isLoading} onClick={handleUserLogOut}>
@@ -151,7 +151,7 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
     onIdle,
     onActive,
     onAction,
-    timeout: 60 * 1000 * 5, // 5MINS
+    timeout: 1 * 1000 * 5, // 5MINS
     throttle: 500,
     disabled: !loggedIn
   });
