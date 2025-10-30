@@ -1,3 +1,5 @@
+import PoweredBy from "@/components/powered-by";
+import { Power } from "lucide-react";
 import Image from "next/image";
 import { PropsWithChildren } from "react";
 
@@ -15,6 +17,12 @@ export default function AuthLayout({ children }: PropsWithChildren) {
       </div>
       <div className="gradient absolute inset-0 grid opacity-80" />
       <div className="z-30 w-full max-w-sm py-12">{children}</div>
+
+      <PoweredBy
+        className="absolute bottom-0 z-999"
+        classNames={{ text: "text-white" }}
+        isWhite={true}
+      />
     </div>
   );
 }

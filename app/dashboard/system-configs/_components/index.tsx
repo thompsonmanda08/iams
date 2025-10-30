@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AppModule, Department, ErrorState } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input-field";
+import { Input } from "@/components/ui/input";
 import {
   updateDepartment,
   getModules,

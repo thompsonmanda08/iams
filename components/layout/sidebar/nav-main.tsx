@@ -44,9 +44,10 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { navItems } from "@/lib/routes-config";
+import { adminNavItems, navItems } from "@/lib/routes-config";
 import { useQuery } from "@tanstack/react-query";
 import { getModules } from "@/app/_actions/config-actions";
+import { useMemo } from "react";
 
 // Icon mapping based on the icon strings from API
 const iconMap: Record<string, LucideIcon> = {
@@ -192,7 +193,7 @@ export function transformModulesToNavCustom(
   return transformModulesToNav(apiModules);
 }
 
-export function NavMain() {
+export function NavMain({ session, isAuthenticated }: { session: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
 
@@ -207,12 +208,20 @@ export function NavMain() {
   //   staleTime: Infinity
   // });
 
+  const routes = useMemo(() => {
+    return session?.user?.userType === "admin" ||
+      session?.user?.userType === "BACK_OFFICE" ||
+      pathname.startsWith("/admin/")
+      ? adminNavItems // ADMIN ROUTES
+      : navItems; // DEFAULT ROUTES
+  }, [navItems, session?.user?.userType]);
+
   return false ? (
     <>Loading...</>
   ) : (
     <>
-      {navItems &&
-        navItems.map((nav) => (
+      {routes &&
+        routes.map((nav) => (
           <SidebarGroup key={nav.title}>
             <SidebarGroupLabel>{nav.title}</SidebarGroupLabel>
             <SidebarGroupContent className="flex flex-col gap-2">

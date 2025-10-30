@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 import { verifySession } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function AuthLayout({
           "--header-height": "calc(var(--spacing) * 14)"
         } as React.CSSProperties
       }>
-      <AppSidebar variant="inset" />
+      <AppSidebar variant="inset" session={session} isAuthenticated={isAuthenticated} />
       <SidebarInset>
         <SiteHeader user={session?.user} />
         <div className="flex flex-1 flex-col">

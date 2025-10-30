@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { AuthSession, UserSession } from "@/lib/types";
 
 import { AUTH_SESSION, USER_SESSION } from "./constants";
+import { User } from "./types/account";
 
 // 1. Get secret from environment variables (MUST be set) - SERVER SIDE ONLY
 // Note: Validation is deferred to runtime to avoid build-time issues
@@ -155,6 +156,9 @@ export async function updateAuthSession(fields: any): Promise<void> {
 export async function verifySession(): Promise<{
   isAuthenticated: boolean;
   session: AuthSession | null;
+  user?: Partial<User> | null;
+  permissions?: any[];
+  [key: string]: any;
 }> {
   const cookie = (await cookies()).get(AUTH_SESSION)?.value;
   const session = await decrypt(cookie);

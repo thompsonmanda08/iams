@@ -33,7 +33,9 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { session: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
@@ -109,7 +111,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full">
-          <NavMain />
+          <NavMain session={props?.session} isAuthenticated={props?.isAuthenticated} />
         </ScrollArea>
       </SidebarContent>
       <SidebarFooter>
