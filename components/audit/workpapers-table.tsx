@@ -20,7 +20,9 @@ import {
   AlertCircle,
   Loader2,
   FileText,
-  Plus
+  Plus,
+  View,
+  Pencil
 } from "lucide-react";
 import type { Workpaper } from "@/lib/types/audit-types";
 import { format } from "date-fns";
@@ -162,7 +164,7 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
             <TableHead>Prepared By</TableHead>
             <TableHead>Reviewed By</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead className="w-[80px]">Actions</TableHead>
+            <TableHead className="text-right">Options</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -221,38 +223,34 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
                   </span>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href={`/dashboard/audit/workpapers/${workpaper.id}`}
-                          className="flex cursor-pointer items-center gap-2">
-                          <Eye className="h-4 w-4" />
-                          View Details
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="cursor-pointer gap-2"
-                        onClick={() =>
-                          router.push(`/dashboard/audit/workpapers/${workpaper.id}/edit`)
-                        }>
-                        <Edit className="h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive cursor-pointer gap-2"
-                        onClick={() => handleDeleteClick(workpaper)}>
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/dashboard/audit/workpapers/${workpaper.id}`)}
+                      className="h-8 gap-1.5">
+                      <View className="h-3.5 w-3.5" />
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        router.push(`/dashboard/audit/workpapers/${workpaper.id}/edit`)
+                      }
+                      className="h-8 gap-1.5">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteClick(workpaper)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             );
