@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -12,28 +12,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  AlertCircle,
-  Loader2,
-  FileText,
-  Plus,
-  View,
-  Pencil
-} from "lucide-react";
+import { Trash2, AlertCircle, Loader2, FileText, Plus, View, Pencil } from "lucide-react";
 import type { Workpaper } from "@/lib/types/audit-types";
-import { format } from "date-fns";
 import Link from "next/link";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,11 +28,14 @@ import {
 import { cn } from "@/lib/utils";
 import { deleteWorkpaper } from "@/app/_actions/audit-module-actions";
 import { useToast } from "@/hooks/use-toast";
+import { CustomPagination } from "../ui/pagination";
+import { Pagination } from "@/lib/types";
 
 interface WorkpapersTableProps {
   workpapers: Workpaper[];
   isLoading?: boolean;
   onCreateClick?: () => void;
+  pagination: Pagination;
 }
 
 const testResultConfig = {
@@ -69,7 +53,12 @@ const testResultConfig = {
   }
 };
 
-export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: WorkpapersTableProps) {
+export function WorkpapersTable({
+  workpapers,
+  isLoading,
+  onCreateClick,
+  pagination
+}: WorkpapersTableProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -112,6 +101,31 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("page_size", String(page_size));
+      params.set("page", "1");
+    }
+
+    router.push(`?${params.toString()}`);
+  };
+  const customPaginationData = {
+    page: pagination.page,
+    page_size: pagination.page_size,
+    total_pages: pagination.total_pages,
+    totalCount: pagination.total,
+    has_prev: pagination.has_prev,
+    has_next: pagination.has_next
   };
 
   if (isLoading) {
@@ -257,6 +271,15 @@ export function WorkpapersTable({ workpapers, isLoading, onCreateClick }: Workpa
           })}
         </TableBody>
       </Table>
+      {workpapers.length > 0 && (
+        <CustomPagination
+          pagination={customPaginationData}
+          updatePagination={updatePagination}
+          allowSetPageSize={true}
+          showDetails={true}
+          className="border-t"
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

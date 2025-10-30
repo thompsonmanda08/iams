@@ -7,6 +7,7 @@ import { WorkpapersTable } from "./workpapers-table";
 import { WorkpaperTemplateDialog } from "../../app/dashboard/system-configs/audit-settings/_components/workpaper-template-dialog";
 import type { Workpaper, AuditPlan, CustomTemplate } from "@/lib/types/audit-types";
 import Link from "next/link";
+import { Pagination } from "@/lib/types";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -20,6 +21,7 @@ interface WorkpapersPageClientProps {
   workpapers: Workpaper[];
   audits: AuditPlan[];
   templates?: WorkingPaperTemplate[];
+  pagination: Pagination;
 }
 
 // Mock custom templates - replace with actual data fetch
@@ -67,6 +69,7 @@ const mockCustomTemplates: CustomTemplate[] = [
 export function WorkpapersPageClient({
   workpapers,
   audits,
+  pagination,
   templates = []
 }: WorkpapersPageClientProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -120,7 +123,11 @@ export function WorkpapersPageClient({
           )}
 
           {/* Table */}
-          <WorkpapersTable workpapers={workpapers || []} onCreateClick={handleOpenCreateDialog} />
+          <WorkpapersTable
+            workpapers={workpapers || []}
+            onCreateClick={handleOpenCreateDialog}
+            pagination={pagination}
+          />
         </div>
       </div>
 
