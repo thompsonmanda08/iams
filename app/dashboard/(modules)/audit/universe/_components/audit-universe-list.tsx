@@ -24,35 +24,9 @@ import { AuditUniverse, AuditUniverseStatus } from "@/lib/types/audit-types";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-interface StatusBadgeProps {
-  status: AuditUniverseStatus;
-}
-
-const statusConfig = {
-  UNDER_REVIEW: {
-    label: "Under Review",
-    variant: "warning" as const
-  },
-  UNIVERSE_CREATION: {
-    label: "Universe Creation",
-    variant: "info" as const
-  },
-  APPROVED: {
-    label: "Approved",
-    variant: "success" as const
-  }
-};
-
-export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const config = statusConfig[status];
-
-  return (
-    <Badge variant={config.variant} className="font-medium">
-      {config.label}
-    </Badge>
-  );
-};
+import { CustomPagination } from "@/components/ui/pagination";
+import { Pagination } from "@/lib/types";
+import { StatusBadge } from "@/components/status-badge";
 
 export const mockAuditUniverses: AuditUniverse[] = [
   {
@@ -125,7 +99,13 @@ export const mockAuditUniverses: AuditUniverse[] = [
   }
 ];
 
-export default function AuditUniverseList({ initialData }: { initialData?: AuditUniverse[] }) {
+export default function AuditUniverseList({
+  initialData,
+  pagination
+}: {
+  initialData?: AuditUniverse[];
+  pagination: Pagination;
+}) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState("10");
@@ -308,66 +288,20 @@ export default function AuditUniverseList({ initialData }: { initialData?: Audit
           </div>
 
           <div className="bg-card flex items-center justify-between border-t p-6">
-            <p className="text-muted-foreground text-sm font-medium">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of{" "}
-              {filteredData.length} entries
-            </p>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="gap-1">
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-
-              <div className="flex gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((page) => {
-                    return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
-                  })
-                  .map((page, idx, arr) => {
-                    if (idx > 0 && arr[idx - 1] !== page - 1) {
-                      return [
-                        <span key={`ellipsis-${page}`} className="text-muted-foreground px-2">
-                          ...
-                        </span>,
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentPage(page)}
-                          className="w-9">
-                          {page}
-                        </Button>
-                      ];
-                    }
-                    return (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="w-9">
-                        {page}
-                      </Button>
-                    );
-                  })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="gap-1">
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <CustomPagination
+              pagination={
+                pagination ||
+                ({
+                  page: 1,
+                  page_size: 10,
+                  total_pages: Math.ceil(filteredData.length / 10),
+                  totalCount: filteredData.length
+                } as Pagination)
+              }
+              updatePagination={({ page, page_size }) => setCurrentPage(page)}
+              showDetails
+              allowSetPageSize
+            />
           </div>
         </Card>
       </div>

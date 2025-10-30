@@ -31,9 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { deleteWorkingPaperTemplate } from "@/app/_actions/audit-module-actions";
 import { useToast } from "@/hooks/use-toast";
+import { StatusBadge } from "@/components/status-badge";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Spinner } from "../../../../../components/ui/spinner";
@@ -163,13 +163,7 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
                 <span className="text-sm">{template.version || "1.0"}</span>
               </TableCell>
               <TableCell>
-                {template.is_active ? (
-                  <Badge variant="default" className="bg-green-500">
-                    Active
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Inactive</Badge>
-                )}
+                <StatusBadge status={template.is_active ? "ACTIVE" : "INACTIVE"} size="sm" />
               </TableCell>
               <TableCell>
                 <span className="text-sm">

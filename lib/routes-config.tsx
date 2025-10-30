@@ -8,7 +8,8 @@ import {
   type LucideIcon,
   Settings,
   BookTemplate,
-  Sliders
+  Sliders,
+  LayoutDashboard
 } from "lucide-react";
 
 export type NavGroup = {
@@ -26,6 +27,58 @@ export type NavItem = {
   newTab?: boolean;
   items?: NavItem;
 }[];
+
+export const adminNavItems: NavGroup[] = [
+  {
+    title: "Dashboards",
+    items: [
+      {
+        title: "Overview",
+        href: "/admin/home",
+        icon: LayoutDashboard
+      }
+      // {
+      //   title: "Risk Module",
+      //   href: "/dashboard/system-configs/risk-settings",
+      //   icon: Package
+      // }
+    ]
+  },
+
+  // GLOBALLY AVAILABLE MODULES
+  {
+    title: "Global System",
+    items: [
+      {
+        title: "Users",
+        href: "/admin/users",
+        icon: Users
+      },
+      {
+        title: "Companies",
+        href: "/admin/companies",
+        icon: Building
+      }
+    ]
+  },
+
+  // SYSTEM CONFIGS
+  {
+    title: "System Configurations",
+    items: [
+      {
+        title: "Locations",
+        href: "/admin/Configurations",
+        icon: MapPin
+        // items: [
+        //   { title: "Countries", href: "/admin/locations/countries" },
+        //   { title: "Provinces", href: "/admin/locations/provinces" },
+        //   { title: "Towns", href: "/admin/locations/towns" }
+        // ]
+      }
+    ]
+  }
+];
 
 export const navItems: NavGroup[] = [
   {

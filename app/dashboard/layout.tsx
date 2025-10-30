@@ -20,8 +20,6 @@ export default async function AuthLayout({
 
   const { session, isAuthenticated } = await verifySession();
 
-  console.log(session);
-
   return (
     <SidebarProvider
       defaultOpen={defaultOpen}

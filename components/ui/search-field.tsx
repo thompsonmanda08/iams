@@ -50,7 +50,7 @@ export default function Search({
       />
       <Input
         className={cn(
-          "border-divider !placeholder:text-[10px] focus-within:border-primary/70 w-full pl-10 text-base !text-[10px] placeholder:font-normal placeholder:text-slate-400 focus-within:shadow-sm",
+          "border-divider !placeholder:text-[10px] focus-within:border-primary/70 w-full pl-10 text-base text-[10px]! placeholder:font-normal placeholder:text-slate-400 focus-within:shadow-sm",
           base,
           input
         )}

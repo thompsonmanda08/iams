@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input-field";
+import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ErrorState, Pagination } from "@/lib/types";

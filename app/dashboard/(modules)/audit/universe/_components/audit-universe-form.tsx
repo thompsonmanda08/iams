@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Plus, X, ChevronDown, ChevronUp, Save, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input-field";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";

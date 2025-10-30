@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input-field";
+import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ErrorState } from "@/lib/types";
 import { createProvince, updateProvince, deleteProvince } from "@/app/_actions/config-actions";

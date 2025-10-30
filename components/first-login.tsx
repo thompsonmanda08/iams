@@ -15,7 +15,7 @@ import { ErrorState } from "@/lib/types";
 import { ChangePassword } from "@/lib/types/stores";
 import CustomAlert from "./ui/custom-alert";
 import { notify } from "@/lib/utils";
-import { Input } from "./ui/input-field";
+import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { changePassword } from "@/app/_actions/auth-actions";
 
