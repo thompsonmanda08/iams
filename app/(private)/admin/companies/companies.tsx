@@ -24,7 +24,13 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 const mockCompanies: Company[] = [
   {
@@ -193,15 +199,11 @@ export default function Companies() {
             <TableHeader>
               <TableRow>
                 <TableHead>Logo</TableHead>
-                <TableHead>
-                  Company Name
-                </TableHead>
+                <TableHead>Company Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>
-                  Actions
-                </TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -244,52 +246,50 @@ export default function Companies() {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-                {editingCompany ? "Edit Company" : "Add Company"}
-            </DialogTitle>
+            <DialogTitle>{editingCompany ? "Edit Company" : "Add Company"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="company-name">Company Name</Label>
               <Input
-                  id="company-name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+                id="company-name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
             </div>
 
             <div className="space-y-2">
               <Label>Logo</Label>
-                <div className="flex items-center gap-4">
-                  {formData.logo_url && (
-                    <img
-                      src={formData.logo_url}
-                      alt="Logo preview"
+              <div className="flex items-center gap-4">
+                {formData.logo_url && (
+                  <img
+                    src={formData.logo_url}
+                    alt="Logo preview"
                     className="h-16 w-16 rounded-md border object-contain"
-                    />
-                  )}
+                  />
+                )}
                 <Button asChild variant="outline" type="button">
                   <Label className="cursor-pointer">
                     <Upload size={18} />
@@ -301,19 +301,18 @@ export default function Companies() {
                       disabled={uploading}
                       className="hidden"
                     />
-                  </label>
+                  </Label>
                 </Button>
-                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                  value={formData.status}
+                value={formData.status}
                 onValueChange={(value) =>
                   setFormData({ ...formData, status: value as "active" | "inactive" })
-                  }
-                >
+                }>
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -330,9 +329,7 @@ export default function Companies() {
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                  {editingCompany ? "Update" : "Create"}
-              </Button>
+              <Button type="submit">{editingCompany ? "Update" : "Create"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
