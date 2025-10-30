@@ -19,6 +19,13 @@ function ScreenLock({ open }: { open: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [seconds, setSeconds] = useState(90);
 
+  // Reset countdown when dialog opens
+  useEffect(() => {
+    if (open) {
+      setSeconds(90);
+    }
+  }, [open]);
+
   async function handleRefreshAuthToken() {
     setIsLoading(true);
     await lockScreenOnUserIdle(false);
@@ -58,18 +65,22 @@ function ScreenLock({ open }: { open: boolean }) {
   }
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSeconds((x) => x - 1);
-    }, 1000);
+    if (!open) return;
 
-    if (seconds == 0) {
-      handleUserLogOut();
-    }
+    const interval = setInterval(() => {
+      setSeconds((x) => {
+        if (x <= 1) {
+          handleUserLogOut();
+          return 0;
+        }
+        return x - 1;
+      });
+    }, 1000);
 
     return () => {
       clearInterval(interval);
     };
-  });
+  }, [open]);
 
   return (
     <Dialog open={open}>
@@ -129,7 +140,6 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
 
   const [state, setState] = useState("Active");
   const [count, setCount] = useState(0);
-  const [remaining, setRemaining] = useState(0);
 
   const loggedIn = authSession?.accessToken;
   const isIdle = state === "Idle";
@@ -147,7 +157,7 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
 
   const onAction = async () => setCount(count + 1);
 
-  const { getRemainingTime } = useIdleTimer({
+  useIdleTimer({
     onIdle,
     onActive,
     onAction,
@@ -156,22 +166,17 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
     disabled: !loggedIn
   });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRemaining(Math.ceil(getRemainingTime() / 1000));
-    }, 500);
-
-    return () => {
-      clearInterval(interval);
-    };
-  });
-
   /* NO TIMER ON EXTERNAL ROUTES */
   if (pathname.startsWith("/checkout")) return null;
   if (pathname.startsWith("/invoice")) return null;
   if (pathname.startsWith("/subscriptions")) return null;
 
-  return <></>;
+  // Render the ScreenLock component when idle
+  if (isIdle) {
+    return <ScreenLock open={isIdle} />;
+  }
+
+  return null;
 }
 
 export default ScreenLock;
