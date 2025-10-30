@@ -73,7 +73,7 @@ export default function NewWorkpaperPage() {
             <Button variant="ghost" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-3xl font-bold">Create Workpaper</h1>
+            <h1 className="text-3xl font-bold">Create Workpaper Template</h1>
           </div>
           {auditTitle ? (
             <p className="text-muted-foreground">
@@ -100,10 +100,10 @@ export default function NewWorkpaperPage() {
 
       {templateId === "general" && (
         <GeneralWorkpaperForm
-          auditId={auditId}
-          auditTitle={auditTitle}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
+          // auditId={auditId}
+          // auditTitle={auditTitle}
+          // onSuccess={handleSuccess}
+          // onCancel={handleCancel}
         />
       )}
 

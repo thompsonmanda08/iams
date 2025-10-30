@@ -8,6 +8,12 @@ import { Suspense } from "react";
 import { getAuditPlans, getWorkpapers } from "@/app/_actions/audit-module-actions";
 import { WorkpapersPageClient } from "@/components/audit/workpapers-page-client";
 import AuditableAreaConfig from "../_components/auditable-areas-tab";
+import IndicativeTargetsTab from "../_components/indicative-targets-tab";
+import StrategicPillarsTab from "../_components/strategic-pillars-tab";
+import StrategicInitiativeTab from "../_components/strategic-initiative-tab";
+import FindingsCategoryTab from "../_components/findings-categories-tab";
+import ProcessActivityTab from "../_components/process-activity-tab";
+import WorkpaperTemplatesTab from "./_components/workpaper-templates-tab";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;
@@ -51,23 +57,62 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
       <div className="">
         <Tabs defaultValue="areas" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="templates">Workpaper Templates</TabsTrigger>
             <TabsTrigger value="areas">Auditable Areas</TabsTrigger>
-            <TabsTrigger value="towns">Towns</TabsTrigger>
-            <TabsTrigger value="branches">Branches</TabsTrigger>
+            <TabsTrigger value="targets">Indicative Targets </TabsTrigger>
+            <TabsTrigger value="pillars">Strategic Pillars</TabsTrigger>
+            <TabsTrigger value="initiative">Strategic Initiative</TabsTrigger>
+            <TabsTrigger value="findings">Findings Categories</TabsTrigger>
+            <TabsTrigger value="process">Process/Activity</TabsTrigger>
           </TabsList>
 
-          {/* Towns Tab */}
+          <TabsContent value="templates">
+            <Suspense fallback={<TableLoading />}>
+              <WorkpaperTemplatesTab templates={workpapers || []} />
+            </Suspense>
+          </TabsContent>
+
+          {/* Auditable Areas Tab */}
           <TabsContent value="areas">
             <Suspense fallback={<TableLoading />}>
               <AuditableAreaConfig areas={towns} pagination={townsPagination} />
             </Suspense>
           </TabsContent>
 
-          {/* <TabsContent value="templates">
+          {/* Indicative Targets Tab */}
+          <TabsContent value="targets">
             <Suspense fallback={<TableLoading />}>
-              <WorkpapersPageClient workpapers={workpapers || []} audits={audits || []} />
+              <IndicativeTargetsTab areas={towns} pagination={townsPagination} />
             </Suspense>
-          </TabsContent> */}
+          </TabsContent>
+
+          {/* Strategic Pillars Tab */}
+          <TabsContent value="pillars">
+            <Suspense fallback={<TableLoading />}>
+              <StrategicPillarsTab areas={towns} pagination={townsPagination} />
+            </Suspense>
+          </TabsContent>
+
+          {/* Strategic Initiative Tab */}
+          <TabsContent value="initiative">
+            <Suspense fallback={<TableLoading />}>
+              <StrategicInitiativeTab areas={towns} pagination={townsPagination} />
+            </Suspense>
+          </TabsContent>
+
+          {/* Findings Categories Tab */}
+          <TabsContent value="findings">
+            <Suspense fallback={<TableLoading />}>
+              <FindingsCategoryTab areas={towns} pagination={townsPagination} />
+            </Suspense>
+          </TabsContent>
+
+          {/* Process Activity Tab */}
+          <TabsContent value="process">
+            <Suspense fallback={<TableLoading />}>
+              <ProcessActivityTab areas={towns} pagination={townsPagination} />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </div>
     </div>

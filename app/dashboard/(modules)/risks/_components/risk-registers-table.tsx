@@ -20,15 +20,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Notebook, Search } from "lucide-react";
+import { Notebook, Pencil, Search, Trash2, View } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { RiskRegister } from "@/lib/types/risk-types";
@@ -155,7 +147,7 @@ export default function RiskRegistersTable({
               <TableHead>Status</TableHead>
               <TableHead>Timeline</TableHead>
               <TableHead>Created At</TableHead>
-              <TableHead className="text-right">OPTIONS</TableHead>
+              <TableHead className="text-right">Options</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -213,28 +205,34 @@ export default function RiskRegistersTable({
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            router.push(`/dashboard/risks/risk-registers/${register.id}`)
-                          }>
-                          View Register
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Edit Register</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
-                          Delete Register
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          router.push(`/dashboard/risks/risk-registers/${register.id}`)
+                        }
+                        className="h-8 gap-1.5">
+                        <View className="h-3.5 w-3.5" />
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        // onClick={() => handleEdit(item.id)}
+                        className="h-8 gap-1.5">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        // onClick={() => handleDelete(item.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

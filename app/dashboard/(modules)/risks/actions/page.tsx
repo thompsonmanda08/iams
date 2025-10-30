@@ -18,7 +18,7 @@ const mockActions = [
   }
 ];
 
-export default function ActionsPage() {
+export default async function ActionsPage() {
   return (
     <main className="bg-background min-h-screen">
       <div className="bg-card border-b">

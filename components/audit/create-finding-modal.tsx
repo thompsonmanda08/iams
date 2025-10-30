@@ -115,7 +115,7 @@ export function CreateFindingModal({
         includeInReport,
         findingNumber: findingNumber || undefined,
         workingsAndTestResults: workingsAndTestResults || undefined,
-        conclusion: conclusion || undefined,
+        conclusion: conclusion || undefined
       });
 
       if (result.success) {
@@ -262,15 +262,14 @@ export function CreateFindingModal({
                 />
                 <Label
                   htmlFor="includeInReport"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
+                  className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Include in Final Report
                 </Label>
               </div>
             </div>
 
             {includeInReport && (
-              <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+              <div className="border-primary/20 space-y-4 border-l-2 pl-4">
                 {/* Finding Number */}
                 <div className="space-y-2">
                   <Label htmlFor="findingNumber">Finding Number</Label>
@@ -280,16 +279,12 @@ export function CreateFindingModal({
                     onChange={(e) => setFindingNumber(e.target.value)}
                     placeholder="e.g., F-001, 2025-001"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Auto-generated if left blank
-                  </p>
+                  <p className="text-muted-foreground text-xs">Auto-generated if left blank</p>
                 </div>
 
                 {/* Workings and Test Results */}
                 <div className="space-y-2">
-                  <Label htmlFor="workingsAndTestResults">
-                    Workings and Test Results
-                  </Label>
+                  <Label htmlFor="workingsAndTestResults">Workings and Test Results</Label>
                   <Textarea
                     id="workingsAndTestResults"
                     value={workingsAndTestResults}

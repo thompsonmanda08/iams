@@ -93,7 +93,7 @@ export default function RisksDashboardPage() {
                       <ArrowRight className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-2">Risk Register</h3>
+                      <h3 className="text-lg font-semibold mb-2">Risk Registers</h3>
                       <p className="text-sm text-muted-foreground">
                         Identify, assess, and manage organizational risks
                       </p>

@@ -10,19 +10,11 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Copy, FileText, FileSpreadsheet, Printer, MoreHorizontal } from "lucide-react";
+import { Copy, FileText, FileSpreadsheet, Printer, View, Pencil, FileLock2 } from "lucide-react";
 
 interface Action {
   id: string;
@@ -108,15 +100,15 @@ export function ActionsTable({ actions }: ActionsTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[200px]">#</TableHead>
-                <TableHead>RISK</TableHead>
-                <TableHead>ACTION</TableHead>
-                <TableHead>TYPE</TableHead>
-                <TableHead>DUE DATE</TableHead>
-                <TableHead>WEIGHT</TableHead>
-                <TableHead>UPDATES FREQUENCY</TableHead>
-                <TableHead>PROGRESS</TableHead>
-                <TableHead>STATUS</TableHead>
-                <TableHead className="text-right">OPTIONS</TableHead>
+                <TableHead>Risk</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Weight</TableHead>
+                <TableHead>Updates Frequency</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Options</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -150,28 +142,32 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              router.push(`/dashboard/risks/actions/${action.actionId}`)
-                            }>
-                            View Risk
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Risk Acceptance Form</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600">
-                            Close Risk
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => router.push(`/dashboard/risks/actions/${action.actionId}`)}
+                          className="h-8 gap-1.5">
+                          <View className="h-3.5 w-3.5" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          // onClick={() => handleEdit(item.id)}
+                          className="h-8 gap-1.5">
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          // onClick={() => handleDelete(item.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <FileLock2 className="h-3.5 w-3.5" />
+                          Close
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
