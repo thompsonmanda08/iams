@@ -109,7 +109,7 @@ export type Pagination = {
   page: number;
   page_size: number;
   total?: number; // TOTAL NUMBER OF RECORDS
-  total_pages?: number;
+  total_pages: number;
   has_next?: boolean;
   has_prev?: boolean;
   [x: string]: any;
@@ -123,3 +123,44 @@ export type AuditableArea = {
   // code: string;
   // is_active: boolean;
 };
+
+export interface Company {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  email: string | null;
+  phone: string | null;
+  status: "active" | "inactive";
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Country {
+  id: string;
+  name: string;
+  code: string;
+  created_at?: string;
+}
+
+export interface Province {
+  id: string;
+  country_id: string;
+  name: string;
+  created_at?: string;
+}
+
+export interface Town {
+  id: string;
+  province_id: string;
+  name: string;
+  created_at?: string;
+}
+
+export interface CompanyLocation {
+  id: string;
+  company_id: string;
+  country_id: string;
+  province_id: string | null;
+  town_id: string | null;
+  created_at?: string;
+}

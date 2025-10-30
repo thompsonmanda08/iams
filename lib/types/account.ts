@@ -63,12 +63,6 @@ export type User = {
   role: Role;
 };
 
-export type AccountOwner = User & {
-  role: "owner";
-  password: string;
-  changePassword: string;
-};
-
 export type UserQueryParams = {
   branchId?: string;
   departmentId?: string;
