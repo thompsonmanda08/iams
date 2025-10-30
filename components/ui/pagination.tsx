@@ -4,6 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-re
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Pagination } from "@/lib/types";
+import { SelectField } from "./select-field";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -96,6 +97,7 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
 const CustomPagination = ({
   pagination,
   updatePagination,
+  allowSetPageSize,
   showDetails,
   classNames,
   className
@@ -109,36 +111,49 @@ const CustomPagination = ({
     pagesWrapper: string;
   };
   showDetails?: boolean;
+  allowSetPageSize?: boolean;
   pagination: Pagination;
-  updatePagination: (page: { page: number }) => void;
+  updatePagination: (page: { page?: number; page_size?: number }) => void;
 }) => {
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 px-4 py-3 sm:flex-row",
+        "flex w-full flex-col gap-4 px-4 py-3 sm:flex-row",
         {
-          "items-center justify-between": showDetails
+          "items-center justify-between": showDetails || allowSetPageSize
         },
         className,
         classNames?.wrapper
       )}>
+      {allowSetPageSize && (
+        <div className="flex max-w-max items-center space-x-1.5 font-medium text-nowrap">
+          <span className="text-sm text-gray-500">Show</span>
+          <SelectField
+            value={String(pagination?.page_size)}
+            onValueChange={(value) => updatePagination({ page_size: Number(value) })}
+            options={Array.from({ length: 5 }).map((_, index: number) => ({
+              id: `${(index + 1) * 10}`,
+              name: `${(index + 1) * 10}`
+            }))}
+          />
+          <span className="text-sm text-gray-500">Per Page</span>
+        </div>
+      )}
       {showDetails && (
-        <div className="text-foreground/80 order-2 text-sm sm:order-1">
+        <div className="text-foreground/80 order-2 text-sm font-medium sm:order-1">
           Showing page {pagination.page} of {pagination?.total_pages} ({pagination.totalCount} total
-          products)
+          results)
         </div>
       )}
       <div className="order-1 flex items-center space-x-1 sm:order-2 sm:space-x-2">
-        <button
+        <Button
           onClick={() => updatePagination({ page: pagination?.page - 1 })}
           disabled={!pagination.has_prev}
-          className={cn(
-            "rounded-md border border-gray-300 px-2 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3",
-            classNames?.previous
-          )}>
+          variant={"outline"}
+          className={cn("", classNames?.previous)}>
           <span className="hidden sm:inline">Previous</span>
           <span className="sm:hidden">Prev</span>
-        </button>
+        </Button>
 
         <div className={cn("flex items-center space-x-1", classNames?.pagesWrapper)}>
           {Array.from({ length: Math.min(3, pagination?.total_pages) }, (_, i) => {
@@ -154,33 +169,27 @@ const CustomPagination = ({
             }
 
             return (
-              <button
+              <Button
+                size={"sm"}
                 key={pageNum}
+                variant={pagination.page === pageNum ? "default" : "outline"}
                 onClick={() => updatePagination({ page: pageNum })}
-                className={cn(
-                  `rounded-md px-2 py-1 text-sm sm:px-3 ${
-                    pagination.page === pageNum
-                      ? "bg-primary text-white"
-                      : "border border-gray-300 hover:bg-gray-50"
-                  }`,
-                  classNames?.current
-                )}>
+                className={cn(``, classNames?.current)}>
                 {pageNum}
-              </button>
+              </Button>
             );
           })}
         </div>
 
-        <button
+        <Button
+          size={"sm"}
+          variant={"outline"}
           onClick={() => updatePagination({ page: pagination.page + 1 })}
           disabled={!pagination.has_next}
-          className={cn(
-            "rounded-md border border-gray-300 px-2 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3",
-            classNames?.next
-          )}>
+          className={cn("", classNames?.next)}>
           <span className="hidden sm:inline">Next</span>
           <span className="sm:hidden">Next</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

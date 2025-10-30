@@ -92,11 +92,36 @@ function transformMeta(apiMeta: any) {
   };
 }
 
-export default async function RisksPage({ params }: { params: Promise<{ id: string }> }) {
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    search?: string;
+    category?: string;
+    status?: string;
+    page?: string;
+    limit?: string;
+  }>;
+};
+
+export default async function RisksPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const {
+    search = "",
+    category = "all",
+    status = "all",
+    page = "1",
+    limit = "10"
+  } = await searchParams;
 
   try {
-    const response = await getRisksInRegister(id);
+    const response = await getRisksInRegister(id, {
+      search: search || undefined,
+      category: category !== "all" ? category : undefined,
+      status: status !== "all" ? status : undefined,
+      page: Number(page),
+      limit: Number(limit)
+    });
+
     if (!response?.data?.data) {
       return (
         <div className="space-y-6">
@@ -105,9 +130,9 @@ export default async function RisksPage({ params }: { params: Promise<{ id: stri
             risks={[]}
             meta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
             registerId={id}
-            currentSearch=""
-            currentCategory="all"
-            currentStatus="all"
+            currentSearch={search}
+            currentCategory={category}
+            currentStatus={status}
           />
         </div>
       );
@@ -123,9 +148,9 @@ export default async function RisksPage({ params }: { params: Promise<{ id: stri
           risks={transformedRisks}
           meta={transformedMeta}
           registerId={id}
-          currentSearch=""
-          currentCategory="all"
-          currentStatus="all"
+          currentSearch={search}
+          currentCategory={category}
+          currentStatus={status}
         />
       </div>
     );
@@ -138,9 +163,9 @@ export default async function RisksPage({ params }: { params: Promise<{ id: stri
           risks={[]}
           meta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
           registerId={id}
-          currentSearch=""
-          currentCategory="all"
-          currentStatus="all"
+          currentSearch={search}
+          currentCategory={category}
+          currentStatus={status}
         />
       </div>
     );

@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -20,13 +19,15 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Search, Trash2, View, Pencil } from "lucide-react";
+import { Trash2, View, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { deleteRisk } from "@/app/_actions/risk-module-actions";
-import { RiskFormDialog } from "@/components/forms/risk-form-dialog"; // Keep for editing
+import { RiskFormDialog } from "@/components/forms/risk-form-dialog";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
+import Search from "@/components/ui/search-field";
+import { CustomPagination } from "@/components/ui/pagination";
 
 type Risk = {
   id: string;
@@ -43,7 +44,7 @@ type Risk = {
   riskMagnitude: string;
   status: string;
   owner: string;
-  step?: number; // Add this to track which step the risk is on
+  step?: number;
 };
 
 type Meta = {
@@ -74,7 +75,6 @@ export default function RisksTable({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  // Separate states for create and edit dialogs
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState<Risk | undefined>();
@@ -92,7 +92,6 @@ export default function RisksTable({
       params.delete(key);
     }
 
-    // Reset to page 1 on filter change
     if (key !== "page") {
       params.delete("page");
     }
@@ -114,8 +113,22 @@ export default function RisksTable({
     updateSearchParams("status", value);
   };
 
-  const handlePageChange = (newPage: number) => {
-    updateSearchParams("page", String(newPage));
+  // UPDATED: Pagination handler for CustomPagination
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("limit", String(page_size)); // Use 'limit' instead of 'page_size'
+      params.set("page", "1");
+    }
+
+    startTransition(() => {
+      router.push(`?${params.toString()}`);
+    });
   };
 
   const handleEdit = (risk: Risk) => {
@@ -164,7 +177,7 @@ export default function RisksTable({
       open: "bg-blue-100 text-blue-700",
       monitoring: "bg-purple-100 text-purple-700",
       closed: "bg-gray-100 text-gray-700",
-      draft: "bg-slate-100 text-slate-700" // Add draft status
+      draft: "bg-slate-100 text-slate-700"
     };
     return colors[status.toLowerCase() as keyof typeof colors] || "bg-gray-100 text-gray-700";
   };
@@ -176,21 +189,27 @@ export default function RisksTable({
     return "text-green-600";
   };
 
+  // ADDED: Transform meta to CustomPagination format
+  const customPaginationData = {
+    page: meta.page,
+    page_size: meta.limit,
+    total_pages: meta.totalPages,
+    totalCount: meta.total,
+    has_prev: meta.page > 1,
+    has_next: meta.page < meta.totalPages
+  };
+
   return (
     <>
-      {/* Filters */}
       <Card className="container mx-auto mb-8 px-4 py-8">
         <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search risks..."
-              defaultValue={currentSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9"
-              disabled={isPending}
-            />
-          </div>
+          <Search
+            placeholder="Search risks..."
+            defaultValue={currentSearch}
+            onChange={(e) => handleSearchChange(e)}
+            disabled={isPending}
+          />
+
           <Select value={currentCategory} onValueChange={handleCategoryChange} disabled={isPending}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Category" />
@@ -219,7 +238,6 @@ export default function RisksTable({
         </div>
       </Card>
 
-      {/* Table */}
       <Card className="container mx-auto">
         <Table>
           <TableHeader>
@@ -310,13 +328,7 @@ export default function RisksTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        // onClick={() =>
-                        //   router.push(`/dashboard/risks/risk/${risk.id}`)
-                        // }
-                        className="h-8 gap-1.5">
+                      <Button size="sm" variant="outline" className="h-8 gap-1.5">
                         <View className="h-3.5 w-3.5" />
                         View
                       </Button>
@@ -344,41 +356,23 @@ export default function RisksTable({
           </TableBody>
         </Table>
 
-        {/* Pagination */}
         {risks?.length > 0 && (
-          <div className="flex items-center justify-between border-t p-4">
-            <p className="text-muted-foreground text-sm">
-              Showing {(meta?.page - 1) * meta?.limit + 1} to{" "}
-              {Math.min(meta?.page * meta?.limit, meta?.total)} of {meta?.total} risks
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={meta?.page === 1}
-                onClick={() => handlePageChange(meta?.page - 1)}>
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={meta?.page === meta?.totalPages}
-                onClick={() => handlePageChange(meta?.page + 1)}>
-                Next
-              </Button>
-            </div>
-          </div>
+          <CustomPagination
+            pagination={customPaginationData}
+            updatePagination={updatePagination}
+            allowSetPageSize={true}
+            showDetails={true}
+            className="border-t"
+          />
         )}
       </Card>
 
-      {/* Multi-step form for creating new risks */}
       <MultiStepRiskForm
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         registerId={registerId}
       />
 
-      {/* Keep the old form dialog for editing existing risks */}
       <RiskFormDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}

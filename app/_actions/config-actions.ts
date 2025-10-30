@@ -19,14 +19,15 @@ import { revalidatePath } from "next/cache";
  * Status: ✅ Documented in API
  * Query Parameters: province_id, town_id, is_active, limit, offset
  */
-export async function getBranches(
-  params?: Pagination & {
-    provinceId?: string;
-    townId?: string;
-    isActive?: boolean;
-  }
-): Promise<APIResponse> {
+export async function getBranches(params?: {
+  provinceId?: string;
+  townId?: string;
+  isActive?: boolean;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
+  
   queryParams.append("page_size", String(params?.page_size || 10));
   queryParams.append("page", String(params?.page || 1));
 
@@ -46,7 +47,6 @@ export async function getBranches(
     return handleError(error, "GET", url);
   }
 }
-
 /**
  * Get single branch by ID
  * Endpoint: GET /api/v1/branches/{id}
@@ -774,12 +774,22 @@ export async function getProvincesWithTowns(): Promise<APIResponse> {
  * Endpoint: GET /api/v1/provinces
  * Status: ✅ Documented in API
  */
-export async function getProvinces(isActive?: boolean): Promise<APIResponse> {
-  const url = `/api/v1/provinces${isActive !== undefined ? `?is_active=${isActive}` : ""}`;
+export async function getProvinces(params?: {
+  isActive?: boolean;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+  
+  if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
+  const url = `/api/v1/provinces${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url });
-    return successResponse(response?.data, "Provinces fetched successfully");
+    return successResponse(response?.data?.data, "Provinces fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -904,16 +914,17 @@ export async function getTowns(params?: {
   page?: number;
 }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
+  
   if (params?.provinceId) queryParams.append("province_id", params.provinceId);
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
   if (params?.page_size !== undefined) queryParams.append("page_size", String(params.page_size));
   if (params?.page !== undefined) queryParams.append("page", String(params.page));
 
-  const url = `/api/v1/towns${queryParams.toString() ? `?${queryParams.toString()}` : ``}`;
+  const url = `/api/v1/towns${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url });
-    return successResponse(response?.data, "Towns fetched successfully");
+    return successResponse(response?.data?.data, "Towns fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }

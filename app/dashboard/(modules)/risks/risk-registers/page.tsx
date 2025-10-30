@@ -16,29 +16,31 @@ type PageProps = {
 export default async function RiskRegistersPage({ searchParams }: PageProps) {
   const search = searchParams.search || "";
   const status = searchParams.status || "";
-  const page =  1;
+  const page = 1;
 
   const response = await getRiskRegisters({
     name: search || undefined,
     status: status && status !== "all" ? status.toUpperCase() : undefined,
     page,
-    page_size: 10,
+    page_size: 10
   });
 
   const data = response.success && response.data ? response.data : null;
   const registers = data?.data || [];
-  const pagination = {
-    total: data?.total || 0,
-    page: data?.page || 1,
-    page_size: data?.page_size || 10,
-    total_pages: data?.total_pages || 0,
+  const pagination = data?.pagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
   };
 
   const stats = {
     total: pagination.total,
-    open: registers.filter((r:any) => r.status === "OPEN").length,
-    closed: registers.filter((r:any) => r.status === "CLOSED").length,
-    overdue: registers.filter((r:any) => r.timeline_status === "OVERDUE").length,
+    open: registers.filter((r: any) => r.status === "OPEN").length,
+    closed: registers.filter((r: any) => r.status === "CLOSED").length,
+    overdue: registers.filter((r: any) => r.timeline_status === "OVERDUE").length
   };
 
   return (

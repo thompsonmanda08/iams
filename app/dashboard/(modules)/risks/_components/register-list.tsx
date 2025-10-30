@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,13 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Archive, FolderOpen, View, Pencil, Trash2 } from "lucide-react";
+import { Plus, FileText, Archive, FolderOpen, View, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createKRIRegister } from "@/app/_actions/risk-module-actions";
 import { toast } from "sonner";
+import Search from "@/components/ui/search-field";
+import { CustomPagination } from "@/components/ui/pagination";
 
 type KRIRegister = {
   id: string;
@@ -37,6 +39,15 @@ type KRIRegister = {
   updated_at: string;
 };
 
+type Pagination = {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+};
+
 type CreateRegisterForm = {
   name: string;
   description: string;
@@ -44,13 +55,21 @@ type CreateRegisterForm = {
 
 type Props = {
   initialRegisters: KRIRegister[];
+  initialPagination: Pagination;
+  currentSearch: string;
 };
 
-export default function KRIRegistersClient({ initialRegisters }: Props) {
+export default function KRIRegistersClient({
+  initialRegisters,
+  initialPagination,
+  currentSearch
+}: Props) {
   const router = useRouter();
-  const [registers, setRegisters] = useState<KRIRegister[]>(initialRegisters);
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const [registers] = useState<KRIRegister[]>(initialRegisters);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateRegisterForm>({
     name: "",
@@ -63,13 +82,54 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
     return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   };
 
+  // ADDED: Search params handler
+  const updateSearchParams = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+
+    // Reset to page 1 on search change
+    if (key === "search") {
+      params.delete("page");
+    }
+
+    startTransition(() => {
+      router.push(`?${params.toString()}`);
+    });
+  };
+
+  const handleSearchChange = (value: string) => {
+    updateSearchParams("search", value);
+  };
+
+  // ADDED: Pagination handler
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("page_size", String(page_size));
+      params.set("page", "1");
+    }
+
+    startTransition(() => {
+      router.push(`?${params.toString()}`);
+    });
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
       const response = await createKRIRegister(formData);
 
       if (response.success && response.data) {
-        setRegisters([response.data, ...registers]);
         setDialogOpen(false);
         setFormData({ name: "", description: "" });
         setErrors({});
@@ -86,16 +146,6 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
     }
   };
 
-  const filteredRegisters = registers?.filter(
-    (register) =>
-      register.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      register.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const totalRegisters = registers?.length;
-  const activeCount = registers?.filter((r) => r.is_active).length;
-  const inactiveCount = registers?.filter((r) => !r.is_active).length;
-
   const handleNavigateToRegister = (registerId: string) => {
     router.push(`/dashboard/risks/kri/${registerId}`);
   };
@@ -103,6 +153,21 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
   const getStatusColor = (isActive: boolean) => {
     return isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700";
   };
+
+  // ADDED: Transform pagination for CustomPagination
+  const customPaginationData = {
+    page: initialPagination.page,
+    page_size: initialPagination.page_size,
+    total_pages: initialPagination.total_pages,
+    totalCount: initialPagination.total,
+    has_prev: initialPagination.has_prev,
+    has_next: initialPagination.has_next
+  };
+
+  // Stats
+  const totalRegisters = initialPagination.total;
+  const activeCount = registers.filter((r) => r.is_active).length;
+  const inactiveCount = registers.filter((r) => !r.is_active).length;
 
   return (
     <div className="bg-background min-h-screen">
@@ -164,15 +229,12 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
       {/* Filters */}
       <div className="container mx-auto px-4 pt-6">
         <Card className="p-4">
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search registers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          <Search
+            placeholder="Search registers..."
+            defaultValue={currentSearch}
+            onChange={handleSearchChange}
+            disabled={isPending}
+          />
         </Card>
       </div>
 
@@ -190,18 +252,18 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRegisters?.length === 0 ? (
+              {registers?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-12 text-center">
                     <div className="flex flex-col items-center">
                       <FolderOpen className="text-muted-foreground mx-auto h-12 w-12" />
                       <h3 className="mt-4 text-lg font-semibold">No registers found</h3>
                       <p className="text-muted-foreground mt-2 text-sm">
-                        {searchQuery
+                        {currentSearch
                           ? "Try adjusting your search criteria"
                           : "Get started by creating your first KRI register"}
                       </p>
-                      {!searchQuery && (
+                      {!currentSearch && (
                         <Button className="mt-4" onClick={() => setDialogOpen(true)}>
                           <Plus className="mr-2 h-4 w-4" />
                           Create Register
@@ -211,7 +273,7 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredRegisters?.map((register) => (
+                registers?.map((register) => (
                   <TableRow key={register.id}>
                     <TableCell>
                       <p className="text-foreground font-medium">{register.name}</p>
@@ -252,18 +314,13 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
                           <View className="h-3.5 w-3.5" />
                           View
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          // onClick={() => handleEdit(item.id)}
-                          className="h-8 gap-1.5">
+                        <Button size="sm" variant="outline" className="h-8 gap-1.5">
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          // onClick={() => handleDelete(item.id)}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                           <Trash2 className="h-3.5 w-3.5" />
                           Delete
@@ -275,12 +332,16 @@ export default function KRIRegistersClient({ initialRegisters }: Props) {
               )}
             </TableBody>
           </Table>
-          {filteredRegisters?.length > 0 && (
-            <div className="flex items-center justify-between border-t p-4">
-              <p className="text-muted-foreground text-sm">
-                Showing {filteredRegisters?.length} of {totalRegisters} registers
-              </p>
-            </div>
+
+          {/* ADDED: CustomPagination */}
+          {registers?.length > 0 && (
+            <CustomPagination
+              pagination={customPaginationData}
+              updatePagination={updatePagination}
+              allowSetPageSize={true}
+              showDetails={true}
+              className="border-t"
+            />
           )}
         </Card>
       </div>

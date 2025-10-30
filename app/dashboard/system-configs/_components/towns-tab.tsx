@@ -57,7 +57,7 @@ interface Town {
 interface TownsTabProps {
   initialTowns: Town[];
   provinces: Province[];
-  pagination: Pagination | null;
+  pagination: Pagination;
 }
 
 export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps) {
@@ -97,12 +97,30 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
     deleteTownMutation.mutate(id);
   };
 
-  function handlePageChange({ page }: { page: number }) {
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    params.set("page_size", String(pagination?.page_size || 10));
+    params.set("tab", "towns");
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("page_size", String(page_size));
+      params.set("page", "1");
+    }
+
     router.push(`?${params.toString()}`);
-  }
+  };
+
+  const customPaginationData = {
+    page: pagination?.page,
+    page_size: pagination?.page_size,
+    total_pages: pagination?.total_pages,
+    totalCount: pagination?.total,
+    has_prev: pagination?.has_prev,
+    has_next: pagination?.has_next
+  };
 
   return (
     <Card className="p-4">
@@ -211,7 +229,13 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
 
       {/* Pagination */}
       {pagination && (
-        <CustomPagination pagination={pagination} showDetails updatePagination={handlePageChange} />
+        <CustomPagination
+          pagination={customPaginationData}
+          updatePagination={updatePagination}
+          allowSetPageSize={true}
+          showDetails={true}
+          className="mt-4 border-t"
+        />
       )}
 
       <CreateOrUpdateTownDialog

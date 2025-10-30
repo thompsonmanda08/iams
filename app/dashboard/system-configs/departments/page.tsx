@@ -6,18 +6,27 @@ type PageProps = {
   params: Promise<{ [key: string]: string }>;
   searchParams: Promise<Pagination & { [key: string]: string }>;
 };
+
 export default async function DepartmentsConfigPage({ searchParams }: PageProps) {
   const urlParams = await searchParams;
   const page = urlParams.page ? Number(urlParams.page) : 1;
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
-  // Fetch all data server-side
-  const [departmentsResponse] = await Promise.all([getDepartments({ page, page_size })]);
 
-  const departments = departmentsResponse.success ? departmentsResponse.data?.data : [];
+  const departmentsResponse = await getDepartments({ page, page_size });
+
+  const data = departmentsResponse.success ? departmentsResponse.data : null;
+  const departments = data?.data || [];
+  const pagination = data?.pagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
 
   return (
     <div className="container mx-auto space-y-6 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-foreground text-3xl font-bold">Department Setup</h1>
@@ -25,7 +34,7 @@ export default async function DepartmentsConfigPage({ searchParams }: PageProps)
         </div>
       </div>
 
-      <DepartmentsConfig initialDepartments={departments} />
+      <DepartmentsConfig initialDepartments={departments} pagination={pagination} />
     </div>
   );
 }

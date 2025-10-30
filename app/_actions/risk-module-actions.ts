@@ -629,21 +629,37 @@ export async function updateRiskStepThree(
 /**
  * Get risks in a risk register
  */
-export async function getRisksInRegister(registerId: string): Promise<APIResponse> {
+export async function getRisksInRegister(
+  registerId: string,
+  params?: {
+    search?: string;
+    category?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }
+): Promise<APIResponse> {
   try {
-    const response = await authenticatedApiClient( {
-      url: `/api/v1/risk-registers/${registerId}/risks`,
-      method: "GET",
+    const queryParams = new URLSearchParams();
+
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.category) queryParams.append("category", params.category);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.limit) queryParams.append("limit", String(params.limit));
+
+    const url = `/api/v1/risk-registers/${registerId}/risks${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
+
+    const response = await authenticatedApiClient({
+      url: url,
+      method: "GET"
     });
-    console.log("RISK RES:", response);
-    
+
     return successResponse(response.data.data);
   } catch (error) {
-    return handleError(
-      error,
-      "GET | GET RISKS IN REGISTER",
-      `/api/v1/risk-registers/${registerId}/risks`
-    );
+    return handleError(error, "GET | GET RISKS IN REGISTER", `/api/v1/risks/${registerId}`);
   }
 }
 
@@ -835,13 +851,30 @@ export async function getHeatMap(): Promise<APIResponse> {
 /**
  * Get all KRI registers
  */
-export async function getKRIRegisters(params?: { is_active?: boolean }): Promise<APIResponse> {
+export async function getKRIRegisters(params?: {
+  is_active?: boolean;
+  search?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+
+    if (params?.is_active !== undefined)
+      queryParams.append("is_active", String(params.is_active));
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
+    const url = `/api/v1/kri-registers${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
+
     const response = await authenticatedApiClient({
-      url:"/api/v1/kri-registers", 
-      params,
-      method:"GET"
-    });;
+      url: url,
+      method: "GET"
+    });
+
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI REGISTERS", "/api/v1/kri-registers");

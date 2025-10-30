@@ -8,7 +8,17 @@ import { createAuthSession, updateAuthSession, verifySession } from "@/lib/sessi
 import { USER_SESSION } from "@/lib/constants";
 import { cookies } from "next/headers";
 
-export async function getUsers(params?: UserQueryParams): Promise<APIResponse> {
+export async function getUsers(params?: {
+  branchId?: string;
+  departmentId?: string;
+  roleId?: string;
+  isActive?: boolean;
+  isLdapUser?: boolean;
+  search?: string;
+  role?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
 
   if (params?.branchId) queryParams.append("branch_id", params.branchId);
@@ -17,14 +27,16 @@ export async function getUsers(params?: UserQueryParams): Promise<APIResponse> {
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
   if (params?.isLdapUser !== undefined)
     queryParams.append("is_ldap_user", String(params.isLdapUser));
-  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+  if (params?.search) queryParams.append("search", params.search);
+  if (params?.role) queryParams.append("role", params.role);
   if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
 
   const url = `/api/v1/users${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url: url, method: "GET" });
-    return successResponse(response.data.data || response.data, "Users fetched successfully");
+    return successResponse(response.data.data, "Users fetched successfully");
   } catch (error) {
     return handleError(error, "GET", url);
   }

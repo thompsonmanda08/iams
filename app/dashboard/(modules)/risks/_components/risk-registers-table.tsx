@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -20,10 +19,12 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Notebook, Pencil, Search, Trash2, View } from "lucide-react";
+import { Notebook, Pencil, Trash2, View } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { RiskRegister } from "@/lib/types/risk-types";
+import { CustomPagination } from "@/components/ui/pagination";
+import Search from "@/components/ui/search-field";
 
 type RiskRegistersTableProps = {
   registers: RiskRegister[];
@@ -32,6 +33,8 @@ type RiskRegistersTableProps = {
     page: number;
     page_size: number;
     total_pages: number;
+    has_prev: boolean;
+    has_next: boolean;
   };
   currentStatus: string;
   currentSearch: string;
@@ -74,8 +77,23 @@ export default function RiskRegistersTable({
     updateSearchParams("status", value);
   };
 
-  const handlePageChange = (newPage: number) => {
-    updateSearchParams("page", String(newPage));
+  // Updated pagination handler for CustomPagination
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("page_size", String(page_size));
+      // Reset to page 1 when page size changes
+      params.set("page", "1");
+    }
+
+    startTransition(() => {
+      router.push(`?${params.toString()}`);
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -103,24 +121,27 @@ export default function RiskRegistersTable({
     }
   };
 
-  const startIndex = (pagination.page - 1) * pagination.page_size + 1;
-  const endIndex = Math.min(pagination.page * pagination.page_size, pagination.total);
+  const customPaginationData = {
+    page: pagination.page,
+    page_size: pagination.page_size,
+    total_pages: pagination.total_pages,
+    totalCount: pagination.total,
+    has_prev: pagination.has_prev,
+    has_next: pagination.has_next
+  };
 
   return (
     <>
       {/* Filters */}
       <Card className="container mx-auto mb-8 px-4 py-8">
         <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search risk registers..."
-              defaultValue={currentSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9"
-              disabled={isPending}
-            />
-          </div>
+          <Search
+            placeholder="Search risk registers..."
+            defaultValue={currentSearch}
+            onChange={(e) => handleSearchChange(e)}
+            disabled={isPending}
+          />
+
           <Select
             value={currentStatus || "all"}
             onValueChange={handleStatusChange}
@@ -136,6 +157,8 @@ export default function RiskRegistersTable({
           </Select>
         </div>
       </Card>
+
+      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -219,7 +242,7 @@ export default function RiskRegistersTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        // onClick={() => handleEdit(item.id)}
+                        // onClick={() => handleEdit(register.id)}
                         className="h-8 gap-1.5">
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
@@ -227,7 +250,7 @@ export default function RiskRegistersTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        // onClick={() => handleDelete(item.id)}
+                        // onClick={() => handleDelete(register.id)}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
@@ -240,32 +263,13 @@ export default function RiskRegistersTable({
           </TableBody>
         </Table>
         {registers.length > 0 && (
-          <div className="flex items-center justify-between border-t p-4">
-            <p className="text-muted-foreground text-sm">
-              Showing {startIndex} to {endIndex} of {pagination.total} risk registers
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.page === 1 || isPending}
-                onClick={() => handlePageChange(pagination.page - 1)}>
-                Previous
-              </Button>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">
-                  Page {pagination.page} of {pagination.total_pages}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.page === pagination.total_pages || isPending}
-                onClick={() => handlePageChange(pagination.page + 1)}>
-                Next
-              </Button>
-            </div>
-          </div>
+          <CustomPagination
+            pagination={customPaginationData}
+            updatePagination={updatePagination}
+            allowSetPageSize={true}
+            showDetails={true}
+            className="border-t"
+          />
         )}
       </Card>
     </>

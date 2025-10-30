@@ -14,21 +14,50 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
   const urlParams = await searchParams;
   const page = urlParams.page ? Number(urlParams.page) : 1;
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
+  const activeTab = urlParams.tab || "branches";
 
   const [branchesResponse, provincesResponse, townsResponse] = await Promise.all([
     getBranches({ page, page_size }),
-    getProvinces(),
+    getProvinces({ page, page_size }),
     getTowns({ page, page_size })
   ]);
 
-  const branches = branchesResponse.success ? branchesResponse.data?.data : [];
-  const provinces = provincesResponse.success ? provincesResponse.data?.data?.data : [];
-  const towns = townsResponse.success ? townsResponse.data?.data?.data : [];
-  const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
+  const branchesData = branchesResponse.success ? branchesResponse.data : null;
+  const provincesData = provincesResponse.success ? provincesResponse.data : null;
+  const townsData = townsResponse.success ? townsResponse.data : null;
+
+  const branches = branchesData?.data || [];
+  const branchesPagination = branchesData?.pagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
+
+  const provinces = provincesData?.data || [];
+  const provincesPagination = provincesData?.pagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
+
+  const towns = townsData?.data || [];
+  const townsPagination = townsData?.pagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
 
   return (
     <div className="container mx-auto space-y-6 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-foreground text-3xl font-bold">Locations Setup</h1>
@@ -38,30 +67,30 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <div className="">
-        <Tabs defaultValue="branches" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="provinces">Provinces</TabsTrigger>
-            <TabsTrigger value="towns">Towns</TabsTrigger>
-            <TabsTrigger value="branches">Branches</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue={activeTab} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="provinces">Provinces</TabsTrigger>
+          <TabsTrigger value="towns">Towns</TabsTrigger>
+          <TabsTrigger value="branches">Branches</TabsTrigger>
+        </TabsList>
 
-          {/* Provinces Tab */}
-          <TabsContent value="provinces">
-            <ProvincesTab initialProvinces={provinces} />
-          </TabsContent>
+        <TabsContent value="provinces">
+          <ProvincesTab initialProvinces={provinces} pagination={provincesPagination} />
+        </TabsContent>
 
-          {/* Towns Tab */}
-          <TabsContent value="towns">
-            <TownsTab initialTowns={towns} provinces={provinces} pagination={townsPagination} />
-          </TabsContent>
+        <TabsContent value="towns">
+          <TownsTab initialTowns={towns} provinces={provinces} pagination={townsPagination} />
+        </TabsContent>
 
-          {/* Branches Tab */}
-          <TabsContent value="branches">
-            <BranchesTab initialBranches={branches} provinces={provinces} towns={towns} />
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="branches">
+          <BranchesTab
+            initialBranches={branches}
+            provinces={provinces}
+            towns={towns}
+            pagination={branchesPagination}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

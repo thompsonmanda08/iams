@@ -1,9 +1,40 @@
 import { getKRIRegisters } from "@/app/_actions/risk-module-actions";
-import KRIRegisterList from "../_components/register-list";
+import KRIRegistersClient from "../_components/register-list";
 
-export default async function KRIRegistersPage() {
-  const response = await getKRIRegisters();
-  const registers = response?.data?.data ?? [];
 
-  return <KRIRegisterList initialRegisters={registers} />;
+type PageProps = {
+  searchParams: Promise<{
+    search?: string;
+    page?: string;
+    page_size?: string;
+  }>;
+};
+
+export default async function KRIRegistersPage({ searchParams }: PageProps) {
+  const { search = "", page = "1", page_size = "10" } = await searchParams;
+
+  const response = await getKRIRegisters({
+    search: search || undefined,
+    page: Number(page),
+    page_size: Number(page_size)
+  });
+
+  const data = response?.data;
+  const registers = data?.data ?? [];
+  const pagination = data?.pagination ?? {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
+
+  return (
+    <KRIRegistersClient
+      initialRegisters={registers}
+      initialPagination={pagination}
+      currentSearch={search}
+    />
+  );
 }

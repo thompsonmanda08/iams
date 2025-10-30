@@ -37,6 +37,8 @@ import { createBranch, updateBranch, deleteBranch } from "@/app/_actions/config-
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CustomPagination } from "@/components/ui/pagination";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Province {
   id: string;
@@ -62,13 +64,25 @@ interface Branch {
   is_active: boolean;
 }
 
+interface Pagination {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
 interface BranchesTabProps {
   initialBranches: Branch[];
   provinces: Province[];
   towns: Town[];
+  pagination: Pagination;
 }
 
-export function BranchesTab({ initialBranches, provinces, towns }: BranchesTabProps) {
+export function BranchesTab({ initialBranches, provinces, towns, pagination }: BranchesTabProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [branches, setBranches] = useState<Branch[]>(initialBranches);
   const [openModal, setOpenModal] = useState(false);
@@ -107,6 +121,31 @@ export function BranchesTab({ initialBranches, provinces, towns }: BranchesTabPr
       return toast.warning("This action currently is disabled");
     }
     deleteBranchMutation.mutate(id);
+  };
+
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "branches");
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("page_size", String(page_size));
+      params.set("page", "1");
+    }
+
+    router.push(`?${params.toString()}`);
+  };
+
+  const customPaginationData = {
+    page: pagination.page,
+    page_size: pagination.page_size,
+    total_pages: pagination.total_pages,
+    totalCount: pagination.total,
+    has_prev: pagination.has_prev,
+    has_next: pagination.has_next
   };
 
   return (
@@ -242,6 +281,15 @@ export function BranchesTab({ initialBranches, provinces, towns }: BranchesTabPr
           )}
         </TableBody>
       </Table>
+      {branches.length > 0 && (
+        <CustomPagination
+          pagination={customPaginationData}
+          updatePagination={updatePagination}
+          allowSetPageSize={true}
+          showDetails={true}
+          className="mt-4 border-t"
+        />
+      )}
 
       <CreateOrUpdateBranchDialog
         openModal={openModal}
