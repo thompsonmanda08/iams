@@ -14,7 +14,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
-import authenticatedApiClient, { axios, handleBadRequest, handleError, successResponse } from "./api-config";
+import authenticatedApiClient, { handleError, successResponse } from "./api-config";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -383,7 +383,10 @@ export async function getRiskCategories(params?: {
 export async function getRiskCategory(id: string): Promise<APIResponse> {
   const url = `/api/v1/risk-categories/${id}`;
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({
+      url: url,
+      method: "GET",
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET RISK CATEGORIES", url);
@@ -395,7 +398,11 @@ export async function getRiskCategory(id: string): Promise<APIResponse> {
  */
 export async function createRiskCategory(input: RiskCategoryInput): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/risk-categories", input);
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-categories",
+      data: input,
+      method: "POST"
+    });
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
   } catch (error) {
@@ -411,7 +418,11 @@ export async function updateRiskCategory(
   input: Partial<RiskCategoryInput>
 ): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/risk-categories/${id}`, input);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/risk-categories/${id}`, 
+      data:input,
+      method: "PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
   } catch (error) {
@@ -425,7 +436,10 @@ export async function updateRiskCategory(
  */
 export async function getDepartmentRiskCategories(departmentId: string): Promise<APIResponse> {
   try {
-    const response = await axios.get(`/api/v1/departments/${departmentId}/risk-categories`);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/departments/${departmentId}/risk-categories`,
+      method: "GET"
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(
@@ -507,7 +521,11 @@ export async function updateRiskRegister(
   input: Partial<RiskRegisterInput>
 ): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/risk-registers/${id}`, input);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/risk-registers/${id}`, 
+      data:input,
+      method: "PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
@@ -520,7 +538,10 @@ export async function updateRiskRegister(
  */
 export async function closeRiskRegister(id: string): Promise<APIResponse> {
   try {
-    const response = await axios.post(`/api/v1/risk-registers/${id}/close`);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/risk-registers/${id}/close`,
+      method: "POST"
+    });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
@@ -533,7 +554,10 @@ export async function closeRiskRegister(id: string): Promise<APIResponse> {
  */
 export async function deleteRiskRegister(id: string): Promise<APIResponse> {
   try {
-    await axios.delete(`/api/v1/risk-registers/${id}`);
+    await authenticatedApiClient({
+      url:`/api/v1/risk-registers/${id}`,
+      method: "DELETE"
+    });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(undefined);
   } catch (error) {
@@ -546,7 +570,10 @@ export async function deleteRiskRegister(id: string): Promise<APIResponse> {
  */
 export async function getBranchRiskRegisters(branchId: string): Promise<APIResponse> {
   try {
-    const response = await axios.get(`/api/v1/branches/${branchId}/risk-registers`);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/branches/${branchId}/risk-registers`,
+      method: "GET"
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(
@@ -657,7 +684,11 @@ export async function getRisksInRegister(
  */
 export async function updateRiskStatus(id: string, status: RiskStatus): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/risks/${id}/status`, { status });
+    const response = await authenticatedApiClient({
+      url:`/api/v1/risks/${id}/status`,
+      data: { status },
+      method: "PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
   } catch (error) {
@@ -673,8 +704,11 @@ export async function submitDepartmentRisks(
   departmentId: string
 ): Promise<APIResponse> {
   try {
-    const response = await axios.post(
-      `/api/v1/risk-registers/${registerId}/departments/${departmentId}/submit`
+    const response = await authenticatedApiClient(
+     {
+      url:`/api/v1/risk-registers/${registerId}/departments/${departmentId}/submit`,
+      method: "POST"
+     }
     );
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
@@ -725,13 +759,11 @@ export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
  */
 export async function getRisk(id: string): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const risk = mockRisks.find((r) => r.id === id);
-    if (!risk) {
-      return handleBadRequest("Risk not found");
-    }
-    return successResponse(risk);
+   const response = await authenticatedApiClient({
+      url:`/api/v1/risks/${id}`, 
+      method:"GET"
+    });
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET RISK", `/api/v1/risks/${id}`);
   }
@@ -742,7 +774,11 @@ export async function getRisk(id: string): Promise<APIResponse> {
  */
 export async function createRisk(input: any): Promise<APIResponse> {
   try {
-    const response = await axios.post("/api/v1/risks");
+    const response = await authenticatedApiClient({
+      url:"/api/v1/risks", 
+      data:input,
+      method:"POST"
+    });
     revalidatePath("/dashboard/(modules)/risks");
    return successResponse(response.data);
   } catch (error) {
@@ -756,14 +792,13 @@ export async function createRisk(input: any): Promise<APIResponse> {
 export async function updateRisk(id: string, input: Partial<Risk>): Promise<APIResponse> {
   try {
     // TODO: Replace with real API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const index = mockRisks.findIndex((r) => r.id === id);
-    if (index === -1) {
-      return handleBadRequest("Risk not found");
-    }
-    mockRisks[index] = { ...mockRisks[index], ...input, updated_at: new Date() };
+   const response =  await authenticatedApiClient({
+      url:`/api/v1/risks/${id}`, 
+      data:input,
+      method:"PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks");
-    return successResponse(mockRisks[index]);
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "PUT | UPDATE RISK", `/api/v1/risks/${id}`);
   }
@@ -774,15 +809,12 @@ export async function updateRisk(id: string, input: Partial<Risk>): Promise<APIR
  */
 export async function deleteRisk(id: string): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const index = mockRisks.findIndex((r) => r.id === id);
-    if (index === -1) {
-      return handleBadRequest("Risk not found");
-    }
-    mockRisks.splice(index, 1);
+   const response = await authenticatedApiClient({
+    url:`/api/v1/risks/${id}`,
+    method:"DELETE"
+   })
     revalidatePath("/dashboard/(modules)/risks");
-    return successResponse(undefined);
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "DELETE | DELETE RISK", `/api/v1/risks/${id}`);
   }
@@ -794,6 +826,11 @@ export async function deleteRisk(id: string): Promise<APIResponse> {
 export async function getRiskMatrix(): Promise<APIResponse> {
   try {
     // TODO: Replace with real API call
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-matrix",
+      method: "GET"
+    });
+    // return successResponse(response.data.data);
     await new Promise((resolve) => setTimeout(resolve, 300));
     return successResponse({
       low: 12,
@@ -811,6 +848,12 @@ export async function getRiskMatrix(): Promise<APIResponse> {
 export async function getHeatMap(): Promise<APIResponse> {
   try {
     // TODO: Replace with real API call when backend is ready
+const response = await authenticatedApiClient({
+      url: "/api/v1/heatmap",
+      method: "GET"
+    });
+    // return successResponse(response.data.data);
+
     // Mock implementation for development
     const mockData: HeatMapData[] = [];
 
@@ -911,7 +954,11 @@ export async function updateKRIRegister(
   input: Partial<KRIRegisterInput>
 ): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/kri-registers/${id}`, input);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kri-registers/${id}`, 
+      data:input,
+      method: "PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {
@@ -924,9 +971,12 @@ export async function updateKRIRegister(
  */
 export async function deleteKRIRegister(id: string): Promise<APIResponse> {
   try {
-    await axios.delete(`/api/v1/kri-registers/${id}`);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kri-registers/${id}`, 
+      method: "DELETE"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
-    return successResponse(undefined);
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "DELETE | DELETE KRI REGISTER", `/api/v1/kri-registers/${id}`);
   }
@@ -991,13 +1041,11 @@ export async function getKRIs(params?: {
  */
 export async function getKRI(id: string): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    // const kri = mockKRIs.find((k) => k.id === id);
-    // if (!kri) {
-    //   return handleBadRequest("KRI not found");
-    // }
-    return successResponse([]);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kris/${id}`, 
+      method:"GET"
+    });
+    return successResponse(response);
   } catch (error) {
     return handleError(error, "GET | GET KRI", `/api/v1/kris/${id}`);
   }
@@ -1025,7 +1073,11 @@ export async function createKRI(input: KRIInput): Promise<APIResponse> {
  */
 export async function updateKRI(id: string, input: Partial<KRIInput>): Promise<APIResponse> {
   try {
-    const response = await axios.put(`/api/v1/kris/${id}`, input);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kris/${id}`, 
+      data:input,
+      method: "PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {
@@ -1038,9 +1090,12 @@ export async function updateKRI(id: string, input: Partial<KRIInput>): Promise<A
  */
 export async function deleteKRI(id: string): Promise<APIResponse> {
   try {
-    await axios.delete(`/api/v1/kris/${id}`);
+   const response =  await authenticatedApiClient({
+      url:`/api/v1/kris/${id}`, 
+      method: "DELETE"
+   });
     revalidatePath("/dashboard/(modules)/risks/kri");
-    return successResponse(undefined);
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "DELETE | DELETE KRI", `/api/v1/kris/${id}`);
   }
@@ -1058,7 +1113,11 @@ export async function addKRIMeasurement(
   input: KRIMeasurementInput
 ): Promise<APIResponse> {
   try {
-    const response = await axios.post(`/api/v1/kris/${kriId}/measurements`, input);
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kris/${kriId}/measurements`, 
+      data:input,
+      method: "POST"
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {
@@ -1077,7 +1136,11 @@ export async function getKRIMeasurements(
   }
 ): Promise<APIResponse> {
   try {
-    const response = await axios.get(`/api/v1/kris/${kriId}/measurements`, { params });
+    const response = await authenticatedApiClient({
+      url:`/api/v1/kris/${kriId}/measurements`, 
+      params,
+      method: "GET"
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI MEASUREMENTS", `/api/v1/kris/${kriId}/measurements`);
@@ -1091,7 +1154,11 @@ export async function getKRIsDueMeasurement(params?: {
   as_of_date?: string;
 }): Promise<APIResponse> {
   try {
-    const response = await axios.get("/api/v1/kris/due-measurement", { params });
+    const response = await authenticatedApiClient({
+      url: "/api/v1/kris/due-measurement", 
+      params,
+      method: "GET"
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRIs DUE MEASUREMENT", "/api/v1/kris/due-measurement");
@@ -1106,7 +1173,11 @@ export async function getKRIStatusSummary(params?: {
   kri_register_id?: string;
 }): Promise<APIResponse> {
   try {
-    const response = await axios.get("/api/v1/kris/status-summary", { params });
+    const response = await authenticatedApiClient({
+      url: "/api/v1/kris/status-summary", 
+      params,
+      method: "GET"
+    });
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI STATUS SUMMARY", "/api/v1/kris/status-summary");
