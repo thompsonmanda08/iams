@@ -151,7 +151,6 @@ export async function updateAuthSession(fields: any): Promise<AuthSession> {
 
   const newSession: AuthSession = { ...oldSession, ...fields };
 
-  console.log("[updated session ]: ", newSession);
   if (isLoggedIn && oldSession) {
     // Call `encrypt` to generate the session token
     const session = await encrypt(newSession);

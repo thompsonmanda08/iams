@@ -18,7 +18,7 @@ export default async function AuthLayout({
     cookieStore.get("sidebar_state")?.value === "true" ||
     cookieStore.get("sidebar_state") === undefined;
 
-  const { session, isAuthenticated } = await verifySession();
+  const { session } = await verifySession();
 
   return (
     <SidebarProvider

@@ -80,9 +80,13 @@ export async function changePassword({
   const url = `/api/v1/auth/change-password`;
 
   try {
-    const response = await axios.post(url, {
-      old_password: oldPassword,
-      new_password: newPassword
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        old_password: oldPassword,
+        new_password: newPassword
+      }
     });
 
     await updateAuthSession({ change_password: false });
@@ -245,9 +249,7 @@ export async function getRefreshToken(): Promise<APIResponse> {
     const tokenData = response.data?.data;
 
     await updateAuthSession({
-      accessToken: tokenData?.access_token,
-      user: { ...session?.user }
-      
+      accessToken: tokenData?.access_token
     });
 
     return successResponse(tokenData, response.data?.message);

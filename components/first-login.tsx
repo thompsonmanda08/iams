@@ -14,10 +14,11 @@ import { PASSWORD_PATTERN } from "@/lib/constants";
 import { ErrorState } from "@/lib/types";
 import { ChangePassword } from "@/lib/types/stores";
 import CustomAlert from "./ui/custom-alert";
-import { notify } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { changePassword } from "@/app/_actions/auth-actions";
+import { Eye, EyeOff, LockIcon } from "lucide-react";
 
 export default function FirstLogin({ open }: { open?: boolean }) {
   const queryClient = useQueryClient();
@@ -28,6 +29,16 @@ export default function FirstLogin({ open }: { open?: boolean }) {
     newPassword: "",
     confirmPassword: ""
   });
+
+  const [showPassword, setShowPassword] = useState({
+    password: false,
+    newPassword: false,
+    confirmPassword: false
+  });
+
+  const togglePassword = (type: "password" | "newPassword" | "confirmPassword") => {
+    setShowPassword((prev) => ({ ...prev, [type]: !prev[type] }));
+  };
 
   const updatePasswordField = (fields: Partial<ChangePassword>) => {
     setFormData((prev) => ({ ...prev, ...fields }));
@@ -90,36 +101,87 @@ export default function FirstLogin({ open }: { open?: boolean }) {
             password on their first login.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-y-2 py-4">
-          <Input
-            autoFocus
-            required
-            label="Old Password"
-            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-            type="password"
-            value={formData?.oldPassword}
-            onChange={(e) => updatePasswordField({ oldPassword: e.target.value })}
-          />
-          <Input
-            required
-            label="New Password"
-            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-            type="password"
-            value={formData?.newPassword}
-            onChange={(e) => updatePasswordField({ newPassword: e.target.value })}
-          />
-          <Input
-            errorText={"Passwords do not match"}
-            isInvalid={
-              (formData?.confirmPassword !== formData?.newPassword &&
-                String(formData?.confirmPassword)?.length > 6) ||
-              error?.onConfirmPassword
-            }
-            label="Confirm New Password"
-            type="password"
-            value={formData?.confirmPassword}
-            onChange={(e) => updatePasswordField({ confirmPassword: e.target.value })}
-          />
+        <div className="flex flex-col gap-y-2 py-2">
+          <div className="relative">
+            <LockIcon className="text-foreground/50 absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2" />
+            <Input
+              id="password"
+              autoFocus
+              required
+              label="Old Password"
+              pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+              type={showPassword.password ? "text" : "password"}
+              className={cn("pl-10", !showPassword.password && "text-2xl!")}
+              value={formData?.oldPassword}
+              onChange={(e) => updatePasswordField({ oldPassword: e.target.value })}
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={() => togglePassword("password")}
+              className="absolute top-2/3 right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600"
+              disabled={isLoading}>
+              {showPassword.password ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+          <div className="relative">
+            <LockIcon className="text-foreground/50 absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2" />
+            <Input
+              id="password"
+              autoFocus
+              required
+              disabled={isLoading}
+              label="New Password"
+              className={cn("pl-10", !showPassword.newPassword && "text-2xl!")}
+              pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+              type={showPassword.newPassword ? "text" : "password"}
+              value={formData?.newPassword}
+              onChange={(e) => updatePasswordField({ newPassword: e.target.value })}
+            />
+            <button
+              type="button"
+              onClick={() => togglePassword("newPassword")}
+              className="absolute top-2/3 right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600"
+              disabled={isLoading}>
+              {showPassword.newPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          <div className="relative">
+            <LockIcon className="text-foreground/50 absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2" />
+            <Input
+              id="password"
+              autoFocus
+              required
+              disabled={isLoading}
+              className={cn("pl-10", !showPassword.confirmPassword && "text-2xl!")}
+              errorText={"Passwords do not match"}
+              isInvalid={
+                (formData?.confirmPassword !== formData?.newPassword &&
+                  String(formData?.confirmPassword)?.length > 6) ||
+                error?.onConfirmPassword
+              }
+              label="Confirm New Password"
+              type={showPassword.confirmPassword ? "text" : "password"}
+              value={formData?.confirmPassword}
+              onChange={(e) => updatePasswordField({ confirmPassword: e.target.value })}
+            />
+            <button
+              type="button"
+              onClick={() => togglePassword("confirmPassword")}
+              className="absolute top-2/3 right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600"
+              disabled={isLoading}>
+              {showPassword.confirmPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+
           {error?.status && (
             <div className="mx-auto mt-2 flex w-full flex-col items-center justify-center gap-4">
               <CustomAlert type="error" message={error.message} />
