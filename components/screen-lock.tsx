@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useIdleTimer } from "react-idle-timer";
 
 import {
@@ -14,25 +14,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRefreshToken } from "@/hooks/use-users-query-data";
 import { lockScreenOnUserIdle } from "@/app/_actions/auth-actions";
+import { AuthSession } from "@/lib/types";
 
 function ScreenLock({ open }: { open: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [seconds, setSeconds] = useState(90);
+  const hasLoggedOutRef = useRef(false);
 
   // Reset countdown when dialog opens
   useEffect(() => {
     if (open) {
       setSeconds(90);
+      hasLoggedOutRef.current = false;
     }
   }, [open]);
 
-  async function handleRefreshAuthToken() {
+  const handleRefreshAuthToken = useCallback(async () => {
     setIsLoading(true);
     await lockScreenOnUserIdle(false);
     setIsLoading(false);
-  }
+  }, []);
 
-  async function handleUserLogOut() {
+  const handleUserLogOut = useCallback(async () => {
+    if (hasLoggedOutRef.current) return; // Prevent multiple logout calls
+    hasLoggedOutRef.current = true;
+
     setIsLoading(true);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
@@ -58,29 +64,36 @@ function ScreenLock({ open }: { open: boolean }) {
       }
     } catch (error) {
       console.error("Logout error:", error);
+      // Force redirect even on error
+      window.location.href = "/login";
     } finally {
       clearTimeout(timeoutId);
       setIsLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
 
     const interval = setInterval(() => {
-      setSeconds((x) => {
-        if (x <= 1) {
+      setSeconds((prevSeconds) => {
+        const newSeconds = prevSeconds - 1;
+
+        // Trigger logout when reaching 0
+        if (newSeconds <= 0) {
+          clearInterval(interval);
           handleUserLogOut();
           return 0;
         }
-        return x - 1;
+
+        return newSeconds;
       });
     }, 1000);
 
     return () => {
       clearInterval(interval);
     };
-  }, [open]);
+  }, [open, handleUserLogOut]);
 
   return (
     <Dialog open={open}>
@@ -135,13 +148,13 @@ function ScreenLock({ open }: { open: boolean }) {
   );
 }
 
-export function IdleTimerContainer({ authSession }: { authSession: any }) {
+export function IdleTimerContainer({ session }: { session: AuthSession | null }) {
   const pathname = usePathname();
 
   const [state, setState] = useState("Active");
   const [count, setCount] = useState(0);
 
-  const loggedIn = authSession?.accessToken;
+  const loggedIn = session?.accessToken || false;
   const isIdle = state === "Idle";
 
   useRefreshToken(Boolean(loggedIn && !isIdle));
@@ -167,9 +180,9 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
   });
 
   /* NO TIMER ON EXTERNAL ROUTES */
-  if (pathname.startsWith("/checkout")) return null;
-  if (pathname.startsWith("/invoice")) return null;
-  if (pathname.startsWith("/subscriptions")) return null;
+  // if (pathname.startsWith("/checkout")) return null;
+  // if (pathname.startsWith("/invoice")) return null;
+  // if (pathname.startsWith("/subscriptions")) return null;
 
   // Render the ScreenLock component when idle
   if (isIdle) {

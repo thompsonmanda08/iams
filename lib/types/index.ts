@@ -46,7 +46,7 @@ export type DocumentType = GenericJSONB & {
 export type AuthSession = JWTPayload & {
   accessToken: string;
   refreshToken?: string;
-  screenLocked?: boolean;
+  screen_locked?: boolean;
   user?: Partial<User> | null;
   permissions?: any[];
   [x: string]: any;

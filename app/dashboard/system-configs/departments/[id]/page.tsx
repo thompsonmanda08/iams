@@ -46,8 +46,6 @@ export default async function DepartmentDetailsPage({
     return notFound();
   }
 
-  console.log("USERS - ", users);
-
   return (
     <div className="container mx-auto space-y-6 p-6">
       {/* Header */}

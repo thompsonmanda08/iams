@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { AuthSession, UserSession } from "@/lib/types";
 
 import { AUTH_SESSION, USER_SESSION } from "./constants";
-import { User } from "./types/account";
+import { User, UserType } from "./types/account";
 
 // 1. Get secret from environment variables (MUST be set) - SERVER SIDE ONLY
 // Note: Validation is deferred to runtime to avoid build-time issues
@@ -104,12 +104,22 @@ export async function decrypt(session: any) {
   }
 }
 
-export async function createAuthSession(accessToken: string): Promise<void> {
+export async function createAuthSession({
+  accessToken,
+  user_type
+}: {
+  accessToken: string;
+  user_type: UserType;
+  change_password?: boolean;
+  mfa_required?: boolean;
+  organization_id?: string;
+}): Promise<void> {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // AFTER 1 HOUR
 
   // Call `encrypt` to generate the session token
   const session = await encrypt({
     accessToken: accessToken || "",
+    user: { user_type: user_type || "ORGANIZATION_USER" },
     expiresAt
   });
 
@@ -127,17 +137,14 @@ export async function createAuthSession(accessToken: string): Promise<void> {
   }
 }
 
-export async function updateAuthSession(fields: any): Promise<void> {
+export async function updateAuthSession(fields: any): Promise<AuthSession> {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const isLoggedIn = await verifySession();
-  const cookie = (await cookies()).get(AUTH_SESSION)?.value;
-  const oldSession = await decrypt(cookie);
+  const { isAuthenticated: isLoggedIn, session: oldSession } = await verifySession();
 
+  const newSession: AuthSession = { ...oldSession, ...fields };
   if (isLoggedIn && oldSession) {
-    const session = await encrypt({
-      ...oldSession,
-      ...fields
-    });
+    // Call `encrypt` to generate the session token
+    const session = await encrypt(newSession);
 
     if (session) {
       (await cookies()).set(AUTH_SESSION, session, {
@@ -147,10 +154,12 @@ export async function updateAuthSession(fields: any): Promise<void> {
         sameSite: "strict",
         path: "/"
       });
+      return newSession;
     } else {
       throw new Error("Failed to update session token.");
     }
   }
+  return oldSession as AuthSession;
 }
 
 export async function verifySession(): Promise<{
@@ -164,12 +173,9 @@ export async function verifySession(): Promise<{
   const session = await decrypt(cookie);
 
   if (session?.accessToken) {
-    const authUserCookie = (await cookies()).get(USER_SESSION)?.value;
-    const userSession = await decrypt(authUserCookie);
     return {
       isAuthenticated: true,
-      session: session as AuthSession,
-      ...userSession
+      session: session as AuthSession
     };
   }
 
@@ -183,7 +189,6 @@ export async function deleteSession() {
 
     // Delete all session cookies
     cookieStore.delete(AUTH_SESSION);
-    cookieStore.delete(USER_SESSION);
 
     return { success: true, message: "Logout Success" };
   } catch (error: any) {
