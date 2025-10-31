@@ -6,7 +6,7 @@ import { AuditableArea, Pagination } from "@/lib/types";
 import { Suspense } from "react";
 import { getAuditPlans, getWorkpapers } from "@/app/_actions/audit-module-actions";
 import WorkpaperTemplatesTab from "./workpaper-templates-tab";
-import AuditableAreaConfig from "../../_components/auditable-areas-tab";
+import AuditableAreaConfig from "./auditable-areas-tab";
 
 type TabsComponentProps = {
   auditableAreas: AuditableArea[];

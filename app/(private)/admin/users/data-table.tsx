@@ -11,7 +11,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
+  useReactTable
 } from "@tanstack/react-table";
 import { ArrowUpDown, Columns3, MoreHorizontal, Search, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,14 +31,14 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { User } from "@/lib/types/account";
 import { deleteUser, toggleUserStatus } from "@/app/_actions/user-actions";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 const getColumns = (
   onDelete: (id: string) => void,
@@ -56,9 +57,7 @@ const getColumns = (
   {
     id: "#",
     header: "#",
-    cell: ({ row }) => (
-      <div className="text-sm font-medium text-gray-500">{row.index + 1}</div>
-    ),
+    cell: ({ row }) => <div className="text-sm font-medium text-gray-500">{row.index + 1}</div>
   },
   {
     accessorKey: "username",
@@ -85,62 +84,71 @@ const getColumns = (
       const email = row.original.email.toLowerCase();
       const username = row.original.username.toLowerCase();
       const searchValue = value.toLowerCase();
-      return fullName.includes(searchValue) || email.includes(searchValue) || username.includes(searchValue);
-    },
+      return (
+        fullName.includes(searchValue) ||
+        email.includes(searchValue) ||
+        username.includes(searchValue)
+      );
+    }
   },
   {
     id: "role",
-    accessorFn: (row) => row.role.name,
+    accessorFn: (row) => row.role?.name || "N/A",
     header: ({ column }) => (
       <Button
         variant="ghost"
         className="-ml-3 hover:bg-transparent"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Role
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="text-sm text-gray-700">{row.original.role.name}</div>
+      <div className="text-sm text-gray-700">
+        {row.original.role?.name || <span className="text-gray-400 italic">No role assigned</span>}
+      </div>
     ),
     filterFn: (row, id, value) => {
-      return row.original.role.name === value;
-    },
+      return row.original.role?.name === value;
+    }
   },
   {
     id: "department",
-    accessorFn: (row) => row.department.name,
+    accessorFn: (row) => row.department?.name || "N/A",
     header: ({ column }) => (
       <Button
         variant="ghost"
         className="-ml-3 hover:bg-transparent"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Department
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="text-sm text-gray-700">{row.original.department.name}</div>
-    ),
+      <div className="text-sm text-gray-700">
+        {row.original.department?.name || (
+          <span className="text-gray-400 italic">No department</span>
+        )}
+      </div>
+    )
   },
   {
     id: "branch",
-    accessorFn: (row) => row.branch.name,
+    accessorFn: (row) => row.branch?.name || "N/A",
     header: ({ column }) => (
       <Button
         variant="ghost"
         className="-ml-3 hover:bg-transparent"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Branch
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="text-sm text-gray-700">{row.original.branch.name}</div>
-    ),
+      <div className="text-sm text-gray-700">
+        {row.original.branch?.name || <span className="text-gray-400 italic">No branch</span>}
+      </div>
+    )
   },
   {
     id: "status",
@@ -149,8 +157,7 @@ const getColumns = (
       <Button
         variant="ghost"
         className="-ml-3 hover:bg-transparent"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Status
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
@@ -161,15 +168,14 @@ const getColumns = (
         <span
           className={`rounded-full px-2 py-1 text-xs font-medium capitalize ${
             isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-          }`}
-        >
+          }`}>
           {isActive ? "Active" : "Inactive"}
         </span>
       );
     },
     filterFn: (row, id, value) => {
       return row.original.is_active === value;
-    },
+    }
   },
   {
     id: "actions",
@@ -198,16 +204,15 @@ const getColumns = (
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(user.id)}
-                className="text-red-600 focus:text-red-600"
-              >
+                className="text-red-600 focus:text-red-600">
                 Delete User
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       );
-    },
-  },
+    }
+  }
 ];
 
 export default function UsersDataTable({ data }: { data: User[] }) {
@@ -218,15 +223,36 @@ export default function UsersDataTable({ data }: { data: User[] }) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [roleFilter, setRoleFilter] = React.useState<string>("all");
+  const [deleteDialog, setDeleteDialog] = React.useState<{
+    open: boolean;
+    userId: string | null;
+    userName: string | null;
+  }>({
+    open: false,
+    userId: null,
+    userName: null
+  });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+  const handleDeleteClick = (id: string) => {
+    const user = data.find((u) => u.id === id);
+    if (user) {
+      setDeleteDialog({
+        open: true,
+        userId: id,
+        userName: `${user.first_name} ${user.last_name}`
+      });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.userId) return;
 
     try {
-      const response = await deleteUser(id);
+      const response = await deleteUser(deleteDialog.userId);
       if (response.success) {
         toast.success("User deleted successfully");
         router.refresh();
+        setDeleteDialog({ open: false, userId: null, userName: null });
       } else {
         toast.error(response.message || "Failed to delete user");
       }
@@ -249,7 +275,7 @@ export default function UsersDataTable({ data }: { data: User[] }) {
     }
   };
 
-  const columns = getColumns(handleDelete, handleToggleStatus);
+  const columns = getColumns(handleDeleteClick, handleToggleStatus);
 
   const table = useReactTable({
     data,
@@ -266,8 +292,8 @@ export default function UsersDataTable({ data }: { data: User[] }) {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
-    },
+      rowSelection
+    }
   });
 
   // Apply filters
@@ -298,7 +324,9 @@ export default function UsersDataTable({ data }: { data: User[] }) {
 
   // Get unique roles from data
   const uniqueRoles = React.useMemo(() => {
-    return Array.from(new Set(data.map((user) => user.role.name))).sort();
+    return Array.from(
+      new Set(data.filter((user) => user.role?.name).map((user) => user.role.name))
+    ).sort();
   }, [data]);
 
   return (
@@ -361,8 +389,7 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                         key={column.id}
                         className="capitalize"
                         checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(value)}
-                      >
+                        onCheckedChange={(value) => column.toggleVisibility(value)}>
                         {column.id}
                       </DropdownMenuCheckboxItem>
                     ))}
@@ -382,7 +409,7 @@ export default function UsersDataTable({ data }: { data: User[] }) {
               Showing {table.getFilteredRowModel().rows.length} of {data.length} users
             </span>
             {hasFilters && (
-              <Badge variant="secondary" className="text-xs text-white">
+              <Badge variant="secondary" className="text-xs">
                 <Filter className="mr-1 h-3 w-3" />
                 Filters active
               </Badge>
@@ -410,8 +437,7 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="transition-colors hover:bg-gray-50"
-                  >
+                    className="transition-colors hover:bg-gray-50">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -439,8 +465,7 @@ export default function UsersDataTable({ data }: { data: User[] }) {
               <span className="text-sm text-gray-500">Rows per page:</span>
               <Select
                 value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => table.setPageSize(Number(value))}
-              >
+                onValueChange={(value) => table.setPageSize(Number(value))}>
                 <SelectTrigger className="h-8 w-auto">
                   <SelectValue />
                 </SelectTrigger>
@@ -463,16 +488,14 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                   variant="outline"
                   size="sm"
                   onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
+                  disabled={!table.getCanPreviousPage()}>
                   Previous
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
+                  disabled={!table.getCanNextPage()}>
                   Next
                 </Button>
               </div>
@@ -480,6 +503,13 @@ export default function UsersDataTable({ data }: { data: User[] }) {
           </div>
         </div>
       </CardContent>
+
+      <ConfirmationModal
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, userId: null, userName: null })}
+        onConfirm={handleDeleteConfirm}
+        type="delete"
+      />
     </Card>
   );
 }

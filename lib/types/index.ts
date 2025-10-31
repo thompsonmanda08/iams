@@ -136,7 +136,7 @@ export type Pagination = {
 };
 
 export type AuditableArea = {
-  id: string | undefined;
+  id: string;
   name: string;
   description: string;
   department_id: string | null;

@@ -14,7 +14,7 @@ import {
 import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
-import { AuditableArea as Area, Pagination } from "@/lib/types";
+import { AuditableArea as Area, Department, Pagination } from "@/lib/types";
 import {
   Dialog,
   DialogClose,
@@ -46,18 +46,33 @@ import { useDepartments } from "@/hooks/use-query-data";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { set } from "date-fns";
+
+interface AreaFormData {
+  name: string;
+  department_id: string;
+  description: string;
+}
+
+const INIT_FORM_DATA: AreaFormData = {
+  name: "",
+  department_id: "",
+  description: ""
+};
 
 export default function AuditableAreaConfig({
   areas,
-  pagination
+  pagination,
+  departments
 }: {
   areas: Area[];
   pagination?: Pagination;
+  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<Area | null>(null);
+  const [formData, setFormData] = useState<Omit<Area, "id"> | null>(INIT_FORM_DATA);
+  const [areaId, setAreaId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
 
   const [items, setItems] = useState<Area[]>(areas);
 
@@ -85,7 +100,7 @@ export default function AuditableAreaConfig({
     },
     onSettled: () => {
       setDeleteDialogOpen(false);
-      setDepartmentToDelete(null);
+      setAreaId(null);
     }
   });
 
@@ -96,27 +111,32 @@ export default function AuditableAreaConfig({
    */
   /*******  7df535e1-228a-4281-91c5-50dc0fe4cb5b  *******/
   const handleDeleteClick = (id: string) => {
-    setDepartmentToDelete(id);
+    setAreaId(id);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!departmentToDelete) return;
+    if (!areaId) return;
     // if (true) {
     //   return toast.warning("This action currently is disabled");
     // }
-    deleteMutation.mutate(departmentToDelete as any);
+    deleteMutation.mutate(areaId as any);
   };
 
   return (
     <>
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Departments</h3>
+          <div className="space-y-1">
+            <h4 className="text-sm leading-none font-medium">Auditable Areas</h4>
+            <p className="text-muted-foreground text-sm">
+              List of all the auditable areas across all departments
+            </p>
+          </div>
           <Button
             size="sm"
             onClick={() => {
-              setEditingDepartment(null);
+              setFormData(null);
               setOpenModal(true);
             }}>
             <Plus className="h-4 w-4" />
@@ -156,7 +176,7 @@ export default function AuditableAreaConfig({
                         <Button
                           size="sm"
                           onClick={() => {
-                            setEditingDepartment(null);
+                            setFormData(null);
                             setOpenModal(true);
                           }}>
                           <Plus className="h-4 w-4" /> Create New Auditable Area
@@ -169,7 +189,9 @@ export default function AuditableAreaConfig({
             ) : (
               items.map((item) => {
                 const departmentName =
-                  item?.department || "No department assigned - map from departments";
+                  item?.department ||
+                  departments.find((d) => d.id === item.department_id)?.name ||
+                  "No department assigned - Global";
                 return (
                   <TableRow
                     key={item.id}
@@ -209,7 +231,8 @@ export default function AuditableAreaConfig({
                           size="sm"
                           variant="outline"
                           onClick={(e) => {
-                            setEditingDepartment(item);
+                            setFormData(item);
+                            setAreaId(item.id);
                             setOpenModal(true);
                             e.stopPropagation();
                           }}
@@ -241,9 +264,9 @@ export default function AuditableAreaConfig({
       <CreateOrUpdateArea
         openModal={openModal}
         setOpenModal={setOpenModal}
-        initialData={editingDepartment}
-        departmentId={editingDepartment?.id}
-        setInitialData={setEditingDepartment}
+        initialData={formData}
+        areaId={areaId}
+        setInitialData={setFormData}
       />
 
       <ConfirmDeleteDialog
@@ -264,8 +287,7 @@ type ErrorState = {
   onParentId?: boolean;
 };
 
-const INIT_AREA: Area = {
-  id: undefined,
+const INIT_AREA: Omit<Area, "id"> = {
   name: "",
   description: "",
   department_id: null
@@ -278,14 +300,14 @@ export function CreateOrUpdateArea({
   openModal,
   setOpenModal,
   initialData = null,
-  departmentId,
+  areaId = null,
   setInitialData
 }: {
   showTrigger?: boolean;
   openModal?: boolean;
-  departmentId?: string;
-  initialData?: Area | null;
-  setInitialData?: React.Dispatch<React.SetStateAction<Area | null>>;
+  areaId: string | null;
+  initialData?: Omit<Area, "id"> | null;
+  setInitialData?: React.Dispatch<React.SetStateAction<Omit<Area, "id"> | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const queryClient = useQueryClient();
@@ -295,10 +317,10 @@ export function CreateOrUpdateArea({
   });
 
   // Initialize with initialData if provided, otherwise use INIT_AREA
-  const [formData, setFormData] = useState<Area>(() => {
-    if (initialData && departmentId) {
+  const [formData, setFormData] = useState<Omit<Area, "id">>(() => {
+    if (initialData && areaId) {
       return {
-        id: initialData.id,
+        // id: areaId,
         name: initialData.name || "",
         department_id: initialData.department_id || "",
         description: initialData.description || ""
@@ -319,12 +341,12 @@ export function CreateOrUpdateArea({
 
   // Update form when initialData changes
   useEffect(() => {
-    console.log("🔄 Effect triggered:", { initialData, departmentId, openModal });
+    console.log("🔄 Effect triggered:", { initialData, areaId, openModal });
 
     if (openModal) {
-      if (initialData && departmentId) {
+      if (initialData && areaId) {
         setFormData({
-          id: initialData.id,
+          // id: areaId,
           name: initialData.name || "",
           department_id: initialData.department_id || "",
           description: initialData.description || ""
@@ -337,7 +359,7 @@ export function CreateOrUpdateArea({
       }
       setError({ status: false, message: "" });
     }
-  }, [initialData, departmentId]);
+  }, [initialData, areaId]);
 
   // Reset form when modal closes (only for client-side modal usage)
   useEffect(() => {
@@ -356,8 +378,8 @@ export function CreateOrUpdateArea({
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: (data: Area) => {
-      return initialData && departmentId
-        ? updateDepartment({ ...data, id: String(departmentId) })
+      return initialData && areaId
+        ? updateDepartment({ ...data, id: String(areaId) })
         : createDepartment(data);
     },
     onSuccess: (response) => {
@@ -387,12 +409,12 @@ export function CreateOrUpdateArea({
 
   const departmentOptions = useMemo(() => {
     return items
-      .filter((dept) => dept.id !== departmentId) // Prevent self-parenting
+      .filter((dept) => dept.id !== areaId) // Prevent self-parenting
       .map((item) => ({
         id: item?.id as string,
         name: item?.name
       }));
-  }, [items, departmentId]);
+  }, [items, areaId]);
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -419,10 +441,10 @@ export function CreateOrUpdateArea({
           <SearchSelectField
             label="Functional Unit/Department"
             placeholder="Select parent unit (optional)"
-            value={formData.department_id || ""}
+            value={formData?.department_id || ""}
             onValueChange={(value) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, department_id: value || null }));
+              setFormData((c) => ({ ...c, department_id: value }));
             }}
             options={departmentOptions}
           />
@@ -468,7 +490,7 @@ export function CreateOrUpdateArea({
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="destructive"
                 onClick={() => {
                   setOpenModal?.(false);
                   setFormData(INIT_AREA);

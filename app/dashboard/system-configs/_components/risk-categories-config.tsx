@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
 } from "@/app/_actions/risk-module-actions";
 import { deleteRiskCategory, getDepartments } from "@/app/_actions/config-actions";
 import { useRouter } from "next/navigation";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 type RiskCategory = {
   id?: string;
@@ -45,6 +45,15 @@ export function RiskCategoriesConfig() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    categoryId: string | null;
+    categoryName: string | null;
+  }>({
+    open: false,
+    categoryId: null,
+    categoryName: null
+  });
   const router = useRouter();
 
   // Fetch initial data
@@ -105,12 +114,10 @@ export function RiskCategoriesConfig() {
       toast.info("Category name is required");
       return;
     }
-
     if (!category.code.trim()) {
       toast.info("Category code is required");
       return;
     }
-
     if (!category.department_id) {
       toast.info("Department is required");
       return;
@@ -119,7 +126,6 @@ export function RiskCategoriesConfig() {
 
     try {
       const isNew = category.id?.startsWith("temp-");
-
       const payload = {
         department_id: category.department_id,
         name: category.name,
@@ -137,8 +143,8 @@ export function RiskCategoriesConfig() {
 
       if (response.success) {
         toast.success(`Risk category ${isNew ? "created" : "updated"} successfully`);
-        router.refresh();
         await fetchCategories();
+        router.refresh();
       } else {
         toast.error(response.message || "Failed to save category");
       }
@@ -153,19 +159,40 @@ export function RiskCategoriesConfig() {
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    // Handle temp categories immediately
     if (id?.startsWith("temp-")) {
       setCategories(categories.filter((cat) => cat.id !== id));
+      toast.success("Draft category removed");
       return;
     }
+
+    // For existing categories, open confirmation dialog
+    const category = categories.find((cat) => cat.id === id);
+    if (category) {
+      setDeleteDialog({
+        open: true,
+        categoryId: id,
+        categoryName: category.name
+      });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.categoryId) return;
+
     try {
-      const response = await deleteRiskCategory(id);
+      const response = await deleteRiskCategory(deleteDialog.categoryId);
       if (response.success) {
-        toast.success(response.message || "Risk category deleted successfully");
+        toast.success("Risk category deleted successfully");
+        await fetchCategories();
         router.refresh();
+        setDeleteDialog({ open: false, categoryId: null, categoryName: null });
+      } else {
+        toast.error(response.message || "Failed to delete category");
       }
     } catch (error) {
-      toast.success("Failed to delete risk category");
+      toast.error("Failed to delete risk category");
     }
   };
 
@@ -344,7 +371,7 @@ export function RiskCategoriesConfig() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteCategory(category.id!)}>
+                          onClick={() => handleDeleteClick(category.id!)}>
                           <Trash2 className="text-destructive h-4 w-4" />
                         </Button>
                       </>
@@ -373,6 +400,15 @@ export function RiskCategoriesConfig() {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmationModal
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, categoryId: null, categoryName: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Risk Category"
+        description={`Are you sure you want to delete "${deleteDialog.categoryName}"? This action cannot be undone.`}
+        type="delete"
+      />
     </div>
   );
 }

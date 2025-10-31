@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getBranches, getProvinces, getTowns } from "@/app/_actions/config-actions";
+import { getBranches, getDepartments, getProvinces, getTowns } from "@/app/_actions/config-actions";
 import { ProvincesTab } from "../_components/provinces-tab";
 import { TownsTab } from "../_components/towns-tab";
 import { BranchesTab } from "../_components/branches-tab";
@@ -7,7 +7,7 @@ import { Pagination } from "@/lib/types";
 import { Suspense } from "react";
 import { getAuditPlans, getWorkpapers } from "@/app/_actions/audit-module-actions";
 import { WorkpapersPageClient } from "@/components/audit/workpapers-page-client";
-import AuditableAreaConfig from "../_components/auditable-areas-tab";
+import AuditableAreaConfig from "./_components/auditable-areas-tab";
 import IndicativeTargetsTab from "../_components/indicative-targets-tab";
 import StrategicPillarsTab from "../_components/strategic-pillars-tab";
 import StrategicInitiativeTab from "../_components/strategic-initiative-tab";
@@ -27,11 +27,15 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
   const page = urlParams.page ? Number(urlParams.page) : 1;
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
 
-  const [branchesResponse, provincesResponse, townsResponse] = await Promise.all([
-    getBranches({ page, page_size }),
-    getProvinces(),
-    getTowns({ page, page_size })
-  ]);
+  const [branchesResponse, provincesResponse, townsResponse, departmentsResponse] =
+    await Promise.all([
+      getBranches({ page, page_size }),
+      getProvinces(),
+      getTowns({ page, page_size }),
+      getDepartments()
+    ]);
+
+  const departments = departmentsResponse.success ? departmentsResponse.data?.data : [];
 
   const workpapersResponse = await getWorkpapers();
   const workpapers = workpapersResponse.success ? workpapersResponse.data?.data?.data : [];
@@ -88,7 +92,11 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           {/* Auditable Areas Tab */}
           <TabsContent value="areas">
             <Suspense fallback={<TableLoading />}>
-              <AuditableAreaConfig areas={towns} pagination={townsPagination} />
+              <AuditableAreaConfig
+                areas={towns}
+                departments={departments}
+                pagination={townsPagination}
+              />
             </Suspense>
           </TabsContent>
 
