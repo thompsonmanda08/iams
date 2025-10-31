@@ -1066,3 +1066,19 @@ export async function updateRiskCategory(
     return handleError(error, "PUT | UPDATE RISK CATEGORY", `/api/v1/risk-categories/${id}`);
   }
 }
+
+/**
+ * Delete a risk category
+ */
+export async function deleteRiskCategory(id: string): Promise<APIResponse> {
+  try {
+     const response = await authenticatedApiClient({
+      url:`/api/v1/risk-categories/${id}`, 
+      method:"DELETE"
+    });
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "DELETE | DELETE RISK CATEGORY", `/api/v1/risk-categories/${id}`);
+  }
+}

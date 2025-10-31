@@ -1,5 +1,3 @@
-"use client";
-import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { RiskMatrixConfig } from "../_components/risk-matrix-config";
@@ -9,9 +7,7 @@ import { RiskAppetiteConfig } from "../_components/risk-appetite-config";
 import { KRIConfig } from "../_components/kri-config";
 import { RiskRegisterConfig } from "../_components/risk-register-config";
 
-export default function RiskConfigurationsPage() {
-  const [activeTab, setActiveTab] = useState("matrix");
-
+export default async function RiskConfigurationsPage() {
   return (
     <div className="bg-background min-h-screen p-6">
       <div className="container mx-auto py-6">
@@ -25,7 +21,7 @@ export default function RiskConfigurationsPage() {
 
       {/* Main Content */}
       <main className="container mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs defaultValue="matrix" className="space-y-6">
           <TabsList className="bg-muted inline-flex h-auto w-full justify-start gap-1 rounded-lg p-1">
             <TabsTrigger value="matrix" className="rounded-md px-4 py-2 text-sm">
               Risk Matrix
