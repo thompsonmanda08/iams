@@ -89,21 +89,35 @@ const getColumns = (
   },
   {
     id: "role",
-    accessorFn: (row) => row.role.name,
+    accessorFn: (row) => row.role?.name || "N/A",
     header: "Role",
-    cell: ({ row }) => <div className="text-sm text-gray-700">{row.original.role.name}</div>
+    cell: ({ row }) => (
+      <div className="text-sm text-gray-700">
+        {row.original.role?.name || <span className="text-gray-400 italic">No role assigned</span>}
+      </div>
+    )
   },
   {
     id: "department",
-    accessorFn: (row) => row.department.name,
+    accessorFn: (row) => row.department?.name || "N/A",
     header: "Department",
-    cell: ({ row }) => <div className="text-sm text-gray-700">{row.original.department.name}</div>
+    cell: ({ row }) => (
+      <div className="text-sm text-gray-700">
+        {row.original.department?.name || (
+          <span className="text-gray-400 italic">No department</span>
+        )}
+      </div>
+    )
   },
   {
     id: "branch",
-    accessorFn: (row) => row.branch.name,
+    accessorFn: (row) => row.branch?.name || "N/A",
     header: "Branch",
-    cell: ({ row }) => <div className="text-sm text-gray-700">{row.original.branch.name}</div>
+    cell: ({ row }) => (
+      <div className="text-sm text-gray-700">
+        {row.original.branch?.name || <span className="text-gray-400 italic">No branch</span>}
+      </div>
+    )
   },
   {
     id: "status",
@@ -275,7 +289,13 @@ export default function UsersDataTable({
 
   // Get unique roles from data
   const uniqueRoles = React.useMemo(() => {
-    return Array.from(new Set(data.map((user) => user.role.name))).sort();
+    return Array.from(
+      new Set(
+        data
+          .filter((user) => user.role?.name) 
+          .map((user) => user.role.name)
+      )
+    ).sort();
   }, [data]);
 
   // Transform pagination for CustomPagination

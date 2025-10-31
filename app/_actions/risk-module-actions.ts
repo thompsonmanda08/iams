@@ -419,18 +419,6 @@ export async function updateRiskCategory(
   }
 }
 
-/**
- * Delete a risk category
- */
-export async function deleteRiskCategory(id: string): Promise<APIResponse> {
-  try {
-    await axios.delete(`/api/v1/risk-categories/${id}`);
-    revalidatePath("/dashboard/(modules)/risks");
-    return successResponse(undefined);
-  } catch (error) {
-    return handleError(error, "DELETE | DELETE RISK CATEGORY", `/api/v1/risk-categories/${id}`);
-  }
-}
 
 /**
  * Get department risk categories

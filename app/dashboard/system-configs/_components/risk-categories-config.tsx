@@ -19,7 +19,7 @@ import {
   updateRiskCategory,
   getRiskCategories
 } from "@/app/_actions/risk-module-actions";
-import { getDepartments } from "@/app/_actions/config-actions";
+import { deleteRiskCategory, getDepartments } from "@/app/_actions/config-actions";
 import { useRouter } from "next/navigation";
 
 type RiskCategory = {
@@ -158,8 +158,15 @@ export function RiskCategoriesConfig() {
       setCategories(categories.filter((cat) => cat.id !== id));
       return;
     }
-    // TODO: Implement delete API call when available
-    toast.info("Delete functionality will be implemented when API endpoint is available");
+    try {
+      const response = await deleteRiskCategory(id);
+      if (response.success) {
+        toast.success(response.message || "Risk category deleted successfully");
+        router.refresh();
+      }
+    } catch (error) {
+      toast.success("Failed to delete risk category");
+    }
   };
 
   const handleCancelEdit = (id: string) => {
@@ -294,7 +301,9 @@ export function RiskCategoriesConfig() {
                       </div>
                     ) : (
                       <>
-                        <CardTitle className="flex items-center gap-2 mb-2">{category.name}</CardTitle>
+                        <CardTitle className="mb-2 flex items-center gap-2">
+                          {category.name}
+                        </CardTitle>
                         <CardDescription>
                           Code: {category.code} |{" "}
                           {departments.find((d) => d.id === category.department_id)?.name}
