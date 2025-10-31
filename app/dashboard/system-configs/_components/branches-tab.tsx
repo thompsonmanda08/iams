@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Trash2, MapPin, Pencil } from "lucide-react";
+import { Plus, Trash2, MapPin, Pencil, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -38,12 +38,16 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
+import { set } from "date-fns";
+import CustomAlert from "@/components/ui/custom-alert";
 
 interface Province {
   id: string;
   name: string;
   code: string;
   is_active: boolean;
+  towns?: Town[];
 }
 
 interface Town {
@@ -74,7 +78,7 @@ interface Pagination {
 
 interface BranchesTabProps {
   initialBranches: Branch[];
-  provinces: Province[];
+  provinces: Province[]; // EACH PROVINCE HAS TOWNS
   towns: Town[];
   pagination: Pagination;
 }
@@ -97,6 +101,8 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     return town ? town.name : "Unknown";
   };
 
+  // GET TOWNS FROM SELECTED PROVINCE
+
   const deleteBranchMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await deleteBranch(id);
@@ -107,20 +113,14 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     },
     onSuccess: () => {
       toast.success("Branch deleted successfully");
+      setOpenModal(false);
+      setBranchToDelete(null);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete branch");
     }
   });
-
-  const handleDeleteBranch = async (id: string) => {
-    // if (!confirm("Are you sure you want to delete this branch?")) return;
-    if (true) {
-      return toast.warning("This action currently is disabled");
-    }
-    deleteBranchMutation.mutate(id);
-  };
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -149,6 +149,14 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     totalCount: pagination.total,
     has_prev: pagination.has_prev,
     has_next: pagination.has_next
+  };
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
+
+  const handleDeleteConfirm = async () => {
+    if (!branchToDelete?.id) return;
+    deleteBranchMutation.mutate(branchToDelete?.id);
   };
 
   return (
@@ -260,7 +268,8 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        handleDeleteBranch(branch.id);
+                        setBranchToDelete(branch);
+                        setDeleteDialogOpen(true);
                         e.stopPropagation();
                       }}
                       className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5"
@@ -275,6 +284,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
           )}
         </TableBody>
       </Table>
+
       {branches.length > 0 && (
         <CustomPagination
           pagination={customPaginationData}
@@ -291,10 +301,18 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
         initialData={editingBranch}
         setInitialData={setEditingBranch}
         provinces={provinces}
-        towns={towns}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
         }}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={`Delete ${branchToDelete?.name || "Branch"}`}
+        description="Are you sure you want to delete this department? This action cannot be undone and may affect related data."
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteBranchMutation.isPending}
       />
     </Card>
   );
@@ -315,7 +333,6 @@ interface CreateOrUpdateBranchDialogProps {
   initialData: Branch | null;
   setInitialData: React.Dispatch<React.SetStateAction<Branch | null>>;
   provinces: Province[];
-  towns: Town[];
   onSuccess: () => void;
 }
 
@@ -324,8 +341,7 @@ function CreateOrUpdateBranchDialog({
   setOpenModal,
   initialData,
   setInitialData,
-  provinces,
-  towns,
+  provinces, // The selected province will have towns
   onSuccess
 }: CreateOrUpdateBranchDialogProps) {
   const [error, setError] = useState<ErrorState>({
@@ -333,6 +349,14 @@ function CreateOrUpdateBranchDialog({
     message: ""
   });
   const [formData, setFormData] = useState(BRANCH_INITIAL_STATE);
+
+  const towns = useMemo(() => {
+    return (
+      provinces
+        .find((p) => p.id === formData?.province_id)
+        ?.towns?.map((t) => ({ id: t.id, name: t.name })) || []
+    );
+  }, [formData?.province_id, provinces]);
 
   // PRE-POPULATE FORM DATA - Fixed to respond to prop changes
   useEffect(() => {
@@ -350,6 +374,8 @@ function CreateOrUpdateBranchDialog({
     }
     setError({ status: false, message: "" });
   }, [initialData, openModal]);
+
+  console.log("PROV====>", formData.province_id, towns);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -374,18 +400,6 @@ function CreateOrUpdateBranchDialog({
           name: province.name
         })),
     [provinces]
-  );
-
-  // Filter towns by selected province
-  const townOptions = useMemo(
-    () =>
-      towns
-        .filter((t) => t.is_active && t.province_id === formData.province_id)
-        .map((town) => ({
-          id: town.id,
-          name: town.name
-        })),
-    [towns, formData.province_id]
   );
 
   const saveMutation = useMutation({
@@ -496,7 +510,7 @@ function CreateOrUpdateBranchDialog({
               label="Town"
               placeholder="Select a town"
               className="w-full"
-              options={townOptions}
+              options={towns}
               value={formData.town_id}
               onValueChange={(town_id) => {
                 setError({ status: false, message: "" });
@@ -515,9 +529,7 @@ function CreateOrUpdateBranchDialog({
             }}
           />
           {error.status && (
-            <Alert variant="destructive">
-              <AlertDescription>{error.message}</AlertDescription>
-            </Alert>
+            <CustomAlert type="error" message={error.message} Icon={TriangleAlert} />
           )}
           <div className="flex justify-end gap-3 pt-2">
             <DialogClose asChild>

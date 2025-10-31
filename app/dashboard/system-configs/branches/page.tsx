@@ -1,9 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getBranches, getProvinces, getTowns } from "@/app/_actions/config-actions";
+import {
+  getBranches,
+  getProvinces,
+  getProvincesWithTowns,
+  getTowns
+} from "@/app/_actions/config-actions";
 import { ProvincesTab } from "../_components/provinces-tab";
 import { TownsTab } from "../_components/towns-tab";
 import { BranchesTab } from "../_components/branches-tab";
 import { Pagination } from "@/lib/types";
+import { get } from "http";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;
@@ -16,38 +22,18 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
   const activeTab = urlParams.tab || "branches";
 
-  const [branchesResponse, provincesResponse, townsResponse] = await Promise.all([
+  const [branchesResponse, townsResponse, provincesResponse] = await Promise.all([
     getBranches({ page, page_size }),
-    getProvinces({ page, page_size }),
-    getTowns({ page, page_size })
+    getTowns({ page, page_size }),
+    getProvincesWithTowns()
   ]);
 
   const branchesData = branchesResponse.success ? branchesResponse.data : null;
-  const provincesData = provincesResponse.success ? provincesResponse.data : null;
-  const townsData = townsResponse.success ? townsResponse.data : null;
+  const provinces = provincesResponse.success ? provincesResponse.data?.data : [];
+  const towns = townsResponse.success ? townsResponse.data?.data : [];
 
   const branches = branchesData?.data || [];
   const branchesPagination = branchesData?.pagination || {
-    total: 0,
-    page: 1,
-    page_size: 10,
-    total_pages: 0,
-    has_next: false,
-    has_prev: false
-  };
-
-  const provinces = provincesData?.data || [];
-  const provincesPagination = provincesData?.pagination || {
-    total: 0,
-    page: 1,
-    page_size: 10,
-    total_pages: 0,
-    has_next: false,
-    has_prev: false
-  };
-
-  const towns = townsData?.data || [];
-  const townsPagination = townsData?.pagination || {
     total: 0,
     page: 1,
     page_size: 10,

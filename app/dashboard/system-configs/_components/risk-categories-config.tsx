@@ -1,175 +1,195 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus, Trash2, Edit2, Save, X } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-
-type RiskType = {
-  id: string
-  name: string
-}
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Plus, Trash2, Edit2, Save, X, Building2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  createRiskCategory,
+  updateRiskCategory,
+  getRiskCategories
+} from "@/app/_actions/risk-module-actions";
+import { getDepartments } from "@/app/_actions/config-actions";
+import { useRouter } from "next/navigation";
 
 type RiskCategory = {
-  id: string
-  name: string
-  types: RiskType[]
-  editing?: boolean
-}
+  id?: string;
+  department_id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+  editing?: boolean;
+};
+
+type Department = {
+  id: string;
+  name: string;
+  code: string;
+};
 
 export function RiskCategoriesConfig() {
-  const { toast } = useToast()
-  const [categories, setCategories] = useState<RiskCategory[]>([
-    {
-      id: "1",
-      name: "Strategic Risks",
-      types: [
-        { id: "1-1", name: "Market changes" },
-        { id: "1-2", name: "Competitive threats" },
-        { id: "1-3", name: "Regulatory changes" },
-        { id: "1-4", name: "Technology disruption" },
-        { id: "1-5", name: "Reputation damage" },
-      ],
-    },
-    {
-      id: "2",
-      name: "Operational Risks",
-      types: [
-        { id: "2-1", name: "Process failures" },
-        { id: "2-2", name: "System outages" },
-        { id: "2-3", name: "Human error" },
-        { id: "2-4", name: "Supply chain disruption" },
-        { id: "2-5", name: "Quality issues" },
-      ],
-    },
-    {
-      id: "3",
-      name: "Financial Risks",
-      types: [
-        { id: "3-1", name: "Currency fluctuations" },
-        { id: "3-2", name: "Credit risk" },
-        { id: "3-3", name: "Liquidity risk" },
-        { id: "3-4", name: "Investment losses" },
-        { id: "3-5", name: "Fraud" },
-      ],
-    },
-    {
-      id: "4",
-      name: "Compliance Risks",
-      types: [
-        { id: "4-1", name: "Regulatory violations" },
-        { id: "4-2", name: "Legal disputes" },
-        { id: "4-3", name: "Policy breaches" },
-        { id: "4-4", name: "Licensing issues" },
-        { id: "4-5", name: "Data privacy violations" },
-      ],
-    },
-    {
-      id: "5",
-      name: "IT & Cybersecurity Risks",
-      types: [
-        { id: "5-1", name: "Data breaches" },
-        { id: "5-2", name: "Cyber attacks" },
-        { id: "5-3", name: "System failures" },
-        { id: "5-4", name: "Software vulnerabilities" },
-        { id: "5-5", name: "Network disruptions" },
-      ],
-    },
-    {
-      id: "6",
-      name: "Environmental, Social & Governance (ESG)",
-      types: [
-        { id: "6-1", name: "Climate risks" },
-        { id: "6-2", name: "Social responsibility" },
-        { id: "6-3", name: "Environmental compliance" },
-        { id: "6-4", name: "Governance failures" },
-        { id: "6-5", name: "Sustainability issues" },
-      ],
-    },
-  ])
+  const [categories, setCategories] = useState<RiskCategory[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const router = useRouter();
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchCategories();
+    fetchDepartments();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getRiskCategories();
+      if (response.success && response.data?.data) {
+        setCategories(response.data?.data);
+      }
+    } catch (error) {
+      toast.error("Failed to load risk categories");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      setLoadingDepartments(true);
+      const response = await getDepartments({ isActive: true });
+      if (response.success && response.data?.data) {
+        setDepartments(response.data?.data);
+      }
+    } catch (error) {
+      toast.error("Failed to load departments");
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
 
   const handleAddCategory = () => {
+    const tempId = `temp-${Date.now()}`;
     const newCategory: RiskCategory = {
-      id: Date.now().toString(),
-      name: "New Category",
-      types: [],
-      editing: true,
-    }
-    setCategories([...categories, newCategory])
-  }
+      id: tempId,
+      department_id: "",
+      name: "",
+      code: "",
+      description: "",
+      sort_order: categories.length + 1,
+      is_active: true,
+      editing: true
+    };
+    setCategories([...categories, newCategory]);
+  };
 
   const handleEditCategory = (id: string) => {
-    setCategories(categories.map((cat) => (cat.id === id ? { ...cat, editing: true } : cat)))
-  }
+    setCategories(categories?.map((cat) => (cat.id === id ? { ...cat, editing: true } : cat)));
+  };
 
-  const handleSaveCategory = (id: string) => {
-    setCategories(categories.map((cat) => (cat.id === id ? { ...cat, editing: false } : cat)))
-    toast({
-      title: "Category updated",
-      description: "Risk category has been saved successfully.",
-    })
-  }
+  const handleSaveCategory = async (category: RiskCategory) => {
+    if (!category.name.trim()) {
+      toast.info("Category name is required");
+      return;
+    }
 
-  const handleDeleteCategory = (id: string) => {
-    setCategories(categories.filter((cat) => cat.id !== id))
-    toast({
-      title: "Category deleted",
-      description: "Risk category has been removed.",
-      variant: "destructive",
-    })
-  }
+    if (!category.code.trim()) {
+      toast.info("Category code is required");
+      return;
+    }
 
-  const handleAddType = (categoryId: string) => {
-    setCategories(
-      categories.map((cat) =>
-        cat.id === categoryId
-          ? {
-              ...cat,
-              types: [...cat.types, { id: `${categoryId}-${Date.now()}`, name: "New Risk Type" }],
-            }
-          : cat,
-      ),
-    )
-  }
+    if (!category.department_id) {
+      toast.info("Department is required");
+      return;
+    }
+    setSavingIds((prev) => new Set(prev).add(category.id!));
 
-  const handleDeleteType = (categoryId: string, typeId: string) => {
-    setCategories(
-      categories.map((cat) =>
-        cat.id === categoryId
-          ? {
-              ...cat,
-              types: cat.types.filter((type) => type.id !== typeId),
-            }
-          : cat,
-      ),
-    )
-  }
+    try {
+      const isNew = category.id?.startsWith("temp-");
 
-  const handleUpdateCategoryName = (id: string, name: string) => {
-    setCategories(categories.map((cat) => (cat.id === id ? { ...cat, name } : cat)))
-  }
+      const payload = {
+        department_id: category.department_id,
+        name: category.name,
+        code: category.code,
+        description: category.description || "",
+        sort_order: category.sort_order
+      };
 
-  const handleUpdateTypeName = (categoryId: string, typeId: string, name: string) => {
-    setCategories(
-      categories.map((cat) =>
-        cat.id === categoryId
-          ? {
-              ...cat,
-              types: cat.types.map((type) => (type.id === typeId ? { ...type, name } : type)),
-            }
-          : cat,
-      ),
-    )
+      let response;
+      if (isNew) {
+        response = await createRiskCategory(payload);
+      } else {
+        response = await updateRiskCategory(category.id!, payload);
+      }
+
+      if (response.success) {
+        toast.success(`Risk category ${isNew ? "created" : "updated"} successfully`);
+        router.refresh();
+        await fetchCategories();
+      } else {
+        toast.error(response.message || "Failed to save category");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save category");
+    } finally {
+      setSavingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(category.id!);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (id?.startsWith("temp-")) {
+      setCategories(categories.filter((cat) => cat.id !== id));
+      return;
+    }
+    // TODO: Implement delete API call when available
+    toast.info("Delete functionality will be implemented when API endpoint is available");
+  };
+
+  const handleCancelEdit = (id: string) => {
+    if (id?.startsWith("temp-")) {
+      setCategories(categories.filter((cat) => cat.id !== id));
+    } else {
+      setCategories(categories.map((cat) => (cat.id === id ? { ...cat, editing: false } : cat)));
+    }
+  };
+
+  const handleUpdateCategory = (id: string, field: keyof RiskCategory, value: any) => {
+    setCategories(categories.map((cat) => (cat.id === id ? { ...cat, [field]: value } : cat)));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Risk Categories & Types</h2>
-          <p className="text-sm text-muted-foreground">Organize risks into categories and define specific risk types</p>
+          <h2 className="text-foreground text-2xl font-semibold">Risk Categories</h2>
+          <p className="text-muted-foreground text-sm">
+            Manage risk categories and their classifications
+          </p>
         </div>
         <Button onClick={handleAddCategory}>
           <Plus className="mr-2 h-4 w-4" />
@@ -178,97 +198,172 @@ export function RiskCategoriesConfig() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {categories.map((category) => (
-          <Card key={category.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  {category.editing ? (
-                    <Input
-                      value={category.name}
-                      onChange={(e) => handleUpdateCategoryName(category.id, e.target.value)}
-                      className="mb-2 font-semibold"
-                    />
-                  ) : (
-                    <CardTitle>{category.name}</CardTitle>
-                  )}
-                  <CardDescription>{category.types.length} risk types</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  {category.editing ? (
-                    <>
-                      <Button variant="ghost" size="icon" onClick={() => handleSaveCategory(category.id)}>
-                        <Save className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          setCategories(
-                            categories.map((cat) => (cat.id === category.id ? { ...cat, editing: false } : cat)),
-                          )
-                        }
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditCategory(category.id)}>
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteCategory(category.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {category.types.map((type) => (
-                  <div
-                    key={type.id}
-                    className="flex items-center justify-between rounded-md border border-border bg-muted/50 p-2"
-                  >
+        {categories?.map((category) => {
+          const isSaving = savingIds.has(category.id!);
+          const isNew = category.id?.startsWith("temp-");
+
+          return (
+            <Card key={category.id}>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
                     {category.editing ? (
-                      <Input
-                        value={type.name}
-                        onChange={(e) => handleUpdateTypeName(category.id, type.id, e.target.value)}
-                        className="h-8 flex-1 bg-background"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="mb-2" htmlFor={`name-${category.id}`}>
+                            Category Name *
+                          </Label>
+                          <Input
+                            id={`name-${category.id}`}
+                            value={category.name}
+                            onChange={(e) =>
+                              handleUpdateCategory(category.id!, "name", e.target.value)
+                            }
+                            placeholder="e.g., Financial Risk"
+                            disabled={isSaving}
+                          />
+                        </div>
+                        <div>
+                          <Label className="mb-2" htmlFor={`code-${category.id}`}>
+                            Code *
+                          </Label>
+                          <Input
+                            id={`code-${category.id}`}
+                            value={category.code}
+                            onChange={(e) =>
+                              handleUpdateCategory(
+                                category.id!,
+                                "code",
+                                e.target.value.toUpperCase()
+                              )
+                            }
+                            placeholder="e.g., FIN"
+                            maxLength={10}
+                            disabled={isSaving}
+                          />
+                        </div>
+                        <div>
+                          <Label className="mb-2" htmlFor={`department-${category.id}`}>
+                            Department *
+                          </Label>
+                          <Select
+                            value={category.department_id}
+                            onValueChange={(value) =>
+                              handleUpdateCategory(category.id!, "department_id", value)
+                            }
+                            disabled={loadingDepartments || isSaving}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select department">
+                                {loadingDepartments
+                                  ? "Loading..."
+                                  : category.department_id
+                                    ? departments.find((d) => d.id === category.department_id)
+                                        ?.name || "Select department"
+                                    : "Select department"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {departments?.map((dept) => (
+                                <SelectItem key={dept.id} value={dept.id}>
+                                  <div className="flex items-center gap-2">
+                                    <Building2 className="h-4 w-4" />
+                                    <span>{dept.name}</span>
+                                    <span className="text-muted-foreground text-xs">
+                                      ({dept.code})
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="mb-2" htmlFor={`description-${category.id}`}>
+                            Description
+                          </Label>
+                          <Input
+                            id={`description-${category.id}`}
+                            value={category.description || ""}
+                            onChange={(e) =>
+                              handleUpdateCategory(category.id!, "description", e.target.value)
+                            }
+                            placeholder="Brief description"
+                            disabled={isSaving}
+                          />
+                        </div>
+                      </div>
                     ) : (
-                      <span className="text-sm text-foreground">{type.name}</span>
-                    )}
-                    {category.editing && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleDeleteType(category.id, type.id)}
-                      >
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
+                      <>
+                        <CardTitle className="flex items-center gap-2 mb-2">{category.name}</CardTitle>
+                        <CardDescription>
+                          Code: {category.code} |{" "}
+                          {departments.find((d) => d.id === category.department_id)?.name}
+                        </CardDescription>
+                      </>
                     )}
                   </div>
-                ))}
-                {category.editing && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full bg-transparent"
-                    onClick={() => handleAddType(category.id)}
-                  >
-                    <Plus className="mr-2 h-3 w-3" />
-                    Add Risk Type
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <div className="flex gap-2">
+                    {category.editing ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleSaveCategory(category)}
+                          disabled={isSaving}>
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleCancelEdit(category.id!)}
+                          disabled={isSaving}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditCategory(category.id!)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteCategory(category.id!)}>
+                          <Trash2 className="text-destructive h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              {!category.editing && category.description && (
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">{category.description}</p>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
       </div>
+
+      {categories.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-muted-foreground mb-4">No risk categories found</p>
+            <Button onClick={handleAddCategory}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Your First Category
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
-  )
+  );
 }
