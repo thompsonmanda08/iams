@@ -195,13 +195,33 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
 
   // Toggle permission
   const togglePermission = (moduleId: string, permissionType: PermissionType) => {
-    setPermissionsMatrix((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        [permissionType]: !prev[moduleId]?.[permissionType]
-      }
-    }));
+    setPermissionsMatrix((prev) => {
+      const currentModulePerms = prev[moduleId] || {
+        can_view: false,
+        can_create: false,
+        can_edit: false,
+        can_delete: false,
+        can_approve: false,
+        can_export: false,
+        can_assign: false,
+        can_configure: false
+      };
+
+      const newValue = !currentModulePerms[permissionType];
+
+      console.log(`🔄 Toggling ${permissionType} for module ${moduleId}:`, {
+        oldValue: currentModulePerms[permissionType],
+        newValue
+      });
+
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModulePerms,
+          [permissionType]: newValue
+        }
+      };
+    });
     setHasChanges(true);
   };
 
@@ -212,10 +232,42 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
         throw new Error("No role selected");
       }
 
-      const permissions = modules.map((module) => ({
-        moduleId: module.id,
-        ...permissionsMatrix[module.id]
-      }));
+      const permissions = modules
+        .map((module) => {
+          const modulePerms = permissionsMatrix[module.id];
+          return {
+            moduleId: module.id,
+            canView: modulePerms?.can_view || false,
+            canCreate: modulePerms?.can_create || false,
+            canEdit: modulePerms?.can_edit || false,
+            canDelete: modulePerms?.can_delete || false,
+            canApprove: modulePerms?.can_approve || false,
+            canExport: modulePerms?.can_export || false,
+            canAssign: modulePerms?.can_assign || false,
+            canConfigure: modulePerms?.can_configure || false
+          };
+        })
+        .filter((perm) => {
+          // Filter out modules where all permissions are false
+          // API requires at least one permission to be true
+          return (
+            perm.canView ||
+            perm.canCreate ||
+            perm.canEdit ||
+            perm.canDelete ||
+            perm.canApprove ||
+            perm.canExport ||
+            perm.canAssign ||
+            perm.canConfigure
+          );
+        });
+
+      console.log("💾 Saving permissions for role:", selectedRole);
+      console.log("📋 Permissions to save:", JSON.stringify(permissions, null, 2));
+
+      if (permissions.length === 0) {
+        throw new Error("At least one module must have permissions enabled");
+      }
 
       const response = await bulkUpdateRolePermissions({
         roleId: selectedRole,

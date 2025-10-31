@@ -1,7 +1,12 @@
 "use server";
 
 import { APIResponse } from "@/lib/types";
-import { axios, handleBadRequest, handleError, successResponse } from "./api-config";
+import authenticatedApiClient, {
+  axios,
+  handleBadRequest,
+  handleError,
+  successResponse
+} from "./api-config";
 
 // ============================================================================
 // ROLE PERMISSIONS MANAGEMENT
@@ -79,17 +84,21 @@ export async function grantOrUpdateRolePermission({
   }
 
   try {
-    const response = await axios.post(url, {
-      module_id: moduleId,
-      can_view: canView,
-      can_create: canCreate,
-      can_edit: canEdit,
-      can_delete: canDelete,
-      can_approve: canApprove,
-      can_export: canExport,
-      can_assign: canAssign,
-      can_configure: canConfigure,
-      custom_permissions: customPermissions || {}
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        module_id: moduleId,
+        can_view: canView,
+        can_create: canCreate,
+        can_edit: canEdit,
+        can_delete: canDelete,
+        can_approve: canApprove,
+        can_export: canExport,
+        can_assign: canAssign,
+        can_configure: canConfigure,
+        custom_permissions: customPermissions || {}
+      }
     });
 
     return successResponse(response?.data, "Permission granted successfully");
