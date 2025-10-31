@@ -25,8 +25,6 @@ function Providers({
 
   if (!mounted) return null;
 
-  // console.log("[current session ]: ", session);
-
   return (
     <>
       <QueryClientProvider client={queryClient}>
