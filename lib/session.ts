@@ -106,7 +106,10 @@ export async function decrypt(session: any) {
 
 export async function createAuthSession({
   accessToken,
-  user_type
+  user_type,
+  change_password,
+  mfa_required,
+  organization_id
 }: {
   accessToken: string;
   user_type: UserType;
@@ -116,12 +119,17 @@ export async function createAuthSession({
 }): Promise<void> {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // AFTER 1 HOUR
 
-  // Call `encrypt` to generate the session token
-  const session = await encrypt({
+  const newSession: AuthSession = {
     accessToken: accessToken || "",
-    user: { user_type: user_type || "ORGANIZATION_USER" },
+    change_password,
+    mfa_required,
+    organization_id,
     expiresAt
-  });
+  };
+  console.log("[new session ]: ", newSession);
+
+  // Call `encrypt` to generate the session token
+  const session = await encrypt(newSession);
 
   // Ensure `session` is successfully created before setting the cookie
   if (session) {
@@ -142,6 +150,7 @@ export async function updateAuthSession(fields: any): Promise<AuthSession> {
   const { isAuthenticated: isLoggedIn, session: oldSession } = await verifySession();
 
   const newSession: AuthSession = { ...oldSession, ...fields };
+
   if (isLoggedIn && oldSession) {
     // Call `encrypt` to generate the session token
     const session = await encrypt(newSession);

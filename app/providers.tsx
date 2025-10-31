@@ -25,6 +25,8 @@ function Providers({
 
   if (!mounted) return null;
 
+  console.log("[current session ]: ", session);
+
   return (
     <>
       <QueryClientProvider client={queryClient}>
@@ -47,7 +49,7 @@ function Providers({
 
         {children}
         <IdleTimerContainer session={session} />
-        {session?.change_password && <FirstLogin />}
+        {session?.change_password && <FirstLogin open={session?.change_password} />}
         {session?.screen_locked && <ScreenLock open={session?.screen_locked} />}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

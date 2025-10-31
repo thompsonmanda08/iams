@@ -20,6 +20,8 @@ import { CustomPagination } from "@/components/ui/pagination";
 interface Action {
   id: string;
   actionId: string;
+  title: string;
+  description: string;
   risk: {
     title: string;
     description: string;
@@ -50,6 +52,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const searchParams = useSearchParams();
   const [_, startTransition] = useTransition();
+
+  console.log("ATCTIONS:", actions);
 
   const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
     console.log(`Exporting as ${type}`);
@@ -142,15 +146,13 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                actions.map((action) => (
+                actions?.map((action) => (
                   <TableRow key={action.id}>
                     <TableCell className="font-mono text-xs">{action.id}</TableCell>
                     <TableCell className="align-top break-words whitespace-normal">
                       <div className="max-w-sm">
-                        <div className="font-semibold">{action.risk.title}</div>
-                        <div className="text-muted-foreground text-xs">
-                          {action.risk.description}
-                        </div>
+                        <div className="font-semibold">{action.title}</div>
+                        <div className="text-muted-foreground text-xs">{action.description}</div>
                       </div>
                     </TableCell>
                     <TableCell>{action.action}</TableCell>
