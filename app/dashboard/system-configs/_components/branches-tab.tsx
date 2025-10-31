@@ -90,6 +90,8 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
   const [branches, setBranches] = useState<Branch[]>(initialBranches);
   const [openModal, setOpenModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
 
   const getProvinceName = (provinceId: string) => {
     const province = provinces.find((p) => p.id === provinceId);
@@ -113,6 +115,8 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     },
     onSuccess: () => {
       toast.success("Branch deleted successfully");
+      setOpenModal(false);
+      setDeleteDialogOpen(false);
       setOpenModal(false);
       setBranchToDelete(null);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
@@ -150,9 +154,6 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     has_prev: pagination.has_prev,
     has_next: pagination.has_next
   };
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
 
   const handleDeleteConfirm = async () => {
     if (!branchToDelete?.id) return;
@@ -374,8 +375,6 @@ function CreateOrUpdateBranchDialog({
     }
     setError({ status: false, message: "" });
   }, [initialData, openModal]);
-
-  console.log("PROV====>", formData.province_id, towns);
 
   // Reset form when modal closes
   useEffect(() => {
