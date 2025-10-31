@@ -1,5 +1,5 @@
 "use client";
-
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,10 @@ import { format } from "date-fns";
 import { RiskRegister } from "@/lib/types/risk-types";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
+import { ConfirmationModal } from "@/components/confirmation-modal";
+import { toast } from "sonner";
+import { deleteRiskRegister } from "@/app/_actions/risk-module-actions";
+import EditRiskRegisterDialog from "@/components/forms/edit-risk-register-dialog";
 
 type RiskRegistersTableProps = {
   registers: RiskRegister[];
@@ -49,21 +53,33 @@ export default function RiskRegistersTable({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    registerId: string | null;
+    registerName: string | null;
+  }>({
+    open: false,
+    registerId: null,
+    registerName: null
+  });
+  const [editDialog, setEditDialog] = useState<{
+    open: boolean;
+    register: RiskRegister | null;
+  }>({
+    open: false,
+    register: null
+  });
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-
     if (value && value !== "all") {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-
-    // Reset to page 1 on filter change
     if (key !== "page") {
       params.delete("page");
     }
-
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
@@ -77,22 +93,49 @@ export default function RiskRegistersTable({
     updateSearchParams("status", value);
   };
 
-  // Updated pagination handler for CustomPagination
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
-
     if (page !== undefined) {
       params.set("page", String(page));
     }
-
     if (page_size !== undefined) {
       params.set("page_size", String(page_size));
-      // Reset to page 1 when page size changes
       params.set("page", "1");
     }
-
     startTransition(() => {
       router.push(`?${params.toString()}`);
+    });
+  };
+
+  const handleDeleteClick = (register: RiskRegister) => {
+    setDeleteDialog({
+      open: true,
+      registerId: register.id,
+      registerName: register.name
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.registerId) return;
+
+    try {
+      const response = await deleteRiskRegister(deleteDialog.registerId);
+      if (response.success) {
+        toast.success("Risk register deleted successfully");
+        router.refresh();
+        setDeleteDialog({ open: false, registerId: null, registerName: null });
+      } else {
+        toast.error(response.message || "Failed to delete risk register");
+      }
+    } catch (error) {
+      toast.error("Failed to delete risk register");
+    }
+  };
+
+  const handleEditClick = (register: RiskRegister) => {
+    setEditDialog({
+      open: true,
+      register
     });
   };
 
@@ -141,7 +184,6 @@ export default function RiskRegistersTable({
             onChange={(e) => handleSearchChange(e)}
             disabled={isPending}
           />
-
           <Select
             value={currentStatus || "all"}
             onValueChange={handleStatusChange}
@@ -244,7 +286,7 @@ export default function RiskRegistersTable({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
-                          // handleEdit(register.id)
+                          handleEditClick(register);
                           e.stopPropagation();
                         }}
                         className="h-8 gap-1.5">
@@ -255,7 +297,7 @@ export default function RiskRegistersTable({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
-                          // handleDelete(register.id)
+                          handleDeleteClick(register);
                           e.stopPropagation();
                         }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
@@ -279,6 +321,23 @@ export default function RiskRegistersTable({
           />
         )}
       </Card>
+
+      <ConfirmationModal
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, registerId: null, registerName: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Risk Register"
+        description={`Are you sure you want to delete "${deleteDialog.registerName}"? This action cannot be undone and will delete all associated risks.`}
+        type="delete"
+      />
+
+      {editDialog.register && (
+        <EditRiskRegisterDialog
+          open={editDialog.open}
+          onOpenChange={(open) => setEditDialog({ open, register: null })}
+          register={editDialog.register}
+        />
+      )}
     </>
   );
 }
