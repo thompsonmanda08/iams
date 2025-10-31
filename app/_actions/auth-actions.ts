@@ -237,7 +237,7 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
       "🔧 [InitializeSystemSetup] Received permissions from API:",
       !!session?.permissions
     );
-    console.log("🔧 [InitializeSystemSetup] Permissions value:", session?.permissions);
+    // console.log("🔧 [InitializeSystemSetup] Permissions value:", session?.permissions);
 
     // Only update session with fields that have actual values
     const updateFields: any = {};
@@ -280,7 +280,9 @@ export async function getRefreshToken(): Promise<APIResponse> {
     const updateFields: any = { accessToken: tokenData?.access_token };
 
     if (!session.user || !session.permissions) {
-      console.log("⚠️ [getRefreshToken] User/permissions missing, attempting to restore from backup...");
+      console.log(
+        "⚠️ [getRefreshToken] User/permissions missing, attempting to restore from backup..."
+      );
       const backup = await getUserBackup();
 
       if (backup) {

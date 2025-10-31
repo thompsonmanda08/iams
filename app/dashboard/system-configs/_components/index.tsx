@@ -15,10 +15,9 @@ import {
 } from "@/app/_actions/config-actions";
 import { useParams } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, FolderCode, PuzzleIcon } from "lucide-react";
+import { FolderCode, PuzzleIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { add } from "date-fns";
-import { capitalize, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 
@@ -49,7 +48,9 @@ export const AddNewRoleForm = () => {
     id: undefined,
     name: "",
     code: "",
-    description: ""
+    description: "",
+    parent_id: null,
+    is_active: true
   });
 
   async function handleUpdateDepartment(e: React.FormEvent) {
@@ -114,13 +115,52 @@ export const AddNewRoleForm = () => {
   );
 };
 
+// Helper function to format module display name for layman users
+const formatModuleName = (name: string, moduleCode: string) => {
+  // Priority 1: If name is meaningful (not "overview" or generic), use it
+  const nameLower = name.toLowerCase().trim();
+  const isGenericName = nameLower === "overview" || nameLower === moduleCode.toLowerCase();
+
+  if (!isGenericName && name.length > 0) {
+    // Use the provided name, just clean it up
+    return name
+      .trim()
+      .split(/[\s_-]+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+
+  // Priority 2: Use module_code if name is generic or empty
+  if (moduleCode && moduleCode.length > 0) {
+    // Convert module_code to readable format
+    // Examples: "audit_universe" -> "Audit Universe", "risk-kri" -> "Risk KRI"
+    return moduleCode
+      .replace(/[_-]/g, " ")
+      .split(" ")
+      .map((word) => {
+        // Keep acronyms uppercase (2-3 letter words)
+        if (word.length <= 3 && word.toUpperCase() === word) {
+          return word.toUpperCase();
+        }
+        // Capitalize first letter of longer words
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(" ");
+  }
+
+  // Fallback: return name as-is
+  return name;
+};
+
 const ModuleItem = ({
   name,
   description,
   onSelection,
   allowSelect = false,
   backendKey,
-  selectedModules = []
+  selectedModules = [],
+  isParent = false,
+  moduleCode = ""
 }: {
   name: string;
   description: string;
@@ -128,12 +168,19 @@ const ModuleItem = ({
   allowSelect?: boolean;
   backendKey: string;
   selectedModules?: string[];
+  isParent?: boolean;
+  moduleCode?: string;
 }) => {
+  const displayName = formatModuleName(name, moduleCode);
+
   return (
     <Label
       key={name}
       htmlFor={backendKey}
-      className="hover:bg-primary/10 border-primary/10 bg-primary/5 relative flex w-full cursor-pointer justify-start gap-2 gap-x-2 rounded-lg border p-3">
+      className={cn(
+        "hover:bg-primary/10 border-primary/10 bg-primary/5 relative flex w-full cursor-pointer justify-start gap-2 gap-x-2 rounded-lg border p-3",
+        isParent && "border-primary/30 bg-primary/10 font-semibold"
+      )}>
       <Checkbox
         id={backendKey}
         checked={selectedModules?.includes(backendKey)}
@@ -142,14 +189,20 @@ const ModuleItem = ({
           onSelection(backendKey);
         }}
         disabled={!allowSelect}
-        className="absolute right-2 h-4 w-4"
+        className="absolute top-3 right-2 h-4 w-4"
       />
       <div className="flex items-center justify-center gap-3 rounded">
-        <div className="bg-primary flex h-8 w-8 items-center justify-center rounded">
+        <div
+          className={cn(
+            "bg-primary flex h-8 w-8 items-center justify-center rounded",
+            isParent && "bg-primary/80"
+          )}>
           <PuzzleIcon className="h-4 w-4 text-white" />
         </div>
         <div className="flex w-max flex-col items-start justify-start">
-          <span className="text-sm font-medium text-gray-900 uppercase">{name}</span>
+          <span className={cn("text-sm font-medium text-gray-900", isParent && "text-base")}>
+            {displayName}
+          </span>
           <span className="text-xs text-gray-500">{description}</span>
         </div>
       </div>
@@ -192,6 +245,9 @@ export function ModuleSelection({
         ? (modulesResponse.data?.data as any[]).map((module: any) => ({
             id: module.id,
             name: module.name,
+            module_code: module.module_code || module.code || "",
+            href: module.href || "",
+            parent_module_id: module.parent_module_id || null,
             description: module.description || "",
             department: "",
             backendKey: module.id,
@@ -299,10 +355,163 @@ export function ModuleSelection({
   const isLoading = modulesLoading || departmentModulesLoading;
   const isSaving = saveModulesMutation.isPending;
 
+  // Helper to categorize modules based on their route and parent-child relationships
+  const categorizeModules = useMemo(() => {
+    // Initialize categories in the desired order
+    const categorized: Record<
+      string,
+      { parent: AppModule | null; children: AppModule[]; parentId?: string; order: number }
+    > = {
+      Risk: { parent: null, children: [], order: 1 },
+      Audit: { parent: null, children: [], order: 2 },
+      "System Configuration": { parent: null, children: [], order: 3 },
+      Other: { parent: null, children: [], order: 4 }
+    };
+
+    // First pass: identify parent modules (modules with no parent_module_id)
+    const parentModules = modules.filter((m) => !m.parent_module_id);
+    const childModules = modules.filter((m) => m.parent_module_id);
+
+    // Categorize parent modules based on their href
+    parentModules.forEach((module) => {
+      const hrefValue = (module.href || "").toLowerCase();
+      const moduleCodeValue = (module.module_code || "").toLowerCase();
+
+      let category = "Other";
+
+      // Determine category based on href path
+      if (hrefValue.includes("/risk")) {
+        category = "Risk";
+      } else if (hrefValue.includes("/audit")) {
+        category = "Audit";
+      } else if (hrefValue.includes("/system-config")) {
+        category = "System Configuration";
+      }
+      // Fallback to module_code if no href match
+      else if (moduleCodeValue.includes("risk")) {
+        category = "Risk";
+      } else if (moduleCodeValue.includes("audit")) {
+        category = "Audit";
+      } else if (
+        moduleCodeValue.includes("system") ||
+        moduleCodeValue.includes("config") ||
+        moduleCodeValue.includes("setting")
+      ) {
+        category = "System Configuration";
+      }
+
+      console.log("🔍 Parent Module:", {
+        name: module.name,
+        module_code: module.module_code,
+        href: module.href,
+        category
+      });
+
+      categorized[category].parent = module;
+      categorized[category].parentId = module.id;
+    });
+
+    // Categorize child modules based on their parent's category
+    childModules.forEach((module) => {
+      const hrefValue = (module.href || "").toLowerCase();
+      const moduleCodeValue = (module.module_code || "").toLowerCase();
+
+      // Find parent's category
+      let category = "Other";
+      const parentId = module.parent_module_id;
+
+      // Check if this child belongs to any of our identified parents
+      for (const [catName, catData] of Object.entries(categorized)) {
+        if (catData.parentId === parentId) {
+          category = catName;
+          break;
+        }
+      }
+
+      // If parent not found in our categories, determine by href/module_code
+      if (category === "Other") {
+        if (hrefValue.includes("/risk") || moduleCodeValue.includes("risk")) {
+          category = "Risk";
+        } else if (hrefValue.includes("/audit") || moduleCodeValue.includes("audit")) {
+          category = "Audit";
+        } else if (hrefValue.includes("/system-config")) {
+          category = "System Configuration";
+        }
+      }
+
+      console.log("🔍 Child Module:", {
+        name: module.name,
+        module_code: module.module_code,
+        href: module.href,
+        parent_id: module.parent_module_id,
+        category
+      });
+
+      categorized[category].children.push(module);
+    });
+
+    return categorized;
+  }, [modules]);
+
   const handleModuleToggle = (moduleId: string) => {
-    setSelectedModules((prev) =>
-      prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]
-    );
+    setSelectedModules((prev) => {
+      const isCurrentlySelected = prev.includes(moduleId);
+      const clickedModule = modules.find((m) => m.backendKey === moduleId);
+
+      if (!clickedModule) return prev;
+
+      // Check if this is a parent module (no parent_module_id)
+      const isParentModule = !clickedModule.parent_module_id;
+
+      // Find all children of this module (if it's a parent)
+      const childModuleIds = isParentModule
+        ? modules.filter((m) => m.parent_module_id === moduleId).map((m) => m.backendKey)
+        : [];
+
+      // Find the parent of this module (if it's a child)
+      const parentModuleId = clickedModule.parent_module_id;
+
+      console.log("🎯 Toggle Module:", {
+        module: clickedModule.name,
+        isParentModule,
+        isCurrentlySelected,
+        childModuleIds,
+        parentModuleId
+      });
+
+      if (isCurrentlySelected) {
+        // DESELECTING
+        if (isParentModule) {
+          // Deselecting a parent: remove parent and ALL its children
+          console.log("   → Deselecting parent and all children");
+          return prev.filter((id) => id !== moduleId && !childModuleIds.includes(id));
+        } else {
+          // Deselecting a child: only remove this child (keep parent and other children)
+          console.log("   → Deselecting child only");
+          return prev.filter((id) => id !== moduleId);
+        }
+      } else {
+        // SELECTING
+        if (isParentModule) {
+          // Selecting a parent: add parent and ALL its children
+          console.log("   → Selecting parent and all children");
+          const newSelection = [moduleId, ...childModuleIds.filter((id) => !prev.includes(id))];
+          return [...prev, ...newSelection.filter((id) => !prev.includes(id))];
+        } else {
+          // Selecting a child: add child AND ensure parent is selected
+          console.log("   → Selecting child and ensuring parent is selected");
+          const newSelection = [moduleId];
+
+          // Always include the parent if not already selected
+          if (parentModuleId && !prev.includes(parentModuleId)) {
+            newSelection.push(parentModuleId);
+            console.log("   → Auto-selected parent:", parentModuleId);
+          }
+
+          return [...prev, ...newSelection.filter((id) => !prev.includes(id))];
+        }
+      }
+    });
   };
 
   if (isLoading) {
@@ -330,25 +539,97 @@ export function ModuleSelection({
           </div>
         )}
 
-        <div
-          className={cn(
-            "grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3",
-            modules.length === 0 && "place-items-center"
-          )}>
+        <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+          <h4 className="mb-2 text-sm font-medium text-blue-900">
+            About Department Module Assignment
+          </h4>
+          <div className="space-y-1 text-sm text-blue-700">
+            <p>• Modules assigned here will be available for roles within this department</p>
+            <p>• Roles can only receive permissions for modules assigned to their department</p>
+            <p>• This implements the department-constrained RBAC system</p>
+          </div>
+        </div>
+
+        <div className={cn("space-y-6", modules.length === 0 && "place-items-center")}>
           {modules && modules.length > 0 ? (
-            modules.map((module) => {
-              return (
-                <ModuleItem
-                  key={module.backendKey + "-display"}
-                  name={capitalize(module.name)}
-                  description={module.description || "No Description"}
-                  allowSelect={allowSelect}
-                  backendKey={module.backendKey}
-                  selectedModules={selectedModules}
-                  onSelection={handleModuleToggle}
-                />
-              );
-            })
+            <>
+              {/* Sort categories by order and render */}
+              {Object.entries(categorizeModules)
+                .sort(([, a], [, b]) => a.order - b.order)
+                .map(([categoryName, category]) => {
+                  const hasContent = category.parent || category.children.length > 0;
+                  if (!hasContent) return null;
+
+                  return (
+                    <div key={categoryName} className="space-y-3">
+                      {/* Category Header */}
+                      <div className="flex items-center gap-2">
+                        <div className="bg-primary/20 h-px flex-1" />
+                        <h4 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                          {categoryName}
+                        </h4>
+                        <div className="bg-primary/20 h-px flex-1" />
+                      </div>
+
+                      {/* Parent Module */}
+                      {category.parent && (
+                        <div className="border-primary/20 rounded-lg border-2 border-dashed p-4">
+                          <ModuleItem
+                            key={category.parent.backendKey + "-parent"}
+                            name={category.parent.name}
+                            moduleCode={category.parent.module_code || ""}
+                            description={category.parent.description || "Main Module"}
+                            allowSelect={allowSelect}
+                            backendKey={category.parent.backendKey}
+                            selectedModules={selectedModules}
+                            onSelection={handleModuleToggle}
+                            isParent={true}
+                          />
+
+                          {/* Child Modules */}
+                          {category.children.length > 0 && (
+                            <div className="border-primary/20 mt-3 ml-4 space-y-2 border-l-2 pl-4">
+                              <p className="text-muted-foreground mb-2 text-xs">Sub-modules:</p>
+                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                {category.children.map((child) => (
+                                  <ModuleItem
+                                    key={child.backendKey + "-child"}
+                                    name={child.name}
+                                    moduleCode={child.module_code || ""}
+                                    description={child.description || "No Description"}
+                                    allowSelect={allowSelect}
+                                    backendKey={child.backendKey}
+                                    selectedModules={selectedModules}
+                                    onSelection={handleModuleToggle}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Standalone modules (no parent) */}
+                      {!category.parent && category.children.length > 0 && (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                          {category.children.map((module) => (
+                            <ModuleItem
+                              key={module.backendKey + "-standalone"}
+                              name={module.name}
+                              moduleCode={module.module_code || ""}
+                              description={module.description || "No Description"}
+                              allowSelect={allowSelect}
+                              backendKey={module.backendKey}
+                              selectedModules={selectedModules}
+                              onSelection={handleModuleToggle}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </>
           ) : (
             <div className="col-span-full">
               <Empty>
@@ -388,17 +669,6 @@ export function ModuleSelection({
               <Button onClick={handleSave} disabled={isSaving}>
                 {isSaving ? "Saving..." : "Save Selection"}
               </Button>
-            </div>
-
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
-              <h4 className="mb-2 text-sm font-medium text-blue-900">
-                About Department Module Assignment
-              </h4>
-              <div className="space-y-1 text-sm text-blue-700">
-                <p>• Modules assigned here will be available for roles within this department</p>
-                <p>• Roles can only receive permissions for modules assigned to their department</p>
-                <p>• This implements the department-constrained RBAC system</p>
-              </div>
             </div>
           </div>
         )}

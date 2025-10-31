@@ -82,6 +82,9 @@ export type DepartmentUser = {
 export type AppModule = {
   id: string;
   name: string;
+  module_code?: string;
+  href?: string;
+  parent_module_id?: string | null;
   description?: string;
   department: string;
   backendKey: string;

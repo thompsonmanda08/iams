@@ -197,16 +197,18 @@ export function NavMain({ session, isAuthenticated }: { session: any; isAuthenti
   const pathname = usePathname();
   const { isMobile } = useSidebar();
 
-  // const { data: navItemss, isLoading } = useQuery({
-  //   queryKey: ["navigation-modules"],
-  //   queryFn: async () => {
-  //     const response = await getModules();
-  //     // const data = response?.data || [];
-  //     // return response.data;
-  //     return transformModulesToNav(response?.data.data || []);
-  //   },
-  //   staleTime: Infinity
-  // });
+  const { data: navItemss, isLoading } = useQuery({
+    queryKey: ["navigation-modules"],
+    queryFn: async () => {
+      const response = await getModules();
+      // const data = response?.data || [];
+      // return response.data;
+      console.log("MODULES: ", response?.data.data);
+
+      return transformModulesToNav(response?.data.data || []);
+    },
+    staleTime: Infinity
+  });
 
   const routes = useMemo(() => {
     return session?.user?.userType === "admin" ||
