@@ -185,6 +185,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     // timeout: 1 * 1000 * 5, // 5SEC
     throttle: 500,
     disabled: !loggedIn
+    
   });
 
   /* NO TIMER ON EXTERNAL ROUTES */

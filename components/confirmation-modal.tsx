@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Trash2, X, Edit } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type ConfirmationType = "delete" | "close" | "edit" | "default";
 
@@ -27,11 +28,12 @@ interface ConfirmationModalProps {
 const typeConfig = {
   delete: {
     icon: Trash2,
-    title: "Confirm Deletion",
-    description: "Are you sure you want to delete this? This action cannot be undone.",
+    title: "Confirm Deletion?",
+    description:
+      "Are you sure you want to perform a delete action on this entry? This action cannot be undone.",
     confirmText: "Delete",
     variant: "destructive" as const,
-    iconColor: "text-destructive"
+    iconColor: "text-destructive bg-red-50 p-1"
   },
   close: {
     icon: X,
@@ -47,7 +49,7 @@ const typeConfig = {
     description: "Are you sure you want to make these changes?",
     confirmText: "Confirm",
     variant: "default" as const,
-    iconColor: "text-primary"
+    iconColor: "text-primary "
   },
   default: {
     icon: AlertTriangle,
@@ -81,17 +83,23 @@ export function ConfirmationModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className={`bg-muted rounded-full p-2 ${config.iconColor}`}>
-              <Icon className="h-5 w-5" />
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-full",
+                config.iconColor
+              )}>
+              <Icon className="h-4 w-4" />
             </div>
-            <DialogTitle>{title || config.title}</DialogTitle>
+            <DialogTitle className="tracking-tight">{title || config.title}</DialogTitle>
           </div>
-          <DialogDescription className="pt-2">
+          <DialogDescription className="text-muted-foreground text-xs font-medium sm:text-sm">
+            {" "}
             {description || config.description}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0 space-x-2">
+
+        <DialogFooter className="gap-2 space-x-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
@@ -103,8 +111,10 @@ export function ConfirmationModal({
             type="button"
             variant={config.variant}
             onClick={handleConfirm}
+            loadingText=""
+            isLoading={isLoading}
             disabled={isLoading}>
-            {isLoading ? "Processing..." : confirmText || config.confirmText}
+            {confirmText || config.confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

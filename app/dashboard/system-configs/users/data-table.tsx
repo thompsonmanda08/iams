@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { Columns3, MoreHorizontal, Filter, X } from "lucide-react";
+import { Columns3, MoreHorizontal, Filter, X, MoreVertical, SlidersVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -138,7 +138,7 @@ const getColumns = (
   },
   {
     id: "options",
-    header: () => <div className="text-right">Options</div>,
+    header: () => <div className="pr-6 text-right">Actions</div>,
     enableHiding: false,
     cell: ({ row }) => {
       const user = row.original;
@@ -146,13 +146,15 @@ const getColumns = (
         <div className="text-right">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="outline" size="sm" className="text-primary">
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+                <SlidersVertical className="h-4 w-4" />
+                Options
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               <DropdownMenuItem>View Profile</DropdownMenuItem>
               <DropdownMenuItem>Edit User</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -195,7 +197,6 @@ export default function UsersDataTable({
     userName: null
   });
 
-
   const handleDeleteConfirm = async () => {
     if (!deleteDialog.userId) return;
 
@@ -213,7 +214,7 @@ export default function UsersDataTable({
     }
   };
 
-    const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: string) => {
     const user = data.find((u) => u.id === id);
     if (user) {
       setDeleteDialog({
@@ -464,6 +465,7 @@ export default function UsersDataTable({
       </CardContent>
       <ConfirmationModal
         open={deleteDialog.open}
+        description={`Are you sure you want to delete the user "${deleteDialog.userName?.toLocaleUpperCase()}"? This action cannot be undone.`}
         onOpenChange={(open) => setDeleteDialog({ open, userId: null, userName: null })}
         onConfirm={handleDeleteConfirm}
         type="delete"
