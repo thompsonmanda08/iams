@@ -19,7 +19,6 @@ import { CustomPagination } from "@/components/ui/pagination";
 
 interface Action {
   id: string;
-  actionId: string;
   title: string;
   description: string;
   risk: {
@@ -52,8 +51,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const searchParams = useSearchParams();
   const [_, startTransition] = useTransition();
-
-  console.log("ATCTIONS:", actions);
 
   const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
     console.log(`Exporting as ${type}`);
@@ -171,9 +168,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={(e) => {
-                            router.push(`/dashboard/risks/actions/${action.actionId}`);
-                            e.stopPropagation();
+                          onClick={() => {
+                            router.push(`/dashboard/risks/actions/${action.id}`);
                           }}
                           className="h-8 gap-1.5">
                           <View className="h-3.5 w-3.5" />

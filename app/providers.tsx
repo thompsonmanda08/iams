@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PropsWithChildren, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import ScreenLock, { IdleTimerContainer } from "@/components/screen-lock";
+import { IdleTimerContainer } from "@/components/screen-lock";
 import FirstLogin from "@/components/first-login";
 import { useNetwork } from "@/hooks/use-network";
 
@@ -24,8 +24,6 @@ function Providers({
   }, []);
 
   if (!mounted) return null;
-
-  console.log("[current session ]: ", session);
 
   return (
     <>
@@ -50,7 +48,6 @@ function Providers({
         {children}
         <IdleTimerContainer session={session} />
         {session?.change_password && <FirstLogin open={session?.change_password} />}
-        {session?.screen_locked && <ScreenLock open={session?.screen_locked} />}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </>

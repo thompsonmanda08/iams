@@ -8,7 +8,14 @@ import authenticatedApiClient, {
   successResponse,
   unauthorizedResponse
 } from "./api-config";
-import { createAuthSession, deleteSession, updateAuthSession, verifySession } from "@/lib/session";
+import {
+  createAuthSession,
+  deleteSession,
+  updateAuthSession,
+  verifySession,
+  saveUserBackup,
+  getUserBackup
+} from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
 import { se } from "date-fns/locale";
@@ -224,7 +231,28 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
     const session = response?.data;
     const user = session?.user;
 
-    await updateAuthSession({ user, permissions: session?.permissions });
+    console.log("🔧 [InitializeSystemSetup] Received user from API:", !!user);
+    console.log("🔧 [InitializeSystemSetup] User value:", user);
+    console.log(
+      "🔧 [InitializeSystemSetup] Received permissions from API:",
+      !!session?.permissions
+    );
+    console.log("🔧 [InitializeSystemSetup] Permissions value:", session?.permissions);
+
+    // Only update session with fields that have actual values
+    const updateFields: any = {};
+    if (user) updateFields.user = user;
+    if (session?.permissions) updateFields.permissions = session.permissions;
+
+    // Only call updateAuthSession if there's something to update
+    if (Object.keys(updateFields).length > 0) {
+      await updateAuthSession(updateFields);
+
+      // Save user backup to separate cookie for recovery
+      if (user) {
+        await saveUserBackup(user, session?.permissions);
+      }
+    }
 
     return successResponse({ user }, response?.data?.message);
   } catch (error: Error | any) {
@@ -248,9 +276,29 @@ export async function getRefreshToken(): Promise<APIResponse> {
 
     const tokenData = response.data?.data;
 
-    await updateAuthSession({
-      accessToken: tokenData?.access_token
-    });
+    // Check if user is missing from session and restore from backup if available
+    const updateFields: any = { accessToken: tokenData?.access_token };
+
+    if (!session.user || !session.permissions) {
+      console.log("⚠️ [getRefreshToken] User/permissions missing, attempting to restore from backup...");
+      const backup = await getUserBackup();
+
+      if (backup) {
+        if (!session.user && backup.user) {
+          updateFields.user = backup.user;
+          console.log("✅ [getRefreshToken] User restored from backup");
+        }
+        if (!session.permissions && backup.permissions) {
+          updateFields.permissions = backup.permissions;
+          console.log("✅ [getRefreshToken] Permissions restored from backup");
+        }
+      } else {
+        console.log("❌ [getRefreshToken] No backup found, user data may be lost");
+      }
+    }
+
+    // Update session with new token and restored user data if needed
+    await updateAuthSession(updateFields);
 
     return successResponse(tokenData, response.data?.message);
   } catch (error: Error | any) {
@@ -268,6 +316,7 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
         const refreshResponse = await getRefreshToken();
         if (refreshResponse.success) {
           await updateAuthSession({ screen_locked: state });
+
           return true;
         }
       } catch (error) {

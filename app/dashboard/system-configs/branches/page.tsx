@@ -60,14 +60,19 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
     <div className="container mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-foreground text-3xl font-bold">Locations Setup</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your branches, provinces, and towns across the country
-          </p>
+          <h1 className="text-foreground text-3xl font-bold">Branches Setup</h1>
+          <p className="text-muted-foreground mt-1">Manage your branches, across the country</p>
         </div>
       </div>
 
-      <Tabs defaultValue={activeTab} className="space-y-6">
+      <BranchesTab
+        initialBranches={branches}
+        provinces={provinces}
+        towns={towns}
+        pagination={branchesPagination}
+      />
+
+      {/* <Tabs defaultValue={activeTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="provinces">Provinces</TabsTrigger>
           <TabsTrigger value="towns">Towns</TabsTrigger>
@@ -90,7 +95,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
             pagination={branchesPagination}
           />
         </TabsContent>
-      </Tabs>
+      </Tabs> */}
     </div>
   );
 }

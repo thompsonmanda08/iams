@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -138,6 +138,10 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     router.push(`?${params.toString()}`);
   };
 
+  useEffect(() => {
+    setBranches(initialBranches);
+  }, [initialBranches]);
+
   const customPaginationData = {
     page: pagination.page,
     page_size: pagination.page_size,
@@ -241,9 +245,9 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        if (true) {
-                          return toast.warning("This action currently is disabled");
-                        }
+                        // if (true) {
+                        //   return toast.warning("This action currently is disabled");
+                        // }
                         setEditingBranch(branch);
                         setOpenModal(true);
                         e.stopPropagation();
@@ -328,7 +332,38 @@ function CreateOrUpdateBranchDialog({
     status: false,
     message: ""
   });
-  const [formData, setFormData] = useState(initialData || BRANCH_INITIAL_STATE);
+  const [formData, setFormData] = useState(BRANCH_INITIAL_STATE);
+
+  // PRE-POPULATE FORM DATA - Fixed to respond to prop changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        code: initialData.code || "",
+        province_id: initialData.province_id || "",
+        town_id: initialData.town_id || "",
+        address: initialData.address || "",
+        is_active: initialData.is_active ?? true
+      });
+    } else {
+      setFormData(BRANCH_INITIAL_STATE);
+    }
+    setError({ status: false, message: "" });
+  }, [initialData, openModal]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!openModal) {
+      // Small delay to allow animation to complete
+      const timer = setTimeout(() => {
+        setFormData(BRANCH_INITIAL_STATE);
+        setError({ status: false, message: "" });
+        setInitialData(null);
+      }, 200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [openModal, setInitialData]);
 
   const provinceOptions = useMemo(
     () =>

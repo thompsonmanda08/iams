@@ -16,15 +16,17 @@ import { useRefreshToken } from "@/hooks/use-users-query-data";
 import { lockScreenOnUserIdle } from "@/app/_actions/auth-actions";
 import { AuthSession } from "@/lib/types";
 
+const DEFAULT_TIMEOUT = 90 * 1000; // SECONDS
+
 function ScreenLock({ open }: { open: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [seconds, setSeconds] = useState(90);
+  const [seconds, setSeconds] = useState(DEFAULT_TIMEOUT / 1000); // REMAINING SECONDS
   const hasLoggedOutRef = useRef(false);
 
   // Reset countdown when dialog opens
   useEffect(() => {
     if (open) {
-      setSeconds(90);
+      setSeconds(DEFAULT_TIMEOUT / 1000);
       hasLoggedOutRef.current = false;
     }
   }, [open]);
@@ -78,6 +80,8 @@ function ScreenLock({ open }: { open: boolean }) {
     const interval = setInterval(() => {
       setSeconds((prevSeconds) => {
         const newSeconds = prevSeconds - 1;
+
+        console.log("Remaining seconds:", newSeconds);
 
         // Trigger logout when reaching 0
         if (newSeconds <= 0) {
@@ -165,7 +169,9 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   };
 
   const onActive = () => {
-    setState("Active");
+    if (!isIdle) {
+      setState("Active");
+    }
   };
 
   const onAction = async () => setCount(count + 1);
@@ -175,6 +181,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     onActive,
     onAction,
     timeout: 60 * 1000 * 5, // 5MINS
+    // timeout: 1 * 1000 * 5, // 5SEC
     throttle: 500,
     disabled: !loggedIn
   });
@@ -185,7 +192,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   // if (pathname.startsWith("/subscriptions")) return null;
 
   // Render the ScreenLock component when idle
-  if (isIdle) {
+  if (isIdle && session?.screen_locked) {
     return <ScreenLock open={isIdle} />;
   }
 

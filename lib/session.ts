@@ -146,12 +146,35 @@ export async function createAuthSession({
 }
 
 export async function updateAuthSession(fields: any): Promise<AuthSession> {
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   const { isAuthenticated: isLoggedIn, session: oldSession } = await verifySession();
 
-  const newSession: AuthSession = { ...oldSession, ...fields };
-
   if (isLoggedIn && oldSession) {
+    // Remove any null values from the old session (cleanup from previous bugs)
+    const cleanedOldSession = Object.fromEntries(
+      Object.entries(oldSession).filter(([_, value]) => value !== null)
+    ) as AuthSession;
+
+    // Merge old session with new fields, preserving all existing data
+    // Filter out undefined and null values from fields to prevent overwriting existing data
+    const filteredFields = Object.fromEntries(
+      Object.entries(fields).filter(([_, value]) => value !== undefined && value !== null)
+    );
+
+    const newSession: AuthSession = {
+      ...cleanedOldSession,
+      ...filteredFields
+    };
+
+    // Determine expiration: use provided expiresAt from fields, keep existing, or create new
+    const expiresAt = fields?.expiresAt
+      ? new Date(fields.expiresAt)
+      : oldSession?.expiresAt
+        ? new Date(oldSession.expiresAt)
+        : new Date(Date.now() + 60 * 60 * 1000);
+
+    // Ensure expiresAt is included in the session payload
+    newSession.expiresAt = expiresAt;
+
     // Call `encrypt` to generate the session token
     const session = await encrypt(newSession);
 
@@ -198,6 +221,7 @@ export async function deleteSession() {
 
     // Delete all session cookies
     cookieStore.delete(AUTH_SESSION);
+    cookieStore.delete(USER_SESSION); // Also delete user backup
 
     return { success: true, message: "Logout Success" };
   } catch (error: any) {
@@ -208,5 +232,52 @@ export async function deleteSession() {
       message: "Failed to clear session cookies",
       error: error?.message || "Unknown error"
     };
+  }
+}
+
+// SAVE USER AND PERMISSIONS BACKUP
+export async function saveUserBackup(user: any, permissions?: any[]) {
+  try {
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const backup = { user, permissions, savedAt: new Date().toISOString() };
+    const encryptedBackup = await encrypt(backup);
+
+    (await cookies()).set(USER_SESSION, encryptedBackup, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: expiresAt,
+      sameSite: "strict",
+      path: "/"
+    });
+
+    console.log("💾 [saveUserBackup] User backup saved successfully");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to save user backup:", error);
+    return { success: false, error: error?.message };
+  }
+}
+
+// RETRIEVE USER AND PERMISSIONS BACKUP
+export async function getUserBackup(): Promise<{
+  user: any;
+  permissions?: any[];
+  savedAt?: string;
+} | null> {
+  try {
+    const cookie = (await cookies()).get(USER_SESSION)?.value;
+    if (!cookie) return null;
+
+    const backup = await decrypt(cookie);
+
+    if (backup?.user) {
+      console.log("📦 [getUserBackup] User backup retrieved successfully");
+      return backup as { user: any; permissions?: any[]; savedAt?: string };
+    }
+
+    return null;
+  } catch (error: any) {
+    console.error("Failed to retrieve user backup:", error);
+    return null;
   }
 }
