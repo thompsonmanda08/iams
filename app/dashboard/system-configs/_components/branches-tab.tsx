@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Trash2, MapPin, Pencil } from "lucide-react";
+import { Plus, Trash2, MapPin, Pencil, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -38,6 +38,9 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
+import { set } from "date-fns";
+import CustomAlert from "@/components/ui/custom-alert";
 
 interface Province {
   id: string;
@@ -110,20 +113,14 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     },
     onSuccess: () => {
       toast.success("Branch deleted successfully");
+      setOpenModal(false);
+      setBranchToDelete(null);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete branch");
     }
   });
-
-  const handleDeleteBranch = async (id: string) => {
-    // if (!confirm("Are you sure you want to delete this branch?")) return;
-    if (true) {
-      return toast.warning("This action currently is disabled");
-    }
-    deleteBranchMutation.mutate(id);
-  };
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -152,6 +149,14 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     totalCount: pagination.total,
     has_prev: pagination.has_prev,
     has_next: pagination.has_next
+  };
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
+
+  const handleDeleteConfirm = async () => {
+    if (!branchToDelete?.id) return;
+    deleteBranchMutation.mutate(branchToDelete?.id);
   };
 
   return (
@@ -263,7 +268,8 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        handleDeleteBranch(branch.id);
+                        setBranchToDelete(branch);
+                        setDeleteDialogOpen(true);
                         e.stopPropagation();
                       }}
                       className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5"
@@ -278,6 +284,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
           )}
         </TableBody>
       </Table>
+
       {branches.length > 0 && (
         <CustomPagination
           pagination={customPaginationData}
@@ -297,6 +304,15 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
         }}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={`Delete ${branchToDelete?.name || "Branch"}`}
+        description="Are you sure you want to delete this department? This action cannot be undone and may affect related data."
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteBranchMutation.isPending}
       />
     </Card>
   );
@@ -513,9 +529,7 @@ function CreateOrUpdateBranchDialog({
             }}
           />
           {error.status && (
-            <Alert variant="destructive">
-              <AlertDescription>{error.message}</AlertDescription>
-            </Alert>
+            <CustomAlert type="error" message={error.message} Icon={TriangleAlert} />
           )}
           <div className="flex justify-end gap-3 pt-2">
             <DialogClose asChild>
