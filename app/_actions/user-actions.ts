@@ -2,11 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
-import authenticatedApiClient, { axios, handleError, successResponse } from "./api-config";
-import { User, UserQueryParams } from "@/lib/types/account";
-import { createAuthSession, updateAuthSession, verifySession } from "@/lib/session";
-import { USER_SESSION } from "@/lib/constants";
-import { cookies } from "next/headers";
+import authenticatedApiClient, { handleError, successResponse } from "./api-config";
+import { User } from "@/lib/types/account";
 
 export async function getUsers(params?: {
   branchId?: string;

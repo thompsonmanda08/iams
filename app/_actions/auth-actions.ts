@@ -239,8 +239,6 @@ export async function getRefreshToken(): Promise<APIResponse> {
     return unauthorizedResponse("UNAUTHENTICATED");
   }
 
-  console.log("[ session ]: ", session);
-
   try {
     const response = await authenticatedApiClient({ url });
 
@@ -248,7 +246,8 @@ export async function getRefreshToken(): Promise<APIResponse> {
 
     await updateAuthSession({
       accessToken: tokenData?.access_token,
-      user: { ...session?.user, user_type: tokenData?.user_type }
+      user: { ...session?.user }
+      
     });
 
     return successResponse(tokenData, response.data?.message);
