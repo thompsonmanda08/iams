@@ -39,6 +39,7 @@ import { User } from "@/lib/types/account";
 import { deleteUser, toggleUserStatus } from "@/app/_actions/user-actions";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 type Pagination = {
   total: number;
@@ -184,20 +185,42 @@ export default function UsersDataTable({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [deleteDialog, setDeleteDialog] = React.useState<{
+    open: boolean;
+    userId: string | null;
+    userName: string | null;
+  }>({
+    open: false,
+    userId: null,
+    userName: null
+  });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.userId) return;
 
     try {
-      const response = await deleteUser(id);
+      const response = await deleteUser(deleteDialog.userId);
       if (response.success) {
-        toast.success("User deleted successfully");
+        toast.success(response.message || "User deleted successfully");
         router.refresh();
+        setDeleteDialog({ open: false, userId: null, userName: null });
       } else {
         toast.error(response.message || "Failed to delete user");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
+    }
+  };
+
+    const handleDeleteClick = (id: string) => {
+    const user = data.find((u) => u.id === id);
+    if (user) {
+      setDeleteDialog({
+        open: true,
+        userId: id,
+        userName: `${user.first_name} ${user.last_name}`
+      });
     }
   };
 
@@ -215,7 +238,7 @@ export default function UsersDataTable({
     }
   };
 
-  const columns = getColumns(handleDelete, handleToggleStatus);
+  const columns = getColumns(handleDeleteClick, handleToggleStatus);
 
   const table = useReactTable({
     data,
@@ -290,11 +313,7 @@ export default function UsersDataTable({
   // Get unique roles from data
   const uniqueRoles = React.useMemo(() => {
     return Array.from(
-      new Set(
-        data
-          .filter((user) => user.role?.name) 
-          .map((user) => user.role.name)
-      )
+      new Set(data.filter((user) => user.role?.name).map((user) => user.role.name))
     ).sort();
   }, [data]);
 
@@ -443,6 +462,12 @@ export default function UsersDataTable({
           />
         )}
       </CardContent>
+      <ConfirmationModal
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, userId: null, userName: null })}
+        onConfirm={handleDeleteConfirm}
+        type="delete"
+      />
     </Card>
   );
 }

@@ -21,49 +21,49 @@ export default async function RiskConfigurationsPage() {
 
       {/* Main Content */}
       <main className="container mx-auto">
-        <Tabs defaultValue="matrix" className="space-y-6">
-          <TabsList className="bg-muted inline-flex h-auto w-full justify-start gap-1 rounded-lg p-1">
-            <TabsTrigger value="matrix" className="rounded-md px-4 py-2 text-sm">
+        <Tabs defaultValue="matrix" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="matrix">
               Risk Matrix
             </TabsTrigger>
-            <TabsTrigger value="categories" className="rounded-md px-4 py-2 text-sm">
+            <TabsTrigger value="categories" >
               Categories
             </TabsTrigger>
-            <TabsTrigger value="response" className="rounded-md px-4 py-2 text-sm">
+            <TabsTrigger value="response" >
               Response Strategies
             </TabsTrigger>
-            <TabsTrigger value="appetite" className="rounded-md px-4 py-2 text-sm">
+            <TabsTrigger value="appetite">
               Risk Appetite
             </TabsTrigger>
-            <TabsTrigger value="kri" className="rounded-md px-4 py-2 text-sm">
+            <TabsTrigger value="kri">
               KRIs
             </TabsTrigger>
-            <TabsTrigger value="register" className="rounded-md px-4 py-2 text-sm">
+            <TabsTrigger value="register">
               Register Settings
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="matrix" className="space-y-6">
+          <TabsContent value="matrix">
             <RiskMatrixConfig />
           </TabsContent>
 
-          <TabsContent value="categories" className="space-y-6">
+          <TabsContent value="categories">
             <RiskCategoriesConfig />
           </TabsContent>
 
-          <TabsContent value="response" className="space-y-6">
+          <TabsContent value="response">
             <RiskResponseConfig />
           </TabsContent>
 
-          <TabsContent value="appetite" className="space-y-6">
+          <TabsContent value="appetite">
             <RiskAppetiteConfig />
           </TabsContent>
 
-          <TabsContent value="kri" className="space-y-6">
+          <TabsContent value="kri">
             <KRIConfig />
           </TabsContent>
 
-          <TabsContent value="register" className="space-y-6">
+          <TabsContent value="register">
             <RiskRegisterConfig />
           </TabsContent>
         </Tabs>
