@@ -27,8 +27,10 @@ export async function getRolePermissions(roleId: string): Promise<APIResponse> {
   }
 
   try {
-    const response = await axios.get(url);
-    return successResponse(response?.data, "Role permissions fetched successfully");
+    const response = await authenticatedApiClient({ url });
+    const permissions = response?.data?.data || [];
+
+    return successResponse(permissions, "Role permissions fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -149,7 +151,7 @@ export async function getAvailableModulesForRole(roleId: string): Promise<APIRes
   }
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Available modules fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);

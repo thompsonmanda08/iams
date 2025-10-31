@@ -29,11 +29,11 @@ const userData = {
   avatar: "https://bundui-images.netlify.app/avatars/01.png"
 };
 
-export function NavUser() {
+export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
 
-  const { data: setup } = useSystemSetup();
-  const user = setup?.data?.user as User;
+  // const { data: setup } = useSystemSetup();
+  // const user = setup?.data?.user as User;
   const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
   const userEmail = user?.email || "example@mail.com";
 

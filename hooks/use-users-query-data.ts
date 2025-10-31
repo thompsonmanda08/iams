@@ -1,6 +1,6 @@
 import { UserQueryParams } from "@/lib/types/account";
 import { useQuery } from "@tanstack/react-query";
-import { getRefreshToken, InitializeSystemSetup } from "@/app/_actions/auth-actions";
+import { getRefreshToken, initializeSystemSetup } from "@/app/_actions/auth-actions";
 import { getUsers } from "@/app/_actions/user-actions";
 
 // Query Keys
@@ -41,7 +41,7 @@ export const useRefreshToken = (enabled: boolean) =>
 export const useSystemSetup = () =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.SYS_SETUP],
-    queryFn: InitializeSystemSetup,
+    queryFn: initializeSystemSetup,
     retry: 3,
     retryDelay: 3000,
     refetchInterval: 1000 * 60 * 5, // 3minutes

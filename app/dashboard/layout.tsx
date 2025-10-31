@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 import { verifySession } from "@/lib/session";
+import { User } from "@/lib/types/account";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function AuthLayout({
     cookieStore.get("sidebar_state")?.value === "true" ||
     cookieStore.get("sidebar_state") === undefined;
 
-  const { session } = await verifySession();
+  const { session, isAuthenticated } = await verifySession();
 
   return (
     <SidebarProvider
@@ -29,9 +30,9 @@ export default async function AuthLayout({
           "--header-height": "calc(var(--spacing) * 14)"
         } as React.CSSProperties
       }>
-      <AppSidebar variant="inset" />
+      <AppSidebar variant="inset" session={session} isAuthenticated={isAuthenticated} />
       <SidebarInset>
-        <SiteHeader user={session?.user} />
+        <SiteHeader user={session?.user as User} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
             {children}

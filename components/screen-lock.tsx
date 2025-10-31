@@ -161,7 +161,8 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   const loggedIn = session?.accessToken || false;
   const isIdle = state === "Idle";
 
-  useRefreshToken(Boolean(loggedIn && !isIdle));
+  const { data } = useRefreshToken(Boolean(loggedIn && !isIdle));
+  
 
   const onIdle = async () => {
     setState("Idle");

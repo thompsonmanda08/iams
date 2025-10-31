@@ -3,7 +3,7 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-import { AuthSession, UserSession } from "@/lib/types";
+import { AuthSession, Permission, UserSession } from "@/lib/types";
 
 import { AUTH_SESSION, USER_SESSION } from "./constants";
 import { User, UserType } from "./types/account";
@@ -146,7 +146,13 @@ export async function createAuthSession({
 }
 
 export async function updateAuthSession(fields: any): Promise<AuthSession> {
-  const { isAuthenticated: isLoggedIn, session: oldSession } = await verifySession();
+  // const { isAuthenticated: isLoggedIn, session: oldSession } = await verifySession();
+  // const backupUserSession = await getUserSession();
+  const [{ isAuthenticated: isLoggedIn, session: oldSession }, backupUserSession] =
+    await Promise.all([verifySession(), getUserSession()]);
+
+  const user = (backupUserSession?.user || {}) as User;
+  const permissions = (backupUserSession?.permissions || []) as Permission[];
 
   if (isLoggedIn && oldSession) {
     // Remove any null values from the old session (cleanup from previous bugs)
@@ -162,7 +168,9 @@ export async function updateAuthSession(fields: any): Promise<AuthSession> {
 
     const newSession: AuthSession = {
       ...cleanedOldSession,
-      ...filteredFields
+      ...filteredFields,
+      user: filteredFields.user || user,
+      permissions: (filteredFields.permissions || permissions) as Permission[]
     };
 
     // Determine expiration: use provided expiresAt from fields, keep existing, or create new
@@ -214,6 +222,53 @@ export async function verifySession(): Promise<{
   return { isAuthenticated: false, session: null };
 }
 
+// SAVE USER AND PERMISSIONS BACKUP
+export async function createUserSession(user: any, permissions?: any[]) {
+  try {
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const backup = { user, permissions, savedAt: new Date().toISOString() };
+    const encryptedBackup = await encrypt(backup);
+
+    (await cookies()).set(USER_SESSION, encryptedBackup, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: expiresAt,
+      sameSite: "strict",
+      path: "/"
+    });
+
+    // console.log("💾 [createUserSession] User backup saved successfully");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to save user backup:", error);
+    return { success: false, error: error?.message };
+  }
+}
+
+// RETRIEVE USER AND PERMISSIONS BACKUP
+export async function getUserSession(): Promise<{
+  user: any;
+  permissions?: any[];
+  savedAt?: string;
+} | null> {
+  try {
+    const cookie = (await cookies()).get(USER_SESSION)?.value;
+    if (!cookie) return null;
+
+    const backup = await decrypt(cookie);
+
+    if (backup?.user) {
+      console.log("📦 [getUserSession] User backup retrieved successfully");
+      return backup as { user: any; permissions?: any[]; savedAt?: string };
+    }
+
+    return null;
+  } catch (error: any) {
+    console.error("Failed to retrieve user backup:", error);
+    return null;
+  }
+}
+
 // DELETE THE SESSION
 export async function deleteSession() {
   try {
@@ -232,52 +287,5 @@ export async function deleteSession() {
       message: "Failed to clear session cookies",
       error: error?.message || "Unknown error"
     };
-  }
-}
-
-// SAVE USER AND PERMISSIONS BACKUP
-export async function saveUserBackup(user: any, permissions?: any[]) {
-  try {
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    const backup = { user, permissions, savedAt: new Date().toISOString() };
-    const encryptedBackup = await encrypt(backup);
-
-    (await cookies()).set(USER_SESSION, encryptedBackup, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      expires: expiresAt,
-      sameSite: "strict",
-      path: "/"
-    });
-
-    console.log("💾 [saveUserBackup] User backup saved successfully");
-    return { success: true };
-  } catch (error: any) {
-    console.error("Failed to save user backup:", error);
-    return { success: false, error: error?.message };
-  }
-}
-
-// RETRIEVE USER AND PERMISSIONS BACKUP
-export async function getUserBackup(): Promise<{
-  user: any;
-  permissions?: any[];
-  savedAt?: string;
-} | null> {
-  try {
-    const cookie = (await cookies()).get(USER_SESSION)?.value;
-    if (!cookie) return null;
-
-    const backup = await decrypt(cookie);
-
-    if (backup?.user) {
-      console.log("📦 [getUserBackup] User backup retrieved successfully");
-      return backup as { user: any; permissions?: any[]; savedAt?: string };
-    }
-
-    return null;
-  } catch (error: any) {
-    console.error("Failed to retrieve user backup:", error);
-    return null;
   }
 }

@@ -13,8 +13,8 @@ import {
   deleteSession,
   updateAuthSession,
   verifySession,
-  saveUserBackup,
-  getUserBackup
+  createUserSession,
+  getUserSession
 } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
@@ -223,7 +223,13 @@ export async function logUserOut(reason: string): Promise<APIResponse> {
 /**
  * Create initial system setup
  */
-export async function InitializeSystemSetup(): Promise<APIResponse> {
+export async function initializeSystemSetup(
+  key:
+    | {
+        access_token?: string;
+      }
+    | undefined
+): Promise<APIResponse> {
   const url = `/api/v1/auth/setup`;
 
   try {
@@ -231,17 +237,18 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
     const session = response?.data;
     const user = session?.user;
 
-    console.log("🔧 [InitializeSystemSetup] Received user from API:", !!user);
-    console.log("🔧 [InitializeSystemSetup] User value:", user);
-    console.log(
-      "🔧 [InitializeSystemSetup] Received permissions from API:",
-      !!session?.permissions
-    );
+    // console.log("🔧 [InitializeSystemSetup] Received user from API:", !!user);
+    // console.log("🔧 [InitializeSystemSetup] User value:", user);
+    // console.log(
+    //   "🔧 [InitializeSystemSetup] Received permissions from API:",
+    //   !!session?.permissions
+    // );
     // console.log("🔧 [InitializeSystemSetup] Permissions value:", session?.permissions);
 
     // Only update session with fields that have actual values
     const updateFields: any = {};
     if (user) updateFields.user = user;
+    if (key?.access_token) updateFields.access_token = key?.access_token; // IF ACCESS TOKEN
     if (session?.permissions) updateFields.permissions = session.permissions;
 
     // Only call updateAuthSession if there's something to update
@@ -250,7 +257,7 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
 
       // Save user backup to separate cookie for recovery
       if (user) {
-        await saveUserBackup(user, session?.permissions);
+        await createUserSession(user, session?.permissions);
       }
     }
 
@@ -274,35 +281,34 @@ export async function getRefreshToken(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({ url });
 
-    const tokenData = response.data?.data;
+    const access_token = response.data?.data?.access_token;
 
     // Check if user is missing from session and restore from backup if available
-    const updateFields: any = { accessToken: tokenData?.access_token };
+    // const updateFields: any = { accessToken: tokenData?.access_token };
 
-    if (!session.user || !session.permissions) {
-      console.log(
-        "⚠️ [getRefreshToken] User/permissions missing, attempting to restore from backup..."
-      );
-      const backup = await getUserBackup();
+    // if (!session.user || !session.permissions) {
+    //   console.log(
+    //     "⚠️ [getRefreshToken] User/permissions missing, attempting to restore from backup..."
+    //   );
+    //   const backup = await getUserSession();
 
-      if (backup) {
-        if (!session.user && backup.user) {
-          updateFields.user = backup.user;
-          console.log("✅ [getRefreshToken] User restored from backup");
-        }
-        if (!session.permissions && backup.permissions) {
-          updateFields.permissions = backup.permissions;
-          console.log("✅ [getRefreshToken] Permissions restored from backup");
-        }
-      } else {
-        console.log("❌ [getRefreshToken] No backup found, user data may be lost");
-      }
-    }
+    //   if (backup) {
+    //     if (!session.user && backup.user) {
+    //       updateFields.user = backup.user;
+    //       console.log("✅ [getRefreshToken] User restored from backup");
+    //     }
+    //     if (!session.permissions && backup.permissions) {
+    //       updateFields.permissions = backup.permissions;
+    //       console.log("✅ [getRefreshToken] Permissions restored from backup");
+    //     }
+    //   } else {
+    //     console.log("❌ [getRefreshToken] No backup found, user data may be lost");
+    //   }
+    // }
 
-    // Update session with new token and restored user data if needed
-    await updateAuthSession(updateFields);
+    await initializeSystemSetup({ access_token });
 
-    return successResponse(tokenData, response.data?.message);
+    return successResponse({ access_token }, response.data?.message);
   } catch (error: Error | any) {
     return handleError(error, "GET | REFRESH TOKEN", url);
   }

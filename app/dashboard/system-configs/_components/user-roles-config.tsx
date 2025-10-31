@@ -209,10 +209,10 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
 
       const newValue = !currentModulePerms[permissionType];
 
-      console.log(`🔄 Toggling ${permissionType} for module ${moduleId}:`, {
-        oldValue: currentModulePerms[permissionType],
-        newValue
-      });
+      // console.log(`🔄 Toggling ${permissionType} for module ${moduleId}:`, {
+      //   oldValue: currentModulePerms[permissionType],
+      //   newValue
+      // });
 
       return {
         ...prev,
@@ -280,10 +280,27 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
 
       return response;
     },
-    onSuccess: () => {
-      toast.success("Permissions updated successfully");
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLE_PERMISSIONS, selectedRole] });
+    onSuccess: (response) => {
+      console.log("✅ Permissions saved successfully:", response);
+
+      // Show detailed success message
+      const { successCount, failureCount } = response.data || {};
+      if (failureCount && failureCount > 0) {
+        toast.warning(
+          `Updated ${successCount || 0} permissions successfully, ${failureCount} failed`
+        );
+      } else {
+        toast.success(
+          `Successfully updated permissions for ${successCount || modules.length} module(s)`
+        );
+      }
+
+      // Reset the hasChanges flag immediately to show changes are saved
       setHasChanges(false);
+
+      // Refetch permissions from server to confirm the changes persisted
+      // This ensures the UI reflects what's actually in the database
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLE_PERMISSIONS, selectedRole] });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update permissions");
@@ -436,7 +453,7 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
                       setHasChanges(false);
                     }}
                     className={cn(
-                      "hover:bg-accent group relative rounded-md border p-4 text-left transition-colors cursor-pointer",
+                      "hover:bg-accent group relative cursor-pointer rounded-md border p-4 text-left transition-colors",
                       selectedRole === role.id ? "border-primary bg-accent" : ""
                     )}>
                     <Button

@@ -10,8 +10,9 @@ import UserMenu from "@/components/layout/header/user-menu";
 // import { ThemeCustomizerPanel } from "@/components/theme-customizer";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
+import { User } from "@/lib/types/account";
 
-export function SiteHeader({ user }: any) {
+export function SiteHeader({ user }: { user: User }) {
   const { toggleSidebar } = useSidebar();
 
   return (
