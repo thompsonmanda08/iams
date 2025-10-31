@@ -8,10 +8,22 @@ export default async function WorkpapersPage() {
 
   const auditsResponse = await getAuditPlans();
   const audits = auditsResponse.success ? auditsResponse.data?.data?.data : [];
+  const pagination = auditsResponse.data?.data?.pagination ?? {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
 
   return (
     <Suspense fallback={<TableLoading />}>
-      <WorkpapersPageClient workpapers={workpapers || []} audits={audits || []} />
+      <WorkpapersPageClient
+        workpapers={workpapers || []}
+        audits={audits || []}
+        pagination={pagination}
+      />
     </Suspense>
   );
 }

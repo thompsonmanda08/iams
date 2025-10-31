@@ -8,6 +8,7 @@ import authenticatedApiClient, {
   successResponse
 } from "./api-config";
 import { revalidatePath } from "next/cache";
+import { RiskCategoryInput } from "./risk-module-actions";
 
 // ============================================================================
 // BRANCH MANAGEMENT
@@ -1026,5 +1027,42 @@ export async function deleteTown(id: string): Promise<APIResponse> {
     return successResponse(null, "Town deleted successfully (mock)");
   } catch (error: Error | any) {
     return handleError(error, "DELETE", `/api/v1/towns/${id}`);
+  }
+}
+
+/**
+ * Create a new risk category
+ */
+export async function createRiskCategory(input: RiskCategoryInput): Promise<APIResponse> {
+  try {
+     const response = await authenticatedApiClient({
+      url:"/api/v1/risk-categories", 
+      data:input,
+      method:"POST"
+    });
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "POST | CREATE RISK CATEGORY", "/api/v1/risk-categories");
+  }
+}
+
+/**
+ * Update a risk category
+ */
+export async function updateRiskCategory(
+  id: string,
+  input: Partial<RiskCategoryInput>
+): Promise<APIResponse> {
+  try {
+ const response = await authenticatedApiClient({
+      url:`/api/v1/risk-categories/${id}`, 
+      data:input,
+      method:"PUT"
+    });
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "PUT | UPDATE RISK CATEGORY", `/api/v1/risk-categories/${id}`);
   }
 }

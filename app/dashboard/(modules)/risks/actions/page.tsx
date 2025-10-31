@@ -1,24 +1,24 @@
+import { getRisks } from "@/app/_actions/risk-module-actions";
 import { ActionsTable } from "./actions-table";
-const mockActions = [
-  {
-    id: "ACT-2025813-12351354175488",
-    actionId: "8b08ab2b-8c0b-4429-9078-4aa60e0815a",
-    risk: {
-      title: "Infrastructure Risk",
-      description:
-        "Damage to Buildings and Facilities. Structural damage or collapse of offices, factories, or warehouses"
-    },
-    action: "Testing",
-    type: "Primary",
-    dueDate: "10/17/2025",
-    weight: "100.00%",
-    updatesFrequency: "Monthly",
-    progress: 0,
-    status: "Active"
-  }
-];
+import { verifySession } from "@/lib/session";
+export const dynamic = "force-dynamic";
 
 export default async function ActionsPage() {
+  const { session } = await verifySession();
+
+  const response = await getRisks({
+    risk_owner_id: session?.user?.id
+  });
+  const data = response.success && response.data ? response.data : null;
+  const actions = data || [];
+  const pagination = data?.pagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
   return (
     <main className="bg-background min-h-screen">
       <div className="bg-card border-b">
@@ -30,7 +30,7 @@ export default async function ActionsPage() {
         </div>
       </div>
       <div className="container mx-auto px-4 py-8">
-        <ActionsTable actions={mockActions} />
+        <ActionsTable actions={actions?.data} pagination={pagination} />
       </div>
     </main>
   );
