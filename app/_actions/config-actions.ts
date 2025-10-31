@@ -772,7 +772,7 @@ export async function getProvincesWithTowns(): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url });
-    return successResponse(response?.data, "Provinces with towns fetched successfully");
+    return successResponse(response?.data?.data, "Provinces with towns fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }

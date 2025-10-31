@@ -44,6 +44,7 @@ interface Province {
   name: string;
   code: string;
   is_active: boolean;
+  towns?: Town[];
 }
 
 interface Town {
@@ -74,7 +75,7 @@ interface Pagination {
 
 interface BranchesTabProps {
   initialBranches: Branch[];
-  provinces: Province[];
+  provinces: Province[]; // EACH PROVINCE HAS TOWNS
   towns: Town[];
   pagination: Pagination;
 }
@@ -96,6 +97,8 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     const town = towns.find((t) => t.id === townId);
     return town ? town.name : "Unknown";
   };
+
+  // GET TOWNS FROM SELECTED PROVINCE
 
   const deleteBranchMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -291,7 +294,6 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
         initialData={editingBranch}
         setInitialData={setEditingBranch}
         provinces={provinces}
-        towns={towns}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
         }}
@@ -315,7 +317,6 @@ interface CreateOrUpdateBranchDialogProps {
   initialData: Branch | null;
   setInitialData: React.Dispatch<React.SetStateAction<Branch | null>>;
   provinces: Province[];
-  towns: Town[];
   onSuccess: () => void;
 }
 
@@ -324,8 +325,7 @@ function CreateOrUpdateBranchDialog({
   setOpenModal,
   initialData,
   setInitialData,
-  provinces,
-  towns,
+  provinces, // The selected province will have towns
   onSuccess
 }: CreateOrUpdateBranchDialogProps) {
   const [error, setError] = useState<ErrorState>({
@@ -333,6 +333,14 @@ function CreateOrUpdateBranchDialog({
     message: ""
   });
   const [formData, setFormData] = useState(BRANCH_INITIAL_STATE);
+
+  const towns = useMemo(() => {
+    return (
+      provinces
+        .find((p) => p.id === formData?.province_id)
+        ?.towns?.map((t) => ({ id: t.id, name: t.name })) || []
+    );
+  }, [formData?.province_id, provinces]);
 
   // PRE-POPULATE FORM DATA - Fixed to respond to prop changes
   useEffect(() => {
@@ -350,6 +358,8 @@ function CreateOrUpdateBranchDialog({
     }
     setError({ status: false, message: "" });
   }, [initialData, openModal]);
+
+  console.log("PROV====>", formData.province_id, towns);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -374,18 +384,6 @@ function CreateOrUpdateBranchDialog({
           name: province.name
         })),
     [provinces]
-  );
-
-  // Filter towns by selected province
-  const townOptions = useMemo(
-    () =>
-      towns
-        .filter((t) => t.is_active && t.province_id === formData.province_id)
-        .map((town) => ({
-          id: town.id,
-          name: town.name
-        })),
-    [towns, formData.province_id]
   );
 
   const saveMutation = useMutation({
@@ -496,7 +494,7 @@ function CreateOrUpdateBranchDialog({
               label="Town"
               placeholder="Select a town"
               className="w-full"
-              options={townOptions}
+              options={towns}
               value={formData.town_id}
               onValueChange={(town_id) => {
                 setError({ status: false, message: "" });
