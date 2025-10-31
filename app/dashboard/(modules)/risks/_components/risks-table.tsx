@@ -328,14 +328,21 @@ export default function RisksTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline" className="h-8 gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-8 gap-1.5">
                         <View className="h-3.5 w-3.5" />
                         View
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleEdit(risk)}
+                        onClick={(e) => {
+                          handleEdit(risk);
+                          e.stopPropagation();
+                        }}
                         className="h-8 gap-1.5">
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
@@ -343,9 +350,12 @@ export default function RisksTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDelete(risk.id)}
+                        onClick={(e) => {
+                          handleDelete(risk.id);
+                          e.stopPropagation();
+                        }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                         Delete
                       </Button>
                     </div>

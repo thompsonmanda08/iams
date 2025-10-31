@@ -145,6 +145,7 @@ export interface RiskQueryParams {
   category_id?: string;
   department_id?: string;
   status?: string;
+  risk_owner_id?: string;
 }
 
 // Risk Register
@@ -707,24 +708,25 @@ export async function submitDepartmentRisks(
  */
 export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call when backend is ready
-    // const response = await axios.get("/api/v1/risks", { params });
-    // return successResponse(response.data);
+        const queryParams = new URLSearchParams();
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.category) queryParams.append("category", params.category);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.limit) queryParams.append("limit", String(params.limit));
+    if (params?.risk_owner_id) queryParams.append("risk_owner_id", String(params.risk_owner_id));
 
-    const page = params?.page || 1;
-    const limit = params?.limit || 10;
+    const url = `/api/v1/risks${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
 
-    return successResponse({
-      data: mockRisks,
-      meta: {
-        total: mockRisks.length,
-        page,
-        limit,
-        totalPages: Math.ceil(mockRisks.length / limit)
-      }
-    });
+   const response = await  authenticatedApiClient({
+      url: url,
+      method: "GET"
+    })
+    
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET RISKS", "/api/v1/risks");
   }

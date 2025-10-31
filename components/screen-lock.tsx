@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useIdleTimer } from "react-idle-timer";
 
 import {
@@ -14,18 +14,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRefreshToken } from "@/hooks/use-users-query-data";
 import { lockScreenOnUserIdle } from "@/app/_actions/auth-actions";
+import { AuthSession } from "@/lib/types";
 
 function ScreenLock({ open }: { open: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [seconds, setSeconds] = useState(90);
+  const hasLoggedOutRef = useRef(false);
 
-  async function handleRefreshAuthToken() {
+  // Reset countdown when dialog opens
+  useEffect(() => {
+    if (open) {
+      setSeconds(90);
+      hasLoggedOutRef.current = false;
+    }
+  }, [open]);
+
+  const handleRefreshAuthToken = useCallback(async () => {
     setIsLoading(true);
     await lockScreenOnUserIdle(false);
     setIsLoading(false);
-  }
+  }, []);
 
-  async function handleUserLogOut() {
+  const handleUserLogOut = useCallback(async () => {
+    if (hasLoggedOutRef.current) return; // Prevent multiple logout calls
+    hasLoggedOutRef.current = true;
+
     setIsLoading(true);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
@@ -51,25 +64,36 @@ function ScreenLock({ open }: { open: boolean }) {
       }
     } catch (error) {
       console.error("Logout error:", error);
+      // Force redirect even on error
+      window.location.href = "/login";
     } finally {
       clearTimeout(timeoutId);
       setIsLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSeconds((x) => x - 1);
-    }, 1000);
+    if (!open) return;
 
-    if (seconds == 0) {
-      handleUserLogOut();
-    }
+    const interval = setInterval(() => {
+      setSeconds((prevSeconds) => {
+        const newSeconds = prevSeconds - 1;
+
+        // Trigger logout when reaching 0
+        if (newSeconds <= 0) {
+          clearInterval(interval);
+          handleUserLogOut();
+          return 0;
+        }
+
+        return newSeconds;
+      });
+    }, 1000);
 
     return () => {
       clearInterval(interval);
     };
-  });
+  }, [open, handleUserLogOut]);
 
   return (
     <Dialog open={open}>
@@ -124,14 +148,13 @@ function ScreenLock({ open }: { open: boolean }) {
   );
 }
 
-export function IdleTimerContainer({ authSession }: { authSession: any }) {
+export function IdleTimerContainer({ session }: { session: AuthSession | null }) {
   const pathname = usePathname();
 
   const [state, setState] = useState("Active");
   const [count, setCount] = useState(0);
-  const [remaining, setRemaining] = useState(0);
 
-  const loggedIn = authSession?.accessToken;
+  const loggedIn = session?.accessToken || false;
   const isIdle = state === "Idle";
 
   useRefreshToken(Boolean(loggedIn && !isIdle));
@@ -147,7 +170,7 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
 
   const onAction = async () => setCount(count + 1);
 
-  const { getRemainingTime } = useIdleTimer({
+  useIdleTimer({
     onIdle,
     onActive,
     onAction,
@@ -156,22 +179,17 @@ export function IdleTimerContainer({ authSession }: { authSession: any }) {
     disabled: !loggedIn
   });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRemaining(Math.ceil(getRemainingTime() / 1000));
-    }, 500);
-
-    return () => {
-      clearInterval(interval);
-    };
-  });
-
   /* NO TIMER ON EXTERNAL ROUTES */
-  if (pathname.startsWith("/checkout")) return null;
-  if (pathname.startsWith("/invoice")) return null;
-  if (pathname.startsWith("/subscriptions")) return null;
+  // if (pathname.startsWith("/checkout")) return null;
+  // if (pathname.startsWith("/invoice")) return null;
+  // if (pathname.startsWith("/subscriptions")) return null;
 
-  return <></>;
+  // Render the ScreenLock component when idle
+  if (isIdle) {
+    return <ScreenLock open={isIdle} />;
+  }
+
+  return null;
 }
 
 export default ScreenLock;

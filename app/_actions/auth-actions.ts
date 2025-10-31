@@ -8,14 +8,10 @@ import authenticatedApiClient, {
   successResponse,
   unauthorizedResponse
 } from "./api-config";
-import {
-  createAuthSession,
-  deleteSession,
-  updateAuthSession,
-  verifySession
-} from "@/lib/session";
+import { createAuthSession, deleteSession, updateAuthSession, verifySession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
+import { se } from "date-fns/locale";
 
 export async function loginUser({
   username,
@@ -29,9 +25,18 @@ export async function loginUser({
   try {
     const response = await axios.post(url, { username, password });
 
+    console.log("[ LOGIN ]: ", response.data);
+    const session = response?.data;
+
     // Set authentication cookie
-    await createAuthSession(response.data.access_token);
-    return successResponse(response?.data, "Login successful");
+    await createAuthSession({
+      accessToken: session?.access_token,
+      user_type: session?.user_type,
+      change_password: session?.change_password,
+      mfa_required: session?.mfa_required,
+      organization_id: session?.organization_id
+    });
+    return successResponse(session, session?.message);
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }
@@ -79,6 +84,8 @@ export async function changePassword({
       old_password: oldPassword,
       new_password: newPassword
     });
+
+    await updateAuthSession({ change_password: false });
 
     return successResponse(response?.data, "Password changed successfully");
   } catch (error: Error | any) {
@@ -138,39 +145,67 @@ export async function registerUser({
 export async function logUserOut(reason: string): Promise<APIResponse> {
   const { isAuthenticated } = await verifySession();
   if (isAuthenticated) {
-    const response = await authenticatedApiClient({
-      url: "/api/v1/auth/logout",
-      method: "POST",
-      data: { reason }
-    });
-
-    // Check if backend logout succeeded (optional - proceed anyway)
-    if (!response.status || response.status !== 200) {
-      console.warn("Backend logout failed, proceeding with local session cleanup", {
-        status: response.status,
-        statusText: response.statusText
+    try {
+      const response = await authenticatedApiClient({
+        url: "/api/v1/auth/logout"
+        // method: "POST",
+        // data: { reason }
       });
-    }
+      console.log("[ LOGOUT ]: ", reason);
 
-    // Delete server-side session (cookies) - this is the critical part
-    const result = await deleteSession();
+      // Check if backend logout succeeded (optional - proceed anyway)
+      if (!response.status || response.status !== 200) {
+        console.warn("Backend logout failed, proceeding with local session cleanup", {
+          status: response.status,
+          statusText: response.statusText
+        });
+      }
 
-    if (!result.success) {
+      // Delete server-side session (cookies) - this is the critical part
+      const result = await deleteSession();
+
+      if (!result.success) {
+        return {
+          success: false,
+          message: "Failed to clear session",
+          data: null,
+          status: 500,
+          statusText: "INTERNAL SERVER ERROR"
+        };
+      }
+
+      // Return only serializable data
+      return {
+        success: true,
+        message: "Logout successful",
+        data: null,
+        status: 200,
+        statusText: "OK"
+      };
+    } catch (error: any) {
+      console.error("Logout error:", error);
+
+      // Still try to delete the session even if backend logout fails
+      await deleteSession().catch(() => {
+        console.warn("Failed to delete session during error handling");
+      });
+
+      // Return serializable error response
       return {
         success: false,
-        message: "Failed to clear session",
+        message: error?.message || "Logout failed",
         data: null,
         status: 500,
         statusText: "INTERNAL SERVER ERROR"
       };
     }
-    return successResponse(null, response?.data?.message);
   }
   return {
     success: false,
     message: "User not authenticated",
     data: null,
-    status: 401
+    status: 401,
+    statusText: "UNAUTHORIZED"
   };
 }
 
@@ -198,14 +233,25 @@ export async function InitializeSystemSetup(): Promise<APIResponse> {
 export async function getRefreshToken(): Promise<APIResponse> {
   const url = `api/v1/auth/refresh-token`;
 
+  const { session, isAuthenticated } = await verifySession();
+
+  if (!session || !isAuthenticated) {
+    return unauthorizedResponse("UNAUTHENTICATED");
+  }
+
+  console.log("[ session ]: ", session);
+
   try {
     const response = await authenticatedApiClient({ url });
 
-    const accessToken = response.data?.access_token;
+    const tokenData = response.data?.data;
 
-    await createAuthSession(accessToken);
+    await updateAuthSession({
+      accessToken: tokenData?.access_token,
+      user: { ...session?.user, user_type: tokenData?.user_type }
+    });
 
-    return successResponse({ accessToken }, response.data?.message);
+    return successResponse(tokenData, response.data?.message);
   } catch (error: Error | any) {
     return handleError(error, "GET | REFRESH TOKEN", url);
   }
@@ -215,8 +261,21 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
   const { isAuthenticated } = await verifySession();
 
   if (isAuthenticated) {
-    await updateAuthSession({ screenLocked: state });
+    // When unlocking (state = false), refresh the token to extend the session
+    if (!state) {
+      try {
+        const refreshResponse = await getRefreshToken();
+        if (refreshResponse.success) {
+          await updateAuthSession({ screen_locked: state });
+          return true;
+        }
+      } catch (error) {
+        console.error("Failed to refresh token on unlock:", error);
+        // Continue with updating screen lock state even if refresh fails
+      }
+    }
 
+    await updateAuthSession({ screen_locked: state });
     return isAuthenticated;
   }
 

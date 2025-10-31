@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Building, ArrowRight } from "lucide-react";
+import { Plus, Edit, Trash2, Building, ArrowRight, Pencil, View } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department } from "@/lib/types";
@@ -43,6 +43,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CustomPagination } from "@/components/ui/pagination";
 import { CreateOrUpdateDepartment } from "./department-users";
+import Link from "next/link";
 
 type Pagination = {
   total: number;
@@ -217,55 +218,43 @@ export default function DepartmentsConfig({
                     <span className="font-mono text-sm">{department.code}</span>
                   </TableCell>
                   <TableCell align="center">
-                    <div className="flex gap-4">
-                      <Tooltip>
-                        <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
-                          <div
-                            onClick={(e) => {
-                              setEditingDepartment(department);
-                              setOpenModal(true);
-                              e.stopPropagation();
-                            }}>
-                            <Edit className="text-primary h-4 w-4" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-primary">Edit Department</TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
-                          <div
-                            onClick={(e) => {
-                              handleDeleteClick(String(department.id));
-                              e.stopPropagation();
-                            }}
-                            className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          classNames={{
-                            content: "bg-destructive text-white",
-                            arrow: "bg-destructive! fill-destructive!"
-                          }}>
-                          Delete Department
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
-                          <div
-                            onClick={(e) => {
-                              router.push(`/dashboard/system-configs/departments/${department.id}`);
-                              e.stopPropagation();
-                            }}
-                            className="text-primary">
-                            <ArrowRight className="h-4 w-4" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>View Department Details</TooltipContent>
-                      </Tooltip>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-8 gap-1.5">
+                        <Link
+                          href={`/dashboard/system-configs/departments/${department.id}`}
+                          className="flex cursor-pointer items-center gap-2">
+                          <View className="h-3.5 w-3.5" />
+                          View
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          setEditingDepartment(department);
+                          setOpenModal(true);
+                          e.stopPropagation();
+                        }}
+                        className="h-8 gap-1.5">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          handleDeleteClick(String(department.id));
+                          e.stopPropagation();
+                        }}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </Button>
                     </div>
+                    <div className="flex gap-4"></div>
                   </TableCell>
                 </TableRow>
               ))
@@ -280,7 +269,7 @@ export default function DepartmentsConfig({
             updatePagination={updatePagination}
             allowSetPageSize={true}
             showDetails={true}
-            className="border-t mt-4"
+            className="mt-4 border-t"
           />
         )}
       </Card>

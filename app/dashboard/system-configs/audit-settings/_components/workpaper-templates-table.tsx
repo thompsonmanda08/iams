@@ -11,7 +11,18 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Edit, Trash2, Loader2, Copy, ArrowRight } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  Loader2,
+  Copy,
+  ArrowRight,
+  Pencil,
+  View,
+  Trash
+} from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import {
@@ -132,7 +143,9 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
             <TableHead>Version</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Last Updated</TableHead>
-            <TableHead className="w-[80px]">Actions</TableHead>
+            <TableHead className="w-[80px] text-center" align="center">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -173,62 +186,41 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
                 </span>
               </TableCell>
               <TableCell>
-                <div className="flex gap-2">
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        onClick={(e) => e.stopPropagation()}>
-                        <Link
-                          href={`/dashboard/audit/workpapers/templates/${template.id}/edit`}
-                          className="flex cursor-pointer items-center gap-2">
-                          <Edit className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-primary">Edit Template</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          handleDeleteClick(template);
-                          e.stopPropagation();
-                        }}
-                        className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      classNames={{
-                        content: "bg-destructive text-white",
-                        arrow: "bg-destructive! fill-destructive!"
-                      }}>
-                      Delete Template
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="text-primary"
-                        onClick={(e) => e.stopPropagation()}>
-                        <Link
-                          href={`/dashboard/audit/workpapers/templates/${template.id}`}
-                          className="flex cursor-pointer items-center gap-2">
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>View Template Details</TooltipContent>
-                  </Tooltip>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-8 gap-1.5">
+                    <Link
+                      href={`/dashboard/audit/workpapers/templates/${template.id}`}
+                      className="flex cursor-pointer items-center gap-2">
+                      <View className="h-3.5 w-3.5" />
+                      View
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-8 gap-1.5">
+                    <Link
+                      href={`/dashboard/audit/workpapers/templates/${template.id}/edit`}
+                      className="flex cursor-pointer items-center gap-2">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      handleDeleteClick(template);
+                      e.stopPropagation();
+                    }}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>

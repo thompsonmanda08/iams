@@ -232,9 +232,10 @@ export default function RiskRegistersTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          router.push(`/dashboard/risks/risk-registers/${register.id}`)
-                        }
+                        onClick={(e) => {
+                          router.push(`/dashboard/risks/risk-registers/${register.id}`);
+                          e.stopPropagation();
+                        }}
                         className="h-8 gap-1.5">
                         <View className="h-3.5 w-3.5" />
                         View
@@ -242,7 +243,10 @@ export default function RiskRegistersTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        // onClick={() => handleEdit(register.id)}
+                        onClick={(e) => {
+                          // handleEdit(register.id)
+                          e.stopPropagation();
+                        }}
                         className="h-8 gap-1.5">
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
@@ -250,9 +254,12 @@ export default function RiskRegistersTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        // onClick={() => handleDelete(register.id)}
+                        onClick={(e) => {
+                          // handleDelete(register.id)
+                          e.stopPropagation();
+                        }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                         Delete
                       </Button>
                     </div>

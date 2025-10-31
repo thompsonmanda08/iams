@@ -86,8 +86,6 @@ export default function ModuleListConfig({ initialModules = [] }: { initialModul
     );
   };
 
-  console.log("modules", modules);
-
   return (
     <>
       {/* Header */}

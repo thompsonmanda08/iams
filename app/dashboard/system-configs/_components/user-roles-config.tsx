@@ -131,10 +131,12 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
     [rolesResponse]
   );
 
-  const modules: Module[] = useMemo(
-    () => (modulesResponse?.success && modulesResponse?.data ? modulesResponse.data.data : []),
-    [modulesResponse]
-  );
+  const modules: Module[] = useMemo(() => {
+    if (!modulesResponse?.success || !modulesResponse?.data) return [];
+    // Handle both modulesResponse.data.data and modulesResponse.data as array
+    const data = modulesResponse.data.data || modulesResponse.data;
+    return Array.isArray(data) ? data : [];
+  }, [modulesResponse]);
 
   // Fetch permissions for selected role
   const { data: permissionsResponse, isLoading: permissionsLoading } = useQuery({
@@ -245,13 +247,19 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
 
   if (!departmentId) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground text-center">
-            Please select a department to view roles and permissions.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="grid place-items-center">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <InfoIcon className="h-6 w-6" />
+            </EmptyMedia>
+            <EmptyTitle>No Department Selected</EmptyTitle>
+            <EmptyDescription>
+              Please select a department to view roles and permissions.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
     );
   }
 
@@ -302,15 +310,21 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
     );
   }
 
-  if (modules.length === 0) {
+  if (modules?.length === 0) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground text-center">
-            No modules assigned to this department. Please assign modules first.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="col-span-full rounded-lg border border-dashed">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <InfoIcon className="h-6 w-6" />
+            </EmptyMedia>
+            <EmptyTitle>No Modules Assigned</EmptyTitle>
+            <EmptyDescription>
+              No modules have been assigned to this department. Please assign modules first.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
     );
   }
 
@@ -354,7 +368,7 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
             <CardContent>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {roles.map((role) => (
-                  <button
+                  <div
                     key={role.id}
                     onClick={() => {
                       if (hasChanges) {
@@ -370,7 +384,7 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
                       setHasChanges(false);
                     }}
                     className={cn(
-                      "hover:bg-accent group relative rounded-md border p-4 text-left transition-colors",
+                      "hover:bg-accent group relative rounded-md border p-4 text-left transition-colors cursor-pointer",
                       selectedRole === role.id ? "border-primary bg-accent" : ""
                     )}>
                     <Button
@@ -393,7 +407,7 @@ export default function UserRolesConfig({ departmentId }: { departmentId: string
                     <p className="text-muted-foreground text-sm">
                       {role.description || `Code: ${role.code}`}
                     </p>
-                  </button>
+                  </div>
                 ))}
               </div>
             </CardContent>

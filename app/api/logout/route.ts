@@ -30,10 +30,12 @@ export async function POST(request: NextRequest) {
     const reason = body?.reason;
 
     const response = await authenticatedApiClient({
-      url: "/api/v1/auth/logout",
-      method: "POST",
-      data: { reason }
+      url: "/api/v1/auth/logout"
+      // method: "POST",
+      // data: { reason }
     });
+
+    console.log("[ LOGOUT ]: ", reason);
 
     // Check if backend logout succeeded (optional - proceed anyway)
     if (!response.status || response.status !== 200) {

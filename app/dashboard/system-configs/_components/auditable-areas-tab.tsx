@@ -41,7 +41,6 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import CustomAlert from "@/components/ui/custom-alert";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -205,40 +204,30 @@ export default function AuditableAreaConfig({
                     </span>
                   </TableCell> */}
                     <TableCell align="center">
-                      <div className="flex gap-4">
-                        <Tooltip>
-                          <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
-                            <div
-                              onClick={(e) => {
-                                setEditingDepartment(item);
-                                setOpenModal(true);
-                                e.stopPropagation();
-                              }}>
-                              <Edit className="text-primary h-4 w-4" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-primary">Edit </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger className="hover:bg-primary/5 rounded p-2">
-                            <div
-                              onClick={(e) => {
-                                handleDeleteClick(String(item.id));
-                                e.stopPropagation();
-                              }}
-                              className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            classNames={{
-                              content: "bg-destructive text-white",
-                              arrow: "bg-destructive! fill-destructive!"
-                            }}>
-                            Delete
-                          </TooltipContent>
-                        </Tooltip>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            setEditingDepartment(item);
+                            setOpenModal(true);
+                            e.stopPropagation();
+                          }}
+                          className="h-8 gap-1.5">
+                          <Edit className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            handleDeleteClick(String(item.id));
+                            e.stopPropagation();
+                          }}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

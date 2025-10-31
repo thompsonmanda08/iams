@@ -3,6 +3,8 @@ export type LoginPayload = {
   password: string;
 };
 
+export type UserType = "ORGANIZATION_USER" | "BACKOFFICE_USER";
+
 export type Branch = {
   id: string;
   name: string;
@@ -61,6 +63,7 @@ export type User = {
   branch: Branch;
   department: Department;
   role: Role;
+  user_type: UserType;
 };
 
 export type UserQueryParams = {

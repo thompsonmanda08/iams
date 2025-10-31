@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -11,10 +11,11 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Copy, FileText, FileSpreadsheet, Printer, View, Pencil, FileLock2 } from "lucide-react";
+import Search from "@/components/ui/search-field";
+import { CustomPagination } from "@/components/ui/pagination";
 
 interface Action {
   id: string;
@@ -31,31 +32,53 @@ interface Action {
   progress: number;
   status: string;
 }
-
+interface Pagination {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
+}
 interface ActionsTableProps {
   actions: Action[];
+  pagination: Pagination;
 }
 
-export function ActionsTable({ actions }: ActionsTableProps) {
+export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [entriesPerPage, setEntriesPerPage] = useState("10");
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const filteredActions = actions.filter((action) =>
-    Object.values(action).some((value) =>
-      String(value).toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
-
-  const totalPages = Math.ceil(filteredActions.length / Number.parseInt(entriesPerPage));
-  const startIndex = (currentPage - 1) * Number.parseInt(entriesPerPage);
-  const endIndex = startIndex + Number.parseInt(entriesPerPage);
-  const paginatedActions = filteredActions.slice(startIndex, endIndex);
+  const searchParams = useSearchParams();
+  const [_, startTransition] = useTransition();
 
   const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
-    // Implement export functionality
     console.log(`Exporting as ${type}`);
+  };
+
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("page_size", String(page_size));
+      params.set("page", "1");
+    }
+
+    startTransition(() => {
+      router.push(`?${params.toString()}`);
+    });
+  };
+
+  const customPaginationData = {
+    page: pagination.page,
+    page_size: pagination.page_size,
+    total_pages: pagination.total_pages,
+    totalCount: pagination.total,
+    has_prev: pagination.has_prev,
+    has_next: pagination.has_next
   };
 
   return (
@@ -87,10 +110,10 @@ export function ActionsTable({ actions }: ActionsTableProps) {
               Print
             </Button>
           </div>
-          <Input
+          <Search
             placeholder="Search..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e)}
             className="max-w-xs"
           />
         </div>
@@ -112,14 +135,14 @@ export function ActionsTable({ actions }: ActionsTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedActions.length === 0 ? (
+              {actions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="py-8 text-center">
                     No data available in table
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedActions.map((action) => (
+                actions.map((action) => (
                   <TableRow key={action.id}>
                     <TableCell className="font-mono text-xs">{action.id}</TableCell>
                     <TableCell className="align-top break-words whitespace-normal">
@@ -146,7 +169,10 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => router.push(`/dashboard/risks/actions/${action.actionId}`)}
+                          onClick={(e) => {
+                            router.push(`/dashboard/risks/actions/${action.actionId}`);
+                            e.stopPropagation();
+                          }}
                           className="h-8 gap-1.5">
                           <View className="h-3.5 w-3.5" />
                           View
@@ -154,7 +180,10 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          // onClick={() => handleEdit(item.id)}
+                          onClick={(e) => {
+                            // handleEdit(item.id)
+                            e.stopPropagation();
+                          }}
                           className="h-8 gap-1.5">
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
@@ -162,9 +191,12 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          // onClick={() => handleDelete(item.id)}
+                          onClick={(e) => {
+                            // handleDelete(item.id)
+                            e.stopPropagation();
+                          }}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <FileLock2 className="h-3.5 w-3.5" />
+                          <FileLock2 className="h-4 w-4" />
                           Close
                         </Button>
                       </div>
@@ -174,38 +206,15 @@ export function ActionsTable({ actions }: ActionsTableProps) {
               )}
             </TableBody>
           </Table>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-muted-foreground text-sm">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredActions.length)} of{" "}
-            {filteredActions.length} entries
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}>
-              Previous
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(page)}>
-                {page}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}>
-              Next
-            </Button>
-          </div>
+          {actions.length > 0 && (
+            <CustomPagination
+              pagination={customPaginationData}
+              updatePagination={updatePagination}
+              allowSetPageSize={true}
+              showDetails={true}
+              className="border-t"
+            />
+          )}
         </div>
       </CardContent>
     </Card>

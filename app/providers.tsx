@@ -46,9 +46,9 @@ function Providers({
         )}
 
         {children}
-        <IdleTimerContainer authSession={session} />
-        {session?.user?.changePassword && <FirstLogin />}
-        {session?.screenLocked && <ScreenLock open={session?.screenLocked} />}
+        <IdleTimerContainer session={session} />
+        {session?.change_password && <FirstLogin />}
+        {session?.screen_locked && <ScreenLock open={session?.screen_locked} />}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </>

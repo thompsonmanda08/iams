@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, MapPin } from "lucide-react";
+import { Plus, Trash2, MapPin, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -36,7 +36,6 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -195,43 +194,34 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
                   </span>
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            if (true) {
-                              return toast.warning("This action currently is disabled");
-                            }
-                            setEditingProvince(province);
-                            setOpenModal(true);
-                          }}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Edit Province</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteProvince(province.id)}
-                          className="text-destructive"
-                          disabled={deleteProvinceMutation.isPending}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        classNames={{
-                          content: "bg-destructive text-white",
-                          arrow: "bg-destructive! fill-destructive!"
-                        }}>
-                        Delete Province
-                      </TooltipContent>
-                    </Tooltip>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        if (true) {
+                          return toast.warning("This action currently is disabled");
+                        }
+                        setEditingProvince(province);
+                        setOpenModal(true);
+                        e.stopPropagation();
+                      }}
+                      className="h-8 gap-1.5">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        handleDeleteProvince(province.id);
+                        e.stopPropagation();
+                      }}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5"
+                      disabled={deleteProvinceMutation.isPending}>
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
