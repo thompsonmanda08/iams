@@ -138,6 +138,10 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     router.push(`?${params.toString()}`);
   };
 
+  useEffect(() => {
+    setBranches(initialBranches);
+  }, [initialBranches]);
+
   const customPaginationData = {
     page: pagination.page,
     page_size: pagination.page_size,
