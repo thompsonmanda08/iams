@@ -126,7 +126,6 @@ export async function createAuthSession({
     organization_id,
     expiresAt
   };
-  console.log("[new session ]: ", newSession);
 
   // Call `encrypt` to generate the session token
   const session = await encrypt(newSession);
