@@ -268,6 +268,7 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
         const refreshResponse = await getRefreshToken();
         if (refreshResponse.success) {
           await updateAuthSession({ screen_locked: state });
+
           return true;
         }
       } catch (error) {
