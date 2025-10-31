@@ -3,6 +3,7 @@ import UsersDataTable from "./data-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { getUsers } from "@/app/_actions/user-actions";
 import CreateUserButton from "../_components/create-user-button";
+import { User } from "@/lib/types/account";
 
 type PageProps = {
   searchParams: Promise<{
@@ -29,9 +30,9 @@ export default async function UsersPage({ searchParams }: PageProps) {
     role: role !== "all" ? role : undefined
   });
 
-  const data = response?.data;
-  const users = data?.data ?? [];
-  const pagination = data?.pagination ?? {
+  const users = (response?.data?.data || []) as User[];
+
+  const pagination = response?.data?.pagination ?? {
     total: 0,
     page: 1,
     page_size: 10,
@@ -39,6 +40,8 @@ export default async function UsersPage({ searchParams }: PageProps) {
     has_next: false,
     has_prev: false
   };
+
+  console.log("USERS", users);
 
   return (
     <div className="container mx-auto flex flex-col space-y-6 p-6">

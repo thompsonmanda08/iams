@@ -175,7 +175,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
         isActive: true
       });
       if (response.success && response.data?.data) {
-        setUsers(response.data.data);
+        setUsers(response?.data?.data);
       } else {
         setUsers([]);
       }

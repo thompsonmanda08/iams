@@ -153,7 +153,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
     mitigation_cost: 0
   });
 
-
   useEffect(() => {
     if (open) {
       loadDepartments();
@@ -218,7 +217,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
         isActive: true
       });
       if (response.success && response.data?.data) {
-        setUsers(response.data.data);
+        setUsers(response.data?.data);
       } else {
         setUsers([]);
       }
@@ -816,7 +815,10 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                   <Select
                     value={stepThreeData.risk_appetite_status}
                     onValueChange={(value) =>
-                      setStepThreeData({ ...stepThreeData, risk_appetite_status: value as "WITHIN" | "ABOVE"})
+                      setStepThreeData({
+                        ...stepThreeData,
+                        risk_appetite_status: value as "WITHIN" | "ABOVE"
+                      })
                     }
                     disabled={isLoading}>
                     <SelectTrigger className="w-full">

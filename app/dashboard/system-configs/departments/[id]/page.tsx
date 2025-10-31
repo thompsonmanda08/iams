@@ -36,7 +36,7 @@ export default async function DepartmentDetailsPage({
   ]);
 
   const users = userResponse.success
-    ? ((userResponse.data.data || []) as DepartmentUser[])
+    ? ((userResponse?.data?.data || []) as DepartmentUser[])
     : ([] as DepartmentUser[]);
   const department = departmentResponse.success
     ? ((departmentResponse?.data || {}) as Department)

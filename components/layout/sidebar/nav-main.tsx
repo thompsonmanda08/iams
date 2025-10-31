@@ -48,6 +48,8 @@ import { adminNavItems, navItems } from "@/lib/routes-config";
 import { useQuery } from "@tanstack/react-query";
 import { getModules } from "@/app/_actions/config-actions";
 import { useMemo } from "react";
+import { useSystemSetup } from "@/hooks/use-users-query-data";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Icon mapping based on the icon strings from API
 const iconMap: Record<string, LucideIcon> = {
@@ -196,19 +198,9 @@ export function transformModulesToNavCustom(
 export function NavMain({ session, isAuthenticated }: { session: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-
-  const { data: navItemss, isLoading } = useQuery({
-    queryKey: ["navigation-modules"],
-    queryFn: async () => {
-      const response = await getModules();
-      // const data = response?.data || [];
-      // return response.data;
-      console.log("MODULES: ", response?.data.data);
-
-      return transformModulesToNav(response?.data.data || []);
-    },
-    staleTime: Infinity
-  });
+  const { data: setup, isLoading } = useSystemSetup();
+  // const routes = setup?.data?.navigation || [];
+  // console.log("NAV", setup);
 
   const routes = useMemo(() => {
     return session?.user?.userType === "admin" ||
@@ -218,12 +210,16 @@ export function NavMain({ session, isAuthenticated }: { session: any; isAuthenti
       : navItems; // DEFAULT ROUTES
   }, [navItems, session?.user?.userType]);
 
-  return false ? (
-    <>Loading...</>
+  return isLoading ? (
+    <div className="space-y-2 px-1 pt-2 pb-4">
+      {Array.from({ length: 10 }).map((_, i) => (
+        <Skeleton key={i} className="h-9 w-full" />
+      ))}
+    </div>
   ) : (
     <>
       {routes &&
-        routes.map((nav) => (
+        routes.map((nav: NavGroup) => (
           <SidebarGroup key={nav.title}>
             <SidebarGroupLabel>{nav.title}</SidebarGroupLabel>
             <SidebarGroupContent className="flex flex-col gap-2">

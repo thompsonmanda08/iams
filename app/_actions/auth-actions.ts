@@ -236,6 +236,8 @@ export async function initializeSystemSetup(
     const response = await authenticatedApiClient({ url });
     const session = response?.data;
     const user = session?.user;
+    // const permissions = session?.permissions;
+    // const navigation = session?.navigation;
 
     // console.log("🔧 [InitializeSystemSetup] Received user from API:", !!user);
     // console.log("🔧 [InitializeSystemSetup] User value:", user);
@@ -261,7 +263,7 @@ export async function initializeSystemSetup(
       }
     }
 
-    return successResponse({ user }, response?.data?.message);
+    return successResponse(session, response?.data?.message);
   } catch (error: Error | any) {
     return handleError(error, "GET | SYSTEM SETUP", url);
   }

@@ -35,7 +35,7 @@ export const useRefreshToken = (enabled: boolean) =>
 export const useSystemSetup = () =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.SYS_SETUP],
-    queryFn: initializeSystemSetup,
+    queryFn: async () => await initializeSystemSetup({ access_token: "" }),
     retry: 3,
     retryDelay: 3000,
     refetchInterval: 1000 * 60 * 5, // 3minutes
