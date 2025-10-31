@@ -33,7 +33,7 @@ export async function getUsers(params?: {
 
   try {
     const response = await authenticatedApiClient({ url: url, method: "GET" });
-    return successResponse(response.data.data, "Users fetched successfully");
+    return successResponse(response.data.data?.data, "Users fetched successfully");
   } catch (error) {
     return handleError(error, "GET", url);
   }
@@ -44,7 +44,7 @@ export async function getUserById(id: string): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url: url, method: "GET" });
-    return successResponse(response.data.data || response.data, "User fetched successfully");
+    return successResponse(response.data.data?.data || response.data, "User fetched successfully");
   } catch (error) {
     return handleError(error, "GET", url);
   }

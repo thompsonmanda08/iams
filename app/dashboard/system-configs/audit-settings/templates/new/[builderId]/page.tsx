@@ -1,14 +1,16 @@
-"use client";
-
 import { FileText } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { ISOWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
 import { GeneralWorkpaperForm } from "../../../_components/general-workpaper-form";
+import { WorkpaperBuilderTemplateId } from "@/lib/types/audit-types";
+import { Card, CardContent } from "@/components/ui/card";
+import { CustomTemplateBuilder } from "../../../_components/custom-template-builder";
+import { CustomWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/custom-workpaper-form";
 
 export default async function CreateNewTemplatePage({
   params
 }: {
-  params: Promise<{ builderId: string }>;
+  params: Promise<{ builderId: WorkpaperBuilderTemplateId }>;
 }) {
   const { builderId } = await params;
 
@@ -29,11 +31,11 @@ export default async function CreateNewTemplatePage({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {builderId == "iso27001" && (
+        {builderId == "ISO27001" && (
           <ISOWorkpaperTemplateForm templateId={null} initialData={null} />
         )}
 
-        {builderId === "general" && (
+        {builderId === "GENERAL" && (
           <GeneralWorkpaperForm
           // auditId={auditId}
           // auditTitle={auditTitle}
@@ -42,27 +44,17 @@ export default async function CreateNewTemplatePage({
           />
         )}
 
-        {/* {templateId === "custom-new" && (
+        {builderId === "CUSTOM" && (
           <Card>
             <CardContent className="pt-6">
-              <CustomTemplateBuilder onSuccess={handleTemplateCreated} onCancel={handleCancel} />
+              <CustomTemplateBuilder />
             </CardContent>
           </Card>
         )}
 
-        {selectedCustomTemplate &&
-          templateId !== "iso27001" &&
-          templateId !== "iso27001-2022" &&
-          templateId !== "general" &&
-          templateId !== "custom-new" && (
-            <CustomWorkpaperForm
-              auditId={auditId}
-              auditTitle={auditTitle}
-              template={selectedCustomTemplate}
-              onSuccess={handleSuccess}
-              onCancel={handleCancel}
-            />
-          )} */}
+        {builderId !== "ISO27001" && builderId !== "GENERAL" && builderId !== "CUSTOM" && (
+          <CustomWorkpaperForm />
+        )}
       </div>
     </div>
   );

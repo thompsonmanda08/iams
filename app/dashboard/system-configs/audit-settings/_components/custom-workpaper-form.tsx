@@ -8,16 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { Save, Loader2, AlertCircle, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { EvidenceGrid } from "./evidence-grid";
+import { EvidenceGrid } from "../../../../../components/audit/evidence-grid";
 import type {
   CustomTemplate,
   CustomWorkpaperInput,
@@ -27,28 +20,28 @@ import type {
 import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS } from "@/lib/data/tick-marks";
 import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { SelectField } from "@/components/ui/select-field";
+import { DatePicker } from "@/components/ui/date-picker";
+import type { User } from "@/lib/types/account";
 
 interface CustomWorkpaperFormProps {
-  auditId?: string; // Optional - can be attached to audit plan later
+  // auditId?: string; // Optional - can be attached to audit plan later
   auditTitle?: string;
   template: CustomTemplate;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export function CustomWorkpaperForm({
-  auditId,
-  auditTitle,
-  template,
-  onSuccess,
-  onCancel
-}: CustomWorkpaperFormProps) {
+export function CustomWorkpaperForm({ auditId, auditTitle, template, onSuccess, onCancel }: any) {
   const router = useRouter();
   const { toast } = useToast();
-  const { data: teamMembers } = useTeamMembers({ page_size: 100 });
+  const { data: teamMembersResponse } = useTeamMembers({ page_size: 100 });
   const [isSaving, setIsSaving] = useState(false);
 
-  const currentUser = teamMembers?.[0]?.name || "Current User";
+  const teamMembers = teamMembersResponse?.data;
+  const currentUser = teamMembers?.[0]?.id || "";
+
+  console.log("USERS: ", teamMembers);
 
   // Form state
   const [preparedBy, setPreparedBy] = useState(currentUser);
@@ -62,7 +55,7 @@ export function CustomWorkpaperForm({
   // Evidence grid (if template includes it)
   const [evidenceRows, setEvidenceRows] = useState<EvidenceRow[]>([]);
   const [selectedTickMarks, setSelectedTickMarks] = useState<string[]>(
-    template.defaultTickMarks || []
+    template?.defaultTickMarks || []
   );
 
   // Update field value
@@ -110,28 +103,29 @@ export function CustomWorkpaperForm({
 
       case "date":
         return (
-          <Input
-            id={field.id}
-            type="date"
-            value={value ? new Date(value).toISOString().split("T")[0] : ""}
-            onChange={(e) => updateFieldValue(field.id, new Date(e.target.value))}
+          <DatePicker
+            name={field.id}
+            value={(value ? new Date(value) : undefined) as any}
+            onValueChange={(date) => updateFieldValue(field.id, date)}
           />
         );
 
       case "select":
         return (
-          <Select value={value} onValueChange={(v) => updateFieldValue(field.id, v)}>
-            <SelectTrigger id={field.id}>
-              <SelectValue placeholder={field.placeholder || "Select..."} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SelectField
+            value={value}
+            onValueChange={(v) => updateFieldValue(field.id, v)}
+            options={
+              field.options && field.options.length > 0
+                ? field.options?.map((option) => {
+                    return {
+                      id: option,
+                      name: option
+                    };
+                  })
+                : []
+            }
+          />
         );
 
       case "checkbox":
@@ -172,7 +166,7 @@ export function CustomWorkpaperForm({
     if (!preparedBy) return "Prepared by is required";
 
     // Check required fields
-    for (const section of template.sections) {
+    for (const section of template?.sections || []) {
       for (const field of section.fields) {
         if (field.required && !fieldValues[field.id]) {
           return `"${field.label}" is required`;
@@ -181,7 +175,7 @@ export function CustomWorkpaperForm({
     }
 
     // If evidence grid is included, require at least one row
-    if (template.includeEvidenceGrid && evidenceRows.length === 0) {
+    if (template?.includeEvidenceGrid && evidenceRows?.length === 0) {
       return "At least one evidence row is required";
     }
 
@@ -203,14 +197,14 @@ export function CustomWorkpaperForm({
     setIsSaving(true);
 
     const workpaperData: CustomWorkpaperInput = {
-      auditId,
+      // auditId,
       templateId: template.id,
       preparedBy,
       preparedDate,
       reviewedBy: reviewedBy || undefined,
       reviewedDate,
       fieldValues,
-      evidenceRows: template.includeEvidenceGrid ? evidenceRows : undefined,
+      evidenceRows: template?.includeEvidenceGrid ? evidenceRows : undefined,
       selectedTickMarks: template.includeTickMarks ? selectedTickMarks : undefined
     };
 
@@ -240,11 +234,13 @@ export function CustomWorkpaperForm({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-purple-100">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100">
           <FileText className="h-5 w-5 text-purple-600" />
         </div>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold">{template.name}</h2>
+          <h2 className="text-2xl font-bold">
+            {template?.name || "New Custom Workpaper Template"}
+          </h2>
           {auditTitle ? (
             <p className="text-muted-foreground mt-1 text-sm">For Audit: {auditTitle}</p>
           ) : (
@@ -252,7 +248,7 @@ export function CustomWorkpaperForm({
               You can attach this workpaper to an audit plan later
             </p>
           )}
-          <p className="text-muted-foreground text-sm">{template.description}</p>
+          <p className="text-muted-foreground text-sm">{template?.description || ""}</p>
         </div>
       </div>
 
@@ -263,63 +259,52 @@ export function CustomWorkpaperForm({
 
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="preparedBy">
-                Prepared By <span className="text-destructive">*</span>
-              </Label>
-              <Select value={preparedBy} onValueChange={setPreparedBy}>
-                <SelectTrigger id="preparedBy">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {teamMembers?.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
-                      {member.name} - {member.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="preparedDate">
-                Preparation Date <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="preparedDate"
-                type="date"
-                value={preparedDate.toISOString().split("T")[0]}
-                onChange={(e) => setPreparedDate(new Date(e.target.value))}
+              <SelectField
+                label="Prepared By"
+                required
+                value={preparedBy}
+                onValueChange={setPreparedBy}
+                options={
+                  teamMembers?.map((member: User) => ({
+                    id: member.id,
+                    name: `${member.first_name} ${member.last_name} - ${member.role?.name}`
+                  })) || []
+                }
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reviewedBy">Reviewed By (Optional)</Label>
-              <Select
-                value={reviewedBy}
-                onValueChange={(value) => setReviewedBy(value === "none" ? undefined : value)}>
-                <SelectTrigger id="reviewedBy">
-                  <SelectValue placeholder="Select reviewer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {teamMembers?.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
-                      {member.name} - {member.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <DatePicker
+                label="Preparation Date"
+                required
+                name="preparedDate"
+                value={preparedDate as any}
+                onValueChange={(date) => date && setPreparedDate(date)}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reviewedDate">Review Date (Optional)</Label>
-              <Input
-                id="reviewedDate"
-                type="date"
-                value={reviewedDate ? reviewedDate.toISOString().split("T")[0] : ""}
-                onChange={(e) =>
-                  setReviewedDate(e.target.value ? new Date(e.target.value) : undefined)
-                }
+              <SelectField
+                label="Reviewed By (Optional)"
+                placeholder="Select reviewer..."
+                value={reviewedBy}
+                onValueChange={(value) => setReviewedBy(value === "none" ? undefined : value)}
+                options={[
+                  { id: "none", name: "None" },
+                  ...(teamMembers?.map((member: User) => ({
+                    id: member.id,
+                    name: `${member.first_name} ${member.last_name} - ${member.role?.name}`
+                  })) || [])
+                ]}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <DatePicker
+                label="Review Date (Optional)"
+                name="reviewedDate"
+                value={reviewedDate as any}
+                onValueChange={(date) => setReviewedDate(date)}
               />
             </div>
           </div>
@@ -327,35 +312,37 @@ export function CustomWorkpaperForm({
       </Card>
 
       {/* Dynamic Sections */}
-      {template.sections.map((section, sectionIndex) => (
-        <Card key={sectionIndex} className="p-6">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold">{section.title}</h3>
-              {section.description && (
-                <p className="text-muted-foreground mt-1 text-sm">{section.description}</p>
+      {template &&
+        template?.sections?.length > 0 &&
+        template?.sections.map((section, sectionIndex) => (
+          <Card key={sectionIndex} className="p-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">{section.title}</h3>
+                {section.description && (
+                  <p className="text-muted-foreground mt-1 text-sm">{section.description}</p>
+                )}
+              </div>
+
+              {section.fields.length > 0 && (
+                <div className="grid grid-cols-1 gap-6">
+                  {section.fields.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label htmlFor={field.id}>
+                        {field.label}
+                        {field.required && <span className="text-destructive ml-1">*</span>}
+                      </Label>
+                      {renderField(field)}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-
-            {section.fields.length > 0 && (
-              <div className="grid grid-cols-1 gap-6">
-                {section.fields.map((field) => (
-                  <div key={field.id} className="space-y-2">
-                    <Label htmlFor={field.id}>
-                      {field.label}
-                      {field.required && <span className="text-destructive ml-1">*</span>}
-                    </Label>
-                    {renderField(field)}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
-      ))}
+          </Card>
+        ))}
 
       {/* Evidence Grid (if included) */}
-      {template.includeEvidenceGrid && (
+      {template && template?.includeEvidenceGrid && (
         <Card className="p-6">
           <EvidenceGrid
             rows={evidenceRows}

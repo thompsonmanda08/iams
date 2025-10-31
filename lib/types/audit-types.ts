@@ -152,6 +152,8 @@ export interface AuditPlanInput {
   selectedCategories?: string[];
 }
 
+export type WorkpaperBuilderTemplateId = "ISO27001" | "GENERAL" | "CUSTOM";
+
 /**
  * Filters for querying audit plans
  */

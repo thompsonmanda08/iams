@@ -14,6 +14,7 @@ import {
   updateWorkingPaperTemplate
 } from "@/app/_actions/audit-module-actions";
 import { Switch } from "@/components/ui/switch";
+import { SelectField } from "@/components/ui/select-field";
 
 export function ISOWorkpaperTemplateForm({
   templateId,
@@ -31,7 +32,7 @@ export function ISOWorkpaperTemplateForm({
       ? initialData
       : {
           name: "",
-          standard: "ISO 27001:2022",
+          standard: "ISO27001",
           description: "",
           version: "1.0",
           is_active: true
@@ -119,14 +120,15 @@ export function ISOWorkpaperTemplateForm({
                 />
               </div>
 
-              <Input
-                id="name"
-                label="Standard"
+              <SelectField
+                label="Workpaper Template"
+                placeholder="Select template standard"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, standard: e.target.value })}
-                placeholder="e.g., ISO 27001:2022 ISMS Audit"
+                onValueChange={(value) => setFormData({ ...formData, standard: value })}
+                options={[{ id: "ISO27001", name: "ISO 27001 ISMS Audit" }]}
                 required
               />
+
               <Textarea
                 id="description"
                 label="Description"

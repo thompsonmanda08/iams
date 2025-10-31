@@ -16,13 +16,7 @@ export const USERS_QUERY_KEYS = {
 export const useTeamMembers = (params: UserQueryParams | undefined) => {
   return useQuery({
     queryKey: [USERS_QUERY_KEYS.USERS, params],
-    queryFn: async () => {
-      const response = await getUsers(params);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
+    queryFn: async () => await getUsers(params),
     staleTime: 5 * 60 * 1000 // Cache for 10 minutes
   });
 };

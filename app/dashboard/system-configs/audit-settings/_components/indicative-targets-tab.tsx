@@ -14,7 +14,7 @@ import {
 import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
-import { AuditableArea as Area, Pagination } from "@/lib/types";
+import { AuditConfigurableItem, Department, ErrorState, Pagination } from "@/lib/types";
 import {
   Dialog,
   DialogClose,
@@ -46,24 +46,43 @@ import { useDepartments } from "@/hooks/use-query-data";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { set } from "date-fns";
+
+interface AreaFormData {
+  name: string;
+  department_id: string;
+  description: string;
+}
+
+const INIT_FORM_DATA: Omit<AuditConfigurableItem, "id"> = {
+  name: "",
+  description: "",
+  department_id: null
+  // code: "",
+  // is_active: true
+};
 
 export default function IndicativeTargetsTab({
-  areas,
-  pagination
+  targets = [],
+  pagination,
+  departments = []
 }: {
-  areas: Area[];
+  targets: AuditConfigurableItem[];
   pagination?: Pagination;
+  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<Area | null>(null);
+  const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id"> | null>(
+    INIT_FORM_DATA
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
 
-  const [items, setItems] = useState<Area[]>(areas);
+  const [items, setItems] = useState<AuditConfigurableItem[]>(targets);
 
   useEffect(() => {
-    setItems(areas);
-  }, [areas]);
+    setItems(targets);
+  }, [targets]);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -73,7 +92,7 @@ export default function IndicativeTargetsTab({
     mutationFn: (id: string) => deleteDepartment(id),
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Area deleted successfully");
+        toast.success("Indicative Target deleted successfully");
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
       } else {
         toast.error(response.message || "Failed to delete item");
@@ -85,7 +104,7 @@ export default function IndicativeTargetsTab({
     },
     onSettled: () => {
       setDeleteDialogOpen(false);
-      setDepartmentToDelete(null);
+      setSelectedId(null);
     }
   });
 
@@ -96,40 +115,45 @@ export default function IndicativeTargetsTab({
    */
   /*******  7df535e1-228a-4281-91c5-50dc0fe4cb5b  *******/
   const handleDeleteClick = (id: string) => {
-    setDepartmentToDelete(id);
+    setSelectedId(id);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!departmentToDelete) return;
+    if (!selectedId) return;
     // if (true) {
     //   return toast.warning("This action currently is disabled");
     // }
-    deleteMutation.mutate(departmentToDelete as any);
+    deleteMutation.mutate(selectedId as any);
   };
 
   return (
     <>
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Indicative Targets</h3>
+          <div className="space-y-1">
+            <h4 className="text-sm leading-none font-medium">Indicative Targets</h4>
+            <p className="text-muted-foreground text-sm">
+              List of all the indicative targets across all departments
+            </p>
+          </div>
           <Button
             size="sm"
             onClick={() => {
-              setEditingDepartment(null);
+              setFormData(null);
               setOpenModal(true);
             }}>
             <Plus className="h-4 w-4" />
-            New Auditable Area
+            New Indicative Target
           </Button>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Auditable Area</TableHead>
+              <TableHead>Indicative Target</TableHead>
               <TableHead>Department</TableHead>
-              <TableHead>Description of Area</TableHead>
+              <TableHead>Description</TableHead>
               {/* <TableHead>Status</TableHead> */}
               <TableHead className="w-24" align="center">
                 Actions
@@ -145,10 +169,10 @@ export default function IndicativeTargetsTab({
                       <EmptyMedia variant="icon">
                         <Building />
                       </EmptyMedia>
-                      <EmptyTitle>No areas yet</EmptyTitle>
+                      <EmptyTitle>No indicative targets yet</EmptyTitle>
                       <EmptyDescription>
-                        You haven&apos;t created any areas yet. Get started by creating your first
-                        auditable area.
+                        You haven&apos;t created any indicative targets yet. Get started by creating
+                        your first Indicative Target.
                       </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>
@@ -156,10 +180,10 @@ export default function IndicativeTargetsTab({
                         <Button
                           size="sm"
                           onClick={() => {
-                            setEditingDepartment(null);
+                            setFormData(null);
                             setOpenModal(true);
                           }}>
-                          <Plus className="h-4 w-4" /> Create New Auditable Area
+                          <Plus className="h-4 w-4" /> Create New Indicative Target
                         </Button>
                       </div>
                     </EmptyContent>
@@ -169,7 +193,9 @@ export default function IndicativeTargetsTab({
             ) : (
               items.map((item) => {
                 const departmentName =
-                  item?.department || "No department assigned - map from departments";
+                  item?.department ||
+                  departments.find((d) => d.id === item.department_id)?.name ||
+                  "No department assigned - Global";
                 return (
                   <TableRow
                     key={item.id}
@@ -209,7 +235,8 @@ export default function IndicativeTargetsTab({
                           size="sm"
                           variant="outline"
                           onClick={(e) => {
-                            setEditingDepartment(item);
+                            setFormData(item);
+                            setSelectedId(item.id);
                             setOpenModal(true);
                             e.stopPropagation();
                           }}
@@ -238,18 +265,18 @@ export default function IndicativeTargetsTab({
         </Table>
       </Card>
 
-      <CreateOrUpdateArea
+      <CreateOrUpdate
         openModal={openModal}
         setOpenModal={setOpenModal}
-        initialData={editingDepartment}
-        departmentId={editingDepartment?.id}
-        setInitialData={setEditingDepartment}
+        initialData={formData}
+        selectedId={selectedId}
+        setInitialData={setFormData}
       />
 
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete Area"
+        title="Delete Indicative Target"
         description="Are you sure you want to delete this item? This action cannot be undone and may affect related data."
         onConfirm={handleDeleteConfirm}
         isLoading={deleteMutation.isPending}
@@ -258,34 +285,19 @@ export default function IndicativeTargetsTab({
   );
 }
 
-type ErrorState = {
-  status: boolean;
-  message: string;
-  onParentId?: boolean;
-};
-
-const INIT_AREA: Area = {
-  id: undefined,
-  name: "",
-  description: "",
-  department_id: null
-  // code: "",
-  // is_active: true
-};
-
-export function CreateOrUpdateArea({
+export function CreateOrUpdate({
   showTrigger,
   openModal,
   setOpenModal,
   initialData = null,
-  departmentId,
+  selectedId = null,
   setInitialData
 }: {
   showTrigger?: boolean;
   openModal?: boolean;
-  departmentId?: string;
-  initialData?: Area | null;
-  setInitialData?: React.Dispatch<React.SetStateAction<Area | null>>;
+  selectedId: string | null;
+  initialData?: Omit<AuditConfigurableItem, "id"> | null;
+  setInitialData?: React.Dispatch<React.SetStateAction<Omit<AuditConfigurableItem, "id"> | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const queryClient = useQueryClient();
@@ -294,19 +306,19 @@ export function CreateOrUpdateArea({
     message: ""
   });
 
-  // Initialize with initialData if provided, otherwise use INIT_AREA
-  const [formData, setFormData] = useState<Area>(() => {
-    if (initialData && departmentId) {
+  // Initialize with initialData if provided, otherwise use INIT_FORM_DATA
+  const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id">>(() => {
+    if (initialData && selectedId) {
       return {
-        id: initialData.id,
+        // id: selectedId,
         name: initialData.name || "",
         department_id: initialData.department_id || "",
         description: initialData.description || ""
         // parent_id: initialData.parent_id || undefined,
         // is_active: initialData.is_active || true
-      } as Area;
+      } as AuditConfigurableItem;
     }
-    return INIT_AREA;
+    return INIT_FORM_DATA;
   });
 
   const { data } = useDepartments({
@@ -315,16 +327,16 @@ export function CreateOrUpdateArea({
     page: 1
   });
 
-  const items = (data?.data?.data || []) as Area[];
+  const items = (data?.data?.data || []) as AuditConfigurableItem[];
 
   // Update form when initialData changes
   useEffect(() => {
-    console.log("🔄 Effect triggered:", { initialData, departmentId, openModal });
+    console.log("🔄 Effect triggered:", { initialData, selectedId, openModal });
 
     if (openModal) {
-      if (initialData && departmentId) {
+      if (initialData && selectedId) {
         setFormData({
-          id: initialData.id,
+          // id: selectedId,
           name: initialData.name || "",
           department_id: initialData.department_id || "",
           description: initialData.description || ""
@@ -333,18 +345,18 @@ export function CreateOrUpdateArea({
         });
       } else if (!initialData) {
         // Only reset if no initialData (create mode)
-        setFormData(INIT_AREA);
+        setFormData(INIT_FORM_DATA);
       }
       setError({ status: false, message: "" });
     }
-  }, [initialData, departmentId]);
+  }, [initialData, selectedId]);
 
   // Reset form when modal closes (only for client-side modal usage)
   useEffect(() => {
     if (!openModal && setOpenModal) {
       // Only run cleanup if we have modal control (client-side)
       const timer = setTimeout(() => {
-        setFormData(INIT_AREA);
+        setFormData(INIT_FORM_DATA);
         setError({ status: false, message: "" });
         setInitialData?.(null);
       }, 200);
@@ -355,18 +367,18 @@ export function CreateOrUpdateArea({
 
   // Create/Update mutation
   const saveMutation = useMutation({
-    mutationFn: (data: Area) => {
-      return initialData && departmentId
-        ? updateDepartment({ ...data, id: String(departmentId) })
+    mutationFn: (data: AuditConfigurableItem) => {
+      return initialData && selectedId
+        ? updateDepartment({ ...data, id: String(selectedId) })
         : createDepartment(data);
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`Area ${initialData ? "updated" : "created"} successfully`);
+        toast.success(`AuditConfigurableItem ${initialData ? "updated" : "created"} successfully`);
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         setOpenModal?.(false);
         setInitialData?.(null);
-        setFormData(INIT_AREA);
+        setFormData(INIT_FORM_DATA);
         setError({ status: false, message: "" });
       } else {
         toast.error(response.message);
@@ -387,12 +399,12 @@ export function CreateOrUpdateArea({
 
   const departmentOptions = useMemo(() => {
     return items
-      .filter((dept) => dept.id !== departmentId) // Prevent self-parenting
+      .filter((dept) => dept.id !== selectedId) // Prevent self-parenting
       .map((item) => ({
         id: item?.id as string,
         name: item?.name
       }));
-  }, [items, departmentId]);
+  }, [items, selectedId]);
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -401,11 +413,11 @@ export function CreateOrUpdateArea({
           <Button size="sm">
             {initialData ? (
               <>
-                <PencilLine className="mr-2 h-4 w-4" /> Update Area
+                <PencilLine className="mr-2 h-4 w-4" /> Update AuditConfigurableItem
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" /> Create New Area
+                <Plus className="mr-2 h-4 w-4" /> Create New AuditConfigurableItem
               </>
             )}
           </Button>
@@ -413,22 +425,24 @@ export function CreateOrUpdateArea({
       )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Update Area" : "Create New Area"}</DialogTitle>
+          <DialogTitle>
+            {initialData ? "Update AuditConfigurableItem" : "Create New AuditConfigurableItem"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleCreateOrUpdate} className="space-y-3">
           <SearchSelectField
             label="Functional Unit/Department"
             placeholder="Select parent unit (optional)"
-            value={formData.department_id || ""}
+            value={formData?.department_id || ""}
             onValueChange={(value) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, department_id: value || null }));
+              setFormData((c) => ({ ...c, department_id: value }));
             }}
             options={departmentOptions}
           />
           <Input
             label="Name"
-            placeholder="Area Name"
+            placeholder="Enter Target Name"
             value={formData.name}
             onChange={(e) => {
               setError({ status: false, message: "" });
@@ -439,7 +453,7 @@ export function CreateOrUpdateArea({
           />
           <Textarea
             label="Description"
-            placeholder="Area description (optional)"
+            placeholder="Enter Target description (optional)"
             value={formData.description || ""}
             onChange={(e) => {
               setError({ status: false, message: "" });
@@ -458,7 +472,7 @@ export function CreateOrUpdateArea({
             <Label
               htmlFor="is_active"
               className="text-foreground cursor-pointer text-sm font-medium text-nowrap">
-              Is Active Area
+              Is Active AuditConfigurableItem
             </Label>
           </div> */}
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
@@ -468,10 +482,10 @@ export function CreateOrUpdateArea({
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="destructive"
                 onClick={() => {
                   setOpenModal?.(false);
-                  setFormData(INIT_AREA);
+                  setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
                 Cancel

@@ -1,14 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getBranches, getDepartments, getProvinces, getTowns } from "@/app/_actions/config-actions";
-import { ProvincesTab } from "../_components/provinces-tab";
-import { TownsTab } from "../_components/towns-tab";
-import { BranchesTab } from "../_components/branches-tab";
 import { Pagination } from "@/lib/types";
 import { Suspense } from "react";
 import { getAuditPlans, getWorkpapers } from "@/app/_actions/audit-module-actions";
-import { WorkpapersPageClient } from "@/components/audit/workpapers-page-client";
 import AuditableAreaConfig from "./_components/auditable-areas-tab";
-import IndicativeTargetsTab from "../_components/indicative-targets-tab";
+import IndicativeTargetsTab from "./_components/indicative-targets-tab";
 import StrategicPillarsTab from "../_components/strategic-pillars-tab";
 import StrategicInitiativeTab from "../_components/strategic-initiative-tab";
 import FindingsCategoryTab from "../_components/findings-categories-tab";
@@ -103,7 +99,11 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           {/* Indicative Targets Tab */}
           <TabsContent value="targets">
             <Suspense fallback={<TableLoading />}>
-              <IndicativeTargetsTab areas={towns} pagination={townsPagination} />
+              <IndicativeTargetsTab
+                targets={towns}
+                departments={departments}
+                pagination={townsPagination}
+              />
             </Suspense>
           </TabsContent>
 

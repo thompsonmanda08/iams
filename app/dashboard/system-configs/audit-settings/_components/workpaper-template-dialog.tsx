@@ -16,7 +16,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { FileText, ClipboardList, Settings, Sparkles } from "lucide-react";
-import type { AuditPlan, CustomTemplate } from "@/lib/types/audit-types";
+import type {
+  AuditPlan,
+  CustomTemplate,
+  WorkpaperBuilderTemplateId
+} from "@/lib/types/audit-types";
 
 interface WorkpaperTemplateDialogProps {
   open: boolean;
@@ -36,10 +40,10 @@ export function WorkpaperTemplateDialog({
 
   // const selectedAudit = audits.find((a) => a.id === selectedAuditId);
 
-  const handleTemplateSelect = (templateId: string) => {
+  const handleTemplateSelect = (templateId: WorkpaperBuilderTemplateId) => {
     // Build the URL without audit info - users will attach to audit plan later
-    // const url = `/dashboard/system-configs/audit-settings/templates/new/${templateId}`;
-    const url = `/dashboard/system-configs/audit-settings/templates/new`; // ISO IEC 27001
+    const url = `/dashboard/system-configs/audit-settings/templates/new/${templateId}`;
+    // const url = `/dashboard/system-configs/audit-settings/templates/new`; // ISO IEC 27001
 
     // Navigate to the creation page
     router.push(url);
@@ -92,9 +96,9 @@ export function WorkpaperTemplateDialog({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {/* ISO 27001 Template */}
-              <Card
+              {/* <Card
                 className="hover:border-primary cursor-pointer p-6 transition-all hover:bg-slate-50"
-                onClick={() => handleTemplateSelect("iso27001")}>
+                onClick={() => handleTemplateSelect("ISO27001")}>
                 <div className="flex flex-col items-center space-y-4 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
                     <ClipboardList className="h-8 w-8 text-blue-600" />
@@ -112,12 +116,12 @@ export function WorkpaperTemplateDialog({
                     <li>✓ Test result tracking</li>
                   </ul>
                 </div>
-              </Card>
+              </Card> */}
 
               {/* ISO 27001:2022 Comprehensive Template */}
               <Card
                 className="hover:border-primary cursor-pointer border-2 p-6 transition-all hover:bg-slate-50"
-                onClick={() => handleTemplateSelect("iso27001-2022")}>
+                onClick={() => handleTemplateSelect("ISO27001")}>
                 <div className="flex flex-col items-center space-y-4 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
                     <ClipboardList className="h-8 w-8 text-indigo-600" />
@@ -145,7 +149,7 @@ export function WorkpaperTemplateDialog({
               {/* General Template */}
               <Card
                 className="hover:border-primary cursor-pointer p-6 transition-all hover:bg-slate-50"
-                onClick={() => handleTemplateSelect("general")}>
+                onClick={() => handleTemplateSelect("GENERAL")}>
                 <div className="flex flex-col items-center space-y-4 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                     <FileText className="h-8 w-8 text-green-600" />
@@ -169,7 +173,7 @@ export function WorkpaperTemplateDialog({
               {/* Create Custom Template */}
               <Card
                 className="hover:border-primary cursor-pointer border-2 border-dashed p-6 transition-all hover:bg-slate-50"
-                onClick={() => handleTemplateSelect("custom-new")}>
+                onClick={() => handleTemplateSelect("CUSTOM")}>
                 <div className="flex flex-col items-center space-y-4 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-100">
                     <Sparkles className="h-8 w-8 text-purple-600" />

@@ -135,11 +135,12 @@ export type Pagination = {
   [x: string]: any;
 };
 
-export type AuditableArea = {
+export type AuditConfigurableItem = {
   id: string;
   name: string;
   description: string;
   department_id: string | null;
+  [x: string]: any;
   // code: string;
   // is_active: boolean;
 };
