@@ -27,7 +27,7 @@ export async function getBranches(params?: {
   page_size?: number;
 }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
-  
+
   queryParams.append("page_size", String(params?.page_size || 10));
   queryParams.append("page", String(params?.page || 1));
 
@@ -193,7 +193,7 @@ export async function deleteBranch(id: string): Promise<APIResponse> {
  * Query Parameters: parent_id, is_active, limit, offset
  */
 export async function getDepartments(
-  params?: Pagination & {
+  params?: Partial<Pagination> & {
     parentId?: string;
     isActive?: boolean;
   }
@@ -646,7 +646,7 @@ export async function getRoleById(id: string): Promise<APIResponse> {
   const url = `/api/v1/roles/${id}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, "Role fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -676,13 +676,17 @@ export async function createRole({
   }
 
   try {
-    const response = await axios.post(url, {
-      department_id: departmentId,
-      name,
-      code,
-      description
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        department_id: departmentId,
+        name,
+        code,
+        description
+      }
     });
-
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Role created successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -715,13 +719,17 @@ export async function updateRole({
   }
 
   try {
-    const response = await axios.put(url, {
-      name,
-      code,
-      description,
-      is_active: isActive
+    const response = await authenticatedApiClient({
+      url,
+      method: "PUT",
+      data: {
+        name,
+        code,
+        description,
+        is_active: isActive
+      }
     });
-
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Role updated successfully");
   } catch (error: Error | any) {
     return handleError(error, "PUT", url);
@@ -741,7 +749,8 @@ export async function deleteRole(id: string): Promise<APIResponse> {
   }
 
   try {
-    await axios.delete(url);
+    await authenticatedApiClient({ url, method: "DELETE" });
+    revalidatePath("/dashboard/system-configs/departments");
     return successResponse(null, "Role deleted successfully");
   } catch (error: Error | any) {
     return handleError(error, "DELETE", url);
@@ -780,7 +789,7 @@ export async function getProvinces(params?: {
   page_size?: number;
 }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
-  
+
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.page_size) queryParams.append("page_size", String(params.page_size));
@@ -914,7 +923,7 @@ export async function getTowns(params?: {
   page?: number;
 }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
-  
+
   if (params?.provinceId) queryParams.append("province_id", params.provinceId);
   if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
   if (params?.page_size !== undefined) queryParams.append("page_size", String(params.page_size));

@@ -180,26 +180,33 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
                   </span>
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex justify-end gap-2">
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
                         if (true) {
                           return toast.warning("This action currently is disabled");
                         }
                         setEditingTown(town);
                         setOpenModal(true);
-                      }}>
-                      <Edit className="h-4 w-4" />
+                        e.stopPropagation();
+                      }}
+                      className="h-8 gap-1.5">
+                      <Edit className="h-3.5 w-3.5" />
+                      Edit
                     </Button>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTown(town.id)}
-                      className="text-destructive"
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        handleDeleteTown(town.id);
+                        e.stopPropagation();
+                      }}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5"
                       disabled={deleteTownMutation.isPending}>
                       <Trash2 className="h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </TableCell>

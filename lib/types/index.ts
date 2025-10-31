@@ -1,6 +1,6 @@
 import { JWTPayload } from "jose";
 
-import { User } from "./account";
+import { Role, User } from "./account";
 
 export type PageProps = {
   params?: Promise<{ [key: string]: string }>;
@@ -73,7 +73,7 @@ export type Department = {
 export type DepartmentUser = {
   id: string;
   fullName: string;
-  role: string;
+  role: Role;
   department: string;
   isActive: boolean;
 

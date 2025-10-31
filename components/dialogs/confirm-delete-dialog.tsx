@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmDeleteDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description: string
-  onConfirm: () => void
-  isLoading?: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 export function ConfirmDeleteDialog({
@@ -26,21 +26,21 @@ export function ConfirmDeleteDialog({
   title,
   description,
   onConfirm,
-  isLoading = false,
+  isLoading = false
 }: ConfirmDeleteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
             </div>
             <DialogTitle>{title}</DialogTitle>
           </div>
-          <DialogDescription className="pt-3">{description}</DialogDescription>
+          <DialogDescription className="pt-">{description}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 space-x-2">
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
@@ -50,5 +50,5 @@ export function ConfirmDeleteDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

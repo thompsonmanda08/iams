@@ -265,7 +265,10 @@ export default function AuditUniverseList({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleEdit(item.id)}
+                            onClick={(e) => {
+                              handleEdit(item.id);
+                              e.stopPropagation();
+                            }}
                             className="h-8 gap-1.5">
                             <Pencil className="h-3.5 w-3.5" />
                             Edit
@@ -273,9 +276,12 @@ export default function AuditUniverseList({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDelete(item.id, item.universeName)}
+                            onClick={(e) => {
+                              handleDelete(item.id, item.universeName);
+                              e.stopPropagation();
+                            }}
                             className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                             Delete
                           </Button>
                         </div>

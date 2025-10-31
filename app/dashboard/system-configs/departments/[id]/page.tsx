@@ -17,8 +17,9 @@ import { cn } from "@/lib/utils";
 import { getUsers } from "@/app/_actions/user-actions";
 import { getDepartmentById } from "@/app/_actions/config-actions";
 import { notFound } from "next/navigation";
-import { CreateOrUpdateDepartment } from "../../_components/departments-config";
-import DepartmentUsersConfig from "../../_components/department-users";
+import DepartmentUsersConfig, {
+  CreateOrUpdateDepartment
+} from "../../_components/department-users";
 import { User } from "@/lib/types/account";
 import UserRolesConfig from "../../_components/user-roles-config";
 
@@ -97,7 +98,7 @@ export default async function DepartmentDetailsPage({
         {/* Roles & Permissions */}
 
         <TabsContent value="permissions">
-          <UserRolesConfig departmentId={departmentId}  />
+          <UserRolesConfig departmentId={departmentId} />
         </TabsContent>
       </Tabs>
     </div>

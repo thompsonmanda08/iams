@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Plus, Search, Edit2, Building2, Upload, X } from "lucide-react";
+import { Plus, Search, Building2, Upload, X, Pencil } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { Company } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
@@ -232,9 +232,19 @@ export default function Companies() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => openModal(company)}>
-                      <Edit2 size={18} />
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          openModal(company);
+                          e.stopPropagation();
+                        }}
+                        className="h-8 gap-1.5">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

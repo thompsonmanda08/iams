@@ -146,7 +146,10 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => router.push(`/dashboard/risks/actions/${action.actionId}`)}
+                          onClick={(e) => {
+                            router.push(`/dashboard/risks/actions/${action.actionId}`);
+                            e.stopPropagation();
+                          }}
                           className="h-8 gap-1.5">
                           <View className="h-3.5 w-3.5" />
                           View
@@ -154,7 +157,10 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          // onClick={() => handleEdit(item.id)}
+                          onClick={(e) => {
+                            // handleEdit(item.id)
+                            e.stopPropagation();
+                          }}
                           className="h-8 gap-1.5">
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
@@ -162,9 +168,12 @@ export function ActionsTable({ actions }: ActionsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          // onClick={() => handleDelete(item.id)}
+                          onClick={(e) => {
+                            // handleDelete(item.id)
+                            e.stopPropagation();
+                          }}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <FileLock2 className="h-3.5 w-3.5" />
+                          <FileLock2 className="h-4 w-4" />
                           Close
                         </Button>
                       </div>

@@ -14,13 +14,15 @@ import StrategicInitiativeTab from "../_components/strategic-initiative-tab";
 import FindingsCategoryTab from "../_components/findings-categories-tab";
 import ProcessActivityTab from "../_components/process-activity-tab";
 import WorkpaperTemplatesTab from "./_components/workpaper-templates-tab";
+import PageHeader from "@/components/page-header";
+import { BookCheckIcon } from "lucide-react";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;
   searchParams: Promise<Pagination & { [key: string]: string }>;
 };
 
-export default async function BranchesConfigPage({ searchParams }: PageProps) {
+export default async function AuditSettingsPage({ searchParams }: PageProps) {
   const urlParams = await searchParams;
   const page = urlParams.page ? Number(urlParams.page) : 1;
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
@@ -39,23 +41,34 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
 
   const branches = branchesResponse.success ? branchesResponse.data?.data : [];
   const provinces = provincesResponse.success ? provincesResponse.data?.data?.data : [];
-  const towns = townsResponse.success ? townsResponse.data?.data?.data : [];
+  const towns = townsResponse.success ? townsResponse.data?.data || [] : [];
   const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
 
   return (
-    <div className="container mx-auto space-y-6 p-6">
+    <div className="">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-3xl font-bold">Audit Configurations Setup</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your audit templates, pillars, auditable areas, strategies, and workpapers
-          </p>
+      <div className="bg-card border-b">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <PageHeader
+              title="Audit Configurations"
+              description="Manage your audit templates, pillars, auditable areas, strategies, and workpapers"
+              Icon={BookCheckIcon}
+            />
+            {/* <div className="flex gap-2">
+              <Link href="/dashboard/audit/budgets/new">
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  New Budget
+                </Button>
+              </Link>
+            </div> */}
+          </div>
         </div>
       </div>
 
-      <div className="">
-        <Tabs defaultValue="areas" className="space-y-6">
+      <div className="container mx-auto space-y-4 p-4">
+        <Tabs defaultValue="templates" className="space-y-4">
           <TabsList>
             <TabsTrigger value="templates">Workpaper Templates</TabsTrigger>
             <TabsTrigger value="areas">Auditable Areas</TabsTrigger>

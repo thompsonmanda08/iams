@@ -13,14 +13,15 @@ import {
 } from "@/components/ui/table";
 import {
   Plus,
-  Edit,
   Trash2,
   Building,
   PencilLine,
   ShieldAlert,
   ArrowRight,
   ArrowUpRightIcon,
-  Users2
+  Users2,
+  View,
+  Pencil
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
@@ -37,10 +38,12 @@ import { Input } from "@/components/ui/input";
 import {
   updateDepartment,
   deleteDepartment,
-  createDepartment
+  createDepartment,
+  getRoles
 } from "@/app/_actions/config-actions";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateUser } from "@/app/_actions/user-actions";
+import { useRouter, useParams } from "next/navigation";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -51,7 +54,6 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import CustomAlert from "@/components/ui/custom-alert";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -60,10 +62,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { User } from "@/lib/types/account";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { StatusBadge } from "@/components/status-badge";
 
-export default function DepartmentUsersConfig({ users }: { users: DepartmentUser[] }) {
+export default function DepartmentUsersConfig({ users = [] }: { users: DepartmentUser[] }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const params = useParams();
+  const departmentId = params?.id as string;
+
+  const [editingUser, setEditingUser] = useState<DepartmentUser | null>(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [userToRemove, setUserToRemove] = useState<DepartmentUser | null>(null);
+  const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
 
   return (
     <>
@@ -75,9 +85,11 @@ export default function DepartmentUsersConfig({ users }: { users: DepartmentUser
               List of all the users in this department
             </p>
           </div>
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add users
+          <Button size="sm" asChild>
+            <Link href="/dashboard/system-configs/users">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Department Users
+            </Link>
           </Button>
         </div>
 
@@ -87,7 +99,7 @@ export default function DepartmentUsersConfig({ users }: { users: DepartmentUser
               <TableHead>Name</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
-              {/* <TableHead className="w-24">Actions</TableHead> */}
+              <TableHead className="w-32 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -102,8 +114,8 @@ export default function DepartmentUsersConfig({ users }: { users: DepartmentUser
                         </EmptyMedia>
                         <EmptyTitle>No Users Yet</EmptyTitle>
                         <EmptyDescription>
-                          You haven&apos;t created any modules yet. Get started by creating your
-                          first module.
+                          You haven&apos;t added any users to this department yet. Get started by
+                          adding your first user.
                         </EmptyDescription>
                       </EmptyHeader>
                       <EmptyContent>
@@ -131,39 +143,224 @@ export default function DepartmentUsersConfig({ users }: { users: DepartmentUser
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-muted-foreground text-sm">{user.role}</span>
+                    <span className="text-muted-foreground text-sm">{user.role.name}</span>
                   </TableCell>
-
                   <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium",
-                        user.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                      )}>
-                      {user.is_active ? "Active" : "Inactive"}
-                    </span>
+                    <StatusBadge status={user.is_active ? ("ACTIVE" as const) : "INACTIVE"} />
                   </TableCell>
-                  {/* <TableCell>
-                              <div className="flex gap-2">
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteTown(user.id)}
-                                  className="text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell> */}
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-8 gap-1.5">
+                        <Link
+                          href={`/dashboard/system-configs/users/${user.id}`}
+                          className="flex cursor-pointer items-center gap-2">
+                          <View className="h-3.5 w-3.5" />
+                          View
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          setEditingUser(user);
+                          setOpenEditDialog(true);
+                          e.stopPropagation();
+                        }}
+                        className="h-8 gap-1.5">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit Role
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          setUserToRemove(user);
+                          setOpenRemoveDialog(true);
+                          e.stopPropagation();
+                        }}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-4 w-4" />
+                        Remove
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </Card>
+
+      {/* Edit User Role Dialog */}
+      <EditUserRoleDialog
+        open={openEditDialog}
+        setOpen={setOpenEditDialog}
+        user={editingUser}
+        departmentId={departmentId}
+      />
+
+      {/* Remove User Confirmation Dialog */}
+      <ConfirmDeleteDialog
+        open={openRemoveDialog}
+        onOpenChange={setOpenRemoveDialog}
+        title="Remove User from Department"
+        description={`Are you sure you want to remove ${userToRemove?.first_name} ${userToRemove?.last_name} from this department? This action cannot be undone.`}
+        onConfirm={async () => {
+          if (!userToRemove) return;
+
+          try {
+            const response = await updateUser(userToRemove.id, {
+              department_id: null as any
+            });
+
+            if (response.success) {
+              toast.success("User removed from department successfully");
+              queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USERS] });
+              router.refresh();
+            } else {
+              toast.error(response.message || "Failed to remove user");
+            }
+          } catch (error) {
+            toast.error("An error occurred while removing the user");
+          } finally {
+            setOpenRemoveDialog(false);
+            setUserToRemove(null);
+          }
+        }}
+      />
     </>
+  );
+}
+
+// Edit User Role Dialog Component
+function EditUserRoleDialog({
+  open,
+  setOpen,
+  user,
+  departmentId
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  user: DepartmentUser | null;
+  departmentId: string;
+}) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+
+  // Fetch roles for this department
+  const { data: rolesResponse, isLoading: rolesLoading } = useQuery({
+    queryKey: [QUERY_KEYS.ROLES, departmentId],
+    queryFn: () => getRoles({ departmentId }),
+    enabled: !!departmentId && open,
+    staleTime: 5 * 60 * 1000
+  });
+
+  const roles = useMemo(() => {
+    if (!rolesResponse?.success || !rolesResponse?.data?.data) return [];
+    return rolesResponse.data.data;
+  }, [rolesResponse]);
+
+  // Set initial role when user changes
+  useEffect(() => {
+    if (user?.role?.id) {
+      setSelectedRoleId(user.role.id);
+    }
+  }, [user]);
+
+  // Update user role mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      if (!user) throw new Error("No user selected");
+      return await updateUser(user.id, { role_id: roleId });
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success("User role updated successfully");
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USERS] });
+        router.refresh();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to update user role");
+      }
+    },
+    onError: (error) => {
+      toast.error("An error occurred while updating the user role");
+      console.error("Error updating user role:", error);
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedRoleId && selectedRoleId !== user?.role?.id) {
+      updateRoleMutation.mutate(selectedRoleId);
+    } else {
+      toast.info("No changes detected");
+    }
+  };
+
+  const roleOptions = useMemo(() => {
+    return roles.map((role: any) => ({
+      id: role.id,
+      name: role.name
+    }));
+  }, [roles]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit User Role</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>User</Label>
+            <div className="text-muted-foreground rounded-md border bg-gray-50 p-3 text-sm">
+              {user?.first_name} {user?.last_name}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Current Role</Label>
+            <div className="text-muted-foreground rounded-md border bg-gray-50 p-3 text-sm">
+              {user?.role?.name || "No role assigned"}
+            </div>
+          </div>
+
+          <SearchSelectField
+            label="New Role"
+            placeholder="Select a role"
+            value={selectedRoleId}
+            onValueChange={setSelectedRoleId}
+            options={roleOptions}
+            disabled={rolesLoading || updateRoleMutation.isPending}
+            required
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={updateRoleMutation.isPending}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="submit"
+              disabled={
+                updateRoleMutation.isPending ||
+                !selectedRoleId ||
+                selectedRoleId === user?.role?.id
+              }
+              isLoading={updateRoleMutation.isPending}>
+              Update Role
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -228,9 +425,6 @@ export function CreateOrUpdateDepartment({
     }
     setError({ status: false, message: "" });
   }, [initialData, departmentId, openModal]); // Added dependencies
-
-  console.log("Initial Data:", initialData);
-  console.log("Form Data:", formData);
 
   // Reset form when modal closes
   useEffect(() => {
