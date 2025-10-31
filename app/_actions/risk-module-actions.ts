@@ -169,6 +169,7 @@ export interface RiskRegisterInput {
   start_date: string;
   due_date:string;
   is_active?:boolean;
+  status?: string;
 }
 
 // KRI Register
