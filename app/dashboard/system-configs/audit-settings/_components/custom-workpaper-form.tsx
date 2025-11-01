@@ -38,7 +38,7 @@ export function CustomWorkpaperForm({ auditId, auditTitle, template, onSuccess, 
   const { data: teamMembersResponse } = useTeamMembers({ page_size: 100 });
   const [isSaving, setIsSaving] = useState(false);
 
-  const teamMembers = teamMembersResponse?.data;
+  const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
   const currentUser = teamMembers?.[0]?.id || "";
 
   console.log("USERS: ", teamMembers);

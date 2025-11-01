@@ -123,6 +123,10 @@ export function ISOWorkpaperTemplateForm({
               <SelectField
                 label="Workpaper Template"
                 placeholder="Select template standard"
+                className="w-full max-w-none"
+                classNames={{
+                  wrapper: "max-w-none"
+                }}
                 value={formData.standard}
                 onValueChange={(value) => setFormData({ ...formData, standard: value })}
                 options={[{ id: "ISO27001", name: "ISO 27001 ISMS Audit" }]}

@@ -23,13 +23,19 @@ export default async function WorkpaperTemplatesPage() {
             />
 
             <div className="flex gap-2">
-              <Link href="/dashboard/system-configs/audit-settings/new/GENERAL">
+              <Link href="/dashboard/system-configs/audit-settings/templates/new/CUSTOM">
                 <Button variant="outline" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Create General Workpaper Template
+                  Create Custom Template
                 </Button>
               </Link>
-              <Link href="/dashboard/system-configs/audit-settings/new/ISO27001">
+              <Link href="/dashboard/system-configs/audit-settings/templates/new/GENERAL">
+                <Button variant="outline" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create General Template
+                </Button>
+              </Link>
+              <Link href="/dashboard/system-configs/audit-settings/templates/new/ISO27001">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create ISO27001 Template

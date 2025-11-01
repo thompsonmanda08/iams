@@ -65,13 +65,14 @@ export function CreateWorkpaperForm({
   const router = useRouter();
   const { toast } = useToast();
   const createMutation = useCreateWorkpaper();
-  const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers({ page_size: 100 });
+  const { data: teamMembersResponse, isLoading: loadingTeam } = useTeamMembers({ page_size: 100 });
+  const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
 
   // Draft store
   const { getDraft, saveDraft, deleteDraft } = useWorkpaperDraftStore();
 
   // Get current user (mock - replace with actual auth)
-  const currentUser = teamMembers?.[0]?.name || "Current User";
+  const currentUser = teamMembers?.[0]?.first_name || "Current User";
 
   // Selected template (for old clause-based system)
   const [selectedTemplate, setSelectedTemplate] = useState<ClauseTemplate | null>(null);
@@ -384,7 +385,7 @@ export function CreateWorkpaperForm({
       </div>
 
       {/* Template/Category Selector - show appropriate selector based on templateId */}
-      {templateId === "iso27001-2022" ? (
+      {templateId === "ISO27001" ? (
         <IsoCategorySelector
           templateId={templateId}
           onCategorySelect={handleCategorySelect}
