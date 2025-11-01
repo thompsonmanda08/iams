@@ -23,8 +23,6 @@ export default async function DashLayout({
   const user = await getUserSession();
   const pem = await getPermissionsSession();
 
-  console.log("PERM: ", pem);
-
   return (
     <SidebarProvider
       defaultOpen={defaultOpen}
