@@ -59,7 +59,10 @@ export function TasksTable({ tasks }: TasksTableProps) {
 
   const getEntityTypeBadge = (entityType: Task["entityType"]) => {
     const typeConfig = {
-      RISK: { label: "Risk", className: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" },
+      RISK: {
+        label: "Risk",
+        className: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+      },
       AUDIT_PLAN: {
         label: "Audit Plan",
         className: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
@@ -83,7 +86,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
       <div className="border-border bg-muted/50 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
         <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
           <h3 className="mt-4 text-lg font-semibold">No tasks found</h3>
-          <p className="text-muted-foreground mb-4 mt-2 text-sm">
+          <p className="text-muted-foreground mt-2 mb-4 text-sm">
             There are no workflow tasks available at the moment.
           </p>
         </div>
@@ -145,18 +148,16 @@ export function TasksTable({ tasks }: TasksTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="gap-1"
-                          onClick={() => handleAction(task, "APPROVE")}
-                        >
+                          className="gap-1 border-green-100 bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600"
+                          onClick={() => handleAction(task, "APPROVE")}>
                           <CheckCircle className="h-4 w-4" />
                           Approve
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="gap-1"
-                          onClick={() => handleAction(task, "REJECT")}
-                        >
+                          className="gap-1 border-red-100 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600"
+                          onClick={() => handleAction(task, "REJECT")}>
                           <XCircle className="h-4 w-4" />
                           Reject
                         </Button>

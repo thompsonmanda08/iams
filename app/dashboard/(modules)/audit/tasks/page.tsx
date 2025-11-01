@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Download, Filter } from "lucide-react";
+import { Download, Filter, Workflow } from "lucide-react";
 import { TasksTableClient } from "./_components/tasks-table-client";
 import { TaskStats } from "./_components/task-stats";
+import PageHeader from "@/components/page-header";
 
 export default function TasksPage() {
   return (
@@ -10,18 +11,17 @@ export default function TasksPage() {
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Workflow Tasks</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Manage and execute workflow tasks assigned to users (Simulation Mode)
-              </p>
-            </div>
+            <PageHeader
+              title="Workflow Tasks"
+              description="  Manage and execute workflow tasks assigned to users (Simulation Mode)"
+              Icon={Workflow}
+            />
             <div className="flex gap-2">
               <Button variant="outline" className="gap-2">
                 <Filter className="h-4 w-4" />
                 Filter
               </Button>
-              <Button variant="outline" className="gap-2">
+              <Button className="gap-2">
                 <Download className="h-4 w-4" />
                 Export
               </Button>
