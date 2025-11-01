@@ -198,15 +198,9 @@ export async function updateAuthSession(fields: any): Promise<AuthSession | unde
       Object.entries(oldSession).filter(([_, value]) => value !== null)
     ) as AuthSession;
 
-    // Merge old session with new fields, preserving all existing data
-    // Filter out undefined and null values from fields to prevent overwriting existing data
-    const filteredFields = Object.fromEntries(
-      Object.entries(fields).filter(([_, value]) => value !== undefined && value !== null)
-    );
-
     const newSession: AuthSession = {
       ...cleanedOldSession,
-      ...filteredFields
+      ...fields
     };
 
     // Determine expiration: use provided expiresAt from fields, keep existing, or create new

@@ -5,7 +5,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -14,7 +13,6 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import {
-  Book,
   BookOpenCheckIcon,
   Building,
   Calendar,
@@ -43,12 +41,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { adminNavItems, navItems } from "@/lib/routes-config";
-import { useQuery } from "@tanstack/react-query";
-import { getModules } from "@/app/_actions/config-actions";
 import { useMemo } from "react";
-import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Icon mapping based on the icon strings from API
@@ -198,7 +192,6 @@ export function transformModulesToNavCustom(
 export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  // const { data: setup, isLoading } = useSystemSetup();
   // const routes = setup?.data?.navigation || [];
   // console.log("NAV", setup);
 

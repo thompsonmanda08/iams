@@ -12,17 +12,13 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { logUserOut } from "@/app/_actions/auth-actions";
-// import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSystemSetup } from "@/hooks/use-users-query-data";
 
 export default function UserMenu({ user }: { user: User }) {
-  // const { data: setup } = useSystemSetup();
-  // const user = (user || setup?.data?.user) as User;
-  const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
-  const userEmail = user?.email || "example@mail.com";
+  const fullName = `${user?.first_name || "User"} ${user?.last_name || ""}`;
+  const userEmail = user?.email || "user@mail.com";
 
   const handleUserLogOut = async () => {
     // Clear session initialization flag
@@ -35,7 +31,7 @@ export default function UserMenu({ user }: { user: User }) {
     }
   };
 
-  return !user || Object.keys(user).length < 0 ? (
+  return !user || Object.keys(user || {}).length < 0 ? (
     <>
       <Skeleton className="h-10 w-10 rounded-lg" />
     </>

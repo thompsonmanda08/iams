@@ -1,6 +1,8 @@
-import { getUserSession, verifySession } from "@/lib/session";
+import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { PropsWithChildren } from "react";
+import { initializeSystemSetupCached } from "./_actions/auth-actions";
+import { User } from "@/lib/types/account";
 
 export default async function HomePage({
   children
@@ -15,7 +17,8 @@ export default async function HomePage({
       redirect("/otp");
     }
 
-    const user = await getUserSession()
+    const systemInit = await initializeSystemSetupCached();
+    const user = systemInit?.data?.user as User;
 
     // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
     if (session?.session?.user_type === "BACKOFFICE_USER") {

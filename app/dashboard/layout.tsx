@@ -4,9 +4,8 @@ import { cookies } from "next/headers";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
-import { getPermissionsSession, getUserSession, verifySession } from "@/lib/session";
 import { User } from "@/lib/types/account";
-import { SessionInitializer } from "./_components/session-initializer";
+import { initializeSystemSetupCached } from "../_actions/auth-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +19,8 @@ export default async function DashLayout({
     cookieStore.get("sidebar_state")?.value === "true" ||
     cookieStore.get("sidebar_state") === undefined;
 
-  const user = await getUserSession();
-  const pem = await getPermissionsSession();
+  const systemInit = await initializeSystemSetupCached();
+  const user = systemInit?.data?.user as User;
 
   return (
     <SidebarProvider
@@ -32,8 +31,6 @@ export default async function DashLayout({
           "--header-height": "calc(var(--spacing) * 14)"
         } as React.CSSProperties
       }>
-      {/* Initialize session if user data is missing */}
-      <SessionInitializer hasUser={!!user && !!pem} />
       <AppSidebar variant="inset" user={user} isAuthenticated={!!user} />
       <SidebarInset>
         <SiteHeader user={user as User} />

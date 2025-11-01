@@ -1,10 +1,12 @@
 import { getRisks } from "@/app/_actions/risk-module-actions";
 import { ActionsTable } from "./actions-table";
-import { getUserSession } from "@/lib/session";
+import { initializeSystemSetupCached } from "@/app/_actions/auth-actions";
+import { User } from "@/lib/types/account";
 export const dynamic = "force-dynamic";
 
 export default async function ActionsPage() {
-  const user = await getUserSession();
+  const systemInit = await initializeSystemSetupCached();
+  const user = systemInit?.data?.user as User;
 
   const response = await getRisks({
     risk_owner_id: user?.id
