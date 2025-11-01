@@ -1,108 +1,153 @@
 {
   "info": {
     "_postman_id": "b0d3231a-d994-41d9-8b0a-15f18a32aa18",
-    "name": "Risk Audit Management System - Complete API (148 Endpoints)",
+    "name": "Risk Audit Management System - Complete API (152 Endpoints)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "12584233",
-    "description": "Complete API collection for Risk Audit Management System with ALL 148 endpoints. Features: Multi-stage approval workflows, comprehensive audit tracking with IP capture, token refresh (1-hour expiry), pagination with page/page_size parameters.",
-    "variable": [
-      {
-        "key": "base_url",
-        "value": "localhost:8080",
-        "type": "string"
-      },
-      {
-        "key": "token",
-        "value": "",
-        "type": "string"
-      },
-      {
-        "key": "user_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "branch_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "department_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "role_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "module_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "province_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "town_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "risk_category_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "risk_register_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "risk_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "kri_register_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "kri_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "audit_plan_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "working_paper_template_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "working_paper_category_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "working_paper_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      },
-      {
-        "key": "finding_id",
-        "value": "00000000-0000-0000-0000-000000000000",
-        "type": "string"
-      }
-    ]
+    "description": "Complete API collection for Risk Audit Management System with ALL 152 endpoints. Features: Multi-stage approval workflows, comprehensive audit tracking with IP capture, token refresh (1-hour expiry), pagination with page/page_size parameters."
   },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "branch_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "department_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "role_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "module_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "province_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "town_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "risk_category_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "risk_register_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "risk_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "kri_register_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "kri_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "audit_plan_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "working_paper_template_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "working_paper_category_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "working_paper_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "finding_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "workflow_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "country_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "organization_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "risk_acceptance_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "state_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "transition_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "trigger_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "from_state_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "to_state_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ],
   "auth": {
     "type": "bearer",
     "bearer": [
@@ -156,9 +201,6 @@
             }
           ],
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
@@ -167,7 +209,7 @@
               }
             ],
             "body": {
-              "mode": "raw", 
+              "mode": "raw",
               "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
             },
             "url": {
@@ -206,21 +248,21 @@
         },
         {
           "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('user_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('user_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -279,7 +321,7 @@
         {
           "name": "Refresh Token",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [],
             "url": {
               "raw": "http://{{base_url}}/api/v1/auth/refresh-token",
@@ -292,17 +334,9 @@
           "response": []
         },
         {
-          "name": "Lock User", "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": ["pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\npm.test(\"Response has success message\", function () {\n    const response = pm.response.json();\n    pm.expect(response.message).to.eql(\"User locked successfully\");\n});"],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Logout",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [],
             "url": {
               "raw": "http://{{base_url}}/api/v1/auth/logout",
@@ -320,7 +354,8 @@
       "name": "User Management",
       "item": [
         {
-          "name": "List Users", "event": [
+          "name": "List Users",
+          "event": [
             {
               "listen": "test",
               "script": {
@@ -402,7 +437,8 @@
           "response": []
         },
         {
-          "name": "Update User", "event": [
+          "name": "Update User",
+          "event": [
             {
               "listen": "test",
               "script": {
@@ -566,17 +602,60 @@
           "response": []
         },
         {
-          "name": "Get Current User",
+          "name": "Activate Branch",
           "request": {
-            "method": "GET",
+            "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "http://{{base_url}}/api/v1/users/me",
+              "raw": "http://{{base_url}}/api/v1/branches/{{branch_id}}/activate",
               "protocol": "http",
-              "host": [ "{{base_url}}" ],
-              "path": [ "api", "v1", "users", "me" ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "branches", "{{branch_id}}", "activate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Branch",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/branches/{{branch_id}}/deactivate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "branches", "{{branch_id}}", "deactivate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Lock User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/users/{{user_id}}/lock",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}", "lock"]
             },
-            "description": "Retrieves the profile of the currently authenticated user. (Protected)"
+            "description": "Manually locks a user account, preventing them from logging in. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Unlock User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/users/{{user_id}}/unlock",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}", "unlock"]
+            },
+            "description": "Manually unlocks a user account and resets their failed login attempts. (Protected, Admin)"
           },
           "response": []
         }
@@ -613,6 +692,21 @@
                   "key": "is_active",
                   "value": "true",
                   "disabled": true
+                },
+                {
+                  "key": "monitoring_frequency",
+                  "value": "MONTHLY",
+                  "disabled": true
+                },
+                {
+                  "key": "owner_id",
+                  "value": "{{user_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "last_status",
+                  "value": "TARGET",
+                  "disabled": true
                 }
               ]
             },
@@ -622,21 +716,21 @@
         },
         {
           "name": "Create Role",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('role_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('role_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -704,6 +798,34 @@
               "path": ["api", "v1", "roles", "{{role_id}}"]
             },
             "description": "Deletes a role by ID. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Role",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/roles/{{role_id}}/activate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roles", "{{role_id}}", "activate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Role",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/roles/{{role_id}}/deactivate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roles", "{{role_id}}", "deactivate"]
+            }
           },
           "response": []
         },
@@ -814,6 +936,11 @@
                   "key": "is_active",
                   "value": "true",
                   "disabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "",
+                  "disabled": true
                 }
               ]
             },
@@ -823,21 +950,21 @@
         },
         {
           "name": "Create Branch",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('branch_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('branch_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -950,21 +1077,21 @@
         },
         {
           "name": "Create Department",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('department_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('department_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -1032,6 +1159,34 @@
               "path": ["api", "v1", "departments", "{{department_id}}"]
             },
             "description": "Deletes a department by ID. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Department",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/departments/{{department_id}}/activate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "departments", "{{department_id}}", "activate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Department",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/departments/{{department_id}}/deactivate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "departments", "{{department_id}}", "deactivate"]
+            }
           },
           "response": []
         },
@@ -1141,21 +1296,21 @@
         },
         {
           "name": "Create Province",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('province_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('province_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -1184,6 +1339,43 @@
               "path": ["api", "v1", "provinces", "{{province_id}}"]
             },
             "description": "Retrieves a single province by ID. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Province",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Harare Metropolitan\",\n  \"code\": \"HRE\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/provinces/{{province_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "provinces", "{{province_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Province",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/provinces/{{province_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "provinces", "{{province_id}}"]
+            }
           },
           "response": []
         },
@@ -1239,21 +1431,21 @@
         },
         {
           "name": "Create Town",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('town_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('town_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -1267,6 +1459,57 @@
               "path": ["api", "v1", "towns"]
             },
             "description": "Creates a new town. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Town by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/towns/{{town_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "towns", "{{town_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Town",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Harare City\",\n  \"code\": \"HRE\",\n  \"province_id\": \"{{province_id}}\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/towns/{{town_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "towns", "{{town_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Town",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/towns/{{town_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "towns", "{{town_id}}"]
+            }
           },
           "response": []
         }
@@ -1298,21 +1541,21 @@
         },
         {
           "name": "Create Module",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('module_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('module_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -1384,6 +1627,34 @@
           "response": []
         },
         {
+          "name": "Activate Module",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/modules/{{module_id}}/activate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "modules", "{{module_id}}", "activate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Module",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/modules/{{module_id}}/deactivate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "modules", "{{module_id}}", "deactivate"]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Sub-Modules",
           "request": {
             "method": "GET",
@@ -1440,21 +1711,21 @@
         },
         {
           "name": "Create Risk Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_category_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_category_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -1572,21 +1843,21 @@
         },
         {
           "name": "Create Risk Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_register_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_register_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -1643,15 +1914,22 @@
           "response": []
         },
         {
-          "name": "Unlock User", "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": ["pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\npm.test(\"Response has success message\", function () {\n    const response = pm.response.json();\n    pm.expect(response.message).to.eql(\"User unlocked successfully\");\n});"],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Get Risks in Register",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/risk-registers/{{risk_register_id}}/risks",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risk-registers", "{{risk_register_id}}", "risks"]
+            },
+            "description": "Retrieves all risks in a specific register. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Close Risk Register",
           "request": {
             "method": "POST",
             "header": [],
@@ -1677,21 +1955,6 @@
               "path": ["api", "v1", "risk-registers", "{{risk_register_id}}"]
             },
             "description": "Deletes a risk register by ID. (Protected)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Risks in Register",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://{{base_url}}/api/v1/risk-registers/{{risk_register_id}}/risks",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "risk-registers", "{{risk_register_id}}", "risks"]
-            },
-            "description": "Retrieves all risks in a specific register. (Protected)"
           },
           "response": []
         },
@@ -1784,6 +2047,36 @@
                   "key": "status",
                   "value": "OPEN",
                   "disabled": true
+                },
+                {
+                  "key": "risk_response",
+                  "value": "MITIGATE",
+                  "disabled": true
+                },
+                {
+                  "key": "risk_appetite_status",
+                  "value": "WITHIN",
+                  "disabled": true
+                },
+                {
+                  "key": "inherent_rating",
+                  "value": "HIGH",
+                  "disabled": true
+                },
+                {
+                  "key": "residual_rating",
+                  "value": "MEDIUM",
+                  "disabled": true
+                },
+                {
+                  "key": "risk_owner_id",
+                  "value": "{{user_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "title",
+                  "value": "",
+                  "disabled": true
                 }
               ]
             },
@@ -1793,21 +2086,21 @@
         },
         {
           "name": "Create Risk",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -1921,21 +2214,21 @@
         },
         {
           "name": "Create Risk - Step One",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('risk_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -2023,6 +2316,113 @@
             "description": "Updates the status of a risk. (Protected)"
           },
           "response": []
+        },
+        {
+          "name": "Accept Risk",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"justification\": \"The business has decided that the potential reward from this activity outweighs the residual risk, and the cost of further mitigation is prohibitive.\",\n  \"deficiency_description\": \"The primary control for data validation is manual and prone to human error, which could lead to data integrity issues.\",\n  \"compensating_controls\": \"A secondary, automated script will run daily to check for data anomalies. Additionally, a quarterly manual review by a separate team will be instituted.\",\n  \"monitoring_plan\": \"The risk will be monitored monthly by the Risk Committee, and the compensating controls will be tested quarterly.\",\n  \"additional_remarks\": \"This acceptance is valid for one year, after which it must be re-evaluated.\",\n  \"next_review_date\": \"2025-10-27T00:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/risks/{{risk_id}}/accept",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risks", "{{risk_id}}", "accept"]
+            },
+            "description": "Formally accepts a risk, moving it to OPEN status. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "List Risk Acceptances",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/risk-acceptances?status=ACTIVE&page=1&page_size=10",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risk-acceptances"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lists all currently active risk acceptances across the organization. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Risk Acceptance History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/risks/{{risk_id}}/acceptances",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risks", "{{risk_id}}", "acceptances"]
+            },
+            "description": "Gets the full acceptance history (active and superseded) for a single risk. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Risk Acceptance",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"justification\": \"Updated justification: The business has re-evaluated the risk and confirmed the reward still outweighs the cost.\",\n  \"deficiency_description\": \"The primary control for data validation is still manual but has been supplemented with a new checklist.\",\n  \"compensating_controls\": \"The secondary script now runs hourly. The quarterly manual review is now monthly.\",\n  \"monitoring_plan\": \"The risk will now be monitored bi-weekly by the Risk Committee.\",\n  \"additional_remarks\": \"This acceptance is now valid for another six months.\",\n  \"next_review_date\": \"2026-04-27T00:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/risk-acceptances/{{risk_acceptance_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risk-acceptances", "{{risk_acceptance_id}}"]
+            },
+            "description": "Updates the details of a specific, active risk acceptance record. (Protected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Risk Acceptance",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/risk-acceptances/{{risk_acceptance_id}}/revoke",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risk-acceptances", "{{risk_acceptance_id}}", "revoke"]
+            },
+            "description": "Revokes an active risk acceptance, changing its status to 'SUPERSEDED'. (Protected)"
+          },
+          "response": []
         }
       ]
     },
@@ -2061,21 +2461,21 @@
         },
         {
           "name": "Create KRI Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('kri_register_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('kri_register_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -2147,6 +2547,34 @@
           "response": []
         },
         {
+          "name": "Activate KRI Register",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/kri-registers/{{kri_register_id}}/activate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "kri-registers", "{{kri_register_id}}", "activate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate KRI Register",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/kri-registers/{{kri_register_id}}/deactivate",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "kri-registers", "{{kri_register_id}}", "deactivate"]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "List KRIs by Register",
           "request": {
             "method": "GET",
@@ -2154,19 +2582,17 @@
             "url": {
               "raw": "http://{{base_url}}/api/v1/kri-registers/{{kri_register_id}}/kris?page=1&page_size=20",
               "protocol": "http",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "kri-registers",
-                "{{kri_register_id}}",
-                "kris"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "kri-registers", "{{kri_register_id}}", "kris"],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "page_size", "value": "20" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -2223,21 +2649,21 @@
         },
         {
           "name": "Create KRI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('kri_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('kri_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -2317,7 +2743,7 @@
                 "key": "Content-Type",
                 "value": "application/json"
               }
-            ], 
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"measurement_date\": \"2024-01-31T00:00:00Z\",\n  \"measured_value\": 2.5,\n  \"status\": \"TRIGGER\",\n  \"notes\": \"Slight increase from last month\",\n  \"measured_by\": \"{{user_id}}\"\n}"
@@ -2442,21 +2868,21 @@
         },
         {
           "name": "Create Audit Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('audit_plan_id', response.data.id);\n}"],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('audit_plan_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
               }
             ],
             "body": {
@@ -2713,6 +3139,15 @@
             },
             {
               "name": "Create Template",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_template_id', response.data.id);\n}"],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
               "request": {
                 "method": "POST",
                 "header": [
@@ -2720,16 +3155,7 @@
                     "key": "Content-Type",
                     "value": "application/json"
                   }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_template_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
-              }
-            ],
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"name\": \"ISO 19011 Template\",\n  \"description\": \"Template based on ISO 19011 standards\",\n  \"standard\": \"ISO 19011:2018\"\n}"
@@ -2835,6 +3261,15 @@
             },
             {
               "name": "Create Category",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_category_id', response.data.id);\n}"],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
               "request": {
                 "method": "POST",
                 "header": [
@@ -2842,16 +3277,7 @@
                     "key": "Content-Type",
                     "value": "application/json"
                   }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_category_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
-              }
-            ],
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"template_id\": \"{{working_paper_template_id}}\",\n  \"name\": \"organisational-controls\",\n  \"display_name\": \"Organisational Controls (Annex A: 5.1-5.37)\",\n  \"description\": \"Controls related to organizational policies, procedures, and structure\",\n  \"clauses\": \"A.5.1, A.5.2, A.5.3, A.5.4, A.5.5\",\n  \"clause_range\": \"A.5.1-5.37\",\n  \"group\": \"annex-a-controls\",\n  \"objectives\": \"To establish organizational controls framework\",\n  \"scope\": \"All organizational policies and procedures\",\n  \"documents_obtained\": \"Policy manual, Procedure documents\",\n  \"source_documents\": \"ISO 27001:2022 Annex A\",\n  \"sample_size\": \"All applicable controls\",\n  \"frequency_of_control\": \"Annual review\",\n  \"sampling_methodology\": \"Complete review\",\n  \"audit_procedure\": \"Review all organizational policies and procedures against Annex A requirements\",\n  \"is_required\": true,\n  \"sort_order\": 1\n}"
@@ -2967,6 +3393,15 @@
             },
             {
               "name": "Create Working Paper",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_id', response.data.id);\n}"],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
               "request": {
                 "method": "POST",
                 "header": [
@@ -2974,16 +3409,7 @@
                     "key": "Content-Type",
                     "value": "application/json"
                   }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
-              }
-            ],
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"audit_plan_id\": \"{{audit_plan_id}}\",\n  \"template_id\": \"{{working_paper_template_id}}\",\n  \"ref_number\": \"WP-2024-001\",\n  \"working_paper_date\": \"2024-01-15T00:00:00Z\",\n  \"prepared_by\": \"{{user_id}}\"\n}"
@@ -3000,6 +3426,15 @@
             },
             {
               "name": "Create from Template",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_id', response.data.id);\n}"],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
               "request": {
                 "method": "POST",
                 "header": [
@@ -3007,16 +3442,7 @@
                     "key": "Content-Type",
                     "value": "application/json"
                   }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('working_paper_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
-              }
-            ],
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"audit_plan_id\": \"{{audit_plan_id}}\",\n  \"template_id\": \"{{working_paper_template_id}}\"\n}"
@@ -3196,6 +3622,15 @@
             },
             {
               "name": "Create Finding",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('finding_id', response.data.id);\n}"],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
               "request": {
                 "method": "POST",
                 "header": [
@@ -3203,16 +3638,7 @@
                     "key": "Content-Type",
                     "value": "application/json"
                   }
-            ], 
-            "event": [
-              {
-                "listen": "test",
-                "script": {
-                  "exec": ["if (pm.response.code === 201) {\n    const response = pm.response.json();\n    pm.collectionVariables.set('finding_id', response.data.id);\n}"],
-                  "type": "text/javascript"
-                }
-              }
-            ],
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"audit_plan_id\": \"{{audit_plan_id}}\",\n  \"working_paper_id\": \"{{working_paper_id}}\",\n  \"category_name\": \"Observation\",\n  \"finding_number\": \"F-001\",\n  \"workings_and_test_results\": \"Test results show control failure.\",\n  \"conclusion\": \"Control is ineffective.\",\n  \"report\": true,\n  \"severity\": \"HIGH\",\n  \"recommendation\": \"Implement proper controls\",\n  \"management_response\": \"Management agrees and will implement.\",\n  \"action_plan\": \"Develop new procedure by Q2.\",\n  \"responsible_person\": \"{{user_id}}\",\n  \"due_date\": \"2024-06-30T00:00:00Z\",\n  \"status\": \"OPEN\",\n  \"evidence_links\": \"https://example.com/evidence\"\n}"
@@ -3321,6 +3747,911 @@
               "response": []
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Workflow Administration",
+      "item": [
+        {
+          "name": "List Workflows",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows"]
+            },
+            "description": "Retrieves all defined workflows in the system. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Risk Assessment Process\",\n  \"entity_type\": \"RISK\",\n  \"description\": \"Workflow for risk identification, assessment, and mitigation.\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows"]
+            },
+            "description": "Creates a new workflow definition. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Workflow Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/details?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "details"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            },
+            "description": "Retrieves details for a single workflow. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Workflow",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Risk Assessment Process - Updated\",\n  \"description\": \"Updated workflow description\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/update?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "update"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Workflow",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/delete?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "delete"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Workflow States",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/states?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "states"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            },
+            "description": "Retrieves all states for a given workflow. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Workflow State",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Assessed\",\n  \"description\": \"Risk has been assessed for impact and likelihood.\",\n  \"is_initial\": false,\n  \"is_final\": false\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/states?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "states"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            },
+            "description": "Creates a new state within a workflow. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Workflow State",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Assessed - Updated\",\n  \"description\": \"Updated description for Assessed state.\",\n  \"is_initial\": false,\n  \"is_final\": false\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/states/update?state_id={{state_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "states", "update"],
+              "query": [
+                {
+                  "key": "state_id",
+                  "value": "{{state_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Workflow State",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/states/delete?state_id={{state_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "states", "delete"],
+              "query": [
+                {
+                  "key": "state_id",
+                  "value": "{{state_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Workflow Transitions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            },
+            "description": "Retrieves all transitions for a given workflow. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Workflow Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Assess Risk\",\n  \"from_state_id\": \"{{from_state_id}}\",\n  \"to_state_id\": \"{{to_state_id}}\",\n  \"action_name\": \"ASSESS\",\n  \"description\": \"Move risk from Identified to Assessed state.\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            },
+            "description": "Creates a new transition between two states. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Workflow Transition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Assess Risk - Updated\",\n  \"action_name\": \"ASSESS_UPDATED\",\n  \"description\": \"Updated description for transition.\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/update?transition_id={{transition_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "update"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Workflow Transition",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/delete?transition_id={{transition_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "delete"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transition Triggers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/triggers?transition_id={{transition_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "triggers"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Transition Trigger",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trigger_name\": \"Auto-escalate after 24h\",\n  \"trigger_type\": \"TIME_BASED\",\n  \"delay_duration\": \"24h\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/triggers?transition_id={{transition_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "triggers"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Transition Trigger",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trigger_name\": \"Auto-escalate after 48h\",\n  \"delay_duration\": \"48h\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/triggers/update?trigger_id={{trigger_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "triggers", "update"],
+              "query": [
+                {
+                  "key": "trigger_id",
+                  "value": "{{trigger_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Transition Trigger",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/triggers/delete?trigger_id={{trigger_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "triggers", "delete"],
+              "query": [
+                {
+                  "key": "trigger_id",
+                  "value": "{{trigger_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Workflow Entry Triggers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/entry-triggers?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "entry-triggers"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Entry Trigger",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trigger_name\": \"Start workflow on risk creation\",\n  \"trigger_type\": \"ON_CREATE\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/entry-triggers?workflow_id={{workflow_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "entry-triggers"],
+              "query": [
+                {
+                  "key": "workflow_id",
+                  "value": "{{workflow_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Entry Trigger",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trigger_name\": \"Start workflow on risk creation - Updated\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/entry-triggers/update?trigger_id={{trigger_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "entry-triggers", "update"],
+              "query": [
+                {
+                  "key": "trigger_id",
+                  "value": "{{trigger_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Entry Trigger",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/entry-triggers/delete?trigger_id={{trigger_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "entry-triggers", "delete"],
+              "query": [
+                {
+                  "key": "trigger_id",
+                  "value": "{{trigger_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transition Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/roles?transition_id={{transition_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "roles"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                }
+              ]
+            },
+            "description": "Gets all roles allowed to perform a transition. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transition Role",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/roles/details?transition_id={{transition_id}}&role_id={{role_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "roles", "details"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                },
+                {
+                  "key": "role_id",
+                  "value": "{{role_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Role to Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role_id\": \"{{role_id}}\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/roles?transition_id={{transition_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "roles"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                }
+              ]
+            },
+            "description": "Assigns a role to a transition, allowing users with that role to perform the action. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Role from Transition",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/transitions/roles/remove?transition_id={{transition_id}}&role_id={{role_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "transitions", "roles", "remove"],
+              "query": [
+                {
+                  "key": "transition_id",
+                  "value": "{{transition_id}}"
+                },
+                {
+                  "key": "role_id",
+                  "value": "{{role_id}}"
+                }
+              ]
+            },
+            "description": "Removes a role's permission to perform a transition. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Background Worker Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/worker/status",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "worker", "status"]
+            },
+            "description": "Gets the status of the background worker that processes scheduled triggers. (Protected, Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Trigger Worker Process Manually",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/workflows/worker/process",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "workflows", "worker", "process"]
+            },
+            "description": "Manually triggers one cycle of the background worker to process pending triggers. Useful for testing. (Protected, Admin)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Backoffice",
+      "item": [
+        {
+          "name": "List Countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/countries",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "countries"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Country",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zambia\",\n  \"code\": \"ZMB\",\n  \"iso2_code\": \"ZM\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/countries",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "countries"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Country",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/countries/{{country_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "countries", "{{country_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Country",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Republic of Zambia\",\n  \"code\": \"ZMB\",\n  \"iso2_code\": \"ZM\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/countries/{{country_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "countries", "{{country_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Country",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/countries/{{country_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "countries", "{{country_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Province",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lusaka\",\n  \"code\": \"LSK\",\n  \"country_id\": \"{{country_id}}\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/provinces",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "provinces"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Town",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lusaka\",\n  \"code\": \"LUS\",\n  \"province_id\": \"{{province_id}}\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/towns",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "towns"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Organizations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/organizations",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "organizations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Corp\",\n  \"country_id\": \"{{country_id}}\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/organizations",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "organizations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/organizations/details?id={{organization_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "organizations", "details"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{organization_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Organization",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Corp Inc.\"\n}"
+            },
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/organizations/update?id={{organization_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "organizations", "update"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{organization_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Organization",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/organizations/deactivate?id={{organization_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "organizations", "deactivate"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{organization_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Organization Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{base_url}}/api/v1/backoffice/organizations/stats?id={{organization_id}}",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backoffice", "organizations", "stats"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{organization_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },

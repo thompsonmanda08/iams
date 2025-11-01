@@ -18,7 +18,12 @@ import { AuthSession } from "@/lib/types";
 
 const DEFAULT_TIMEOUT = 90 * 1000; // SECONDS
 
-function ScreenLock({ open }: { open: boolean }) {
+interface ScreenLockProps {
+  open: boolean;
+  onStillHere?: () => Promise<void>;
+}
+
+function ScreenLock({ open, onStillHere }: ScreenLockProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [seconds, setSeconds] = useState(DEFAULT_TIMEOUT / 1000); // REMAINING SECONDS
   const hasLoggedOutRef = useRef(false);
@@ -33,9 +38,17 @@ function ScreenLock({ open }: { open: boolean }) {
 
   const handleRefreshAuthToken = useCallback(async () => {
     setIsLoading(true);
-    await lockScreenOnUserIdle(false);
+
+    // Call the parent's onStillHere callback if provided
+    if (onStillHere) {
+      await onStillHere();
+    } else {
+      // Fallback to original behavior
+      await lockScreenOnUserIdle(false);
+    }
+
     setIsLoading(false);
-  }, []);
+  }, [onStillHere]);
 
   const handleUserLogOut = useCallback(async () => {
     if (hasLoggedOutRef.current) return; // Prevent multiple logout calls
@@ -162,7 +175,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   const isIdle = state === "Idle";
 
   const { data } = useRefreshToken(Boolean(loggedIn && !isIdle));
-  
+
 
   const onIdle = async () => {
     setState("Idle");
@@ -170,14 +183,12 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   };
 
   const onActive = () => {
-    if (!isIdle) {
-      setState("Active");
-    }
+    setState("Active");
   };
 
   const onAction = async () => setCount(count + 1);
 
-  useIdleTimer({
+  const idleTimer = useIdleTimer({
     onIdle,
     onActive,
     onAction,
@@ -185,8 +196,21 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     // timeout: 1 * 1000 * 5, // 5SEC
     throttle: 500,
     disabled: !loggedIn
-    
+
   });
+
+  // Callback to handle "I'm still here" button click
+  const handleStillHere = useCallback(async () => {
+    // Update server session to unlock screen
+    const success = await lockScreenOnUserIdle(false);
+
+    if (success) {
+      // Reset local idle state
+      setState("Active");
+      // Reset the idle timer to restart the countdown
+      idleTimer.reset();
+    }
+  }, [idleTimer]);
 
   /* NO TIMER ON EXTERNAL ROUTES */
   // if (pathname.startsWith("/checkout")) return null;
@@ -195,7 +219,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
   // Render the ScreenLock component when idle
   if (isIdle && session?.screen_locked) {
-    return <ScreenLock open={isIdle} />;
+    return <ScreenLock open={isIdle} onStillHere={handleStillHere} />;
   }
 
   return null;
