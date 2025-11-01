@@ -1151,9 +1151,9 @@ export async function deleteRiskMatrix(id: string): Promise<APIResponse> {
       method: "DELETE"
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
-   return successResponse(response.data );
+   return successResponse(response.data);
   } catch (error: any) {
-    return handleError(error, "DELETE | DELETE MATRICES", `/api/v1/risk-configs/matrices/${id}`);
+    return handleError(error, "DELETE | DELETE MATRICES", `/api/v1/risk-configs/matrix-configs/${id}`);
   }
 }
 
@@ -1161,12 +1161,12 @@ export async function deleteRiskMatrix(id: string): Promise<APIResponse> {
 export async function getRiskResponses(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-configs/responses",
+      url: "/api/v1/risk-responses",
       method: "GET"
     });
-     return successResponse(response.data );
+     return successResponse(response.data?.data);
   } catch (error: any) {
-    return handleError(error, "GET | GET RESPONSE", "/api/v1/risk-configs/responses");
+    return handleError(error, "GET | GET RESPONSE", "/api/v1/risk-responses");
   }
 }
 
@@ -1176,14 +1176,14 @@ export async function createRiskResponse(data: {
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-configs/responses",
+      url: "/api/v1/risk-responses",
       method: "POST",
       data
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
    return successResponse(response.data );
   } catch (error: any) {
-     return handleError(error, "POST | CREATE RESPONSE", "/api/v1/risk-configs/responses");
+     return handleError(error, "POST | CREATE RESPONSE", "/api/v1/risk-responses");
   }
 }
 
@@ -1193,27 +1193,27 @@ export async function updateRiskResponse(
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/responses/${id}`,
+      url: `/api/v1/risk-responses/${id}`,
       method: "PUT",
       data
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
     return successResponse(response.data );
   } catch (error: any) {
-   return handleError(error, "PUT | UPDATE RESPONSE", `/api/v1/risk-configs/responses/${id}`)
+   return handleError(error, "PUT | UPDATE RESPONSE", `/api/v1/risk-responses/${id}`)
   }
 }
 
 export async function deleteRiskResponse(id: string): Promise<APIResponse> {
   try {
    const response =  await authenticatedApiClient({
-      url: `/api/v1/risk-configs/responses/${id}`,
+      url: `/api/v1/risk-responses/${id}`,
       method: "DELETE"
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
 return successResponse(response.data );
   } catch (error: any) {
-     return handleError(error, "DELETE | DELETE RESPONSE", `/api/v1/risk-configs/responses/${id}`);
+     return handleError(error, "DELETE | DELETE RESPONSE", `/api/v1/risk-responses/${id}`);
   }
 }
 

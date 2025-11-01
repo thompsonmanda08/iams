@@ -41,7 +41,7 @@ export function RiskResponsesList() {
     try {
       const response = await getRiskResponses();
       if (response.success && response.data?.data) {
-        setResponses(response.data.data);
+        setResponses(response.data?.data);
       }
     } catch (error) {
       toast.error("Failed to load risk responses");
