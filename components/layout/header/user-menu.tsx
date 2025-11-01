@@ -19,10 +19,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 
 export default function UserMenu({ user }: { user: User }) {
-  const { data: setup } = useSystemSetup();
-  const userData = (user || setup?.data?.user) as User;
-  const fullName = `${userData?.first_name || "No"} ${userData?.last_name || "Session"}`;
-  const userEmail = userData?.email || "example@mail.com";
+  // const { data: setup } = useSystemSetup();
+  // const user = (user || setup?.data?.user) as User;
+  const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
+  const userEmail = user?.email || "example@mail.com";
 
   const handleUserLogOut = async () => {
     // Clear session initialization flag
@@ -35,7 +35,7 @@ export default function UserMenu({ user }: { user: User }) {
     }
   };
 
-  return !userData || Object.keys(userData).length < 0 ? (
+  return !user || Object.keys(user).length < 0 ? (
     <>
       <Skeleton className="h-10 w-10 rounded-lg" />
     </>

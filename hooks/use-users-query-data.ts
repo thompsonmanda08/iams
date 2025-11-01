@@ -46,7 +46,7 @@ export const useRefreshToken = (enabled: boolean = false) =>
 export const useSystemSetup = (enabled: boolean = false) =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.SYS_SETUP, enabled], // Add enabled to key to prevent cache collision
-    queryFn: async () => await initializeSystemSetup({ access_token: "" }),
+    queryFn: initializeSystemSetup,
     retry: 0, // ✅ No retries - fail fast
     refetchInterval: false, // ✅ DISABLED: Prevents automatic refetch every 5 minutes
     refetchOnMount: false, // ✅ Don't refetch when component mounts

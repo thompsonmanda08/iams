@@ -31,10 +31,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function AppSidebar({
-  session,
+  user,
   isAuthenticated,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { session: any; isAuthenticated: boolean }) {
+}: React.ComponentProps<typeof Sidebar> & { user: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
@@ -110,7 +110,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full">
-          <NavMain session={session} isAuthenticated={isAuthenticated} />
+          <NavMain user={user} isAuthenticated={isAuthenticated} />
         </ScrollArea>
       </SidebarContent>
       <SidebarFooter>
@@ -129,7 +129,7 @@ export function AppSidebar({
             </Button>
           </CardContent>
         </Card> */}
-        <NavUser user={session?.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   );

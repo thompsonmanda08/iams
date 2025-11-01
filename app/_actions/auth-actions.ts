@@ -1,24 +1,17 @@
 "use server";
 
 import { APIResponse } from "@/lib/types";
-import authenticatedApiClient, {
-  axios,
-  handleBadRequest,
-  handleError,
-  successResponse,
-  unauthorizedResponse
-} from "./api-config";
+import authenticatedApiClient, { axios, handleError, successResponse } from "./api-config";
 import {
   createAuthSession,
   deleteSession,
   updateAuthSession,
   verifySession,
   createUserSession,
-  getUserSession
+  createPermissionsSession
 } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
-import { se } from "date-fns/locale";
 
 export async function loginUser({
   username,
@@ -32,8 +25,8 @@ export async function loginUser({
   try {
     const response = await axios.post(url, { username, password });
 
-    console.log("[ LOGIN ]: ", response.data);
     const session = response?.data;
+    console.log("[ LOGIN ]: ", session);
 
     // Set authentication cookie (will include mfa_required flag)
     await createAuthSession({
@@ -44,31 +37,6 @@ export async function loginUser({
       organization_id: session?.organization_id
     });
 
-    // TEMPORARILY DISABLED: Fetch user data on dashboard load instead
-    // This was causing login to hang - will be re-enabled after debugging
-    // if (!session?.mfa_required) {
-    //   console.log("✅ No MFA required, fetching user data immediately...");
-    //   try {
-    //     const setupPromise = initializeSystemSetup({ access_token: session?.access_token });
-    //     const timeoutPromise = new Promise<APIResponse>((_, reject) =>
-    //       setTimeout(() => reject(new Error("Setup timeout after 10 seconds")), 10000)
-    //     );
-    //     const setupResult = await Promise.race([setupPromise, timeoutPromise]);
-    //     if (!setupResult.success) {
-    //       console.error("❌ [Login] Failed to fetch user data:", setupResult.message);
-    //     } else {
-    //       console.log("✅ [Login] User data fetched successfully");
-    //     }
-    //   } catch (error: any) {
-    //     console.error("❌ [Login] Setup failed with error:", error?.message);
-    //   }
-    // } else {
-    //   console.log("🔐 MFA required, user data will be fetched after OTP verification");
-    // }
-
-    console.log("✅ [Login] Session created, user data will be fetched on dashboard load");
-
-    // Return response with mfa_required flag for routing logic
     return successResponse(session, session?.message);
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -91,23 +59,15 @@ export async function verifyOTP({
   const url = `/api/v1/auth/verify-otp`;
 
   try {
-    const response = await axios.post(url, { username, otp });
-
-    console.log("[ VERIFY OTP ]: ", response.data);
-    const session = response?.data;
+    const response = await authenticatedApiClient({ url, method: "POST", data: { username, otp } });
 
     // Update authentication session with new access token and mark MFA as complete
     await updateAuthSession({
-      accessToken: session?.access_token, // Update with new token from OTP verification
       mfa_required: false, // MFA is now complete
       mfa_verified: true
     });
 
-    // Initialize system setup to fetch user data and permissions
-    // This will populate the session with user information
-    await initializeSystemSetup({ access_token: session?.access_token });
-
-    return successResponse(session, "OTP verified successfully");
+    return successResponse(response?.data, "OTP verified successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }
@@ -127,16 +87,16 @@ export async function resendOTP({ username }: { username: string }): Promise<API
 
   try {
     // ATTEMPT REAL API CALL FIRST
-    const response = await axios.post(url, { username });
+    const response = await authenticatedApiClient({ url, method: "POST", data: { username } });
     return successResponse(response?.data, "OTP resent successfully");
   } catch (error: Error | any) {
     // IF ENDPOINT DOESN'T EXIST, SIMULATE SUCCESS
     // This allows the UI to work while backend implements the endpoint
-    if (error?.response?.status === 404 || error?.code === 'ECONNREFUSED') {
+    if (error?.response?.status === 404 || error?.code === "ECONNREFUSED") {
       console.warn("[ RESEND OTP ]: Endpoint not found, using simulated response");
 
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       return successResponse(
         { message: "OTP resent successfully (simulated)" },
@@ -322,13 +282,7 @@ export async function logUserOut(reason: string): Promise<APIResponse> {
 /**
  * Create initial system setup
  */
-export async function initializeSystemSetup(
-  key:
-    | {
-        access_token?: string;
-      }
-    | undefined
-): Promise<APIResponse> {
+export async function initializeSystemSetup(): Promise<APIResponse> {
   const url = `/api/v1/auth/setup`;
 
   try {
@@ -336,52 +290,12 @@ export async function initializeSystemSetup(
     const response = await authenticatedApiClient({ url });
     const session = response?.data;
     const user = session?.user;
+    const permissions = session?.permissions;
 
-    // console.log("🔧 [InitializeSystemSetup] API Response:", {
-    //   hasData: !!response?.data,
-    //   hasUser: !!user,
-    //   userKeys: user ? Object.keys(user) : [],
-    //   userName: user?.first_name,
-    //   hasPermissions: !!session?.permissions
-    // });
+    await createUserSession(user);
+    await createPermissionsSession(permissions);
 
-    // Only update session with fields that have actual values
-    const updateFields: any = {};
-    if (user && Object.keys(user).length > 0) {
-      updateFields.user = user;
-      console.log("✅ [InitializeSystemSetup] User data will be saved to session");
-    } else {
-      console.error("❌ [InitializeSystemSetup] No user data received from API!");
-    }
-
-    if (key?.access_token) {
-      updateFields.accessToken = key?.access_token; // Use accessToken not access_token
-      console.log("🔑 [InitializeSystemSetup] Access token will be updated");
-    }
-
-    if (session?.permissions) {
-      updateFields.permissions = session.permissions;
-      console.log("🔐 [InitializeSystemSetup] Permissions will be saved");
-    }
-
-    console.log("📝 [InitializeSystemSetup] Update fields:", Object.keys(updateFields));
-
-    // Only call updateAuthSession if there's something to update
-    if (Object.keys(updateFields).length > 0) {
-      console.log("💾 [InitializeSystemSetup] Calling updateAuthSession...");
-      await updateAuthSession(updateFields);
-      console.log("✅ [InitializeSystemSetup] Session updated successfully");
-
-      // Save user backup to separate cookie for recovery
-      if (user && Object.keys(user).length > 0) {
-        console.log("💾 [InitializeSystemSetup] Saving user backup...");
-        await createUserSession(user, session?.permissions);
-        console.log("✅ [InitializeSystemSetup] User backup saved");
-      }
-    } else {
-      console.warn("⚠️ [InitializeSystemSetup] No fields to update!");
-    }
-
+    console.log("🔧 [InitializeSystemSetup] Completed...");
     return successResponse(session, response?.data?.message);
   } catch (error: Error | any) {
     console.error("❌ [InitializeSystemSetup] Error:", error?.message);
@@ -394,41 +308,12 @@ export async function initializeSystemSetup(
 export async function getRefreshToken(): Promise<APIResponse> {
   const url = `api/v1/auth/refresh-token`;
 
-  const { session, isAuthenticated } = await verifySession();
-
-  if (!session || !isAuthenticated) {
-    return unauthorizedResponse("UNAUTHENTICATED");
-  }
-
   try {
     const response = await authenticatedApiClient({ url });
 
     const access_token = response.data?.data?.access_token;
 
-    // Check if user is missing from session and restore from backup if available
-    // const updateFields: any = { accessToken: tokenData?.access_token };
-
-    // if (!session.user || !session.permissions) {
-    //   console.log(
-    //     "⚠️ [getRefreshToken] User/permissions missing, attempting to restore from backup..."
-    //   );
-    //   const backup = await getUserSession();
-
-    //   if (backup) {
-    //     if (!session.user && backup.user) {
-    //       updateFields.user = backup.user;
-          console.log("✅ [getRefreshToken] User restored from backup");
-    //     }
-    //     if (!session.permissions && backup.permissions) {
-    //       updateFields.permissions = backup.permissions;
-          console.log("✅ [getRefreshToken] Permissions restored from backup");
-    //     }
-    //   } else {
-    //     console.log("❌ [getRefreshToken] No backup found, user data may be lost");
-    //   }
-    // }
-
-    await initializeSystemSetup({ access_token });
+    await updateAuthSession({ access_token });
 
     return successResponse({ access_token }, response.data?.message);
   } catch (error: Error | any) {

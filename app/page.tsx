@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/session";
+import { getUserSession, verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { PropsWithChildren } from "react";
 
@@ -14,6 +14,8 @@ export default async function HomePage({
     if (session?.session?.mfa_required && !session?.session?.mfa_verified) {
       redirect("/otp");
     }
+
+    const user = await getUserSession()
 
     // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
     if (session?.session?.user_type === "BACKOFFICE_USER") {

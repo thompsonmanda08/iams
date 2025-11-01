@@ -1,13 +1,13 @@
 import { getRisks } from "@/app/_actions/risk-module-actions";
 import { ActionsTable } from "./actions-table";
-import { verifySession } from "@/lib/session";
+import { getUserSession } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export default async function ActionsPage() {
-  const { session } = await verifySession();
+  const user = await getUserSession();
 
   const response = await getRisks({
-    risk_owner_id: session?.user?.id
+    risk_owner_id: user?.id
   });
   const data = response.success && response.data ? response.data : null;
   const actions = data || [];

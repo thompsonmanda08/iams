@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/session";
+import { getUserSession, verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { RiskDashboardClient } from "./_components/risk-dashboard-client";
 
@@ -9,7 +9,7 @@ export default async function RiskDashboard() {
     redirect("/login");
   }
 
-  const user = session.user;
+  const user = await getUserSession();
 
   return <RiskDashboardClient user={user} />;
 }
