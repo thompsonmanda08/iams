@@ -1,9 +1,8 @@
-'use client';
+"use client";
 import { useState } from "react";
-import { Plus, GitBranch, Edit, Trash2, Workflow } from "lucide-react";
+import { Plus, Trash2, Workflow, Edit2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import WorkflowEditor from "./workflow-editor";
 import PageHeader from "@/components/page-header";
 import { WorkflowSimulator } from "./workflow-simulator";
@@ -67,47 +66,79 @@ const WorkflowClient = ({ initialData }: any) => {
         {/* Saved Workflows */}
         {workflows.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold mb-4">Saved Workflows</h3>
+            <h3 className="mb-4 text-lg font-semibold">Saved Workflows</h3>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {workflows.map((workflow) => (
-                <Card key={workflow.id} className="transition-all duration-200 hover:shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <GitBranch className="text-primary mb-2 h-8 w-8" />
-                      <Badge variant="default">Active</Badge>
-                    </div>
-                    <CardTitle className="text-xl">{workflow.name}</CardTitle>
-                    <CardDescription>{workflow.entityType}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">States:</span>
-                        <span className="font-medium">{workflow.states.length}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Transitions:</span>
-                        <span className="font-medium">{workflow.transitions.length}</span>
-                      </div>
+                <Card
+                  key={workflow.id}
+                  className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-sm transition-all duration-300 hover:shadow-md">
+                  {/* Top accent bar */}
+                  <div className="from-primary via-primary/80 to-secondary/60 absolute top-0 right-0 left-0 h-1 bg-linear-to-r"></div>
 
-                      <div className="flex gap-2 pt-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => handleEdit(workflow.id)}>
-                          <Edit className="mr-2 h-3 w-3" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(workflow.id)}>
-                          <Trash2 className="text-destructive h-3 w-3" />
-                        </Button>
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="mb-5 flex items-start justify-between">
+                      <div className="flex flex-1 items-start gap-3">
+                        <div className="bg-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors">
+                          <Workflow className="text-primary-foreground h-6 w-6" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-lg font-semibold text-slate-900">
+                            {workflow.name}
+                          </h3>
+                          <p className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+                            {workflow.entityType}
+                          </p>
+                        </div>
+                      </div>
+                      {(workflow.status || workflow?.is_active || true) && (
+                        <CheckCircle2 className="ml-2 h-6 w-6 shrink-0 text-emerald-500" />
+                      )}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="mb-5 h-px bg-gradient-to-r from-slate-200 to-slate-100"></div>
+
+                    {/* Stats grid */}
+                    <div className="mb-5 grid grid-cols-3 gap-3">
+                      <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50">
+                        <p className="mb-1.5 text-xs font-medium text-slate-600">States</p>
+                        <p className="text-2xl font-bold text-slate-900">
+                          {workflow.states.length}
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50">
+                        <p className="mb-1.5 text-xs font-medium text-slate-600">Transitions</p>
+                        <p className="text-2xl font-bold text-slate-900">
+                          {workflow.transitions.length}
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-emerald-50 p-3 text-center transition-colors hover:bg-emerald-100">
+                        <p className="mb-1.5 text-xs font-medium text-emerald-600">Status</p>
+                        <p className="text-sm font-bold text-emerald-700">
+                          {workflow.status || workflow?.is_active || true ? "Active" : "Inactive"}
+                        </p>
                       </div>
                     </div>
-                  </CardContent>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={"outline"}
+                        className="border-primary/20 bg-primary/5 text-primary flex-1 border"
+                        onClick={() => handleEdit(workflow.id)}>
+                        <Edit2 className="h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant={"outline"}
+                        onClick={() => handleDelete(workflow.id)}
+                        className="flex-1 border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
                 </Card>
               ))}
             </div>
