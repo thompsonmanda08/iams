@@ -70,7 +70,7 @@ export function ISOWorkpaperTemplateForm({
           title: "Success",
           description: `Working paper template ${templateId ? "updated" : "created"} successfully`
         });
-        router.push("/dashboard/audit/workpapers/templates");
+        router.push("/dashboard/system-configs/audit-settings/templates");
       } else {
         toast({
           title: "Error",
@@ -123,7 +123,7 @@ export function ISOWorkpaperTemplateForm({
               <SelectField
                 label="Workpaper Template"
                 placeholder="Select template standard"
-                value={formData.name}
+                value={formData.standard}
                 onValueChange={(value) => setFormData({ ...formData, standard: value })}
                 options={[{ id: "ISO27001", name: "ISO 27001 ISMS Audit" }]}
                 required

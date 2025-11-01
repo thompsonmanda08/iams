@@ -153,12 +153,12 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
             <TableRow
               key={template.id}
               onClick={() => {
-                router.push(`/dashboard/audit/workpapers/templates/${template.id}`);
+                router.push(`/dashboard/system-configs/audit-settings/templates/${template.id}`);
               }}>
               <TableCell>
                 <div className="space-y-1">
                   <Link
-                    href={`/dashboard/audit/workpapers/templates/${template.id}`}
+                    href={`/dashboard/system-configs/audit-settings/templates/${template.id}`}
                     className="hover:text-primary font-medium hover:underline">
                     {template.name}
                   </Link>
@@ -193,7 +193,7 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
                     onClick={(e) => e.stopPropagation()}
                     className="h-8 gap-1.5">
                     <Link
-                      href={`/dashboard/audit/workpapers/templates/${template.id}`}
+                      href={`/dashboard/system-configs/audit-settings/templates/${template.id}`}
                       className="flex cursor-pointer items-center gap-2">
                       <View className="h-3.5 w-3.5" />
                       View
@@ -204,11 +204,11 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/dashboard/audit/workpapers/templates/${template.id}/edit`);
+                      router.push(`/dashboard/system-configs/audit-settings/templates/${template.id}/edit`);
                     }}
                     className="h-8 gap-1.5">
                     <Link
-                      href={`/dashboard/audit/workpapers/templates/${template.id}/edit`}
+                      href={`/dashboard/system-configs/audit-settings/templates/${template.id}/edit`}
                       className="flex cursor-pointer items-center gap-2">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit

@@ -25,10 +25,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  updateDepartment,
-  deleteDepartment,
-  createDepartment
-} from "@/app/_actions/config-actions";
+  createAuditableArea,
+  updateAuditableArea,
+  deleteAuditableArea
+} from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -85,11 +85,11 @@ export default function AuditableAreaConfig({
 
   // Delete item mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteDepartment(id),
+    mutationFn: (id: string) => deleteAuditableArea(id),
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Area deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        toast.success("Auditable Area deleted successfully");
+        router.refresh();
       } else {
         toast.error(response.message || "Failed to delete item");
       }
@@ -376,16 +376,17 @@ export function CreateOrUpdateArea({
   }, [openModal, setOpenModal, setInitialData]);
 
   // Create/Update mutation
+  const router = useRouter();
   const saveMutation = useMutation({
     mutationFn: (data: Area) => {
       return initialData && areaId
-        ? updateDepartment({ ...data, id: String(areaId) })
-        : createDepartment(data);
+        ? updateAuditableArea({ ...data, id: String(areaId) })
+        : createAuditableArea(data);
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`Area ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        toast.success(`Auditable Area ${initialData ? "updated" : "created"} successfully`);
+        router.refresh();
         setOpenModal?.(false);
         setInitialData?.(null);
         setFormData(INIT_AREA);

@@ -24,7 +24,7 @@ export default async function AuthLayout({
 
   if (session?.isAuthenticated && session?.user?.user_type != "BACKOFFICE_USER") {
     // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
-    return redirect("/");
+    redirect("/");
   }
 
   return (

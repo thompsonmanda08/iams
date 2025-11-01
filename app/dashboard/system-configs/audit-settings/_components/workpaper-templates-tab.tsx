@@ -1,32 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, PencilLine, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
-import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
+import { Plus } from "lucide-react";
 import { AuditableArea as Area, Pagination } from "@/lib/types";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  updateDepartment,
-  deleteDepartment,
-  createDepartment
-} from "@/app/_actions/config-actions";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/lib/constants";
-import CustomAlert from "@/components/ui/custom-alert";
-import { SearchSelectField } from "@/components/ui/search-select-field";
-import { useDepartments } from "@/hooks/use-query-data";
-import { Textarea } from "@/components/ui/textarea";
 import type {
   Workpaper,
   AuditPlan,
@@ -97,60 +74,6 @@ export default function WorkpaperTemplatesTab({
   templates: Area[];
   pagination?: Pagination;
 }) {
-  const [openModal, setOpenModal] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<Area | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
-
-  const [items, setItems] = useState<Area[]>(templates);
-
-  useEffect(() => {
-    setItems(templates);
-  }, [templates]);
-
-  const router = useRouter();
-  const queryClient = useQueryClient();
-
-  // Delete item mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteDepartment(id),
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success("Area deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
-      } else {
-        toast.error(response.message || "Failed to delete item");
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to delete item");
-      console.error("Error deleting item:", error);
-    },
-    onSettled: () => {
-      setDeleteDialogOpen(false);
-      setDepartmentToDelete(null);
-    }
-  });
-
-  /*************  ✨ Windsurf Command ⭐  *************/
-  /**
-   * Opens the delete item dialog for the item with the given id.
-   * @param {string} id - The id of the item to delete.
-   */
-  /*******  7df535e1-228a-4281-91c5-50dc0fe4cb5b  *******/
-  const handleDeleteClick = (id: string) => {
-    setDepartmentToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!departmentToDelete) return;
-    // if (true) {
-    //   return toast.warning("This action currently is disabled");
-    // }
-    deleteMutation.mutate(departmentToDelete as any);
-  };
-
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleOpenCreateDialog = () => {
@@ -196,15 +119,6 @@ export default function WorkpaperTemplatesTab({
           customTemplates={mockCustomTemplates}
         />
       </div>
-
-      <ConfirmDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        title="Delete Area"
-        description="Are you sure you want to delete this item? This action cannot be undone and may affect related data."
-        onConfirm={handleDeleteConfirm}
-        isLoading={deleteMutation.isPending}
-      />
     </>
   );
 }

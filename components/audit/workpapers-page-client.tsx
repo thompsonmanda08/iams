@@ -91,20 +91,12 @@ export function WorkpapersPageClient({
               </p>
             </div>
             <div className="flex gap-2">
-              <Link href="/dashboard/audit/workpapers/templates">
-                <Button variant="outline" className="gap-2">
+              <Link href="/dashboard/system-configs/audit-settings/templates">
+                <Button>
                   <FileCode className="h-4 w-4" />
                   Manage Templates
                 </Button>
               </Link>
-              {/* <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button> */}
-              <Button className="gap-2" onClick={handleOpenCreateDialog}>
-                <Plus className="h-4 w-4" />
-                Create Workpaper
-              </Button>
             </div>
           </div>
         </div>
@@ -130,14 +122,6 @@ export function WorkpapersPageClient({
           />
         </div>
       </div>
-
-      {/* Create Workpaper Template Selection Dialog */}
-      <WorkpaperTemplateDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        audits={audits}
-        customTemplates={mockCustomTemplates}
-      />
     </div>
   );
 }

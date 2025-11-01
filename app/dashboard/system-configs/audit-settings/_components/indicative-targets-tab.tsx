@@ -25,10 +25,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  updateDepartment,
-  deleteDepartment,
-  createDepartment
-} from "@/app/_actions/config-actions";
+  createIndicativeTarget,
+  updateIndicativeTarget,
+  deleteIndicativeTarget
+} from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -89,11 +89,11 @@ export default function IndicativeTargetsTab({
 
   // Delete item mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteDepartment(id),
+    mutationFn: (id: string) => deleteIndicativeTarget(id),
     onSuccess: (response) => {
       if (response.success) {
         toast.success("Indicative Target deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        router.refresh();
       } else {
         toast.error(response.message || "Failed to delete item");
       }
@@ -366,16 +366,17 @@ export function CreateOrUpdate({
   }, [openModal, setOpenModal, setInitialData]);
 
   // Create/Update mutation
+  const router = useRouter();
   const saveMutation = useMutation({
     mutationFn: (data: AuditConfigurableItem) => {
       return initialData && selectedId
-        ? updateDepartment({ ...data, id: String(selectedId) })
-        : createDepartment(data);
+        ? updateIndicativeTarget({ ...data, id: String(selectedId) })
+        : createIndicativeTarget(data);
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`AuditConfigurableItem ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        toast.success(`Indicative Target ${initialData ? "updated" : "created"} successfully`);
+        router.refresh();
         setOpenModal?.(false);
         setInitialData?.(null);
         setFormData(INIT_FORM_DATA);

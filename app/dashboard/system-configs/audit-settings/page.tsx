@@ -2,13 +2,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getBranches, getDepartments, getProvinces, getTowns } from "@/app/_actions/config-actions";
 import { Pagination } from "@/lib/types";
 import { Suspense } from "react";
-import { getWorkpapers } from "@/app/_actions/audit-module-actions";
+import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
 import {
   getStrategicPillars,
   getStrategicInitiatives,
   getFindingsCategories,
   getProcessActivities,
-  getIndicativeTargets
+  getIndicativeTargets,
+  getAuditableAreas
 } from "@/app/_actions/audit-settings-actions";
 import AuditableAreaConfig from "./_components/auditable-areas-tab";
 import IndicativeTargetsTab from "./_components/indicative-targets-tab";
@@ -40,42 +41,49 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
 
   const [
-    branchesResponse,
-    provincesResponse,
-    townsResponse,
-    departmentsResponse,
-    workpapersResponse,
+    templatesResponse,
+    auditableAreasResponse,
+    indicativeTargetsResponse,
     pillarsResponse,
     initiativesResponse,
-    categoriesResponse,
-    processActivitiesResponse,
-    indicativeTargetsResponse
+    townsResponse,
+    departmentsResponse
+    // categoriesResponse,
+    // processActivitiesResponse,
   ] = await Promise.all([
-    getBranches({ page, page_size }),
-    getProvinces(),
-    getTowns({ page, page_size }),
-    getDepartments(),
-    getWorkpapers(),
+    getWorkingPaperTemplates(),
+    getAuditableAreas(),
+    getIndicativeTargets(),
     getStrategicPillars(),
     getStrategicInitiatives(),
-    getFindingsCategories(),
-    getProcessActivities(),
-    getIndicativeTargets()
+    getTowns({ page, page_size }),
+    getDepartments()
+    // getBranches({ page, page_size }),
+    // getProvinces(),
+    // getFindingsCategories(),
+    // getProcessActivities(),
   ]);
 
   const departments = departmentsResponse.success ? departmentsResponse.data?.data : [];
-  const workpapers = workpapersResponse.success ? workpapersResponse.data?.data?.data : [];
-  const branches = branchesResponse.success ? branchesResponse.data?.data : [];
-  const provinces = provincesResponse.success ? provincesResponse.data?.data?.data : [];
+  const templates = templatesResponse.success ? templatesResponse.data?.data?.data : [];
+
+  const areas = auditableAreasResponse.success ? auditableAreasResponse.data?.data : [];
+
   const towns = townsResponse.success ? townsResponse.data?.data || [] : [];
   const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
 
   // Audit settings data
   const pillars = pillarsResponse.success ? pillarsResponse.data?.data : [];
-  const initiatives = initiativesResponse.success ? initiativesResponse.data?.data : [];
-  const categories = categoriesResponse.success ? categoriesResponse.data?.data : [];
-  const processActivities = processActivitiesResponse.success ? processActivitiesResponse.data?.data : [];
-  const indicativeTargets = indicativeTargetsResponse.success ? indicativeTargetsResponse.data?.data : [];
+  const initiatives = initiativesResponse.success ? initiativesResponse.data?.data?.data : [];
+  // const categories = categoriesResponse.success ? categoriesResponse.data?.data : [];
+  // const processActivities = processActivitiesResponse.success
+  //   ? processActivitiesResponse.data?.data
+  //   : [];
+  const indicativeTargets = indicativeTargetsResponse.success
+    ? indicativeTargetsResponse.data?.data
+    : [];
+
+  console.log("WP templates:", initiatives);
 
   return (
     <div className="">
@@ -124,20 +132,20 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
                 <Lightbulb className="h-4 w-4" />
                 Strategic Initiative
               </TabsTrigger>
-              <TabsTrigger value="findings" className="gap-2">
+              {/* <TabsTrigger value="findings" className="gap-2">
                 <AlertCircle className="h-4 w-4" />
                 Findings Categories
               </TabsTrigger>
               <TabsTrigger value="process" className="gap-2">
                 <Workflow className="h-4 w-4" />
                 Process/Activity
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
           </div>
 
           <TabsContent value="templates">
             <Suspense fallback={<TableLoading />}>
-              <WorkpaperTemplatesTab templates={workpapers || []} />
+              <WorkpaperTemplatesTab templates={templates || []} />
             </Suspense>
           </TabsContent>
 
@@ -145,7 +153,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           <TabsContent value="areas">
             <Suspense fallback={<TableLoading />}>
               <AuditableAreaConfig
-                areas={towns}
+                areas={areas}
                 departments={departments}
                 pagination={townsPagination}
               />
@@ -155,10 +163,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           {/* Indicative Targets Tab */}
           <TabsContent value="targets">
             <Suspense fallback={<TableLoading />}>
-              <IndicativeTargetsTab
-                targets={indicativeTargets}
-                departments={departments}
-              />
+              <IndicativeTargetsTab targets={indicativeTargets} departments={departments} />
             </Suspense>
           </TabsContent>
 
@@ -177,18 +182,18 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           </TabsContent>
 
           {/* Findings Categories Tab */}
-          <TabsContent value="findings">
+          {/* <TabsContent value="findings">
             <Suspense fallback={<TableLoading />}>
               <FindingsCategoryTab categories={categories} />
             </Suspense>
-          </TabsContent>
+          </TabsContent> */}
 
           {/* Process Activity Tab */}
-          <TabsContent value="process">
+          {/* <TabsContent value="process">
             <Suspense fallback={<TableLoading />}>
               <ProcessActivityTab processes={processActivities} />
             </Suspense>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
     </div>

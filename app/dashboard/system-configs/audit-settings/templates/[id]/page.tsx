@@ -41,7 +41,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" asChild>
-                <Link href="/dashboard/audit/workpapers/templates">
+                <Link href="/dashboard/system-configs/audit-settings/templates">
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
@@ -56,7 +56,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
               ) : (
                 <Badge variant="secondary">Inactive</Badge>
               )}
-              <Link href={`/dashboard/audit/workpapers/templates/${id}/edit`}>
+              <Link href={`/dashboard/system-configs/audit-settings/templates/${id}/edit`}>
                 <Button variant="outline" size="sm">
                   <Edit className="mr-2 h-4 w-4" />
                   Edit Template
@@ -110,7 +110,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   Categories ({categories.length})
                 </TabsTrigger>
               </TabsList>
-              <Link href={`/dashboard/audit/workpapers/templates/${id}/categories/new`}>
+              <Link href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
                 <Button size="sm">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Category

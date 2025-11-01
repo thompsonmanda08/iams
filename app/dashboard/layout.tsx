@@ -40,11 +40,11 @@ export default async function AuthLayout({
     }
   }
 
-  console.log("📊 DASHBOARD SESSION:", {
-    hasUser: !!finalSession?.user,
-    userName: finalSession?.user?.first_name,
-    userKeys: finalSession?.user ? Object.keys(finalSession.user) : []
-  });
+  // console.log("📊 DASHBOARD SESSION:", {
+  //   hasUser: !!finalSession?.user,
+  //   userName: finalSession?.user?.first_name,
+  //   userKeys: finalSession?.user ? Object.keys(finalSession.user) : []
+  // });
 
   const hasUser = !!(finalSession?.user && Object.keys(finalSession.user).length > 0);
 

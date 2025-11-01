@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, AlertCircle, Loader2, FileText, Plus, View, Pencil } from "lucide-react";
+import { Trash2, AlertCircle, Loader2, FileText, Plus } from "lucide-react";
 import type { Workpaper } from "@/lib/types/audit-types";
 import Link from "next/link";
 import {
@@ -238,15 +238,17 @@ export function WorkpapersTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
-                    <Button
+                    {/* TODO: Enable when workpaper detail route is created at /dashboard/(modules)/audit/workpapers/[id]/page.tsx */}
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() => router.push(`/dashboard/audit/workpapers/${workpaper.id}`)}
                       className="h-8 gap-1.5">
                       <View className="h-3.5 w-3.5" />
                       View
-                    </Button>
-                    <Button
+                    </Button> */}
+                    {/* TODO: Enable when workpaper edit route is created at /dashboard/(modules)/audit/workpapers/[id]/edit/page.tsx */}
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() =>
@@ -255,7 +257,7 @@ export function WorkpapersTable({
                       className="h-8 gap-1.5">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
-                    </Button>
+                    </Button> */}
                     <Button
                       size="sm"
                       variant="outline"

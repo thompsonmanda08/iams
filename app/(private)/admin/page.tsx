@@ -9,5 +9,5 @@ export default async function AdminPage() {
     redirect("/_/admin/home");
   }
 
-  return redirect("/login");
+  redirect("/login");
 }

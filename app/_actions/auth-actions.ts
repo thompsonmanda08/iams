@@ -337,13 +337,13 @@ export async function initializeSystemSetup(
     const session = response?.data;
     const user = session?.user;
 
-    console.log("🔧 [InitializeSystemSetup] API Response:", {
-      hasData: !!response?.data,
-      hasUser: !!user,
-      userKeys: user ? Object.keys(user) : [],
-      userName: user?.first_name,
-      hasPermissions: !!session?.permissions
-    });
+    // console.log("🔧 [InitializeSystemSetup] API Response:", {
+    //   hasData: !!response?.data,
+    //   hasUser: !!user,
+    //   userKeys: user ? Object.keys(user) : [],
+    //   userName: user?.first_name,
+    //   hasPermissions: !!session?.permissions
+    // });
 
     // Only update session with fields that have actual values
     const updateFields: any = {};
@@ -417,11 +417,11 @@ export async function getRefreshToken(): Promise<APIResponse> {
     //   if (backup) {
     //     if (!session.user && backup.user) {
     //       updateFields.user = backup.user;
-    //       console.log("✅ [getRefreshToken] User restored from backup");
+          console.log("✅ [getRefreshToken] User restored from backup");
     //     }
     //     if (!session.permissions && backup.permissions) {
     //       updateFields.permissions = backup.permissions;
-    //       console.log("✅ [getRefreshToken] Permissions restored from backup");
+          console.log("✅ [getRefreshToken] Permissions restored from backup");
     //     }
     //   } else {
     //     console.log("❌ [getRefreshToken] No backup found, user data may be lost");

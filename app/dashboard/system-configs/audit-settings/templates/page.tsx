@@ -26,7 +26,7 @@ export default async function WorkpaperTemplatesPage() {
                 <Download className="h-4 w-4" />
                 Export
               </Button> */}
-              <Link href="/dashboard/audit/workpapers/templates/new">
+              <Link href="/dashboard/system-configs/audit-settings/new/ISO27001">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create Template

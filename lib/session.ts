@@ -151,12 +151,12 @@ export async function updateAuthSession(fields: any): Promise<AuthSession> {
   const backupUser = (backupUserSession?.user || {}) as User;
   const backupPermissions = (backupUserSession?.permissions || []) as Permission[];
 
-  console.log("🔄 [updateAuthSession] Current state:", {
-    hasOldSession: !!oldSession,
-    hasBackupUser: backupUser && Object.keys(backupUser).length > 0,
-    fieldsToUpdate: Object.keys(fields),
-    hasOldUser: !!(oldSession?.user && Object.keys(oldSession.user).length > 0)
-  });
+  // console.log("🔄 [updateAuthSession] Current state:", {
+  //   hasOldSession: !!oldSession,
+  //   hasBackupUser: backupUser && Object.keys(backupUser).length > 0,
+  //   fieldsToUpdate: Object.keys(fields),
+  //   hasOldUser: !!(oldSession?.user && Object.keys(oldSession.user).length > 0)
+  // });
 
   if (isLoggedIn && oldSession) {
     // Remove any null values from the old session (cleanup from previous bugs)

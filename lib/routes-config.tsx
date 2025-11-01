@@ -145,17 +145,17 @@ export const navItems: NavGroup[] = [
         ]
       },
       {
-        title: "Modules",
+        title: "Module Settings",
         href: "/dashboard/system-configs",
         icon: Sliders,
         items: [
           {
-            title: "Audit Module",
+            title: "Audit Module Configs",
             href: "/dashboard/system-configs/audit-settings",
             icon: BookTemplate
           },
           {
-            title: "Risk Module",
+            title: "Risk Module Configs",
             href: "/dashboard/system-configs/risk-settings",
             icon: Package
           }

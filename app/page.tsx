@@ -12,17 +12,17 @@ export default async function HomePage({
   if (session?.isAuthenticated) {
     // CHECK IF MFA IS REQUIRED BUT NOT YET VERIFIED
     if (session?.session?.mfa_required && !session?.session?.mfa_verified) {
-      return redirect("/otp");
+      redirect("/otp");
     }
 
     // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
     if (session?.session?.user_type === "BACKOFFICE_USER") {
-      return redirect("/_/admin/home");
+      redirect("/_/admin/home");
     }
 
     // ROUTE PROTECTION - DEFAULT USERS
-    return redirect("/dashboard/home");
+    redirect("/dashboard/home");
   }
 
-  return redirect("/login");
+  redirect("/login");
 }

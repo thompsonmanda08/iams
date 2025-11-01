@@ -1,5 +1,6 @@
 "use client";
 
+import PageHeader from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import {
   TrendingUp,
@@ -55,15 +56,12 @@ export default function OperationalRiskDashboard() {
       <div className="bg-card/80 sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-start justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-3">
-                <div className="border-primary/30 rounded-lg border bg-white/20 p-2">
-                  <BarChart3 className="text-primary h-6 w-6 dark:text-blue-400" />
-                </div>
-                <h1 className="text-foreground text-3xl font-bold">Operational Risk Dashboard</h1>
-              </div>
-              <p className="text-sm text-slate-400">Completion rates and audit analytics</p>
-            </div>
+            <PageHeader
+              title="Operational Risk Dashboard"
+              description="Completion rates and audit analytics"
+              Icon={BarChart3}
+            />
+
             <div className="flex items-center gap-8">
               <div className="text-right">
                 <p className="mb-1 text-xs text-slate-400">Action response rating</p>

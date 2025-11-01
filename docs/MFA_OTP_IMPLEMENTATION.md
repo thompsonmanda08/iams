@@ -7,6 +7,7 @@ Complete implementation of Multi-Factor Authentication (MFA) with OTP verificati
 ## Overview
 
 This implementation adds a secure two-step authentication flow:
+
 1. User logs in with username/password
 2. If MFA is required, user must verify OTP sent to their email
 3. Only after OTP verification, user can access their dashboard
@@ -59,6 +60,7 @@ This implementation adds a secure two-step authentication flow:
 **File**: `components/forms/login-form.tsx`
 
 **Changes**:
+
 ```typescript
 const response = await loginUser({ username: email, password });
 
@@ -77,6 +79,7 @@ if (response.success) {
 ```
 
 **Key Points**:
+
 - Checks `mfa_required` flag from login response
 - Redirects to OTP page if MFA is required
 - Passes username as query parameter for OTP verification
@@ -88,6 +91,7 @@ if (response.success) {
 **File**: `app/_actions/auth-actions.ts`
 
 **New Function**:
+
 ```typescript
 export async function verifyOTP({
   username,
@@ -116,6 +120,7 @@ export async function verifyOTP({
 
 **API Endpoint**: `POST /api/v1/auth/verify-otp`
 **Request Body**:
+
 ```json
 {
   "username": "admin",
@@ -132,6 +137,7 @@ export async function verifyOTP({
 **File**: `app/(auth)/otp/otp-form.tsx`
 
 **Features**:
+
 - 6-digit OTP input with visual separation (3-3)
 - Gets username from URL query parameters
 - Client-side validation
@@ -140,6 +146,7 @@ export async function verifyOTP({
 - Auto-clears OTP on error
 
 **Key Functions**:
+
 ```typescript
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -176,10 +183,12 @@ Simple page that renders the OTP form with Suspense wrapper.
 **Updated**: `lib/session.ts`
 
 The session now tracks:
+
 - `mfa_required` - Set during login if MFA is enabled
 - `mfa_verified` - Set to true after successful OTP verification
 
 **Session Cookie Structure**:
+
 ```typescript
 {
   accessToken: string,
@@ -199,28 +208,30 @@ The session now tracks:
 **File**: `app/page.tsx`
 
 **Updated Logic**:
+
 ```typescript
 const session = await verifySession();
 
 if (session?.isAuthenticated) {
   // CHECK IF MFA IS REQUIRED BUT NOT YET VERIFIED
   if (session?.session?.mfa_required && !session?.session?.mfa_verified) {
-    return redirect("/otp");
+    redirect("/otp");
   }
 
   // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
   if (session?.session?.user_type === "BACKOFFICE_USER") {
-    return redirect("/_/admin/home");
+    redirect("/_/admin/home");
   }
 
   // ROUTE PROTECTION - DEFAULT USERS
-  return redirect("/dashboard/home");
+  redirect("/dashboard/home");
 }
 
-return redirect("/login");
+redirect("/login");
 ```
 
 **Routing Priority**:
+
 1. **Not authenticated** → `/login`
 2. **Authenticated but MFA required** → `/otp`
 3. **Authenticated + BACKOFFICE_USER** → `/_/admin/home`
@@ -237,6 +248,7 @@ return redirect("/login");
    - Clicks "Sign In"
 
 2. **Backend Response**
+
    ```json
    {
      "access_token": "eyJ...",
@@ -272,6 +284,7 @@ return redirect("/login");
    - Clicks "Sign In"
 
 2. **Backend Response**
+
    ```json
    {
      "access_token": "eyJ...",
@@ -290,24 +303,29 @@ return redirect("/login");
 ## Security Features
 
 ### 1. Session-Based MFA Tracking
+
 - MFA status stored in encrypted JWT cookie
 - Cannot be bypassed by URL manipulation
 
 ### 2. Username Validation
+
 - OTP form checks for username in URL
 - Redirects to login if username missing
 
 ### 3. OTP Validation
+
 - Backend validates:
   - OTP matches sent code
   - OTP hasn't expired
   - Username is correct
 
 ### 4. Complete OTP Required
+
 - Submit button disabled until all 6 digits entered
 - Client-side validation before API call
 
 ### 5. Error Handling
+
 - Invalid OTP clears input for retry
 - Failed attempts logged
 - Toast notifications for all error cases
@@ -321,6 +339,7 @@ return redirect("/login");
 **URL**: `POST /api/v1/auth/login`
 
 **Request**:
+
 ```json
 {
   "username": "admin",
@@ -329,6 +348,7 @@ return redirect("/login");
 ```
 
 **Response (MFA Required)**:
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -341,6 +361,7 @@ return redirect("/login");
 ```
 
 **Response (No MFA)**:
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -357,6 +378,7 @@ return redirect("/login");
 **URL**: `POST /api/v1/auth/verify-otp`
 
 **Request**:
+
 ```json
 {
   "username": "admin",
@@ -365,6 +387,7 @@ return redirect("/login");
 ```
 
 **Response (Success)**:
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -374,6 +397,7 @@ return redirect("/login");
 ```
 
 **Response (Error)**:
+
 ```json
 {
   "error": "Invalid OTP",
@@ -425,10 +449,12 @@ return redirect("/login");
 ## Files Created/Modified
 
 ### Created:
+
 - ✅ `app/(auth)/otp/otp-form.tsx` - OTP input form component
 - ✅ `app/(auth)/otp/page.tsx` - OTP page
 
 ### Modified:
+
 - ✅ `components/forms/login-form.tsx` - Added MFA check and routing
 - ✅ `app/_actions/auth-actions.ts` - Added `verifyOTP()` function
 - ✅ `app/page.tsx` - Added MFA routing logic
@@ -438,6 +464,7 @@ return redirect("/login");
 ## Environment Variables
 
 No new environment variables required. Uses existing:
+
 - `AUTH_SECRET` - For JWT encryption
 - `NEXT_PUBLIC_API_URL` - API base URL
 
@@ -462,6 +489,7 @@ No new environment variables required. Uses existing:
 ## Summary
 
 ✅ **Complete MFA/OTP Flow**
+
 - Login detects `mfa_required` flag
 - Redirects to OTP page
 - Verifies OTP via API
@@ -469,12 +497,14 @@ No new environment variables required. Uses existing:
 - Routes to correct dashboard
 
 ✅ **Security**
+
 - Session-based MFA tracking
 - Cannot bypass OTP page
 - Proper error handling
 - Input validation
 
 ✅ **User Experience**
+
 - Clear visual OTP input (3-3 digits)
 - Loading states
 - Error messages
@@ -482,6 +512,7 @@ No new environment variables required. Uses existing:
 - Disabled states
 
 ✅ **Flexible Routing**
+
 - Works with/without MFA
 - Routes based on `user_type`
 - Handles BACKOFFICE_USER separately

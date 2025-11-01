@@ -106,8 +106,8 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
         //   title: "Success",
         //   description: `Category ${isUpdating ? "updated" : "created"} successfully`
         // });
-        router.push(`/dashboard/audit/workpapers/templates/${templateId}`);
-      } else {
+        router.push(`/dashboard/system-configs/audit-settings/templates/${templateId}`);
+      } else{
         toast.error(result.message || `Failed to ${isUpdating ? "update" : "create"} category`);
         // toast({
         //   title: "Error",
