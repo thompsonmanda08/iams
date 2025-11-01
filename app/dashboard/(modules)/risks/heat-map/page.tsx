@@ -59,11 +59,13 @@ const getRiskColor = (level: RiskLevel): string => {
 const RiskMatrix = ({
   data,
   type,
-  onCellClick
+  onCellClick,
+  selectedCell
 }: {
   data: CellData[][];
   type: RiskType;
   onCellClick: (likelihood: number, impact: number, type: RiskType, cellData: CellData) => void;
+  selectedCell: SelectedCell | null;
 }) => {
   return (
     <div className="flex flex-col gap-1">
@@ -72,11 +74,19 @@ const RiskMatrix = ({
           {[0, 1, 2, 3, 4].map((likelihood) => {
             const level = getRiskLevel(likelihood + 1, impact + 1);
             const cellData = data[impact][likelihood];
+            const isSelected =
+              selectedCell &&
+              selectedCell.likelihood === likelihood + 1 &&
+              selectedCell.impact === impact + 1 &&
+              selectedCell.type === type;
+
             return (
               <button
                 key={`${impact}-${likelihood}`}
                 onClick={() => onCellClick(likelihood + 1, impact + 1, type, cellData)}
-                className={`${getRiskColor(level)} flex h-12 w-12 flex-col items-center justify-center rounded text-xs font-semibold text-white transition-all hover:scale-105 hover:shadow-lg md:h-14 md:w-14`}>
+                className={`${getRiskColor(level)} flex h-12 w-12 flex-col items-center justify-center rounded text-xs font-semibold text-white transition-all hover:scale-105 hover:shadow-lg md:h-14 md:w-14 ${
+                  isSelected ? "ring-1 ring-black ring-offset-1" : ""
+                }`}>
                 <span className="text-base">{cellData.count}</span>
               </button>
             );
@@ -136,7 +146,12 @@ export default function RiskHeatMapPage() {
                   <span className="w-full text-center">← Likelihood →</span>
                 </div>
                 <div className="flex justify-center">
-                  <RiskMatrix data={inherentData} type="inherent" onCellClick={handleCellClick} />
+                  <RiskMatrix
+                    data={inherentData}
+                    type="inherent"
+                    onCellClick={handleCellClick}
+                    selectedCell={selectedCell}
+                  />
                 </div>
                 <div className="text-muted-foreground flex justify-between pt-2 text-xs">
                   <span>1</span>
@@ -165,7 +180,12 @@ export default function RiskHeatMapPage() {
                   <span className="w-full text-center">← Likelihood →</span>
                 </div>
                 <div className="flex justify-center">
-                  <RiskMatrix data={residualData} type="residual" onCellClick={handleCellClick} />
+                  <RiskMatrix
+                    data={residualData}
+                    type="residual"
+                    onCellClick={handleCellClick}
+                    selectedCell={selectedCell}
+                  />
                 </div>
                 <div className="text-muted-foreground flex justify-between pt-2 text-xs">
                   <span>1</span>
