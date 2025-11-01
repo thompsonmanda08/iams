@@ -35,7 +35,7 @@ export async function loginUser({
     console.log("[ LOGIN ]: ", response.data);
     const session = response?.data;
 
-    // Set authentication cookie
+    // Set authentication cookie (will include mfa_required flag)
     await createAuthSession({
       accessToken: session?.access_token,
       user_type: session?.user_type,
@@ -43,7 +43,42 @@ export async function loginUser({
       mfa_required: session?.mfa_required,
       organization_id: session?.organization_id
     });
+
+    // Return response with mfa_required flag for routing logic
     return successResponse(session, session?.message);
+  } catch (error: Error | any) {
+    return handleError(error, "POST", url);
+  }
+}
+
+/**
+ * Verify OTP for multi-factor authentication
+ * Endpoint: POST /api/v1/auth/verify-otp
+ * Body: { username, otp }
+ * Returns: JWT token with full user data if successful
+ */
+export async function verifyOTP({
+  username,
+  otp
+}: {
+  username: string;
+  otp: string;
+}): Promise<APIResponse> {
+  const url = `/api/v1/auth/verify-otp`;
+
+  try {
+    const response = await authenticatedApiClient({ url, method: "POST", data: { username, otp } });
+
+    console.log("[ VERIFY OTP ]: ", response.data);
+    const session = response?.data;
+
+    // Update authentication session - mark MFA as complete
+    await updateAuthSession({
+      mfa_required: false, // MFA is now complete
+      mfa_verified: true
+    });
+
+    return successResponse(session, "OTP verified successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }

@@ -29,8 +29,16 @@ export default function LoginForm() {
     });
 
     if (response.success) {
-      toast.success(response.message || "Login successful");
-      router.push("/dashboard/home");
+      // Check if MFA is required
+      if (response.data?.mfa_required) {
+        toast.info("Please enter the OTP sent to your email");
+        // Redirect to OTP page with username
+        router.push(`/otp?username=${encodeURIComponent(email)}`);
+      } else {
+        toast.success(response.message || "Login successful");
+        // Redirect to appropriate dashboard based on user_type
+        router.push("/");
+      }
     } else {
       toast.error(response.message || "Invalid credentials");
       setIsLoading(false);
