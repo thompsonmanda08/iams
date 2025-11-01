@@ -1,5 +1,4 @@
 "use client";
-
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Card } from "@/components/ui/card";
@@ -23,11 +22,10 @@ import { Trash2, View, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { deleteRisk } from "@/app/_actions/risk-module-actions";
-import { RiskFormDialog } from "@/components/forms/risk-form-dialog";
-import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 type Risk = {
   id: string;
@@ -35,12 +33,27 @@ type Risk = {
   title: string;
   description: string;
   category: string;
+  category_id: string;
+  department_id: string;
+  macro_process: string;
+  sub_process: string;
+  strategic_objective: string;
+  root_cause: string;
+  recurrence: "ongoing" | "one-time";
   inherentScore: number;
   inherentImpact: number;
   inherentLikelihood: number;
   residualScore: number;
   residualImpact: number;
   residualLikelihood: number;
+  existing_controls: string;
+  control_effectiveness: number;
+  treatment_plan: string;
+  risk_response: "REDUCE" | "ACCEPT" | "TRANSFER" | "AVOID";
+  risk_owner_id: string;
+  risk_appetite_status: "WITHIN" | "ABOVE";
+  target_closing_date: string;
+  mitigation_cost: number;
   riskMagnitude: string;
   status: string;
   owner: string;
@@ -80,7 +93,7 @@ export default function RisksTable({
   const [selectedRisk, setSelectedRisk] = useState<Risk | undefined>();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [riskToDelete, setRiskToDelete] = useState<string | null>(null);
+  const [riskToDelete, setRiskToDelete] = useState<{ id: string; title: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const updateSearchParams = (key: string, value: string) => {
@@ -113,7 +126,6 @@ export default function RisksTable({
     updateSearchParams("status", value);
   };
 
-  // UPDATED: Pagination handler for CustomPagination
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -122,7 +134,7 @@ export default function RisksTable({
     }
 
     if (page_size !== undefined) {
-      params.set("limit", String(page_size)); // Use 'limit' instead of 'page_size'
+      params.set("limit", String(page_size));
       params.set("page", "1");
     }
 
@@ -136,8 +148,8 @@ export default function RisksTable({
     setEditDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setRiskToDelete(id);
+  const handleDeleteClick = (risk: Risk) => {
+    setRiskToDelete({ id: risk.id, title: risk.title });
     setDeleteDialogOpen(true);
   };
 
@@ -146,14 +158,14 @@ export default function RisksTable({
 
     setIsDeleting(true);
     try {
-      const response = await deleteRisk(riskToDelete);
+      const response = await deleteRisk(riskToDelete.id);
       if (response.success) {
         toast.success("Risk deleted successfully");
         setDeleteDialogOpen(false);
         setRiskToDelete(null);
         router.refresh();
       } else {
-        toast.error("Failed to delete risk");
+        toast.error(response.message || "Failed to delete risk");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -189,7 +201,6 @@ export default function RisksTable({
     return "text-green-600";
   };
 
-  // ADDED: Transform meta to CustomPagination format
   const customPaginationData = {
     page: meta.page,
     page_size: meta.limit,
@@ -223,6 +234,7 @@ export default function RisksTable({
               <SelectItem value="IT Security">IT Security</SelectItem>
             </SelectContent>
           </Select>
+
           <Select value={currentStatus} onValueChange={handleStatusChange} disabled={isPending}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Status" />
@@ -331,7 +343,12 @@ export default function RisksTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          router.push(
+                            `/dashboard/risks/risk-registers/${registerId}/risks/${risk.id}`
+                          );
+                          e.stopPropagation();
+                        }}
                         className="h-8 gap-1.5">
                         <View className="h-3.5 w-3.5" />
                         View
@@ -351,7 +368,7 @@ export default function RisksTable({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
-                          handleDelete(risk.id);
+                          handleDeleteClick(risk);
                           e.stopPropagation();
                         }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
@@ -381,22 +398,26 @@ export default function RisksTable({
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         registerId={registerId}
+        mode="create"
       />
 
-      <RiskFormDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        risk={selectedRisk}
-        registerId={registerId}
-      />
-
-      <ConfirmDeleteDialog
+      {selectedRisk && (
+        <MultiStepRiskForm
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          registerId={registerId}
+          mode="edit"
+          riskData={selectedRisk}
+        />
+      )}
+      <ConfirmationModal
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Delete Risk"
-        description="Are you sure you want to delete this risk? This action cannot be undone."
+        description={`Are you sure you want to delete "${riskToDelete?.title}"? This action cannot be undone.`}
         onConfirm={confirmDelete}
         isLoading={isDeleting}
+        type="delete"
       />
     </>
   );

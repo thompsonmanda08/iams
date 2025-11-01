@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, CalendarIcon, ChevronLeft, ChevronRight, User } from "lucide-react";
@@ -29,12 +28,13 @@ import {
   updateRiskStepTwo,
   updateRiskStepThree,
   getRiskCategories,
+  updateRisk,
   RiskResponse
 } from "@/app/_actions/risk-module-actions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { format, formatISO } from "date-fns";
+import { format, formatISO, parseISO } from "date-fns";
 import { getUsers } from "@/app/_actions/user-actions";
 
 type Department = {
@@ -55,11 +55,45 @@ type RiskCategory = {
   department_id: string;
 };
 
+type Risk = {
+  id: string;
+  riskId: string;
+  title: string;
+  description: string;
+  category: string;
+  category_id: string;
+  department_id: string;
+  macro_process: string;
+  sub_process: string;
+  strategic_objective: string;
+  root_cause: string;
+  recurrence: "ongoing" | "one-time";
+  inherentScore: number;
+  inherentImpact: number;
+  inherentLikelihood: number;
+  residualScore: number;
+  residualImpact: number;
+  residualLikelihood: number;
+  existing_controls: string;
+  control_effectiveness: number;
+  treatment_plan: string;
+  risk_response: "REDUCE" | "ACCEPT" | "TRANSFER" | "AVOID";
+  risk_owner_id: string;
+  risk_appetite_status: "WITHIN" | "ABOVE";
+  target_closing_date: string;
+  mitigation_cost: number;
+  riskMagnitude: string;
+  status: string;
+  owner: string;
+  step?: number;
+};
+
 interface MultiStepRiskFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   registerId: string;
   mode?: "create" | "edit";
+  riskData?: Risk;
   categories?: Array<{ id: string; name: string }>;
 }
 
@@ -103,54 +137,60 @@ type User = {
   is_active: boolean;
 };
 
-export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepRiskFormProps) {
+export function MultiStepRiskForm({
+  open,
+  onOpenChange,
+  registerId,
+  mode = "create",
+  riskData
+}: MultiStepRiskFormProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [createdRiskId, setCreatedRiskId] = useState<string | null>(null);
-
+  const [createdRiskId, setCreatedRiskId] = useState<string | null>(
+    mode === "edit" && riskData ? riskData.id : null
+  );
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-
   const [categories, setCategories] = useState<RiskCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [closeDate, setCloseDate] = useState<Date | undefined>(
+    mode === "edit" && riskData?.target_closing_date
+      ? parseISO(riskData.target_closing_date)
+      : undefined
+  );
 
-  const [closeDate, setCloseDate] = useState<Date | undefined>();
-
-  // Step 1 state
+  // Initialize form data based on mode
   const [stepOneData, setStepOneData] = useState<StepOneData>({
-    title: "",
-    description: "",
-    category_id: "",
-    department_id: "",
-    macro_process: "",
-    sub_process: "",
-    strategic_objective: "",
-    root_cause: "",
-    recurrence: "ongoing"
+    title: mode === "edit" && riskData ? riskData.title : "",
+    description: mode === "edit" && riskData ? riskData.description : "",
+    category_id: mode === "edit" && riskData ? riskData.category_id : "",
+    department_id: mode === "edit" && riskData ? riskData.department_id : "",
+    macro_process: mode === "edit" && riskData ? riskData.macro_process : "",
+    sub_process: mode === "edit" && riskData ? riskData.sub_process : "",
+    strategic_objective: mode === "edit" && riskData ? riskData.strategic_objective : "",
+    root_cause: mode === "edit" && riskData ? riskData.root_cause : "",
+    recurrence: mode === "edit" && riskData ? riskData.recurrence : "ongoing"
   });
 
-  // Step 2 state
   const [stepTwoData, setStepTwoData] = useState<StepTwoData>({
-    inherent_likelihood: 3,
-    inherent_impact: 3,
-    existing_controls: "",
-    control_effectiveness: 2
+    inherent_likelihood: mode === "edit" && riskData ? riskData.inherentLikelihood : 3,
+    inherent_impact: mode === "edit" && riskData ? riskData.inherentImpact : 3,
+    existing_controls: mode === "edit" && riskData ? riskData.existing_controls : "",
+    control_effectiveness: mode === "edit" && riskData ? riskData.control_effectiveness : 2
   });
 
-  // Step 3 state
   const [stepThreeData, setStepThreeData] = useState<StepThreeData>({
-    residual_likelihood: 2,
-    residual_impact: 2,
-    treatment_plan: "",
-    risk_response: "REDUCE",
-    risk_owner_id: "",
-    risk_appetite_status: "WITHIN",
-    target_closing_date: "",
-    mitigation_cost: 0
+    residual_likelihood: mode === "edit" && riskData ? riskData.residualLikelihood : 2,
+    residual_impact: mode === "edit" && riskData ? riskData.residualImpact : 2,
+    treatment_plan: mode === "edit" && riskData ? riskData.treatment_plan : "",
+    risk_response: mode === "edit" && riskData ? riskData.risk_response : "REDUCE",
+    risk_owner_id: mode === "edit" && riskData ? riskData.risk_owner_id : "",
+    risk_appetite_status: mode === "edit" && riskData ? riskData.risk_appetite_status : "WITHIN",
+    target_closing_date: mode === "edit" && riskData ? riskData.target_closing_date : "",
+    mitigation_cost: mode === "edit" && riskData ? riskData.mitigation_cost : 0
   });
 
   useEffect(() => {
@@ -169,10 +209,12 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
   useEffect(() => {
     if (!open) {
       setCurrentStep(1);
-      setCreatedRiskId(null);
-      resetForm();
+      if (mode === "create") {
+        setCreatedRiskId(null);
+        resetForm();
+      }
     }
-  }, [open]);
+  }, [open, mode]);
 
   const loadDepartments = async () => {
     setLoadingDepartments(true);
@@ -264,17 +306,26 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
   const handleStepOne = async () => {
     setIsLoading(true);
     try {
-      const response = await createRiskStepOne({
-        risk_register_id: registerId,
-        ...stepOneData
-      });
-
-      if (response.success && response.data) {
-        setCreatedRiskId(response.data.id);
-        toast.success("Step 1 completed - Risk details saved");
-        setCurrentStep(2);
+      if (mode === "edit" && createdRiskId) {
+        const response = await updateRisk(createdRiskId, stepOneData);
+        if (response.success) {
+          toast.success("Step 1 updated - Risk details saved");
+          setCurrentStep(2);
+        } else {
+          toast.error(response.message || "Failed to update risk");
+        }
       } else {
-        toast.error(response.message || "Failed to create risk");
+        const response = await createRiskStepOne({
+          risk_register_id: registerId,
+          ...stepOneData
+        });
+        if (response.success && response.data) {
+          setCreatedRiskId(response.data.id);
+          toast.success("Step 1 completed - Risk details saved");
+          setCurrentStep(2);
+        } else {
+          toast.error(response.message || "Failed to create risk");
+        }
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -288,11 +339,9 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
       toast.error("Risk ID not found");
       return;
     }
-
     setIsLoading(true);
     try {
       const response = await updateRiskStepTwo(createdRiskId, stepTwoData);
-
       if (response.success) {
         toast.success("Step 2 completed - Risk evaluation saved");
         setCurrentStep(3);
@@ -311,13 +360,15 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
       toast.error("Risk ID not found");
       return;
     }
-
     setIsLoading(true);
     try {
       const response = await updateRiskStepThree(createdRiskId, stepThreeData);
-
       if (response.success) {
-        toast.success("Risk created successfully and is now OPEN");
+        toast.success(
+          mode === "edit"
+            ? "Risk updated successfully"
+            : "Risk created successfully and is now OPEN"
+        );
         onOpenChange(false);
         router.refresh();
       } else {
@@ -356,7 +407,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
       );
     }
     if (currentStep === 2) {
-      return true; // All fields are optional or have defaults
+      return true;
     }
     if (currentStep === 3) {
       return stepThreeData.risk_owner_id && stepThreeData.treatment_plan;
@@ -385,7 +436,9 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>Create New Risk - Step {currentStep} of 3</DialogTitle>
+          <DialogTitle>
+            {mode === "edit" ? "Edit Risk" : "Create New Risk"} - Step {currentStep} of 3
+          </DialogTitle>
           <DialogDescription>
             {currentStep === 1 && "Provide risk identification and categorization details"}
             {currentStep === 2 && "Assess inherent risk and document existing controls"}
@@ -427,6 +480,24 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                   onChange={(e) => setStepOneData({ ...stepOneData, title: e.target.value })}
                   disabled={isLoading}
                 />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="recurrence">Recurrence</Label>
+                <Select
+                  value={stepOneData.recurrence}
+                  onValueChange={(value) =>
+                    setStepOneData({ ...stepOneData, recurrence: value as "ongoing" | "one-time" })
+                  }
+                  disabled={isLoading}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ongoing">Ongoing</SelectItem>
+                    <SelectItem value="one-time">One-time</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid gap-2">
@@ -531,7 +602,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                     disabled={isLoading}
                   />
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="sub_process">Sub Process</Label>
                   <Input
@@ -570,24 +640,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                   disabled={isLoading}
                 />
               </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="recurrence">Recurrence</Label>
-                <Select
-                  value={stepOneData.recurrence}
-                  onValueChange={(value) =>
-                    setStepOneData({ ...stepOneData, recurrence: value as "ongoing" | "one-time" })
-                  }
-                  disabled={isLoading}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ongoing">Ongoing</SelectItem>
-                    <SelectItem value="one-time">One-time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </>
           )}
 
@@ -599,7 +651,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                 <p className="text-muted-foreground text-sm">
                   Assess the risk before considering any controls
                 </p>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="inherent_likelihood">
@@ -652,7 +703,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                     </p>
                   </div>
                 </div>
-
                 <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
                   <div>
                     <span className="text-sm font-medium">Inherent Score:</span>
@@ -711,7 +761,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                 <p className="text-muted-foreground text-sm">
                   Assess the risk after considering planned controls
                 </p>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="residual_likelihood">
@@ -760,7 +809,6 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                     />
                   </div>
                 </div>
-
                 <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
                   <div>
                     <span className="text-sm font-medium">Residual Score:</span>
@@ -831,6 +879,7 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
                   </Select>
                 </div>
               </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="risk_owner_id">Risk Owner *</Label>
                 <Select
@@ -955,7 +1004,11 @@ export function MultiStepRiskForm({ open, onOpenChange, registerId }: MultiStepR
             {isLoading ? (
               "Processing..."
             ) : currentStep === 3 ? (
-              "Complete Risk"
+              mode === "edit" ? (
+                "Update Risk"
+              ) : (
+                "Complete Risk"
+              )
             ) : (
               <>
                 Next
