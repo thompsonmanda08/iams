@@ -1224,7 +1224,7 @@ export async function getMatrixScales(
   try {
     const params = scaleType ? `?scale_type=${scaleType}` : "";
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/matrix-scales/${matrixId}/${params}`,
+      url: `/api/v1/risk-configs/matrix-scales/${matrixId}${params}`,
       method: "GET"
     });
     return successResponse(response.data.data);
