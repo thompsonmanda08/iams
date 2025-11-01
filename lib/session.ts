@@ -239,17 +239,52 @@ export async function verifySession(): Promise<{
   permissions?: any[];
   [key: string]: any;
 }> {
-  const cookie = (await cookies()).get(AUTH_SESSION)?.value;
-  const session = await decrypt(cookie);
+  try {
+    const cookie = (await cookies()).get(AUTH_SESSION)?.value;
 
-  if (session?.accessToken) {
+    // No cookie present
+    if (!cookie) {
+      return { isAuthenticated: false, session: null };
+    }
+
+    const decrypted = await decrypt(cookie);
+
+    // Check if decryption returned an error object
+    if (!decrypted || decrypted.success === false) {
+      // Invalid token - clean up
+      await deleteSession();
+      return { isAuthenticated: false, session: null };
+    }
+
+    const session = decrypted as AuthSession;
+
+    // Check if session has required accessToken
+    if (!session?.accessToken) {
+      return { isAuthenticated: false, session: null };
+    }
+
+    // Check token expiration
+    if (session?.expiresAt) {
+      const expiresAt = new Date(session.expiresAt);
+      const now = new Date();
+
+      if (expiresAt < now) {
+        // Token is expired, delete it
+        await deleteSession();
+        return { isAuthenticated: false, session: null };
+      }
+    }
+
+    // Session is valid
     return {
       isAuthenticated: true,
-      session: session as AuthSession
+      session: session
     };
+  } catch (error) {
+    console.error("[verifySession] Error:", error);
+    // On any error, return unauthenticated
+    return { isAuthenticated: false, session: null };
   }
-
-  return { isAuthenticated: false, session: null };
 }
 
 // DELETE THE SESSION

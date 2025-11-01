@@ -26,9 +26,13 @@ export default function UserMenu({ user }: { user: User }) {
 
     const response = await logUserOut("User initiated logout");
     if (response.success) {
-      window.location.href = "/";
+      // Direct redirect to login (no intermediate "/" redirect)
+      window.location.href = "/login";
       return;
     }
+
+    // If logout fails, show error (optional: add toast notification)
+    console.error("Logout failed:", response.message);
   };
 
   return !user || Object.keys(user || {}).length < 0 ? (

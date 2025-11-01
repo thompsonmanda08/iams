@@ -23,7 +23,9 @@ export default async function DashLayout({
   const systemInit = await initializeSystemSetup();
   const user = systemInit?.data?.user as User;
 
-  if (user == null) redirect("/login");
+  if (user == null) return redirect("/login");
+
+  if (user?.user_type !== "BACKOFFICE_USER") return redirect("/dashboard/home");
 
   return (
     <SidebarProvider

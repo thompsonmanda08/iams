@@ -3,12 +3,9 @@ import { redirect } from "next/navigation";
 import { initializeSystemSetup } from "../_actions/auth-actions";
 
 export default async function HomePage() {
-  const session = await verifySession();
+  const { isAuthenticated } = await verifySession();
 
-  if (session?.isAuthenticated) {
-    await initializeSystemSetup();
-    redirect("/dashboard/home");
-  }
+  if (isAuthenticated) return redirect("/dashboard/home");
 
-  redirect("/login");
+  return redirect("/login");
 }

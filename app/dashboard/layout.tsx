@@ -6,6 +6,8 @@ import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 import { User } from "@/lib/types/account";
 import { initializeSystemSetupCached } from "../_actions/auth-actions";
+import { redirect } from "next/navigation";
+import { verifySession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,10 @@ export default async function DashLayout({
 
   const systemInit = await initializeSystemSetupCached();
   const user = systemInit?.data?.user as User;
+
+  if (user?.user_type == "BACKOFFICE_USER") {
+    return redirect("/admin/home");
+  }
 
   return (
     <SidebarProvider

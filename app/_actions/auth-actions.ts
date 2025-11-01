@@ -75,6 +75,9 @@ export async function verifyOTP({
       mfa_verified: true
     });
 
+    // Clear cache to ensure fresh user data after MFA verification
+    clearSystemSetupCache();
+
     return successResponse(response?.data, "OTP verified successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -164,6 +167,9 @@ export async function changePassword({
     });
 
     await updateAuthSession({ change_password: false });
+
+    // Clear cached system setup after password change (security-critical)
+    clearSystemSetupCache();
 
     return successResponse(response?.data, "Password changed successfully");
   } catch (error: Error | any) {
