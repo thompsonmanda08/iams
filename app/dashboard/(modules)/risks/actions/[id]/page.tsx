@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ActionDetails } from "../action-details";
 import { log } from "console";
+import { getRisk } from "@/app/_actions/risk-module-actions";
 
 // Mock data - replace with actual data fetching
 const mockActionDetails = {
@@ -22,11 +23,19 @@ const mockActionDetails = {
 export default async function ActionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   console.log("Action ID:", id);
+  const response = await getRisk(id);
+  const data = response.success && response.data ? response.data : null;
+  const actions = data || [];
+  const pagination = data?.pagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
 
-  // In a real app, fetch the action by ID
-  // if (id !== mockActionDetails.id) {
-  //   notFound();
-  // }
+  console.log("RES ACTION:", actions);
 
   return (
     <main className="bg-background min-h-screen">
