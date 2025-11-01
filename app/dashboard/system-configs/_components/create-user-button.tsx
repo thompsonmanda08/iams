@@ -14,7 +14,7 @@ export default function CreateUserButton() {
         <UserPlus className="mr-2 h-4 w-4" />
         Create New User
       </Button>
-      <SignUpForm isOpen={isOpen} setIsOpen={setIsOpen} />
+      {isOpen && <SignUpForm user={null} onClose={() => setIsOpen(false)} />}
     </>
   );
 }

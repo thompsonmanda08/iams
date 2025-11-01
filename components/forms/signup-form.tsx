@@ -31,10 +31,12 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getBranches, getDepartments, getRoles } from "@/app/_actions/config-actions";
 import { registerUser } from "@/app/_actions/auth-actions";
+import { User } from "@/lib/types/account";
+import { updateUser } from "@/app/_actions/user-actions";
 
 type SignUpFormProps = {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
+  user: User | null;
+  onClose: () => void;
 };
 
 type Branch = {
@@ -56,7 +58,7 @@ type Role = {
   department_id: string;
 };
 
-export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
+export function SignUpForm({ user, onClose }: SignUpFormProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +69,8 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
+
+  const isEditMode = !!user;
 
   const generatePass = useCallback(() => {
     let pass = "";
@@ -94,11 +98,8 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
 
   // Load initial data
   useEffect(() => {
-    if (isOpen) {
-      loadData();
-      resetForm();
-    }
-  }, [isOpen]);
+    loadData();
+  }, []);
 
   // Filter roles based on selected department
   useEffect(() => {
@@ -116,6 +117,23 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
       setFilteredRoles([]);
     }
   }, [form.watch("department_id"), roles]);
+
+  // Set form values when in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      form.reset({
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        branch_id: user.branch_id,
+        department_id: user.department_id,
+        role_id: user.role_id
+      });
+    } else {
+      resetForm();
+    }
+  }, [isEditMode, user, form]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -171,7 +189,7 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
 
   const handleCancel = () => {
     resetForm();
-    setIsOpen(false);
+    onClose();
   };
 
   const handleGenerateNewPassword = () => {
@@ -182,24 +200,38 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
 
   const onSubmit = async (values: SignupFormValues) => {
     setIsSubmitting(true);
+
     try {
-      const response = await registerUser({
-        username: values.username,
-        email: values.email,
-        password: values.password,
-        first_name: values.first_name,
-        last_name: values.last_name,
-        branch_id: values.branch_id,
-        department_id: values.department_id,
-        role_id: values.role_id
-      });
+      let response;
+      if (isEditMode) {
+        response = await updateUser(user.id, {
+          username: values.username,
+          email: values.email,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          branch_id: values.branch_id,
+          department_id: values.department_id,
+          role_id: values.role_id
+        });
+      } else {
+        response = await registerUser({
+          username: values.username,
+          email: values.email,
+          password: values.password,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          branch_id: values.branch_id,
+          department_id: values.department_id,
+          role_id: values.role_id
+        });
+      }
 
       if (response.success) {
-        toast.success("User created successfully");
+        toast.success(`User ${isEditMode ? "updated" : "created"} successfully`);
         handleCancel();
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to create user");
+        toast.error(response.message || `Failed to ${isEditMode ? "update" : "create"} user`);
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -209,11 +241,13 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] w-full min-w-2xl overflow-hidden p-0 [&>button]:hidden">
         <DialogHeader className="border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-semibold">Create New User</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold">
+              {isEditMode ? "Edit User" : "Create New User"}
+            </DialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -333,13 +367,9 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
                           disabled={isSubmitting || isLoading}>
                           <FormControl>
                             <SelectTrigger className="w-full focus:ring-1">
-                              <SelectValue placeholder="Select branch">
-                                {isLoading
-                                  ? "Loading branches..."
-                                  : field.value
-                                    ? branches.find((b) => b.id === field.value)?.name
-                                    : "Select branch"}
-                              </SelectValue>
+                              <SelectValue
+                                placeholder={isLoading ? "Loading branches..." : "Select branch"}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -375,13 +405,9 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
                           disabled={isSubmitting || isLoading}>
                           <FormControl>
                             <SelectTrigger className="w-full focus:ring-1">
-                              <SelectValue placeholder="Select department">
-                                {isLoading
-                                  ? "Loading departments..."
-                                  : field.value
-                                    ? departments.find((d) => d.id === field.value)?.name
-                                    : "Select department"}
-                              </SelectValue>
+                              <SelectValue
+                                placeholder={isLoading ? "Loading departments..." : "Select department"}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -422,15 +448,15 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
                           }>
                           <FormControl>
                             <SelectTrigger className="w-full focus:ring-1">
-                              <SelectValue placeholder="Select role">
-                                {!form.watch("department_id")
-                                  ? "Select department first"
-                                  : isLoading
-                                    ? "Loading roles..."
-                                    : field.value
-                                      ? filteredRoles.find((r) => r.id === field.value)?.name
-                                      : "Select role"}
-                              </SelectValue>
+                              <SelectValue
+                                placeholder={
+                                  !form.watch("department_id")
+                                    ? "Select department first"
+                                    : isLoading
+                                      ? "Loading roles..."
+                                      : "Select role"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -452,50 +478,52 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Password <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              {...field}
-                              readOnly
-                              className="cursor-default font-mono text-sm focus-visible:ring-1"
-                              disabled={isSubmitting}
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={handleCopyPassword}
-                              className="shrink-0"
-                              disabled={isSubmitting}>
-                              {copied ? (
-                                <Check className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <span
-                          onClick={isSubmitting ? undefined : handleGenerateNewPassword}
-                          className={`text-primary mt-1 block text-center text-xs ${
-                            isSubmitting
-                              ? "cursor-not-allowed opacity-50"
-                              : "cursor-pointer hover:underline"
-                          }`}>
-                          Generate new password
-                        </span>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {!isEditMode && (
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Password <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                {...field}
+                                readOnly
+                                className="cursor-default font-mono text-sm focus-visible:ring-1"
+                                disabled={isSubmitting}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={handleCopyPassword}
+                                className="shrink-0"
+                                disabled={isSubmitting}>
+                                {copied ? (
+                                  <Check className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Copy className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <span
+                            onClick={isSubmitting ? undefined : handleGenerateNewPassword}
+                            className={`text-primary mt-1 block text-center text-xs ${
+                              isSubmitting
+                                ? "cursor-not-allowed opacity-50"
+                                : "cursor-pointer hover:underline"
+                            }`}>
+                            Generate new password
+                          </span>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -508,7 +536,13 @@ export function SignUpForm({ isOpen, setIsOpen }: SignUpFormProps) {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Creating..." : "Create"}
+                  {isSubmitting
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Creating..."
+                    : isEditMode
+                      ? "Update"
+                      : "Create"}
                 </Button>
               </div>
             </form>

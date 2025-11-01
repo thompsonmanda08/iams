@@ -37,6 +37,7 @@ import { generateAvatarFallback } from "@/lib/utils";
 import { toast } from "sonner";
 import { User } from "@/lib/types/account";
 import { deleteUser, toggleUserStatus } from "@/app/_actions/user-actions";
+import { SignUpForm } from "@/components/forms/signup-form";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -60,7 +61,8 @@ type UsersDataTableProps = {
 
 const getColumns = (
   onDelete: (id: string) => void,
-  onToggleStatus: (id: string, isActive: boolean) => void
+  onToggleStatus: (id: string, isActive: boolean) => void,
+  onEdit: (user: User) => void
 ): ColumnDef<User>[] => [
   {
     id: "#",
@@ -156,7 +158,7 @@ const getColumns = (
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>View Profile</DropdownMenuItem>
-              <DropdownMenuItem>Edit User</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(user)}>Edit User</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Reset Password</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onToggleStatus(user.id, !user.is_active)}>
@@ -187,6 +189,7 @@ export default function UsersDataTable({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [deleteDialog, setDeleteDialog] = React.useState<{
     open: boolean;
     userId: string | null;
@@ -239,7 +242,11 @@ export default function UsersDataTable({
     }
   };
 
-  const columns = getColumns(handleDeleteClick, handleToggleStatus);
+  const handleEditClick = (user: User) => {
+    setEditingUser(user);
+  };
+
+  const columns = getColumns(handleDeleteClick, handleToggleStatus, handleEditClick);
 
   const table = useReactTable({
     data,
@@ -470,6 +477,7 @@ export default function UsersDataTable({
         onConfirm={handleDeleteConfirm}
         type="delete"
       />
+      {editingUser && <SignUpForm user={editingUser} onClose={() => setEditingUser(null)} />}
     </Card>
   );
 }
