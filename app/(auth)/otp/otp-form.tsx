@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/input-otp";
 import Image from "next/image";
 import Link from "next/link";
-import { verifyOTP } from "@/app/_actions/auth-actions";
+import { verifyOTP, resendOTP } from "@/app/_actions/auth-actions";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
@@ -27,6 +27,19 @@ export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
 
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
+    }
+  }, [countdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +71,29 @@ export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
       setOtp(""); // Clear OTP on error
       setIsLoading(false);
     }
+  };
+
+  const handleResend = async () => {
+    if (!username) {
+      toast.error("Username not found. Please login again.");
+      router.push("/login");
+      return;
+    }
+
+    setIsResending(true);
+
+    const response = await resendOTP({ username });
+
+    if (response.success) {
+      toast.success(response.message || "OTP resent successfully!");
+      // Reset countdown timer
+      setCountdown(60);
+      setCanResend(false);
+    } else {
+      toast.error(response.message || "Failed to resend OTP. Please try again.");
+    }
+
+    setIsResending(false);
   };
 
   return (
@@ -105,7 +141,19 @@ export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
               </InputOTPGroup>
             </InputOTP>
             <FieldDescription className="text-center">
-              Didn&apos;t receive the code? <a href="#">Resend</a>
+              Didn&apos;t receive the code?{" "}
+              {canResend ? (
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={handleResend}
+                  disabled={isResending}
+                  className="h-auto p-0 text-sm font-normal">
+                  {isResending ? "Resending..." : "Resend"}
+                </Button>
+              ) : (
+                <span className="text-muted-foreground">Resend in {countdown}s</span>
+              )}
             </FieldDescription>
           </Field>
           <Field>

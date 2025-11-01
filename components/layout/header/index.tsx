@@ -11,8 +11,10 @@ import UserMenu from "@/components/layout/header/user-menu";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { User } from "@/lib/types/account";
+import { useSystemSetup } from "@/hooks/use-users-query-data";
 
 export function SiteHeader({ user }: { user: User }) {
+  // const { data: setup } = useSystemSetup();
   const { toggleSidebar } = useSidebar();
 
   return (

@@ -39,6 +39,9 @@ export function NavUser({ user }: { user: User }) {
   const userEmail = user?.email || "example@mail.com";
 
   const handleUserLogOut = async () => {
+    // Clear session initialization flag
+    sessionStorage.removeItem("session_initialized");
+
     const response = await logUserOut("User initiated logout");
     if (response.success) {
       window.location.href = "/";

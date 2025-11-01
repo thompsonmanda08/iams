@@ -21,23 +21,37 @@ export const useTeamMembers = (params: UserQueryParams | undefined) => {
   });
 };
 
-export const useRefreshToken = (enabled: boolean) =>
+/**
+ * Hook to manually refresh authentication token
+ * IMPORTANT: Auto-refetch disabled to prevent screen flickering
+ * Only refetch manually when user takes action (e.g., unlock screen)
+ */
+export const useRefreshToken = (enabled: boolean = false) =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN, enabled],
     queryFn: getRefreshToken,
-    retry: 3,
-    retryDelay: 3000,
+    retry: 1, // Reduced retries
+    retryDelay: 1000,
     refetchOnMount: false,
-    refetchInterval: 1000 * 60 * 3, // 3minutes
-    staleTime: 60 * 1000 * 3,
+    refetchInterval: false, // ✅ DISABLED: Prevents automatic refetch every 3 minutes
+    staleTime: Infinity, // ✅ Never auto-refetch, only manual
     enabled
   });
-export const useSystemSetup = () =>
+
+/**
+ * Hook to fetch system setup (user data and permissions)
+ * IMPORTANT: This hook is disabled by default as it's handled server-side
+ * Only enable if you need to manually trigger a refresh
+ */
+export const useSystemSetup = (enabled: boolean = false) =>
   useQuery({
-    queryKey: [USERS_QUERY_KEYS.SYS_SETUP],
+    queryKey: [USERS_QUERY_KEYS.SYS_SETUP, enabled], // Add enabled to key to prevent cache collision
     queryFn: async () => await initializeSystemSetup({ access_token: "" }),
-    retry: 3,
-    retryDelay: 3000,
-    refetchInterval: 1000 * 60 * 5, // 3minutes
-    staleTime: 60 * 1000 * 5
+    retry: 0, // ✅ No retries - fail fast
+    refetchInterval: false, // ✅ DISABLED: Prevents automatic refetch every 5 minutes
+    refetchOnMount: false, // ✅ Don't refetch when component mounts
+    refetchOnWindowFocus: false, // ✅ Don't refetch when window gains focus
+    refetchOnReconnect: false, // ✅ Don't refetch when network reconnects
+    staleTime: Infinity, // ✅ Never go stale
+    enabled // ✅ Disabled by default
   });

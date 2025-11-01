@@ -145,13 +145,18 @@ export async function createAuthSession({
 }
 
 export async function updateAuthSession(fields: any): Promise<AuthSession> {
-  // const { isAuthenticated: isLoggedIn, session: oldSession } = await verifySession();
-  // const backupUserSession = await getUserSession();
   const [{ isAuthenticated: isLoggedIn, session: oldSession }, backupUserSession] =
     await Promise.all([verifySession(), getUserSession()]);
 
-  const user = (backupUserSession?.user || {}) as User;
-  const permissions = (backupUserSession?.permissions || []) as Permission[];
+  const backupUser = (backupUserSession?.user || {}) as User;
+  const backupPermissions = (backupUserSession?.permissions || []) as Permission[];
+
+  console.log("🔄 [updateAuthSession] Current state:", {
+    hasOldSession: !!oldSession,
+    hasBackupUser: backupUser && Object.keys(backupUser).length > 0,
+    fieldsToUpdate: Object.keys(fields),
+    hasOldUser: !!(oldSession?.user && Object.keys(oldSession.user).length > 0)
+  });
 
   if (isLoggedIn && oldSession) {
     // Remove any null values from the old session (cleanup from previous bugs)
@@ -165,11 +170,28 @@ export async function updateAuthSession(fields: any): Promise<AuthSession> {
       Object.entries(fields).filter(([_, value]) => value !== undefined && value !== null)
     );
 
+    // Determine user: prefer new user data, then existing session user, then backup
+    let finalUser: User | undefined;
+    if (filteredFields.user && Object.keys(filteredFields.user).length > 0) {
+      finalUser = filteredFields.user as User;
+      console.log("✅ [updateAuthSession] Using new user data from fields");
+    } else if (cleanedOldSession.user && Object.keys(cleanedOldSession.user).length > 0) {
+      finalUser = cleanedOldSession.user as User;
+      console.log("♻️ [updateAuthSession] Keeping existing session user");
+    } else if (backupUser && Object.keys(backupUser).length > 0) {
+      finalUser = backupUser;
+      console.log("🔄 [updateAuthSession] Restoring user from backup");
+    } else {
+      console.warn("⚠️ [updateAuthSession] No user data available!");
+    }
+
     const newSession: AuthSession = {
       ...cleanedOldSession,
       ...filteredFields,
-      user: filteredFields.user || user,
-      permissions: (filteredFields.permissions || permissions) as Permission[]
+      user: finalUser,
+      permissions: (filteredFields.permissions ||
+        cleanedOldSession.permissions ||
+        backupPermissions) as Permission[]
     };
 
     // Determine expiration: use provided expiresAt from fields, keep existing, or create new
@@ -246,8 +268,8 @@ export async function createUserSession(user: any, permissions?: any[]) {
 
 // RETRIEVE USER AND PERMISSIONS BACKUP
 export async function getUserSession(): Promise<{
-  user: any;
-  permissions?: any[];
+  user: User;
+  permissions: Permission[];
   savedAt?: string;
 } | null> {
   try {
@@ -258,7 +280,7 @@ export async function getUserSession(): Promise<{
 
     if (backup?.user) {
       console.log("📦 [getUserSession] User backup retrieved successfully");
-      return backup as { user: any; permissions?: any[]; savedAt?: string };
+      return backup as { user: User; permissions: Permission[]; savedAt?: string };
     }
 
     return null;
