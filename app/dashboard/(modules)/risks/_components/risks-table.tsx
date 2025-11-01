@@ -344,9 +344,9 @@ export default function RisksTable({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
-                          router.push(
-                            `/dashboard/risks/risk-registers/${registerId}/risks/${risk.id}`
-                          );
+                          // router.push(
+                          //   `/dashboard/risks/risk-registers/${registerId}/risks/${risk.id}`
+                          // );
                           e.stopPropagation();
                         }}
                         className="h-8 gap-1.5">
