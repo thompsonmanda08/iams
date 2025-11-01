@@ -6,13 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import WorkflowEditor from "./workflow-editor";
 import PageHeader from "@/components/page-header";
 import { WorkflowSimulator } from "./workflow-simulator";
-import { useWorkflowStore } from "@/lib/stores/workflow-store";
 import { useWorkflowMutations } from "@/lib/hooks/use-workflow-mutations";
 
-const WorkflowClient = ({ initialData }: any) => {
+interface WorkflowClientProps {
+  initialWorkflows: any[];
+}
+
+const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
-  const { workflows } = useWorkflowStore();
+  const workflows = initialWorkflows || [];
   const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
 
   const handleEdit = (workflowId: string) => {

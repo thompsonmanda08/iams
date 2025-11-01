@@ -1,10 +1,5 @@
-import { getDepartments } from "@/app/_actions/config-actions";
-import DepartmentsConfig from "../_components/departments-config";
+import { listWorkflows } from "@/app/_actions/workflow-actions";
 import { Pagination } from "@/lib/types";
-import PageHeader from "@/components/page-header";
-import { Briefcase, Plus, Workflow } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import WorkflowClient from "./_components";
 
 type PageProps = {
@@ -14,25 +9,14 @@ type PageProps = {
 
 export default async function WorkflowConfigPage({ searchParams }: PageProps) {
   const urlParams = await searchParams;
-  const page = urlParams.page ? Number(urlParams.page) : 1;
-  const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
 
-  const departmentsResponse = await getDepartments({ page, page_size });
-
-  const data = departmentsResponse.success ? departmentsResponse.data : null;
-  const departments = data?.data || [];
-  const pagination = data?.pagination || {
-    total: 0,
-    page: 1,
-    page_size: 10,
-    total_pages: 0,
-    has_next: false,
-    has_prev: false
-  };
+  // Fetch workflows from the API
+  const workflowsResponse = await listWorkflows();
+  const workflows = workflowsResponse.success ? workflowsResponse.data : [];
 
   return (
     <div>
-      <WorkflowClient initialDepartments={departments} pagination={pagination} />
+      <WorkflowClient initialWorkflows={workflows} />
     </div>
   );
 }

@@ -2,11 +2,24 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
-import { useTaskStore } from "@/lib/stores/task-store";
 
-export function TaskStats() {
-  const { getStats } = useTaskStore();
-  const stats = getStats();
+interface TaskStatsProps {
+  initialStats: {
+    pending: number;
+    in_progress?: number;
+    inProgress?: number;
+    completed: number;
+    rejected: number;
+  };
+}
+
+export function TaskStats({ initialStats }: TaskStatsProps) {
+  const stats = {
+    pending: initialStats.pending || 0,
+    inProgress: initialStats.in_progress || initialStats.inProgress || 0,
+    completed: initialStats.completed || 0,
+    rejected: initialStats.rejected || 0
+  };
 
   const statCards = [
     {

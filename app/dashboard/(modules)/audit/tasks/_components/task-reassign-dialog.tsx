@@ -23,8 +23,9 @@ import type { Task } from "@/lib/types/task";
 import { toast } from "sonner";
 import { UserCog, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useTaskStore } from "@/lib/stores/task-store";
-import { mockUsers, getUsersByRole, type MockUser } from "@/lib/data/mock-users";
+import { reassignTask } from "@/app/_actions/task-actions";
+import { getUsers } from "@/app/_actions/user-actions";
+import { useRouter } from "next/navigation";
 
 interface TaskReassignDialogProps {
   task: Task;
@@ -36,18 +37,34 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
   const [selectedUserId, setSelectedUserId] = useState("");
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [users, setUsers] = useState<MockUser[]>([]);
-  const { reassignTask: reassignTaskStore } = useTaskStore();
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (open) {
-      // Load users with the required role
-      const filteredUsers = getUsersByRole(task.requiredRole);
-      setUsers(filteredUsers);
+      // Load users from API
+      loadUsers();
     }
-  }, [open, task.requiredRole]);
+  }, [open]);
 
-  const handleSubmit = () => {
+  const loadUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const response = await getUsers({ role: task.requiredRole });
+      if (response.success) {
+        setUsers(response.data || []);
+      } else {
+        toast.error("Failed to load users");
+      }
+    } catch (error) {
+      toast.error("Error loading users");
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!selectedUserId) {
       toast.error("Please select a user to reassign the task to");
       return;
@@ -56,26 +73,19 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
     setIsSubmitting(true);
 
     try {
-      const selectedUser = users.find((u) => u.id === selectedUserId);
-      if (!selectedUser) {
-        toast.error("Selected user not found");
-        return;
+      const response = await reassignTask(task.id, selectedUserId, comment);
+
+      if (response.success) {
+        toast.success(response.message || "Task reassigned successfully");
+        onOpenChange(false);
+        setSelectedUserId("");
+        setComment("");
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to reassign task");
       }
-
-      reassignTaskStore(
-        task.id,
-        selectedUser.id,
-        `${selectedUser.first_name} ${selectedUser.last_name}`,
-        selectedUser.email,
-        comment
-      );
-
-      toast.success("Task reassigned successfully");
-      onOpenChange(false);
-      setSelectedUserId("");
-      setComment("");
-    } catch (error) {
-      toast.error("An error occurred while reassigning the task");
+    } catch (error: any) {
+      toast.error(error?.message || "An error occurred while reassigning the task");
     } finally {
       setIsSubmitting(false);
     }
@@ -130,7 +140,11 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
             <Label htmlFor="user">
               Select User <span className="text-red-500">*</span>
             </Label>
-            {users.length === 0 ? (
+            {isLoadingUsers ? (
+              <div className="flex items-center justify-center p-4">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : users.length === 0 ? (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>

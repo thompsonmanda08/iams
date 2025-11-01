@@ -3,8 +3,21 @@ import { Download, Filter, Workflow } from "lucide-react";
 import { TasksTableClient } from "./_components/tasks-table-client";
 import { TaskStats } from "./_components/task-stats";
 import PageHeader from "@/components/page-header";
+import { getTasks, getTaskStats } from "@/app/_actions/task-actions";
 
-export default function TasksPage() {
+export default async function TasksPage() {
+  // Fetch tasks and stats from the API
+  const tasksResponse = await getTasks();
+  const statsResponse = await getTaskStats();
+
+  const tasks = tasksResponse.success ? tasksResponse.data : [];
+  const stats = statsResponse.success ? statsResponse.data : {
+    pending: 0,
+    in_progress: 0,
+    completed: 0,
+    rejected: 0
+  };
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -13,7 +26,7 @@ export default function TasksPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
               title="Workflow Tasks"
-              description="  Manage and execute workflow tasks assigned to users (Simulation Mode)"
+              description="Manage and execute workflow tasks assigned to users"
               Icon={Workflow}
             />
             <div className="flex gap-2">
@@ -34,10 +47,10 @@ export default function TasksPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           {/* Task Statistics */}
-          <TaskStats />
+          <TaskStats initialStats={stats} />
 
           {/* Table */}
-          <TasksTableClient />
+          <TasksTableClient initialTasks={tasks} />
         </div>
       </div>
     </div>

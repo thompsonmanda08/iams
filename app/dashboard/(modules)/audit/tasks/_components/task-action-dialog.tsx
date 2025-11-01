@@ -15,10 +15,8 @@ import { Label } from "@/components/ui/label";
 import type { Task } from "@/lib/types/task";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
-import { useTaskStore } from "@/lib/stores/task-store";
-import { useEntityStore } from "@/lib/stores/entity-store";
-import { useWorkflowStore } from "@/lib/stores/workflow-store";
-import { WorkflowExecutor } from "@/lib/utils/workflow-executor";
+import { approveTask, rejectTask } from "@/app/_actions/task-actions";
+import { useRouter } from "next/navigation";
 
 interface TaskActionDialogProps {
   task: Task;
@@ -30,11 +28,9 @@ interface TaskActionDialogProps {
 export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActionDialogProps) {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { approveTask: approveTaskStore, rejectTask: rejectTaskStore, addTask } = useTaskStore();
-  const { getWorkflow } = useWorkflowStore();
-  const { getEntity, transitionEntity } = useEntityStore();
+  const router = useRouter();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!action) return;
     if (action === "REJECT" && !comment.trim()) {
       toast.error("Comment is required when rejecting a task");
@@ -44,68 +40,24 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
     setIsSubmitting(true);
 
     try {
-      // Simulate current user (in real app, get from auth)
-      const currentUser = {
-        id: "user-current",
-        name: "Current User",
-        role: task.requiredRole
-      };
+      let response;
 
       if (action === "APPROVE") {
-        // Mark task as completed
-        approveTaskStore(task.id, currentUser.id, currentUser.name, comment);
-
-        // Get workflow and entity
-        const workflow = getWorkflow(task.workflowId);
-        const entity = getEntity(task.entityId);
-
-        if (workflow && entity) {
-          // Execute workflow transition
-          const executor = new WorkflowExecutor(workflow);
-          const result = executor.executeTransition(task.actionName, entity.currentStateId, {
-            userId: currentUser.id,
-            userRole: currentUser.role,
-            entityData: entity.data
-          });
-
-          if (result.success && result.newState) {
-            // Find new state ID
-            const newStateObj = workflow.states.find((s) => s.name === result.newState);
-            if (newStateObj) {
-              // Update entity state
-              transitionEntity(
-                entity.id,
-                result.newState,
-                newStateObj.id,
-                task.actionName,
-                currentUser.name,
-                comment
-              );
-
-              // Create new tasks
-              if (result.tasksCreated && result.tasksCreated.length > 0) {
-                result.tasksCreated.forEach((newTask) => addTask(newTask));
-                toast.success(
-                  `Task approved! ${result.tasksCreated.length} new task(s) created.`
-                );
-              } else {
-                toast.success("Task approved successfully!");
-              }
-            }
-          } else {
-            toast.error(result.error || "Failed to execute workflow transition");
-          }
-        }
+        response = await approveTask(task.id, comment);
       } else if (action === "REJECT") {
-        // Mark task as rejected
-        rejectTaskStore(task.id, currentUser.id, currentUser.name, comment);
-        toast.success("Task rejected successfully!");
+        response = await rejectTask(task.id, comment);
       }
 
-      onOpenChange(false);
-      setComment("");
-    } catch (error) {
-      toast.error(`An error occurred while ${action?.toLowerCase()}ing the task`);
+      if (response?.success) {
+        toast.success(response.message || `Task ${action.toLowerCase()}ed successfully!`);
+        onOpenChange(false);
+        setComment("");
+        router.refresh();
+      } else {
+        toast.error(response?.message || `Failed to ${action.toLowerCase()} task`);
+      }
+    } catch (error: any) {
+      toast.error(error?.message || `An error occurred while ${action?.toLowerCase()}ing the task`);
     } finally {
       setIsSubmitting(false);
     }
