@@ -22,6 +22,7 @@ type Scale = {
   level: number;
   name: string;
   description: string;
+  matrix_id?: string;
 };
 
 type EditScaleDialogProps = {
@@ -35,7 +36,8 @@ export function EditScaleDialog({ open, onOpenChange, scale, onSuccess }: EditSc
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: scale.name,
-    description: scale.description
+    description: scale.description,
+    matrix_id: scale.matrix_id
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

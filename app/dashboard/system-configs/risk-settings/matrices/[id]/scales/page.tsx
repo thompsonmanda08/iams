@@ -1,7 +1,3 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-
 import { getRiskMatrix } from "@/app/_actions/config-actions";
 import { RiskScalesManager } from "../../_components/risk-scales-manager";
 import BackButton from "@/components/back-button";

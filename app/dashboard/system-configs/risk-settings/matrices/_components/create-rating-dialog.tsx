@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { createRating } from "@/app/_actions/config-actions";
+import { ColorPicker } from "@/components/color-picker";
 
 type CreateRatingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   matrixId: string;
+  matrix_id: string;
   onSuccess: () => void;
 };
 
@@ -34,8 +36,9 @@ export function CreateRatingDialog({
     name: "",
     min_score: 1,
     max_score: 5,
-    color_hex: "#FFFF00",
-    description: ""
+    color_hex: "#FFFFFF",
+    description: "",
+    matrix_id: matrixId
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +64,8 @@ export function CreateRatingDialog({
           min_score: 1,
           max_score: 5,
           color_hex: "#FFFF00",
-          description: ""
+          description: "",
+          matrix_id: matrixId
         });
         onOpenChange(false);
         onSuccess();
@@ -132,25 +136,14 @@ export function CreateRatingDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="color_hex">
+              <Label>
                 Color <span className="text-destructive">*</span>
               </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="color_hex"
-                  type="color"
-                  value={formData.color_hex}
-                  onChange={(e) => setFormData({ ...formData, color_hex: e.target.value })}
-                  className="h-10 w-20"
-                  disabled={isLoading}
-                />
-                <Input
-                  value={formData.color_hex}
-                  onChange={(e) => setFormData({ ...formData, color_hex: e.target.value })}
-                  placeholder="#FFFF00"
-                  disabled={isLoading}
-                />
-              </div>
+              <ColorPicker
+                value={formData.color_hex}
+                onChange={(color) => setFormData({ ...formData, color_hex: color })}
+                disabled={isLoading}
+              />
             </div>
 
             <div className="grid gap-2">

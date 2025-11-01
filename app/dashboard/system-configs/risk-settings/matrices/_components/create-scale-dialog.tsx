@@ -20,6 +20,7 @@ type CreateScaleDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   matrixId: string;
+  matrix_id?: string;
   scaleType: "LIKELIHOOD" | "IMPACT";
   onSuccess: () => void;
 };
@@ -35,7 +36,8 @@ export function CreateScaleDialog({
   const [formData, setFormData] = useState({
     level: 1,
     name: "",
-    description: ""
+    description: "",
+    matrix_id: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,11 +59,13 @@ export function CreateScaleDialog({
         scale_type: scaleType,
         level: formData.level,
         name: formData.name,
-        description: formData.description
+        description: formData.description,
+        matrix_id: matrixId,
+        
       });
       if (response.success) {
         toast.success(response.message || "Scale created successfully");
-        setFormData({ level: 1, name: "", description: "" });
+        setFormData({ level: 1, name: "", description: "", matrix_id: matrixId });
         onOpenChange(false);
         onSuccess();
       } else {
