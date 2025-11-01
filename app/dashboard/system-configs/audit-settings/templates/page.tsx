@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, FileCode2 } from "lucide-react";
 import Link from "next/link";
 import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
+import PageHeader from "@/components/page-header";
 
 export default async function WorkpaperTemplatesPage() {
   const templatesResponse = await getWorkingPaperTemplates();
@@ -15,21 +16,23 @@ export default async function WorkpaperTemplatesPage() {
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Working Paper Templates</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Manage working paper templates and their categories
-              </p>
-            </div>
+            <PageHeader
+              title="Working Paper Templates"
+              description="Manage working paper templates and their categories"
+              Icon={FileCode2}
+            />
+
             <div className="flex gap-2">
-              {/* <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button> */}
+              <Link href="/dashboard/system-configs/audit-settings/new/GENERAL">
+                <Button variant="outline" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create General Workpaper Template
+                </Button>
+              </Link>
               <Link href="/dashboard/system-configs/audit-settings/new/ISO27001">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Create Template
+                  Create ISO27001 Template
                 </Button>
               </Link>
             </div>
