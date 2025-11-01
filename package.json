@@ -86,6 +86,7 @@
     "react": "^19.0.0",
     "react-day-picker": "^9.7.0",
     "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.8",
     "react-ga4": "^2.1.0",
     "react-hook-form": "^7.58.1",
     "react-idle-timer": "^5.7.2",
