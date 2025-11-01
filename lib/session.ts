@@ -3,10 +3,11 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-import { AuthSession, Permission, UserSession } from "@/lib/types";
+import { AuthSession, Permission } from "@/lib/types";
 
-import { AUTH_SESSION, USER_SESSION } from "./constants";
+import { AUTH_SESSION, USER_SESSION, PERMISSIONS_SESSION } from "./constants";
 import { User, UserType } from "./types/account";
+import { cache } from "react";
 
 // 1. Get secret from environment variables (MUST be set) - SERVER SIDE ONLY
 // Note: Validation is deferred to runtime to avoid build-time issues
@@ -38,8 +39,8 @@ export async function encrypt(payload: any) {
     .sign(key);
 }
 
-export async function decrypt(session: any) {
-  if (!session || typeof session !== "string") {
+export async function decrypt(token: any) {
+  if (!token || typeof token !== "string") {
     return {
       success: false,
       message: "No session token provided",
@@ -49,7 +50,7 @@ export async function decrypt(session: any) {
     };
   }
 
-  const parts = session.split(".");
+  const parts = token.split(".");
 
   if (parts.length !== 3) {
     return {
@@ -63,7 +64,7 @@ export async function decrypt(session: any) {
 
   try {
     const key = getKey();
-    const { payload } = await jwtVerify(session, key, {
+    const { payload } = await jwtVerify(token, key, {
       algorithms: ["HS256"],
       clockTolerance: 15
     });
@@ -128,11 +129,11 @@ export async function createAuthSession({
   };
 
   // Call `encrypt` to generate the session token
-  const session = await encrypt(newSession);
+  const token = await encrypt(newSession);
 
   // Ensure `session` is successfully created before setting the cookie
-  if (session) {
-    (await cookies()).set(AUTH_SESSION, session, {
+  if (token) {
+    (await cookies()).set(AUTH_SESSION, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       expires: expiresAt,
@@ -144,19 +145,52 @@ export async function createAuthSession({
   }
 }
 
-export async function updateAuthSession(fields: any): Promise<AuthSession> {
-  const [{ isAuthenticated: isLoggedIn, session: oldSession }, backupUserSession] =
-    await Promise.all([verifySession(), getUserSession()]);
+export async function createUserSession(user: User): Promise<void> {
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // AFTER 1 HOUR
 
-  const backupUser = (backupUserSession?.user || {}) as User;
-  const backupPermissions = (backupUserSession?.permissions || []) as Permission[];
+  const newSession = { ...user, expiresAt };
 
-  // console.log("🔄 [updateAuthSession] Current state:", {
-  //   hasOldSession: !!oldSession,
-  //   hasBackupUser: backupUser && Object.keys(backupUser).length > 0,
-  //   fieldsToUpdate: Object.keys(fields),
-  //   hasOldUser: !!(oldSession?.user && Object.keys(oldSession.user).length > 0)
-  // });
+  // Call `encrypt` to generate the session token
+  const token = await encrypt(newSession);
+
+  // Ensure `session` is successfully created before setting the cookie
+  if (token) {
+    (await cookies()).set(USER_SESSION, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: expiresAt,
+      sameSite: "strict",
+      path: "/"
+    });
+  } else {
+    throw new Error("Failed to create session token.");
+  }
+}
+
+export async function createPermissionsSession(pem: Permission[]): Promise<void> {
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // AFTER 1 HOUR
+
+  const newSession = { ...pem, expiresAt };
+
+  // Call `encrypt` to generate the session token
+  const token = await encrypt(newSession);
+
+  // Ensure `session` is successfully created before setting the cookie
+  if (token) {
+    (await cookies()).set(PERMISSIONS_SESSION, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: expiresAt,
+      sameSite: "strict",
+      path: "/"
+    });
+  } else {
+    throw new Error("Failed to create session token.");
+  }
+}
+
+export async function updateAuthSession(fields: any): Promise<AuthSession | undefined> {
+  const { isAuthenticated: isLoggedIn, session: oldSession } = await verifySession();
 
   if (isLoggedIn && oldSession) {
     // Remove any null values from the old session (cleanup from previous bugs)
@@ -164,34 +198,9 @@ export async function updateAuthSession(fields: any): Promise<AuthSession> {
       Object.entries(oldSession).filter(([_, value]) => value !== null)
     ) as AuthSession;
 
-    // Merge old session with new fields, preserving all existing data
-    // Filter out undefined and null values from fields to prevent overwriting existing data
-    const filteredFields = Object.fromEntries(
-      Object.entries(fields).filter(([_, value]) => value !== undefined && value !== null)
-    );
-
-    // Determine user: prefer new user data, then existing session user, then backup
-    let finalUser: User | undefined;
-    if (filteredFields.user && Object.keys(filteredFields.user).length > 0) {
-      finalUser = filteredFields.user as User;
-      console.log("✅ [updateAuthSession] Using new user data from fields");
-    } else if (cleanedOldSession.user && Object.keys(cleanedOldSession.user).length > 0) {
-      finalUser = cleanedOldSession.user as User;
-      console.log("♻️ [updateAuthSession] Keeping existing session user");
-    } else if (backupUser && Object.keys(backupUser).length > 0) {
-      finalUser = backupUser;
-      console.log("🔄 [updateAuthSession] Restoring user from backup");
-    } else {
-      console.warn("⚠️ [updateAuthSession] No user data available!");
-    }
-
     const newSession: AuthSession = {
       ...cleanedOldSession,
-      ...filteredFields,
-      user: finalUser,
-      permissions: (filteredFields.permissions ||
-        cleanedOldSession.permissions ||
-        backupPermissions) as Permission[]
+      ...fields
     };
 
     // Determine expiration: use provided expiresAt from fields, keep existing, or create new
@@ -220,7 +229,7 @@ export async function updateAuthSession(fields: any): Promise<AuthSession> {
       throw new Error("Failed to update session token.");
     }
   }
-  return oldSession as AuthSession;
+  return;
 }
 
 export async function verifySession(): Promise<{
@@ -230,63 +239,51 @@ export async function verifySession(): Promise<{
   permissions?: any[];
   [key: string]: any;
 }> {
-  const cookie = (await cookies()).get(AUTH_SESSION)?.value;
-  const session = await decrypt(cookie);
-
-  if (session?.accessToken) {
-    return {
-      isAuthenticated: true,
-      session: session as AuthSession
-    };
-  }
-
-  return { isAuthenticated: false, session: null };
-}
-
-// SAVE USER AND PERMISSIONS BACKUP
-export async function createUserSession(user: any, permissions?: any[]) {
   try {
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    const backup = { user, permissions, savedAt: new Date().toISOString() };
-    const encryptedBackup = await encrypt(backup);
+    const cookie = (await cookies()).get(AUTH_SESSION)?.value;
 
-    (await cookies()).set(USER_SESSION, encryptedBackup, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      expires: expiresAt,
-      sameSite: "strict",
-      path: "/"
-    });
-
-    // console.log("💾 [createUserSession] User backup saved successfully");
-    return { success: true };
-  } catch (error: any) {
-    console.error("Failed to save user backup:", error);
-    return { success: false, error: error?.message };
-  }
-}
-
-// RETRIEVE USER AND PERMISSIONS BACKUP
-export async function getUserSession(): Promise<{
-  user: User;
-  permissions: Permission[];
-  savedAt?: string;
-} | null> {
-  try {
-    const cookie = (await cookies()).get(USER_SESSION)?.value;
-    if (!cookie) return null;
-
-    const backup = await decrypt(cookie);
-
-    if (backup?.user) {
-      console.log("📦 [getUserSession] User backup retrieved successfully");
-      return backup as { user: User; permissions: Permission[]; savedAt?: string };
+    // No cookie present
+    if (!cookie) {
+      return { isAuthenticated: false, session: null };
     }
 
-    return null;
-  } catch (error: any) {
-    console.error("Failed to retrieve user backup:", error);
-    return null;
+    const decrypted = await decrypt(cookie);
+
+    // Check if decryption returned an error object
+    if (!decrypted || decrypted.success === false) {
+      // Invalid token - clean up
+      await deleteSession();
+      return { isAuthenticated: false, session: null };
+    }
+
+    const session = decrypted as AuthSession;
+
+    // Check if session has required accessToken
+    if (!session?.accessToken) {
+      return { isAuthenticated: false, session: null };
+    }
+
+    // Check token expiration
+    if (session?.expiresAt) {
+      const expiresAt = new Date(session.expiresAt);
+      const now = new Date();
+
+      if (expiresAt < now) {
+        // Token is expired, delete it
+        await deleteSession();
+        return { isAuthenticated: false, session: null };
+      }
+    }
+
+    // Session is valid
+    return {
+      isAuthenticated: true,
+      session: session
+    };
+  } catch (error) {
+    console.error("[verifySession] Error:", error);
+    // On any error, return unauthenticated
+    return { isAuthenticated: false, session: null };
   }
 }
 
@@ -298,6 +295,7 @@ export async function deleteSession() {
     // Delete all session cookies
     cookieStore.delete(AUTH_SESSION);
     cookieStore.delete(USER_SESSION); // Also delete user backup
+    cookieStore.delete(PERMISSIONS_SESSION);
 
     return { success: true, message: "Logout Success" };
   } catch (error: any) {
@@ -309,4 +307,67 @@ export async function deleteSession() {
       error: error?.message || "Unknown error"
     };
   }
+}
+
+// --- NEW SESSION GETTER FUNCTIONS ---
+
+/**
+ * Retrieves and decrypts the AUTH_SESSION cookie.
+ * Contains access token and other auth-related flags.
+ */
+export async function getAuthSession(): Promise<Omit<AuthSession, "user" | "permissions"> | null> {
+  const cookie = (await cookies()).get(AUTH_SESSION)?.value;
+  if (!cookie) return null;
+  return decrypt(cookie);
+}
+
+/**
+ * Retrieves and decrypts the USER_SESSION cookie.
+ * Contains public user profile information.
+ */
+export async function _getUserSession(): Promise<AuthSession["user"] | null> {
+  const cookie = (await cookies()).get(USER_SESSION)?.value;
+  if (!cookie) return null;
+  return decrypt(cookie) as AuthSession["user"];
+}
+
+export const getUserSession = cache(_getUserSession);
+
+/**
+ * Retrieves and decrypts the PERMISSIONS_SESSION cookie.
+ * Contains user permissions.
+ */
+export async function getPermissionsSession(): Promise<AuthSession["permissions"] | null> {
+  const cookie = (await cookies()).get(PERMISSIONS_SESSION)?.value;
+  if (!cookie) return null;
+  return decrypt(cookie) as unknown as AuthSession["permissions"];
+}
+
+/**
+ * Verifies one or more session cookies and returns a consolidated session object.
+ * @param sessionNames Array of cookie names to verify (e.g., [AUTH_SESSION, USER_SESSION])
+ * @returns An object with isAuthenticated flag and a session object with combined data.
+ */
+export async function verifySessions(
+  sessionNames: string[] = [AUTH_SESSION]
+): Promise<{ isAuthenticated: boolean; session: any }> {
+  const cookieStore = await cookies();
+  const sessionPromises = sessionNames.map(async (name) => {
+    const cookie = cookieStore.get(name)?.value;
+    if (!cookie) return null;
+    const data = await decrypt(cookie);
+    // Ensure we don't return decryption error objects
+    return data && !data.success === false ? data : null;
+  });
+
+  const decryptedSessions = await Promise.all(sessionPromises);
+
+  const consolidatedSession = decryptedSessions.reduce((acc, curr) => {
+    if (curr) return { ...acc, ...curr };
+    return acc;
+  }, {});
+
+  const isAuthenticated = !!consolidatedSession?.accessToken;
+
+  return { isAuthenticated, session: consolidatedSession };
 }

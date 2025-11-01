@@ -19,22 +19,13 @@ import {
 import { BellIcon, CreditCardIcon, LogOutIcon, UserCircle2Icon } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { logUserOut } from "@/app/_actions/auth-actions";
-import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const userData = {
-  name: "Toby Belhome",
-  email: "hello@tobybelhome.com",
-  avatar: "https://bundui-images.netlify.app/avatars/01.png"
-};
-
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
 
-  // const { data: setup } = useSystemSetup();
-  // const user = setup?.data?.user as User;
   const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
   const userEmail = user?.email || "example@mail.com";
 

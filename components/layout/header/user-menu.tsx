@@ -12,17 +12,13 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { logUserOut } from "@/app/_actions/auth-actions";
-// import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSystemSetup } from "@/hooks/use-users-query-data";
 
 export default function UserMenu({ user }: { user: User }) {
-  const { data: setup } = useSystemSetup();
-  const userData = (user || setup?.data?.user) as User;
-  const fullName = `${userData?.first_name || "No"} ${userData?.last_name || "Session"}`;
-  const userEmail = userData?.email || "example@mail.com";
+  const fullName = `${user?.first_name || "User"} ${user?.last_name || ""}`;
+  const userEmail = user?.email || "user@mail.com";
 
   const handleUserLogOut = async () => {
     // Clear session initialization flag
@@ -30,12 +26,16 @@ export default function UserMenu({ user }: { user: User }) {
 
     const response = await logUserOut("User initiated logout");
     if (response.success) {
-      window.location.href = "/";
+      // Direct redirect to login (no intermediate "/" redirect)
+      window.location.href = "/login";
       return;
     }
+
+    // If logout fails, show error (optional: add toast notification)
+    console.error("Logout failed:", response.message);
   };
 
-  return !userData || Object.keys(userData).length < 0 ? (
+  return !user || Object.keys(user || {}).length < 0 ? (
     <>
       <Skeleton className="h-10 w-10 rounded-lg" />
     </>

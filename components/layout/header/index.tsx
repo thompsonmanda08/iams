@@ -7,14 +7,11 @@ import Notifications from "@/components/layout/header/notifications";
 import Search from "@/components/layout/header/search";
 import ThemeSwitch from "@/components/layout/header/theme-switch";
 import UserMenu from "@/components/layout/header/user-menu";
-// import { ThemeCustomizerPanel } from "@/components/theme-customizer";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { User } from "@/lib/types/account";
-import { useSystemSetup } from "@/hooks/use-users-query-data";
 
 export function SiteHeader({ user }: { user: User }) {
-  // const { data: setup } = useSystemSetup();
   const { toggleSidebar } = useSidebar();
 
   return (
