@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { getMatrixRatings, deleteRating } from "@/app/_actions/config-actions";
+import { deleteRating, getMatrixRatingsById } from "@/app/_actions/config-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateRatingDialog } from "./create-rating-dialog";
 import { EditRatingDialog } from "./edit-rating-dialog";
@@ -48,7 +48,7 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
   const fetchRatings = async () => {
     setIsLoading(true);
     try {
-      const response = await getMatrixRatings(matrixId);
+      const response = await getMatrixRatingsById(matrixId);
       if (response.success && response.data?.data) {
         // Sort by min_score
         const sortedRatings = response.data.data.sort(

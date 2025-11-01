@@ -1217,8 +1217,6 @@ return successResponse(response.data );
   }
 }
 
-
-
 export async function getMatrixScales(
   matrixId: string,
   scaleType?: "LIKELIHOOD" | "IMPACT"
@@ -1226,10 +1224,10 @@ export async function getMatrixScales(
   try {
     const params = scaleType ? `?scale_type=${scaleType}` : "";
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/matrix-scales/${matrixId}/scales${params}`,
+      url: `/api/v1/risk-configs/matrix-scales/${matrixId}/${params}`,
       method: "GET"
     });
-    return successResponse(response.data);
+    return successResponse(response.data.data);
   } catch (error: any) {
     return handleError(error, "GET | MATRIX SCALES", `/api/v1/risk-configs/matrix-scales/${matrixId}`);
   }
@@ -1242,18 +1240,19 @@ export async function createScale(
     level: number;
     name: string;
     description: string;
+    matrix_id: string;
   }
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/matrix-scales/${matrixId}`,
+      url: `/api/v1/risk-configs/matrix-scales`,
       method: "POST",
       data
     });
     revalidatePath(`/dashboard/system-configs/risk-configs/matrices/${matrixId}/scales`);
     return successResponse(response.data);
   } catch (error: any) {
-    return handleError(error, "POST | CREATE SCALE", `/api/v1/risk-configs/matrix-scales/${matrixId}`);
+    return handleError(error, "POST | CREATE SCALE", `/api/v1/risk-configs/matrix-scales`);
   }
 }
 
@@ -1287,15 +1286,26 @@ export async function deleteScale(id: string): Promise<APIResponse> {
   }
 }
 
-export async function getMatrixRatings(matrixId: string): Promise<APIResponse> {
+export async function getMatrixRatings(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`,
+      url: `/api/v1/risk-configs/rating-levels`,
       method: "GET"
     });
-    return successResponse(response.data);
+    return successResponse(response.data?.data);
   } catch (error: any) {
-    return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`);
+    return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels`);
+  }
+}
+export async function getMatrixRatingsById(matrixId:string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/rating-levels/${matrixId}`,
+      method: "GET"
+    });
+    return successResponse(response.data?.data);
+  } catch (error: any) {
+    return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels/${matrixId}`);
   }
 }
 
@@ -1307,18 +1317,19 @@ export async function createRating(
     max_score: number;
     color_hex: string;
     description: string;
+    matrix_id:string;
   }
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`,
+      url: `/api/v1/risk-configs/rating-levels`,
       method: "POST",
       data
     });
     revalidatePath(`/dashboard/system-configs/risk-configs/matrices/${matrixId}/scales`);
     return successResponse(response.data);
   } catch (error: any) {
-    return handleError(error, "POST | CREATE RATING", `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`);
+    return handleError(error, "POST | CREATE RATING", `/api/v1/risk-configs/rating-levels`);
   }
 }
 
