@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Save, Settings } from "lucide-react";
+import { ArrowLeft, Save, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,7 @@ interface WorkflowHeaderProps {
   onEntityTypeChange: (type: EntityType) => void;
   onSave: () => void;
   onBack: () => void;
+  isLoading?: boolean;
 }
 
 export const WorkflowHeader = ({
@@ -26,7 +27,8 @@ export const WorkflowHeader = ({
   onWorkflowNameChange,
   onEntityTypeChange,
   onSave,
-  onBack
+  onBack,
+  isLoading = false
 }: WorkflowHeaderProps) => {
   return (
     <div className="bg-card border-b">
@@ -61,13 +63,22 @@ export const WorkflowHeader = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" disabled={isLoading}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Button>
-          <Button size="sm" onClick={onSave}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Workflow
+          <Button size="sm" onClick={onSave} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Workflow
+              </>
+            )}
           </Button>
         </div>
       </div>

@@ -1,15 +1,26 @@
 "use client";
 import { EntityType, State, Transition, Workflow } from "@/lib/types/workflow";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState, useEffect } from "react";
 import { WorkflowHeader } from "./workflow-header";
 import { WorkflowCanvas } from "./workflow-canvas";
 import { TransitionPanel } from "./transition-panel";
+import { useWorkflowStore } from "@/lib/stores/workflow-store";
+import { useWorkflowMutations } from "@/lib/hooks/use-workflow-mutations";
+import { toast } from "sonner";
 
-export const WorkflowEditor = ({ onBack }: { onBack: () => void }) => {
-  const [workflow, setWorkflow] = useState<Workflow>({
-    id: "wf-1",
-    name: "Audit Plan Approval",
+interface WorkflowEditorProps {
+  onBack: () => void;
+  workflowId?: string | null;
+}
+
+export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
+  const { getWorkflow, workflows } = useWorkflowStore();
+  const { saveOrUpdateWorkflow, isLoading } = useWorkflowMutations();
+
+  // Create default workflow template
+  const createDefaultWorkflow = (): Workflow => ({
+    id: `wf-${Date.now()}`,
+    name: "New Workflow",
     entityType: "AUDIT_PLAN",
     states: [
       {
@@ -57,8 +68,31 @@ export const WorkflowEditor = ({ onBack }: { onBack: () => void }) => {
     entryConditions: []
   });
 
+  const [workflow, setWorkflow] = useState<Workflow>(() => {
+    // Initialize state with either existing workflow or default
+    if (workflowId) {
+      const existingWorkflow = getWorkflow(workflowId);
+      if (existingWorkflow) {
+        return existingWorkflow;
+      }
+    }
+    return createDefaultWorkflow();
+  });
+
   const [selectedTransition, setSelectedTransition] = useState<Transition | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+  // Reload workflow when workflowId changes
+  useEffect(() => {
+    if (workflowId) {
+      const existingWorkflow = getWorkflow(workflowId);
+      if (existingWorkflow) {
+        setWorkflow(existingWorkflow);
+      }
+    } else {
+      setWorkflow(createDefaultWorkflow());
+    }
+  }, [workflowId, getWorkflow]);
 
   const handleStateAdd = () => {
     const newState: State = {
@@ -142,9 +176,35 @@ export const WorkflowEditor = ({ onBack }: { onBack: () => void }) => {
     toast.success("Transition added - configure it now");
   };
 
-  const handleSave = () => {
-    // TODO: API call to save workflow
-    toast.success("Workflow saved successfully!");
+  const handleSave = async () => {
+    // Validate workflow before saving
+    if (!workflow.name.trim()) {
+      toast.error("Workflow name is required");
+      return;
+    }
+
+    if (workflow.states.length === 0) {
+      toast.error("Workflow must have at least one state");
+      return;
+    }
+
+    const hasInitialState = workflow.states.some((s) => s.isInitial);
+    if (!hasInitialState) {
+      toast.error("Workflow must have an initial state");
+      return;
+    }
+
+    // Check if workflow already exists
+    const existingWorkflow = workflows.find((w) => w.id === workflow.id);
+    const isExisting = !!existingWorkflow;
+
+    // Use mutation to save or update
+    const result = await saveOrUpdateWorkflow(workflow, isExisting);
+
+    if (result.success) {
+      // Optionally go back to list after save
+      // onBack();
+    }
   };
 
   return (
@@ -156,6 +216,7 @@ export const WorkflowEditor = ({ onBack }: { onBack: () => void }) => {
         onEntityTypeChange={(entityType: EntityType) => setWorkflow({ ...workflow, entityType })}
         onSave={handleSave}
         onBack={onBack}
+        isLoading={isLoading}
       />
 
       <WorkflowCanvas
