@@ -113,7 +113,7 @@ const CustomPagination = ({
   showDetails?: boolean;
   allowSetPageSize?: boolean;
   pagination: Pagination;
-  updatePagination: (page: { page?: number; page_size?: number }) => void;
+  updatePagination: (page: { page: number; page_size?: number }) => void;
 }) => {
   return (
     <div
@@ -130,7 +130,9 @@ const CustomPagination = ({
           <span className="text-sm text-gray-500">Show</span>
           <SelectField
             value={String(pagination?.page_size)}
-            onValueChange={(value) => updatePagination({ page_size: Number(value) })}
+            onValueChange={(value) =>
+              updatePagination({ page_size: Number(value), page: Number(pagination?.page) })
+            }
             options={Array.from({ length: 5 }).map((_, index: number) => ({
               id: `${(index + 1) * 10}`,
               name: `${(index + 1) * 10}`

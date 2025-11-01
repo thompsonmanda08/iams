@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Plus, X, MapPin, Trash2 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { Company, Country, Province, Town, Option } from "@/lib/types";
+import { Company, Country, Province, Town } from "@/lib/types";
 import { notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {

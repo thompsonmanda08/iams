@@ -11,25 +11,42 @@ export const mockCompanies: Company[] = [
     id: "comp-1",
     name: "Tech Solutions Inc.",
     status: "active",
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    logo_url: null,
+    email: null,
+    phone: null
   },
   {
     id: "comp-2",
     name: "Global Logistics",
     status: "active",
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    logo_url: null,
+    email: null,
+    phone: null
   },
   {
     id: "comp-3",
     name: "Innovate Creations",
     status: "active",
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    logo_url: null,
+    email: null,
+    phone: null
   }
 ];
 
 export const mockCountries: Country[] = [
-  { id: "country-1", name: "Zambia" },
-  { id: "country-2", name: "South Africa" }
+  {
+    id: "country-1",
+    name: "Zambia",
+    code: ""
+  },
+  {
+    id: "country-2",
+    name: "South Africa",
+    code: ""
+  }
 ];
 
 export const mockProvinces: Province[] = [

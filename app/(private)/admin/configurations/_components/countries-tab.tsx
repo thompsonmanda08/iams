@@ -97,10 +97,10 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
     deleteTownMutation.mutate(id);
   };
 
-  function handlePageChange({ page }: { page: number }) {
+  function handlePageChange({ page, page_size }: { page: number; page_size?: number }) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(page));
-    params.set("page_size", String(pagination?.page_size || 10));
+    params.set("page_size", String(page_size || pagination?.page_size || 10));
     router.push(`?${params.toString()}`);
   }
 

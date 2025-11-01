@@ -203,12 +203,10 @@ export function NavMain({ session, isAuthenticated }: { session: any; isAuthenti
   // console.log("NAV", setup);
 
   const routes = useMemo(() => {
-    return session?.user?.userType === "admin" ||
-      session?.user?.userType === "BACK_OFFICE" ||
-      pathname.startsWith("/admin/")
+    return session?.user?.user_type === "BACKOFFICE_USER" && pathname.startsWith("/admin/")
       ? adminNavItems // ADMIN ROUTES
       : navItems; // DEFAULT ROUTES
-  }, [navItems, session?.user?.userType]);
+  }, [navItems, session?.user?.user_type]);
 
   return isLoading ? (
     <div className="space-y-2 px-1 pt-2 pb-4">
@@ -273,7 +271,8 @@ export function NavMain({ session, isAuthenticated }: { session: any; isAuthenti
                                     asChild>
                                     <Link
                                       href={subItem.href}
-                                      target={subItem.newTab ? "_blank" : ""}>
+                                      // target={subItem.newTab ? "_blank" : ""}
+                                    >
                                       <span>{subItem.title}</span>
                                     </Link>
                                   </SidebarMenuSubButton>
@@ -289,13 +288,16 @@ export function NavMain({ session, isAuthenticated }: { session: any; isAuthenti
                         isActive={pathname === item.href}
                         tooltip={item.title}
                         asChild>
-                        <Link href={item.href} target={item.newTab ? "_blank" : ""}>
+                        <Link
+                          href={item.href}
+                          // target={item.newTab ? "_blank" : ""}
+                        >
                           {item.icon && <item.icon />}
                           <span>{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
                     )}
-                    {!!item.isComing && (
+                    {/* {!!item.isComing && (
                       <SidebarMenuBadge className="peer-hover/menu-button:text-foreground opacity-50">
                         Coming
                       </SidebarMenuBadge>
@@ -316,7 +318,7 @@ export function NavMain({ session, isAuthenticated }: { session: any; isAuthenti
                       <SidebarMenuBadge className="peer-hover/menu-button:text-foreground">
                         {item.isDataBadge}
                       </SidebarMenuBadge>
-                    )}
+                    )} */}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>

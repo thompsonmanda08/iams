@@ -21,11 +21,14 @@ import { notify } from "@/lib/utils";
 interface GeneralWorkpaperFormProps {
   templateId?: string | null;
   initialData?: Partial<GeneralWorkpaperInput> | null;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpaperFormProps) {
   const router = useRouter();
-  const { data: teamMembers, isLoading: loadingTeam } = useTeamMembers({ page_size: 100 });
+  const { data: teamMembersResponse, isLoading: loadingTeam } = useTeamMembers({ page_size: 200 });
+  const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
 
   const teamMemberOptions = useMemo(() => {
     return teamMembers && teamMembers.length > 0
@@ -37,7 +40,7 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
   }, [teamMembers]);
 
   // Get current user (mock - replace with actual auth)
-  const currentUser = teamMembers?.[0]?.name || "Current User";
+  const currentUser = teamMembers?.[0]?.first_name || "Current User";
 
   const [isSaving, setIsSaving] = useState(false);
   const [showCreateFinding, setShowCreateFinding] = useState(false);

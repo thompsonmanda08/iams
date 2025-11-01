@@ -29,6 +29,7 @@ import { mockBudgetItems, mockBudgets } from "./budget-form";
 import Link from "next/link";
 import { notify } from "@/lib/utils";
 import { BudgetStatusBadge } from "./budget-status-badge";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const BudgetDetails = () => {
   const { id, lineID } = useParams();
@@ -42,7 +43,7 @@ const BudgetDetails = () => {
   const [itemName, setItemName] = useState("");
   const [itemAmount, setItemAmount] = useState("");
   const [itemDescription, setItemDescription] = useState("");
-  const [itemDate, setItemDate] = useState<Date | null>(null);
+  const [itemDate, setItemDate] = useState<string | null>(null);
 
   if (!budget || !budgetLine) {
     return (
@@ -153,7 +154,7 @@ const BudgetDetails = () => {
             <div className="bg-muted/30 flex items-center justify-between rounded-lg p-3">
               <span className="text-muted-foreground text-sm font-medium">Period</span>
               <span className="text-sm font-semibold">
-                {formatDate(budget.startDate)} - {formatDate(budget.endDate)}
+                {formatDate(budget.start_date || "")} - {formatDate(budget.end_date || "")}
               </span>
             </div>
           </div>
@@ -248,14 +249,14 @@ const BudgetDetails = () => {
               <div className="space-y-2">
                 <Label htmlFor="itemDate" className="flex items-center gap-2 text-sm font-semibold">
                   <Calendar className="text-muted-foreground h-4 w-4" />
-                  Date
                 </Label>
-                <Input
+                <DatePicker
                   id="itemDate"
                   type="date"
-                  value={itemDate}
-                  onChange={(e) => setItemDate(e.target.value)}
-                  className="h-11"
+                  label="Date"
+                  value={itemDate ?? ((itemDate || undefined) as any)}
+                  onValueChange={(date) => setItemDate(date?.toISOString().split("T")[0] || "")}
+                  placeholder="Select date"
                   required
                 />
               </div>
@@ -334,7 +335,9 @@ const BudgetDetails = () => {
                       {formatCurrency(item.amount)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{item.description}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(item.date)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(item.date as any)}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                         <Button

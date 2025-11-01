@@ -11,7 +11,7 @@ export default async function HomePage({
 
   if (session?.isAuthenticated) {
     // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
-    // if (session?.user?.userType == "BACK_OFFICE") {
+    // if (session?.user?.user_type == "BACKOFFICE_USER") {
     //   redirect("/_/admin/home");
     // }
 

@@ -17,8 +17,6 @@ import type {
   ScheduledReport,
   AuditSettings,
   SettingsInput,
-  TeamMember,
-  TeamMemberInput,
   TemplateCategory
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
@@ -450,12 +448,14 @@ export async function deleteWorkpaper(id: string): Promise<APIResponse> {
  */
 export async function getFindings(filters?: {
   working_paper_id?: string;
+  audit_plan_id?: string;
   severity?: string;
   status?: string;
 }): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
     if (filters?.working_paper_id) params.append("working_paper_id", filters.working_paper_id);
+    if (filters?.audit_plan_id) params.append("audit_plan_id", filters.audit_plan_id);
     if (filters?.severity) params.append("severity", filters.severity);
     if (filters?.status) params.append("status", filters.status);
 

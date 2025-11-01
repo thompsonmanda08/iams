@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, BarChart3, Clock, Download, FileSpreadsheet } from "lucide-react";
 import { getReportTemplates } from "@/app/_actions/audit-module-actions";
+import { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 
 export default async function ReportsPage() {
   const templatesResponse = await getReportTemplates();
-  const templates = templatesResponse.success ? templatesResponse.data : [];
+  const templates = templatesResponse.success
+    ? (templatesResponse.data as WorkpaperTemplateDefinition[])
+    : [];
 
   return (
     <div className="bg-background min-h-screen">

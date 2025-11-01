@@ -14,6 +14,7 @@ import { logUserOut } from "@/app/_actions/auth-actions";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UserMenu({ user }: { user: User }) {
   // const { data: setup } = useSystemSetup();
@@ -29,7 +30,11 @@ export default function UserMenu({ user }: { user: User }) {
     }
   };
 
-  return (
+  return !user || Object.keys(user).length < 0 ? (
+    <>
+      <Skeleton className="h-10 w-10 rounded-lg" />
+    </>
+  ) : (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar>

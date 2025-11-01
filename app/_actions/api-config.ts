@@ -178,11 +178,7 @@ export function handleError(error: any, method: string = "GET", url: string): AP
     config: error?.config,
     status: error?.response?.status || 500,
     endpoint: `${method} | ~ ${url}`,
-    apiRoute:
-      `${error?.config?.baseURL || error?.request?.baseURL}/${error?.config?.url || error?.request?.url}`.replaceAll(
-        "//",
-        "/"
-      ),
+    apiRoute: `${error?.config?.baseURL || error?.request?.baseURL}${error?.config?.url || error?.request?.url}`,
     code: error?.code,
     type: error?.type,
     message: error?.message,

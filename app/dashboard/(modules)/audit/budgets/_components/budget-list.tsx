@@ -21,6 +21,8 @@ import { Card } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, Search, Wallet, TrendingUp, DollarSign } from "lucide-react";
 import { mockBudgets } from "./budget-form";
 import Link from "next/link";
+import { BudgetLinesList } from "./budget-line-list";
+import { BudgetStatusBadge } from "./budget-status-badge";
 
 const BudgetList = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -143,7 +145,7 @@ const BudgetList = () => {
                   style={{ animationDelay: `${index * 50}ms` }}>
                   <TableCell>
                     <Link
-                      href={`/budget/${budget.id}/${budget.budgetLines[0]?.id}/details`}
+                      href={`/budget/${budget.id}/${budget.budget_lines[0]?.id}/details`}
                       className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
                       {budget.name}
                     </Link>
@@ -152,16 +154,16 @@ const BudgetList = () => {
                     {formatCurrency(budget.amount)}
                   </TableCell>
                   <TableCell>
-                    <BudgetLinesList budgetLines={budget.budgetLines} />
+                    <BudgetLinesList budgetLines={budget.budget_lines} />
                   </TableCell>
                   <TableCell>
                     <BudgetStatusBadge status={budget.status} />
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {formatDate(budget.startDate)}
+                    {formatDate(budget.start_date || "")}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {formatDate(budget.endDate)}
+                    {formatDate(budget.end_date || "")}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">

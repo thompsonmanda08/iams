@@ -1,9 +1,6 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { FileText, Plus } from "lucide-react";
-import Link from "next/link";
 import AuditUniverseForm from "../../_components/audit-universe-form";
-import PageHeader from "@/components/page-header";
+import { AuditUniverse } from "@/lib/types/audit-types";
 
 const UniverseUpdatePage = async () => {
   const universeResponse = await Promise.resolve({
@@ -24,7 +21,7 @@ const UniverseUpdatePage = async () => {
     <div className="bg-background min-h-screen">
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <AuditUniverseForm initialData={universe} />
+        <AuditUniverseForm initialData={universe as unknown as AuditUniverse} />
       </div>
     </div>
   );

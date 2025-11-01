@@ -104,7 +104,7 @@ export default function AuditUniverseList({
   pagination
 }: {
   initialData?: AuditUniverse[];
-  pagination: Pagination;
+  pagination?: Pagination;
 }) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");

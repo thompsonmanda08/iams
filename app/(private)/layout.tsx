@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
+import { User } from "@/lib/types/account";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,11 @@ export default async function AuthLayout({
 
   const { session, isAuthenticated } = await verifySession();
 
+  if (session?.isAuthenticated && session?.user?.user_type != "BACKOFFICE_USER") {
+    // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
+    return redirect("/");
+  }
+
   return (
     <SidebarProvider
       defaultOpen={defaultOpen}
@@ -32,7 +38,7 @@ export default async function AuthLayout({
       }>
       <AppSidebar variant="inset" session={session} isAuthenticated={isAuthenticated} />
       <SidebarInset>
-        <SiteHeader user={session?.user} />
+        <SiteHeader user={session?.user as User} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
             {children}

@@ -18,24 +18,24 @@ export const mockBudgets: Budget[] = [
     amount: 1000000,
     description: "This is the annual budget for all departments in the company",
     status: "BUDGET_CREATION",
-    startDate: "2025-10-27",
-    endDate: "2026-10-27",
-    budgetLines: [
+    start_date: "2025-10-27",
+    end_date: "2026-10-27",
+    budget_lines: [
       {
         id: "1-1",
         name: "Operations",
         amount: 350000,
         description: "Budget under operations department",
-        startDate: "2025-10-29",
-        endDate: "2026-10-21"
+        start_date: "2025-10-29",
+        end_date: "2026-10-21"
       },
       {
         id: "1-2",
         name: "Finance",
         amount: 200000,
         description: "Budget under finance department",
-        startDate: "2025-10-27",
-        endDate: "2026-10-14"
+        start_date: "2025-10-27",
+        end_date: "2026-10-14"
       }
     ]
   },
@@ -45,24 +45,24 @@ export const mockBudgets: Budget[] = [
     amount: 200000,
     description: "Quarterly scheduled budget allocations",
     status: "UNDER_REVIEW",
-    startDate: "2025-10-22",
-    endDate: "2027-02-27",
-    budgetLines: [
+    start_date: "2025-10-22",
+    end_date: "2027-02-27",
+    budget_lines: [
       {
         id: "2-1",
         name: "Supplies",
         amount: 120000,
         description: "Office and operational supplies",
-        startDate: "2025-10-22",
-        endDate: "2027-02-27"
+        start_date: "2025-10-22",
+        end_date: "2027-02-27"
       },
       {
         id: "2-2",
         name: "Contingency",
         amount: 80000,
         description: "Emergency and contingency fund",
-        startDate: "2025-10-22",
-        endDate: "2027-02-27"
+        start_date: "2025-10-22",
+        end_date: "2027-02-27"
       }
     ]
   },
@@ -72,24 +72,24 @@ export const mockBudgets: Budget[] = [
     amount: 200000,
     description: "Most recent budget allocation",
     status: "APPROVED",
-    startDate: "2025-10-21",
-    endDate: "2026-07-15",
-    budgetLines: [
+    start_date: "2025-10-21",
+    end_date: "2026-07-15",
+    budget_lines: [
       {
         id: "3-1",
         name: "Training and Certifications",
         amount: 120000,
         description: "Employee development programs",
-        startDate: "2025-10-21",
-        endDate: "2026-07-15"
+        start_date: "2025-10-21",
+        end_date: "2026-07-15"
       },
       {
         id: "3-2",
         name: "Transport",
         amount: 80000,
         description: "Transportation and logistics",
-        startDate: "2025-10-21",
-        endDate: "2026-07-15"
+        start_date: "2025-10-21",
+        end_date: "2026-07-15"
       }
     ]
   }
@@ -98,7 +98,7 @@ export const mockBudgets: Budget[] = [
 export const mockBudgetItems: BudgetItem[] = [
   {
     id: "item-1",
-    budgetLineId: "1-1",
+    budget_line_id: "1-1",
     name: "Office Equipment",
     amount: 50000,
     description: "New computers and furniture",
@@ -106,7 +106,7 @@ export const mockBudgetItems: BudgetItem[] = [
   },
   {
     id: "item-2",
-    budgetLineId: "1-1",
+    budget_line_id: "1-1",
     name: "Software Licenses",
     amount: 30000,
     description: "Annual software subscriptions",
@@ -114,7 +114,7 @@ export const mockBudgetItems: BudgetItem[] = [
   },
   {
     id: "item-3",
-    budgetLineId: "1-2",
+    budget_line_id: "1-2",
     name: "Audit Services",
     amount: 75000,
     description: "External audit engagement",
@@ -128,8 +128,8 @@ const INIT_FORM_DATA: Budget = {
   amount: 0,
   description: "",
   status: "BUDGET_CREATION",
-  start_date: null,
-  end_date: null,
+  start_date: "",
+  end_date: "",
   budget_lines: []
 };
 const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?: Budget }) => {
@@ -161,13 +161,13 @@ const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?
       name: "",
       amount: 0,
       description: "",
-      startDate: "",
-      endDate: ""
+      start_date: "",
+      end_date: ""
     };
     updateFormData({
       budget_lines: [...formData.budget_lines, newLine]
     });
-    // setBudgetLines([...budgetLines, newLine]);
+    // setBudgetLines([...budget_lines, newLine]);
   };
 
   const removeBudgetLine = (id: string) => {
@@ -278,7 +278,9 @@ const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?
                     label="Start Date"
                     required
                     value={(formData.start_date ?? undefined) as any}
-                    onValueChange={(date) => updateFormData({ start_date: date || null })}
+                    onValueChange={(date) =>
+                      updateFormData({ start_date: date?.toISOString().split("T")[0] || null })
+                    }
                   />
                 </div>
               </div>
@@ -300,7 +302,9 @@ const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?
                     label="End Date"
                     required
                     value={(formData.end_date ?? undefined) as any}
-                    onValueChange={(date) => updateFormData({ end_date: date || null })}
+                    onValueChange={(date) =>
+                      updateFormData({ end_date: date?.toISOString().split("T")[0] || null })
+                    }
                   />
                 </div>
               </div>
@@ -380,31 +384,35 @@ const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label
-                            htmlFor={`lineStartDate-${line.id}`}
-                            className="text-sm font-medium">
-                            Start Date
-                          </Label>
-                          <Input
+                          <DatePicker
                             id={`lineStartDate-${line.id}`}
                             type="date"
-                            value={line.startDate}
-                            onChange={(e) => updateBudgetLine(line.id, "startDate", e.target.value)}
+                            value={line.start_date as any}
+                            onValueChange={(date) =>
+                              updateBudgetLine(
+                                line.id,
+                                "start_date",
+                                date?.toISOString().split("T")[0] as string
+                              )
+                            }
                             required
                           />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`lineEndDate-${line.id}`} className="text-sm font-medium">
-                            End Date
-                          </Label>
-                          <Input
+                          <DatePicker
                             id={`lineEndDate-${line.id}`}
                             type="date"
-                            value={line.endDate}
-                            onChange={(e) => updateBudgetLine(line.id, "endDate", e.target.value)}
+                            label="End Date"
+                            value={line.end_date as any}
+                            onValueChange={(date) =>
+                              updateBudgetLine(
+                                line.id,
+                                "end_date",
+                                date?.toISOString().split("T")[0] || ""
+                              )
+                            }
                             required
                           />
                         </div>
+
                         <div className="flex items-end">
                           <Button
                             type="button"
@@ -417,13 +425,9 @@ const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label
-                          htmlFor={`lineDescription-${line.id}`}
-                          className="text-sm font-medium">
-                          Description
-                        </Label>
                         <Textarea
                           id={`lineDescription-${line.id}`}
+                          label="  Description"
                           value={line.description}
                           onChange={(e) => updateBudgetLine(line.id, "description", e.target.value)}
                           rows={2}

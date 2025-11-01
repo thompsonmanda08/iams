@@ -226,10 +226,7 @@ export default function Companies() {
                   <TableCell>{company.email || "-"}</TableCell>
                   <TableCell>{company.phone || "-"}</TableCell>
                   <TableCell>
-                    <StatusBadge
-                      status={company.status === "active" ? "ACTIVE" : "INACTIVE"}
-                      size="sm"
-                    />
+                    <StatusBadge status={company.status === "active" ? "ACTIVE" : "INACTIVE"} />
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">

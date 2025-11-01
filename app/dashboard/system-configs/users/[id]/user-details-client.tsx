@@ -376,7 +376,7 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Account Type</span>
                       <Badge variant="outline">
-                        {user.user_type?.replace("_", " ") || "Standard"}
+                        {user.user_type?.replace("_", " ") || "ORGANIZATIONAL USER"}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between text-sm">

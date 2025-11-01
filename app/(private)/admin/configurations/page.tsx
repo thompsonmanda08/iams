@@ -24,7 +24,15 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
   ]);
 
   const branches = branchesResponse.success ? branchesResponse.data?.data : [];
+  const branchesPagination = branchesResponse.success
+    ? branchesResponse.data?.data?.pagination
+    : null;
+
   const provinces = provincesResponse.success ? provincesResponse.data?.data?.data : [];
+  const provincesPagination = townsResponse.success
+    ? provincesResponse.data?.data?.pagination
+    : null;
+
   const towns = townsResponse.success ? townsResponse.data?.data?.data : [];
   const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
 
@@ -48,7 +56,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
 
           {/* Provinces Tab */}
           <TabsContent value="provinces">
-            <ProvincesTab initialProvinces={provinces} />
+            <ProvincesTab initialProvinces={provinces} pagination={provincesPagination} />
           </TabsContent>
 
           {/* Towns Tab */}

@@ -1,15 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Wallet,
-  TrendingUp,
-  PieChart,
-  ArrowRight,
-  Layers,
-  BarChart3,
-  Plus,
-  FileText
-} from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import Link from "next/link";
 import AuditUniverseList from "./_components/audit-universe-list";
 import PageHeader from "@/components/page-header";

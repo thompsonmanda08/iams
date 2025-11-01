@@ -90,8 +90,6 @@ export default function NewWorkpaperPage() {
       {/* Form Content based on template */}
       {(templateId === "iso27001" || templateId === "iso27001-2022") && (
         <CreateWorkpaperForm
-          auditId={auditId}
-          auditTitle={auditTitle}
           onSuccess={handleSuccess}
           onCancel={handleCancel}
           templateId={templateId}
@@ -99,12 +97,7 @@ export default function NewWorkpaperPage() {
       )}
 
       {templateId === "general" && (
-        <GeneralWorkpaperForm
-          auditId={auditId}
-          auditTitle={auditTitle}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
+        <GeneralWorkpaperForm onSuccess={handleSuccess} onCancel={handleCancel} />
       )}
 
       {templateId === "custom-new" && (
@@ -121,8 +114,6 @@ export default function NewWorkpaperPage() {
         templateId !== "general" &&
         templateId !== "custom-new" && (
           <CustomWorkpaperForm
-            auditId={auditId}
-            auditTitle={auditTitle}
             template={selectedCustomTemplate}
             onSuccess={handleSuccess}
             onCancel={handleCancel}

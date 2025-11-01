@@ -852,8 +852,8 @@ export interface BudgetLine {
   name: string;
   amount: number;
   description: string;
-  startDate: string;
-  endDate: string;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 export interface Budget {
@@ -862,8 +862,8 @@ export interface Budget {
   amount: number;
   description: string;
   status: BudgetStatus;
-  start_date: Date | null;
-  end_date: Date | null;
+  start_date: string | null;
+  end_date: string | null;
   budget_lines: BudgetLine[];
 }
 
@@ -873,5 +873,5 @@ export interface BudgetItem {
   name: string;
   amount: number;
   description: string;
-  date: Date | null;
+  date: string | null;
 }

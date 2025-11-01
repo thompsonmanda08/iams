@@ -91,9 +91,10 @@ const WorkflowClient = ({ initialData }: any) => {
                           </p>
                         </div>
                       </div>
-                      {(workflow.status || workflow?.is_active || true) && (
+                      {
+                        // (workflow.status || workflow?.is_active || true) &&
                         <CheckCircle2 className="ml-2 h-6 w-6 shrink-0 text-emerald-500" />
-                      )}
+                      }
                     </div>
 
                     {/* Divider */}
@@ -116,7 +117,10 @@ const WorkflowClient = ({ initialData }: any) => {
                       <div className="rounded-lg bg-emerald-50 p-3 text-center transition-colors hover:bg-emerald-100">
                         <p className="mb-1.5 text-xs font-medium text-emerald-600">Status</p>
                         <p className="text-sm font-bold text-emerald-700">
-                          {workflow.status || workflow?.is_active || true ? "Active" : "Inactive"}
+                          {
+                            // workflow.status || workflow?.is_active ||
+                            true ? "Active" : "Inactive"
+                          }
                         </p>
                       </div>
                     </div>

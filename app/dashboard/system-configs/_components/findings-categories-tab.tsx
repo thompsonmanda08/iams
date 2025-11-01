@@ -14,7 +14,7 @@ import {
 import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
-import { AuditableArea as Area, Pagination } from "@/lib/types";
+import { AuditConfigurableItem, Pagination } from "@/lib/types";
 import {
   Dialog,
   DialogClose,
@@ -51,15 +51,15 @@ export default function FindingsCategoryTab({
   areas,
   pagination
 }: {
-  areas: Area[];
+  areas: AuditConfigurableItem[];
   pagination?: Pagination;
 }) {
   const [openModal, setOpenModal] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<Area | null>(null);
+  const [editingDepartment, setEditingDepartment] = useState<AuditConfigurableItem | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
 
-  const [items, setItems] = useState<Area[]>(areas);
+  const [items, setItems] = useState<AuditConfigurableItem[]>(areas);
 
   useEffect(() => {
     setItems(areas);
@@ -73,7 +73,7 @@ export default function FindingsCategoryTab({
     mutationFn: (id: string) => deleteDepartment(id),
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Area deleted successfully");
+        toast.success("AuditConfigurableItem deleted successfully");
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
       } else {
         toast.error(response.message || "Failed to delete item");
@@ -120,16 +120,16 @@ export default function FindingsCategoryTab({
               setOpenModal(true);
             }}>
             <Plus className="h-4 w-4" />
-            New Auditable Area
+            New Auditable AuditConfigurableItem
           </Button>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Auditable Area</TableHead>
+              <TableHead>Auditable AuditConfigurableItem</TableHead>
               <TableHead>Department</TableHead>
-              <TableHead>Description of Area</TableHead>
+              <TableHead>Description of AuditConfigurableItem</TableHead>
               {/* <TableHead>Status</TableHead> */}
               <TableHead className="w-24" align="center">
                 Actions
@@ -159,7 +159,7 @@ export default function FindingsCategoryTab({
                             setEditingDepartment(null);
                             setOpenModal(true);
                           }}>
-                          <Plus className="h-4 w-4" /> Create New Auditable Area
+                          <Plus className="h-4 w-4" /> Create New Auditable AuditConfigurableItem
                         </Button>
                       </div>
                     </EmptyContent>
@@ -249,7 +249,7 @@ export default function FindingsCategoryTab({
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete Area"
+        title="Delete AuditConfigurableItem"
         description="Are you sure you want to delete this item? This action cannot be undone and may affect related data."
         onConfirm={handleDeleteConfirm}
         isLoading={deleteMutation.isPending}
@@ -264,8 +264,8 @@ type ErrorState = {
   onParentId?: boolean;
 };
 
-const INIT_AREA: Area = {
-  id: undefined,
+const INIT_AREA: AuditConfigurableItem = {
+  id: "",
   name: "",
   description: "",
   department_id: null
@@ -284,8 +284,8 @@ export function CreateOrUpdateArea({
   showTrigger?: boolean;
   openModal?: boolean;
   departmentId?: string;
-  initialData?: Area | null;
-  setInitialData?: React.Dispatch<React.SetStateAction<Area | null>>;
+  initialData?: AuditConfigurableItem | null;
+  setInitialData?: React.Dispatch<React.SetStateAction<AuditConfigurableItem | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const queryClient = useQueryClient();
@@ -295,7 +295,7 @@ export function CreateOrUpdateArea({
   });
 
   // Initialize with initialData if provided, otherwise use INIT_AREA
-  const [formData, setFormData] = useState<Area>(() => {
+  const [formData, setFormData] = useState<AuditConfigurableItem>(() => {
     if (initialData && departmentId) {
       return {
         id: initialData.id,
@@ -304,7 +304,7 @@ export function CreateOrUpdateArea({
         description: initialData.description || ""
         // parent_id: initialData.parent_id || undefined,
         // is_active: initialData.is_active || true
-      } as Area;
+      } as AuditConfigurableItem;
     }
     return INIT_AREA;
   });
@@ -315,7 +315,7 @@ export function CreateOrUpdateArea({
     page: 1
   });
 
-  const items = (data?.data?.data || []) as Area[];
+  const items = (data?.data?.data || []) as AuditConfigurableItem[];
 
   // Update form when initialData changes
   useEffect(() => {
@@ -355,14 +355,14 @@ export function CreateOrUpdateArea({
 
   // Create/Update mutation
   const saveMutation = useMutation({
-    mutationFn: (data: Area) => {
+    mutationFn: (data: AuditConfigurableItem) => {
       return initialData && departmentId
         ? updateDepartment({ ...data, id: String(departmentId) })
         : createDepartment(data);
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`Area ${initialData ? "updated" : "created"} successfully`);
+        toast.success(`AuditConfigurableItem ${initialData ? "updated" : "created"} successfully`);
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         setOpenModal?.(false);
         setInitialData?.(null);
@@ -401,11 +401,11 @@ export function CreateOrUpdateArea({
           <Button size="sm">
             {initialData ? (
               <>
-                <PencilLine className="mr-2 h-4 w-4" /> Update Area
+                <PencilLine className="mr-2 h-4 w-4" /> Update AuditConfigurableItem
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" /> Create New Area
+                <Plus className="mr-2 h-4 w-4" /> Create New AuditConfigurableItem
               </>
             )}
           </Button>
@@ -413,7 +413,9 @@ export function CreateOrUpdateArea({
       )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Update Area" : "Create New Area"}</DialogTitle>
+          <DialogTitle>
+            {initialData ? "Update AuditConfigurableItem" : "Create New AuditConfigurableItem"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleCreateOrUpdate} className="space-y-3">
           <SearchSelectField
@@ -428,7 +430,7 @@ export function CreateOrUpdateArea({
           />
           <Input
             label="Name"
-            placeholder="Area Name"
+            placeholder="AuditConfigurableItem Name"
             value={formData.name}
             onChange={(e) => {
               setError({ status: false, message: "" });
@@ -439,7 +441,7 @@ export function CreateOrUpdateArea({
           />
           <Textarea
             label="Description"
-            placeholder="Area description (optional)"
+            placeholder="AuditConfigurableItem description (optional)"
             value={formData.description || ""}
             onChange={(e) => {
               setError({ status: false, message: "" });
@@ -458,7 +460,7 @@ export function CreateOrUpdateArea({
             <Label
               htmlFor="is_active"
               className="text-foreground cursor-pointer text-sm font-medium text-nowrap">
-              Is Active Area
+              Is Active AuditConfigurableItem
             </Label>
           </div> */}
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}

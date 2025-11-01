@@ -22,6 +22,7 @@ import { logUserOut } from "@/app/_actions/auth-actions";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const userData = {
   name: "Toby Belhome",
@@ -45,7 +46,12 @@ export function NavUser({ user }: { user: User }) {
     }
   };
 
-  return (
+  // LOADING STATE
+  return !user || Object.keys(user).length < 0 ? (
+    <>
+      <Skeleton className="h-10 w-full rounded-lg" />
+    </>
+  ) : (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
