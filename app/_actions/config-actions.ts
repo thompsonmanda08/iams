@@ -1082,3 +1082,278 @@ export async function deleteRiskCategory(id: string): Promise<APIResponse> {
     return handleError(error, "DELETE | DELETE RISK CATEGORY", `/api/v1/risk-categories/${id}`);
   }
 }
+
+// Risk Matrices
+export async function getRiskMatrices(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/matrix-configs",
+      method: "GET"
+    });
+    
+     revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data);
+  } catch (error: any) {
+    return handleError(error, "GET | GET MATRICES", `/api/v1/risk-configs/matrices`);
+  }
+}
+
+export async function createRiskMatrix(data: {
+  name: string;
+  description: string;
+  is_default: boolean;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/matrix-configs",
+      method: "POST",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return  successResponse(response?.data);
+  } catch (error: any) {
+    return handleError(error,"POST | CREATE MATRICES", "/api/v1/risk-configs/matrices");
+  }
+}
+
+export async function updateRiskMatrix(
+  id: string,
+  data: Partial<{ name: string; description: string; is_default: boolean }>
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/matrix-configs/${id}`,
+      method: "PUT",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "PUT | UPDATE MATRICES", `/api/v1/risk-configs/matrices/${id}`);
+  }
+}
+export async function getRiskMatrix(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/matrix-configs/${id}`,
+      method: "GET"
+    });
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "GET | RISK MATRIX", `/api/v1/risk-configs/matrices/${id}`);
+  }
+}
+
+export async function deleteRiskMatrix(id: string): Promise<APIResponse> {
+  try {
+    const response =  await authenticatedApiClient({
+      url: `/api/v1/risk-configs/matrix-configs/${id}`,
+      method: "DELETE"
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+   return successResponse(response.data );
+  } catch (error: any) {
+    return handleError(error, "DELETE | DELETE MATRICES", `/api/v1/risk-configs/matrices/${id}`);
+  }
+}
+
+// Risk Responses
+export async function getRiskResponses(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/responses",
+      method: "GET"
+    });
+     return successResponse(response.data );
+  } catch (error: any) {
+    return handleError(error, "GET | GET RESPONSE", "/api/v1/risk-configs/responses");
+  }
+}
+
+export async function createRiskResponse(data: {
+  name: string;
+  description: string;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/responses",
+      method: "POST",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+   return successResponse(response.data );
+  } catch (error: any) {
+     return handleError(error, "POST | CREATE RESPONSE", "/api/v1/risk-configs/responses");
+  }
+}
+
+export async function updateRiskResponse(
+  id: string,
+  data: Partial<{ name: string; description: string }>
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/responses/${id}`,
+      method: "PUT",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data );
+  } catch (error: any) {
+   return handleError(error, "PUT | UPDATE RESPONSE", `/api/v1/risk-configs/responses/${id}`)
+  }
+}
+
+export async function deleteRiskResponse(id: string): Promise<APIResponse> {
+  try {
+   const response =  await authenticatedApiClient({
+      url: `/api/v1/risk-configs/responses/${id}`,
+      method: "DELETE"
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+return successResponse(response.data );
+  } catch (error: any) {
+     return handleError(error, "DELETE | DELETE RESPONSE", `/api/v1/risk-configs/responses/${id}`);
+  }
+}
+
+
+
+export async function getMatrixScales(
+  matrixId: string,
+  scaleType?: "LIKELIHOOD" | "IMPACT"
+): Promise<APIResponse> {
+  try {
+    const params = scaleType ? `?scale_type=${scaleType}` : "";
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/matrix-scales/${matrixId}/scales${params}`,
+      method: "GET"
+    });
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "GET | MATRIX SCALES", `/api/v1/risk-configs/matrix-scales/${matrixId}`);
+  }
+}
+
+export async function createScale(
+  matrixId: string,
+  data: {
+    scale_type: "LIKELIHOOD" | "IMPACT";
+    level: number;
+    name: string;
+    description: string;
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/matrix-scales/${matrixId}`,
+      method: "POST",
+      data
+    });
+    revalidatePath(`/dashboard/system-configs/risk-configs/matrices/${matrixId}/scales`);
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE SCALE", `/api/v1/risk-configs/matrix-scales/${matrixId}`);
+  }
+}
+
+export async function updateScale(
+  id: string,
+  data: Partial<{ name: string; description: string }>
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/matrix-scales/${id}`,
+      method: "PUT",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "PUT | UPDATE SCALE", `/api/v1/risk-configs/scales/${id}`);
+  }
+}
+
+export async function deleteScale(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/matrix-scales/${id}`,
+      method: "DELETE"
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "DELETE | DELETE SCALE", `/api/v1/risk-configs/scales/${id}`);
+  }
+}
+
+export async function getMatrixRatings(matrixId: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`,
+      method: "GET"
+    });
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`);
+  }
+}
+
+export async function createRating(
+  matrixId: string,
+  data: {
+    name: string;
+    min_score: number;
+    max_score: number;
+    color_hex: string;
+    description: string;
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`,
+      method: "POST",
+      data
+    });
+    revalidatePath(`/dashboard/system-configs/risk-configs/matrices/${matrixId}/scales`);
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE RATING", `/api/v1/risk-configs/rating-levels/${matrixId}/ratings`);
+  }
+}
+
+export async function updateRating(
+  id: string,
+  data: Partial<{
+    name: string;
+    min_score: number;
+    max_score: number;
+    color_hex: string;
+    description: string;
+  }>
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/rating-levels/${id}`,
+      method: "PUT",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "PUT | UPDATE RATING", `/api/v1/risk-configs/rating-levels/${id}`);
+  }
+}
+
+export async function deleteRating(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/rating-levels/${id}`,
+      method: "DELETE"
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "DELETE | DELETE RATING", `/api/v1/risk-configs/rating-levels/${id}`);
+  }
+}

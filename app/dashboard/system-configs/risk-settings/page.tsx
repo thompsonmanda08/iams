@@ -1,13 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import { RiskMatrixConfig } from "../_components/risk-matrix-config";
 import { RiskCategoriesConfig } from "../_components/risk-categories-config";
-import { RiskResponseConfig } from "../_components/risk-response-config";
-import { RiskAppetiteConfig } from "../_components/risk-appetite-config";
-import { KRIConfig } from "../_components/kri-config";
-import { RiskRegisterConfig } from "../_components/risk-register-config";
-import { ShieldAlert } from "lucide-react";
+import { RiskMatrixConfigList } from "../_components/risk-matrix-config-list";
+import { RiskResponsesList } from "../_components/risk-responses-list";
 import PageHeader from "@/components/page-header";
+import { ShieldAlert } from "lucide-react";
 
 export default async function RiskConfigurationsPage() {
   return (
@@ -37,17 +33,14 @@ export default async function RiskConfigurationsPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="matrix" className="space-y-4">
-          <TabsList>
+          <TabsList className="w-full">
             <TabsTrigger value="matrix">Risk Matrix</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="response">Response Strategies</TabsTrigger>
-            <TabsTrigger value="appetite">Risk Appetite</TabsTrigger>
-            <TabsTrigger value="kri">KRIs</TabsTrigger>
-            <TabsTrigger value="register">Register Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="matrix">
-            <RiskMatrixConfig />
+            <RiskMatrixConfigList />
           </TabsContent>
 
           <TabsContent value="categories">
@@ -55,19 +48,7 @@ export default async function RiskConfigurationsPage() {
           </TabsContent>
 
           <TabsContent value="response">
-            <RiskResponseConfig />
-          </TabsContent>
-
-          <TabsContent value="appetite">
-            <RiskAppetiteConfig />
-          </TabsContent>
-
-          <TabsContent value="kri">
-            <KRIConfig />
-          </TabsContent>
-
-          <TabsContent value="register">
-            <RiskRegisterConfig />
+            <RiskResponsesList />
           </TabsContent>
         </Tabs>
       </main>
