@@ -9,7 +9,8 @@ import {
   Settings,
   BookTemplate,
   Sliders,
-  LayoutDashboard
+  LayoutDashboard,
+  Workflow
 } from "lucide-react";
 
 export type NavGroup = {
@@ -134,6 +135,11 @@ export const navItems: NavGroup[] = [
             title: "Branches",
             href: "/dashboard/system-configs/branches",
             icon: MapPin
+          },
+          {
+            title: "Workflow",
+            href: "/dashboard/system-configs/workflow",
+            icon: Workflow
           }
         ]
       },

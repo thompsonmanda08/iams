@@ -10,6 +10,8 @@ import { TownsTab } from "../_components/towns-tab";
 import { BranchesTab } from "../_components/branches-tab";
 import { Pagination } from "@/lib/types";
 import { get } from "http";
+import { Building2 } from "lucide-react";
+import PageHeader from "@/components/page-header";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;
@@ -43,22 +45,27 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
   };
 
   return (
-    <div className="container mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-3xl font-bold">Branches Setup</h1>
-          <p className="text-muted-foreground mt-1">Manage your branches, across the country</p>
+    <div>
+      <div className="bg-card border-b">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <PageHeader
+              title="Branches Setup"
+              description="Manage your branches, across the country"
+              Icon={Building2}
+            />
+          </div>
         </div>
       </div>
+      <div className="container mx-auto space-y-6 p-6">
+        <BranchesTab
+          initialBranches={branches}
+          provinces={provinces}
+          towns={towns}
+          pagination={branchesPagination}
+        />
 
-      <BranchesTab
-        initialBranches={branches}
-        provinces={provinces}
-        towns={towns}
-        pagination={branchesPagination}
-      />
-
-      {/* <Tabs defaultValue={activeTab} className="space-y-6">
+        {/* <Tabs defaultValue={activeTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="provinces">Provinces</TabsTrigger>
           <TabsTrigger value="towns">Towns</TabsTrigger>
@@ -82,6 +89,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
           />
         </TabsContent>
       </Tabs> */}
+      </div>
     </div>
   );
 }
