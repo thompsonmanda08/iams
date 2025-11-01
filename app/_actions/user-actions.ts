@@ -78,12 +78,87 @@ export async function deleteUser(id: string): Promise<APIResponse> {
  * Toggle user active status
  */
 export async function toggleUserStatus(id: string, isActive: boolean): Promise<APIResponse> {
-  return updateUser(id, { is_active: isActive });
+  try {
+    // Fetch current user data first
+    const userResponse = await getUserById(id);
+
+    if (!userResponse.success || !userResponse.data) {
+      return {
+        success: false,
+        message: "Failed to fetch user data",
+        data: null
+      };
+    }
+
+    const user = userResponse.data;
+
+    // Update with complete user data plus the status change
+    return updateUser(id, {
+      username: user.username,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      branch_id: user.branch_id,
+      department_id: user.department_id,
+      role_id: user.role_id,
+      is_active: isActive
+    });
+  } catch (error) {
+    return {
+      success: false,
+      message: "Failed to toggle user status",
+      data: null
+    };
+  }
 }
 
 /**
  * Toggle user MFA
  */
 export async function toggleUserMFA(id: string, enabled: boolean): Promise<APIResponse> {
-  return updateUser(id, { mfa_enabled: enabled });
+  try {
+    // Fetch current user data first
+    const userResponse = await getUserById(id);
+
+    if (!userResponse.success || !userResponse.data) {
+      return {
+        success: false,
+        message: "Failed to fetch user data",
+        data: null
+      };
+    }
+
+    const user = userResponse.data;
+
+    // Update with complete user data plus the MFA change
+    return updateUser(id, {
+      username: user.username,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      branch_id: user.branch_id,
+      department_id: user.department_id,
+      role_id: user.role_id,
+      mfa_enabled: enabled
+    });
+  } catch (error) {
+    return {
+      success: false,
+      message: "Failed to toggle user MFA",
+      data: null
+    };
+  }
+}
+
+/**
+ * Reset user password
+ */
+export async function resetUserPassword(id: string): Promise<APIResponse> {
+  const url = `/api/v1/users/${id}/reset-password`;
+  try {
+    const response = await authenticatedApiClient({ url: url, method: "POST" });
+    return successResponse(response.data, "Password reset successfully");
+  } catch (error) {
+    return handleError(error, "POST", url);
+  }
 }

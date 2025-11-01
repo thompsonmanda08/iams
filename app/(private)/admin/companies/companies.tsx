@@ -236,10 +236,7 @@ export default function Companies() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={(e) => {
-                          openModal(company);
-                          e.stopPropagation();
-                        }}
+                        onClick={() => openModal(company)}
                         className="h-8 gap-1.5">
                         <Pencil className="h-3.5 w-3.5" />
                         Edit

@@ -202,7 +202,10 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/dashboard/audit/workpapers/templates/${template.id}/edit`);
+                    }}
                     className="h-8 gap-1.5">
                     <Link
                       href={`/dashboard/audit/workpapers/templates/${template.id}/edit`}

@@ -44,13 +44,13 @@ export default function Search({
       onSubmit={resolveSearch}>
       <SearchIcon
         className={cn(
-          "group-focus-within:text-primary absolute top-2 left-3 h-5 w-5 transition-all",
+          "group-focus-within:text-primary absolute top-2.5 left-3 h-4 w-4 transition-all",
           icon
         )}
       />
       <Input
         className={cn(
-          "border-divider !placeholder:text-[10px] focus-within:border-primary/70 w-full pl-10 text-base text-[10px]! placeholder:font-normal placeholder:text-slate-400 focus-within:shadow-sm",
+          "border-divider focus-within:border-primary/70 placeholder:text-muted-foreground w-full pl-10 text-base placeholder:font-normal focus-within:shadow-sm",
           base,
           input
         )}

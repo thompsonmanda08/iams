@@ -30,13 +30,13 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { generateAvatarFallback } from "@/lib/utils";
+import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { toast } from "sonner";
 import { User } from "@/lib/types/account";
-import { deleteUser, toggleUserStatus } from "@/app/_actions/user-actions";
+import { deleteUser, resetUserPassword, toggleUserStatus } from "@/app/_actions/user-actions";
 import { SignUpForm } from "@/components/forms/signup-form";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
@@ -62,7 +62,9 @@ type UsersDataTableProps = {
 const getColumns = (
   onDelete: (id: string) => void,
   onToggleStatus: (id: string, isActive: boolean) => void,
-  onEdit: (user: User) => void
+  onEdit: (user: User) => void,
+  onResetPassword: (id: string) => void,
+  onViewProfile: (id: string) => void
 ): ColumnDef<User>[] => [
   {
     id: "#",
@@ -78,6 +80,7 @@ const getColumns = (
       return (
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
+            <AvatarImage src={getAvatarSrc(fullName)} alt={`${fullName} - Image`} />
             <AvatarFallback className="text-xs font-medium">
               {generateAvatarFallback(fullName)}
             </AvatarFallback>
@@ -157,10 +160,14 @@ const getColumns = (
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>View Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(user)}>Edit User</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onViewProfile(user.id)}>
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(user)}>Edit User Details</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Reset Password</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onResetPassword(user.id)}>
+                Reset Password
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onToggleStatus(user.id, !user.is_active)}>
                 {user.is_active ? "Deactivate" : "Activate"} Account
               </DropdownMenuItem>
@@ -199,6 +206,22 @@ export default function UsersDataTable({
     userId: null,
     userName: null
   });
+  const [toggleStatusDialog, setToggleStatusDialog] = React.useState<{
+    open: boolean;
+    userId: string | null;
+    userName: string | null;
+    activate: boolean | null;
+  }>({ open: false, userId: null, userName: null, activate: null });
+
+  const [resetPasswordDialog, setResetPasswordDialog] = React.useState<{
+    open: boolean;
+    userId: string | null;
+    userName: string | null;
+  }>({
+    open: false,
+    userId: null,
+    userName: null
+  });
 
   const handleDeleteConfirm = async () => {
     if (!deleteDialog.userId) return;
@@ -208,7 +231,11 @@ export default function UsersDataTable({
       if (response.success) {
         toast.success(response.message || "User deleted successfully");
         router.refresh();
-        setDeleteDialog({ open: false, userId: null, userName: null });
+        // Close dialog first, then reset state after animation
+        setDeleteDialog((prev) => ({ ...prev, open: false }));
+        setTimeout(() => {
+          setDeleteDialog({ open: false, userId: null, userName: null });
+        }, 300);
       } else {
         toast.error(response.message || "Failed to delete user");
       }
@@ -228,12 +255,36 @@ export default function UsersDataTable({
     }
   };
 
-  const handleToggleStatus = async (id: string, isActive: boolean) => {
+  const handleToggleStatusClick = (id: string, activate: boolean) => {
+    const user = data.find((u) => u.id === id);
+    if (user) {
+      setToggleStatusDialog({
+        open: true,
+        userId: id,
+        userName: `${user.first_name} ${user.last_name}`,
+        activate
+      });
+    }
+  };
+
+  const handleToggleStatusConfirm = async () => {
+    if (toggleStatusDialog.userId === null || toggleStatusDialog.activate === null) return;
+
     try {
-      const response = await toggleUserStatus(id, isActive);
+      const response = await toggleUserStatus(
+        toggleStatusDialog.userId,
+        toggleStatusDialog.activate
+      );
       if (response.success) {
-        toast.success(`User ${isActive ? "activated" : "deactivated"} successfully`);
+        toast.success(
+          `User ${toggleStatusDialog.activate ? "activated" : "deactivated"} successfully`
+        );
         router.refresh();
+        // Close dialog first, then reset state after animation
+        setToggleStatusDialog((prev) => ({ ...prev, open: false }));
+        setTimeout(() => {
+          setToggleStatusDialog({ open: false, userId: null, userName: null, activate: null });
+        }, 300); // Wait for dialog close animation
       } else {
         toast.error(response.message || "Failed to update user status");
       }
@@ -242,11 +293,47 @@ export default function UsersDataTable({
     }
   };
 
+  const handleResetPasswordClick = (id: string) => {
+    const user = data.find((u) => u.id === id);
+    if (user) {
+      setResetPasswordDialog({
+        open: true,
+        userId: id,
+        userName: `${user.first_name} ${user.last_name}`
+      });
+    }
+  };
+
+  const handleResetPasswordConfirm = async () => {
+    if (!resetPasswordDialog.userId) return;
+    const response = await resetUserPassword(resetPasswordDialog.userId);
+    if (response.success) {
+      toast.success(response.message || "Password reset successfully");
+    } else {
+      toast.error(response.message || "Failed to reset password");
+    }
+    // Close dialog first, then reset state after animation
+    setResetPasswordDialog((prev) => ({ ...prev, open: false }));
+    setTimeout(() => {
+      setResetPasswordDialog({ open: false, userId: null, userName: null });
+    }, 300);
+  };
+
   const handleEditClick = (user: User) => {
     setEditingUser(user);
   };
 
-  const columns = getColumns(handleDeleteClick, handleToggleStatus, handleEditClick);
+  const handleViewProfile = (id: string) => {
+    router.push(`/dashboard/system-configs/users/${id}`);
+  };
+
+  const columns = getColumns(
+    handleDeleteClick,
+    handleToggleStatusClick,
+    handleEditClick,
+    handleResetPasswordClick,
+    handleViewProfile
+  );
 
   const table = useReactTable({
     data,
@@ -476,6 +563,26 @@ export default function UsersDataTable({
         onOpenChange={(open) => setDeleteDialog({ open, userId: null, userName: null })}
         onConfirm={handleDeleteConfirm}
         type="delete"
+      />
+      <ConfirmationModal
+        open={toggleStatusDialog.open}
+        title={`${toggleStatusDialog.activate ? "Activate" : "Deactivate"} User`}
+        description={`Are you sure you want to ${
+          toggleStatusDialog.activate ? "activate" : "deactivate"
+        } the user "${toggleStatusDialog.userName?.toLocaleUpperCase()}"?`}
+        onOpenChange={(open) =>
+          setToggleStatusDialog({ open, userId: null, userName: null, activate: null })
+        }
+        onConfirm={handleToggleStatusConfirm}
+        type={toggleStatusDialog.activate ? "default" : "delete"}
+      />
+      <ConfirmationModal
+        open={resetPasswordDialog.open}
+        title="Reset Password"
+        description={`Are you sure you want to reset the password for "${resetPasswordDialog.userName?.toLocaleUpperCase()}"? A new password will be generated and the user will need to be notified.`}
+        onOpenChange={(open) => setResetPasswordDialog({ open, userId: null, userName: null })}
+        onConfirm={handleResetPasswordConfirm}
+        type="default"
       />
       {editingUser && <SignUpForm user={editingUser} onClose={() => setEditingUser(null)} />}
     </Card>

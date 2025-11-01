@@ -12,7 +12,8 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import {
   Select,
@@ -21,11 +22,12 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { signupSchema, type SignupFormValues } from "@/app/schemas/auth";
-import { useCallback, useEffect, useState } from "react";
+import { signupSchema, updateUserSchema, type SignupFormValues } from "@/app/schemas/auth";
+import { useEffect, useState, useMemo } from "react";
 import { Check, Copy, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -72,7 +74,7 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
 
   const isEditMode = !!user;
 
-  const generatePass = useCallback(() => {
+  const generatePass = () => {
     let pass = "";
     const str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz0123456789@#$";
     for (let i = 1; i <= 12; i++) {
@@ -80,11 +82,30 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
       pass += str.charAt(char);
     }
     return pass;
-  }, []);
+  };
 
-  const form = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
+  // Use different schema based on edit mode
+  const validationSchema = useMemo(
+    () => (isEditMode ? updateUserSchema : signupSchema),
+    [isEditMode]
+  );
+
+  // Initialize form with user data if in edit mode to prevent flash
+  const initialValues = useMemo(() => {
+    if (isEditMode && user) {
+      return {
+        username: user.username || "",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        branch_id: user.branch_id || "",
+        role_id: user.role_id || "",
+        department_id: user.department_id || "",
+        is_active: user.is_active ?? true,
+        password: ""
+      };
+    }
+    return {
       username: "",
       first_name: "",
       last_name: "",
@@ -92,8 +113,14 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
       branch_id: "",
       role_id: "",
       department_id: "",
-      password: ""
-    }
+      is_active: true,
+      password: generatePass()
+    };
+  }, [isEditMode, user?.id]);
+
+  const form = useForm<any>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: initialValues
   });
 
   // Load initial data
@@ -108,32 +135,25 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
       const filtered = roles.filter((role) => role.department_id === department);
       setFilteredRoles(filtered);
 
-      // Reset role if current selection is not in filtered roles
+      // Only reset role if current selection is not in filtered roles AND not in edit mode
       const currentRole = form.getValues("role_id");
-      if (currentRole && !filtered.find((r) => r.id === currentRole)) {
+      if (currentRole && !filtered.find((r) => r.id === currentRole) && !isEditMode) {
         form.setValue("role_id", "");
       }
     } else {
       setFilteredRoles([]);
     }
-  }, [form.watch("department_id"), roles]);
+  }, [form.watch("department_id"), roles, isEditMode]);
 
-  // Set form values when in edit mode
+  // Update filtered roles when data loads
   useEffect(() => {
-    if (isEditMode) {
-      form.reset({
-        username: user.username,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-        branch_id: user.branch_id,
-        department_id: user.department_id,
-        role_id: user.role_id
-      });
-    } else {
-      resetForm();
+    if (isEditMode && user && roles.length > 0) {
+      console.log("Data loaded for edit mode:", user);
+      // Trigger role filtering for the user's department
+      const filtered = roles.filter((role) => role.department_id === user.department_id);
+      setFilteredRoles(filtered);
     }
-  }, [isEditMode, user, form]);
+  }, [isEditMode, user?.id, roles.length]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -198,21 +218,28 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
     setCopied(false);
   };
 
-  const onSubmit = async (values: SignupFormValues) => {
+  const processForm = async (values: SignupFormValues) => {
+    const isEdit = !!user; // Recalculate inside the handler
     setIsSubmitting(true);
+
+    console.log("Processing form:", { isEdit, values, userId: user?.id });
 
     try {
       let response;
-      if (isEditMode) {
-        response = await updateUser(user.id, {
+      if (isEdit) {
+        const updateData = {
           username: values.username,
           email: values.email,
           first_name: values.first_name,
           last_name: values.last_name,
           branch_id: values.branch_id,
           department_id: values.department_id,
-          role_id: values.role_id
-        });
+          role_id: values.role_id,
+          is_active: values.is_active ?? true
+        };
+        console.log("Updating user with data:", updateData);
+        response = await updateUser(user.id, updateData);
+        console.log("Update response:", response);
       } else {
         response = await registerUser({
           username: values.username,
@@ -227,13 +254,15 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
       }
 
       if (response.success) {
-        toast.success(`User ${isEditMode ? "updated" : "created"} successfully`);
+        toast.success(`User ${isEdit ? "updated" : "created"} successfully`);
         handleCancel();
         router.refresh();
       } else {
-        toast.error(response.message || `Failed to ${isEditMode ? "update" : "create"} user`);
+        console.error("Form submission failed:", response);
+        toast.error(response.message || `Failed to ${isEdit ? "update" : "create"} user`);
       }
     } catch (error) {
+      console.error("Form submission error:", error);
       toast.error("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
@@ -261,7 +290,7 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
 
         <div className="overflow-y-auto px-6 py-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               <div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
@@ -406,7 +435,9 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
                           <FormControl>
                             <SelectTrigger className="w-full focus:ring-1">
                               <SelectValue
-                                placeholder={isLoading ? "Loading departments..." : "Select department"}
+                                placeholder={
+                                  isLoading ? "Loading departments..." : "Select department"
+                                }
                               />
                             </SelectTrigger>
                           </FormControl>
@@ -478,6 +509,30 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
                     )}
                   />
 
+                  {isEditMode && (
+                    <FormField
+                      control={form.control}
+                      name="is_active"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Account Status</FormLabel>
+                            <FormDescription>
+                              {field.value ? "Account is active" : "Account is deactivated"}
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
                   {!isEditMode && (
                     <FormField
                       control={form.control}
@@ -535,7 +590,43 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
                   disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button
+                  type="button"
+                  onClick={async (e) => {
+                    console.log("Button clicked", { isEditMode, isSubmitting });
+                    console.log("Form state:", {
+                      values: form.getValues(),
+                      errors: form.formState.errors,
+                      isValid: form.formState.isValid,
+                      isDirty: form.formState.isDirty,
+                      isSubmitting: form.formState.isSubmitting
+                    });
+                    console.log("Current validation schema:", isEditMode ? "updateUserSchema" : "signupSchema");
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Manually trigger validation first to see what fails
+                    const isValid = await form.trigger();
+                    console.log("Manual validation result:", isValid);
+                    console.log("Errors after trigger:", form.formState.errors);
+
+                    if (!isValid) {
+                      console.error("Validation failed with errors:", form.formState.errors);
+                      return;
+                    }
+
+                    form.handleSubmit(
+                      (data) => {
+                        console.log("Form validation passed, calling processForm");
+                        processForm(data);
+                      },
+                      (errors) => {
+                        console.error("Form validation failed in handleSubmit:", errors);
+                      }
+                    )(e);
+                  }}
+                  disabled={isSubmitting}>
                   {isSubmitting
                     ? isEditMode
                       ? "Updating..."

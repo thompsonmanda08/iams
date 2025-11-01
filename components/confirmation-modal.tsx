@@ -31,7 +31,7 @@ const typeConfig = {
     title: "Confirm Deletion?",
     description:
       "Are you sure you want to perform a delete action on this entry? This action cannot be undone.",
-    confirmText: "Delete",
+    confirmText: "Confirm",
     variant: "destructive" as const,
     iconColor: "text-destructive bg-red-50 p-1"
   },
@@ -57,7 +57,7 @@ const typeConfig = {
     description: "Are you sure you want to proceed?",
     confirmText: "Confirm",
     variant: "default" as const,
-    iconColor: "text-muted-foreground"
+    iconColor: "text-primary bg-primary/10"
   }
 };
 

@@ -176,13 +176,14 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
   const { data } = useRefreshToken(Boolean(loggedIn && !isIdle));
 
-
   const onIdle = async () => {
     setState("Idle");
     await lockScreenOnUserIdle(true);
   };
 
   const onActive = () => {
+    if (state === "Idle") return;
+    // Reset local idle state if not idle
     setState("Active");
   };
 
@@ -196,7 +197,6 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     // timeout: 1 * 1000 * 5, // 5SEC
     throttle: 500,
     disabled: !loggedIn
-
   });
 
   // Callback to handle "I'm still here" button click
