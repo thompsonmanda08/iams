@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useEffect } from "react";
 import { ChevronsUpDown, HistoryIcon, ShoppingBagIcon, UserCircle2Icon } from "lucide-react";
-import { PlusIcon } from "@radix-ui/react-icons";
 import { usePathname } from "next/navigation";
 import { useIsTablet } from "@/hooks/use-mobile";
 import Link from "next/link";
@@ -30,10 +29,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  session,
+  isAuthenticated,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { session: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
@@ -109,7 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full">
-          <NavMain />
+          <NavMain session={session} isAuthenticated={isAuthenticated} />
         </ScrollArea>
       </SidebarContent>
       <SidebarFooter>
@@ -128,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </Button>
           </CardContent>
         </Card> */}
-        <NavUser />
+        <NavUser user={session?.user} />
       </SidebarFooter>
     </Sidebar>
   );

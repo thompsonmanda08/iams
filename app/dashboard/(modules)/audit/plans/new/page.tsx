@@ -1,76 +1,115 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Users, FileText, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Users,
+  AlertCircle,
+  FileText,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Link from "next/link";
 import { createAuditPlan } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
-import { TemplateSelectorSimple } from "@/components/audit/template-selector-simple";
-import { CategorySelector } from "@/components/audit/category-selector";
-import { TemplateService } from "@/lib/services/template-service";
+import { TemplateSelectorSimple } from "@/app/dashboard/(modules)/audit/plans/_components/template-selector-simple";
+import { CategorySelector } from "@/app/dashboard/(modules)/audit/plans/_components/category-selector";
+import { SelectField } from "@/components/ui/select-field";
+import { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
+import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
+import { notify } from "@/lib/utils";
+import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { User } from "@/lib/types/account";
+import { MultiSelectField } from "@/components/ui/multi-select-field";
 
 const STEPS = [
-  { id: 1, name: 'Basic Details', icon: Calendar },
-  { id: 2, name: 'Template Selection', icon: FileText },
-  { id: 3, name: 'Category Selection', icon: CheckCircle2 },
+  { id: 1, name: "Basic Details", icon: Calendar },
+  { id: 2, name: "Template Selection", icon: FileText },
+  { id: 3, name: "Category Selection", icon: CheckCircle2 }
 ];
 
 export default function NewAuditPlanPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
+  const teamMembers = ((teamMemberResponse?.data || []) as User[]) ?? [];
 
   // Form state
   const [formData, setFormData] = useState({
-    title: '',
-    standard: 'ISO 27001:2022',
-    scope: '',
-    objectives: '',
-    startDate: '',
-    endDate: '',
-    teamLeader: '',
-    teamMembers: '',
-    templateId: '',
-    selectedCategories: [] as string[],
+    year: new Date().getFullYear(),
+    title: "",
+    description: "",
+    ref_no: "",
+    audit_area: "",
+    audit_scope: "",
+    audit_criteria: "",
+    audit_objective: "",
+    management_standard: "ISO IEC 27001",
+    audit_team_leader: "",
+    audit_team_member: [] as string[],
+    client_representative: "",
+    audit_language: "English",
+    start_date: null as Date | null,
+    end_date: null as Date | null,
+    opening_meeting_datetime: null as Date | null,
+    closing_meeting_datetime: null as Date | null,
+    working_paper_template_id: "",
+    selectedCategories: [] as string[]
   });
+
+  const { data: fullTemplateResponse, isLoading: loadingTemplateDetails } =
+    useWorkpaperTemplatesWithCategories(formData.working_paper_template_id);
+
+  const selectedTemplate: WorkpaperTemplateDefinition =
+    fullTemplateResponse?.data ?? ({} as WorkpaperTemplateDefinition);
 
   const handleNext = () => {
     // Validate current step before proceeding
     if (currentStep === 1) {
-      if (!formData.title || !formData.scope || !formData.objectives || !formData.startDate || !formData.endDate || !formData.teamLeader) {
-        toast({
-          title: "Validation Error",
+      if (
+        !formData.title ||
+        !formData.ref_no ||
+        !formData.audit_scope ||
+        !formData.audit_objective ||
+        !formData.start_date ||
+        !formData.end_date ||
+        !formData.audit_team_leader ||
+        !formData.audit_area ||
+        !formData.audit_criteria
+      ) {
+        setValidationError("Please fill in all required fields on this step.");
+        notify({
+          // title: "Validation Error",
           description: "Please fill in all required fields",
-          variant: "destructive",
+          type: "error"
         });
         return;
       }
     } else if (currentStep === 2) {
-      if (!formData.templateId) {
-        toast({
-          title: "Validation Error",
+      if (!formData.working_paper_template_id) {
+        setValidationError("Please select a working paper template.");
+        notify({
+          // title: "Validation Error",
           description: "Please select a template",
-          variant: "destructive",
+          type: "error"
         });
         return;
       }
     }
-
+    setValidationError(null);
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   };
 
@@ -78,62 +117,93 @@ export default function NewAuditPlanPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleTemplateChange = (templateId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      templateId,
-      selectedCategories: [], // Reset categories when template changes
-    }));
-  };
+  const handleTemplateChange = useCallback(
+    (templateId: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        working_paper_template_id: templateId,
+        // selectedCategories: [] // Reset categories when template changes
+        selectedCategories:
+          selectedTemplate != null && selectedTemplate.categories
+            ? selectedTemplate.categories?.map((cat) => cat.id as string)
+            : []
+      }));
+    },
+    [selectedTemplate]
+  );
 
   async function handleSubmit() {
-    // Validate category selection
-    if (formData.selectedCategories.length === 0) {
-      toast({
+    setValidationError(null);
+
+    // Validate that all required categories are selected
+    const requiredCategoryIds =
+      selectedTemplate.categories?.filter((c) => c.is_required).map((c) => c.id) ?? [];
+
+    const missingRequired = requiredCategoryIds.filter(
+      (id) => !formData.selectedCategories.includes(id as string)
+    );
+
+    if (missingRequired.length > 0) {
+      const missingNames = missingRequired
+        .map((id) => selectedTemplate.categories?.find((c) => c.id === id)?.name)
+        .filter(Boolean)
+        .join(", ");
+      const errorMsg = `You must select all required categories. Missing: ${missingNames}`;
+      setValidationError(errorMsg);
+      notify({
         title: "Validation Error",
-        description: "Please select at least one category",
-        variant: "destructive",
+        description: errorMsg,
+        type: "error"
       });
       return;
     }
 
     setIsSubmitting(true);
 
+    // Prepare data according to new API structure
     const auditData = {
+      year: formData.year,
       title: formData.title,
-      standard: formData.standard,
-      scope: formData.scope.split(",").map(s => s.trim()),
-      objectives: formData.objectives,
-      teamLeader: formData.teamLeader,
-      teamMembers: formData.teamMembers.split(",").map(m => m.trim()).filter(Boolean),
-      startDate: new Date(formData.startDate),
-      endDate: new Date(formData.endDate),
-      templateId: formData.templateId,
-      selectedCategories: formData.selectedCategories,
+      description: formData.description || undefined,
+      start_date: formData.start_date?.toISOString().split("T")[0] as string,
+      end_date: formData.end_date?.toISOString().split("T")[0] as string,
+      ref_no: formData.ref_no,
+      audit_area: formData.audit_area,
+      audit_scope: formData.audit_scope,
+      audit_criteria: formData.audit_criteria,
+      audit_objective: formData.audit_objective,
+      management_standard: formData.management_standard,
+      audit_team_leader: formData.audit_team_leader,
+      audit_team_members: formData.audit_team_member || undefined,
+      client_representative: formData.client_representative || undefined,
+      audit_language: formData.audit_language || undefined,
+      opening_meeting_datetime: formData.opening_meeting_datetime?.toISOString() || undefined,
+      closing_meeting_datetime: formData.closing_meeting_datetime?.toISOString() || undefined,
+      working_paper_template_id: formData.working_paper_template_id || undefined
     };
 
     try {
       const result = await createAuditPlan(auditData);
 
       if (result.success) {
-        const template = TemplateService.getTemplate(formData.templateId);
-        toast({
+        notify({
           title: "Success",
-          description: `Audit plan created successfully. ${formData.selectedCategories.length} working papers will be generated.`,
+          description:
+            "Audit plan created successfully as Draft. You can submit it for approval when ready."
         });
         router.push("/dashboard/audit/plans");
       } else {
-        toast({
+        notify({
           title: "Error",
           description: result.message || "Failed to create audit plan",
-          variant: "destructive",
+          type: "error"
         });
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive",
+        type: "error"
       });
     } finally {
       setIsSubmitting(false);
@@ -141,9 +211,9 @@ export default function NewAuditPlanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="border-b bg-card">
+      <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
@@ -153,7 +223,7 @@ export default function NewAuditPlanPage() {
             </Button>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Create New Audit Plan</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Set up a new ISO 27001 audit plan with template and category selection
               </p>
             </div>
@@ -163,26 +233,20 @@ export default function NewAuditPlanPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           {/* Progress Steps */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
+          <div className="mb-4">
+            <div className="grid grid-cols-3 place-items-center justify-center gap-4">
               {STEPS.map((step, index) => {
                 const Icon = step.icon;
                 const isActive = currentStep === step.id;
                 const isCompleted = currentStep > step.id;
 
                 return (
-                  <div key={step.id} className="flex items-center flex-1">
-                    <div className="flex flex-col items-center flex-1">
+                  <div key={step.id} className="relative grid place-items-center">
+                    <div className="grid min-w-40 flex-col place-items-center">
                       <div
-                        className={`
-                          flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors
-                          ${isActive ? 'border-primary bg-primary text-primary-foreground' : ''}
-                          ${isCompleted ? 'border-primary bg-primary text-primary-foreground' : ''}
-                          ${!isActive && !isCompleted ? 'border-muted bg-background text-muted-foreground' : ''}
-                        `}
-                      >
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${isActive ? "border-primary bg-primary text-primary-foreground" : ""} ${isCompleted ? "border-primary bg-primary text-primary-foreground" : ""} ${!isActive && !isCompleted ? "border-muted bg-background text-muted-foreground" : ""} `}>
                         {isCompleted ? (
                           <CheckCircle2 className="h-5 w-5" />
                         ) : (
@@ -190,20 +254,13 @@ export default function NewAuditPlanPage() {
                         )}
                       </div>
                       <span
-                        className={`
-                          text-sm mt-2 font-medium
-                          ${isActive ? 'text-foreground' : 'text-muted-foreground'}
-                        `}
-                      >
+                        className={`mt-2 text-sm font-medium text-nowrap ${isActive ? "text-foreground" : "text-muted-foreground"} `}>
                         {step.name}
                       </span>
                     </div>
                     {index < STEPS.length - 1 && (
                       <div
-                        className={`
-                          h-0.5 flex-1 mx-4 transition-colors
-                          ${isCompleted ? 'bg-primary' : 'bg-muted'}
-                        `}
+                        className={`absolute left-[90%] mx-4 h-0.5 w-full transition-colors ${isCompleted ? "bg-primary" : "bg-muted"} `}
                       />
                     )}
                   </div>
@@ -214,130 +271,227 @@ export default function NewAuditPlanPage() {
 
           {/* Form Content */}
           <Card className="p-6">
+            {validationError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Validation Error</AlertTitle>
+                <AlertDescription>{validationError}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-6">
               {/* Step 1: Basic Details */}
               {currentStep === 1 && (
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold">
                       <Calendar className="h-5 w-5" />
                       Basic Information
                     </h3>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Audit Title *</Label>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="e.g., Q1 2025 ISO 27001 Internal Audit"
+                        id="year"
+                        type="number"
+                        label="Year"
+                        value={formData.year}
+                        onChange={(e) =>
+                          setFormData({ ...formData, year: parseInt(e.target.value) })
+                        }
+                        placeholder="2025"
                         required
                       />
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="standard">Standard *</Label>
-                      <Select
-                        value={formData.standard}
-                        onValueChange={(value) => setFormData({ ...formData, standard: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select standard" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ISO 27001:2022">ISO 27001:2022</SelectItem>
-                          <SelectItem value="ISO 27001:2013">ISO 27001:2013</SelectItem>
-                          <SelectItem value="ISO 9001:2015">ISO 9001:2015</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="scope">Scope (comma-separated) *</Label>
                       <Input
-                        id="scope"
-                        value={formData.scope}
-                        onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
-                        placeholder="e.g., Information Security, Risk Management, ISMS"
+                        id="ref_no"
+                        label="Reference Number"
+                        value={formData.ref_no}
+                        onChange={(e) => setFormData({ ...formData, ref_no: e.target.value })}
+                        placeholder="e.g., AP-2025-001"
                         required
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Separate multiple scope items with commas
-                      </p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="objectives">Audit Objectives *</Label>
-                      <Textarea
-                        id="objectives"
-                        value={formData.objectives}
-                        onChange={(e) => setFormData({ ...formData, objectives: e.target.value })}
-                        placeholder="Describe the main objectives of this audit..."
-                        rows={4}
+                    <Input
+                      id="title"
+                      label="Audit Plan Title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="e.g., Annual Audit Plan 2025"
+                      required
+                    />
+
+                    <Textarea
+                      id="description"
+                      label="Description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Comprehensive audit plan for fiscal year..."
+                      rows={2}
+                    />
+
+                    <div className="flex gap-4">
+                      <div className="space-y-2">
+                        <SelectField
+                          id="management_standard"
+                          label="Management Standard"
+                          required
+                          value={formData.management_standard}
+                          onValueChange={(v) =>
+                            setFormData({ ...formData, management_standard: v })
+                          }
+                          options={[{ id: "ISO IEC 27001", name: "ISO IEC 27001" }]}
+                        />
+                      </div>
+
+                      <Input
+                        id="audit_area"
+                        label="Audit Area"
+                        value={formData.audit_area}
+                        onChange={(e) => setFormData({ ...formData, audit_area: e.target.value })}
+                        placeholder="e.g., ISMS based on ISO 27001:2022"
                         required
                       />
                     </div>
+
+                    <Textarea
+                      id="audit_scope"
+                      label="Audit Scope"
+                      value={formData.audit_scope}
+                      onChange={(e) => setFormData({ ...formData, audit_scope: e.target.value })}
+                      placeholder="All information security controls across the organization..."
+                      rows={3}
+                      required
+                    />
+
+                    <Input
+                      id="audit_criteria"
+                      label="Audit Criteria"
+                      value={formData.audit_criteria}
+                      onChange={(e) => setFormData({ ...formData, audit_criteria: e.target.value })}
+                      placeholder="e.g., ISO 27001:2022 requirements"
+                      required
+                    />
+
+                    <Textarea
+                      label="Audit Objective"
+                      id="audit_objective"
+                      value={formData.audit_objective}
+                      onChange={(e) =>
+                        setFormData({ ...formData, audit_objective: e.target.value })
+                      }
+                      placeholder="Assess compliance with ISO 27001:2022 and effectiveness of ISMS..."
+                      rows={3}
+                      required
+                    />
                   </div>
 
-                  <div className="space-y-4 pt-4 border-t">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold">
                       <Calendar className="h-5 w-5" />
-                      Schedule
+                      Schedule & Timelines
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="startDate">Start Date *</Label>
-                        <Input
-                          id="startDate"
-                          type="date"
-                          value={formData.startDate}
-                          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                          required
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <DatePicker
+                        label="Start Date"
+                        required
+                        value={(formData.start_date ?? undefined) as any}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, start_date: date || null })
+                        }
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="endDate">End Date *</Label>
-                        <Input
-                          id="endDate"
-                          type="date"
-                          value={formData.endDate}
-                          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                          required
-                        />
-                      </div>
+                      <DatePicker
+                        label="End Date"
+                        required
+                        value={(formData.end_date ?? undefined) as any}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, end_date: date || null })
+                        }
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <DateTimePicker
+                        label="Opening Meeting"
+                        value={formData.opening_meeting_datetime ?? undefined}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, opening_meeting_datetime: date || null })
+                        }
+                      />
+
+                      <DateTimePicker
+                        label="Closing Meeting"
+                        value={formData.closing_meeting_datetime ?? undefined}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, closing_meeting_datetime: date || null })
+                        }
+                      />
                     </div>
                   </div>
 
-                  <div className="space-y-4 pt-4 border-t">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold">
                       <Users className="h-5 w-5" />
-                      Team
+                      Team & Stakeholders
                     </h3>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="teamLeader">Team Leader *</Label>
+                    <div className="grid grid-cols-1 gap-4 space-y-2 sm:grid-cols-2">
+                      <div>
+                        <SelectField
+                          id="audit_team_leader"
+                          label="Audit Team Leader"
+                          required
+                          className="w-full"
+                          placeholder="Choose team leader"
+                          value={formData.audit_team_leader}
+                          onValueChange={(v) => {
+                            setFormData({ ...formData, audit_team_leader: v });
+                          }}
+                          options={teamMembers.map((member) => ({
+                            id: member.id,
+                            name: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                          }))}
+                        />
+                      </div>
+
                       <Input
-                        id="teamLeader"
-                        value={formData.teamLeader}
-                        onChange={(e) => setFormData({ ...formData, teamLeader: e.target.value })}
-                        placeholder="e.g., John Doe"
-                        required
+                        id="client_representative"
+                        label="Client Representative"
+                        value={formData.client_representative}
+                        onChange={(e) =>
+                          setFormData({ ...formData, client_representative: e.target.value })
+                        }
+                        placeholder="e.g., John Doe, CISO"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="teamMembers">Team Members (comma-separated)</Label>
-                      <Input
-                        id="teamMembers"
-                        value={formData.teamMembers}
-                        onChange={(e) => setFormData({ ...formData, teamMembers: e.target.value })}
-                        placeholder="e.g., Jane Smith, Mike Johnson"
+                      <MultiSelectField
+                        label="Audit Team Members"
+                        required
+                        placeholder="Choose team member"
+                        value={formData.audit_team_member}
+                        onValueChange={(values) => {
+                          setFormData({ ...formData, audit_team_member: values });
+                        }}
+                        options={teamMembers.map((member) => ({
+                          value: member.id,
+                          label: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                        }))}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Separate multiple team members with commas
-                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="audit_language">Audit Language</Label>
+                      <Input
+                        id="audit_language"
+                        value={formData.audit_language}
+                        onChange={(e) =>
+                          setFormData({ ...formData, audit_language: e.target.value })
+                        }
+                        placeholder="English"
+                      />
                     </div>
                   </div>
                 </div>
@@ -346,16 +500,20 @@ export default function NewAuditPlanPage() {
               {/* Step 2: Template Selection */}
               {currentStep === 2 && (
                 <TemplateSelectorSimple
-                  value={formData.templateId}
+                  value={formData.working_paper_template_id}
                   onChange={handleTemplateChange}
+                  selectedTemplate={selectedTemplate}
+                  loadingTemplateDetails={loadingTemplateDetails}
                 />
               )}
 
               {/* Step 3: Category Selection */}
-              {currentStep === 3 && formData.templateId && (
+              {currentStep === 3 && formData.working_paper_template_id && (
                 <CategorySelector
-                  templateId={formData.templateId}
+                  templateId={formData.working_paper_template_id}
                   selectedCategories={formData.selectedCategories}
+                  loadingTemplateDetails={loadingTemplateDetails}
+                  selectedTemplate={selectedTemplate}
                   onCategoriesChange={(categories) =>
                     setFormData({ ...formData, selectedCategories: categories })
                   }
@@ -363,16 +521,15 @@ export default function NewAuditPlanPage() {
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex items-center justify-between pt-6 border-t">
+              <div className="flex items-center justify-between border-t pt-6">
                 <div>
                   {currentStep > 1 && (
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handlePrevious}
-                      disabled={isSubmitting}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-2" />
+                      disabled={isSubmitting}>
+                      <ChevronLeft className="mr-2 h-4 w-4" />
                       Previous
                     </Button>
                   )}
@@ -383,26 +540,17 @@ export default function NewAuditPlanPage() {
                     type="button"
                     variant="ghost"
                     onClick={() => router.back()}
-                    disabled={isSubmitting}
-                  >
+                    disabled={isSubmitting}>
                     Cancel
                   </Button>
 
                   {currentStep < STEPS.length ? (
-                    <Button
-                      type="button"
-                      onClick={handleNext}
-                      disabled={isSubmitting}
-                    >
+                    <Button type="button" onClick={handleNext} disabled={isSubmitting}>
                       Next
-                      <ChevronRight className="h-4 w-4 ml-2" />
+                      <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={isSubmitting}
-                    >
+                    <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
                       {isSubmitting ? "Creating..." : "Create Audit Plan"}
                     </Button>
                   )}

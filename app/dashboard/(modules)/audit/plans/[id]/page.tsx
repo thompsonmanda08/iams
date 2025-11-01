@@ -1,5 +1,14 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Users, TrendingUp, AlertCircle, FileText, Send, Layers } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Users,
+  TrendingUp,
+  AlertCircle,
+  FileText,
+  Send,
+  Layers
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,13 +16,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AuditStatusBadge } from "@/components/audit/audit-status-badge";
 import Link from "next/link";
-import { getAuditPlan, getWorkpapers, getFindings } from "@/app/_actions/audit-module-actions";
+import {
+  getAuditPlan,
+  getWorkpapers,
+  getFindings,
+  getAuditLogsByEntity,
+  getWorkingPaperTemplateWithCategories
+} from "@/app/_actions/audit-module-actions";
 import { format } from "date-fns";
 import { AuditFindingsTab } from "@/components/audit/audit-findings-tab";
 import { AuditWorkpapersTab } from "@/components/audit/audit-workpapers-tab";
-import { AuditPlan } from "@/lib/types/audit-types";
-import { TemplateService } from "@/lib/services/template-service";
+import { AuditLogsTable } from "@/components/audit/audit-logs-table";
+import { AuditPlan, WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import { SubmitForReviewButton } from "@/components/audit/submit-for-review-button";
+import { AuditPlanActions } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plan-actions";
 
 interface AuditDetailPageProps {
   params: Promise<{
@@ -24,21 +40,30 @@ interface AuditDetailPageProps {
 export default async function AuditDetailPage({ params }: AuditDetailPageProps) {
   const { id } = await params;
 
-  const [auditResponse, workpapersResponse, findingsResponse] = await Promise.all([
-    getAuditPlan(id),
-    getWorkpapers(id),
-    getFindings({ search: "" })
-  ]);
+  const auditResponse = await getAuditPlan(id);
 
   if (!auditResponse.success || !auditResponse.data) {
     notFound();
   }
 
   const auditPlan = auditResponse.data as AuditPlan;
-  const workpapers = workpapersResponse.success ? workpapersResponse.data : [];
 
-  const allFindings = findingsResponse.success ? findingsResponse.data : [];
-  const findings = allFindings.filter((f: any) => f.auditId === id);
+  // Fetch related data in parallel
+  const [workpapersResponse, findingsResponse, auditLogsResponse, templateResponse] =
+    await Promise.all([
+      getWorkpapers(id),
+      getFindings({ audit_plan_id: id as string }),
+      getAuditLogsByEntity("audit_plan", id),
+      auditPlan.templateId ? getWorkingPaperTemplateWithCategories(auditPlan.templateId) : null
+    ]);
+
+  const workpapers = workpapersResponse?.success ? workpapersResponse.data : [];
+  const findings = findingsResponse?.success ? findingsResponse.data : [];
+  const auditLogs = auditLogsResponse?.success ? auditLogsResponse.data : [];
+  const template =
+    templateResponse?.success && templateResponse.data?.data?.data
+      ? (templateResponse.data.data.data as WorkpaperTemplateDefinition)
+      : null;
 
   // Calculate stats
   const stats = {
@@ -65,7 +90,10 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
                 <p className="text-muted-foreground mt-1">{auditPlan.standard}</p>
               </div>
             </div>
-            <AuditStatusBadge status={auditPlan.status} />
+            <div className="flex items-center gap-3">
+              <AuditStatusBadge status={auditPlan.status} />
+              <AuditPlanActions auditPlanId={auditPlan.id} status={auditPlan.status} />
+            </div>
           </div>
         </div>
       </div>
@@ -154,7 +182,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
                     <Layers className="text-muted-foreground h-5 w-5" />
                     <span className="font-semibold">Template & Categories</span>
                   </div>
-                  {auditPlan.status === 'draft' && (
+                  {auditPlan.status === "draft" && (
                     <SubmitForReviewButton
                       auditPlanId={auditPlan.id}
                       categoryCount={auditPlan.selectedCategories?.length || 0}
@@ -164,9 +192,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
                 <div className="space-y-3">
                   <div>
-                    <p className="text-muted-foreground text-sm font-medium mb-2">
-                      Template
-                    </p>
+                    <p className="text-muted-foreground mb-2 text-sm font-medium">Template</p>
                     <Badge variant="secondary" className="text-sm">
                       {auditPlan.templateName || auditPlan.templateId}
                     </Badge>
@@ -174,21 +200,14 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
                   {auditPlan.selectedCategories && auditPlan.selectedCategories.length > 0 && (
                     <div>
-                      <p className="text-muted-foreground text-sm font-medium mb-2">
+                      <p className="text-muted-foreground mb-2 text-sm font-medium">
                         Selected Categories ({auditPlan.selectedCategories.length})
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {auditPlan.selectedCategories.map((categoryId) => {
-                          const category = TemplateService.getCategoryById(
-                            auditPlan.templateId!,
-                            categoryId
-                          );
+                          const category = template?.categories?.find((c) => c.id === categoryId);
                           return (
-                            <Badge
-                              key={categoryId}
-                              variant="outline"
-                              className="text-xs"
-                            >
+                            <Badge key={categoryId} variant="outline" className="text-xs">
                               {category?.name || categoryId}
                             </Badge>
                           );
@@ -198,9 +217,9 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
                   )}
 
                   {auditPlan.workpaperIds && auditPlan.workpaperIds.length > 0 && (
-                    <div className="pt-3 border-t">
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">
+                    <div className="border-t pt-3">
+                      <p className="text-muted-foreground text-sm">
+                        <span className="text-foreground font-medium">
                           {auditPlan.workpaperIds.length}
                         </span>{" "}
                         workpapers generated from template
@@ -258,14 +277,16 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
             </TabsContent>
 
             <TabsContent value="findings" className="space-y-4">
-              <AuditFindingsTab stats={stats} findings={findings} />
+              <AuditFindingsTab stats={stats} findings={findings} auditPlanId={id} />
             </TabsContent>
 
-            <TabsContent value="history">
-              <Card className="p-12 text-center">
-                <FileText className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                <h3 className="mb-2 text-lg font-semibold">Audit History</h3>
-                <p className="text-muted-foreground text-sm">Activity timeline coming soon</p>
+            <TabsContent value="history" className="space-y-4">
+              <Card className="p-6">
+                <h3 className="mb-4 text-lg font-semibold">Activity History</h3>
+                <p className="text-muted-foreground mb-4 text-sm">
+                  Track all changes and actions performed on this audit plan.
+                </p>
+                <AuditLogsTable logs={auditLogs} />
               </Card>
             </TabsContent>
           </Tabs>

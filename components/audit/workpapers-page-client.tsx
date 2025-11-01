@@ -2,14 +2,26 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, FileCode } from "lucide-react";
 import { WorkpapersTable } from "./workpapers-table";
-import { WorkpaperTemplateDialog } from "./workpaper-template-dialog";
+import { WorkpaperTemplateDialog } from "../../app/dashboard/system-configs/audit-settings/_components/workpaper-template-dialog";
 import type { Workpaper, AuditPlan, CustomTemplate } from "@/lib/types/audit-types";
+import Link from "next/link";
+import { Pagination } from "@/lib/types";
+
+interface WorkingPaperTemplate {
+  id: string;
+  name: string;
+  standard: string;
+  description?: string;
+  is_active?: boolean;
+}
 
 interface WorkpapersPageClientProps {
   workpapers: Workpaper[];
   audits: AuditPlan[];
+  templates?: WorkingPaperTemplate[];
+  pagination: Pagination;
 }
 
 // Mock custom templates - replace with actual data fetch
@@ -54,7 +66,12 @@ const mockCustomTemplates: CustomTemplate[] = [
   }
 ];
 
-export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClientProps) {
+export function WorkpapersPageClient({
+  workpapers,
+  audits,
+  pagination,
+  templates = []
+}: WorkpapersPageClientProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleOpenCreateDialog = () => {
@@ -74,14 +91,12 @@ export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClien
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
-              <Button className="gap-2" onClick={handleOpenCreateDialog}>
-                <Plus className="h-4 w-4" />
-                Create Workpaper
-              </Button>
+              <Link href="/dashboard/system-configs/audit-settings/templates">
+                <Button>
+                  <FileCode className="h-4 w-4" />
+                  Manage Templates
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -100,17 +115,13 @@ export function WorkpapersPageClient({ workpapers, audits }: WorkpapersPageClien
           )}
 
           {/* Table */}
-          <WorkpapersTable workpapers={workpapers || []} />
+          <WorkpapersTable
+            workpapers={workpapers || []}
+            onCreateClick={handleOpenCreateDialog}
+            pagination={pagination}
+          />
         </div>
       </div>
-
-      {/* Create Workpaper Template Selection Dialog */}
-      <WorkpaperTemplateDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        audits={audits}
-        customTemplates={mockCustomTemplates}
-      />
     </div>
   );
 }

@@ -1,185 +1,261 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { risksApi, type HeatMapData } from "@/lib/api/risks-api";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+type RiskLevel = "low" | "medium" | "high" | "critical";
+type RiskType = "inherent" | "residual";
+
+interface CellData {
+  count: number;
+  risks: string[];
+}
+
+interface SelectedCell {
+  likelihood: number;
+  impact: number;
+  type: RiskType;
+  data: CellData;
+}
+
+// Sample data for demonstration
+const generateRiskData = (type: RiskType): CellData[][] => {
+  const data: CellData[][] = [];
+  for (let i = 0; i < 5; i++) {
+    data[i] = [];
+    for (let j = 0; j < 5; j++) {
+      const count = Math.floor(Math.random() * 8);
+      data[i][j] = {
+        count,
+        risks: count > 0 ? Array.from({ length: count }, (_, k) => `Risk ${k + 1}`) : []
+      };
+    }
+  }
+  return data;
+};
+
+const inherentData = generateRiskData("inherent");
+const residualData = generateRiskData("residual");
+
+const getRiskLevel = (likelihood: number, impact: number): RiskLevel => {
+  const score = likelihood * impact;
+  if (score <= 4) return "low";
+  if (score <= 9) return "medium";
+  if (score <= 16) return "high";
+  return "critical";
+};
+
+const getRiskColor = (level: RiskLevel): string => {
+  const colors = {
+    low: "bg-emerald-500",
+    medium: "bg-amber-500",
+    high: "bg-orange-500",
+    critical: "bg-red-500"
+  };
+  return colors[level];
+};
+
+const RiskMatrix = ({
+  data,
+  type,
+  onCellClick,
+  selectedCell
+}: {
+  data: CellData[][];
+  type: RiskType;
+  onCellClick: (likelihood: number, impact: number, type: RiskType, cellData: CellData) => void;
+  selectedCell: SelectedCell | null;
+}) => {
+  return (
+    <div className="flex flex-col gap-1">
+      {[4, 3, 2, 1, 0].map((impact) => (
+        <div key={impact} className="flex gap-1">
+          {[0, 1, 2, 3, 4].map((likelihood) => {
+            const level = getRiskLevel(likelihood + 1, impact + 1);
+            const cellData = data[impact][likelihood];
+            const isSelected =
+              selectedCell &&
+              selectedCell.likelihood === likelihood + 1 &&
+              selectedCell.impact === impact + 1 &&
+              selectedCell.type === type;
+
+            return (
+              <button
+                key={`${impact}-${likelihood}`}
+                onClick={() => onCellClick(likelihood + 1, impact + 1, type, cellData)}
+                className={`${getRiskColor(level)} flex h-12 w-12 flex-col items-center justify-center rounded text-xs font-semibold text-white transition-all hover:scale-105 hover:shadow-lg md:h-14 md:w-14 ${
+                  isSelected ? "ring-1 ring-black ring-offset-1" : ""
+                }`}>
+                <span className="text-base">{cellData.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function RiskHeatMapPage() {
-  const [heatMapData, setHeatMapData] = useState<HeatMapData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedCell, setSelectedCell] = useState<HeatMapData | null>(null);
+  const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
 
-  useEffect(() => {
-    loadHeatMap();
-  }, []);
-
-  const loadHeatMap = async () => {
-    setIsLoading(true);
-    try {
-      const data = await risksApi.getHeatMap();
-      setHeatMapData(data);
-    } catch (error) {
-      console.error("Failed to load heat map:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getCellColor = (impact: number, likelihood: number) => {
-    const score = impact * likelihood;
-
-    if (score >= 20) return "bg-red-600 hover:bg-red-700";
-    if (score >= 15) return "bg-red-500 hover:bg-red-600";
-    if (score >= 10) return "bg-orange-500 hover:bg-orange-600";
-    if (score >= 5) return "bg-amber-400 hover:bg-amber-500";
-    return "bg-green-500 hover:bg-green-600";
-  };
-
-  const getCellData = (impact: number, likelihood: number) => {
-    return heatMapData.find((d) => d.impact === impact && d.likelihood === likelihood);
+  const handleCellClick = (likelihood: number, impact: number, type: RiskType, data: CellData) => {
+    setSelectedCell({ likelihood, impact, type, data });
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-       <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Risk Heat Map</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Visual representation of risk distribution
-            </p>
-          </div>
+    <div className="bg-background min-h-screen py-4">
+      <div className="bg-card border-b">
+        <div className="container mx-auto py-6">
+          <h1 className="text-foreground text-3xl font-bold">Risk Heat Maps</h1>
+          <p className="text-muted-foreground mt-1">Visual representation of risk distribution</p>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 container mx-auto px-4 py-8">
-        {/* Heat Map */}
-        <Card className="p-6 lg:col-span-2">
-          {isLoading ? (
-            <div className="bg-muted h-96 animate-pulse rounded" />
-          ) : (
-            <div className="space-y-4">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Residual Risk Matrix (5×5)</h3>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded bg-green-500" />
-                    <span>Low</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded bg-amber-400" />
-                    <span>Medium</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded bg-orange-500" />
-                    <span>High</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded bg-red-500" />
-                    <span>Critical</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-6 gap-2">
-                {/* Y-axis label */}
-                <div className="col-span-1 row-span-6 flex items-center justify-center">
-                  <div className="-rotate-90 transform text-sm font-semibold whitespace-nowrap">
-                    Impact →
-                  </div>
-                </div>
-
-                {/* Header row */}
-                <div className="col-span-5 mb-2 grid grid-cols-5 gap-2">
-                  {[1, 2, 3, 4, 5].map((likelihood) => (
-                    <div
-                      key={likelihood}
-                      className="text-muted-foreground text-center text-sm font-medium">
-                      {likelihood}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Heat map cells (reversed impact for visual representation) */}
-                {[5, 4, 3, 2, 1].map((impact) => (
-                  <div key={impact} className="col-span-5 grid grid-cols-5 gap-2">
-                    {[1, 2, 3, 4, 5].map((likelihood) => {
-                      const cellData = getCellData(impact, likelihood);
-                      const score = impact * likelihood;
-
-                      return (
-                        <button
-                          key={`${impact}-${likelihood}`}
-                          onClick={() => setSelectedCell(cellData || null)}
-                          className={cn(
-                            "flex aspect-square flex-col items-center justify-center rounded-lg font-semibold text-white transition-all",
-                            getCellColor(impact, likelihood),
-                            selectedCell?.impact === impact &&
-                              selectedCell?.likelihood === likelihood &&
-                              "ring-primary ring-4"
-                          )}>
-                          <span className="text-2xl">{cellData?.count || 0}</span>
-                          <span className="text-xs opacity-75">{score}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
-
-                {/* X-axis label */}
-                <div className="col-span-5 mt-2 text-center text-sm font-semibold">
-                  ← Likelihood
-                </div>
+      <div className="container mx-auto space-y-6 p-4">
+        {/* Legend */}
+        <Card className="bg-card border-border">
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-foreground text-sm font-medium">Risk Levels:</span>
+              <div className="flex flex-wrap gap-3">
+                <Badge className="bg-emerald-500 text-white hover:bg-emerald-600">Low</Badge>
+                <Badge className="bg-amber-500 text-white hover:bg-amber-600">Medium</Badge>
+                <Badge className="bg-orange-500 text-white hover:bg-orange-600">High</Badge>
+                <Badge className="bg-red-500 text-white hover:bg-red-600">Critical</Badge>
               </div>
             </div>
-          )}
+          </CardContent>
         </Card>
 
-        {/* Selected Cell Details */}
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Cell Details</h3>
-          {selectedCell ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-muted-foreground text-sm">Impact Level</p>
-                <p className="text-2xl font-bold">{selectedCell.impact}</p>
+        {/* Risk Matrices Grid */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Inherent Risk Matrix */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-foreground text-lg font-semibold">
+                Inherent Risk Matrix (5×5)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-muted-foreground mb-2 flex items-center justify-between text-xs">
+                  <span className="absolute top-1/2 -left-8 origin-center -rotate-90 transform">
+                    Impact →
+                  </span>
+                  <span className="w-full text-center">← Likelihood →</span>
+                </div>
+                <div className="flex justify-center">
+                  <RiskMatrix
+                    data={inherentData}
+                    type="inherent"
+                    onCellClick={handleCellClick}
+                    selectedCell={selectedCell}
+                  />
+                </div>
+                <div className="text-muted-foreground flex justify-between pt-2 text-xs">
+                  <span>1</span>
+                  <span>2</span>
+                  <span>3</span>
+                  <span>4</span>
+                  <span>5</span>
+                </div>
               </div>
-              <div>
-                <p className="text-muted-foreground text-sm">Likelihood Level</p>
-                <p className="text-2xl font-bold">{selectedCell.likelihood}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">Risk Score</p>
-                <p className="text-2xl font-bold">
-                  {selectedCell.impact * selectedCell.likelihood}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">Number of Risks</p>
-                <p className="text-2xl font-bold">{selectedCell.count}</p>
-              </div>
+            </CardContent>
+          </Card>
 
-              {selectedCell.risks.length > 0 && (
-                <div className="border-t pt-4">
-                  <p className="mb-2 text-sm font-medium">Risks in this cell:</p>
-                  <div className="space-y-2">
-                    {selectedCell.risks.map((risk) => (
-                      <div key={risk.id} className="bg-muted rounded p-2 text-sm">
-                        {risk.title}
-                      </div>
-                    ))}
+          {/* Residual Risk Matrix */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-foreground text-lg font-semibold">
+                Residual Risk Matrix (5×5)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-muted-foreground mb-2 flex items-center justify-between text-xs">
+                  <span className="absolute top-1/2 -left-8 origin-center -rotate-90 transform">
+                    Impact →
+                  </span>
+                  <span className="w-full text-center">← Likelihood →</span>
+                </div>
+                <div className="flex justify-center">
+                  <RiskMatrix
+                    data={residualData}
+                    type="residual"
+                    onCellClick={handleCellClick}
+                    selectedCell={selectedCell}
+                  />
+                </div>
+                <div className="text-muted-foreground flex justify-between pt-2 text-xs">
+                  <span>1</span>
+                  <span>2</span>
+                  <span>3</span>
+                  <span>4</span>
+                  <span>5</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Detailed View */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground text-lg font-semibold">Cell Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedCell ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">Risk Type</p>
+                    <p className="text-foreground text-sm font-semibold capitalize">
+                      {selectedCell.type}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">Likelihood</p>
+                    <p className="text-foreground text-sm font-semibold">
+                      {selectedCell.likelihood}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">Impact</p>
+                    <p className="text-foreground text-sm font-semibold">{selectedCell.impact}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">Risk Level</p>
+                    <Badge
+                      className={`${getRiskColor(getRiskLevel(selectedCell.likelihood, selectedCell.impact))} text-white capitalize`}>
+                      {getRiskLevel(selectedCell.likelihood, selectedCell.impact)}
+                    </Badge>
                   </div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">Click on a cell to view details</p>
-          )}
+
+                <div className="space-y-2">
+                  <p className="text-foreground text-sm font-medium">
+                    Risks in this cell ({selectedCell.data.count})
+                  </p>
+                  {selectedCell.data.count > 0 ? (
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                      {selectedCell.data.risks.map((risk, idx) => (
+                        <div key={idx} className="bg-muted border-border rounded-lg border p-3">
+                          <p className="text-foreground text-sm">{risk}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No risks in this cell</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground">Click on a cell to view details</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>

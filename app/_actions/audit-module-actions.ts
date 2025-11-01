@@ -10,305 +10,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { APIResponse } from "@/types";
+import type { APIResponse } from "@/lib/types";
 import type {
-  AuditPlan,
-  AuditPlanInput,
-  AuditFilters,
-  Workpaper,
-  WorkpaperInput,
-  WorkpaperTemplate,
-  ClauseTemplate,
-  ClauseTemplateInput,
-  Finding,
-  FindingInput,
-  FindingFilters,
-  FindingTimelineEvent,
-  AuditMetrics,
-  AuditAnalytics,
-  AnalyticsParams,
   ReportTemplate,
   ReportParams,
   ScheduledReport,
   AuditSettings,
   SettingsInput,
-  TeamMember,
-  TeamMemberInput
+  TemplateCategory
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
-import { TemplateService } from "@/lib/services/template-service";
-
-// ============================================================================
-// MOCK DATA
-// ============================================================================
-
-// Mock Audit Plans
-const mockAuditPlans: AuditPlan[] = [
-  {
-    id: "1",
-    title: "Q1 2025 ISO 27001 Internal Audit",
-    standard: "ISO 27001:2022",
-    scope: ["Information Security", "Risk Management", "ISMS"],
-    objectives:
-      "Verify compliance with ISO 27001:2022 controls and identify areas for improvement in the ISMS implementation.",
-    teamLeader: "John Doe",
-    teamMembers: ["Jane Smith", "Mike Johnson", "Sarah Williams"],
-    startDate: new Date("2025-01-15"),
-    endDate: new Date("2025-02-28"),
-    status: "in-progress",
-    progress: 45,
-    conformityRate: 78,
-    createdAt: new Date("2024-12-01"),
-    updatedAt: new Date("2025-01-20")
-  },
-  {
-    id: "2",
-    title: "External Certification Audit 2025",
-    standard: "ISO 27001:2022",
-    scope: ["Full ISMS Scope", "All Departments", "Cloud Infrastructure"],
-    objectives: "Obtain ISO 27001:2022 certification through external audit body assessment.",
-    teamLeader: "Sarah Williams",
-    teamMembers: ["David Lee", "Emma Brown"],
-    startDate: new Date("2025-03-10"),
-    endDate: new Date("2025-03-15"),
-    status: "planned",
-    progress: 0,
-    createdAt: new Date("2024-12-15"),
-    updatedAt: new Date("2024-12-15")
-  },
-  {
-    id: "3",
-    title: "Security Controls Review - Q4 2024",
-    standard: "ISO 27001:2022",
-    scope: ["Access Control", "Cryptography", "Physical Security"],
-    objectives: "Assess effectiveness of technical and physical security controls.",
-    teamLeader: "Mike Johnson",
-    teamMembers: ["John Doe", "Lisa Chen"],
-    startDate: new Date("2024-10-01"),
-    endDate: new Date("2024-11-30"),
-    status: "completed",
-    progress: 100,
-    conformityRate: 92,
-    createdAt: new Date("2024-09-01"),
-    updatedAt: new Date("2024-12-05")
-  }
-];
-
-// Mock Workpapers
-const mockWorkpapers: Workpaper[] = [
-  {
-    id: "1",
-    auditId: "1",
-    auditTitle: "Q1 2025 ISO 27001 Internal Audit",
-    clause: "4.1",
-    clauseTitle: "Understanding the Organization and its Context",
-    objectives:
-      "Verify that the organization has identified internal and external issues relevant to ISMS.",
-    testProcedures:
-      "Review context analysis document, interview management, verify stakeholder identification.",
-    testResults:
-      "Organization maintains comprehensive context analysis. Last updated 3 months ago. All key stakeholders identified.",
-    testResult: "conformity",
-    evidence: [],
-    preparedBy: "Jane Smith",
-    preparedDate: new Date("2025-01-20"),
-    reviewedBy: "John Doe",
-    reviewedDate: new Date("2025-01-22"),
-    createdAt: new Date("2025-01-18"),
-    updatedAt: new Date("2025-01-22")
-  },
-  {
-    id: "2",
-    auditId: "1",
-    auditTitle: "Q1 2025 ISO 27001 Internal Audit",
-    clause: "5.1",
-    clauseTitle: "Leadership and Commitment",
-    objectives: "Confirm top management demonstrates leadership and commitment to the ISMS.",
-    testProcedures:
-      "Review management meeting minutes, interview CISO, verify policy approval and resource allocation.",
-    testResults:
-      "Top management actively supports ISMS. Quarterly review meetings held. However, resource allocation for 2025 not yet finalized.",
-    testResult: "partial-conformity",
-    evidence: [],
-    preparedBy: "Mike Johnson",
-    preparedDate: new Date("2025-01-21"),
-    createdAt: new Date("2025-01-19"),
-    updatedAt: new Date("2025-01-21")
-  }
-];
-
-// Mock Findings
-const mockFindings: Finding[] = [
-  {
-    id: "1",
-    referenceCode: "FND-2025-001",
-    auditId: "1",
-    auditTitle: "Q1 2025 ISO 27001 Internal Audit",
-    clause: "8.2",
-    clauseTitle: "Information Security Risk Assessment",
-    description:
-      "Risk assessment process does not adequately address cloud infrastructure risks. Several cloud services lack formal risk assessment documentation.",
-    severity: "high",
-    status: "open",
-    recommendation:
-      "Extend risk assessment methodology to explicitly include cloud services. Document risk assessments for all cloud platforms in use.",
-    correctiveAction:
-      "Update risk assessment procedure to include cloud services checklist. Conduct risk assessments for AWS, Azure, and GCP environments.",
-    assignedTo: "David Lee",
-    dueDate: new Date("2025-02-28"),
-    attachments: [],
-    createdAt: new Date("2025-01-22"),
-    updatedAt: new Date("2025-01-22")
-  },
-  {
-    id: "2",
-    referenceCode: "FND-2025-002",
-    auditId: "1",
-    auditTitle: "Q1 2025 ISO 27001 Internal Audit",
-    clause: "7.2",
-    clauseTitle: "Competence",
-    description:
-      "Security awareness training records incomplete. 15% of staff have not completed annual security awareness training.",
-    severity: "medium",
-    status: "in-progress",
-    recommendation:
-      "Implement automated reminder system for overdue training. Ensure all staff complete training within next 30 days.",
-    correctiveAction:
-      "HR implementing new LMS with automated reminders. Target completion: February 15, 2025.",
-    assignedTo: "Emma Brown",
-    dueDate: new Date("2025-02-15"),
-    attachments: [],
-    createdAt: new Date("2025-01-23"),
-    updatedAt: new Date("2025-01-25")
-  },
-  {
-    id: "3",
-    referenceCode: "FND-2025-003",
-    auditId: "3",
-    auditTitle: "Security Controls Review - Q4 2024",
-    clause: "5.15",
-    clauseTitle: "Access Control",
-    description:
-      "User access reviews not conducted quarterly as required by policy. Last review was 8 months ago.",
-    severity: "critical",
-    status: "resolved",
-    recommendation:
-      "Establish quarterly access review schedule with automated reminders. Conduct immediate access review.",
-    correctiveAction:
-      "Access review completed for all systems. Quarterly schedule established with IT team. Automated reports configured.",
-    assignedTo: "Mike Johnson",
-    resolvedDate: new Date("2024-11-15"),
-    dueDate: new Date("2024-11-01"),
-    attachments: [],
-    createdAt: new Date("2024-10-20"),
-    updatedAt: new Date("2024-11-15")
-  }
-];
-
-// Mock Templates (deprecated - use mockClauseTemplates)
-const mockTemplates: WorkpaperTemplate[] = [
-  {
-    id: "1",
-    clause: "4.1",
-    clauseTitle: "Understanding the Organization and its Context",
-    category: "Context",
-    objectives: [
-      "Verify organization has determined external and internal issues",
-      "Confirm issues are relevant to purpose and strategic direction",
-      "Verify issues affect ability to achieve intended outcomes of ISMS"
-    ],
-    testProcedures: [
-      "Review context analysis documentation",
-      "Interview management about internal/external issues",
-      "Verify stakeholder identification process",
-      "Check frequency of context review"
-    ]
-  }
-];
-
-// Mock Clause Templates
-const mockClauseTemplates: ClauseTemplate[] = [
-  {
-    id: "1",
-    clause: "4.1",
-    clauseTitle: "Understanding the Organization and its Context",
-    category: "Context",
-    objective: "Verify that the organization has identified and documented internal and external issues that are relevant to its purpose and affect its ability to achieve the intended outcomes of its ISMS.",
-    testProcedure: "Review the organization's context analysis documentation, interview management regarding internal and external issues, verify the stakeholder identification process, and confirm the frequency of context reviews.",
-    createdAt: new Date("2024-01-10"),
-    updatedAt: new Date("2024-01-10")
-  },
-  {
-    id: "2",
-    clause: "5.1",
-    clauseTitle: "Leadership and Commitment",
-    category: "Leadership",
-    objective: "Confirm that top management demonstrates leadership and commitment with respect to the ISMS by taking accountability, ensuring resources are available, and communicating the importance of effective information security management.",
-    testProcedure: "Review management meeting minutes, interview the CISO and senior management, verify policy approval documentation, examine resource allocation records, and assess communication effectiveness.",
-    createdAt: new Date("2024-01-10"),
-    updatedAt: new Date("2024-01-10")
-  },
-  {
-    id: "3",
-    clause: "6.1",
-    clauseTitle: "Actions to Address Risks and Opportunities",
-    category: "Planning",
-    objective: "Verify that the organization has established a process to identify risks and opportunities related to the ISMS and has planned actions to address them.",
-    testProcedure: "Review risk assessment methodology, examine risk register, verify risk treatment plans, interview risk owners, and assess the integration of risk management into business processes.",
-    createdAt: new Date("2024-01-11"),
-    updatedAt: new Date("2024-01-11")
-  },
-  {
-    id: "4",
-    clause: "7.2",
-    clauseTitle: "Competence",
-    category: "Support",
-    objective: "Ensure that persons doing work under the organization's control are competent on the basis of appropriate education, training, or experience.",
-    testProcedure: "Review personnel competency records, examine training programs and completion rates, verify job descriptions include security responsibilities, and assess awareness program effectiveness.",
-    createdAt: new Date("2024-01-12"),
-    updatedAt: new Date("2024-01-12")
-  },
-  {
-    id: "5",
-    clause: "8.2",
-    clauseTitle: "Information Security Risk Assessment",
-    category: "Operation",
-    objective: "Verify that information security risk assessments are performed at planned intervals or when significant changes occur, and that they produce consistent, valid, and comparable results.",
-    testProcedure: "Review risk assessment schedule and completed assessments, verify assessment criteria and methodology, examine change management triggers, and validate risk assessment outputs.",
-    createdAt: new Date("2024-01-13"),
-    updatedAt: new Date("2024-01-13")
-  },
-  {
-    id: "6",
-    clause: "9.2",
-    clauseTitle: "Internal Audit",
-    category: "Evaluation",
-    objective: "Confirm that the organization conducts internal audits at planned intervals to provide information on whether the ISMS conforms to requirements and is effectively implemented and maintained.",
-    testProcedure: "Review internal audit program and schedule, examine audit reports and findings, verify auditor competence and independence, and assess follow-up on audit findings.",
-    createdAt: new Date("2024-01-14"),
-    updatedAt: new Date("2024-01-14")
-  },
-  {
-    id: "7",
-    clause: "10.1",
-    clauseTitle: "Continual Improvement",
-    category: "Improvement",
-    objective: "Verify that the organization continually improves the suitability, adequacy, and effectiveness of the ISMS.",
-    testProcedure: "Review improvement initiatives and their outcomes, examine management review records, verify corrective action effectiveness, and assess performance trends over time.",
-    createdAt: new Date("2024-01-15"),
-    updatedAt: new Date("2024-01-15")
-  },
-  {
-    id: "8",
-    clause: "A.8.2",
-    clauseTitle: "Privileged Access Rights",
-    category: "Annex A",
-    objective: "Verify that the allocation and use of privileged access rights are restricted and controlled through a formal authorization process.",
-    testProcedure: "Review privileged access management procedures, examine access rights allocation and approval records, verify periodic access reviews, and test authentication mechanisms for privileged accounts.",
-    createdAt: new Date("2024-01-16"),
-    updatedAt: new Date("2024-01-16")
-  }
-];
+import authenticatedApiClient from "./api-config";
+import { getUsers } from "./user-actions";
 
 // ============================================================================
 // AUDIT PLAN ACTIONS
@@ -317,60 +30,26 @@ const mockClauseTemplates: ClauseTemplate[] = [
 /**
  * Get all audit plans with optional filters
  */
-export async function getAuditPlans(filters?: AuditFilters): Promise<APIResponse> {
+export async function getAuditPlans(filters?: {
+  year?: number;
+  status?: string;
+}): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Simulate network delay
+    const params = new URLSearchParams();
+    if (filters?.year) params.append("year", String(filters.year));
+    if (filters?.status) params.append("status", filters.status);
 
-    let filtered = [...mockAuditPlans];
+    const queryString = params.toString();
+    const url = `/api/v1/audit-plans${queryString ? `?${queryString}` : ""}`;
 
-    // Apply filters
-    if (filters?.status && filters.status.length > 0) {
-      filtered = filtered.filter((audit) => filters.status!.includes(audit.status));
-    }
-
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (audit) =>
-          audit.title.toLowerCase().includes(search) ||
-          audit.objectives.toLowerCase().includes(search) ||
-          audit.teamLeader.toLowerCase().includes(search)
-      );
-    }
-
-    if (filters?.teamLeader) {
-      filtered = filtered.filter((audit) => audit.teamLeader === filters.teamLeader);
-    }
-
-    if (filters?.dateRange) {
-      const [start, end] = filters.dateRange;
-      filtered = filtered.filter(
-        (audit) =>
-          (audit.startDate >= start && audit.startDate <= end) ||
-          (audit.endDate >= start && audit.endDate <= end)
-      );
-    }
-
-    return {
-      success: true,
-      message: "Audit plans fetched successfully",
-      data: filtered,
-      meta: {
-        total: filtered.length,
-        filtered: filtered.length
-      }
-    };
-  } catch (error: any) {
-    console.error({
-      endpoint: "GET | AUDIT PLANS",
-      error: error?.message || error
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
     });
 
-    return {
-      success: false,
-      message: error?.message || "Failed to fetch audit plans",
-      data: []
-    };
+    return successResponse(response.data?.data, "Audit plans fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT PLANS", "/api/v1/audit-plans");
   }
 }
 
@@ -378,345 +57,139 @@ export async function getAuditPlans(filters?: AuditFilters): Promise<APIResponse
  * Get single audit plan by ID
  */
 export async function getAuditPlan(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const audit = mockAuditPlans.find((a) => a.id === id);
-
-    if (!audit) {
-      return {
-        success: false,
-        message: "Audit plan not found",
-        data: null
-      };
-    }
-
-    return {
-      success: true,
-      message: "Audit plan fetched successfully",
-      data: audit
-    };
-  } catch (error: any) {
-    console.error({
-      endpoint: `GET | AUDIT PLAN ~ ${id}`,
-      error: error?.message || error
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit-plans/${id}`
     });
 
-    return {
-      success: false,
-      message: error?.message || "Failed to fetch audit plan",
-      data: null
-    };
+    return successResponse(response.data, "Audit plan fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT PLAN", `/api/v1/audit-plans/${id}`);
   }
 }
 
 /**
  * Create new audit plan
  */
-export async function createAuditPlan(input: AuditPlanInput): Promise<APIResponse> {
+export async function createAuditPlan(data: {
+  year: number;
+  title: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  ref_no: string;
+  audit_area: string;
+  audit_scope: string;
+  audit_criteria: string;
+  audit_objective: string;
+  management_standard: string;
+  audit_team_leader: string;
+  audit_team_member?: string;
+  client_representative?: string;
+  audit_language?: string;
+  opening_meeting_datetime?: string;
+  closing_meeting_datetime?: string;
+  working_paper_template_id?: string;
+}): Promise<APIResponse> {
+  if (!data.year || !data.title || !data.start_date || !data.end_date || !data.ref_no) {
+    return handleBadRequest("Year, title, start date, end date, and reference number are required");
+  }
+
+  if (!data?.working_paper_template_id) {
+    return handleBadRequest("Working paper template ID is required");
+  }
+
+  if (
+    !data.audit_area ||
+    !data.audit_scope ||
+    !data.audit_criteria ||
+    !data.audit_objective ||
+    !data.audit_team_leader
+  ) {
+    return handleBadRequest("Audit area, scope, criteria, objective, and team leader are required");
+  }
+
+  if (!data.management_standard) {
+    return handleBadRequest("Management standard is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/audit-plans",
+      data
+    });
 
-    const newAudit: AuditPlan = {
-      id: String(mockAuditPlans.length + 1),
-      ...input,
-      standard: input.standard || "ISO 27001:2022",
-      status: input.status || "draft", // New audit plans start as draft
-      progress: 0,
-      templateId: input.templateId,
-      templateName: input.templateId ? getTemplateName(input.templateId) : undefined,
-      selectedCategories: input.selectedCategories || [],
-      workpaperIds: [], // Will be populated when workpapers are created
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    console.log(response);
 
-    mockAuditPlans.push(newAudit);
-
-    // Revalidate relevant paths
     revalidatePath("/dashboard/audit/plans");
     revalidatePath("/dashboard/home/audit");
 
-    return {
-      success: true,
-      message: "Audit plan created successfully",
-      data: newAudit
-    };
+    return successResponse(response.data, "Audit plan created successfully");
   } catch (error: any) {
-    console.error({
-      endpoint: "POST | CREATE AUDIT PLAN",
-      error: error?.message || error
-    });
-
-    return {
-      success: false,
-      message: error?.message || "Failed to create audit plan",
-      data: null
-    };
+    return handleError(error, "POST | CREATE AUDIT PLAN", "/api/v1/audit-plans");
   }
 }
 
 /**
- * Helper function to get template name by ID
- */
-function getTemplateName(templateId: string): string {
-  const templates: Record<string, string> = {
-    'iso27001-2022': 'ISO 27001:2022',
-  };
-  return templates[templateId] || templateId;
-}
-
-/**
- * Update existing audit plan
+ * Update existing audit plan (Draft only)
  */
 export async function updateAuditPlan(
   id: string,
-  data: Partial<AuditPlanInput>
+  data: {
+    title?: string;
+    description?: string;
+    audit_scope?: string;
+    audit_objective?: string;
+    [key: string]: any;
+  }
 ): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const index = mockAuditPlans.findIndex((a) => a.id === id);
-
-    if (index === -1) {
-      return {
-        success: false,
-        message: "Audit plan not found",
-        data: null
-      };
-    }
-
-    mockAuditPlans[index] = {
-      ...mockAuditPlans[index],
-      ...data,
-      updatedAt: new Date()
-    };
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/audit-plans/${id}`,
+      data
+    });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/${id}`);
     revalidatePath("/dashboard/home/audit");
 
-    return {
-      success: true,
-      message: "Audit plan updated successfully",
-      data: mockAuditPlans[index]
-    };
+    return successResponse(response.data, "Audit plan updated successfully");
   } catch (error: any) {
-    console.error({
-      endpoint: `PUT | UPDATE AUDIT PLAN ~ ${id}`,
-      error: error?.message || error
-    });
-
-    return {
-      success: false,
-      message: error?.message || "Failed to update audit plan",
-      data: null
-    };
+    return handleError(error, "PUT | UPDATE AUDIT PLAN", `/api/v1/audit-plans/${id}`);
   }
 }
 
 /**
- * Delete audit plan
+ * Delete audit plan (Draft only)
  */
 export async function deleteAuditPlan(id: string): Promise<APIResponse> {
   if (!id) {
-    return handleBadRequest("Audit plan ID is not missing");
+    return handleBadRequest("Audit plan ID is required");
   }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    const index = mockAuditPlans.findIndex((a) => a.id === id);
-
-    if (index === -1) {
-      return handleBadRequest("Audit plan not found");
-    }
-
-    mockAuditPlans.splice(index, 1);
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/audit-plans/${id}`
+    });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath("/dashboard/home/audit");
 
     return successResponse(null, "Audit plan deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | AUDIT PLAN", `/api/audits/${id}`);
-  }
-}
-
-/**
- * Submit audit plan for review and auto-create workpapers from template
- */
-export async function submitAuditPlanForReview(auditPlanId: string): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Get audit plan
-    const auditPlan = mockAuditPlans.find((a) => a.id === auditPlanId);
-    if (!auditPlan) {
-      return {
-        success: false,
-        message: "Audit plan not found",
-        data: null
-      };
-    }
-
-    // Validate template and categories
-    if (!auditPlan.templateId || !auditPlan.selectedCategories?.length) {
-      return {
-        success: false,
-        message: "Template and categories must be selected before submitting for review",
-        data: null
-      };
-    }
-
-    // Create workpapers from selected categories
-    const workpapersResult = await createWorkpapersFromTemplate(
-      auditPlanId,
-      auditPlan.templateId,
-      auditPlan.selectedCategories
-    );
-
-    if (!workpapersResult.success) {
-      return workpapersResult;
-    }
-
-    // Update audit plan status to under-review
-    const index = mockAuditPlans.findIndex((a) => a.id === auditPlanId);
-    if (index !== -1) {
-      mockAuditPlans[index] = {
-        ...mockAuditPlans[index],
-        status: "under-review",
-        updatedAt: new Date()
-      };
-    }
-
-    revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
-    revalidatePath("/dashboard/audit/workpapers");
-
-    return {
-      success: true,
-      message: `Audit plan submitted for review. ${workpapersResult.data?.length || 0} workpapers created successfully.`,
-      data: {
-        auditPlan: mockAuditPlans[index],
-        workpapers: workpapersResult.data
-      }
-    };
-  } catch (error: any) {
-    console.error({
-      endpoint: `POST | SUBMIT AUDIT PLAN FOR REVIEW ~ ${auditPlanId}`,
-      error: error?.message || error
-    });
-
-    return {
-      success: false,
-      message: error?.message || "Failed to submit audit plan for review",
-      data: null
-    };
-  }
-}
-
-/**
- * Create workpapers from template categories
- */
-export async function createWorkpapersFromTemplate(
-  auditPlanId: string,
-  templateId: string,
-  selectedCategoryIds: string[]
-): Promise<APIResponse<Workpaper[]>> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Get template
-    const template = TemplateService.getTemplate(templateId);
-    if (!template) {
-      return {
-        success: false,
-        message: "Template not found",
-        data: null
-      };
-    }
-
-    // Get audit plan to retrieve title
-    const auditPlan = mockAuditPlans.find((a) => a.id === auditPlanId);
-    const auditTitle = auditPlan?.title || "Unknown Audit";
-
-    // Filter categories based on selection
-    const selectedCategories = template.categories.filter((cat) =>
-      selectedCategoryIds.includes(cat.id)
-    );
-
-    if (selectedCategories.length === 0) {
-      return {
-        success: false,
-        message: "No valid categories selected",
-        data: null
-      };
-    }
-
-    // Create one workpaper for each selected category
-    const createdWorkpapers: Workpaper[] = [];
-
-    for (const category of selectedCategories) {
-      const workpaperId = String(mockWorkpapers.length + createdWorkpapers.length + 1);
-
-      const workpaper: Workpaper = {
-        id: workpaperId,
-        auditId: auditPlanId,
-        auditTitle: auditTitle,
-        categoryId: category.id,
-        category: category.name,
-        clause: category.clauses.join(", "),
-        clauseTitle: category.displayName,
-        objectives: category.objectives,
-        scope: category.scope,
-        testProcedures: category.auditProcedure,
-        testResults: "",
-        conclusion: "",
-        evidence: [],
-        preparedBy: auditPlan?.teamLeader || "",
-        preparedDate: new Date(),
-        status: "unlinked",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-
-        // Initialize new fields as empty
-        documentsObtained: "",
-        sourceDocuments: "",
-        sampleSize: "",
-        controlFrequency: "",
-        samplingMethodology: "",
-      };
-
-      createdWorkpapers.push(workpaper);
-      mockWorkpapers.push(workpaper);
-    }
-
-    // Update audit plan with workpaper IDs
-    const auditIndex = mockAuditPlans.findIndex((a) => a.id === auditPlanId);
-    if (auditIndex !== -1) {
-      mockAuditPlans[auditIndex] = {
-        ...mockAuditPlans[auditIndex],
-        workpaperIds: createdWorkpapers.map((wp) => wp.id),
-        updatedAt: new Date()
-      };
-    }
-
-    return {
-      success: true,
-      message: `${createdWorkpapers.length} workpapers created successfully`,
-      data: createdWorkpapers
-    };
-  } catch (error: any) {
-    console.error({
-      endpoint: "POST | CREATE WORKPAPERS FROM TEMPLATE",
-      error: error?.message || error
-    });
-
-    return {
-      success: false,
-      message: error?.message || "Failed to create workpapers from template",
-      data: null
-    };
+    return handleError(error, "DELETE | AUDIT PLAN", `/api/v1/audit-plans/${id}`);
   }
 }
 
@@ -727,23 +200,30 @@ export async function createWorkpapersFromTemplate(
 /**
  * Get all workpapers, optionally filtered by audit
  */
-export async function getWorkpapers(auditId?: string): Promise<APIResponse> {
+export async function getWorkpapers(
+  auditPlanId?: string,
+  filters?: {
+    status?: string;
+    prepared_by?: string;
+  }
+): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const params = new URLSearchParams();
+    if (auditPlanId) params.append("audit_plan_id", auditPlanId);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.prepared_by) params.append("prepared_by", filters.prepared_by);
 
-    let filtered = [...mockWorkpapers];
+    const queryString = params.toString();
+    const url = `/api/v1/working-papers${queryString ? `?${queryString}` : ""}`;
 
-    if (auditId) {
-      filtered = filtered.filter((wp) => wp.auditId === auditId);
-    }
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
 
-    return successResponse(filtered, "Workpapers fetched successfully");
+    return successResponse(response.data, "Workpapers fetched successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | WORKPAPERS",
-      auditId ? `/api/audits/${auditId}/workpapers` : "/api/audits/workpapers"
-    );
+    return handleError(error, "GET | WORKPAPERS", "/api/v1/working-papers");
   }
 }
 
@@ -751,48 +231,130 @@ export async function getWorkpapers(auditId?: string): Promise<APIResponse> {
  * Get single workpaper by ID
  */
 export async function getWorkpaper(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-papers/${id}`
+    });
 
-    const workpaper = mockWorkpapers.find((wp) => wp.id === id);
-
-    if (!workpaper) {
-      return handleBadRequest("Workpaper not found");
-    }
-
-    return successResponse(workpaper, "Workpaper fetched successfully");
+    return successResponse(response.data, "Workpaper fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | WORKPAPER", `/api/audits/${id}`);
+    return handleError(error, "GET | WORKPAPER", `/api/v1/working-papers/${id}`);
+  }
+}
+
+/**
+ * Get working paper statistics
+ */
+export async function getWorkpaperStatistics(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-papers/${id}/statistics`
+    });
+
+    return successResponse(response.data, "Working paper statistics fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | WORKPAPER STATISTICS",
+      `/api/v1/working-papers/${id}/statistics`
+    );
+  }
+}
+
+/**
+ * Get audit plan working paper summary
+ */
+export async function getAuditPlanWorkpaperSummary(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
+    });
+
+    return successResponse(response.data, "Audit plan workpaper summary fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | AUDIT PLAN WP SUMMARY",
+      `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
+    );
   }
 }
 
 /**
  * Create new workpaper
  */
-export async function createWorkpaper(input: WorkpaperInput): Promise<APIResponse> {
+export async function createWorkpaper(data: {
+  audit_plan_id: string;
+  template_id: string;
+  ref_number: string;
+  working_paper_date: string;
+  prepared_by: string;
+  reviewed_by?: string;
+  status?: string;
+}): Promise<APIResponse> {
+  if (!data.audit_plan_id || !data.template_id || !data.ref_number) {
+    return handleBadRequest("Audit plan ID, template ID, and reference number are required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const audit = mockAuditPlans.find((a) => a.id === input.auditId);
-
-    const newWorkpaper: Workpaper = {
-      id: String(mockWorkpapers.length + 1),
-      ...input,
-      auditTitle: audit?.title || "Unknown Audit",
-      clauseTitle: `Clause ${input.clause}`,
-      evidence: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    mockWorkpapers.push(newWorkpaper);
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-papers",
+      data
+    });
 
     revalidatePath("/dashboard/audit/workpapers");
-    revalidatePath(`/dashboard/audit/plans/${input.auditId}/workpapers`);
+    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
 
-    return successResponse(newWorkpaper, "Workpaper created successfully");
+    return successResponse(response.data, "Workpaper created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE WORKPAPER", "/api/audits/workpapers");
+    return handleError(error, "POST | CREATE WORKPAPER", "/api/v1/working-papers");
+  }
+}
+
+/**
+ * Create workpaper from template
+ */
+export async function createWorkpaperFromTemplate(data: {
+  audit_plan_id: string;
+  template_id: string;
+}): Promise<APIResponse> {
+  if (!data.audit_plan_id || !data.template_id) {
+    return handleBadRequest("Audit plan ID and template ID are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-papers/from-template",
+      data
+    });
+
+    revalidatePath("/dashboard/audit/workpapers");
+    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
+
+    return successResponse(response.data, "Workpaper created from template successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE WORKPAPER FROM TEMPLATE",
+      "/api/v1/working-papers/from-template"
+    );
   }
 }
 
@@ -801,171 +363,79 @@ export async function createWorkpaper(input: WorkpaperInput): Promise<APIRespons
  */
 export async function updateWorkpaper(
   id: string,
-  data: Partial<WorkpaperInput>
+  data: {
+    reviewed_by?: string;
+    status?: string;
+    [key: string]: any;
+  }
 ): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const index = mockWorkpapers.findIndex((wp) => wp.id === id);
-
-    if (index === -1) {
-      return {
-        success: false,
-        message: "Workpaper not found",
-        data: null
-      };
-    }
-
-    mockWorkpapers[index] = {
-      ...mockWorkpapers[index],
-      ...data,
-      updatedAt: new Date()
-    };
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-papers/${id}`,
+      data
+    });
 
     revalidatePath("/dashboard/audit/workpapers");
     revalidatePath(`/dashboard/audit/workpapers/${id}`);
 
-    return successResponse(mockWorkpapers[index], "Workpaper updated successfully");
+    return successResponse(response.data, "Workpaper updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE WORKPAPER", `/api/audits/${id}`);
+    return handleError(error, "PUT | UPDATE WORKPAPER", `/api/v1/working-papers/${id}`);
   }
 }
 
 /**
- * Get workpaper templates (deprecated - use getClauseTemplates)
+ * Update workpaper status only
  */
-export async function getWorkpaperTemplates(clause?: string): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    let filtered = [...mockTemplates];
-
-    if (clause) {
-      filtered = filtered.filter((t) => t.clause === clause);
-    }
-
-    return successResponse(filtered, "Templates fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | WORKPAPER TEMPLATES", "/api/audits/templates");
+export async function updateWorkpaperStatus(id: string, status: string): Promise<APIResponse> {
+  if (!id || !status) {
+    return handleBadRequest("Working paper ID and status are required");
   }
-}
 
-// ============================================================================
-// CLAUSE TEMPLATE ACTIONS
-// ============================================================================
-
-/**
- * Get all clause templates with optional filtering
- */
-export async function getClauseTemplates(category?: string): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url: `/api/v1/working-papers/${id}/status`,
+      data: { status }
+    });
 
-    let filtered = [...mockClauseTemplates];
+    revalidatePath("/dashboard/audit/workpapers");
+    revalidatePath(`/dashboard/audit/workpapers/${id}`);
 
-    if (category) {
-      filtered = filtered.filter((t) => t.category === category);
-    }
-
-    return successResponse(filtered, "Clause templates fetched successfully");
+    return successResponse(response.data, "Workpaper status updated successfully");
   } catch (error: any) {
-    return handleError(error, "GET | CLAUSE TEMPLATES", "/api/audits/clause-templates");
+    return handleError(
+      error,
+      "PATCH | UPDATE WORKPAPER STATUS",
+      `/api/v1/working-papers/${id}/status`
+    );
   }
 }
 
 /**
- * Get single clause template by ID
+ * Delete workpaper
  */
-export async function getClauseTemplate(id: string): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const template = mockClauseTemplates.find((t) => t.id === id);
-
-    if (!template) {
-      return handleBadRequest("Clause template not found");
-    }
-
-    return successResponse(template, "Clause template fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | CLAUSE TEMPLATE", `/api/audits/clause-templates/${id}`);
+export async function deleteWorkpaper(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Working paper ID is required");
   }
-}
 
-/**
- * Create new clause template
- */
-export async function createClauseTemplate(input: ClauseTemplateInput): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const newTemplate: ClauseTemplate = {
-      id: String(mockClauseTemplates.length + 1),
-      ...input,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    mockClauseTemplates.push(newTemplate);
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-papers/${id}`
+    });
 
     revalidatePath("/dashboard/audit/workpapers");
 
-    return successResponse(newTemplate, "Clause template created successfully");
+    return successResponse(null, "Workpaper deleted successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE CLAUSE TEMPLATE", "/api/audits/clause-templates");
-  }
-}
-
-/**
- * Update existing clause template
- */
-export async function updateClauseTemplate(
-  id: string,
-  data: Partial<ClauseTemplateInput>
-): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const index = mockClauseTemplates.findIndex((t) => t.id === id);
-
-    if (index === -1) {
-      return handleBadRequest("Clause template not found");
-    }
-
-    mockClauseTemplates[index] = {
-      ...mockClauseTemplates[index],
-      ...data,
-      updatedAt: new Date()
-    };
-
-    revalidatePath("/dashboard/audit/workpapers");
-
-    return successResponse(mockClauseTemplates[index], "Clause template updated successfully");
-  } catch (error: any) {
-    return handleError(error, "PUT | UPDATE CLAUSE TEMPLATE", `/api/audits/clause-templates/${id}`);
-  }
-}
-
-/**
- * Delete clause template
- */
-export async function deleteClauseTemplate(id: string): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    const index = mockClauseTemplates.findIndex((t) => t.id === id);
-
-    if (index === -1) {
-      return handleBadRequest("Clause template not found");
-    }
-
-    mockClauseTemplates.splice(index, 1);
-
-    revalidatePath("/dashboard/audit/workpapers");
-
-    return successResponse(null, "Clause template deleted successfully");
-  } catch (error: any) {
-    return handleError(error, "DELETE | CLAUSE TEMPLATE", `/api/audits/clause-templates/${id}`);
+    return handleError(error, "DELETE | WORKPAPER", `/api/v1/working-papers/${id}`);
   }
 }
 
@@ -976,41 +446,57 @@ export async function deleteClauseTemplate(id: string): Promise<APIResponse> {
 /**
  * Get all findings with optional filters
  */
-export async function getFindings(filters?: FindingFilters): Promise<APIResponse> {
+export async function getFindings(filters?: {
+  working_paper_id?: string;
+  audit_plan_id?: string;
+  severity?: string;
+  status?: string;
+}): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const params = new URLSearchParams();
+    if (filters?.working_paper_id) params.append("working_paper_id", filters.working_paper_id);
+    if (filters?.audit_plan_id) params.append("audit_plan_id", filters.audit_plan_id);
+    if (filters?.severity) params.append("severity", filters.severity);
+    if (filters?.status) params.append("status", filters.status);
 
-    let filtered = [...mockFindings];
+    const queryString = params.toString();
+    const url = `/api/v1/working-paper-findings${queryString ? `?${queryString}` : ""}`;
 
-    if (filters?.severity && filters.severity.length > 0) {
-      filtered = filtered.filter((f) => filters.severity!.includes(f.severity));
-    }
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
 
-    if (filters?.status && filters.status.length > 0) {
-      filtered = filtered.filter((f) => filters.status!.includes(f.status));
-    }
-
-    if (filters?.clause) {
-      filtered = filtered.filter((f) => f.clause === filters.clause);
-    }
-
-    if (filters?.assignedTo) {
-      filtered = filtered.filter((f) => f.assignedTo === filters.assignedTo);
-    }
-
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (f) =>
-          f.referenceCode.toLowerCase().includes(search) ||
-          f.description.toLowerCase().includes(search) ||
-          f.recommendation.toLowerCase().includes(search)
-      );
-    }
-
-    return successResponse(filtered, "Findings fetched successfully");
+    return successResponse(response.data, "Findings fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | FINDINGS", "/api/audits/findings");
+    return handleError(error, "GET | FINDINGS", "/api/v1/working-paper-findings");
+  }
+}
+
+/**
+ * Get findings by category within a working paper
+ */
+export async function getFindingsByCategory(
+  workingPaperId: string,
+  categoryName: string
+): Promise<APIResponse> {
+  if (!workingPaperId || !categoryName) {
+    return handleBadRequest("Working paper ID and category name are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-papers/${workingPaperId}/categories/${categoryName}/findings`
+    });
+
+    return successResponse(response.data, "Category findings fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | CATEGORY FINDINGS",
+      `/api/v1/working-papers/${workingPaperId}/categories/${categoryName}/findings`
+    );
   }
 }
 
@@ -1018,150 +504,154 @@ export async function getFindings(filters?: FindingFilters): Promise<APIResponse
  * Get single finding by ID
  */
 export async function getFinding(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-findings/${id}`
+    });
 
-    const finding = mockFindings.find((f) => f.id === id);
-
-    if (!finding) {
-      return {
-        success: false,
-        message: "Finding not found",
-        data: null
-      };
-    }
-
-    return successResponse(finding, "Finding fetched successfully");
+    return successResponse(response.data, "Finding fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | FINDING", `/api/audits/findings/${id}`);
+    return handleError(error, "GET | FINDING", `/api/v1/working-paper-findings/${id}`);
   }
 }
 
 /**
  * Create new finding
  */
-export async function createFinding(input: FindingInput): Promise<APIResponse> {
+export async function createFinding(data: {
+  audit_plan_id: string;
+  working_paper_id: string;
+  category_name: string;
+  finding_number: string;
+  workings_and_test_results?: string;
+  conclusion?: string;
+  report?: boolean;
+  severity?: string;
+  recommendation?: string;
+  management_response?: string;
+  action_plan?: string;
+  responsible_person?: string;
+  due_date?: string;
+  status?: string;
+  evidence_links?: string;
+}): Promise<APIResponse> {
+  if (
+    !data.audit_plan_id ||
+    !data.working_paper_id ||
+    !data.category_name ||
+    !data.finding_number
+  ) {
+    return handleBadRequest(
+      "Audit plan ID, working paper ID, category name, and finding number are required"
+    );
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-paper-findings",
+      data
+    });
 
-    const audit = mockAuditPlans.find((a) => a.id === input.auditId);
-    const referenceCode = `FND-${new Date().getFullYear()}-${String(mockFindings.length + 1).padStart(3, "0")}`;
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
+    revalidatePath("/dashboard/audit/workpapers");
 
-    const newFinding: Finding = {
-      id: String(mockFindings.length + 1),
-      referenceCode,
-      ...input,
-      auditTitle: audit?.title || "Unknown Audit",
-      clauseTitle: `Clause ${input.clause}`,
-      status: "open",
-      attachments: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      // Workpaper relationship
-      workpaperId: input.workpaperId,
-      workpaperReference: input.workpaperId ? `WP-${input.clause}-${new Date().getFullYear()}` : undefined,
-      evidenceRowId: input.evidenceRowId,
-      sourceType: input.sourceType || 'manual',
-    };
-
-    mockFindings.push(newFinding);
-
-    // If linked to workpaper, update workpaper's finding count
-    if (input.workpaperId) {
-      const workpaper = mockWorkpapers.find((w) => w.id === input.workpaperId);
-      if (workpaper) {
-        if (!workpaper.findingIds) workpaper.findingIds = [];
-        workpaper.findingIds.push(newFinding.id);
-        workpaper.findingsCount = workpaper.findingIds.length;
-      }
-    }
-
-    revalidatePath(`/dashboard/audit/plans/${input.auditId}`);
-    if (input.workpaperId) {
-      revalidatePath("/dashboard/audit/workpapers");
-    }
-
-    return successResponse(newFinding, "Finding created successfully");
+    return successResponse(response.data, "Finding created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE FINDING", "/api/audits/findings");
+    return handleError(error, "POST | CREATE FINDING", "/api/v1/working-paper-findings");
   }
 }
 
 /**
  * Update existing finding
  */
-export async function updateFinding(id: string, data: Partial<FindingInput>): Promise<APIResponse> {
+export async function updateFinding(
+  id: string,
+  data: {
+    management_response?: string;
+    action_plan?: string;
+    responsible_person?: string;
+    due_date?: string;
+    status?: string;
+    severity?: string;
+    recommendation?: string;
+    [key: string]: any;
+  }
+): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-paper-findings/${id}`,
+      data
+    });
 
-    const index = mockFindings.findIndex((f) => f.id === id);
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath("/dashboard/audit/workpapers");
 
-    if (index === -1) {
-      return {
-        success: false,
-        message: "Finding not found",
-        data: null
-      };
-    }
-
-    mockFindings[index] = {
-      ...mockFindings[index],
-      ...data,
-      updatedAt: new Date()
-    };
-
-    const finding = mockFindings[index];
-    if (finding.auditId) {
-      revalidatePath(`/dashboard/audit/plans/${finding.auditId}`);
-    }
-
-    return successResponse(mockFindings[index], "Finding updated successfully");
+    return successResponse(response.data, "Finding updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE FINDING", `/api/audits/findings/${id}`);
+    return handleError(error, "PUT | UPDATE FINDING", `/api/v1/working-paper-findings/${id}`);
   }
 }
 
 /**
- * Get finding timeline
+ * Update finding status only
  */
-export async function getFindingTimeline(id: string): Promise<APIResponse> {
+export async function updateFindingStatus(id: string, status: string): Promise<APIResponse> {
+  if (!id || !status) {
+    return handleBadRequest("Finding ID and status are required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url: `/api/v1/working-paper-findings/${id}/status`,
+      data: { status }
+    });
 
-    const finding = mockFindings.find((f) => f.id === id);
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath("/dashboard/audit/workpapers");
 
-    if (!finding) {
-      return {
-        success: false,
-        message: "Finding not found",
-        data: []
-      };
-    }
-
-    // Mock timeline events
-    const timeline: FindingTimelineEvent[] = [
-      {
-        id: "1",
-        type: "created",
-        description: "Finding created",
-        user: "John Doe",
-        timestamp: finding.createdAt
-      }
-    ];
-
-    if (finding.status === "resolved") {
-      timeline.push({
-        id: "2",
-        type: "status_change",
-        description: "Status changed to resolved",
-        user: finding.assignedTo || "Unknown",
-        timestamp: finding.resolvedDate || new Date()
-      });
-    }
-
-    return successResponse(timeline, "Timeline fetched successfully");
+    return successResponse(response.data, "Finding status updated successfully");
   } catch (error: any) {
-    return handleError(error, "GET | FINDING TIMELINE", `/api/audits/findings/${id}/timeline`);
+    return handleError(
+      error,
+      "PATCH | UPDATE FINDING STATUS",
+      `/api/v1/working-paper-findings/${id}/status`
+    );
+  }
+}
+
+/**
+ * Delete finding
+ */
+export async function deleteFinding(id: string): Promise<APIResponse> {
+  if (!id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-paper-findings/${id}`
+    });
+
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(null, "Finding deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | FINDING", `/api/v1/working-paper-findings/${id}`);
   }
 }
 
@@ -1170,113 +660,19 @@ export async function getFindingTimeline(id: string): Promise<APIResponse> {
 // ============================================================================
 
 /**
- * Get audit metrics for dashboard
+ * Get audit metrics
  */
 export async function getAuditMetrics(): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: "/api/v1/audit-plans/metrics"
+    });
 
-    const metrics: AuditMetrics = {
-      totalAudits: mockAuditPlans.length,
-      activeAudits: mockAuditPlans.filter((a) => a.status === "in-progress").length,
-      completedAudits: mockAuditPlans.filter((a) => a.status === "completed").length,
-      conformityRate: 85,
-      openFindings: mockFindings.filter((f) => f.status === "open").length,
-      criticalFindings: mockFindings.filter(
-        (f) => f.severity === "critical" && f.status !== "closed"
-      ).length,
-      overdueFindings: mockFindings.filter(
-        (f) => f.dueDate && f.dueDate < new Date() && f.status !== "resolved"
-      ).length,
-      upcomingAudits: mockAuditPlans.filter(
-        (a) =>
-          a.status === "planned" &&
-          a.startDate > new Date() &&
-          a.startDate < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      ).length
-    };
-
-    return successResponse(metrics, "Metrics fetched successfully");
+    return successResponse(response.data, "Audit metrics fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | AUDIT METRICS", "/api/audits/metrics");
-  }
-}
-
-/**
- * Get audit analytics
- */
-export async function getAuditAnalytics(params?: AnalyticsParams): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    // Mock analytics data
-    const analytics: AuditAnalytics = {
-      conformityTrends: [
-        {
-          date: new Date("2024-10-01"),
-          conformityRate: 75,
-          partialConformityRate: 15,
-          nonConformityRate: 10
-        },
-        {
-          date: new Date("2024-11-01"),
-          conformityRate: 80,
-          partialConformityRate: 12,
-          nonConformityRate: 8
-        },
-        {
-          date: new Date("2024-12-01"),
-          conformityRate: 85,
-          partialConformityRate: 10,
-          nonConformityRate: 5
-        }
-      ],
-      findingsByClause: [
-        {
-          clause: "5.15",
-          clauseTitle: "Access Control",
-          critical: 1,
-          high: 2,
-          medium: 1,
-          low: 0,
-          total: 4
-        },
-        {
-          clause: "7.2",
-          clauseTitle: "Competence",
-          critical: 0,
-          high: 0,
-          medium: 1,
-          low: 1,
-          total: 2
-        },
-        {
-          clause: "8.2",
-          clauseTitle: "Risk Assessment",
-          critical: 0,
-          high: 1,
-          medium: 0,
-          low: 0,
-          total: 1
-        }
-      ],
-      severityDistribution: {
-        critical: 1,
-        high: 1,
-        medium: 1,
-        low: 0
-      },
-      statusDistribution: {
-        open: 1,
-        inProgress: 1,
-        resolved: 1,
-        closed: 0
-      }
-    };
-
-    return successResponse(analytics, "Analytics fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | AUDIT ANALYTICS", "/api/audits/analytics");
+    // Providing mock data on error for development purposes
+    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-plans/metrics");
   }
 }
 
@@ -1391,78 +787,632 @@ export async function updateAuditSettings(data: SettingsInput): Promise<APIRespo
   }
 }
 
+// ============================================================================
+// WORKING PAPER TEMPLATE ACTIONS (API Integration)
+// ============================================================================
+
 /**
- * Get team members
+ * Get all working paper templates
  */
-export async function getTeamMembers(): Promise<APIResponse> {
+export async function getWorkingPaperTemplates(
+  standard?: string,
+  isActive?: boolean
+): Promise<APIResponse> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const params = new URLSearchParams();
+    if (standard) params.append("standard", standard);
+    if (isActive !== undefined) params.append("is_active", String(isActive));
 
-    const members: TeamMember[] = [
-      {
-        id: "1",
-        name: "John Doe",
-        email: "john.doe@company.com",
-        role: "Lead Auditor",
-        department: "Compliance",
-        isActive: true
-      },
-      {
-        id: "2",
-        name: "Jane Smith",
-        email: "jane.smith@company.com",
-        role: "Auditor",
-        department: "IT Security",
-        isActive: true
-      },
-      {
-        id: "3",
-        name: "Mike Johnson",
-        email: "mike.johnson@company.com",
-        role: "Auditor",
-        department: "Risk Management",
-        isActive: true
-      }
-    ];
+    const queryString = params.toString();
+    const url = `/api/v1/working-paper-templates${queryString ? `?${queryString}` : ""}`;
 
-    return successResponse(members, "Team members fetched successfully");
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data, "Working paper templates fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | TEAM MEMBERS", "/api/audits/settings/team");
+    return handleError(error, "GET | WORKING PAPER TEMPLATES", "/api/v1/working-paper-templates");
   }
 }
 
 /**
- * Add team member
+ * Get single working paper template by ID
  */
-export async function addTeamMember(data: TeamMemberInput): Promise<APIResponse> {
+export async function getWorkingPaperTemplate(templateId: string): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-templates/${templateId}`
+    });
 
-    const newMember: TeamMember = {
-      id: String(Date.now()),
-      ...data,
-      isActive: true
-    };
-
-    revalidatePath("/dashboard/audit/settings");
-
-    return successResponse(newMember, "Team member added successfully");
+    return successResponse(response.data, "Working paper template fetched successfully");
   } catch (error: any) {
-    return handleError(error, "POST | ADD TEAM MEMBER", "/api/audits/settings/team");
+    return handleError(
+      error,
+      "GET | WORKING PAPER TEMPLATE",
+      `/api/v1/working-paper-templates/${templateId}`
+    );
   }
 }
 
 /**
- * Remove team member
+ * Get working paper template with categories
  */
-export async function removeTeamMember(id: string): Promise<APIResponse> {
+export async function getWorkingPaperTemplateWithCategories(
+  templateId: string
+): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-templates/${templateId}/categories`
+    });
 
-    revalidatePath("/dashboard/audit/settings");
-
-    return successResponse(null, "Team member removed successfully");
+    return successResponse(response.data, "Template with categories fetched successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | REMOVE TEAM MEMBER", `/api/audits/settings/team/${id}`);
+    return handleError(
+      error,
+      "GET | TEMPLATE WITH CATEGORIES",
+      `/api/v1/working-paper-templates/${templateId}/categories`
+    );
+  }
+}
+
+/**
+ * Create new working paper template
+ */
+export async function createWorkingPaperTemplate(data: {
+  name: string;
+  standard: string;
+  description?: string;
+  version?: string;
+  is_active?: boolean;
+}): Promise<APIResponse> {
+  if (!data.name || !data.standard) {
+    return handleBadRequest("Template name and standard are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-paper-templates",
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(response.data, "Working paper template created successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE WORKING PAPER TEMPLATE",
+      "/api/v1/working-paper-templates"
+    );
+  }
+}
+
+/**
+ * Update working paper template
+ */
+export async function updateWorkingPaperTemplate(
+  templateId: string,
+  data: {
+    name?: string;
+    standard?: string;
+    description?: string;
+    version?: string;
+    is_active?: boolean;
+  }
+): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-paper-templates/${templateId}`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+    revalidatePath(`/dashboard/audit/templates/${templateId}`);
+
+    return successResponse(response.data, "Working paper template updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE WORKING PAPER TEMPLATE",
+      `/api/v1/working-paper-templates/${templateId}`
+    );
+  }
+}
+
+/**
+ * Delete working paper template
+ */
+export async function deleteWorkingPaperTemplate(templateId: string): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-paper-templates/${templateId}`
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(null, "Working paper template deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | WORKING PAPER TEMPLATE",
+      `/api/v1/working-paper-templates/${templateId}`
+    );
+  }
+}
+
+// ============================================================================
+// TEMPLATE CATEGORY ACTIONS (API Integration)
+// ============================================================================
+
+/**
+ * Get all categories for a template
+ */
+export async function getTemplateCategories(templateId: string): Promise<APIResponse> {
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-templates/${templateId}/categories-list`
+    });
+
+    return successResponse(response.data, "Template categories fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | TEMPLATE CATEGORIES",
+      `/api/v1/working-paper-templates/${templateId}/categories-list`
+    );
+  }
+}
+
+/**
+ * Get single template category by ID
+ */
+export async function getTemplateCategory(categoryId: string): Promise<APIResponse> {
+  if (!categoryId) {
+    return handleBadRequest("Category ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-categories/${categoryId}`
+    });
+
+    return successResponse(response.data, "Template category fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | TEMPLATE CATEGORY",
+      `/api/v1/working-paper-categories/${categoryId}`
+    );
+  }
+}
+
+/**
+ * Create new template category
+ */
+export async function createTemplateCategory(data: TemplateCategory): Promise<APIResponse> {
+  if (!data.template_id || !data.name) {
+    return handleBadRequest("Template ID and category name are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/working-paper-categories",
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+    revalidatePath(`/dashboard/audit/templates/${data.template_id}`);
+
+    return successResponse(response.data, "Template category created successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE TEMPLATE CATEGORY",
+      "/api/v1/working-paper-categories"
+    );
+  }
+}
+
+/**
+ * Update template category
+ */
+export async function updateTemplateCategory(
+  categoryId: string,
+  data: {
+    name?: string;
+    objectives?: string;
+    scope?: string;
+    documents_obtained?: string;
+    source_documents?: string;
+    sample_size?: string;
+    frequency_of_control?: string;
+    sampling_methodology?: string;
+    audit_procedure?: string;
+    sort_order?: number;
+  }
+): Promise<APIResponse> {
+  if (!categoryId) {
+    return handleBadRequest("Category ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/working-paper-categories/${categoryId}`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(response.data, "Template category updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE TEMPLATE CATEGORY",
+      `/api/v1/working-paper-categories/${categoryId}`
+    );
+  }
+}
+
+/**
+ * Delete template category
+ */
+export async function deleteTemplateCategory(categoryId: string): Promise<APIResponse> {
+  if (!categoryId) {
+    return handleBadRequest("Category ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/working-paper-categories/${categoryId}`
+    });
+
+    revalidatePath("/dashboard/audit/templates");
+
+    return successResponse(null, "Template category deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | TEMPLATE CATEGORY",
+      `/api/v1/working-paper-categories/${categoryId}`
+    );
+  }
+}
+
+// ============================================================================
+// AUDIT PLAN APPROVAL WORKFLOW ACTIONS (API Integration)
+// ============================================================================
+
+/**
+ * Submit audit plan for approval
+ */
+export async function submitAuditPlanForApproval(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/submit`
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SUBMIT AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/submit`
+    );
+  }
+}
+
+/**
+ * HIAR approval for audit plan
+ */
+export async function hiarApproveAuditPlan(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/hiar`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by HIAR successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | HIAR APPROVE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/approve/hiar`
+    );
+  }
+}
+
+/**
+ * CEO approval for audit plan
+ */
+export async function ceoApproveAuditPlan(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/ceo`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by CEO successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CEO APPROVE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/approve/ceo`
+    );
+  }
+}
+
+/**
+ * Audit Chair approval for audit plan
+ */
+export async function auditChairApproveAuditPlan(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by Audit Chair successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | AUDIT CHAIR APPROVE",
+      `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`
+    );
+  }
+}
+
+/**
+ * Reject audit plan
+ */
+export async function rejectAuditPlan(auditPlanId: string, reason: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+  if (!reason) {
+    return handleBadRequest("Rejection reason is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/reject`,
+      data: { reason }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan rejected successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | REJECT AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/reject`
+    );
+  }
+}
+
+/**
+ * Activate audit plan
+ */
+export async function activateAuditPlan(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/activate`
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan activated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | ACTIVATE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/activate`
+    );
+  }
+}
+
+/**
+ * Complete audit plan
+ */
+export async function completeAuditPlan(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/complete`
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan completed successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | COMPLETE AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/complete`
+    );
+  }
+}
+
+// ============================================================================
+// SYSTEM AUDIT LOG ACTIONS (API Integration)
+// ============================================================================
+
+/**
+ * Get all audit logs with filters
+ */
+export async function getAuditLogs(filters?: {
+  action?: string;
+  entity_type?: string;
+  user_id?: string;
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<APIResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.action) params.append("action", filters.action);
+    if (filters?.entity_type) params.append("entity_type", filters.entity_type);
+    if (filters?.user_id) params.append("user_id", filters.user_id);
+    if (filters?.start_date) params.append("start_date", filters.start_date);
+    if (filters?.end_date) params.append("end_date", filters.end_date);
+    if (filters?.limit) params.append("limit", String(filters.limit));
+    if (filters?.offset) params.append("offset", String(filters.offset));
+
+    const queryString = params.toString();
+    const url = `/api/v1/audit-logs${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data, "Audit logs fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT LOGS", "/api/v1/audit-logs");
+  }
+}
+
+/**
+ * Get audit logs by user
+ */
+export async function getAuditLogsByUser(
+  userId: string,
+  limit?: number,
+  offset?: number
+): Promise<APIResponse> {
+  if (!userId) {
+    return handleBadRequest("User ID is required");
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (limit) params.append("limit", String(limit));
+    if (offset) params.append("offset", String(offset));
+
+    const queryString = params.toString();
+    const url = `/api/v1/audit-logs/user/${userId}${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data, "User audit logs fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | USER AUDIT LOGS", `/api/v1/audit-logs/user/${userId}`);
+  }
+}
+
+/**
+ * Get audit logs by entity
+ */
+export async function getAuditLogsByEntity(
+  entityType: string,
+  entityId: string
+): Promise<APIResponse> {
+  if (!entityType || !entityId) {
+    return handleBadRequest("Entity type and ID are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit-logs/entity/${entityType}/${entityId}`
+    });
+
+    return successResponse(response.data, "Entity audit logs fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | ENTITY AUDIT LOGS",
+      `/api/v1/audit-logs/entity/${entityType}/${entityId}`
+    );
   }
 }

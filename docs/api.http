@@ -1,0 +1,732 @@
+### Risk Audit Management System - API Testing File
+### Base URL
+@baseUrl = http://10.51.74.29:8050
+@accessToken = your_jwt_token_here
+
+###############################################################################
+# HEALTH CHECK
+###############################################################################
+
+### Check Service Health
+GET {{baseUrl}}/health
+
+###############################################################################
+# AUTHENTICATION (PUBLIC)
+###############################################################################
+
+### Register New User
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "john.doe",
+  "email": "john.doe@example.com",
+  "password": "securepassword123!",
+  "first_name": "John",
+  "last_name": "Doe",
+  "branch_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "department_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+  "role_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12"
+}
+
+### Login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### Change Password (Protected)
+POST {{baseUrl}}/api/v1/auth/change-password
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "old_password": "current_secure_password",
+  "new_password": "new_very_secure_password"
+}
+
+###############################################################################
+# PROVINCE MANAGEMENT
+###############################################################################
+
+### Create Province
+POST {{baseUrl}}/api/v1/provinces
+Content-Type: application/json
+
+{
+  "name": "Harare",
+  "code": "HRE"
+}
+
+### List All Provinces
+GET {{baseUrl}}/api/v1/provinces
+
+### List Active Provinces
+GET {{baseUrl}}/api/v1/provinces?is_active=true
+
+### Get Province by ID
+GET {{baseUrl}}/api/v1/provinces/a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+### Get Provinces with Towns (Nested)
+GET {{baseUrl}}/api/v1/provinces/with-towns
+
+###############################################################################
+# TOWN MANAGEMENT
+###############################################################################
+
+### Create Town
+POST {{baseUrl}}/api/v1/towns
+Content-Type: application/json
+
+{
+  "name": "Harare",
+  "code": "HRE",
+  "province_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef"
+}
+
+### List All Towns
+GET {{baseUrl}}/api/v1/towns
+
+### List Towns by Province
+GET {{baseUrl}}/api/v1/towns?province_id=a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+### List Active Towns
+GET {{baseUrl}}/api/v1/towns?is_active=true
+
+###############################################################################
+# BRANCH MANAGEMENT
+###############################################################################
+
+### List All Branches
+GET {{baseUrl}}/api/v1/branches
+
+### List Branches with Filters
+GET {{baseUrl}}/api/v1/branches?province_id=b2c3d4e5-f6a7-4890-2345-67890abcdef1&is_active=true&limit=10
+
+### Create Branch
+POST {{baseUrl}}/api/v1/branches
+Content-Type: application/json
+
+{
+  "name": "Harare Branch",
+  "code": "HRE",
+  "town_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "province_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+  "address": "123 Main Street",
+  "province": "Central",
+  "town": "Harare",
+  "is_active": true
+}
+
+### Get Branch by ID
+GET {{baseUrl}}/api/v1/branches/a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+### Update Branch
+PUT {{baseUrl}}/api/v1/branches/a1b2c3d4-e5f6-4789-1234-567890abcdef
+Content-Type: application/json
+
+{
+  "name": "Harare Central Branch",
+  "code": "HRE-C",
+  "town_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "province_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+  "address": "456 Main Street, Harare",
+  "is_active": true
+}
+
+### Delete Branch
+DELETE {{baseUrl}}/api/v1/branches/a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+###############################################################################
+# DEPARTMENT MANAGEMENT
+###############################################################################
+
+### List All Departments
+GET {{baseUrl}}/api/v1/departments
+
+### List Departments with Filters
+GET {{baseUrl}}/api/v1/departments?is_active=true&limit=20
+
+### List Sub-Departments
+GET {{baseUrl}}/api/v1/departments?parent_id=b2c3d4e5-f6a7-4890-2345-67890abcdef1
+
+### Create Department
+POST {{baseUrl}}/api/v1/departments
+Content-Type: application/json
+
+{
+  "name": "Internal Audit",
+  "code": "IA",
+  "description": "Internal Audit Department",
+  "parent_id": null
+}
+
+### Create Sub-Department
+POST {{baseUrl}}/api/v1/departments
+Content-Type: application/json
+
+{
+  "name": "IT Audit",
+  "code": "ITA",
+  "description": "IT Audit Sub-Department",
+  "parent_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1"
+}
+
+### Get Department by ID
+GET {{baseUrl}}/api/v1/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1
+
+### Update Department
+PUT {{baseUrl}}/api/v1/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1
+Content-Type: application/json
+
+{
+  "name": "Internal Audit & Risk",
+  "code": "IAR",
+  "description": "Combined Internal Audit and Risk Department",
+  "parent_id": null,
+  "is_active": true
+}
+
+### Delete Department
+DELETE {{baseUrl}}/api/v1/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1
+
+### Get Department Modules
+GET {{baseUrl}}/api/v1/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1/modules
+
+### Assign Module to Department
+POST {{baseUrl}}/api/v1/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1/modules
+Content-Type: application/json
+
+{
+  "module_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef"
+}
+
+### Remove Module from Department
+DELETE {{baseUrl}}/api/v1/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1/modules/a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+### Get Department Risk Categories
+GET {{baseUrl}}/api/v1/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1/risk-categories
+
+###############################################################################
+# MODULE MANAGEMENT
+###############################################################################
+
+### List All Modules (Flat)
+GET {{baseUrl}}/api/v1/modules
+
+### List Modules (Hierarchical)
+GET {{baseUrl}}/api/v1/modules?hierarchy=true
+
+### Create Parent Module
+POST {{baseUrl}}/api/v1/modules
+Content-Type: application/json
+
+{
+  "module_code": "USER_MGMT",
+  "name": "User Management",
+  "description": "Manage system users",
+  "parent_module_id": null,
+  "href": null,
+  "icon": "users",
+  "sort_order": 1
+}
+
+### Create Sub-Module
+POST {{baseUrl}}/api/v1/modules
+Content-Type: application/json
+
+{
+  "module_code": "USER_CREATE",
+  "name": "Create User",
+  "description": "Create new system users",
+  "parent_module_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+  "href": "/users/create",
+  "icon": "user-plus",
+  "sort_order": 1
+}
+
+### Get Module by ID
+GET {{baseUrl}}/api/v1/modules/c3d4e5f6-a7b8-4901-3456-7890abcdef12
+
+### Update Module
+PUT {{baseUrl}}/api/v1/modules/c3d4e5f6-a7b8-4901-3456-7890abcdef12
+Content-Type: application/json
+
+{
+  "module_code": "USER_MGMT_UPD",
+  "name": "User Management Updated",
+  "description": "Updated description",
+  "parent_module_id": null,
+  "href": "/users",
+  "icon": "users",
+  "sort_order": 1,
+  "is_active": true
+}
+
+### Delete Module
+DELETE {{baseUrl}}/api/v1/modules/c3d4e5f6-a7b8-4901-3456-7890abcdef12
+
+### Get Sub-Modules
+GET {{baseUrl}}/api/v1/modules/c3d4e5f6-a7b8-4901-3456-7890abcdef12/submodules
+
+###############################################################################
+# ROLE MANAGEMENT
+###############################################################################
+
+### List All Roles
+GET {{baseUrl}}/api/v1/roles
+
+### List Roles with Filters
+GET {{baseUrl}}/api/v1/roles?department_id=b2c3d4e5-f6a7-4890-2345-67890abcdef1&is_active=true
+
+### Create Role
+POST {{baseUrl}}/api/v1/roles
+Content-Type: application/json
+
+{
+  "department_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "name": "Auditor",
+  "code": "AUDITOR",
+  "description": "Standard auditor role"
+}
+
+### Get Role by ID
+GET {{baseUrl}}/api/v1/roles/c3d4e5f6-a7b8-4901-3456-7890abcdef12
+
+### Update Role
+PUT {{baseUrl}}/api/v1/roles/c3d4e5f6-a7b8-4901-3456-7890abcdef12
+Content-Type: application/json
+
+{
+  "name": "Senior Auditor",
+  "code": "SR_AUDITOR",
+  "description": "Senior auditor role",
+  "is_active": true
+}
+
+### Delete Role
+DELETE {{baseUrl}}/api/v1/roles/c3d4e5f6-a7b8-4901-3456-7890abcdef12
+
+### Get Role Permissions
+GET {{baseUrl}}/api/v1/roles/c3d4e5f6-a7b8-4901-3456-7890abcdef12/permissions
+
+### Grant or Update Permission to Role
+POST {{baseUrl}}/api/v1/roles/c3d4e5f6-a7b8-4901-3456-7890abcdef12/permissions
+Content-Type: application/json
+
+{
+  "module_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "can_view": true,
+  "can_create": true,
+  "can_edit": true,
+  "can_delete": false,
+  "can_approve": false,
+  "can_export": true,
+  "can_assign": false,
+  "can_configure": false,
+  "custom_permissions": {
+    "can_run_reports": true
+  }
+}
+
+### Revoke Permission from Role
+DELETE {{baseUrl}}/api/v1/roles/c3d4e5f6-a7b8-4901-3456-7890abcdef12/permissions/a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+### Get Available Modules for Role
+GET {{baseUrl}}/api/v1/roles/c3d4e5f6-a7b8-4901-3456-7890abcdef12/available-modules
+
+###############################################################################
+# RISK CATEGORY MANAGEMENT
+###############################################################################
+
+### List Risk Categories
+GET {{baseUrl}}/api/v1/risk-categories
+
+### List Risk Categories with Filters
+GET {{baseUrl}}/api/v1/risk-categories?department_id=b2c3d4e5-f6a7-4890-2345-67890abcdef1&is_active=true
+
+### Create Risk Category
+POST {{baseUrl}}/api/v1/risk-categories
+Content-Type: application/json
+
+{
+  "name": "Information Systems Risks",
+  "code": "IT_SECURITY",
+  "description": "Risks related to information systems and cybersecurity",
+  "color": "#A29BFE",
+  "department_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1"
+}
+
+### Get Risk Category by ID
+GET {{baseUrl}}/api/v1/risk-categories/a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+### Update Risk Category
+PUT {{baseUrl}}/api/v1/risk-categories/a1b2c3d4-e5f6-4789-1234-567890abcdef
+Content-Type: application/json
+
+{
+  "name": "IT Security & Systems",
+  "code": "IT_SEC",
+  "description": "Updated description",
+  "color": "#6C5CE7",
+  "is_active": true
+}
+
+### Delete Risk Category
+DELETE {{baseUrl}}/api/v1/risk-categories/a1b2c3d4-e5f6-4789-1234-567890abcdef
+
+###############################################################################
+# RISK MANAGEMENT (PROTECTED)
+###############################################################################
+
+### List All Risks
+GET {{baseUrl}}/api/v1/risks
+Authorization: Bearer {{accessToken}}
+
+### List Risks with Filters
+GET {{baseUrl}}/api/v1/risks?status=OPEN&inherent_rating=HIGH&limit=10
+Authorization: Bearer {{accessToken}}
+
+### Create Risk
+POST {{baseUrl}}/api/v1/risks
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Cyber Security Breach Risk",
+  "description": "Potential unauthorized access to sensitive company data",
+  "category_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "department_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+  "inherent_likelihood": 4,
+  "inherent_impact": 5,
+  "residual_likelihood": 2,
+  "residual_impact": 3,
+  "existing_controls": "Firewall, antivirus software, employee training",
+  "control_effectiveness": 3,
+  "treatment_plan": "Implement multi-factor authentication",
+  "risk_response": "REDUCE",
+  "risk_owner_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+  "risk_appetite_status": "WITHIN",
+  "target_closing_date": "2025-12-31",
+  "review_date": "2025-11-30",
+  "mitigation_cost": 50000.00
+}
+
+### Get Risk by ID
+GET {{baseUrl}}/api/v1/risks/f6a7b8c9-d0e1-4234-6789-0abcdef12345
+Authorization: Bearer {{accessToken}}
+
+### Update Risk
+PUT {{baseUrl}}/api/v1/risks/f6a7b8c9-d0e1-4234-6789-0abcdef12345
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Updated Cyber Security Risk",
+  "description": "Updated description with more details",
+  "residual_likelihood": 1,
+  "residual_impact": 2,
+  "latest_update": "MFA fully implemented across all departments",
+  "status": "CLOSED",
+  "date_closed": "2025-10-25",
+  "revised_target_date": "2025-10-30"
+}
+
+### Delete Risk
+DELETE {{baseUrl}}/api/v1/risks/f6a7b8c9-d0e1-4234-6789-0abcdef12345
+Authorization: Bearer {{accessToken}}
+
+### Get Risk Matrix
+GET {{baseUrl}}/api/v1/risks/matrix
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# RISK REGISTER MANAGEMENT (PROTECTED)
+###############################################################################
+
+### Initialize Risk Register
+POST {{baseUrl}}/api/v1/risk-registers
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "branch_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "name": "Q1 2025 Risk Assessment",
+  "start_date": "2025-01-01",
+  "due_date": "2025-03-31"
+}
+
+### Get All Risk Registers
+GET {{baseUrl}}/api/v1/risk-registers
+Authorization: Bearer {{accessToken}}
+
+### Get Risk Registers with Filters
+GET {{baseUrl}}/api/v1/risk-registers?branch_id=a1b2c3d4-e5f6-4789-1234-567890abcdef&status=OPEN&page=1&page_size=20
+Authorization: Bearer {{accessToken}}
+
+### Get Risk Register by ID
+GET {{baseUrl}}/api/v1/risk-registers/f6a7b8c9-d0e1-4234-6789-0abcdef12345
+Authorization: Bearer {{accessToken}}
+
+### Update Risk Register
+PUT {{baseUrl}}/api/v1/risk-registers/f6a7b8c9-d0e1-4234-6789-0abcdef12345
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Q1 2025 Risk Assessment - Updated",
+  "start_date": "2025-01-01",
+  "due_date": "2025-04-15",
+  "status": "OPEN"
+}
+
+### Close Risk Register
+POST {{baseUrl}}/api/v1/risk-registers/f6a7b8c9-d0e1-4234-6789-0abcdef12345/close
+Authorization: Bearer {{accessToken}}
+
+### Delete Risk Register
+DELETE {{baseUrl}}/api/v1/risk-registers/f6a7b8c9-d0e1-4234-6789-0abcdef12345
+Authorization: Bearer {{accessToken}}
+
+### Get Risk Registers by Branch
+GET {{baseUrl}}/api/v1/branches/a1b2c3d4-e5f6-4789-1234-567890abcdef/risk-registers
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# MULTI-STEP RISK CREATION WORKFLOW (PROTECTED)
+###############################################################################
+
+### Step 1: Create Risk Details
+POST {{baseUrl}}/api/v1/risks/step-one
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "risk_register_id": "f6a7b8c9-d0e1-4234-6789-0abcdef12345",
+  "title": "Data Center Power Failure",
+  "description": "Risk of prolonged power outage affecting critical services",
+  "category_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "department_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+  "macro_process": "Infrastructure Management",
+  "sub_process": "Power Management",
+  "strategic_objective": "Ensure 99.9% uptime for critical systems",
+  "root_cause": "Aging UPS systems and lack of generator redundancy",
+  "recurrence": "ongoing"
+}
+
+### Step 2: Add Risk Evaluation
+PUT {{baseUrl}}/api/v1/risks/g7h8i9j0-k1l2-5678-9012-3def456789ab/step-two
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "inherent_likelihood": 4,
+  "inherent_impact": 5,
+  "existing_controls": "UPS systems, backup generator, monitoring systems",
+  "control_effectiveness": 2
+}
+
+### Step 3: Complete Risk Response
+PUT {{baseUrl}}/api/v1/risks/g7h8i9j0-k1l2-5678-9012-3def456789ab/step-three
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "residual_likelihood": 2,
+  "residual_impact": 3,
+  "treatment_plan": "Upgrade UPS systems, install redundant generators, implement predictive maintenance",
+  "risk_response": "REDUCE",
+  "risk_owner_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+  "risk_appetite_status": "WITHIN",
+  "target_closing_date": "2025-12-31",
+  "mitigation_cost": 250000.00
+}
+
+### Get Risks in Register
+GET {{baseUrl}}/api/v1/risk-registers/f6a7b8c9-d0e1-4234-6789-0abcdef12345/risks
+Authorization: Bearer {{accessToken}}
+
+### Update Risk Status
+PUT {{baseUrl}}/api/v1/risks/g7h8i9j0-k1l2-5678-9012-3def456789ab/status
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "status": "CLOSED"
+}
+
+### Submit Department Risks
+POST {{baseUrl}}/api/v1/risk-registers/f6a7b8c9-d0e1-4234-6789-0abcdef12345/departments/b2c3d4e5-f6a7-4890-2345-67890abcdef1/submit
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# KRI REGISTER MANAGEMENT (PROTECTED)
+###############################################################################
+
+### List KRI Registers
+GET {{baseUrl}}/api/v1/kri-registers
+Authorization: Bearer {{accessToken}}
+
+### List KRI Registers with Filters
+GET {{baseUrl}}/api/v1/kri-registers?is_active=true&limit=20
+Authorization: Bearer {{accessToken}}
+
+### Create KRI Register
+POST {{baseUrl}}/api/v1/kri-registers
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Quarterly EMC Report Q1 2025",
+  "description": "Executive Management Committee quarterly KRI tracking for Q1"
+}
+
+### Get KRI Register by ID
+GET {{baseUrl}}/api/v1/kri-registers/h8i9j0k1-l2m3-6789-0123-4ef567890bcd
+Authorization: Bearer {{accessToken}}
+
+### Update KRI Register
+PUT {{baseUrl}}/api/v1/kri-registers/h8i9j0k1-l2m3-6789-0123-4ef567890bcd
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Quarterly EMC Report Q1 2025 - Updated",
+  "description": "Updated description",
+  "is_active": true
+}
+
+### Delete KRI Register
+DELETE {{baseUrl}}/api/v1/kri-registers/h8i9j0k1-l2m3-6789-0123-4ef567890bcd
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# KRI (KEY RISK INDICATOR) MANAGEMENT (PROTECTED)
+###############################################################################
+
+### List KRIs
+GET {{baseUrl}}/api/v1/kris
+Authorization: Bearer {{accessToken}}
+
+### List KRIs with Filters
+GET {{baseUrl}}/api/v1/kris?category_id=a1b2c3d4-e5f6-4789-1234-567890abcdef&last_status=Amber&limit=20
+Authorization: Bearer {{accessToken}}
+
+### Create KRI
+POST {{baseUrl}}/api/v1/kris
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Customer Retention Rate",
+  "description": "Percentage of customers retained annually",
+  "kri_register_id": "h8i9j0k1-l2m3-6789-0123-4ef567890bcd",
+  "category_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef",
+  "department_id": "b2c3d4e5-f6a7-4890-2345-67890abcdef1",
+  "target_value": "95%",
+  "trigger_value": "90% ≥ but > 85%",
+  "limit_value": "85%",
+  "monitoring_frequency": "Monthly",
+  "owner_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12",
+  "commentary": "Initial setup for customer retention tracking",
+  "mitigant_plan": "Implement customer feedback survey quarterly"
+}
+
+### Get KRI by ID
+GET {{baseUrl}}/api/v1/kris/i9j0k1l2-m3n4-7890-1234-5fg678901cde
+Authorization: Bearer {{accessToken}}
+
+### Update KRI
+PUT {{baseUrl}}/api/v1/kris/i9j0k1l2-m3n4-7890-1234-5fg678901cde
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Customer Retention Rate",
+  "description": "Updated description",
+  "target_value": "10%",
+  "trigger_value": "9.5% ≥ but > 9%",
+  "limit_value": "8.8%",
+  "monitoring_frequency": "Monthly",
+  "commentary": "Updated commentary after Q1 review",
+  "mitigant_plan": "Enhanced action plan with quarterly reviews",
+  "is_active": true
+}
+
+### Delete KRI
+DELETE {{baseUrl}}/api/v1/kris/i9j0k1l2-m3n4-7890-1234-5fg678901cde
+Authorization: Bearer {{accessToken}}
+
+### Add KRI Measurement
+POST {{baseUrl}}/api/v1/kris/i9j0k1l2-m3n4-7890-1234-5fg678901cde/measurements
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "measurement_date": "2025-01-31T00:00:00Z",
+  "measured_value": 94.0,
+  "status": "Green",
+  "notes": "January performance exceeded target",
+  "measured_by": "c3d4e5f6-a7b8-4901-3456-7890abcdef12"
+}
+
+### Get KRI Measurements
+GET {{baseUrl}}/api/v1/kris/i9j0k1l2-m3n4-7890-1234-5fg678901cde/measurements
+Authorization: Bearer {{accessToken}}
+
+### Get KRI Measurements with Date Range
+GET {{baseUrl}}/api/v1/kris/i9j0k1l2-m3n4-7890-1234-5fg678901cde/measurements?start_date=2025-01-01&end_date=2025-03-31
+Authorization: Bearer {{accessToken}}
+
+### Get Active KRIs Due for Measurement
+GET {{baseUrl}}/api/v1/kris/due-measurement
+Authorization: Bearer {{accessToken}}
+
+### Get Active KRIs Due for Measurement (Specific Date)
+GET {{baseUrl}}/api/v1/kris/due-measurement?as_of_date=2025-02-15
+Authorization: Bearer {{accessToken}}
+
+### Get KRI Status Summary
+GET {{baseUrl}}/api/v1/kris/status-summary
+Authorization: Bearer {{accessToken}}
+
+### Get KRI Status Summary by Department
+GET {{baseUrl}}/api/v1/kris/status-summary?department_id=b2c3d4e5-f6a7-4890-2345-67890abcdef1
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# USER MANAGEMENT (PLACEHOLDER - TODO)
+###############################################################################
+
+### List All Users
+GET {{baseUrl}}/api/v1/users
+Authorization: Bearer {{accessToken}}
+
+### Get User by ID
+GET {{baseUrl}}/api/v1/users/d4e5f6a7-b8c9-4012-4567-890abcdef123
+Authorization: Bearer {{accessToken}}
+
+### Get User Effective Permissions
+GET {{baseUrl}}/api/v1/users/d4e5f6a7-b8c9-4012-4567-890abcdef123/permissions
+Authorization: Bearer {{accessToken}}
+
+### Assign Role to User
+POST {{baseUrl}}/api/v1/users/d4e5f6a7-b8c9-4012-4567-890abcdef123/assign-role
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "role_id": "c3d4e5f6-a7b8-4901-3456-7890abcdef12"
+}
+
+### Assign Branch to User
+POST {{baseUrl}}/api/v1/users/d4e5f6a7-b8c9-4012-4567-890abcdef123/assign-branch
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "branch_id": "a1b2c3d4-e5f6-4789-1234-567890abcdef"
+}

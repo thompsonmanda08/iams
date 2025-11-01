@@ -1,54 +1,138 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Eye, Edit, Trash2, AlertCircle } from "lucide-react";
+import { Trash2, AlertCircle, Loader2, FileText, Plus } from "lucide-react";
 import type { Workpaper } from "@/lib/types/audit-types";
-import { format } from "date-fns";
 import Link from "next/link";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { deleteWorkpaper } from "@/app/_actions/audit-module-actions";
+import { useToast } from "@/hooks/use-toast";
+import { CustomPagination } from "../ui/pagination";
+import { Pagination } from "@/lib/types";
 
 interface WorkpapersTableProps {
   workpapers: Workpaper[];
   isLoading?: boolean;
+  onCreateClick?: () => void;
+  pagination: Pagination;
 }
 
 const testResultConfig = {
   conformity: {
     label: "Conformity",
-    className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
+    className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
   },
   "partial-conformity": {
     label: "Partial Conformity",
-    className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
   },
   "non-conformity": {
     label: "Non-Conformity",
-    className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
-  },
+    className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+  }
 };
 
-export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps) {
+export function WorkpapersTable({
+  workpapers,
+  isLoading,
+  onCreateClick,
+  pagination
+}: WorkpapersTableProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [workpaperToDelete, setWorkpaperToDelete] = useState<Workpaper | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (workpaper: Workpaper) => {
+    setWorkpaperToDelete(workpaper);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!workpaperToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteWorkpaper(workpaperToDelete.id);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Workpaper deleted successfully"
+        });
+        setDeleteDialogOpen(false);
+        setWorkpaperToDelete(null);
+        router.refresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to delete workpaper",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (page !== undefined) {
+      params.set("page", String(page));
+    }
+
+    if (page_size !== undefined) {
+      params.set("page_size", String(page_size));
+      params.set("page", "1");
+    }
+
+    router.push(`?${params.toString()}`);
+  };
+  const customPaginationData = {
+    page: pagination.page,
+    page_size: pagination.page_size,
+    total_pages: pagination.total_pages,
+    totalCount: pagination.total,
+    has_prev: pagination.has_prev,
+    has_next: pagination.has_next
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+          <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
         ))}
       </div>
     );
@@ -56,19 +140,33 @@ export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps)
 
   if (workpapers.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
-        <div className="text-center">
-          <p className="text-lg font-medium text-muted-foreground">No workpapers found</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create your first workpaper to get started
-          </p>
+      <div className="bg-card flex min-h-[400px] items-center justify-center rounded-lg border border-dashed">
+        <div className="max-w-md space-y-4 p-8 text-center">
+          <div className="flex justify-center">
+            <div className="bg-primary/10 rounded-full p-4">
+              <FileText className="text-primary h-10 w-10" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold">No workpapers yet</h3>
+            <p className="text-muted-foreground text-sm">
+              Get started by creating your first workpaper. Working papers help document audit
+              testing procedures and evidence collection.
+            </p>
+          </div>
+          {onCreateClick && (
+            <Button onClick={onCreateClick} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Your First Workpaper
+            </Button>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="bg-card rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -80,19 +178,20 @@ export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps)
             <TableHead>Prepared By</TableHead>
             <TableHead>Reviewed By</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead className="w-[80px]">Actions</TableHead>
+            <TableHead className="text-right">Options</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {workpapers.map((workpaper) => {
-            const testResult = testResultConfig[workpaper.testResult] || testResultConfig.conformity;
+            const testResult =
+              testResultConfig[workpaper.testResult] || testResultConfig.conformity;
 
             return (
               <TableRow key={workpaper.id}>
                 <TableCell>
                   <div className="space-y-1">
                     <p className="font-medium">{workpaper.clause}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
+                    <p className="text-muted-foreground line-clamp-1 text-xs">
                       {workpaper.clauseTitle}
                     </p>
                   </div>
@@ -100,13 +199,12 @@ export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps)
                 <TableCell>
                   <Link
                     href={`/dashboard/audit/plans/${workpaper.auditId}`}
-                    className="text-sm hover:text-primary hover:underline line-clamp-1"
-                  >
+                    className="hover:text-primary line-clamp-1 text-sm hover:underline">
                     {workpaper.auditTitle}
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <p className="text-sm line-clamp-2 max-w-md">{workpaper.objectives}</p>
+                  <p className="line-clamp-2 max-w-md text-sm">{workpaper.objectives}</p>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={cn(testResult.className)}>
@@ -117,10 +215,10 @@ export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps)
                   {workpaper.findingsCount && workpaper.findingsCount > 0 ? (
                     <Badge variant="destructive" className="gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      {workpaper.findingsCount} Finding{workpaper.findingsCount > 1 ? 's' : ''}
+                      {workpaper.findingsCount} Finding{workpaper.findingsCount > 1 ? "s" : ""}
                     </Badge>
                   ) : (
-                    <span className="text-sm text-muted-foreground">None</span>
+                    <span className="text-muted-foreground text-sm">None</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -135,43 +233,84 @@ export function WorkpapersTable({ workpapers, isLoading }: WorkpapersTableProps)
                 </TableCell>
                 <TableCell>
                   <span className="text-sm">
-                    {format(new Date(workpaper.preparedDate), "MMM d, yyyy")}
+                    {/* {format(new Date(workpaper.preparedDate), "MMM d, yyyy")} */}
                   </span>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href={`/dashboard/audit/workpapers/${workpaper.id}`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View Details
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2 cursor-pointer">
-                        <Edit className="h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="gap-2 text-destructive cursor-pointer">
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex justify-end gap-2">
+                    {/* TODO: Enable when workpaper detail route is created at /dashboard/(modules)/audit/workpapers/[id]/page.tsx */}
+                    {/* <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/dashboard/audit/workpapers/${workpaper.id}`)}
+                      className="h-8 gap-1.5">
+                      <View className="h-3.5 w-3.5" />
+                      View
+                    </Button> */}
+                    {/* TODO: Enable when workpaper edit route is created at /dashboard/(modules)/audit/workpapers/[id]/edit/page.tsx */}
+                    {/* <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        router.push(`/dashboard/audit/workpapers/${workpaper.id}/edit`)
+                      }
+                      className="h-8 gap-1.5">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Button> */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteClick(workpaper)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
+      {workpapers.length > 0 && (
+        <CustomPagination
+          pagination={customPaginationData}
+          updatePagination={updatePagination}
+          allowSetPageSize={true}
+          showDetails={true}
+          className="border-t"
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Workpaper</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete workpaper for clause &quot;{workpaperToDelete?.clause}
+              &quot;? This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

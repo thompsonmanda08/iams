@@ -30,6 +30,8 @@ type SelectInputProps = React.InputHTMLAttributes<HTMLSelectElement> & {
     label?: string;
     errorText?: string;
     descriptionText?: string;
+    options?: string;
+    selectContent?: string;
   };
 };
 
@@ -70,7 +72,7 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
         )}>
         {label && (
           <label
-            className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap text-slate-900/80", {
+            className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap", {
               "text-red-500": onError || isInvalid,
               "opacity-50": isDisabled || props?.disabled
             })}
@@ -100,7 +102,7 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
               <SelectValue placeholder={placeholder} />
             )}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className={cn(classNames?.options, classNames?.selectContent)}>
             {options.map((item: any) => {
               const itemValue = item.id || item?.value;
               const itemLabel = item?.[String(listItemName)] || item?.name || item?.label;

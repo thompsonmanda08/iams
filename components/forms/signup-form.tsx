@@ -1,0 +1,645 @@
+// =============================================================================
+// FILE: components/forms/signup-form.tsx
+// =============================================================================
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { signupSchema, updateUserSchema, type SignupFormValues } from "@/app/schemas/auth";
+import { useEffect, useState, useMemo } from "react";
+import { Check, Copy, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { getBranches, getDepartments, getRoles } from "@/app/_actions/config-actions";
+import { registerUser } from "@/app/_actions/auth-actions";
+import { User } from "@/lib/types/account";
+import { updateUser } from "@/app/_actions/user-actions";
+
+type SignUpFormProps = {
+  user: User | null;
+  onClose: () => void;
+};
+
+type Branch = {
+  id: string;
+  name: string;
+  code: string;
+};
+
+type Department = {
+  id: string;
+  name: string;
+  code: string;
+};
+
+type Role = {
+  id: string;
+  name: string;
+  code: string;
+  department_id: string;
+};
+
+export function SignUpForm({ user, onClose }: SignUpFormProps) {
+  const router = useRouter();
+  const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Dynamic data states
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
+
+  const isEditMode = !!user;
+
+  const generatePass = () => {
+    let pass = "";
+    const str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz0123456789@#$";
+    for (let i = 1; i <= 12; i++) {
+      const char = Math.floor(Math.random() * str.length);
+      pass += str.charAt(char);
+    }
+    return pass;
+  };
+
+  // Use different schema based on edit mode
+  const validationSchema = useMemo(
+    () => (isEditMode ? updateUserSchema : signupSchema),
+    [isEditMode]
+  );
+
+  // Initialize form with user data if in edit mode to prevent flash
+  const initialValues = useMemo(() => {
+    if (isEditMode && user) {
+      return {
+        username: user.username || "",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        branch_id: user.branch_id || "",
+        role_id: user.role_id || "",
+        department_id: user.department_id || "",
+        is_active: user.is_active ?? true,
+        password: ""
+      };
+    }
+    return {
+      username: "",
+      first_name: "",
+      last_name: "",
+      email: "",
+      branch_id: "",
+      role_id: "",
+      department_id: "",
+      is_active: true,
+      password: generatePass()
+    };
+  }, [isEditMode, user?.id]);
+
+  const form = useForm<any>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: initialValues
+  });
+
+  // Load initial data
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Filter roles based on selected department
+  useEffect(() => {
+    const department = form.watch("department_id");
+    if (department && roles.length > 0) {
+      const filtered = roles.filter((role) => role.department_id === department);
+      setFilteredRoles(filtered);
+
+      // Only reset role if current selection is not in filtered roles AND not in edit mode
+      const currentRole = form.getValues("role_id");
+      if (currentRole && !filtered.find((r) => r.id === currentRole) && !isEditMode) {
+        form.setValue("role_id", "");
+      }
+    } else {
+      setFilteredRoles([]);
+    }
+  }, [form.watch("department_id"), roles, isEditMode]);
+
+  // Update filtered roles when data loads
+  useEffect(() => {
+    if (isEditMode && user && roles.length > 0) {
+      console.log("Data loaded for edit mode:", user);
+      // Trigger role filtering for the user's department
+      const filtered = roles.filter((role) => role.department_id === user.department_id);
+      setFilteredRoles(filtered);
+    }
+  }, [isEditMode, user?.id, roles.length]);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [branchesRes, departmentsRes, rolesRes] = await Promise.all([
+        getBranches({ isActive: true }),
+        getDepartments({ isActive: true }),
+        getRoles({ isActive: true })
+      ]);
+
+      if (branchesRes.success && branchesRes.data?.data) {
+        setBranches(branchesRes.data?.data);
+      }
+
+      if (departmentsRes.success && departmentsRes.data?.data) {
+        setDepartments(departmentsRes.data?.data);
+      }
+
+      if (rolesRes.success && rolesRes.data?.data) {
+        setRoles(rolesRes.data?.data);
+      }
+    } catch (error) {
+      toast.error("Failed to load form data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopyPassword = async () => {
+    const password = form.getValues("password");
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error("Failed to copy password");
+    }
+  };
+
+  const resetForm = () => {
+    form.reset({
+      username: "",
+      first_name: "",
+      last_name: "",
+      email: "",
+      branch_id: "",
+      role_id: "",
+      department_id: "",
+      password: generatePass()
+    });
+    setCopied(false);
+  };
+
+  const handleCancel = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleGenerateNewPassword = () => {
+    const newPassword = generatePass();
+    form.setValue("password", newPassword);
+    setCopied(false);
+  };
+
+  const processForm = async (values: SignupFormValues) => {
+    const isEdit = !!user; // Recalculate inside the handler
+    setIsSubmitting(true);
+
+    console.log("Processing form:", { isEdit, values, userId: user?.id });
+
+    try {
+      let response;
+      if (isEdit) {
+        const updateData = {
+          username: values.username,
+          email: values.email,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          branch_id: values.branch_id,
+          department_id: values.department_id,
+          role_id: values.role_id,
+          is_active: values.is_active ?? true
+        };
+        console.log("Updating user with data:", updateData);
+        response = await updateUser(user.id, updateData);
+        console.log("Update response:", response);
+      } else {
+        response = await registerUser({
+          username: values.username,
+          email: values.email,
+          password: values.password,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          branch_id: values.branch_id,
+          department_id: values.department_id,
+          role_id: values.role_id
+        });
+      }
+
+      if (response.success) {
+        toast.success(`User ${isEdit ? "updated" : "created"} successfully`);
+        handleCancel();
+        router.refresh();
+      } else {
+        console.error("Form submission failed:", response);
+        toast.error(response.message || `Failed to ${isEdit ? "update" : "create"} user`);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-h-[90vh] w-full min-w-2xl overflow-hidden p-0 [&>button]:hidden">
+        <DialogHeader className="border-b px-6 py-4">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl font-semibold">
+              {isEditMode ? "Edit User" : "Create New User"}
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCancel}
+              className="h-8 w-8 rounded-full"
+              disabled={isSubmitting}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+
+        <div className="overflow-y-auto px-6 py-6">
+          <Form {...form}>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+              <div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          First Name <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="xxx"
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Last Name <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="xxx"
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Username <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="xxx.x"
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Email <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="xx.xxx@company.com"
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="branch_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Branch <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={isSubmitting || isLoading}>
+                          <FormControl>
+                            <SelectTrigger className="w-full focus:ring-1">
+                              <SelectValue
+                                placeholder={isLoading ? "Loading branches..." : "Select branch"}
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {branches.length === 0 ? (
+                              <div className="text-muted-foreground p-2 text-sm">
+                                No branches available
+                              </div>
+                            ) : (
+                              branches.map((branch) => (
+                                <SelectItem key={branch.id} value={branch.id}>
+                                  {branch.name} ({branch.code})
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="department_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Department <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={isSubmitting || isLoading}>
+                          <FormControl>
+                            <SelectTrigger className="w-full focus:ring-1">
+                              <SelectValue
+                                placeholder={
+                                  isLoading ? "Loading departments..." : "Select department"
+                                }
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {departments.length === 0 ? (
+                              <div className="text-muted-foreground p-2 text-sm">
+                                No departments available
+                              </div>
+                            ) : (
+                              departments.map((dept) => (
+                                <SelectItem key={dept.id} value={dept.id}>
+                                  {dept.name} ({dept.code})
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="role_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Role <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={
+                            isSubmitting ||
+                            isLoading ||
+                            !form.watch("department_id") ||
+                            filteredRoles.length === 0
+                          }>
+                          <FormControl>
+                            <SelectTrigger className="w-full focus:ring-1">
+                              <SelectValue
+                                placeholder={
+                                  !form.watch("department_id")
+                                    ? "Select department first"
+                                    : isLoading
+                                      ? "Loading roles..."
+                                      : "Select role"
+                                }
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {filteredRoles.length === 0 ? (
+                              <div className="text-muted-foreground p-2 text-sm">
+                                No roles available for this department
+                              </div>
+                            ) : (
+                              filteredRoles.map((role) => (
+                                <SelectItem key={role.id} value={role.id}>
+                                  {role.name} ({role.code})
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {isEditMode && (
+                    <FormField
+                      control={form.control}
+                      name="is_active"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Account Status</FormLabel>
+                            <FormDescription>
+                              {field.value ? "Account is active" : "Account is deactivated"}
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {!isEditMode && (
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Password <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                {...field}
+                                readOnly
+                                className="cursor-default font-mono text-sm focus-visible:ring-1"
+                                disabled={isSubmitting}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={handleCopyPassword}
+                                className="shrink-0"
+                                disabled={isSubmitting}>
+                                {copied ? (
+                                  <Check className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Copy className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <span
+                            onClick={isSubmitting ? undefined : handleGenerateNewPassword}
+                            className={`text-primary mt-1 block text-center text-xs ${
+                              isSubmitting
+                                ? "cursor-not-allowed opacity-50"
+                                : "cursor-pointer hover:underline"
+                            }`}>
+                            Generate new password
+                          </span>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 border-t pt-6">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleCancel}
+                  disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={async (e) => {
+                    console.log("Button clicked", { isEditMode, isSubmitting });
+                    console.log("Form state:", {
+                      values: form.getValues(),
+                      errors: form.formState.errors,
+                      isValid: form.formState.isValid,
+                      isDirty: form.formState.isDirty,
+                      isSubmitting: form.formState.isSubmitting
+                    });
+                    console.log("Current validation schema:", isEditMode ? "updateUserSchema" : "signupSchema");
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Manually trigger validation first to see what fails
+                    const isValid = await form.trigger();
+                    console.log("Manual validation result:", isValid);
+                    console.log("Errors after trigger:", form.formState.errors);
+
+                    if (!isValid) {
+                      console.error("Validation failed with errors:", form.formState.errors);
+                      return;
+                    }
+
+                    form.handleSubmit(
+                      (data) => {
+                        console.log("Form validation passed, calling processForm");
+                        processForm(data);
+                      },
+                      (errors) => {
+                        console.error("Form validation failed in handleSubmit:", errors);
+                      }
+                    )(e);
+                  }}
+                  disabled={isSubmitting}>
+                  {isSubmitting
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Creating..."
+                    : isEditMode
+                      ? "Update"
+                      : "Create"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

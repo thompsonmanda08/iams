@@ -4,14 +4,26 @@ import { getWorkpapers, getAuditPlans } from "@/app/_actions/audit-module-action
 
 export default async function WorkpapersPage() {
   const workpapersResponse = await getWorkpapers();
-  const workpapers = workpapersResponse.success ? workpapersResponse.data : [];
+  const workpapers = workpapersResponse.success ? workpapersResponse.data?.data?.data : [];
 
   const auditsResponse = await getAuditPlans();
-  const audits = auditsResponse.success ? auditsResponse.data : [];
+  const audits = auditsResponse.success ? auditsResponse.data?.data?.data : [];
+  const pagination = auditsResponse.data?.data?.pagination ?? {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  };
 
   return (
     <Suspense fallback={<TableLoading />}>
-      <WorkpapersPageClient workpapers={workpapers || []} audits={audits || []} />
+      <WorkpapersPageClient
+        workpapers={workpapers || []}
+        audits={audits || []}
+        pagination={pagination}
+      />
     </Suspense>
   );
 }
@@ -20,7 +32,7 @@ function TableLoading() {
   return (
     <div className="space-y-3">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+        <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
       ))}
     </div>
   );

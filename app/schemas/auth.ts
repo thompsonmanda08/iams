@@ -8,15 +8,30 @@ export const loginSchema = z.object({
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const  signupSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required"),
-  lastName: z.string().trim().min(1, "Last name is required"),
+  first_name: z.string().trim().min(1, "First name is required"),
+  last_name: z.string().trim().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
-  branch: z.string().min(1, "Branch is required"),
-  role: z.string().min(1, "Role is required"),
-  department: z.string().min(1, "Department is required"),
+  username: z.string().trim().min(1, "Username is required"),
+  branch_id: z.string().min(1, "Branch is required"),
+  role_id: z.string().min(1, "Role is required"),
+  department_id: z.string().min(1, "Department is required"),
+  is_active: z.boolean().optional().default(true),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+// Schema for editing user (password is optional)
+export const updateUserSchema = z.object({
+  first_name: z.string().trim().min(1, "First name is required"),
+  last_name: z.string().trim().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  username: z.string().trim().min(1, "Username is required"),
+  branch_id: z.string().min(1, "Branch is required"),
+  role_id: z.string().min(1, "Role is required"),
+  department_id: z.string().min(1, "Department is required"),
+  is_active: z.boolean().optional(),
+  password: z.string().optional(),
+});
+
 export type SignupFormValues = z.infer<typeof signupSchema>;
+export type UpdateUserFormValues = z.infer<typeof updateUserSchema>;
 

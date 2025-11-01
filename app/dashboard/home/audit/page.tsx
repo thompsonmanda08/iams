@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, AlertCircle, CheckCircle2, Clock, XCircle } from "lucide-react";
@@ -62,16 +63,15 @@ export default function AuditDashboard() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl">
+      <header className="bg-card/80 sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-foreground flex items-center gap-2 text-2xl font-bold">
-                <AlertCircle className="dark:text-primary h-6 w-6" />
-                Audit Dashboard
-              </h1>
-              <p className="mt-1 text-sm text-slate-400">Completion rates and audit analytics.</p>
-            </div>
+            <PageHeader
+              title="  Audit Dashboard"
+              description="Completion rates and audit analytics"
+              Icon={AlertCircle}
+            />
+
             <div className="flex items-center gap-8">
               <div className="text-right">
                 <p className="mb-1 text-xs text-slate-400">Action response rating</p>

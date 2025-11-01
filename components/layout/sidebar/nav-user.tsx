@@ -18,6 +18,11 @@ import {
 } from "@/components/ui/sidebar";
 import { BellIcon, CreditCardIcon, LogOutIcon, UserCircle2Icon } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import { logUserOut } from "@/app/_actions/auth-actions";
+import { useSystemSetup } from "@/hooks/use-users-query-data";
+import { User } from "@/lib/types/account";
+import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const userData = {
   name: "Toby Belhome",
@@ -25,10 +30,31 @@ const userData = {
   avatar: "https://bundui-images.netlify.app/avatars/01.png"
 };
 
-export function NavUser() {
+export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
 
-  return (
+  // const { data: setup } = useSystemSetup();
+  // const user = setup?.data?.user as User;
+  const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
+  const userEmail = user?.email || "example@mail.com";
+
+  const handleUserLogOut = async () => {
+    // Clear session initialization flag
+    sessionStorage.removeItem("session_initialized");
+
+    const response = await logUserOut("User initiated logout");
+    if (response.success) {
+      window.location.href = "/";
+      return;
+    }
+  };
+
+  // LOADING STATE
+  return !user || Object.keys(user).length < 0 ? (
+    <>
+      <Skeleton className="h-10 w-full rounded-lg" />
+    </>
+  ) : (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
@@ -36,13 +62,15 @@ export function NavUser() {
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <Avatar className="rounded-full">
-                <AvatarImage src={userData.avatar} alt={userData.name} />
-                <AvatarFallback className="rounded-lg">JS</AvatarFallback>
+              <Avatar>
+                <AvatarImage src={getAvatarSrc(fullName)} alt={`${fullName} - Image`} />
+                <AvatarFallback className="rounded-lg">
+                  {generateAvatarFallback(fullName)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{userData.name}</span>
-                <span className="text-muted-foreground truncate text-xs">{userData.email}</span>
+                <span className="truncate font-medium">{fullName}</span>
+                <span className="text-muted-foreground truncate text-xs">{user?.role?.name}</span>
               </div>
               <DotsVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -55,12 +83,14 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={userData.avatar} alt={userData.name} />
-                  <AvatarFallback className="rounded-lg">TB</AvatarFallback>
+                  <AvatarImage src={getAvatarSrc(fullName)} alt={`${fullName} - Image`} />
+                  <AvatarFallback className="rounded-lg">
+                    {generateAvatarFallback(fullName)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{userData.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">{userData.email}</span>
+                  <span className="truncate font-medium">{fullName}</span>
+                  <span className="text-muted-foreground truncate text-xs">{userEmail}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -80,7 +110,7 @@ export function NavUser() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleUserLogOut}>
               <LogOutIcon />
               Log out
             </DropdownMenuItem>

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ActionDetails } from "../action-details";
+import { log } from "console";
 
 // Mock data - replace with actual data fetching
 const mockActionDetails = {
@@ -20,14 +21,15 @@ const mockActionDetails = {
 
 export default async function ActionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  console.log("Action ID:", id);
 
   // In a real app, fetch the action by ID
-  if (id !== mockActionDetails.id) {
-    notFound();
-  }
+  // if (id !== mockActionDetails.id) {
+  //   notFound();
+  // }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="bg-background min-h-screen">
       <ActionDetails action={mockActionDetails} />
     </main>
   );

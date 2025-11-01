@@ -1,17 +1,29 @@
 import { getBranches, getDepartments } from "@/app/_actions/config-actions";
 import { QUERY_KEYS } from "@/lib/constants";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Pagination } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
 
-export const useDepartments = () =>
+export const useDepartments = (
+  params?: Partial<Pagination> & {
+    parentId?: string;
+    isActive?: boolean;
+  }
+) =>
   useQuery({
-    queryKey: [QUERY_KEYS.DEPARTMENTS],
-    queryFn: getDepartments,
+    queryKey: [QUERY_KEYS.DEPARTMENTS, params],
+    queryFn: () => getDepartments(params as any),
     staleTime: Infinity
   });
 
-export const useBranches = () =>
+export const useBranches = (
+  params?: Partial<Pagination> & {
+    provinceId?: string;
+    townId?: string;
+    isActive?: boolean;
+  }
+) =>
   useQuery({
-    queryKey: [QUERY_KEYS.BRANCHES],
-    queryFn: getBranches,
+    queryKey: [QUERY_KEYS.BRANCHES, params],
+    queryFn: () => getBranches(params),
     staleTime: Infinity
   });

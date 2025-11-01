@@ -53,6 +53,14 @@
   --sidebar-border: var(--base-200);
   --sidebar-ring: var(--base-800);
 
+  --canvas-bg: var(--base-100);
+  --canvas-grid: var(--base-300);
+
+  --state-node: var(--color-white);
+  --state-node-border: var(--base-400);
+  --state-node-initial: oklch(45% 0.18 265.909);
+  --state-node-final: oklch(55% 0.18 145);
+
   --display-weight: 700;
 
   --fc-button-bg-color: var(--primary);
@@ -76,7 +84,7 @@
   --popover: var(--base-950);
   --popover-foreground: var(--base-200);
   --primary: var(--base-50);
-  --primary-foreground: var(--base-900);
+  --primary-foreground: oklch(28.526% 0.15946 265.909);
   --secondary: oklch(59.261% 0.23747 30.019);
   --secondary-foreground: var(--base-50);
   --muted: var(--base-900);
@@ -100,6 +108,14 @@
   --sidebar-accent-foreground: var(--base-200);
   --sidebar-border: var(--base-800);
   --sidebar-ring: var(--base-200);
+
+  --canvas-bg: var(--base-950);
+  --canvas-grid: var(--base-800);
+
+  --state-node: var(--base-900);
+  --state-node-border: var(--base-600);
+  --state-node-initial: oklch(75% 0.15 265.909);
+  --state-node-final: oklch(70% 0.16 145);
 }
 
 @theme inline {
@@ -159,6 +175,13 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-canvas-bg: var(--canvas-bg);
+  --color-canvas-grid: var(--canvas-grid);
+  --color-state-node: var(--state-node);
+  --color-state-node-border: var(--state-node-border);
+  --color-state-node-initial: var(--state-node-initial);
+  --color-state-node-final: var(--state-node-final);
 
   --font-display: var(--display-family);
   --display-weight: var(--display-weight);
