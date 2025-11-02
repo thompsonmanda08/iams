@@ -850,31 +850,12 @@ export async function getHeatMap(): Promise<APIResponse> {
   try {
     // TODO: Replace with real API call when backend is ready
 const response = await authenticatedApiClient({
-      url: "/api/v1/heatmap",
+      url: "/api/v1/risks/heatmap",
       method: "GET"
     });
-    // return successResponse(response.data.data);
-
-    // Mock implementation for development
-    const mockData: HeatMapData[] = [];
-
-    // Generate 5x5 heat map with sample data
-    for (let impact = 1; impact <= 5; impact++) {
-      for (let likelihood = 1; likelihood <= 5; likelihood++) {
-        const count = Math.floor(Math.random() * 10);
-        mockData.push({
-          impact,
-          likelihood,
-          count,
-          risks: count > 0 ? [{ id: "1", title: "Sample Risk" }] : []
-        });
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return successResponse(mockData);
+    return successResponse(response.data.data);
   } catch (error) {
-    return handleError(error, "GET | GET HEAT MAP", "/api/v1/heatmap");
+    return handleError(error, "GET | GET HEAT MAP", "/api/v1/risks/heatmap");
   }
 }
 

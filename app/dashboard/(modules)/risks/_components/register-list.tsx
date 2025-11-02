@@ -25,10 +25,16 @@ import {
 import { Plus, FileText, Archive, FolderOpen, View, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createKRIRegister } from "@/app/_actions/risk-module-actions";
+import {
+  createKRIRegister,
+  updateKRIRegister,
+  deleteKRIRegister
+} from "@/app/_actions/risk-module-actions";
 import { toast } from "sonner";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
+import { ConfirmationModal } from "@/components/confirmation-modal";
+import PageHeader from "@/components/page-header";
 
 type KRIRegister = {
   id: string;
@@ -68,7 +74,6 @@ export default function KRIRegistersClient({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const [registers] = useState<KRIRegister[]>(initialRegisters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateRegisterForm>({
@@ -77,26 +82,28 @@ export default function KRIRegistersClient({
   });
   const [errors, setErrors] = useState<Partial<CreateRegisterForm>>({});
 
+  const [editingRegister, setEditingRegister] = useState<KRIRegister | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [registerToDelete, setRegisterToDelete] = useState<KRIRegister | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   };
 
-  // ADDED: Search params handler
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-
-    // Reset to page 1 on search change
     if (key === "search") {
       params.delete("page");
     }
-
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
@@ -106,30 +113,42 @@ export default function KRIRegistersClient({
     updateSearchParams("search", value);
   };
 
-  // ADDED: Pagination handler
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
-
     if (page !== undefined) {
       params.set("page", String(page));
     }
-
     if (page_size !== undefined) {
       params.set("page_size", String(page_size));
       params.set("page", "1");
     }
-
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
   };
 
+  const validateForm = (data: CreateRegisterForm): boolean => {
+    const newErrors: Partial<CreateRegisterForm> = {};
+
+    if (!data.name.trim()) {
+      newErrors.name = "Register name is required";
+    }
+
+    if (!data.description.trim()) {
+      newErrors.description = "Description is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm(formData)) return;
+
     setIsSubmitting(true);
     try {
       const response = await createKRIRegister(formData);
-
-      if (response.success && response.data) {
+      if (response.success) {
         setDialogOpen(false);
         setFormData({ name: "", description: "" });
         setErrors({});
@@ -146,6 +165,68 @@ export default function KRIRegistersClient({
     }
   };
 
+  const handleEditClick = (register: KRIRegister) => {
+    setEditingRegister(register);
+    setFormData({
+      name: register.name,
+      description: register.description
+    });
+    setErrors({});
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingRegister) return;
+    if (!validateForm(formData)) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await updateKRIRegister(editingRegister.id, formData);
+      if (response.success) {
+        setEditDialogOpen(false);
+        setEditingRegister(null);
+        setFormData({ name: "", description: "" });
+        setErrors({});
+        toast.success(response.message || "KRI Register updated successfully");
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to update register");
+      }
+    } catch (error) {
+      console.error("Failed to update register:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = (register: KRIRegister) => {
+    setRegisterToDelete(register);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!registerToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await deleteKRIRegister(registerToDelete.id);
+      if (response.success) {
+        setDeleteDialogOpen(false);
+        setRegisterToDelete(null);
+        toast.success(response.message || "KRI Register deleted successfully");
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to delete register");
+      }
+    } catch (error) {
+      console.error("Failed to delete register:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleNavigateToRegister = (registerId: string) => {
     router.push(`/dashboard/risks/kri/${registerId}`);
   };
@@ -154,7 +235,6 @@ export default function KRIRegistersClient({
     return isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700";
   };
 
-  // ADDED: Transform pagination for CustomPagination
   const customPaginationData = {
     page: initialPagination.page,
     page_size: initialPagination.page_size,
@@ -164,23 +244,20 @@ export default function KRIRegistersClient({
     has_next: initialPagination.has_next
   };
 
-  // Stats
   const totalRegisters = initialPagination.total;
-  const activeCount = registers.filter((r) => r.is_active).length;
-  const inactiveCount = registers.filter((r) => !r.is_active).length;
+  const activeCount = initialRegisters.filter((r) => r.is_active).length;
+  const inactiveCount = initialRegisters.filter((r) => !r.is_active).length;
 
   return (
     <div className="bg-background min-h-screen">
-      {/* Header */}
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">KRI Registers</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Manage your Key Risk Indicator registers and reports
-              </p>
-            </div>
+            <PageHeader
+              title="KRI Registers"
+              description="Manage your Key Risk Indicator registers and reports"
+              Icon={FileText}
+            />
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               New Register
@@ -189,7 +266,6 @@ export default function KRIRegistersClient({
         </div>
       </div>
 
-      {/* Summary Stats */}
       <div className="container mx-auto grid grid-cols-1 gap-4 px-4 pt-6 md:grid-cols-3">
         <Card className="p-4">
           <div className="flex items-center justify-between">
@@ -226,7 +302,6 @@ export default function KRIRegistersClient({
         </Card>
       </div>
 
-      {/* Filters */}
       <div className="container mx-auto px-4 pt-6">
         <Card className="p-4">
           <Search
@@ -238,7 +313,6 @@ export default function KRIRegistersClient({
         </Card>
       </div>
 
-      {/* Table */}
       <div className="container mx-auto px-4 py-6">
         <Card>
           <Table>
@@ -252,7 +326,7 @@ export default function KRIRegistersClient({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {registers?.length === 0 ? (
+              {initialRegisters?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-12 text-center">
                     <div className="flex flex-col items-center">
@@ -273,7 +347,7 @@ export default function KRIRegistersClient({
                   </TableCell>
                 </TableRow>
               ) : (
-                registers?.map((register) => (
+                initialRegisters?.map((register) => (
                   <TableRow key={register.id}>
                     <TableCell>
                       <p className="text-foreground font-medium">{register.name}</p>
@@ -314,13 +388,18 @@ export default function KRIRegistersClient({
                           <View className="h-3.5 w-3.5" />
                           View
                         </Button>
-                        <Button size="sm" variant="outline" className="h-8 gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5"
+                          onClick={() => handleEditClick(register)}>
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => handleDeleteClick(register)}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                           <Trash2 className="h-3.5 w-3.5" />
                           Delete
@@ -332,9 +411,7 @@ export default function KRIRegistersClient({
               )}
             </TableBody>
           </Table>
-
-          {/* ADDED: CustomPagination */}
-          {registers?.length > 0 && (
+          {initialRegisters?.length > 0 && (
             <CustomPagination
               pagination={customPaginationData}
               updatePagination={updatePagination}
@@ -346,7 +423,6 @@ export default function KRIRegistersClient({
         </Card>
       </div>
 
-      {/* Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -392,7 +468,11 @@ export default function KRIRegistersClient({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setDialogOpen(false)}
+              onClick={() => {
+                setDialogOpen(false);
+                setFormData({ name: "", description: "" });
+                setErrors({});
+              }}
               disabled={isSubmitting}>
               Cancel
             </Button>
@@ -402,6 +482,74 @@ export default function KRIRegistersClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit KRI Register</DialogTitle>
+            <DialogDescription>Update the register information</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">
+                Register Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="edit-name"
+                placeholder="e.g., Quarterly EMC Report Q1 2025"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={cn(errors.name && "border-destructive")}
+                disabled={isSubmitting}
+              />
+              {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">
+                Description <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Describe the purpose and scope of this register..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
+                className={cn(errors.description && "border-destructive")}
+                disabled={isSubmitting}
+              />
+              {errors.description && (
+                <p className="text-destructive text-sm">{errors.description}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setEditDialogOpen(false);
+                setEditingRegister(null);
+                setFormData({ name: "", description: "" });
+                setErrors({});
+              }}
+              disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update Register"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmationModal
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        type="delete"
+        title="Delete KRI Register"
+        description={`Are you sure you want to delete "${registerToDelete?.name}"? This action cannot be undone.`}
+      />
     </div>
   );
 }
