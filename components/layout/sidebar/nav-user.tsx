@@ -61,7 +61,9 @@ export function NavUser({ user }: { user: User }) {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{fullName}</span>
-                <span className="text-muted-foreground truncate text-xs">{user?.role?.name}</span>
+                <span className="text-muted-foreground truncate text-xs">
+                  {user?.role?.name || String(user?.role)}
+                </span>
               </div>
               <DotsVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>

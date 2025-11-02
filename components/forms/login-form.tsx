@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 import { toast } from "sonner";
-import { loginUser } from "@/app/_actions/auth-actions";
+import { initializeSystemSetup, loginUser } from "@/app/_actions/auth-actions";
 import { ErrorState } from "@/lib/types";
 import Link from "next/link";
 import CustomAlert from "../ui/custom-alert";
 import { capitalize } from "@/lib/utils";
+import { init } from "next/dist/compiled/webpack/webpack";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -36,7 +37,11 @@ export default function LoginForm() {
 
     if (response.success) {
       // Small delay to ensure cookie propagation (mitigates race condition)
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) =>
+        setTimeout(async () => {
+          await initializeSystemSetup();
+        }, 300)
+      );
 
       // Check if MFA is required
       if (response.data?.mfa_required) {

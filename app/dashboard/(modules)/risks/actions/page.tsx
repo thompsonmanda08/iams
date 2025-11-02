@@ -3,11 +3,13 @@ import { ActionsTable } from "./actions-table";
 import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 import { User } from "@/lib/types/account";
 import PageHeader from "@/components/page-header";
+import { getUserSession } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export default async function ActionsPage() {
-  const systemInit = await initializeSystemSetup();
-  const user = systemInit?.data?.user as User;
+  // const systemInit = await initializeSystemSetup();
+  // const user = systemInit?.data?.user as User;
+  const user = await getUserSession();
 
   const response = await getRisks({
     risk_owner_id: user?.id

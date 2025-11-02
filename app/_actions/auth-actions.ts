@@ -2,7 +2,13 @@
 
 import { APIResponse } from "@/lib/types";
 import authenticatedApiClient, { axios, handleError, successResponse } from "./api-config";
-import { createAuthSession, deleteSession, updateAuthSession, verifySession } from "@/lib/session";
+import {
+  createAuthSession,
+  createUserSession,
+  deleteSession,
+  updateAuthSession,
+  verifySession
+} from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
 import { UserType } from "@/lib/types/account";
@@ -319,7 +325,8 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       mfa_enabled: userData?.mfa_enabled
     };
 
-    // await updateAuthSession({ user });
+    await updateAuthSession({ user });
+    await createUserSession(user as any);
 
     console.log("🔧 [InitializeSystemSetup] Completed");
     return successResponse(session, response?.data?.message);
