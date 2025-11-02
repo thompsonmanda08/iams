@@ -128,7 +128,8 @@ export async function revokeRolePermission({
   }
 
   try {
-    await axios.delete(url);
+    // Fixed: Use authenticatedApiClient instead of axios.delete() to ensure proper authentication
+    await authenticatedApiClient({ url, method: "DELETE" });
     return successResponse(null, "Permission revoked successfully");
   } catch (error: Error | any) {
     return handleError(error, "DELETE", url);

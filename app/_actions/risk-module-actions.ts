@@ -823,21 +823,15 @@ export async function deleteRisk(id: string): Promise<APIResponse> {
 
 /**
  * Get risk matrix data
+ * Endpoint: GET /api/v1/risk-matrix
  */
 export async function getRiskMatrix(): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call
     const response = await authenticatedApiClient({
       url: "/api/v1/risk-matrix",
       method: "GET"
     });
-    // return successResponse(response.data.data);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return successResponse({
-      low: 12,
-      medium: 25,
-      high: 8
-    });
+    return successResponse(response.data.data, "Risk matrix fetched successfully");
   } catch (error) {
     return handleError(error, "GET | GET RISK MATRIX", "/api/v1/risk-matrix");
   }
@@ -845,34 +839,15 @@ export async function getRiskMatrix(): Promise<APIResponse> {
 
 /**
  * Get heat map data
+ * Endpoint: GET /api/v1/heatmap
  */
 export async function getHeatMap(): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call when backend is ready
-const response = await authenticatedApiClient({
+    const response = await authenticatedApiClient({
       url: "/api/v1/heatmap",
       method: "GET"
     });
-    // return successResponse(response.data.data);
-
-    // Mock implementation for development
-    const mockData: HeatMapData[] = [];
-
-    // Generate 5x5 heat map with sample data
-    for (let impact = 1; impact <= 5; impact++) {
-      for (let likelihood = 1; likelihood <= 5; likelihood++) {
-        const count = Math.floor(Math.random() * 10);
-        mockData.push({
-          impact,
-          likelihood,
-          count,
-          risks: count > 0 ? [{ id: "1", title: "Sample Risk" }] : []
-        });
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return successResponse(mockData);
+    return successResponse(response.data.data, "Heat map fetched successfully");
   } catch (error) {
     return handleError(error, "GET | GET HEAT MAP", "/api/v1/heatmap");
   }
