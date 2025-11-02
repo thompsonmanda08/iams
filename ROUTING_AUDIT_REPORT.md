@@ -1,4 +1,5 @@
 # Login Routing Flow Audit Report
+
 ## Next.js 16 Application with Proxy Pattern
 
 **Date**: 2025-11-02
@@ -33,7 +34,7 @@ app/
 │   ├── login/page.tsx           ← Login page
 │   └── otp/page.tsx             ← OTP verification
 ├── dashboard/
-│   ├── layout.tsx               ← Protected with initializeSystemSetupCached()
+│   ├── layout.tsx               ← Protected with initializeSystemSetup()
 │   └── home/page.tsx            ← Main dashboard
 └── (private)/
     └── layout.tsx               ← Admin route protection
@@ -76,6 +77,7 @@ From Next.js 16 documentation:
 > **"Using fetch with options.cache, options.next.revalidate, or options.next.tags has no effect in Proxy"**
 
 Your `verifySession()` function:
+
 1. **Reads cookies** - Acceptable
 2. **Decrypts JWT** - Slow cryptographic operation
 3. **No caching** - Runs on every request
@@ -96,7 +98,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ✅ Fast cookie existence check
-  const hasAuthCookie = request.cookies.has('AUTH_SESSION');
+  const hasAuthCookie = request.cookies.has("AUTH_SESSION");
 
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
 
@@ -146,7 +148,7 @@ REQUEST
        │
        ├─ IF authenticated
        │   ├─→ Check MFA flags
-       │   ├─→ initializeSystemSetupCached()
+       │   ├─→ initializeSystemSetup()
        │   └─→ REDIRECT to /dashboard/home or /_/admin/home
        │
        └─ IF !authenticated
@@ -196,19 +198,19 @@ REQUEST
    └─→ app/page.tsx renders
        ├─→ Calls verifySession() AGAIN - Decrypts JWT ❌
        ├─→ No MFA required
-       ├─→ initializeSystemSetupCached() - API call
+       ├─→ initializeSystemSetup() - API call
        └─→ redirect("/dashboard/home")
 
 4. Browser navigates to /dashboard/home
    ├─→ proxy.ts: AUTH_SESSION exists → Allows through
    │
    └─→ dashboard/layout.tsx
-       ├─→ initializeSystemSetupCached() - Returns cached data ✅
+       ├─→ initializeSystemSetup() - Returns cached data ✅
        └─→ Renders dashboard
 ```
 
 **Total Session Verifications**: 2 (proxy + root page)
-**Total API Calls**: 1 (initializeSystemSetupCached on first call)
+**Total API Calls**: 1 (initializeSystemSetup on first call)
 
 ---
 
@@ -223,16 +225,18 @@ REQUEST
 // login-form.tsx
 const response = await loginUser({ username, password });
 if (response.success) {
-  router.push("/");  // ← Immediate navigation
+  router.push("/"); // ← Immediate navigation
 }
 ```
 
 **Problem**:
+
 - `loginUser()` sets cookie server-side
 - Client immediately calls `router.push("/")`
 - Cookie might not be visible to next request yet
 
 **Scenario**:
+
 ```
 1. loginUser() completes → Cookie set on server
 2. router.push("/") starts → Browser makes GET / request
@@ -270,6 +274,7 @@ app/page.tsx (Line 292-295):
 ```
 
 **Why It's Problematic**:
+
 1. User visits `/login` while authenticated
 2. Proxy redirects to `/`
 3. Root page redirects to `/dashboard/home`
@@ -285,11 +290,13 @@ app/page.tsx (Line 292-295):
 **Location**: `app/(auth)/layout.tsx` + `proxy.ts`
 
 **Current State**:
+
 - `(auth)/layout.tsx` - No authentication check
 - `proxy.ts` - Allows `/login` and `/register` only
 - `/otp` is under `(auth)` but not in proxy's auth page check
 
 **Code**:
+
 ```typescript
 // proxy.ts line 42
 const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
@@ -297,6 +304,7 @@ const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/regist
 ```
 
 **Vulnerability**:
+
 ```
 1. User visits /otp?username=test@example.com directly
 2. proxy.ts: Not an auth page, checks auth
@@ -320,6 +328,7 @@ const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/regist
 **Risk**: Theoretical only
 
 **Scenario**: Broken Session Verification
+
 ```
 1. Cookie exists but is corrupted
 2. proxy.ts: Cookie exists → Allows through
@@ -331,6 +340,7 @@ const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/regist
 ```
 
 **Why This Won't Happen**:
+
 - `verifySession()` checks `session?.accessToken`
 - Invalid tokens return `{ isAuthenticated: false }`
 - Proxy would see `!isAuthenticated` and allow /login
@@ -389,7 +399,7 @@ GET /login
 ```typescript
 export async function verifySession() {
   const cookie = (await cookies()).get(AUTH_SESSION)?.value;
-  const session = await decrypt(cookie);  // ❌ SLOW OPERATION
+  const session = await decrypt(cookie); // ❌ SLOW OPERATION
 
   if (session?.accessToken) {
     return { isAuthenticated: true, session };
@@ -422,7 +432,7 @@ export async function verifySession() {
 
 ```typescript
 // dashboard/layout.tsx
-const systemInit = await initializeSystemSetupCached();
+const systemInit = await initializeSystemSetup();
 const user = systemInit?.data?.user;
 
 if (user == null) redirect("/login");
@@ -431,6 +441,7 @@ if (user == null) redirect("/login");
 ### Cache Invalidation Problems
 
 **Scenario**: User changes password
+
 ```
 1. User in dashboard (cache has old user data)
 2. User changes password → changePassword() action
@@ -449,11 +460,13 @@ if (user == null) redirect("/login");
 ### PRIORITY 1: Fix Proxy Anti-Pattern
 
 **Current** (Lines 23-54 in proxy.ts):
+
 ```typescript
 const { session, isAuthenticated } = await verifySession(); // ❌ SLOW
 ```
 
 **Recommended**:
+
 ```typescript
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -476,7 +489,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // ✅ FAST: Check cookie existence only
-  const hasAuthCookie = request.cookies.has('AUTH_SESSION');
+  const hasAuthCookie = request.cookies.has("AUTH_SESSION");
 
   // Define auth pages
   const isAuthPage =
@@ -501,6 +514,7 @@ export async function proxy(request: NextRequest) {
 ```
 
 **Benefits**:
+
 - 100x faster (no JWT decryption)
 - Follows Next.js 16 best practices
 - Reduces CPU usage
@@ -515,7 +529,7 @@ export async function proxy(request: NextRequest) {
 ```typescript
 import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { initializeSystemSetupCached } from "@/app/_actions/auth-actions";
+import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 
 export default async function AuthLayout({ children }) {
   const { isAuthenticated, session } = await verifySession();
@@ -529,7 +543,7 @@ export default async function AuthLayout({ children }) {
     }
 
     // Fully authenticated, redirect to dashboard
-    const systemInit = await initializeSystemSetupCached();
+    const systemInit = await initializeSystemSetup();
     const user = systemInit?.data?.user;
 
     if (user?.user_type === "BACKOFFICE_USER") {
@@ -572,12 +586,12 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/',
-        destination: '/dashboard/home',
-        permanent: false,
-      },
+        source: "/",
+        destination: "/dashboard/home",
+        permanent: false
+      }
     ];
-  },
+  }
 };
 ```
 
@@ -596,7 +610,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   if (response.success) {
     // Small delay to ensure cookie propagation
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     if (response.data?.mfa_required) {
       router.push(`/otp?username=${encodeURIComponent(email)}`);
@@ -629,7 +643,7 @@ export async function verifySession() {
     const decrypted = await decrypt(cookie);
 
     // Check for decryption errors
-    if (!decrypted || typeof decrypted !== 'object') {
+    if (!decrypted || typeof decrypted !== "object") {
       return { isAuthenticated: false, session: null };
     }
 
@@ -740,7 +754,7 @@ const handleUserLogOut = async () => {
 ### Performance Tests
 
 - [ ] Session verification performance (before/after proxy fix)
-- [ ] Cache hit rate for initializeSystemSetupCached
+- [ ] Cache hit rate for initializeSystemSetup
 - [ ] Redirect chain count (should be 1 per flow)
 
 ---
@@ -749,15 +763,15 @@ const handleUserLogOut = async () => {
 
 ### Current State
 
-| Aspect | Status | Severity |
-|--------|--------|----------|
-| Infinite Loop Risk | ✅ None Detected | N/A |
-| Proxy Anti-Pattern | ❌ Using slow operations | CRITICAL |
-| Race Conditions | ⚠️ Login timing | MEDIUM |
-| Double Redirects | ⚠️ "/" intermediate | LOW |
-| OTP Protection | ❌ Not in proxy check | MEDIUM |
-| Cache Invalidation | ❌ Missing on security changes | MEDIUM |
-| Session Expiry Check | ❌ Not validated | MEDIUM |
+| Aspect               | Status                         | Severity |
+| -------------------- | ------------------------------ | -------- |
+| Infinite Loop Risk   | ✅ None Detected               | N/A      |
+| Proxy Anti-Pattern   | ❌ Using slow operations       | CRITICAL |
+| Race Conditions      | ⚠️ Login timing                | MEDIUM   |
+| Double Redirects     | ⚠️ "/" intermediate            | LOW      |
+| OTP Protection       | ❌ Not in proxy check          | MEDIUM   |
+| Cache Invalidation   | ❌ Missing on security changes | MEDIUM   |
+| Session Expiry Check | ❌ Not validated               | MEDIUM   |
 
 ### After Fixes
 

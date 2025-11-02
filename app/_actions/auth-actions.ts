@@ -2,24 +2,11 @@
 
 import { APIResponse } from "@/lib/types";
 import authenticatedApiClient, { axios, handleError, successResponse } from "./api-config";
-import {
-  createAuthSession,
-  deleteSession,
-  updateAuthSession,
-  verifySession,
-  createUserSession,
-  createPermissionsSession
-} from "@/lib/session";
+import { createAuthSession, deleteSession, updateAuthSession, verifySession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
-import { User, UserType } from "@/lib/types/account";
+import { UserType } from "@/lib/types/account";
 import { cache } from "react";
-import {
-  getCachedSystemSetup,
-  setCachedSystemSetup,
-  clearSystemSetupCache,
-  isSystemSetupCacheFresh
-} from "@/lib/cache-store";
 
 export async function loginUser({
   username,
@@ -75,9 +62,6 @@ export async function verifyOTP({
       mfa_required: false, // MFA is now complete
       mfa_verified: true
     });
-
-    // Clear cache to ensure fresh user data after MFA verification
-    clearSystemSetupCache();
 
     return successResponse(response?.data, "OTP verified successfully");
   } catch (error: Error | any) {
@@ -168,9 +152,6 @@ export async function changePassword({
     });
 
     await updateAuthSession({ change_password: false });
-
-    // Clear cached system setup after password change (security-critical)
-    clearSystemSetupCache();
 
     return successResponse(response?.data, "Password changed successfully");
   } catch (error: Error | any) {
@@ -338,7 +319,7 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       mfa_enabled: userData?.mfa_enabled
     };
 
-    // await updateAuthSession({ user });
+    await updateAuthSession({ user });
 
     console.log("🔧 [InitializeSystemSetup] Completed");
     return successResponse(session, response?.data?.message);
@@ -349,83 +330,6 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
 }
 
 export const initializeSystemSetup = cache(_initializeSystemSetup);
-
-/**
- * Initialize system setup with persistent in-memory cache
- *
- * This version caches data across requests and only refetches when:
- * 1. Cache doesn't exist
- * 2. Cache is stale (older than TTL)
- * 3. Cache is manually cleared via clearSystemSetupCache()
- *
- * @param options.ttl - Time to live in milliseconds (default: 1 hour)
- * @param options.forceRefresh - Force refresh even if cache is fresh
- */
-export async function initializeSystemSetupCached(options?: {
-  ttl?: number;
-  forceRefresh?: boolean;
-}): Promise<APIResponse> {
-  const { ttl = 60 * 60 * 1000, forceRefresh = false } = options || {};
-
-  // Check if we have fresh cached data
-  if (!forceRefresh && isSystemSetupCacheFresh(ttl)) {
-    const cached = getCachedSystemSetup();
-    if (cached) {
-      console.log("🔧 [InitializeSystemSetup] Returning cached data");
-      return cached;
-    }
-  }
-
-  // Fetch fresh data
-  const url = `/api/v1/auth/setup`;
-
-  try {
-    console.log("🔧 [InitializeSystemSetup] Fetching fresh data...");
-    const response = await authenticatedApiClient({ url });
-    const session = response?.data;
-    const userData = session?.user;
-
-    const user = {
-      id: userData?.id,
-      username: userData?.username,
-      email: userData?.email,
-      role: userData?.role?.name,
-      first_name: userData?.first_name,
-      last_name: userData?.last_name,
-      user_type: userData?.user_type,
-      organization_id: userData?.organization_id,
-      branch_id: userData?.branch_id,
-      department_id: userData?.department_id,
-      role_id: userData?.role_id,
-      is_active: userData?.is_active,
-      is_ldap_user: userData?.is_ldap_user,
-      last_login: userData?.last_login,
-      change_password: userData?.change_password,
-      is_locked: userData?.is_locked,
-      mfa_enabled: userData?.mfa_enabled
-    };
-
-    const result = successResponse(session, response?.data?.message);
-
-    // Cache the result
-    setCachedSystemSetup(result);
-
-    console.log("🔧 [InitializeSystemSetup] Completed and cached");
-    return result;
-  } catch (error: Error | any) {
-    console.error("❌ [InitializeSystemSetup] Error:", error?.message);
-    return handleError(error, "GET | SYSTEM SETUP", url);
-  }
-}
-
-/**
- * Manually clear the system setup cache
- * Call this when system configuration changes and you need fresh data
- */
-export async function revalidateSystemSetup(): Promise<void> {
-  clearSystemSetupCache();
-  console.log("🔧 [SystemSetup] Cache cleared");
-}
 
 /**
  * Refresh user Token

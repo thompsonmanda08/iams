@@ -5,7 +5,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 import { User } from "@/lib/types/account";
-import { initializeSystemSetupCached } from "../_actions/auth-actions";
+import { initializeSystemSetup } from "../_actions/auth-actions";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/session";
 
@@ -21,16 +21,7 @@ export default async function DashLayout({
     cookieStore.get("sidebar_state")?.value === "true" ||
     cookieStore.get("sidebar_state") === undefined;
 
-  // Check session user_type first (fast - from cookie)
-  const { user_type } = await verifySession();
-
-  // If admin user, redirect to admin dashboard (prevents redundant API call)
-  if (user_type === "BACKOFFICE_USER") {
-    return redirect("/admin/home");
-  }
-
-  // Only call initializeSystemSetup for regular users
-  const systemInit = await initializeSystemSetupCached();
+  const systemInit = await initializeSystemSetup();
   const user = systemInit?.data?.user as User;
 
   return (

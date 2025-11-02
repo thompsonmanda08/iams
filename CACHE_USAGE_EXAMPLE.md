@@ -15,7 +15,7 @@ Uses React's `cache()` for **request-level memoization**.
 ### Usage
 
 ```typescript
-import { initializeSystemSetup } from '@/app/_actions/auth-actions';
+import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 
 // First call in this request - fetches from API
 const result1 = await initializeSystemSetup();
@@ -40,7 +40,7 @@ const result2 = await initializeSystemSetup();
 
 ---
 
-## Version 2: `initializeSystemSetupCached()` - Persistent Cache
+## Version 2: `initializeSystemSetup()` - Persistent Cache
 
 Uses **in-memory cache** that persists across requests with manual revalidation.
 
@@ -56,25 +56,25 @@ Uses **in-memory cache** that persists across requests with manual revalidation.
 #### Basic usage (1 hour TTL)
 
 ```typescript
-import { initializeSystemSetupCached } from '@/app/_actions/auth-actions';
+import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 
 // First call - fetches and caches
-const result = await initializeSystemSetupCached();
+const result = await initializeSystemSetup();
 
 // Subsequent calls - returns cached data
-const cached = await initializeSystemSetupCached();
+const cached = await initializeSystemSetup();
 ```
 
 #### Custom TTL
 
 ```typescript
 // Cache for 30 minutes
-const result = await initializeSystemSetupCached({
+const result = await initializeSystemSetup({
   ttl: 30 * 60 * 1000
 });
 
 // Cache for 5 minutes
-const result = await initializeSystemSetupCached({
+const result = await initializeSystemSetup({
   ttl: 5 * 60 * 1000
 });
 ```
@@ -83,7 +83,7 @@ const result = await initializeSystemSetupCached({
 
 ```typescript
 // Bypass cache and fetch fresh data
-const fresh = await initializeSystemSetupCached({
+const fresh = await initializeSystemSetup({
   forceRefresh: true
 });
 ```
@@ -91,10 +91,7 @@ const fresh = await initializeSystemSetupCached({
 #### Manual revalidation
 
 ```typescript
-import {
-  initializeSystemSetupCached,
-  revalidateSystemSetup
-} from '@/app/_actions/auth-actions';
+import { initializeSystemSetup, revalidateSystemSetup } from "@/app/_actions/auth-actions";
 
 // Clear cache when configuration changes
 async function updateSystemConfig(config: any) {
@@ -109,7 +106,7 @@ async function updateSystemConfig(config: any) {
 }
 
 // Next call will fetch fresh data
-const fresh = await initializeSystemSetupCached();
+const fresh = await initializeSystemSetup();
 ```
 
 ### Benefits
@@ -152,7 +149,7 @@ async function initializeSystemSetup(): Promise<APIResponse> {
   }
 
   // Fetch and store in session
-  const response = await authenticatedApiClient({ url: '/api/v1/auth/setup' });
+  const response = await authenticatedApiClient({ url: "/api/v1/auth/setup" });
   await updateAuthSession({ systemSetup: response.data });
 
   return successResponse(response.data, response.data?.message);
@@ -166,10 +163,10 @@ async function initializeSystemSetup(): Promise<APIResponse> {
 For production with multiple server instances:
 
 ```typescript
-import redis from '@/lib/redis';
+import redis from "@/lib/redis";
 
 async function initializeSystemSetupRedis(): Promise<APIResponse> {
-  const cacheKey = 'system:setup';
+  const cacheKey = "system:setup";
 
   // Try to get from Redis
   const cached = await redis.get(cacheKey);
@@ -178,7 +175,7 @@ async function initializeSystemSetupRedis(): Promise<APIResponse> {
   }
 
   // Fetch and cache
-  const response = await authenticatedApiClient({ url: '/api/v1/auth/setup' });
+  const response = await authenticatedApiClient({ url: "/api/v1/auth/setup" });
   const result = successResponse(response.data, response.data?.message);
 
   // Cache for 1 hour
@@ -190,12 +187,12 @@ async function initializeSystemSetupRedis(): Promise<APIResponse> {
 
 ## Recommendation
 
-| Use Case | Solution |
-|----------|----------|
-| Fresh data on every page load | `initializeSystemSetup()` (React cache) |
-| Rarely changing system config | `initializeSystemSetupCached()` (In-memory cache) |
-| User-specific data | Session/Cookie storage |
-| Multi-instance production | Redis or external cache |
+| Use Case                      | Solution                                    |
+| ----------------------------- | ------------------------------------------- |
+| Fresh data on every page load | `initializeSystemSetup()` (React cache)     |
+| Rarely changing system config | `initializeSystemSetup()` (In-memory cache) |
+| User-specific data            | Session/Cookie storage                      |
+| Multi-instance production     | Redis or external cache                     |
 
 ## Cache Invalidation
 
@@ -207,5 +204,5 @@ await updateSystemConfiguration(newConfig);
 await revalidateSystemSetup(); // Clear cache
 
 // Or use revalidatePath for full page refresh
-revalidatePath('/dashboard');
+revalidatePath("/dashboard");
 ```

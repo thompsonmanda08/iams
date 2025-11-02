@@ -6,20 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 import { toast } from "sonner";
 import { loginUser } from "@/app/_actions/auth-actions";
+import { ErrorState } from "@/lib/types";
+import Link from "next/link";
+import CustomAlert from "../ui/custom-alert";
+import { capitalize } from "@/lib/utils";
 
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [error, setError] = useState<ErrorState>({});
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setError({ status: false, message: "" });
     e.preventDefault();
     setIsLoading(true);
 
@@ -36,6 +42,7 @@ export default function LoginForm() {
       if (response.data?.mfa_required) {
         toast.info("Please enter the OTP sent to your email");
         // Redirect to OTP page with username
+        setError({ status: true, redirecting: true, message: "Redirection to OTP screen..." });
         router.push(`/otp?username=${encodeURIComponent(email)}`);
       } else {
         toast.success(response.message || "Login successful");
@@ -45,13 +52,14 @@ export default function LoginForm() {
         );
       }
     } else {
+      setError({ status: true, message: response.message });
       toast.error(response.message || "Invalid credentials");
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
+    <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col gap-3">
       <div className="space-y-2">
         <div className="relative">
           <Mail className="absolute top-2/3 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -91,24 +99,34 @@ export default function LoginForm() {
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
+        <div className="flex items-center justify-between text-sm">
+          <Label className="flex cursor-pointer items-center">
+            <Checkbox
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              disabled={isLoading || true}
+            />
+            <span className="text-slate-600">Remember me</span>
+          </Label>
+          <Link
+            href="/#forgot-password"
+            className="text-primary hover:text-primary/70 text-xs font-medium transition-colors sm:text-sm">
+            Forgot password?
+          </Link>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between text-sm">
-        <Label className="flex cursor-pointer items-center space-x-2">
-          <Checkbox
-            checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-            disabled={isLoading}
+      {error?.status && (
+        <>
+          <CustomAlert
+            type={error?.redirecting ? "info" : "error"}
+            title={error?.redirecting ? "Redirecting..." : "Oops! keep calm"}
+            message={capitalize(String(error.message))}
+            Icon={AlertTriangle}
           />
-          <span className="text-slate-600">Remember me</span>
-        </Label>
-        <a
-          href="/forgot-password"
-          className="text-primary hover:text-primary/70 font-medium transition-colors">
-          Forgot password?
-        </a>
-      </div>
+        </>
+      )}
 
       <Button
         type="submit"
