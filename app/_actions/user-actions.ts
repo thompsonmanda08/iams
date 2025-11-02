@@ -200,10 +200,16 @@ export async function toggleUserMFA(id: string, enabled: boolean): Promise<APIRe
 /**
  * Reset user password
  */
-export async function resetUserPassword(id: string): Promise<APIResponse> {
+export async function resetUserPassword(id: string, password: string): Promise<APIResponse> {
   const url = `/api/v1/users/${id}/reset-password`;
   try {
-    const response = await authenticatedApiClient({ url: url, method: "POST" });
+    const response = await authenticatedApiClient({
+      url: url,
+      method: "POST",
+      data: {
+        new_password: password
+      }
+    });
     return successResponse(response.data, "Password reset successfully");
   } catch (error) {
     return handleError(error, "POST", url);
