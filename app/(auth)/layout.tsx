@@ -46,7 +46,7 @@ export default async function AuthLayout({ children }: PropsWithChildren) {
     const user = systemInit?.data?.user as User;
 
     if (user?.user_type === "BACKOFFICE_USER") {
-      redirect("/_/admin/home");
+      redirect("/admin/home");
     }
 
     redirect("/dashboard/home");

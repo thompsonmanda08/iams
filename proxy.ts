@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { AUTH_SESSION } from "./lib/constants";
+import { decrypt } from "./lib/session";
 
 /**
  * Next.js 16 Proxy - Optimized for fast edge checks
  * Per Next.js docs: "Proxy is not intended for slow data fetching"
  *
- * This proxy only checks cookie EXISTENCE (fast) - not JWT decryption (slow).
- * Full session verification happens in layouts/pages where caching works.
+ * This proxy checks cookie EXISTENCE (fast) for most routes.
+ * For admin routes, it performs JWT decryption to verify user_type (acceptable trade-off for security).
+ * Full session verification still happens in layouts/pages where caching works.
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -39,7 +41,7 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // ✅ FAST: Check cookie existence only (no JWT decryption)
+  // ✅ FAST: Check cookie existence only (no JWT decryption for most routes)
   const hasAuthCookie = request.cookies.has(AUTH_SESSION);
 
   // Define authentication pages (login, register, OTP)
@@ -47,6 +49,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
     pathname.startsWith("/otp");
+
+  // Check if accessing admin routes
+  const isAdminRoute = pathname.startsWith("/admin");
 
   // If no auth cookie and not on auth page, redirect to login
   if (!hasAuthCookie && !isAuthPage) {
@@ -59,6 +64,28 @@ export async function proxy(request: NextRequest) {
   if (hasAuthCookie && isAuthPage) {
     url.pathname = "/dashboard/home";
     return NextResponse.redirect(url);
+  }
+
+  // ✅ NEW: Admin route protection
+  // Verify user_type for admin routes (requires JWT decode - acceptable for security)
+  if (isAdminRoute && hasAuthCookie) {
+    try {
+      const cookie = request.cookies.get(AUTH_SESSION)?.value;
+      if (cookie) {
+        const decrypted = await decrypt(cookie);
+        const session = decrypted as any;
+
+        // If not a BACKOFFICE_USER, redirect to regular dashboard
+        if (session?.user_type !== "BACKOFFICE_USER") {
+          console.log("[Proxy] Non-admin user attempting to access admin route, redirecting");
+          url.pathname = "/dashboard/home";
+          return NextResponse.redirect(url);
+        }
+      }
+    } catch (error) {
+      // If decryption fails, let it through (layout will handle)
+      console.error("[Proxy] Admin route check failed:", error);
+    }
   }
 
   return response;

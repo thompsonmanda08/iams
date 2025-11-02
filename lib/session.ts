@@ -108,12 +108,14 @@ export async function decrypt(token: any) {
 export async function createAuthSession({
   accessToken,
   user_type,
+  user_id,
   change_password,
   mfa_required,
   organization_id
 }: {
   accessToken: string;
   user_type: UserType;
+  user_id?: string;
   change_password?: boolean;
   mfa_required?: boolean;
   organization_id?: string;
@@ -122,6 +124,8 @@ export async function createAuthSession({
 
   const newSession: AuthSession = {
     accessToken: accessToken || "",
+    user_type,
+    user_id,
     change_password,
     mfa_required,
     organization_id,
@@ -236,6 +240,7 @@ export async function verifySession(): Promise<{
   isAuthenticated: boolean;
   session: AuthSession | null;
   user?: Partial<User> | null;
+  user_type?: UserType;
   permissions?: any[];
   [key: string]: any;
 }> {
@@ -278,7 +283,8 @@ export async function verifySession(): Promise<{
     // Session is valid
     return {
       isAuthenticated: true,
-      session: session
+      session: session,
+      user_type: session.user_type
     };
   } catch (error) {
     console.error("[verifySession] Error:", error);

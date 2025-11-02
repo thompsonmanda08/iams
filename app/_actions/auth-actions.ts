@@ -40,6 +40,7 @@ export async function loginUser({
     await createAuthSession({
       accessToken: session?.access_token,
       user_type: session?.user_type,
+      user_id: session?.user?.id,
       change_password: session?.change_password,
       mfa_required: session?.mfa_required,
       organization_id: session?.organization_id
