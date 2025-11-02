@@ -94,7 +94,8 @@ export const navItems: NavGroup[] = [
           { title: "Risk Registers", href: "/dashboard/risks/risk-registers" },
           { title: "Heat Map", href: "/dashboard/risks/heat-map" },
           { title: "KRI Dashboard", href: "/dashboard/risks/kri" },
-          { title: "Actions", href: "/dashboard/risks/actions" }
+          { title: "Actions", href: "/dashboard/risks/actions" },
+          { title: "Incidents", href: "/dashboard/risks/incidents" }
         ]
       },
       {
