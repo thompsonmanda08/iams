@@ -1,6 +1,16 @@
 "use client";
 import { useState } from "react";
 import { Plus, Trash2, Workflow, Edit2, CheckCircle2, Settings, GitBranch } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkflowEditor from "./workflow-editor";
@@ -18,6 +28,8 @@ interface WorkflowClientProps {
 const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [workflowToDelete, setWorkflowToDelete] = useState<string | null>(null);
   const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
 
   // Use TanStack Query to manage workflow list with initial data
@@ -48,9 +60,16 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
     setEditingWorkflowId(null);
   };
 
-  const handleDelete = async (workflowId: string) => {
-    if (confirm("Are you sure you want to delete this workflow?")) {
-      await deleteWorkflowMutation(workflowId);
+  const handleDelete = (workflowId: string) => {
+    setWorkflowToDelete(workflowId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (workflowToDelete) {
+      await deleteWorkflowMutation(workflowToDelete);
+      setIsDeleteDialogOpen(false);
+      setWorkflowToDelete(null);
     }
   };
 
@@ -99,6 +118,24 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
         )}
 
         <QuickStartGuide />
+
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the workflow and all its
+                associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setWorkflowToDelete(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmDelete}>Continue</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

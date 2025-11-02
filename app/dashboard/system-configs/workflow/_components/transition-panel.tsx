@@ -47,7 +47,7 @@ export const TransitionPanel = ({
   const [actionNameInput, setActionNameInput] = useState("");
 
   // Debounce action name to avoid excessive updates
-  const debouncedActionName = useDebounce(actionNameInput, 500);
+  const debouncedActionName = useDebounce(actionNameInput, 5000);
 
   // Sync local state with prop changes
   useEffect(() => {

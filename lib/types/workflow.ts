@@ -163,7 +163,7 @@ export interface WorkflowTransition {
 export interface Workflow {
   id: string;
   name: string;
-  entityType: EntityType;
+  entity_type: EntityType;
   states: State[];
   transitions: Transition[];
   entry_conditions: Condition[];

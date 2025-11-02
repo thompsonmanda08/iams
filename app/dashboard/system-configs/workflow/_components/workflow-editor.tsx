@@ -60,7 +60,7 @@ const transformWorkflowData = (apiWorkflow: any): Workflow => {
   return {
     id: apiWorkflow.id,
     name: apiWorkflow.name,
-    entityType: apiWorkflow.entity_type,
+    entity_type: apiWorkflow.entity_type,
     states: mappedStates,
     transitions: mappedTransitions,
     entry_conditions: (apiWorkflow.entry_conditions || []).map((cond: any) => ({
@@ -83,7 +83,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   const createDefaultWorkflow = (): Workflow => ({
     id: `wf-${Date.now()}`,
     name: "New Workflow",
-    entityType: "AUDIT_PLAN",
+    entity_type: "AUDIT_PLAN",
     states: [
       {
         id: "state-1",
@@ -323,9 +323,9 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     <div className="flex h-[92svh] flex-col">
       <WorkflowHeader
         workflowName={workflow.name}
-        entityType={workflow.entityType}
+        entityType={workflow.entity_type}
         onWorkflowNameChange={(name) => setWorkflow({ ...workflow, name })}
-        onEntityTypeChange={(entityType: EntityType) => setWorkflow({ ...workflow, entityType })}
+        onEntityTypeChange={(entity_type: EntityType) => setWorkflow({ ...workflow, entity_type })}
         onSave={handleSave}
         onBack={onBack}
         isLoading={isSaving}
