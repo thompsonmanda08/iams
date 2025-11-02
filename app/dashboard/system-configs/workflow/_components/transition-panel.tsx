@@ -1,12 +1,17 @@
 "use client";
-import { X, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, GitBranchPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Transition, Condition, Permission, Action } from "@/lib/types/workflow";
-import { Badge } from "@/components/ui/badge";
 import { RuleBuilder } from "./rule-builder";
+import PageHeader from "@/components/page-header";
+import CustomAlert from "@/components/ui/custom-alert";
+import { SelectField } from "@/components/ui/select-field";
+import { MultiSelectField } from "@/components/ui/multi-select-field";
+import { useState, useEffect } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface TransitionPanelProps {
   transition: Transition | null;
@@ -15,16 +20,56 @@ interface TransitionPanelProps {
   onUpdate: (transition: Transition) => void;
 }
 
+// Available roles - TODO: fetch from API
+const AVAILABLE_ROLES = [
+  { id: "ADMIN", name: "ADMIN" },
+  { id: "AUDITOR", name: "AUDITOR" },
+  { id: "HIAR", name: "HIAR" },
+  { id: "CEO", name: "CEO" },
+  { id: "MANAGER", name: "MANAGER" },
+  { id: "VIEWER", name: "VIEWER" }
+];
+
+const ACTION_TYPES = [
+  { value: "send_email", label: "Send Email" },
+  { value: "create_log", label: "Create Log" },
+  { value: "update_field", label: "Update Field" },
+  { value: "trigger_webhook", label: "Trigger Webhook" }
+];
+
 export const TransitionPanel = ({
   transition,
   isOpen,
   onClose,
   onUpdate
 }: TransitionPanelProps) => {
-  if (!transition) return null;
+  const [localTransition, setLocalTransition] = useState<Transition | null>(transition);
+  const [actionNameInput, setActionNameInput] = useState("");
+
+  // Debounce action name to avoid excessive updates
+  const debouncedActionName = useDebounce(actionNameInput, 500);
+
+  // Sync local state with prop changes
+  useEffect(() => {
+    setLocalTransition(transition);
+    if (transition) {
+      setActionNameInput(transition.action_name);
+    }
+  }, [transition]);
+
+  // Update parent when debounced value changes
+  useEffect(() => {
+    if (localTransition && debouncedActionName !== localTransition.action_name) {
+      handleUpdate({ action_name: debouncedActionName });
+    }
+  }, [debouncedActionName]);
+
+  if (!localTransition) return null;
 
   const handleUpdate = (updates: Partial<Transition>) => {
-    onUpdate({ ...transition, ...updates });
+    const updated = { ...localTransition, ...updates };
+    setLocalTransition(updated);
+    onUpdate(updated);
   };
 
   const addPermission = () => {
@@ -32,98 +77,111 @@ export const TransitionPanel = ({
       id: `perm-${Date.now()}`,
       role: ""
     };
-    handleUpdate({ permissions: [...transition.permissions, newPermission] });
+    handleUpdate({ permissions: [...localTransition.permissions, newPermission] });
   };
 
   const updatePermission = (id: string, role: string) => {
     handleUpdate({
-      permissions: transition.permissions.map((p) => (p.id === id ? { ...p, role } : p))
+      permissions: localTransition.permissions.map((p) => (p.id === id ? { ...p, role } : p))
     });
   };
 
   const deletePermission = (id: string) => {
     handleUpdate({
-      permissions: transition.permissions.filter((p) => p.id !== id)
+      permissions: localTransition.permissions.filter((p) => p.id !== id)
     });
   };
 
   const addCondition = (condition: Condition) => {
-    handleUpdate({ conditions: [...transition.conditions, condition] });
+    handleUpdate({ conditions: [...localTransition.conditions, condition] });
   };
 
   const updateCondition = (id: string, updates: Partial<Condition>) => {
     handleUpdate({
-      conditions: transition.conditions.map((c) => (c.id === id ? { ...c, ...updates } : c))
+      conditions: localTransition.conditions.map((c) => (c.id === id ? { ...c, ...updates } : c))
     });
   };
 
   const deleteCondition = (id: string) => {
     handleUpdate({
-      conditions: transition.conditions.filter((c) => c.id !== id)
+      conditions: localTransition.conditions.filter((c) => c.id !== id)
     });
   };
 
-  const addAction = () => {
-    const newAction: Action = {
-      id: `action-${Date.now()}`,
-      type: "send_email",
-      config: {}
-    };
-    handleUpdate({ actions: [...transition.actions, newAction] });
-  };
+  // Get selected action types as string array for MultiSelectField
+  const selectedActionTypes = localTransition.actions.map((a) => a.type);
 
-  const deleteAction = (id: string) => {
-    handleUpdate({
-      actions: transition.actions.filter((a) => a.id !== id)
+  const handleActionsChange = (selectedTypes: string[]) => {
+    // Create action objects from selected types
+    const newActions: Action[] = selectedTypes.map((type) => {
+      // Try to find existing action with this type to preserve config
+      const existing = localTransition.actions.find((a) => a.type === type);
+      return (
+        existing || {
+          id: `action-${Date.now()}-${type}`,
+          type: type as Action["type"],
+          config: {}
+        }
+      );
     });
+    handleUpdate({ actions: newActions });
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-xl">
+      <SheetContent className="w-full overflow-y-auto p-0 pt-4 sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>Configure Transition</SheetTitle>
+          <SheetTitle>
+            <PageHeader
+              title="Configure Transition"
+              description="Setup how the workflow will be implemented and actioned"
+              Icon={GitBranchPlus}
+            />
+          </SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="space-y-6 px-6">
           {/* Action Name */}
           <div className="space-y-2">
-            <Label htmlFor="action-name">Action Name</Label>
             <Input
+              label="Action Name"
               id="action-name"
-              value={transition.actionName}
-              onChange={(e) => handleUpdate({ actionName: e.target.value })}
+              value={actionNameInput}
+              onChange={(e) => setActionNameInput(e.target.value)}
               placeholder="e.g., APPROVE_HIAR"
+              descriptionText="The action trigger name for this transition"
+              required
             />
-            <p className="text-muted-foreground text-xs">
-              The action trigger name for this transition
-            </p>
           </div>
 
-          {/* Permissions */}
+          {/* Permissions / Required Roles */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Required Roles</Label>
-              <Button size="sm" variant="outline" onClick={addPermission}>
+              <Button size="sm" variant="outline" type="button" onClick={addPermission}>
                 <Plus className="mr-1 h-3 w-3" />
                 Add Role
               </Button>
             </div>
 
-            {transition.permissions.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No role requirements</p>
+            {localTransition.permissions.length === 0 ? (
+              <CustomAlert type="info" message="No role requirements" />
             ) : (
               <div className="space-y-2">
-                {transition.permissions.map((permission) => (
+                {localTransition.permissions.map((permission) => (
                   <div key={permission.id} className="flex items-center gap-2">
-                    <Input
+                    <SelectField
+                      options={AVAILABLE_ROLES}
                       value={permission.role}
-                      onChange={(e) => updatePermission(permission.id, e.target.value)}
-                      placeholder="e.g., HIAR, CEO"
+                      onValueChange={(value) => updatePermission(permission.id, value)}
+                      placeholder="Select role..."
+                      className="w-full flex-1"
+                      listItemName="name"
                     />
                     <Button
                       size="icon"
-                      variant="ghost"
+                      variant="outline"
+                      type="button"
                       onClick={() => deletePermission(permission.id)}>
                       <Trash2 className="text-destructive h-4 w-4" />
                     </Button>
@@ -131,47 +189,38 @@ export const TransitionPanel = ({
                 ))}
               </div>
             )}
+            <p className="text-muted-foreground text-xs">
+              Specify which roles can execute this transition
+            </p>
           </div>
 
           {/* Conditions */}
           <div className="space-y-3">
             <Label>Conditions</Label>
             <RuleBuilder
-              conditions={transition.conditions}
+              conditions={localTransition.conditions}
               onAdd={addCondition}
               onUpdate={updateCondition}
               onDelete={deleteCondition}
             />
+            <p className="text-muted-foreground text-xs">
+              Define rules that must be met for this transition to execute
+            </p>
           </div>
 
-          {/* Actions */}
+          {/* Post-Transition Actions */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Post-Transition Actions</Label>
-              <Button size="sm" variant="outline" onClick={addAction}>
-                <Plus className="mr-1 h-3 w-3" />
-                Add Action
-              </Button>
-            </div>
-
-            {transition.actions.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No actions configured</p>
-            ) : (
-              <div className="space-y-2">
-                {transition.actions.map((action) => (
-                  <div
-                    key={action.id}
-                    className="bg-card flex items-center justify-between rounded-md border p-3">
-                    <div>
-                      <Badge variant="secondary">{action.type}</Badge>
-                    </div>
-                    <Button size="icon" variant="ghost" onClick={() => deleteAction(action.id)}>
-                      <Trash2 className="text-destructive h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <Label>Post-Transition Actions</Label>
+            <MultiSelectField
+              options={ACTION_TYPES}
+              value={selectedActionTypes}
+              onValueChange={handleActionsChange}
+              placeholder="Select actions..."
+              label=""
+            />
+            <p className="text-muted-foreground text-xs">
+              Actions that will be executed after this transition completes
+            </p>
           </div>
         </div>
       </SheetContent>

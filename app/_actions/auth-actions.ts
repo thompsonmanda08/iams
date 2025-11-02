@@ -319,7 +319,7 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       mfa_enabled: userData?.mfa_enabled
     };
 
-    await updateAuthSession({ user });
+    // await updateAuthSession({ user });
 
     console.log("🔧 [InitializeSystemSetup] Completed");
     return successResponse(session, response?.data?.message);
