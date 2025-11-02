@@ -4,7 +4,7 @@ import Image from "next/image";
 import { PropsWithChildren } from "react";
 import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { initializeSystemSetupCached } from "@/app/_actions/auth-actions";
+import { initializeSystemSetup, initializeSystemSetupCached } from "@/app/_actions/auth-actions";
 import { User } from "@/lib/types/account";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export default async function AuthLayout({ children }: PropsWithChildren) {
 
     // Fully authenticated (MFA complete or not required)
     // Redirect to appropriate dashboard
-    const systemInit = await initializeSystemSetupCached();
+    const systemInit = await initializeSystemSetup();
     const user = systemInit?.data?.user as User;
 
     if (user?.user_type === "BACKOFFICE_USER") {
