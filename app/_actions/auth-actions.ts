@@ -307,26 +307,26 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
 
     const user = {
       id: userData?.id,
-      username: userData?.username,
+      // username: userData?.username,
       email: userData?.email,
       role: userData?.role?.name,
       first_name: userData?.first_name,
       last_name: userData?.last_name,
       user_type: userData?.user_type,
-      organization_id: userData?.organization_id,
+      // organization_id: userData?.organization_id,
       branch_id: userData?.branch_id,
       department_id: userData?.department_id,
-      role_id: userData?.role_id,
-      is_active: userData?.is_active,
-      is_ldap_user: userData?.is_ldap_user,
-      last_login: userData?.last_login,
-      change_password: userData?.change_password,
-      is_locked: userData?.is_locked,
-      mfa_enabled: userData?.mfa_enabled
+      role_id: userData?.role_id
+      // is_active: userData?.is_active,
+      // is_ldap_user: userData?.is_ldap_user,
+      // last_login: userData?.last_login,
+      // change_password: userData?.change_password,
+      // is_locked: userData?.is_locked,
+      // mfa_enabled: userData?.mfa_enabled
     };
 
     await updateAuthSession({ user });
-    await createUserSession(user as any);
+    // await createUserSession(user as any);
 
     console.log("🔧 [InitializeSystemSetup] Completed");
     return successResponse(session, response?.data?.message);
