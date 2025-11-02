@@ -102,6 +102,8 @@ export interface WorkpaperTemplateDefinition {
   updatedAt?: Date;
 }
 
+type ManagementStandard = "ISO IEC 27001" | "ISO 9001" | "ISO 14001";
+
 // ============================================================================
 // AUDIT PLAN TYPES
 // ============================================================================
@@ -111,26 +113,50 @@ export interface WorkpaperTemplateDefinition {
  */
 export interface AuditPlan {
   id: string;
+  organization_id: string;
+  year: number;
   title: string;
-  standard: string;
-  scope: string[];
-  objectives: string;
-  teamLeader: string;
-  teamMembers: string[];
-  startDate: Date;
-  endDate: Date;
-  status: AuditStatus;
-  progress: number;
-  conformityRate?: number;
-
-  // Template and workpaper relationships
-  templateId?: string;
-  templateName?: string;
-  selectedCategories?: string[];
-  workpaperIds?: string[];
-
-  createdAt: Date;
-  updatedAt: Date;
+  description: string;
+  start_date: string; // ISO 8601 datetime string
+  end_date: string; // ISO 8601 datetime string
+  status: string; // Consider using: 'Draft' | 'Submitted' | 'Approved' | 'Rejected' etc.
+  department_id: string | null;
+  audit_universe_id: string | null;
+  audit_universe_item_id: string | null;
+  working_paper_template_id: string;
+  working_paper_id: string | null;
+  ref_no: string;
+  audit_plan_date: string | null;
+  audit_date: string | null;
+  audit_area: string;
+  audit_scope: string;
+  audit_criteria: string;
+  audit_objective: string;
+  management_standard: ManagementStandard | string; // Consider using: 'ISO IEC 27001' | 'ISO 9001' | etc.
+  audit_team_leader: string; // UUID
+  audit_team_members: string[] | null; // Likely an array of UUIDs
+  client_representative: string;
+  audit_language: string;
+  opening_meeting_datetime: string; // ISO 8601 datetime string
+  closing_meeting_datetime: string; // ISO 8601 datetime string
+  submitted_by: string | null;
+  submitted_at: string | null;
+  hiar_approved_by: string | null;
+  hiar_approved_at: string | null;
+  hiar_comments: string | null;
+  ceo_approved_by: string | null;
+  ceo_approved_at: string | null;
+  ceo_comments: string | null;
+  audit_chair_approved_by: string | null;
+  audit_chair_approved_at: string | null;
+  audit_chair_comments: string | null;
+  rejected_by: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  created_by: string; // UUID
+  updated_by: string; // UUID
+  created_at?: string; // ISO 8601 datetime string
+  updated_at?: string; // ISO 8601 datetime string
 }
 
 /**

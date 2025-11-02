@@ -3,7 +3,8 @@ import UsersDataTable from "./data-table";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { getUsers } from "@/app/_actions/user-actions";
-import CreateUserButton from "@/app/dashboard/system-configs/_components/create-user-button";
+import CreateUserButton from "@/app/dashboard/system-configs/_components/create-user-dialog";
+import PageHeader from "@/components/page-header";
 
 export default async function UsersPage() {
   const response = await getUsers();
@@ -12,13 +13,12 @@ export default async function UsersPage() {
   return (
     <div className="container mx-auto flex flex-col space-y-6 p-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Users Management</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your team members and their account permissions
-          </p>
-        </div>
-        <CreateUserButton />
+        <PageHeader
+          title="Admin User Management"
+          description="Manage your team members and their account roles"
+          icon="ShieldUser"
+        />
+        <CreateUserButton user_type="BACKOFFICE_USER" />
       </div>
 
       <Suspense

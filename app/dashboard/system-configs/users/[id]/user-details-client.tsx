@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { SignUpForm } from "@/components/forms/signup-form";
+import CreateUserForm from "../../_components/create-user-dialog";
 
 interface UserDetailsClientProps {
   user: User;
@@ -615,15 +615,18 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
         </Tabs>
 
         {/* Edit User Modal */}
-        {isEditingUser && (
-          <SignUpForm
-            user={user}
-            onClose={() => {
+        <CreateUserForm
+          showTrigger={false}
+          user_type="ORGANIZATION_USER"
+          isOpenModal={isEditingUser}
+          user={user}
+          setIsOpenModal={(open) => {
+            if (!open) {
               setIsEditingUser(false);
               router.refresh();
-            }}
-          />
-        )}
+            }
+          }}
+        />
       </div>
     </>
   );

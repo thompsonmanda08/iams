@@ -12,17 +12,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AuditStatusBadge } from "../../../../../../components/audit/audit-status-badge";
-import { MoreHorizontal, Eye, Edit, Trash2, Loader2 } from "lucide-react";
+import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { format } from "date-fns";
 import Link from "next/link";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +44,7 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
 
   const handleDeleteClick = (plan: AuditPlan) => {
     // Only allow deletion for Draft plans
-    if (plan.status.toLowerCase() !== "draft") {
+    if (plan.status?.toLowerCase() !== "draft") {
       toast({
         title: "Cannot Delete",
         description: "Only draft audit plans can be deleted.",
@@ -119,6 +112,8 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
     );
   }
 
+  console.log("PLA", plans[0]);
+
   return (
     <div className="bg-card rounded-lg border">
       <Table>
@@ -144,79 +139,77 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                     {plan.title}
                   </Link>
                   <p className="text-muted-foreground line-clamp-1 text-xs">
-                    {plan.scope ? plan.scope.join(", ") : "-"}
+                    {plan.audit_scope || "-"}
                   </p>
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-sm">{plan.standard || " - "}</span>
+                <span className="text-sm">{plan.management_standard || " - "}</span>
               </TableCell>
               <TableCell>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">{plan.teamLeader}</p>
+                  <p className="text-sm font-medium">{plan.audit_team_leader}</p>
                   <p className="text-muted-foreground text-xs">
-                    {plan.teamMembers?.length || 0} member
-                    {plan.teamMembers?.length !== 1 ? "s" : ""}
+                    {plan.audit_team_members?.length || 0} member
+                    {plan.audit_team_members?.length !== 1 ? "s" : ""}
                   </p>
                 </div>
               </TableCell>
               <TableCell>
                 <div className="space-y-1 text-sm">
-                  <p>{format(new Date(plan.startDate), "MMM d, yyyy")}</p>
+                  <p>{plan.start_date ? format(new Date(plan.start_date), "MMM d, yyyy") : "-"}</p>
                   <p className="text-muted-foreground">
-                    {format(new Date(plan.endDate), "MMM d, yyyy")}
+                    {plan.end_date ? format(new Date(plan.end_date), "MMM d, yyyy") : "-"}
                   </p>
                 </div>
               </TableCell>
               <TableCell>
                 <div className="w-32 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{plan.progress}%</span>
-                    {plan.conformityRate && (
-                      <span className="text-green-600">{plan.conformityRate}% conform</span>
+                    <span className="text-muted-foreground">
+                      {(plan as any).progress || 0}%
+                    </span>
+                    {(plan as any).conformityRate && (
+                      <span className="text-green-600">
+                        {(plan as any).conformityRate}% conform
+                      </span>
                     )}
                   </div>
-                  <Progress value={plan.progress} className="h-2" />
+                  <Progress value={(plan as any).progress || 0} className="h-2" />
                 </div>
               </TableCell>
               <TableCell>
                 <AuditStatusBadge status={plan.status} />
               </TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/dashboard/audit/plans/${plan.id}`}
-                        className="flex cursor-pointer items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        View Details
-                      </Link>
-                    </DropdownMenuItem>
-                    {plan.status === "draft" && (
-                      <>
-                        <DropdownMenuItem
-                          className="cursor-pointer gap-2"
-                          onClick={() => router.push(`/dashboard/audit/plans/${plan.id}/edit`)}>
-                          <Edit className="h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive cursor-pointer gap-2"
-                          onClick={() => handleDeleteClick(plan)}>
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" className="h-8 gap-1.5" asChild>
+                    <Link href={`/dashboard/audit/plans/${plan.id}`}>
+                      <Eye className="h-3.5 w-3.5" />
+                      View
+                    </Link>
+                  </Button>
+                  {plan.status?.toLowerCase() === "draft" && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/dashboard/audit/plans/${plan.id}/edit`)}
+                        className="h-8 gap-1.5">
+                        <Edit className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(plan)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    </>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

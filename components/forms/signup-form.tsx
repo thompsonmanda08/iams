@@ -24,33 +24,30 @@ import {
 } from "@/components/ui/select";
 import { signupSchema, updateUserSchema, type SignupFormValues } from "@/app/schemas/auth";
 import { useEffect, useState, useMemo } from "react";
-import { Check, Copy, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Check, Copy, UserCog, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { getBranches, getDepartments, getRoles } from "@/app/_actions/config-actions";
-import { registerUser } from "@/app/_actions/auth-actions";
-import { User } from "@/lib/types/account";
-import { updateUser } from "@/app/_actions/user-actions";
+import { User, UserType } from "@/lib/types/account";
+import { generateRandomString } from "@/lib/utils";
+import { useBranches, useDepartments, useRoles } from "@/hooks/use-query-data";
+import { useCreateUser, useUpdateUser } from "@/hooks/use-users-query-data";
+import { Branch, Department } from "@/lib/types";
 
 type SignUpFormProps = {
   user: User | null;
+  isOpen: boolean;
   onClose: () => void;
-};
-
-type Branch = {
-  id: string;
-  name: string;
-  code: string;
-};
-
-type Department = {
-  id: string;
-  name: string;
-  code: string;
+  userType: UserType;
 };
 
 type Role = {
@@ -60,29 +57,32 @@ type Role = {
   department_id: string;
 };
 
-export function SignUpForm({ user, onClose }: SignUpFormProps) {
+export function SignUpForm({ user, isOpen, onClose, userType: user_type }: SignUpFormProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Dynamic data states
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
 
   const isEditMode = !!user;
 
-  const generatePass = () => {
-    let pass = "";
-    const str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz0123456789@#$";
-    for (let i = 1; i <= 12; i++) {
-      const char = Math.floor(Math.random() * str.length);
-      pass += str.charAt(char);
-    }
-    return pass;
-  };
+  // TanStack Query hooks for data fetching
+  const { data: branchesData, isLoading: branchesLoading } = useBranches({ isActive: true });
+  const { data: departmentsData, isLoading: departmentsLoading } = useDepartments({
+    isActive: true
+  });
+  const { data: rolesData, isLoading: rolesLoading } = useRoles({ isActive: true });
+
+  // TanStack Query mutations
+  const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser();
+
+  // Extract data from query responses
+  const branches: Branch[] = branchesData?.success ? branchesData.data?.data || [] : [];
+  const departments: Department[] = departmentsData?.success
+    ? departmentsData.data?.data || []
+    : [];
+  const roles: Role[] = rolesData?.success ? rolesData.data?.data || [] : [];
+
+  const isLoading = branchesLoading || departmentsLoading || rolesLoading;
+  const isSubmitting = createUserMutation.isPending || updateUserMutation.isPending;
 
   // Use different schema based on edit mode
   const validationSchema = useMemo(
@@ -102,6 +102,7 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
         role_id: user.role_id || "",
         department_id: user.department_id || "",
         is_active: user.is_active ?? true,
+        user_type,
         password: ""
       };
     }
@@ -114,7 +115,8 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
       role_id: "",
       department_id: "",
       is_active: true,
-      password: generatePass()
+      user_type,
+      password: generateRandomString()
     };
   }, [isEditMode, user?.id]);
 
@@ -123,70 +125,62 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
     defaultValues: initialValues
   });
 
-  // Load initial data
-  useEffect(() => {
-    loadData();
-  }, []);
-
   // Filter roles based on selected department
-  useEffect(() => {
-    const department = form.watch("department_id");
-    if (department && roles.length > 0) {
-      const filtered = roles.filter((role) => role.department_id === department);
-      setFilteredRoles(filtered);
+  const selectedDepartmentId = form.watch("department_id");
+  const filteredRoles = useMemo(() => {
+    if (!selectedDepartmentId || roles.length === 0) return [];
+    return roles.filter((role: Role) => role.department_id === selectedDepartmentId);
+  }, [selectedDepartmentId, roles]);
 
-      // Only reset role if current selection is not in filtered roles AND not in edit mode
+  // Reset form when user changes (for edit mode) or when dialog opens/closes
+  useEffect(() => {
+    if (isEditMode && user) {
+      // Pre-fill form with user data in edit mode
+      form.reset({
+        username: user.username || "",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        branch_id: user.branch_id || "",
+        role_id: user.role_id || "",
+        department_id: user.department_id || "",
+        is_active: user.is_active ?? true,
+        user_type,
+        password: ""
+      });
+    } else if (!isEditMode && isOpen) {
+      // Reset to empty form in create mode when dialog opens
+      form.reset({
+        username: "",
+        first_name: "",
+        last_name: "",
+        email: "",
+        branch_id: "",
+        role_id: "",
+        department_id: "",
+        is_active: true,
+        user_type,
+        password: generateRandomString()
+      });
+    }
+  }, [user?.id, isOpen, isEditMode]);
+
+  // Reset role when department changes (only in create mode)
+  useEffect(() => {
+    if (!isEditMode && selectedDepartmentId) {
       const currentRole = form.getValues("role_id");
-      if (currentRole && !filtered.find((r) => r.id === currentRole) && !isEditMode) {
+      if (currentRole && !filteredRoles.find((r: Role) => r.id === currentRole)) {
         form.setValue("role_id", "");
       }
-    } else {
-      setFilteredRoles([]);
     }
-  }, [form.watch("department_id"), roles, isEditMode]);
-
-  // Update filtered roles when data loads
-  useEffect(() => {
-    if (isEditMode && user && roles.length > 0) {
-      console.log("Data loaded for edit mode:", user);
-      // Trigger role filtering for the user's department
-      const filtered = roles.filter((role) => role.department_id === user.department_id);
-      setFilteredRoles(filtered);
-    }
-  }, [isEditMode, user?.id, roles.length]);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [branchesRes, departmentsRes, rolesRes] = await Promise.all([
-        getBranches({ isActive: true }),
-        getDepartments({ isActive: true }),
-        getRoles({ isActive: true })
-      ]);
-
-      if (branchesRes.success && branchesRes.data?.data) {
-        setBranches(branchesRes.data?.data);
-      }
-
-      if (departmentsRes.success && departmentsRes.data?.data) {
-        setDepartments(departmentsRes.data?.data);
-      }
-
-      if (rolesRes.success && rolesRes.data?.data) {
-        setRoles(rolesRes.data?.data);
-      }
-    } catch (error) {
-      toast.error("Failed to load form data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [selectedDepartmentId, filteredRoles, isEditMode]);
 
   const handleCopyPassword = async () => {
     const password = form.getValues("password");
     try {
       await navigator.clipboard.writeText(password);
       setCopied(true);
+      toast.info("Password copied to clipboard. ");
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast.error("Failed to copy password");
@@ -202,7 +196,8 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
       branch_id: "",
       role_id: "",
       department_id: "",
-      password: generatePass()
+      user_type,
+      password: generateRandomString()
     });
     setCopied(false);
   };
@@ -213,14 +208,13 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
   };
 
   const handleGenerateNewPassword = () => {
-    const newPassword = generatePass();
+    const newPassword = generateRandomString();
     form.setValue("password", newPassword);
     setCopied(false);
   };
 
   const processForm = async (values: SignupFormValues) => {
-    const isEdit = !!user; // Recalculate inside the handler
-    setIsSubmitting(true);
+    const isEdit = !!user;
 
     console.log("Processing form:", { isEdit, values, userId: user?.id });
 
@@ -230,26 +224,33 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
         const updateData = {
           username: values.username,
           email: values.email,
+          phone: values.phone,
           first_name: values.first_name,
           last_name: values.last_name,
           branch_id: values.branch_id,
           department_id: values.department_id,
           role_id: values.role_id,
-          is_active: values.is_active ?? true
+          is_active: values.is_active ?? true,
+          user_type
         };
         console.log("Updating user with data:", updateData);
-        response = await updateUser(user.id, updateData);
+        response = await updateUserMutation.mutateAsync({
+          userId: user.id,
+          data: updateData
+        });
         console.log("Update response:", response);
       } else {
-        response = await registerUser({
+        response = await createUserMutation.mutateAsync({
           username: values.username,
           email: values.email,
+          phone: values.phone,
           password: values.password,
           first_name: values.first_name,
           last_name: values.last_name,
           branch_id: values.branch_id,
           department_id: values.department_id,
-          role_id: values.role_id
+          role_id: values.role_id,
+          user_type
         });
       }
 
@@ -264,33 +265,38 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
     } catch (error) {
       console.error("Form submission error:", error);
       toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
+  const onSubmit = form.handleSubmit(
+    async (data) => {
+      console.log("Form validation passed, calling processForm");
+      await processForm(data);
+    },
+    (errors) => {
+      console.error("Form validation failed:", errors);
+      toast.error("Please fix the validation errors before submitting");
+    }
+  );
+
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] w-full min-w-2xl overflow-hidden p-0 [&>button]:hidden">
         <DialogHeader className="border-b px-6 py-4">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-semibold">
-              {isEditMode ? "Edit User" : "Create New User"}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCancel}
-              className="h-8 w-8 rounded-full"
-              disabled={isSubmitting}>
-              <X className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/5 text-primary hover:bg-primary/10 flex h-7 w-7 items-center justify-center rounded-full">
+              <UserCog className="h-4 w-4" />
+            </div>
+            <DialogTitle>{isEditMode ? "Edit User" : "Create New User"}</DialogTitle>
           </div>
+          <DialogDescription className="pt-">
+            {"Create or update users in your organisation"}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="overflow-y-auto px-6 py-6">
           <Form {...form}>
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+            <form onSubmit={onSubmit} className="space-y-6">
               <div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
@@ -448,7 +454,7 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
                               </div>
                             ) : (
                               departments.map((dept) => (
-                                <SelectItem key={dept.id} value={dept.id}>
+                                <SelectItem key={dept.id} value={String(dept.id)}>
                                   {dept.name} ({dept.code})
                                 </SelectItem>
                               ))
@@ -543,37 +549,37 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
                             Password <span className="text-destructive">*</span>
                           </FormLabel>
                           <FormControl>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                {...field}
-                                readOnly
-                                className="cursor-default font-mono text-sm focus-visible:ring-1"
-                                disabled={isSubmitting}
-                              />
+                            <div className="flex w-full flex-col items-center gap-2 sm:flex-row">
+                              <div className="relative flex w-full items-center gap-2">
+                                <Input
+                                  {...field}
+                                  readOnly
+                                  className="cursor-default font-mono text-sm focus-visible:ring-1"
+                                  disabled={isSubmitting}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={handleCopyPassword}
+                                  className="hover:bg-muted/5 absolute right-1 shrink-0"
+                                  disabled={isSubmitting}>
+                                  {copied ? (
+                                    <Check className="h-4 w-4 text-green-600" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
                               <Button
                                 type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={handleCopyPassword}
-                                className="shrink-0"
-                                disabled={isSubmitting}>
-                                {copied ? (
-                                  <Check className="h-4 w-4 text-green-600" />
-                                ) : (
-                                  <Copy className="h-4 w-4" />
-                                )}
+                                // variant="ghost"
+                                onClick={isSubmitting ? undefined : handleGenerateNewPassword}>
+                                Generate new password
                               </Button>
                             </div>
                           </FormControl>
-                          <span
-                            onClick={isSubmitting ? undefined : handleGenerateNewPassword}
-                            className={`text-primary mt-1 block text-center text-xs ${
-                              isSubmitting
-                                ? "cursor-not-allowed opacity-50"
-                                : "cursor-pointer hover:underline"
-                            }`}>
-                            Generate new password
-                          </span>
+
                           <FormMessage />
                         </FormItem>
                       )}
@@ -591,41 +597,7 @@ export function SignUpForm({ user, onClose }: SignUpFormProps) {
                   Cancel
                 </Button>
                 <Button
-                  type="button"
-                  onClick={async (e) => {
-                    console.log("Button clicked", { isEditMode, isSubmitting });
-                    console.log("Form state:", {
-                      values: form.getValues(),
-                      errors: form.formState.errors,
-                      isValid: form.formState.isValid,
-                      isDirty: form.formState.isDirty,
-                      isSubmitting: form.formState.isSubmitting
-                    });
-                    console.log("Current validation schema:", isEditMode ? "updateUserSchema" : "signupSchema");
-
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    // Manually trigger validation first to see what fails
-                    const isValid = await form.trigger();
-                    console.log("Manual validation result:", isValid);
-                    console.log("Errors after trigger:", form.formState.errors);
-
-                    if (!isValid) {
-                      console.error("Validation failed with errors:", form.formState.errors);
-                      return;
-                    }
-
-                    form.handleSubmit(
-                      (data) => {
-                        console.log("Form validation passed, calling processForm");
-                        processForm(data);
-                      },
-                      (errors) => {
-                        console.error("Form validation failed in handleSubmit:", errors);
-                      }
-                    )(e);
-                  }}
+                  type="submit"
                   disabled={isSubmitting}>
                   {isSubmitting
                     ? isEditMode
