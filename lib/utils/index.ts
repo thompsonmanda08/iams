@@ -84,3 +84,34 @@ export const getInitials = (fullName: string) => {
   const lastNameInitial = nameParts[1].charAt(0).toUpperCase();
   return `${firstNameInitial}${lastNameInitial}`;
 };
+
+export function generateRandomString(length = 10) {
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const special = "!@#$%^&*()";
+  const allCharacters = uppercase + lowercase + numbers + special;
+
+  if (length < 4) {
+    throw new Error("Length must be at least 4 to include all required character types");
+  }
+
+  // Ensure at least one of each required type
+  let randomString = "";
+  randomString += uppercase[Math.floor(Math.random() * uppercase.length)];
+  randomString += lowercase[Math.floor(Math.random() * lowercase.length)];
+  randomString += numbers[Math.floor(Math.random() * numbers.length)];
+  randomString += special[Math.floor(Math.random() * special.length)];
+
+  // Fill the rest with random characters
+  for (let i = 4; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * allCharacters.length);
+    randomString += allCharacters[randomIndex];
+  }
+
+  // Shuffle the string to avoid predictable pattern
+  return randomString
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
+}

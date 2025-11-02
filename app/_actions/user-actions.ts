@@ -3,7 +3,54 @@
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
 import authenticatedApiClient, { handleError, successResponse } from "./api-config";
-import { User } from "@/lib/types/account";
+import { User, UserType } from "@/lib/types/account";
+
+export async function createNewUser({
+  username,
+  email,
+  phone = "",
+  password,
+  first_name,
+  last_name,
+  branch_id,
+  department_id,
+  role_id
+}: {
+  username: string;
+  email: string;
+  phone?: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  branch_id: string;
+  department_id: string;
+  role_id: string;
+  user_type?: UserType;
+}): Promise<APIResponse> {
+  const url = `/api/v1/users`;
+
+  try {
+    const response = await authenticatedApiClient({
+      url: url,
+      data: {
+        username,
+        email,
+        password,
+        first_name,
+        last_name,
+        branch_id,
+        department_id,
+        role_id
+      },
+      method: "POST"
+    });
+    revalidatePath("/dashboard/system-configs/users");
+
+    return successResponse(response?.data, "User registered successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "POST", url);
+  }
+}
 
 export async function getUsers(params?: {
   branchId?: string;

@@ -4,7 +4,20 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { Columns3, MoreHorizontal, Filter, X, MoreVertical, SlidersVertical } from "lucide-react";
+import {
+  Columns3,
+  MoreHorizontal,
+  Filter,
+  X,
+  MoreVertical,
+  SlidersVertical,
+  TimerReset,
+  ShieldX,
+  ShieldCheck,
+  Trash2,
+  View,
+  PencilLine
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,6 +54,7 @@ import { SignUpForm } from "@/components/forms/signup-form";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import CreateUserForm from "../_components/create-user-dialog";
 
 type Pagination = {
   total: number;
@@ -161,20 +175,34 @@ const getColumns = (
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onViewProfile(user.id)}>
+                <View className="h-4 w-4" />
                 View Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(user)}>Edit User Details</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(user)}>
+                {" "}
+                <PencilLine className="h-4 w-4" />
+                Edit User Details
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onResetPassword(user.id)}>
+                <TimerReset className="h-4 w-4" />
                 Reset Password
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onToggleStatus(user.id, !user.is_active)}>
+                {" "}
+                {!user.is_active ? (
+                  <ShieldCheck className="h-4 w-4" />
+                ) : (
+                  <ShieldX className="h-4 w-4" />
+                )}
                 {user.is_active ? "Deactivate" : "Activate"} Account
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(user.id)}
-                className="text-red-600 focus:text-red-600">
+                className="text-red-600 hover:bg-red-50 focus:text-red-600">
+                {" "}
+                <Trash2 className="h-4 w-4 text-red-500" />
                 Delete User
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -584,7 +612,17 @@ export default function UsersDataTable({
         onConfirm={handleResetPasswordConfirm}
         type="default"
       />
-      {editingUser && <SignUpForm user={editingUser} onClose={() => setEditingUser(null)} />}
+      <CreateUserForm
+        showTrigger={false}
+        user_type="ORGANIZATION_USER"
+        isOpenModal={!!editingUser}
+        user={editingUser}
+        setIsOpenModal={(open) => {
+          if (!open) {
+            setEditingUser(null);
+          }
+        }}
+      />
     </Card>
   );
 }
