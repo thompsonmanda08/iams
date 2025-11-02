@@ -69,7 +69,7 @@ export const adminNavItems: NavGroup[] = [
     items: [
       {
         title: "Locations",
-        href: "/admin/Configurations",
+        href: "/admin/configurations",
         icon: MapPin
         // items: [
         //   { title: "Countries", href: "/admin/locations/countries" },

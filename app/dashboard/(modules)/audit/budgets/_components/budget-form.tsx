@@ -194,7 +194,7 @@ const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?
   const isEditMode = !!budgetId;
 
   return (
-    <div className="from-background via-background to-muted/30 min-h-screen bg-gradient-to-br">
+    <div className="from-background via-background to-muted/30 min-h-screen bg-linear-to-br">
       <div className="container mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <div className="animate-slide-up mb-8 flex items-center justify-between">
@@ -352,7 +352,7 @@ const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?
                 {formData.budget_lines?.map((line, index) => (
                   <div
                     key={line.id}
-                    className="from-card to-muted/20 animate-slide-in rounded-xl border-2 bg-gradient-to-br p-6 transition-all hover:shadow-lg"
+                    className="from-card to-muted/20 animate-slide-in rounded-xl border-2 bg-linear-to-br p-6 transition-all hover:shadow-lg"
                     style={{ animationDelay: `${index * 50}ms` }}>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">

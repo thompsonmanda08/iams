@@ -32,6 +32,11 @@ import {
   SelectValue
 } from "@/components/ui/select";
 
+// TODO: Remove this mock data when backend is ready
+// Backend endpoints needed:
+// - GET /api/v1/backoffice/organizations (getOrganizations)
+// - POST /api/v1/backoffice/organizations (createOrganization)
+// - PUT /api/v1/backoffice/organizations/:id (updateOrganization)
 const mockCompanies: Company[] = [
   {
     id: "comp-1",

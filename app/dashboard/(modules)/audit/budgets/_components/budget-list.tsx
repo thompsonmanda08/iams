@@ -91,7 +91,7 @@ const BudgetList = () => {
 
       {/* Main Content Card */}
       <Card className="animate-fade-in shadow-xl [animation-delay:300ms]">
-        <div className="from-card to-muted/20 border-b bg-gradient-to-r p-6">
+        <div className="from-card to-muted/20 border-b bg-linear-to-r p-6">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-sm">

@@ -1,11 +1,28 @@
 import PageHeader from "@/components/page-header";
 import AdminDashboardHome from "./home";
 import { Metadata } from "next";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata: Metadata = {
   title: "Admin Home",
   description: "Administrator dashboard"
 };
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8">
+      {/* Stats Grid Skeleton */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-lg" />
+        ))}
+      </div>
+      {/* Quick Actions Skeleton */}
+      <Skeleton className="h-40 rounded-lg" />
+    </div>
+  );
+}
 
 async function AdminDashboardHomePage() {
   return (
@@ -19,21 +36,15 @@ async function AdminDashboardHomePage() {
               description="A summary of key metrics and statistics for your dashboard."
               icon="LayoutDashboard"
             />
-            {/* <div className="flex gap-2">
-              <Link href="/dashboard/audit/budgets/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Budget
-                </Button>
-              </Link>
-            </div> */}
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <AdminDashboardHome />
+        <Suspense fallback={<DashboardSkeleton />}>
+          <AdminDashboardHome />
+        </Suspense>
       </div>
     </div>
   );

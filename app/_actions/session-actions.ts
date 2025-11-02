@@ -1,13 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import {
-  AUTH_SESSION,
-  USER_SESSION,
-  PERMISSIONS_SESSION,
-  deleteSession as clearSessionCookies,
-  verifySessions
-} from "@/lib/session";
+import { deleteSession as clearSessionCookies, verifySessions } from "@/lib/session";
+import { AUTH_SESSION, USER_SESSION, PERMISSIONS_SESSION } from "@/lib/constants";
 
 /**
  * Retrieves and consolidates session data from cookies.

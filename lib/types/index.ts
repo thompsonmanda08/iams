@@ -1,6 +1,6 @@
 import { JWTPayload } from "jose";
 
-import { Role, User } from "./account";
+import { Role, User, UserType } from "./account";
 
 export type PageProps = {
   params?: Promise<{ [key: string]: string }>;
@@ -50,7 +50,10 @@ export type AuthSession = JWTPayload & {
   user?: Partial<User> | null;
   change_password?: boolean;
   mfa_required?: boolean;
+  mfa_verified?: boolean;
   organization_id?: string;
+  user_type?: UserType;
+  user_id?: string;
   expiresAt?: Date;
   [x: string]: any;
 };

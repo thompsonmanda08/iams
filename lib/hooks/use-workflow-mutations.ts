@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import type { Workflow } from "@/lib/types/workflow";
-import { useWorkflowStore } from "@/lib/stores/workflow-store";
+import {
+  createWorkflow as createWorkflowAction,
+  updateWorkflow as updateWorkflowAction,
+  deleteWorkflow as deleteWorkflowAction
+} from "@/app/_actions/workflow-actions";
 
 /**
  * Workflow Mutations Hook
  *
  * This hook provides mutation functions for workflow CRUD operations.
- * Currently uses Zustand store for simulation, but can be easily swapped
- * for real API calls when backend is ready.
+ * Uses real API calls via server actions.
  *
  * Usage:
  * const { saveWorkflow, updateWorkflow, deleteWorkflow, isLoading } = useWorkflowMutations();
@@ -30,42 +34,49 @@ interface SaveWorkflowResult {
 }
 
 export function useWorkflowMutations() {
+  const router = useRouter();
   const [state, setState] = useState<MutationState>({
     isLoading: false,
     error: null
   });
 
-  // Get Zustand store actions (simulation mode)
-  const { addWorkflow, updateWorkflow: updateWorkflowStore, deleteWorkflow: deleteWorkflowStore } =
-    useWorkflowStore();
-
   /**
    * Save a new workflow
-   * Currently: Saves to Zustand store
-   * Future: POST /api/v1/workflows
+   * POST /api/v1/workflows
    */
   const saveWorkflow = async (workflow: Workflow): Promise<SaveWorkflowResult> => {
     setState({ isLoading: true, error: null });
 
     try {
-      // SIMULATION MODE: Save to Zustand store
-      addWorkflow(workflow);
+      console.log("=== CREATE WORKFLOW MUTATION ===");
+      console.log("Workflow entity_type:", workflow.entity_type);
+      console.log("Payload to server:", {
+        name: workflow.name,
+        entity_type: workflow.entity_type,
+        description: `Workflow for ${workflow.entity_type}`
+      });
+      console.log("================================");
 
-      // FUTURE API MODE: Uncomment and replace with real API call
-      // const response = await fetch('/api/v1/workflows', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(workflow)
-      // });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.error);
+      const response = await createWorkflowAction({
+        name: workflow.name,
+        entity_type: workflow.entity_type,
+        description: `Workflow for ${workflow.entity_type}`
+      });
 
+      if (!response.success) {
+        console.log("ERROR: Server returned success:false", response);
+        throw new Error(response.message || "Failed to save workflow");
+      }
+
+      console.log("SUCCESS: Workflow created", response.data);
       setState({ isLoading: false, error: null });
-      toast.success("Workflow saved successfully!");
+
+      // Don't call router.refresh() here - let the query invalidation handle it
+      // router.refresh();
 
       return {
         success: true,
-        data: workflow
+        data: response.data
       };
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to save workflow";
@@ -81,8 +92,7 @@ export function useWorkflowMutations() {
 
   /**
    * Update an existing workflow
-   * Currently: Updates in Zustand store
-   * Future: PUT /api/v1/workflows/:id
+   * PUT /api/v1/workflows/update
    */
   const updateWorkflow = async (
     workflowId: string,
@@ -91,24 +101,36 @@ export function useWorkflowMutations() {
     setState({ isLoading: true, error: null });
 
     try {
-      // SIMULATION MODE: Update in Zustand store
-      updateWorkflowStore(workflowId, workflow);
+      console.log("=== UPDATE WORKFLOW MUTATION ===");
+      console.log("Workflow ID:", workflowId);
+      console.log("Workflow entity_type:", workflow.entity_type);
+      console.log("Payload to server:", {
+        name: workflow.name,
+        description: `Workflow for ${workflow.entity_type}`,
+        is_active: true
+      });
+      console.log("================================");
 
-      // FUTURE API MODE: Uncomment and replace with real API call
-      // const response = await fetch(`/api/v1/workflows/${workflowId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(workflow)
-      // });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.error);
+      const response = await updateWorkflowAction(workflowId, {
+        name: workflow.name,
+        description: `Workflow for ${workflow.entity_type}`,
+        is_active: true
+      });
 
+      if (!response.success) {
+        console.log("ERROR: Server returned success:false", response);
+        throw new Error(response.message || "Failed to update workflow");
+      }
+
+      console.log("SUCCESS: Workflow updated", response.data);
       setState({ isLoading: false, error: null });
-      toast.success("Workflow updated successfully!");
+
+      // Don't call router.refresh() here - let the query invalidation handle it
+      // router.refresh();
 
       return {
         success: true,
-        data: workflow
+        data: response.data
       };
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to update workflow";
@@ -124,25 +146,21 @@ export function useWorkflowMutations() {
 
   /**
    * Delete a workflow
-   * Currently: Removes from Zustand store
-   * Future: DELETE /api/v1/workflows/:id
+   * DELETE /api/v1/workflows/delete
    */
   const deleteWorkflow = async (workflowId: string): Promise<SaveWorkflowResult> => {
     setState({ isLoading: true, error: null });
 
     try {
-      // SIMULATION MODE: Delete from Zustand store
-      deleteWorkflowStore(workflowId);
+      const response = await deleteWorkflowAction(workflowId);
 
-      // FUTURE API MODE: Uncomment and replace with real API call
-      // const response = await fetch(`/api/v1/workflows/${workflowId}`, {
-      //   method: 'DELETE'
-      // });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.error);
+      if (!response.success) {
+        throw new Error(response.message || "Failed to delete workflow");
+      }
 
       setState({ isLoading: false, error: null });
       toast.success("Workflow deleted successfully!");
+      router.refresh();
 
       return {
         success: true
@@ -183,41 +201,3 @@ export function useWorkflowMutations() {
     error: state.error
   };
 }
-
-/**
- * MIGRATION GUIDE: From Zustand to API
- *
- * When backend is ready, update this file:
- *
- * 1. Replace Zustand store calls with fetch/axios calls
- * 2. Add authentication headers
- * 3. Handle API-specific error responses
- * 4. Add revalidation/cache invalidation
- * 5. Optionally add React Query for better caching
- *
- * Example API implementation:
- *
- * const saveWorkflow = async (workflow: Workflow) => {
- *   setState({ isLoading: true, error: null });
- *
- *   try {
- *     const response = await authenticatedApiClient({
- *       method: 'POST',
- *       url: '/api/v1/workflows',
- *       data: workflow
- *     });
- *
- *     setState({ isLoading: false, error: null });
- *     toast.success("Workflow saved successfully!");
- *
- *     return { success: true, data: response.data };
- *   } catch (error: any) {
- *     setState({ isLoading: false, error: error.message });
- *     toast.error(error.message);
- *
- *     return { success: false, error: error.message };
- *   }
- * };
- *
- * No other changes needed in components!
- */

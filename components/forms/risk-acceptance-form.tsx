@@ -348,7 +348,7 @@ export default function RiskAcceptanceForm() {
       <div className="mx-auto max-w-4xl">
         <div className="overflow-hidden rounded-lg bg-white shadow-md">
           {/* Header */}
-          <div className="from-primary/70 to-primary/80 bg-gradient-to-r p-6 text-white">
+          <div className="from-primary/70 to-primary/80 bg-linear-to-r p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-3">

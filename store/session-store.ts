@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { initializeSystemSetup } from "./app/_actions/auth-actions";
+import { initializeSystemSetup } from "../app/_actions/auth-actions";
 
 type SessionState = {
   session: any;

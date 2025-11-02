@@ -27,6 +27,7 @@ export async function loginUser({
     await createAuthSession({
       accessToken: session?.access_token,
       user_type: session?.user_type,
+      user_id: session?.user?.id,
       change_password: session?.change_password,
       mfa_required: session?.mfa_required,
       organization_id: session?.organization_id
@@ -318,7 +319,7 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       mfa_enabled: userData?.mfa_enabled
     };
 
-    await updateAuthSession({ user });
+    // await updateAuthSession({ user });
 
     console.log("🔧 [InitializeSystemSetup] Completed");
     return successResponse(session, response?.data?.message);

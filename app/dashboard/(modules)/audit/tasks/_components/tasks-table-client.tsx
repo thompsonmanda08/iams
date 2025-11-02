@@ -1,10 +1,13 @@
 "use client";
 
-import { useTaskStore } from "@/lib/stores/task-store";
 import { TasksTable } from "./tasks-table";
 
-export function TasksTableClient() {
-  const { tasks } = useTaskStore();
+interface TasksTableClientProps {
+  initialTasks: any[];
+}
+
+export function TasksTableClient({ initialTasks }: TasksTableClientProps) {
+  const tasks = initialTasks || [];
 
   return (
     <>
