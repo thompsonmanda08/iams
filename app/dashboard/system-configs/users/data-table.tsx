@@ -46,11 +46,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
+import { generateAvatarFallback, generateRandomString, getAvatarSrc } from "@/lib/utils";
 import { toast } from "sonner";
 import { User } from "@/lib/types/account";
 import { deleteUser, resetUserPassword, toggleUserStatus } from "@/app/_actions/user-actions";
-import { SignUpForm } from "@/components/forms/signup-form";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -333,8 +332,11 @@ export default function UsersDataTable({
   };
 
   const handleResetPasswordConfirm = async () => {
-    if (!resetPasswordDialog.userId) return;
-    const response = await resetUserPassword(resetPasswordDialog.userId);
+    const password = generateRandomString();
+
+    if (!resetPasswordDialog.userId || !password) return;
+
+    const response = await resetUserPassword(resetPasswordDialog.userId, password);
     if (response.success) {
       toast.success(response.message || "Password reset successfully");
     } else {
