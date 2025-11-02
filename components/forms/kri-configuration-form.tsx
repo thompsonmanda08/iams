@@ -202,7 +202,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
       target_value: "",
       trigger_value: "",
       limit_value: "",
-      monitoring_frequency:"",
+      monitoring_frequency: "",
       owner_id: "",
       commentary: "",
       mitigant_plan: ""
@@ -448,8 +448,6 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Real-time">Real-time</SelectItem>
-                    <SelectItem value="Hourly">Hourly</SelectItem>
                     <SelectItem value="Daily">Daily</SelectItem>
                     <SelectItem value="Weekly">Weekly</SelectItem>
                     <SelectItem value="Monthly">Monthly</SelectItem>

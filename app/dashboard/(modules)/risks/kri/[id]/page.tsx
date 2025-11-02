@@ -38,7 +38,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
   const response = await getKRIs({ kri_register_id: id });
   const kris: KRI[] = response.success && response.data ? response.data : [];
 
-  console.log("KRI:", kris);
+  console.log("KRI:", response.data);
 
   const normalCount = kris.filter((k) => k.status === "normal").length;
   const warningCount = kris.filter((k) => k.status === "warning").length;
@@ -99,12 +99,12 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
 
       {/* KRI Cards */}
       <div className="container mx-auto grid grid-cols-1 gap-6 px-4 py-8 lg:grid-cols-2">
-        {kris.length === 0 ? (
+        {kris?.length === 0 ? (
           <div className="col-span-full py-12 text-center">
             <p className="text-muted-foreground">No KRIs configured yet</p>
           </div>
         ) : (
-          kris.map((kri) => (
+          kris?.map((kri) => (
             <Card key={kri.id} className={cn("border-l-4 p-6", getStatusColor(kri.status))}>
               <div className="space-y-4">
                 {/* Header */}
@@ -178,8 +178,8 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
 
                 {/* Footer */}
                 <div className="text-muted-foreground flex items-center justify-between border-t pt-2 text-xs">
-                  {/* <span>Last updated: {format(kri.lastUpdated, "MMM dd, yyyy HH:mm")}</span> */}
-                  <KRIHistoryButton kriId={kri.id} />
+                  <span>Last updated: {format(kri.lastUpdated, "MMM dd, yyyy")}</span>
+                  <KRIHistoryButton kri={kri} />
                 </div>
               </div>
             </Card>
