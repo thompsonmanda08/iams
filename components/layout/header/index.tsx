@@ -16,7 +16,7 @@ import { useMemo } from "react";
 export function SiteHeader({ user: userData }: { user: User }) {
   const { toggleSidebar } = useSidebar();
 
-  const isLoadingUser = Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
+  const isLoadingUser = !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
 
   const { data: session } = useSystemSetup(isLoadingUser);
 
