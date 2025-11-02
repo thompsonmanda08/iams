@@ -4,7 +4,7 @@ import Image from "next/image";
 import { PropsWithChildren } from "react";
 import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { initializeSystemSetup, initializeSystemSetupCached } from "@/app/_actions/auth-actions";
+import { initializeSystemSetup, initializeSystemSetup } from "@/app/_actions/auth-actions";
 import { User } from "@/lib/types/account";
 
 export const dynamic = "force-dynamic";

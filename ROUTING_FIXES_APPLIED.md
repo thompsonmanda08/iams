@@ -1,4 +1,5 @@
 # Routing Fixes Applied
+
 ## Login Flow Optimization - Implementation Report
 
 **Date**: 2025-11-02
@@ -19,22 +20,26 @@ Successfully implemented 7 critical routing optimizations to eliminate potential
 **File**: `proxy.ts`
 
 **Problem**:
+
 - Used `verifySession()` with JWT decryption on every request
 - Violated Next.js 16 guideline: "Proxy is not intended for slow data fetching"
 - CPU-intensive crypto operations at edge layer
 
 **Solution**:
+
 - Replaced with fast cookie existence check: `request.cookies.has(AUTH_SESSION)`
 - Removed JWT decryption from proxy layer
 - Added `/otp` to protected auth pages
 - Direct redirect to `/dashboard/home` (no "/" intermediate)
 
 **Impact**:
+
 - 10-100x faster edge checks
 - Reduced CPU usage
 - Follows Next.js 16 best practices
 
 **Code Changed**:
+
 ```typescript
 // BEFORE: Slow JWT decryption
 const { session, isAuthenticated } = await verifySession();
@@ -50,23 +55,27 @@ const hasAuthCookie = request.cookies.has(AUTH_SESSION);
 **File**: `lib/session.ts` → `verifySession()`
 
 **Problem**:
+
 - No expiry check on JWT tokens
 - Expired tokens still authenticated users
 - No error handling for decrypt failures
 - Could crash on malformed tokens
 
 **Solution**:
+
 - Added explicit expiry date validation
 - Added error handling with try-catch
 - Check for decryption error objects
 - Auto-delete expired sessions
 
 **Impact**:
+
 - Prevents expired token usage
 - Graceful error handling
 - Automatic cleanup
 
 **Code Changed**:
+
 ```typescript
 // Check token expiration
 if (session?.expiresAt) {
@@ -87,23 +96,27 @@ if (session?.expiresAt) {
 **File**: `app/(auth)/layout.tsx`
 
 **Problem**:
+
 - No authentication check in auth layout
 - Unauthenticated users could access `/otp`
 - Authenticated users saw login page briefly
 - Missing MFA routing logic
 
 **Solution**:
+
 - Added `verifySession()` check to layout
 - Handle MFA-required state (allow OTP page)
 - Redirect fully authenticated users to dashboard
-- Use `initializeSystemSetupCached()` for user routing
+- Use `initializeSystemSetup()` for user routing
 
 **Impact**:
+
 - Proper OTP page protection
 - No flash of login page for authenticated users
 - Centralized MFA handling
 
 **Code Changed**:
+
 ```typescript
 export default async function AuthLayout({ children }) {
   const { isAuthenticated, session } = await verifySession();
@@ -115,7 +128,7 @@ export default async function AuthLayout({ children }) {
     }
 
     // Fully authenticated, redirect to dashboard
-    const systemInit = await initializeSystemSetupCached();
+    const systemInit = await initializeSystemSetup();
     // ... route based on user_type
   }
 
@@ -131,21 +144,25 @@ export default async function AuthLayout({ children }) {
 **File**: `components/forms/login-form.tsx`
 
 **Problem**:
+
 - Race condition: Cookie not visible before redirect
 - Redirected to "/" (then "/" redirects to dashboard)
 - No delay for cookie propagation
 
 **Solution**:
+
 - Added 100ms delay after login for cookie sync
 - Direct redirect to `/dashboard/home` (not "/")
 - Reduced redirect chain from 2 to 1
 
 **Impact**:
+
 - Mitigates race condition
 - Faster navigation (1 redirect instead of 2)
 - Better UX
 
 **Code Changed**:
+
 ```typescript
 if (response.success) {
   // Small delay to ensure cookie propagation
@@ -165,26 +182,31 @@ if (response.success) {
 ### ✅ Fix #5: Added Cache Invalidation
 
 **Files**:
+
 - `app/_actions/auth-actions.ts` → `changePassword()`
 - `app/_actions/auth-actions.ts` → `verifyOTP()`
 
 **Problem**:
+
 - Password change didn't clear cached user data
 - OTP verification didn't refresh cache
 - Stale data shown for up to 1 hour
 - Security-critical changes not reflected
 
 **Solution**:
+
 - Call `clearSystemSetupCache()` after password change
 - Call `clearSystemSetupCache()` after OTP verification
 - Ensures fresh data on next request
 
 **Impact**:
+
 - No stale user data after security changes
 - Immediate reflection of role/permission updates
 - Better security posture
 
 **Code Changed**:
+
 ```typescript
 // In changePassword()
 await updateAuthSession({ change_password: false });
@@ -202,23 +224,27 @@ clearSystemSetupCache(); // ← Added
 **File**: `app/page.tsx`
 
 **Problem**:
+
 - Redundant session verification (proxy already checked)
 - Duplicate MFA checking logic
 - Complex user routing in root page
 - Unnecessary API calls
 
 **Solution**:
+
 - Simplified to single redirect: `redirect("/dashboard/home")`
 - Moved authentication logic to proxy and layouts
 - Added clear documentation comments
 - Proxy ensures only authenticated users reach "/"
 
 **Impact**:
+
 - Cleaner code architecture
 - No duplicate checks
 - Faster page load
 
 **Code Changed**:
+
 ```typescript
 // BEFORE: 30+ lines of verification and routing
 
@@ -235,22 +261,26 @@ export default async function HomePage() {
 **File**: `components/layout/header/user-menu.tsx`
 
 **Problem**:
+
 - Redirected to "/" after logout
 - "/" then redirected to "/login"
 - Two redirects for simple operation
 - Inefficient navigation
 
 **Solution**:
+
 - Direct redirect to `/login`
 - Eliminated intermediate "/" hop
 - Added error logging for failed logout
 
 **Impact**:
+
 - Faster logout navigation
 - Cleaner redirect chain
 - Better error handling
 
 **Code Changed**:
+
 ```typescript
 const response = await logUserOut("User initiated logout");
 if (response.success) {
@@ -284,12 +314,12 @@ Login → /dashboard/home
 
 ## Performance Improvements
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Proxy execution time | ~50-200ms (JWT) | ~1-5ms (cookie check) | **10-100x faster** |
-| Login redirect chain | 2 redirects | 1 redirect | **50% reduction** |
-| Logout redirect chain | 2 redirects | 1 redirect | **50% reduction** |
-| Session verifications per request | 2+ (proxy + pages) | 1 (layouts only) | **50%+ reduction** |
+| Metric                            | Before             | After                 | Improvement        |
+| --------------------------------- | ------------------ | --------------------- | ------------------ |
+| Proxy execution time              | ~50-200ms (JWT)    | ~1-5ms (cookie check) | **10-100x faster** |
+| Login redirect chain              | 2 redirects        | 1 redirect            | **50% reduction**  |
+| Logout redirect chain             | 2 redirects        | 1 redirect            | **50% reduction**  |
+| Session verifications per request | 2+ (proxy + pages) | 1 (layouts only)      | **50%+ reduction** |
 
 ---
 
@@ -335,15 +365,15 @@ Login → /dashboard/home
 
 ## Files Modified
 
-| File | Lines Changed | Impact |
-|------|---------------|--------|
-| `proxy.ts` | 65 | CRITICAL - Performance |
-| `lib/session.ts` | 53 | HIGH - Security |
-| `app/(auth)/layout.tsx` | 77 | MEDIUM - Security |
-| `components/forms/login-form.tsx` | 49 | MEDIUM - UX |
-| `app/_actions/auth-actions.ts` | 85, 172 | MEDIUM - Data freshness |
-| `app/page.tsx` | 18 | LOW - Clean code |
-| `components/layout/header/user-menu.tsx` | 36 | LOW - UX |
+| File                                     | Lines Changed | Impact                  |
+| ---------------------------------------- | ------------- | ----------------------- |
+| `proxy.ts`                               | 65            | CRITICAL - Performance  |
+| `lib/session.ts`                         | 53            | HIGH - Security         |
+| `app/(auth)/layout.tsx`                  | 77            | MEDIUM - Security       |
+| `components/forms/login-form.tsx`        | 49            | MEDIUM - UX             |
+| `app/_actions/auth-actions.ts`           | 85, 172       | MEDIUM - Data freshness |
+| `app/page.tsx`                           | 18            | LOW - Clean code        |
+| `components/layout/header/user-menu.tsx` | 36            | LOW - UX                |
 
 **Total**: 7 files modified
 
@@ -409,6 +439,7 @@ All changes are isolated and can be reverted independently.
 ## Questions & Support
 
 For questions about these changes:
+
 1. Review the audit report for detailed analysis
 2. Check the Next.js 16 proxy documentation
 3. Review inline code comments
