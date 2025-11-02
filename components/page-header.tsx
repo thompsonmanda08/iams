@@ -20,7 +20,8 @@ import {
   ListCheck,
   Wallet,
   Workflow,
-  AlertTriangle
+  AlertTriangle,
+  Map
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
@@ -46,7 +47,8 @@ const iconMap: Record<string, LucideIcon> = {
   ListCheck,
   Wallet,
   Workflow,
-  AlertTriangle
+  AlertTriangle,
+  Map,
 };
 
 function PageHeader({
