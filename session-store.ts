@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getSystemSetup } from "@/app/_actions/session-actions";
+import { initializeSystemSetup } from "./app/_actions/auth-actions";
 
 type SessionState = {
   session: any;
@@ -29,7 +29,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
       set({ isLoading: true });
       try {
-        const systemInit = await getSystemSetup();
+        const systemInit = await initializeSystemSetup();
         if (systemInit.success) {
           set({
             session: systemInit.data,
