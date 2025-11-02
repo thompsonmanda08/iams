@@ -1,5 +1,26 @@
 "use client";
-import { ArrowLeft, UserCog, Users, Settings, Shield, Activity, Puzzle } from "lucide-react";
+import {
+  ArrowLeft,
+  UserCog,
+  Users,
+  Settings,
+  Shield,
+  Activity,
+  Puzzle,
+  ShieldUser,
+  LayoutDashboard,
+  Building2,
+  ShieldAlert,
+  FileCode2,
+  FileText,
+  ClipboardCheck,
+  AlertCircle,
+  MapPin,
+  Briefcase,
+  ListCheck,
+  Wallet,
+  Workflow
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { LucideIcon } from "lucide-react";
@@ -9,7 +30,21 @@ const iconMap: Record<string, LucideIcon> = {
   Users,
   Settings,
   Shield,
-  Activity
+  Activity,
+  Puzzle,
+  ShieldUser,
+  LayoutDashboard,
+  Building2,
+  ShieldAlert,
+  FileCode2,
+  FileText,
+  ClipboardCheck,
+  AlertCircle,
+  MapPin,
+  Briefcase,
+  ListCheck,
+  Wallet,
+  Workflow
 };
 
 function PageHeader({

@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getUsers } from "@/app/_actions/user-actions";
 import CreateUserButton from "@/app/dashboard/system-configs/_components/create-user-dialog";
 import PageHeader from "@/components/page-header";
-import { ShieldUser } from "lucide-react";
 
 export default async function UsersPage() {
   const response = await getUsers();
@@ -17,7 +16,7 @@ export default async function UsersPage() {
         <PageHeader
           title="Admin User Management"
           description="Manage your team members and their account roles"
-          Icon={ShieldUser}
+          icon="ShieldUser"
         />
         <CreateUserButton user_type="BACKOFFICE_USER" />
       </div>

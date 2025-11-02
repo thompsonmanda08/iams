@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Download, Filter, Workflow } from "lucide-react";
+import { Download, Filter } from "lucide-react";
 import { TasksTableClient } from "./_components/tasks-table-client";
 import { TaskStats } from "./_components/task-stats";
 import PageHeader from "@/components/page-header";
@@ -14,7 +14,7 @@ export default function TasksPage() {
             <PageHeader
               title="Workflow Tasks"
               description="  Manage and execute workflow tasks assigned to users (Simulation Mode)"
-              Icon={Workflow}
+              icon="Workflow"
             />
             <div className="flex gap-2">
               <Button variant="outline" className="gap-2">

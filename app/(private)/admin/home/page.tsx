@@ -1,7 +1,6 @@
 import PageHeader from "@/components/page-header";
 import AdminDashboardHome from "./home";
 import { Metadata } from "next";
-import { LayoutDashboard } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Admin Home",
@@ -18,7 +17,7 @@ async function AdminDashboardHomePage() {
             <PageHeader
               title="Dashboard Overview"
               description="A summary of key metrics and statistics for your dashboard."
-              Icon={LayoutDashboard}
+              icon="LayoutDashboard"
             />
             {/* <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, FileCode2 } from "lucide-react";
+import { Plus, Download } from "lucide-react";
 import Link from "next/link";
 import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
@@ -19,7 +19,7 @@ export default async function WorkpaperTemplatesPage() {
             <PageHeader
               title="Working Paper Templates"
               description="Manage working paper templates and their categories"
-              Icon={FileCode2}
+              icon="FileCode2"
             />
 
             <div className="flex gap-2">

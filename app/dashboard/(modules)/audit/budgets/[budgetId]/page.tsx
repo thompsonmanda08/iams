@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, Plus, ListCheck } from "lucide-react";
+import { Wallet, Plus } from "lucide-react";
 import Link from "next/link";
 import PageHeader from "@/components/page-header";
 import BudgetDetails from "../_components/budget-details";
@@ -14,7 +14,7 @@ const BudgetsPage = () => {
             <PageHeader
               title="Budget Details"
               description="Manage budget items and track allocations"
-              Icon={ListCheck}
+              icon="ListCheck"
             />
             {/* <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">

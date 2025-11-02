@@ -1,4 +1,4 @@
-import { Building2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Companies from "./companies";
 import PageHeader from "@/components/page-header";
 import Link from "next/link";
@@ -15,7 +15,7 @@ async function CompaniesPage() {
             <PageHeader
               title="Dashboard Overview"
               description="A summary of key metrics and statistics for your dashboard."
-              Icon={Building2}
+              icon="Building2"
             />
             {/* <div className="flex gap-2">
               <Link href="/admin/companies/new">

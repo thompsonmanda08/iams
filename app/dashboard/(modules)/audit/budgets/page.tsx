@@ -14,7 +14,7 @@ const BudgetsPage = () => {
             <PageHeader
               title="Budget Management"
               description="Track and manage all your organizational budgets"
-              Icon={Wallet}
+              icon="Wallet"
             />
             <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">
