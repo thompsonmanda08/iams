@@ -10,9 +10,22 @@ import UserMenu from "@/components/layout/header/user-menu";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { User } from "@/lib/types/account";
+import { useSystemSetup } from "@/hooks/use-users-query-data";
+import { useMemo } from "react";
 
-export function SiteHeader({ user }: { user: User }) {
+export function SiteHeader({ user: userData }: { user: User }) {
   const { toggleSidebar } = useSidebar();
+
+  const isLoadingUser = Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
+
+  const { data: session } = useSystemSetup(isLoadingUser);
+
+  const user = useMemo(() => {
+    return {
+      ...userData,
+      ...session?.data?.user
+    };
+  }, [session?.data, userData, isLoadingUser]);
 
   return (
     <header className="bg-background/40 sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b backdrop-blur-md transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) md:rounded-tl-xl md:rounded-tr-xl">
