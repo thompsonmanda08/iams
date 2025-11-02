@@ -1,4 +1,4 @@
-import { FileText, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { ISOWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
 import { CustomTemplateBuilder } from "../../../_components/custom-template-builder";
@@ -47,7 +47,7 @@ export default async function UpdateTemplatePage({
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
-            <PageHeader title={title} description={description} Icon={FileText} />
+            <PageHeader title={title} description={description} icon="FileText" />
           </div>
         </div>
       </div>

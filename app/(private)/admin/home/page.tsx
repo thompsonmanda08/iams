@@ -1,7 +1,6 @@
 import PageHeader from "@/components/page-header";
 import AdminDashboardHome from "./home";
 import { Metadata } from "next";
-import { LayoutDashboard } from "lucide-react";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -35,7 +34,7 @@ async function AdminDashboardHomePage() {
             <PageHeader
               title="Dashboard Overview"
               description="A summary of key metrics and statistics for your dashboard."
-              Icon={LayoutDashboard}
+              icon="LayoutDashboard"
             />
           </div>
         </div>

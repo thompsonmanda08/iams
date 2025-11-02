@@ -10,7 +10,6 @@ import { TownsTab } from "../_components/towns-tab";
 import { BranchesTab } from "../_components/branches-tab";
 import { Pagination } from "@/lib/types";
 import { get } from "http";
-import { Building2 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 
 type PageProps = {
@@ -52,7 +51,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
             <PageHeader
               title="Branches Setup"
               description="Manage your branches, across the country"
-              Icon={Building2}
+              icon="Building2"
             />
           </div>
         </div>

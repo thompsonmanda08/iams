@@ -20,7 +20,6 @@ import ProcessActivityTab from "./_components/process-activity-tab";
 import WorkpaperTemplatesTab from "./_components/workpaper-templates-tab";
 import PageHeader from "@/components/page-header";
 import {
-  ClipboardCheck,
   FileText,
   MapPin,
   Target,
@@ -94,7 +93,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
             <PageHeader
               title="Audit Configurations"
               description="Manage your audit templates, pillars, auditable areas, strategies, and workpapers"
-              Icon={ClipboardCheck}
+              icon="ClipboardCheck"
             />
             {/* <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">

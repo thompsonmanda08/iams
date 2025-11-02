@@ -4,7 +4,6 @@ import { Pagination } from "@/lib/types";
 import { ProvincesTab } from "@/app/dashboard/system-configs/_components/provinces-tab";
 import { TownsTab } from "./_components/countries-tab";
 import { BranchesTab } from "./_components/branches-tab";
-import { MapPin } from "lucide-react";
 import PageHeader from "@/components/page-header";
 
 type PageProps = {
@@ -43,7 +42,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
       <PageHeader
         title="Locations Setup"
         description="Manage your branches, provinces, and towns across the country."
-        Icon={MapPin}
+        icon="MapPin"
       />
 
       <div className="">

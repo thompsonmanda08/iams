@@ -1,7 +1,7 @@
 import { UserQueryParams } from "@/lib/types/account";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRefreshToken, initializeSystemSetup } from "@/app/_actions/auth-actions";
-import { getUsers } from "@/app/_actions/user-actions";
+import { getUsers, createNewUser, updateUser } from "@/app/_actions/user-actions";
 
 // Query Keys
 export const USERS_QUERY_KEYS = {
@@ -55,3 +55,34 @@ export const useSystemSetup = (enabled: boolean = false) =>
     staleTime: Infinity, // ✅ Never go stale
     enabled // ✅ Disabled by default
   });
+
+/**
+ * Hook to create a new user
+ */
+export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createNewUser,
+    onSuccess: () => {
+      // Invalidate all user queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEYS.USERS] });
+    }
+  });
+};
+
+/**
+ * Hook to update an existing user
+ */
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, data }: { userId: string; data: any }) =>
+      updateUser(userId, data),
+    onSuccess: () => {
+      // Invalidate all user queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEYS.USERS] });
+    }
+  });
+};

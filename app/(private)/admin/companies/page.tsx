@@ -1,4 +1,4 @@
-import { Building2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Companies from "./companies";
 import PageHeader from "@/components/page-header";
 import Link from "next/link";
@@ -38,9 +38,9 @@ async function CompaniesPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
-              title="Companies Management"
-              description="Manage organizations and their configurations."
-              Icon={Building2}
+              title="Dashboard Overview"
+              description="A summary of key metrics and statistics for your dashboard."
+              icon="Building2"
             />
           </div>
         </div>

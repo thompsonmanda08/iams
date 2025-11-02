@@ -2,7 +2,6 @@ import { getDepartments } from "@/app/_actions/config-actions";
 import DepartmentsConfig from "../_components/departments-config";
 import { Pagination } from "@/lib/types";
 import PageHeader from "@/components/page-header";
-import { Briefcase } from "lucide-react";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;
@@ -36,7 +35,7 @@ export default async function DepartmentsConfigPage({ searchParams }: PageProps)
             <PageHeader
               title="Department Setup"
               description="Manage your departments across the country"
-              Icon={Briefcase}
+              icon="Briefcase"
             />
             {/* <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">

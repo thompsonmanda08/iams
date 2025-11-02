@@ -2,10 +2,9 @@ import { Suspense } from "react";
 import UsersDataTable from "./data-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { getUsers } from "@/app/_actions/user-actions";
-import CreateUserButton from "../_components/create-user-button";
 import { User } from "@/lib/types/account";
 import PageHeader from "@/components/page-header";
-import { UserCog } from "lucide-react";
+import CreateUserForm from "../_components/create-user-dialog";
 
 type PageProps = {
   searchParams: Promise<{
@@ -29,7 +28,9 @@ export default async function UsersPage({ searchParams }: PageProps) {
   const response = await getUsers({
     search: search || undefined,
     isActive: status !== "all" ? status === "active" : undefined,
-    role: role !== "all" ? role : undefined
+    role: role !== "all" ? role : undefined,
+    page: Number(page),
+    page_size: Number(page_size)
   });
 
   const users = (response?.data?.data || []) as User[];
@@ -43,8 +44,6 @@ export default async function UsersPage({ searchParams }: PageProps) {
     has_prev: false
   };
 
-  console.log("USERS", users);
-
   return (
     <div>
       {/* Header */}
@@ -54,9 +53,11 @@ export default async function UsersPage({ searchParams }: PageProps) {
             <PageHeader
               title="Users Management"
               description="Manage your team members and their account roles"
-              Icon={UserCog}
+              icon="UserCog"
             />
-            <CreateUserButton />
+            <div>
+              <CreateUserForm user={null} showTrigger user_type="ORGANIZATION_USER" />
+            </div>
           </div>
         </div>
       </div>

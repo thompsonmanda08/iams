@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Download, Filter, Workflow } from "lucide-react";
+import { Download, Filter } from "lucide-react";
 import { TasksTableClient } from "./_components/tasks-table-client";
 import { TaskStats } from "./_components/task-stats";
 import PageHeader from "@/components/page-header";
@@ -11,12 +11,14 @@ export default async function TasksPage() {
   const statsResponse = await getTaskStats();
 
   const tasks = tasksResponse.success ? tasksResponse.data : [];
-  const stats = statsResponse.success ? statsResponse.data : {
-    pending: 0,
-    in_progress: 0,
-    completed: 0,
-    rejected: 0
-  };
+  const stats = statsResponse.success
+    ? statsResponse.data
+    : {
+        pending: 0,
+        in_progress: 0,
+        completed: 0,
+        rejected: 0
+      };
 
   return (
     <div className="bg-background min-h-screen">
@@ -26,8 +28,8 @@ export default async function TasksPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
               title="Workflow Tasks"
-              description="Manage and execute workflow tasks assigned to users"
-              Icon={Workflow}
+              description="  Manage and execute workflow tasks assigned to users (Simulation Mode)"
+              icon="Workflow"
             />
             <div className="flex gap-2">
               <Button variant="outline" className="gap-2">

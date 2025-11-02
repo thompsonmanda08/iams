@@ -1,7 +1,7 @@
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, AlertCircle, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { TrendingUp, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
 
 export default function AuditDashboard() {
   const auditStats = [
@@ -69,7 +69,7 @@ export default function AuditDashboard() {
             <PageHeader
               title="  Audit Dashboard"
               description="Completion rates and audit analytics"
-              Icon={AlertCircle}
+              icon="AlertCircle"
             />
 
             <div className="flex items-center gap-8">

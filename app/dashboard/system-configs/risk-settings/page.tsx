@@ -3,7 +3,6 @@ import { RiskCategoriesConfig } from "../_components/risk-categories-config";
 import { RiskMatrixConfigList } from "../_components/risk-matrix-config-list";
 import { RiskResponsesList } from "../_components/risk-responses-list";
 import PageHeader from "@/components/page-header";
-import { ShieldAlert } from "lucide-react";
 
 export default async function RiskConfigurationsPage() {
   return (
@@ -16,7 +15,7 @@ export default async function RiskConfigurationsPage() {
               title="Risk Configurations"
               description="
             Manage risk assessment parameters and settings"
-              Icon={ShieldAlert}
+              icon="ShieldAlert"
             />
             {/* <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">

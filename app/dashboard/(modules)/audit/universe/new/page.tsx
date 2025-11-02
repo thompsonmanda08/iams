@@ -1,4 +1,3 @@
-import { FileText } from "lucide-react";
 import AuditUniverseForm from "../_components/audit-universe-form";
 import PageHeader from "@/components/page-header";
 
@@ -12,7 +11,7 @@ const NewAuditUniversePage = () => {
             <PageHeader
               title="New Audit"
               description="ISO 27001 compliance monitoring and audit tracking"
-              Icon={FileText}
+              icon="FileText"
             />
             {/* <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">

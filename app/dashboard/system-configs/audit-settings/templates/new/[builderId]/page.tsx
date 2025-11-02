@@ -1,4 +1,3 @@
-import { FileText } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { ISOWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
 import { GeneralWorkpaperForm } from "../../../_components/general-workpaper-form";
@@ -23,7 +22,7 @@ export default async function CreateNewTemplatePage({
             <PageHeader
               title="Create New Template"
               description="ISO 27001 compliance monitoring and audit tracking"
-              Icon={FileText}
+              icon="FileText"
             />
           </div>
         </div>

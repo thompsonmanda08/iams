@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, FileText } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import AuditUniverseList from "./_components/audit-universe-list";
 import PageHeader from "@/components/page-header";
@@ -14,7 +14,7 @@ const AuditUniversePage = () => {
             <PageHeader
               title="Audit Universe"
               description="Comprehensive Audit Management System"
-              Icon={FileText}
+              icon="FileText"
             />
             <div className="flex gap-2">
               <Link href="/dashboard/audit/universe/new">

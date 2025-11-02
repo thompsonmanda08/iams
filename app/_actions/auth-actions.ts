@@ -12,7 +12,7 @@ import {
 } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
-import { User } from "@/lib/types/account";
+import { User, UserType } from "@/lib/types/account";
 import { cache } from "react";
 import {
   getCachedSystemSetup,
@@ -183,6 +183,7 @@ export async function changePassword({
  * Endpoint: POST /api/v1/auth/register
  * Status: ✅ Documented in API
  */
+// ADMIN ONLY
 export async function registerUser({
   username,
   email,
@@ -191,7 +192,8 @@ export async function registerUser({
   last_name,
   branch_id,
   department_id,
-  role_id
+  role_id,
+  user_type
 }: {
   username: string;
   email: string;
@@ -201,6 +203,7 @@ export async function registerUser({
   branch_id: string;
   department_id: string;
   role_id: string;
+  user_type: UserType;
 }): Promise<APIResponse> {
   const url = `/api/v1/auth/register`;
 
@@ -215,11 +218,12 @@ export async function registerUser({
         last_name: last_name,
         branch_id: branch_id,
         department_id: department_id,
-        role_id: role_id
+        role_id: role_id,
+        user_type
       },
       method: "POST"
     });
-    revalidatePath("/dashboard/system-configs/users");
+    revalidatePath("/admin/users", "page");
 
     return successResponse(response?.data, "User registered successfully");
   } catch (error: Error | any) {
