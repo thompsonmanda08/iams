@@ -7,7 +7,7 @@ import { TransitionPanel } from "./transition-panel";
 import { useWorkflowMutations } from "@/lib/hooks/use-workflow-mutations";
 import { getWorkflowDetails } from "@/app/_actions/workflow-actions";
 import { toast } from "sonner";
-import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -147,7 +147,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         throw new Error(response.message || "Failed to load workflow");
       }
 
-      return transformWorkflowData(response.data);
+      return transformWorkflowData(response.data?.data);
     },
     enabled: !!workflowId, // Only fetch if workflowId exists
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
@@ -272,16 +272,33 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     }
 
     const isExisting = !!workflowId;
+
     const result = await saveOrUpdateWorkflow(workflow, isExisting);
+
+    console.log("=== SAVE RESULT ===");
+    console.log("Success:", result.success);
+    console.log("Result:", result);
+    console.log("===================");
 
     if (result.success) {
       toast.success(isExisting ? "Workflow updated successfully" : "Workflow created successfully");
 
+      console.log("=== INVALIDATING QUERIES ===");
+      console.log("Invalidating query key: ['workflows']");
+
       // Invalidate workflow queries to trigger refetch
-      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+      await queryClient.invalidateQueries({ queryKey: ["workflows"] });
+
+      console.log("Query invalidated, should refetch now");
+      console.log("============================");
 
       // Close the editor
       onBack();
+    } else {
+      console.log("=== SAVE FAILED ===");
+      console.log("Error:", result.error);
+      toast.error(result.error || "Failed to save workflow");
+      console.log("===================");
     }
   };
 
@@ -329,6 +346,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         onSave={handleSave}
         onBack={onBack}
         isLoading={isSaving}
+        onStateAdd={handleStateAdd}
       />
 
       <WorkflowCanvas

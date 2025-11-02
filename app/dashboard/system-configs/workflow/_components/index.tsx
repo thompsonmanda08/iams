@@ -1,6 +1,15 @@
 "use client";
 import { useState } from "react";
-import { Plus, Trash2, Workflow, Edit2, CheckCircle2, Settings, GitBranch } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Workflow,
+  Edit2,
+  CheckCircle2,
+  Settings,
+  GitBranch,
+  MessageCircleQuestionMark
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +28,7 @@ import { useWorkflowMutations } from "@/lib/hooks/use-workflow-mutations";
 import { useQuery } from "@tanstack/react-query";
 import { listWorkflows } from "@/app/_actions/workflow-actions";
 import { WorkflowListItem } from "@/lib/types/workflow";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Link from "next/link";
 
 interface WorkflowClientProps {
@@ -33,17 +43,26 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
 
   // Use TanStack Query to manage workflow list with initial data
-  const { data: workflowsData } = useQuery({
+  const { data: workflowsData, refetch } = useQuery({
     queryKey: ["workflows"],
     queryFn: async () => {
+      console.log("=== FETCHING WORKFLOWS LIST ===");
       const response = await listWorkflows();
-      return response.success ? response.data?.data : [];
+      console.log("List response:", response);
+      console.log("Response data:", response.data);
+      const workflows = response.success ? response.data : [];
+      console.log("Extracted workflows:", workflows);
+      console.log("Workflows count:", workflows?.length);
+      console.log("===============================");
+      return workflows;
     },
     initialData: initialWorkflows,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
   const workflows: WorkflowListItem[] = (workflowsData as WorkflowListItem[]) || [];
+
+  console.log("Current workflows in state:", workflows?.length);
 
   const handleEdit = (workflowId: string) => {
     setEditingWorkflowId(workflowId);
@@ -104,7 +123,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
           </>
         ) : (
           <div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {workflows.map((workflow) => (
                 <WorkflowCard
                   key={workflow.id}
@@ -117,7 +136,18 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
           </div>
         )}
 
-        <QuickStartGuide />
+        {workflows && workflows.length > 4 ? (
+          <Popover>
+            <PopoverTrigger className="bg-primary text-primary-foreground absolute right-8 bottom-8 z-10 grid aspect-square h-16! max-h-none! w-16 place-items-center rounded-full p-0! shadow-xl">
+              <MessageCircleQuestionMark className="h-8 w-8" strokeWidth={1.5} />
+            </PopoverTrigger>
+            <PopoverContent className="w-full max-w-none border-none bg-transparent">
+              <QuickStartGuide />
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <QuickStartGuide />
+        )}
 
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
@@ -215,20 +245,20 @@ function WorkflowCard({
   return (
     <Card
       key={workflow.id}
-      className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-sm transition-all duration-300 hover:shadow-md">
+      className="group border-muted bg-card relative overflow-hidden rounded-xl border p-0 shadow-sm transition-all duration-300 hover:shadow-md">
       {/* Top accent bar */}
-      <div className="from-primary via-primary/80 to-secondary/60 absolute top-0 right-0 left-0 h-1 bg-linear-to-r"></div>
+      <div className="from-primary dark:from-accent/50 dark:to-primary/50 via-primary/80 to-secondary/60 absolute top-0 right-0 left-0 h-1 bg-linear-to-r"></div>
 
       <div className="p-6">
         {/* Header */}
         <div className="mb-5 flex items-start justify-between">
           <div className="flex flex-1 items-start gap-3">
-            <div className="bg-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors">
-              <Workflow className="text-primary-foreground h-6 w-6" />
+            <div className="bg-primary dark:bg-accent flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors">
+              <Workflow className="text-primary-foreground dark:text-foreground/50 h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-lg font-semibold text-slate-900">{workflow.name}</h3>
-              <p className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+              <h3 className="text-foreground truncate text-lg font-semibold">{workflow.name}</h3>
+              <p className="dark:text-foreground/60 text-xs font-medium tracking-wider text-slate-500 uppercase">
                 {workflow.entity_type}
               </p>
             </div>
@@ -244,19 +274,25 @@ function WorkflowCard({
 
         {/* Stats grid */}
         <div className="mb-5 grid grid-cols-3 gap-3">
-          <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50">
-            <p className="mb-1.5 text-xs font-medium text-slate-600">States</p>
-            <p className="text-2xl font-bold text-slate-900">{workflow?.states_count || "N/A"}</p>
+          <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50 dark:bg-blue-50/10">
+            <p className="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">States</p>
+            <p className="dark:text-primary text-2xl font-bold text-slate-900">
+              {workflow?.states_count || "N/A"}
+            </p>
           </div>
-          <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50">
-            <p className="mb-1.5 text-xs font-medium text-slate-600">Transitions</p>
-            <p className="text-2xl font-bold text-slate-900">
+          <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50 dark:bg-blue-50/5">
+            <p className="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+              Transitions
+            </p>
+            <p className="dark:text-primary text-2xl font-bold text-slate-900">
               {workflow?.transitions_count || "N/A"}
             </p>
           </div>
-          <div className="rounded-lg bg-emerald-50 p-3 text-center transition-colors hover:bg-emerald-100">
-            <p className="mb-1.5 text-xs font-medium text-emerald-600">Status</p>
-            <p className="text-sm font-bold text-emerald-700">
+          <div className="rounded-lg bg-emerald-50 p-3 text-center transition-colors hover:bg-emerald-100 dark:bg-green-300/5">
+            <p className="mb-1.5 text-xs font-medium text-emerald-600 dark:text-green-400">
+              Status
+            </p>
+            <p className="text-sm font-bold text-emerald-700 dark:text-green-400">
               {workflow?.is_active ? "Active" : "Inactive"}
             </p>
           </div>

@@ -48,19 +48,31 @@ export function useWorkflowMutations() {
     setState({ isLoading: true, error: null });
 
     try {
+      console.log("=== CREATE WORKFLOW MUTATION ===");
+      console.log("Workflow entity_type:", workflow.entity_type);
+      console.log("Payload to server:", {
+        name: workflow.name,
+        entity_type: workflow.entity_type,
+        description: `Workflow for ${workflow.entity_type}`
+      });
+      console.log("================================");
+
       const response = await createWorkflowAction({
         name: workflow.name,
-        entity_type: workflow.entityType,
-        description: `Workflow for ${workflow.entityType}`
+        entity_type: workflow.entity_type,
+        description: `Workflow for ${workflow.entity_type}`
       });
 
       if (!response.success) {
+        console.log("ERROR: Server returned success:false", response);
         throw new Error(response.message || "Failed to save workflow");
       }
 
+      console.log("SUCCESS: Workflow created", response.data);
       setState({ isLoading: false, error: null });
-      toast.success("Workflow saved successfully!");
-      router.refresh();
+
+      // Don't call router.refresh() here - let the query invalidation handle it
+      // router.refresh();
 
       return {
         success: true,
@@ -89,19 +101,32 @@ export function useWorkflowMutations() {
     setState({ isLoading: true, error: null });
 
     try {
+      console.log("=== UPDATE WORKFLOW MUTATION ===");
+      console.log("Workflow ID:", workflowId);
+      console.log("Workflow entity_type:", workflow.entity_type);
+      console.log("Payload to server:", {
+        name: workflow.name,
+        description: `Workflow for ${workflow.entity_type}`,
+        is_active: true
+      });
+      console.log("================================");
+
       const response = await updateWorkflowAction(workflowId, {
         name: workflow.name,
-        description: `Workflow for ${workflow.entityType}`,
+        description: `Workflow for ${workflow.entity_type}`,
         is_active: true
       });
 
       if (!response.success) {
+        console.log("ERROR: Server returned success:false", response);
         throw new Error(response.message || "Failed to update workflow");
       }
 
+      console.log("SUCCESS: Workflow updated", response.data);
       setState({ isLoading: false, error: null });
-      toast.success("Workflow updated successfully!");
-      router.refresh();
+
+      // Don't call router.refresh() here - let the query invalidation handle it
+      // router.refresh();
 
       return {
         success: true,
