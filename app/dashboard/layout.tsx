@@ -21,12 +21,17 @@ export default async function DashLayout({
     cookieStore.get("sidebar_state")?.value === "true" ||
     cookieStore.get("sidebar_state") === undefined;
 
-  const systemInit = await initializeSystemSetupCached();
-  const user = systemInit?.data?.user as User;
+  // Check session user_type first (fast - from cookie)
+  const { user_type } = await verifySession();
 
-  if (user?.user_type == "BACKOFFICE_USER") {
+  // If admin user, redirect to admin dashboard (prevents redundant API call)
+  if (user_type === "BACKOFFICE_USER") {
     return redirect("/admin/home");
   }
+
+  // Only call initializeSystemSetup for regular users
+  const systemInit = await initializeSystemSetupCached();
+  const user = systemInit?.data?.user as User;
 
   return (
     <SidebarProvider

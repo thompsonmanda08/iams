@@ -1,5 +1,14 @@
 import { Company, CompanyLocation, Country, Province, Town } from "@/lib/types";
 
+// TODO: DELETE THIS ENTIRE FILE when backend endpoints are ready
+// This file contains mock data for company location mapping
+// Replace with real API calls in ../page.tsx using:
+// - getOrganizations() from @/app/_actions/backoffice-actions
+// - getCountries() from @/app/_actions/backoffice-actions
+// - getProvinces() from @/app/_actions/config-actions
+// - getTowns() from @/app/_actions/config-actions
+// - getCompanyLocations() from @/app/_actions/backoffice-actions
+
 export interface LocationWithDetails extends CompanyLocation {
   country_name?: string;
   province_name?: string;

@@ -1,7 +1,15 @@
 import PageHeader from "@/components/page-header";
 import { Building2, Users, MapPin, Globe, LayoutDashboard } from "lucide-react";
+// import { getBackofficeStats } from "@/app/_actions/backoffice-actions";
 
 export default async function AdminDashboardHome() {
+  // TODO: Replace with real API call when backend endpoint is ready
+  // Endpoint: GET /api/v1/backoffice/organizations/stats
+  // Uncomment below when backend is ready:
+  // const statsResponse = await getBackofficeStats();
+  // const stats = statsResponse.success ? statsResponse.data : { companies: 0, users: 0, countries: 0, locations: 0 };
+
+  // MOCK DATA - Remove when backend ready
   const stats = {
     companies: 12,
     users: 45,
