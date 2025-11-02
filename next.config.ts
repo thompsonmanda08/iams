@@ -21,6 +21,20 @@ const nextConfig: NextConfig = {
         hostname: "bundui-images.netlify.app"
       }
     ]
+  },
+
+  experimental: {
+    optimizePackageImports: ["lucide-react"], // Optimize chunk splitting
+    serverActions: {
+      bodySizeLimit: (process.env.MAX_FILE_SIZE_LIMIT as any) || "60mb",
+      // allowedForwardedHosts: ["localhost:3001", "iams-dev.infratel.co.zm"] ,
+      allowedOrigins: [
+        "iams-dev.infratel.co.zm",
+        "https://iams-dev.infratel.co.zm",
+        "infratel.co.zm",
+        "*.infratel.co.zm"
+      ]
+    }
   }
 };
 

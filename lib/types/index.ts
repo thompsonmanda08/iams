@@ -48,7 +48,6 @@ export type AuthSession = JWTPayload & {
   refreshToken?: string;
   screen_locked?: boolean;
   user?: Partial<User> | null;
-  permissions?: Permission[] | null;
   change_password?: boolean;
   mfa_required?: boolean;
   organization_id?: string;

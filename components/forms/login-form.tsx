@@ -29,6 +29,9 @@ export default function LoginForm() {
     });
 
     if (response.success) {
+      // Small delay to ensure cookie propagation (mitigates race condition)
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Check if MFA is required
       if (response.data?.mfa_required) {
         toast.info("Please enter the OTP sent to your email");
@@ -36,8 +39,10 @@ export default function LoginForm() {
         router.push(`/otp?username=${encodeURIComponent(email)}`);
       } else {
         toast.success(response.message || "Login successful");
-        // Redirect to appropriate dashboard based on user_type
-        router.push("/");
+        // Direct redirect to dashboard (proxy and layout will handle routing)
+        router.push(
+          response?.data?.user_type === "BACKOFFICE_USER" ? "/admin/home" : "/dashboard/home"
+        );
       }
     } else {
       toast.error(response.message || "Invalid credentials");

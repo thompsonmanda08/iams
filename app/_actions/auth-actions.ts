@@ -1,24 +1,25 @@
 "use server";
 
 import { APIResponse } from "@/lib/types";
-import authenticatedApiClient, {
-  axios,
-  handleBadRequest,
-  handleError,
-  successResponse,
-  unauthorizedResponse
-} from "./api-config";
+import authenticatedApiClient, { axios, handleError, successResponse } from "./api-config";
 import {
   createAuthSession,
   deleteSession,
   updateAuthSession,
   verifySession,
   createUserSession,
-  getUserSession
+  createPermissionsSession
 } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
-import { se } from "date-fns/locale";
+import { User } from "@/lib/types/account";
+import { cache } from "react";
+import {
+  getCachedSystemSetup,
+  setCachedSystemSetup,
+  clearSystemSetupCache,
+  isSystemSetupCacheFresh
+} from "@/lib/cache-store";
 
 export async function loginUser({
   username,
@@ -32,8 +33,8 @@ export async function loginUser({
   try {
     const response = await axios.post(url, { username, password });
 
-    console.log("[ LOGIN ]: ", response.data);
     const session = response?.data;
+    console.log("[ LOGIN ]: ", session);
 
     // Set authentication cookie (will include mfa_required flag)
     await createAuthSession({
@@ -44,31 +45,6 @@ export async function loginUser({
       organization_id: session?.organization_id
     });
 
-    // TEMPORARILY DISABLED: Fetch user data on dashboard load instead
-    // This was causing login to hang - will be re-enabled after debugging
-    // if (!session?.mfa_required) {
-    //   console.log("✅ No MFA required, fetching user data immediately...");
-    //   try {
-    //     const setupPromise = initializeSystemSetup({ access_token: session?.access_token });
-    //     const timeoutPromise = new Promise<APIResponse>((_, reject) =>
-    //       setTimeout(() => reject(new Error("Setup timeout after 10 seconds")), 10000)
-    //     );
-    //     const setupResult = await Promise.race([setupPromise, timeoutPromise]);
-    //     if (!setupResult.success) {
-    //       console.error("❌ [Login] Failed to fetch user data:", setupResult.message);
-    //     } else {
-    //       console.log("✅ [Login] User data fetched successfully");
-    //     }
-    //   } catch (error: any) {
-    //     console.error("❌ [Login] Setup failed with error:", error?.message);
-    //   }
-    // } else {
-    //   console.log("🔐 MFA required, user data will be fetched after OTP verification");
-    // }
-
-    console.log("✅ [Login] Session created, user data will be fetched on dashboard load");
-
-    // Return response with mfa_required flag for routing logic
     return successResponse(session, session?.message);
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
@@ -91,23 +67,18 @@ export async function verifyOTP({
   const url = `/api/v1/auth/verify-otp`;
 
   try {
-    const response = await axios.post(url, { username, otp });
-
-    console.log("[ VERIFY OTP ]: ", response.data);
-    const session = response?.data;
+    const response = await authenticatedApiClient({ url, method: "POST", data: { username, otp } });
 
     // Update authentication session with new access token and mark MFA as complete
     await updateAuthSession({
-      accessToken: session?.access_token, // Update with new token from OTP verification
       mfa_required: false, // MFA is now complete
       mfa_verified: true
     });
 
-    // Initialize system setup to fetch user data and permissions
-    // This will populate the session with user information
-    await initializeSystemSetup({ access_token: session?.access_token });
+    // Clear cache to ensure fresh user data after MFA verification
+    clearSystemSetupCache();
 
-    return successResponse(session, "OTP verified successfully");
+    return successResponse(response?.data, "OTP verified successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }
@@ -127,16 +98,16 @@ export async function resendOTP({ username }: { username: string }): Promise<API
 
   try {
     // ATTEMPT REAL API CALL FIRST
-    const response = await axios.post(url, { username });
+    const response = await authenticatedApiClient({ url, method: "POST", data: { username } });
     return successResponse(response?.data, "OTP resent successfully");
   } catch (error: Error | any) {
     // IF ENDPOINT DOESN'T EXIST, SIMULATE SUCCESS
     // This allows the UI to work while backend implements the endpoint
-    if (error?.response?.status === 404 || error?.code === 'ECONNREFUSED') {
+    if (error?.response?.status === 404 || error?.code === "ECONNREFUSED") {
       console.warn("[ RESEND OTP ]: Endpoint not found, using simulated response");
 
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       return successResponse(
         { message: "OTP resent successfully (simulated)" },
@@ -196,6 +167,9 @@ export async function changePassword({
     });
 
     await updateAuthSession({ change_password: false });
+
+    // Clear cached system setup after password change (security-critical)
+    clearSystemSetupCache();
 
     return successResponse(response?.data, "Password changed successfully");
   } catch (error: Error | any) {
@@ -321,114 +295,145 @@ export async function logUserOut(reason: string): Promise<APIResponse> {
 
 /**
  * Create initial system setup
+ *
+ * Note: This function uses React's cache() for request-level memoization.
+ * The same result will be returned for all calls within a single request.
+ * Cache is automatically cleared between requests.
+ *
+ * For persistent caching across requests with manual revalidation,
+ * you would need to implement a custom caching solution (e.g., Redis, in-memory cache)
+ * as Next.js unstable_cache() doesn't support dynamic data sources like cookies.
  */
-export async function initializeSystemSetup(
-  key:
-    | {
-        access_token?: string;
-      }
-    | undefined
-): Promise<APIResponse> {
+async function _initializeSystemSetup(): Promise<APIResponse> {
   const url = `/api/v1/auth/setup`;
 
   try {
     console.log("🔧 [InitializeSystemSetup] Starting...");
     const response = await authenticatedApiClient({ url });
     const session = response?.data;
-    const user = session?.user;
+    const userData = session?.user;
 
-    // console.log("🔧 [InitializeSystemSetup] API Response:", {
-    //   hasData: !!response?.data,
-    //   hasUser: !!user,
-    //   userKeys: user ? Object.keys(user) : [],
-    //   userName: user?.first_name,
-    //   hasPermissions: !!session?.permissions
-    // });
+    const user = {
+      id: userData?.id,
+      username: userData?.username,
+      email: userData?.email,
+      role: userData?.role?.name,
+      first_name: userData?.first_name,
+      last_name: userData?.last_name,
+      user_type: userData?.user_type,
+      organization_id: userData?.organization_id,
+      branch_id: userData?.branch_id,
+      department_id: userData?.department_id,
+      role_id: userData?.role_id,
+      is_active: userData?.is_active,
+      is_ldap_user: userData?.is_ldap_user,
+      last_login: userData?.last_login,
+      change_password: userData?.change_password,
+      is_locked: userData?.is_locked,
+      mfa_enabled: userData?.mfa_enabled
+    };
 
-    // Only update session with fields that have actual values
-    const updateFields: any = {};
-    if (user && Object.keys(user).length > 0) {
-      updateFields.user = user;
-      console.log("✅ [InitializeSystemSetup] User data will be saved to session");
-    } else {
-      console.error("❌ [InitializeSystemSetup] No user data received from API!");
-    }
+    // await updateAuthSession({ user });
 
-    if (key?.access_token) {
-      updateFields.accessToken = key?.access_token; // Use accessToken not access_token
-      console.log("🔑 [InitializeSystemSetup] Access token will be updated");
-    }
-
-    if (session?.permissions) {
-      updateFields.permissions = session.permissions;
-      console.log("🔐 [InitializeSystemSetup] Permissions will be saved");
-    }
-
-    console.log("📝 [InitializeSystemSetup] Update fields:", Object.keys(updateFields));
-
-    // Only call updateAuthSession if there's something to update
-    if (Object.keys(updateFields).length > 0) {
-      console.log("💾 [InitializeSystemSetup] Calling updateAuthSession...");
-      await updateAuthSession(updateFields);
-      console.log("✅ [InitializeSystemSetup] Session updated successfully");
-
-      // Save user backup to separate cookie for recovery
-      if (user && Object.keys(user).length > 0) {
-        console.log("💾 [InitializeSystemSetup] Saving user backup...");
-        await createUserSession(user, session?.permissions);
-        console.log("✅ [InitializeSystemSetup] User backup saved");
-      }
-    } else {
-      console.warn("⚠️ [InitializeSystemSetup] No fields to update!");
-    }
-
+    console.log("🔧 [InitializeSystemSetup] Completed");
     return successResponse(session, response?.data?.message);
   } catch (error: Error | any) {
     console.error("❌ [InitializeSystemSetup] Error:", error?.message);
     return handleError(error, "GET | SYSTEM SETUP", url);
   }
 }
+
+export const initializeSystemSetup = cache(_initializeSystemSetup);
+
+/**
+ * Initialize system setup with persistent in-memory cache
+ *
+ * This version caches data across requests and only refetches when:
+ * 1. Cache doesn't exist
+ * 2. Cache is stale (older than TTL)
+ * 3. Cache is manually cleared via clearSystemSetupCache()
+ *
+ * @param options.ttl - Time to live in milliseconds (default: 1 hour)
+ * @param options.forceRefresh - Force refresh even if cache is fresh
+ */
+export async function initializeSystemSetupCached(options?: {
+  ttl?: number;
+  forceRefresh?: boolean;
+}): Promise<APIResponse> {
+  const { ttl = 60 * 60 * 1000, forceRefresh = false } = options || {};
+
+  // Check if we have fresh cached data
+  if (!forceRefresh && isSystemSetupCacheFresh(ttl)) {
+    const cached = getCachedSystemSetup();
+    if (cached) {
+      console.log("🔧 [InitializeSystemSetup] Returning cached data");
+      return cached;
+    }
+  }
+
+  // Fetch fresh data
+  const url = `/api/v1/auth/setup`;
+
+  try {
+    console.log("🔧 [InitializeSystemSetup] Fetching fresh data...");
+    const response = await authenticatedApiClient({ url });
+    const session = response?.data;
+    const userData = session?.user;
+
+    const user = {
+      id: userData?.id,
+      username: userData?.username,
+      email: userData?.email,
+      role: userData?.role?.name,
+      first_name: userData?.first_name,
+      last_name: userData?.last_name,
+      user_type: userData?.user_type,
+      organization_id: userData?.organization_id,
+      branch_id: userData?.branch_id,
+      department_id: userData?.department_id,
+      role_id: userData?.role_id,
+      is_active: userData?.is_active,
+      is_ldap_user: userData?.is_ldap_user,
+      last_login: userData?.last_login,
+      change_password: userData?.change_password,
+      is_locked: userData?.is_locked,
+      mfa_enabled: userData?.mfa_enabled
+    };
+
+    const result = successResponse(session, response?.data?.message);
+
+    // Cache the result
+    setCachedSystemSetup(result);
+
+    console.log("🔧 [InitializeSystemSetup] Completed and cached");
+    return result;
+  } catch (error: Error | any) {
+    console.error("❌ [InitializeSystemSetup] Error:", error?.message);
+    return handleError(error, "GET | SYSTEM SETUP", url);
+  }
+}
+
+/**
+ * Manually clear the system setup cache
+ * Call this when system configuration changes and you need fresh data
+ */
+export async function revalidateSystemSetup(): Promise<void> {
+  clearSystemSetupCache();
+  console.log("🔧 [SystemSetup] Cache cleared");
+}
+
 /**
  * Refresh user Token
  */
 export async function getRefreshToken(): Promise<APIResponse> {
   const url = `api/v1/auth/refresh-token`;
 
-  const { session, isAuthenticated } = await verifySession();
-
-  if (!session || !isAuthenticated) {
-    return unauthorizedResponse("UNAUTHENTICATED");
-  }
-
   try {
     const response = await authenticatedApiClient({ url });
 
     const access_token = response.data?.data?.access_token;
 
-    // Check if user is missing from session and restore from backup if available
-    // const updateFields: any = { accessToken: tokenData?.access_token };
-
-    // if (!session.user || !session.permissions) {
-    //   console.log(
-    //     "⚠️ [getRefreshToken] User/permissions missing, attempting to restore from backup..."
-    //   );
-    //   const backup = await getUserSession();
-
-    //   if (backup) {
-    //     if (!session.user && backup.user) {
-    //       updateFields.user = backup.user;
-          console.log("✅ [getRefreshToken] User restored from backup");
-    //     }
-    //     if (!session.permissions && backup.permissions) {
-    //       updateFields.permissions = backup.permissions;
-          console.log("✅ [getRefreshToken] Permissions restored from backup");
-    //     }
-    //   } else {
-    //     console.log("❌ [getRefreshToken] No backup found, user data may be lost");
-    //   }
-    // }
-
-    await initializeSystemSetup({ access_token });
+    await updateAuthSession({ access_token });
 
     return successResponse({ access_token }, response.data?.message);
   } catch (error: Error | any) {

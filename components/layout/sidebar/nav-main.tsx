@@ -5,7 +5,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -14,7 +13,6 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import {
-  Book,
   BookOpenCheckIcon,
   Building,
   Calendar,
@@ -43,12 +41,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { adminNavItems, navItems } from "@/lib/routes-config";
-import { useQuery } from "@tanstack/react-query";
-import { getModules } from "@/app/_actions/config-actions";
 import { useMemo } from "react";
-import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Icon mapping based on the icon strings from API
@@ -195,20 +189,19 @@ export function transformModulesToNavCustom(
   return transformModulesToNav(apiModules);
 }
 
-export function NavMain({ session, isAuthenticated }: { session: any; isAuthenticated: boolean }) {
+export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  const { data: setup, isLoading } = useSystemSetup();
   // const routes = setup?.data?.navigation || [];
   // console.log("NAV", setup);
 
   const routes = useMemo(() => {
-    return session?.user?.user_type === "BACKOFFICE_USER" && pathname.startsWith("/admin/")
+    return user?.user_type === "BACKOFFICE_USER" && pathname.startsWith("/admin/")
       ? adminNavItems // ADMIN ROUTES
       : navItems; // DEFAULT ROUTES
-  }, [navItems, session?.user?.user_type]);
+  }, [navItems, user?.user_type]);
 
-  return isLoading ? (
+  return !user ? (
     <div className="space-y-2 px-1 pt-2 pb-4">
       {Array.from({ length: 10 }).map((_, i) => (
         <Skeleton key={i} className="h-9 w-full" />

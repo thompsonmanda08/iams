@@ -4,13 +4,13 @@ import { cookies } from "next/headers";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
-import { verifySession } from "@/lib/session";
-import { redirect } from "next/navigation";
 import { User } from "@/lib/types/account";
+import { initializeSystemSetup } from "../_actions/auth-actions";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function AuthLayout({
+export default async function DashLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
@@ -20,12 +20,12 @@ export default async function AuthLayout({
     cookieStore.get("sidebar_state")?.value === "true" ||
     cookieStore.get("sidebar_state") === undefined;
 
-  const { session, isAuthenticated } = await verifySession();
+  const systemInit = await initializeSystemSetup();
+  const user = systemInit?.data?.user as User;
 
-  if (session?.isAuthenticated && session?.user?.user_type != "BACKOFFICE_USER") {
-    // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
-    redirect("/");
-  }
+  if (user == null) return redirect("/login");
+
+  if (user?.user_type !== "BACKOFFICE_USER") return redirect("/dashboard/home");
 
   return (
     <SidebarProvider
@@ -36,9 +36,9 @@ export default async function AuthLayout({
           "--header-height": "calc(var(--spacing) * 14)"
         } as React.CSSProperties
       }>
-      <AppSidebar variant="inset" session={session} isAuthenticated={isAuthenticated} />
+      <AppSidebar variant="inset" user={user} isAuthenticated={!!user} />
       <SidebarInset>
-        <SiteHeader user={session?.user as User} />
+        <SiteHeader user={user as User} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
             {children}
