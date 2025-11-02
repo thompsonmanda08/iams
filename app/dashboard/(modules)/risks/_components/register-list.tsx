@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import PageHeader from "@/components/page-header";
 
 type KRIRegister = {
   id: string;
@@ -252,12 +253,11 @@ export default function KRIRegistersClient({
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">KRI Registers</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Manage your Key Risk Indicator registers and reports
-              </p>
-            </div>
+            <PageHeader
+              title="KRI Registers"
+              description="Manage your Key Risk Indicator registers and reports"
+              Icon={FileText}
+            />
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               New Register

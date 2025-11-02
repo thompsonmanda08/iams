@@ -4,6 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import CreateRiskRegisterDialog from "@/components/forms/create-risk-register-dialog";
 import { getRiskRegisters } from "@/app/_actions/risk-module-actions";
 import RiskRegistersTable from "../_components/risk-registers-table";
+import PageHeader from "@/components/page-header";
 
 type PageProps = {
   searchParams: {
@@ -48,12 +49,12 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
       {/* Header */}
       <div className="bg-card border-b">
         <div className="container mx-auto flex items-center justify-between py-6">
-          <div>
-            <h1 className="text-foreground text-3xl font-bold">Risk Registers</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage and organize your risk assessment registers
-            </p>
-          </div>
+          <PageHeader
+            title="Risk Registers"
+            description="Manage and organize your risk assessment registers"
+            icon="FileText"
+          />
+
           <CreateRiskRegisterDialog />
         </div>
       </div>
