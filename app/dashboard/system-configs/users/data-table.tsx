@@ -407,15 +407,15 @@ export default function UsersDataTable({
   };
 
   // Pagination handler
-  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
+  const updatePagination = ({ page, page_size }: { page: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (page !== undefined) {
-      params.set("page", String(page));
-    }
+    // Always set the page
+    params.set("page", String(page));
 
     if (page_size !== undefined) {
       params.set("page_size", String(page_size));
+      // Reset to page 1 when page size changes
       params.set("page", "1");
     }
 

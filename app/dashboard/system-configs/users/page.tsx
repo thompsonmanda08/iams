@@ -28,7 +28,9 @@ export default async function UsersPage({ searchParams }: PageProps) {
   const response = await getUsers({
     search: search || undefined,
     isActive: status !== "all" ? status === "active" : undefined,
-    role: role !== "all" ? role : undefined
+    role: role !== "all" ? role : undefined,
+    page: Number(page),
+    page_size: Number(page_size)
   });
 
   const users = (response?.data?.data || []) as User[];
