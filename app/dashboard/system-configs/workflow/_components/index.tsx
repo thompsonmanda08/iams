@@ -293,7 +293,7 @@ function WorkflowCard({
               Status
             </p>
             <p className="text-sm font-bold text-emerald-700 dark:text-green-400">
-              {workflow?.is_active ? "Active" : "Inactive"}
+              {workflow?.is_active || true ? "Active" : "Inactive"}
             </p>
           </div>
         </div>

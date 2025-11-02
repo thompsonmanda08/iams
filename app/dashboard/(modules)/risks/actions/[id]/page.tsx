@@ -1,11 +1,11 @@
-import { initializeSystemSetupCached } from "@/app/_actions/auth-actions";
+import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 import { ActionDetails } from "../action-details";
 import { getRisk, getRisks } from "@/app/_actions/risk-module-actions";
 import { User } from "@/lib/types/account";
 
 export default async function ActionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const systemInit = await initializeSystemSetupCached();
+  const systemInit = await initializeSystemSetup();
   const user = systemInit?.data?.user as User;
 
   const response = await getRisks({
@@ -22,8 +22,6 @@ export default async function ActionDetailPage({ params }: { params: Promise<{ i
     has_next: false,
     has_prev: false
   };
-
-  console.log("RES ACTION:", actions);
 
   return (
     <main className="bg-background min-h-screen">
