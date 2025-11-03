@@ -77,7 +77,7 @@ export default async function WorkflowAdminPage({ searchParams }: PageProps) {
       : [];
 
   // console.log("ROLES:", rolesResponse?.data?.data);
-  console.log("WF:", workflow);
+  // console.log("WF:", workflow);
 
   return (
     <div className="container mx-auto space-y-6 p-6">

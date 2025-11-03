@@ -37,11 +37,11 @@ export default function LoginForm() {
 
     if (response.success) {
       // Small delay to ensure cookie propagation (mitigates race condition)
-      await new Promise((resolve) =>
-        setTimeout(async () => {
-          await initializeSystemSetup();
-        }, 300)
-      );
+      // await new Promise((resolve) =>
+      //   setTimeout(async () => {
+      //     await initializeSystemSetup();
+      //   }, 300)
+      // );
 
       // Check if MFA is required
       if (response.data?.mfa_required) {

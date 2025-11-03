@@ -29,7 +29,7 @@ export function NavUser({ user: userData }: { user: User }) {
   const { isMobile } = useSidebar();
   const isLoadingUser = !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
 
-  const { data: session } = useSystemSetup(isLoadingUser);
+  const { data: session } = useSystemSetup(true);
 
   const user = useMemo(() => {
     return {

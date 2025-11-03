@@ -1,16 +1,15 @@
 import PoweredBy from "@/components/powered-by";
-import { Power } from "lucide-react";
 import Image from "next/image";
 import { PropsWithChildren } from "react";
 import { getUserSession, verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { initializeSystemSetup } from "@/app/_actions/auth-actions";
-import { User } from "@/lib/types/account";
 
 export const dynamic = "force-dynamic";
 
 export default async function AuthLayout({ children }: PropsWithChildren) {
   const { isAuthenticated, session } = await verifySession();
+
+  console.log("[ session ]:", session);
 
   // If authenticated, handle routing based on MFA status
   if (isAuthenticated) {
