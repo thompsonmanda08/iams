@@ -144,8 +144,6 @@ export function ISOWorkpaperTemplateForm({
               />
             </div>
 
-            <div className="space-y-2"></div>
-
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <Label htmlFor="is_active">Active Template</Label>
@@ -165,7 +163,8 @@ export function ISOWorkpaperTemplateForm({
                 type="button"
                 variant="destructive"
                 onClick={() => router.back()}
-                disabled={isSubmitting}>
+                disabled={isSubmitting}
+                >
                 Cancel
               </Button>
               <Button
