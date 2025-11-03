@@ -21,7 +21,9 @@ import {
   ArrowRight,
   Pencil,
   View,
-  Trash
+  Trash,
+  ClipboardCheck,
+  Plus
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -48,6 +50,7 @@ import { StatusBadge } from "@/components/status-badge";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Spinner } from "../../../../../components/ui/spinner";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -63,9 +66,14 @@ interface WorkingPaperTemplate {
 interface WorkpaperTemplatesTableProps {
   templates: WorkingPaperTemplate[];
   isLoading?: boolean;
+  onCreateClick?: () => void;
 }
 
-export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTemplatesTableProps) {
+export function WorkpaperTemplatesTable({
+  templates,
+  isLoading,
+  onCreateClick
+}: WorkpaperTemplatesTableProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -122,14 +130,41 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
 
   if (templates.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
-        <div className="text-center">
-          <p className="text-muted-foreground text-lg font-medium">No templates found</p>
-          <p className="text-muted-foreground mt-1 text-sm">
+      <Card className="bg-canvas/50 border-2 border-dashed">
+        <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+          <div className="relative mb-4">
+            <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+            <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+              <ClipboardCheck className="text-primary h-16 w-16" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          <h3 className="text-foreground mb-2 text-2xl font-semibold">No No templates</h3>
+          <p className="text-muted-foreground mb-8 max-w-md text-center">
             Create your first working paper template to get started
           </p>
-        </div>
-      </div>
+
+          <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">TEMPLATE</div>
+              <div className="text-muted-foreground">Clauses & Procedures</div>
+            </div>
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">PLAN</div>
+              <div className="text-muted-foreground">Requirement gathering</div>
+            </div>
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">EXECUTE</div>
+              <div className="text-muted-foreground">Action Findings</div>
+            </div>
+          </div>
+
+          <Button size="lg" onClick={onCreateClick} className="gap-2">
+            <Plus className="h-5 w-5" />
+            Create Workpaper Template
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -204,7 +239,9 @@ export function WorkpaperTemplatesTable({ templates, isLoading }: WorkpaperTempl
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/dashboard/system-configs/audit-settings/templates/${template.id}/edit`);
+                      router.push(
+                        `/dashboard/system-configs/audit-settings/templates/${template.id}/edit`
+                      );
                     }}
                     className="h-8 gap-1.5">
                     <Link

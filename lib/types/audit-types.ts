@@ -96,6 +96,7 @@ export interface WorkpaperTemplateDefinition {
   id: string;
   name: string;
   description: string;
+  standard: ManagementStandard;
   categories: TemplateCategory[];
   version?: string;
   createdAt?: Date;
@@ -331,24 +332,16 @@ export interface ClauseTemplateInput {
 /**
  * Workpaper template for pre-filled testing procedures (deprecated - use ClauseTemplate)
  */
-export interface WorkpaperTemplate {
-  id?: string; // old
-  clause: string; // old
-  clauseTitle: string; // old
-  category: string; // old
-  objectives: string[]; // old
-  testProcedures: string[]; // old
-
-  // New fields for comprehensive audit documentation
+export type WorkpaperTemplate = {
+  id: string;
   name: string;
   standard: string;
   description: string;
   version: string;
   is_active: boolean;
-
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+  created_at?: Date;
+  updated_at?: Date;
+};
 
 /**
  * Evidence type categories

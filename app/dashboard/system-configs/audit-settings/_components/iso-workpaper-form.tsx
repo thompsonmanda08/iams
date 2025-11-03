@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import type { GeneralWorkpaperInput, WorkpaperTemplate } from "@/lib/types/audit-types";
+import type { WorkpaperTemplate } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import {
   createWorkingPaperTemplate,
@@ -143,8 +143,6 @@ export function ISOWorkpaperTemplateForm({
                 rows={4}
               />
             </div>
-
-            <div className="space-y-2"></div>
 
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
