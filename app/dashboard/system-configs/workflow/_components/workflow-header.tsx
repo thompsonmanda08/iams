@@ -1,15 +1,9 @@
 "use client";
-import { ArrowLeft, Save, Settings, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { EntityType } from "@/lib/types/workflow";
+import { SelectField } from "@/components/ui/select-field";
 
 interface WorkflowHeaderProps {
   workflowName: string;
@@ -18,12 +12,14 @@ interface WorkflowHeaderProps {
   onEntityTypeChange: (type: EntityType) => void;
   onSave: () => void;
   onBack: () => void;
+  onStateAdd: () => void;
   isLoading?: boolean;
 }
 
 export const WorkflowHeader = ({
   workflowName,
   entityType,
+  onStateAdd,
   onWorkflowNameChange,
   onEntityTypeChange,
   onSave,
@@ -46,39 +42,35 @@ export const WorkflowHeader = ({
               className="font-semibold"
             />
 
-            <Select
+            <SelectField
               value={entityType}
-              onValueChange={(value) => onEntityTypeChange(value as EntityType)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="RISK">Risk</SelectItem>
-                <SelectItem value="AUDIT_PLAN">Audit Plan</SelectItem>
-                <SelectItem value="FINDING">Finding</SelectItem>
-                <SelectItem value="RECOMMENDATION">Recommendation</SelectItem>
-              </SelectContent>
-            </Select>
+              onValueChange={(value) => onEntityTypeChange(value as EntityType)}
+              options={[
+                { id: "RISK", name: "Risk" },
+                { id: "AUDIT_PLAN", name: "Audit Plan" },
+                { id: "FINDING", name: "Finding" },
+                { id: "RECOMMENDATION", name: "Recommendation" }
+              ]}
+            />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled={isLoading}>
+          <Button variant="outline" size="sm" disabled={isLoading} onClick={onStateAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add a new state
+          </Button>
+          {/* <Button variant="outline" size="sm" disabled={isLoading}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
-          </Button>
-          <Button size="sm" onClick={onSave} disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Workflow
-              </>
-            )}
+          </Button> */}
+          <Button
+            size="sm"
+            onClick={onSave}
+            disabled={isLoading}
+            isLoading={isLoading}
+            loadingText="Saving...">
+            Save Workflow
           </Button>
         </div>
       </div>

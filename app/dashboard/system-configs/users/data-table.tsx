@@ -82,7 +82,9 @@ const getColumns = (
   {
     id: "#",
     header: "#",
-    cell: ({ row }) => <div className="text-sm font-medium text-gray-500">{row.index + 1}</div>
+    cell: ({ row }) => (
+      <div className="text-muted-foreground text-sm font-medium">{row.index + 1}</div>
+    )
   },
   {
     accessorKey: "username",
@@ -99,8 +101,8 @@ const getColumns = (
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-medium text-gray-900">{fullName}</div>
-            <div className="text-xs text-gray-500">{row.original.email}</div>
+            <div className="text-foreground font-medium">{fullName}</div>
+            <div className="text-muted-foreground text-xs">{row.original.email}</div>
           </div>
         </div>
       );
@@ -111,8 +113,10 @@ const getColumns = (
     accessorFn: (row) => row.role?.name || "N/A",
     header: "Role",
     cell: ({ row }) => (
-      <div className="text-sm text-gray-700">
-        {row.original.role?.name || <span className="text-gray-400 italic">No role assigned</span>}
+      <div className="text-foreground text-sm">
+        {row.original.role?.name || (
+          <span className="text-muted-foreground italic">No role assigned</span>
+        )}
       </div>
     )
   },
@@ -121,9 +125,9 @@ const getColumns = (
     accessorFn: (row) => row.department?.name || "N/A",
     header: "Department",
     cell: ({ row }) => (
-      <div className="text-sm text-gray-700">
+      <div className="text-foreground text-sm">
         {row.original.department?.name || (
-          <span className="text-gray-400 italic">No department</span>
+          <span className="text-muted-foreground italic">No department</span>
         )}
       </div>
     )
@@ -133,8 +137,10 @@ const getColumns = (
     accessorFn: (row) => row.branch?.name || "N/A",
     header: "Branch",
     cell: ({ row }) => (
-      <div className="text-sm text-gray-700">
-        {row.original.branch?.name || <span className="text-gray-400 italic">No branch</span>}
+      <div className="text-foreground text-sm">
+        {row.original.branch?.name || (
+          <span className="text-muted-foreground italic">No branch</span>
+        )}
       </div>
     )
   },
@@ -147,7 +153,9 @@ const getColumns = (
       return (
         <span
           className={`rounded-full px-2 py-1 text-xs font-medium capitalize ${
-            isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+            isActive
+              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-secondary text-secondary-foreground"
           }`}>
           {isActive ? "Active" : "Inactive"}
         </span>
@@ -199,9 +207,9 @@ const getColumns = (
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(user.id)}
-                className="text-red-600 hover:bg-red-50 focus:text-red-600">
+                className="text-destructive hover:bg-destructive/10 focus:text-destructive">
                 {" "}
-                <Trash2 className="h-4 w-4 text-red-500" />
+                <Trash2 className="text-destructive h-4 w-4" />
                 Delete User
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -455,7 +463,7 @@ export default function UsersDataTable({
   return (
     <Card className="shadow-none">
       <CardContent className="p-0">
-        <div className="space-y-4 border-b border-gray-200 p-4">
+        <div className="space-y-4 border-b p-4">
           <div className="flex flex-col gap-4 sm:flex-row">
             <Search
               placeholder="Search users by name or email..."
@@ -522,7 +530,7 @@ export default function UsersDataTable({
             </div>
           </div>
 
-          <div className="flex items-center justify-end text-sm text-gray-500">
+          <div className="text-muted-foreground flex items-center justify-end text-sm">
             {hasFilters && (
               <Badge variant="secondary" className="text-xs">
                 <Filter className="mr-1 h-3 w-3" />
@@ -538,7 +546,7 @@ export default function UsersDataTable({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="hover:bg-transparent">
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="bg-gray-50">
+                    <TableHead key={header.id} className="bg-muted/50">
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -553,7 +561,7 @@ export default function UsersDataTable({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="transition-colors hover:bg-gray-50">
+                    className="transition-colors hover:bg-muted/50">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -564,8 +572,8 @@ export default function UsersDataTable({
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-32 text-center">
-                    <div className="flex flex-col items-center justify-center text-gray-500">
-                      <Search className="mb-4 h-12 w-12 text-gray-300" />
+                    <div className="text-muted-foreground flex flex-col items-center justify-center">
+                      <Search className="text-muted-foreground/50 mb-4 h-12 w-12" />
                       <p className="text-lg font-medium">No users found</p>
                       <p className="text-sm">Try adjusting your search or filters</p>
                     </div>

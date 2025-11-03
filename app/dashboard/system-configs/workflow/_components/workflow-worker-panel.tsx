@@ -1,0 +1,280 @@
+"use client";
+import { useState, useEffect } from "react";
+import { Activity, PlayCircle, RefreshCw, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  getBackgroundWorkerStatus,
+  triggerBackgroundWorker,
+} from "@/app/_actions/workflow-actions";
+import { toast } from "sonner";
+
+interface WorkerStatus {
+  status: string;
+  last_run?: string;
+  next_run?: string;
+  pending_triggers?: number;
+  processed_today?: number;
+  errors?: number;
+  is_running?: boolean;
+}
+
+export const WorkflowWorkerPanel = () => {
+  const [workerStatus, setWorkerStatus] = useState<WorkerStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  useEffect(() => {
+    fetchWorkerStatus();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchWorkerStatus(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchWorkerStatus = async (silent = false) => {
+    if (!silent) setIsFetching(true);
+    try {
+      const response = await getBackgroundWorkerStatus();
+      if (response.success) {
+        setWorkerStatus(response.data || null);
+        setLastUpdated(new Date());
+      } else {
+        if (!silent) {
+          toast.error("Failed to fetch worker status");
+        }
+      }
+    } catch (error) {
+      if (!silent) {
+        toast.error("Error fetching worker status");
+      }
+    } finally {
+      if (!silent) setIsFetching(false);
+    }
+  };
+
+  const handleTriggerWorker = async () => {
+    setIsLoading(true);
+    try {
+      const response = await triggerBackgroundWorker();
+      if (response.success) {
+        toast.success("Background worker triggered successfully");
+        // Wait a moment for the worker to start, then refresh status
+        setTimeout(() => {
+          fetchWorkerStatus();
+        }, 1000);
+      } else {
+        toast.error(response.message || "Failed to trigger worker");
+      }
+    } catch (error) {
+      toast.error("Error triggering worker");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getStatusColor = (status?: string) => {
+    switch (status?.toLowerCase()) {
+      case "active":
+      case "running":
+        return "bg-green-500";
+      case "idle":
+        return "bg-blue-500";
+      case "error":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getStatusVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status?.toLowerCase()) {
+      case "active":
+      case "running":
+        return "default";
+      case "idle":
+        return "secondary";
+      case "error":
+        return "destructive";
+      default:
+        return "outline";
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Workflow Background Worker
+            </CardTitle>
+            <CardDescription>
+              Monitor and control the automated workflow processing service
+            </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchWorkerStatus()}
+              disabled={isFetching}
+            >
+              {isFetching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isFetching && !workerStatus ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : workerStatus ? (
+          <>
+            {/* Status Overview */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Status</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className={`h-2 w-2 rounded-full ${getStatusColor(workerStatus.status)}`} />
+                      <Badge variant={getStatusVariant(workerStatus.status)}>
+                        {workerStatus.status || "Unknown"}
+                      </Badge>
+                    </div>
+                  </div>
+                  {workerStatus.is_running ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-green-500" />
+                  ) : (
+                    <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-sm font-medium text-muted-foreground">Pending Triggers</p>
+                <p className="mt-2 text-2xl font-bold">
+                  {workerStatus.pending_triggers ?? 0}
+                </p>
+              </div>
+
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-sm font-medium text-muted-foreground">Processed Today</p>
+                <p className="mt-2 text-2xl font-bold text-green-600">
+                  {workerStatus.processed_today ?? 0}
+                </p>
+              </div>
+
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-sm font-medium text-muted-foreground">Errors</p>
+                <p className="mt-2 text-2xl font-bold text-red-600">
+                  {workerStatus.errors ?? 0}
+                </p>
+              </div>
+            </div>
+
+            {/* Timing Information */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {workerStatus.last_run && (
+                <div className="rounded-lg border bg-muted/50 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">Last Run</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {new Date(workerStatus.last_run).toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {workerStatus.next_run && (
+                <div className="rounded-lg border bg-muted/50 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">Next Run</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {new Date(workerStatus.next_run).toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Warnings/Alerts */}
+            {workerStatus.pending_triggers && workerStatus.pending_triggers > 10 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  There are {workerStatus.pending_triggers} pending triggers. Consider manually
+                  triggering the worker to process them.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {workerStatus.errors && workerStatus.errors > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  The worker has encountered {workerStatus.errors} errors. Please check the logs
+                  for more details.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Manual Trigger */}
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold">Manual Processing</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Trigger the worker to immediately process pending workflow triggers
+                  </p>
+                </div>
+                <Button
+                  onClick={handleTriggerWorker}
+                  disabled={isLoading || workerStatus.is_running}
+                  className="gap-2"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <PlayCircle className="h-4 w-4" />
+                  )}
+                  {workerStatus.is_running ? "Running..." : "Trigger Now"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Last Updated */}
+            {lastUpdated && (
+              <p className="text-center text-xs text-muted-foreground">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </p>
+            )}
+          </>
+        ) : (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <Activity className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">
+              Unable to fetch worker status
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => fetchWorkerStatus()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};

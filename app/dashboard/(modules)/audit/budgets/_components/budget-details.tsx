@@ -47,7 +47,7 @@ const BudgetDetails = () => {
 
   if (!budget || !budgetLine) {
     return (
-      <div className="from-background via-background to-muted/30 flex min-h-screen items-center justify-center bg-gradient-to-br">
+      <div className="from-background via-background to-muted/30 flex min-h-screen items-center justify-center bg-linear-to-br">
         <Card className="max-w-md p-8 text-center">
           <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
           <h2 className="mb-4 text-2xl font-bold">Budget Not Found</h2>
@@ -287,7 +287,7 @@ const BudgetDetails = () => {
 
       {/* Budget Items Table */}
       <Card className="animate-fade-in shadow-xl [animation-delay:200ms]">
-        <div className="from-card to-muted/20 border-b bg-gradient-to-r p-6">
+        <div className="from-card to-muted/20 border-b bg-linear-to-r p-6">
           <div className="flex items-center gap-3">
             <div className="bg-success/10 rounded-lg p-2.5">
               <Package className="text-success h-5 w-5" />

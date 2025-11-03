@@ -18,8 +18,9 @@ The function calls `authenticatedApiClient()` → `verifySession()` → `cookies
 ## The Solution
 
 ### 1. Request-Level Cache (Simple)
+
 **Function**: `initializeSystemSetup()`
-**File**: [app/_actions/auth-actions.ts](app/_actions/auth-actions.ts#L340)
+**File**: [app/\_actions/auth-actions.ts](app/_actions/auth-actions.ts#L340)
 
 ```typescript
 export const initializeSystemSetup = cache(_initializeSystemSetup);
@@ -31,17 +32,18 @@ export const initializeSystemSetup = cache(_initializeSystemSetup);
 - Simple, no manual cache management
 
 ### 2. Persistent Cache (Advanced)
-**Function**: `initializeSystemSetupCached()`
-**File**: [app/_actions/auth-actions.ts](app/_actions/auth-actions.ts#L353)
+
+**Function**: `initializeSystemSetup()`
+**File**: [app/\_actions/auth-actions.ts](app/_actions/auth-actions.ts#L353)
 
 ```typescript
 // Cache data across requests with TTL
-const result = await initializeSystemSetupCached({
+const result = await initializeSystemSetup({
   ttl: 60 * 60 * 1000 // 1 hour (default)
 });
 
 // Force refresh
-const fresh = await initializeSystemSetupCached({
+const fresh = await initializeSystemSetup({
   forceRefresh: true
 });
 
@@ -57,25 +59,28 @@ await revalidateSystemSetup();
 ## Files Created/Modified
 
 ### Created
+
 1. **[lib/cache-store.ts](lib/cache-store.ts)** - In-memory cache storage
 2. **[CACHE_USAGE_EXAMPLE.md](CACHE_USAGE_EXAMPLE.md)** - Comprehensive usage guide
 3. **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - This file
 
 ### Modified
-1. **[app/_actions/auth-actions.ts](app/_actions/auth-actions.ts)** - Added both cache implementations
+
+1. **[app/\_actions/auth-actions.ts](app/_actions/auth-actions.ts)** - Added both cache implementations
 
 ## Usage Guide
 
 ### For Request-Level Caching
 
 ```typescript
-import { initializeSystemSetup } from '@/app/_actions/auth-actions';
+import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 
 // Use in any server component or action
 const data = await initializeSystemSetup();
 ```
 
 **Best for:**
+
 - Data that changes frequently
 - When you want fresh data on each page load
 - Simple use cases
@@ -83,16 +88,13 @@ const data = await initializeSystemSetup();
 ### For Persistent Caching
 
 ```typescript
-import {
-  initializeSystemSetupCached,
-  revalidateSystemSetup
-} from '@/app/_actions/auth-actions';
+import { initializeSystemSetup, revalidateSystemSetup } from "@/app/_actions/auth-actions";
 
 // Basic usage (1 hour TTL)
-const data = await initializeSystemSetupCached();
+const data = await initializeSystemSetup();
 
 // Custom TTL (30 minutes)
-const data = await initializeSystemSetupCached({
+const data = await initializeSystemSetup({
   ttl: 30 * 60 * 1000
 });
 
@@ -104,19 +106,20 @@ async function updateConfig(config: any) {
 ```
 
 **Best for:**
+
 - System configuration that rarely changes
 - Reducing API calls significantly
 - When you need control over cache invalidation
 
 ## How to Choose
 
-| Scenario | Use This |
-|----------|----------|
-| Data changes often | `initializeSystemSetup()` |
-| System settings (rarely change) | `initializeSystemSetupCached()` |
+| Scenario                        | Use This                  |
+| ------------------------------- | ------------------------- |
+| Data changes often              | `initializeSystemSetup()` |
+| System settings (rarely change) | `initializeSystemSetup()` |
 | Need fresh data every page load | `initializeSystemSetup()` |
-| Want to minimize API calls | `initializeSystemSetupCached()` |
-| Multiple server instances | Consider Redis (see docs) |
+| Want to minimize API calls      | `initializeSystemSetup()` |
+| Multiple server instances       | Consider Redis (see docs) |
 
 ## Important Notes
 

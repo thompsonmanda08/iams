@@ -14,6 +14,8 @@ export default async function WorkflowConfigPage({ searchParams }: PageProps) {
   const workflowsResponse = await listWorkflows();
   const workflows = workflowsResponse.success ? workflowsResponse.data : [];
 
+  console.log("WOKRFLOWS", workflows);
+
   return (
     <div>
       <WorkflowClient initialWorkflows={workflows} />

@@ -53,8 +53,8 @@ export const WorkflowCanvas = ({
           style={{ zIndex: 1 }}>
           <g style={{ pointerEvents: "auto" }}>
             {transitions.map((transition) => {
-              const fromState = states.find((s) => s.id === transition.fromStateId);
-              const toState = states.find((s) => s.id === transition.toStateId);
+              const fromState = states.find((s) => s.id === transition.from_state_id);
+              const toState = states.find((s) => s.id === transition.to_state_id);
               if (!fromState || !toState) return null;
 
               return (
@@ -62,7 +62,7 @@ export const WorkflowCanvas = ({
                   key={transition.id}
                   from={fromState.position}
                   to={toState.position}
-                  label={transition.actionName}
+                  label={transition.action_name}
                   onClick={() => onTransitionClick(transition)}
                 />
               );
@@ -112,9 +112,10 @@ export const WorkflowCanvas = ({
 
       {/* Floating Add Button */}
       {states.length > 0 && (
-        <Button onClick={onStateAdd} className="absolute right-8 bottom-8 z-10 shadow-xl" size="lg">
-          <Plus className="mr-2 h-4 w-4" />
-          Add State
+        <Button
+          onClick={onStateAdd}
+          className="absolute right-8 bottom-8 z-10 aspect-square h-16! max-h-none! w-16 rounded-full p-0! shadow-xl">
+          <Plus className="h-12 w-12" />
         </Button>
       )}
     </div>

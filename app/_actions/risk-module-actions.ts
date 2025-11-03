@@ -167,8 +167,8 @@ export interface RiskRegisterInput {
   branch_id: string;
   name: string;
   start_date: string;
-  due_date:string;
-  is_active?:boolean;
+  due_date: string;
+  is_active?: boolean;
   status?: string;
 }
 
@@ -215,7 +215,7 @@ export type KRI = {
   updated_at: string;
   created_by: string | null;
   updated_by: string | null;
-  
+
   // Nested objects
   category: {
     id: string;
@@ -245,7 +245,7 @@ export type KRI = {
     role_id: string | null;
     is_active: boolean;
   };
-  
+
   // Computed fields for UI (added by transformation)
   currentValue: number;
   targetValue: number;
@@ -352,7 +352,6 @@ const mockRisks: Risk[] = [
   }
 ];
 
-
 // ============================================================================
 // RISK CATEGORY MANAGEMENT
 // ============================================================================
@@ -365,15 +364,15 @@ export async function getRiskCategories(params?: {
   is_active?: boolean;
 }): Promise<APIResponse> {
   try {
-    const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: "/api/v1/risk-categories",
       params,
-      method: "GET",
-    })
+      method: "GET"
+    });
     return successResponse(response.data?.data);
   } catch (error) {
-    console.log('ERROR:', error);
-    
+    console.log("ERROR:", error);
+
     return handleError(error, "GET | GET RISK CATEGORIES", "/api/v1/risk-categories");
   }
 }
@@ -386,7 +385,7 @@ export async function getRiskCategory(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: url,
-      method: "GET",
+      method: "GET"
     });
     return successResponse(response.data.data);
   } catch (error) {
@@ -420,8 +419,8 @@ export async function updateRiskCategory(
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/risk-categories/${id}`, 
-      data:input,
+      url: `/api/v1/risk-categories/${id}`,
+      data: input,
       method: "PUT"
     });
     revalidatePath("/dashboard/(modules)/risks");
@@ -431,14 +430,13 @@ export async function updateRiskCategory(
   }
 }
 
-
 /**
  * Get department risk categories
  */
 export async function getDepartmentRiskCategories(departmentId: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/departments/${departmentId}/risk-categories`,
+      url: `/api/v1/departments/${departmentId}/risk-categories`,
       method: "GET"
     });
     return successResponse(response.data.data);
@@ -461,7 +459,7 @@ export async function getDepartmentRiskCategories(departmentId: string): Promise
 export async function getRiskRegisters(params?: RiskRegisterParams): Promise<APIResponse> {
   try {
     const queryParams = new URLSearchParams();
-    
+
     if (params?.branch_id) queryParams.append("branch_id", params.branch_id);
     if (params?.status) queryParams.append("status", params.status);
     if (params?.name) queryParams.append("name", params.name);
@@ -469,11 +467,11 @@ export async function getRiskRegisters(params?: RiskRegisterParams): Promise<API
     if (params?.page_size) queryParams.append("page_size", String(params.page_size));
 
     const url = `/api/v1/risk-registers${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-    const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: url,
-      method: "GET",
+      method: "GET"
     });
-    
+
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET RISK REGISTERS", "/api/v1/risk-registers");
@@ -485,10 +483,10 @@ export async function getRiskRegisters(params?: RiskRegisterParams): Promise<API
  */
 export async function getRiskRegister(id: string): Promise<APIResponse> {
   try {
-     const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: `/api/v1/risk-registers/${id}`,
-      method: "GET",
-    })
+      method: "GET"
+    });
     return successResponse(response.data);
   } catch (error) {
     return handleError(error, "GET | GET RISK REGISTER", `/api/v1/risk-registers/${id}`);
@@ -500,16 +498,16 @@ export async function getRiskRegister(id: string): Promise<APIResponse> {
  */
 export async function createRiskRegister(input: RiskRegisterInput): Promise<APIResponse> {
   try {
-    const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: "/api/v1/risk-registers",
       method: "POST",
-      data: input,
+      data: input
     });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
-    console.log('ERROR', error);
-    
+    console.log("ERROR", error);
+
     return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/risk-registers");
   }
 }
@@ -523,8 +521,8 @@ export async function updateRiskRegister(
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/risk-registers/${id}`, 
-      data:input,
+      url: `/api/v1/risk-registers/${id}`,
+      data: input,
       method: "PUT"
     });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
@@ -540,7 +538,7 @@ export async function updateRiskRegister(
 export async function closeRiskRegister(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/risk-registers/${id}/close`,
+      url: `/api/v1/risk-registers/${id}/close`,
       method: "POST"
     });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
@@ -556,7 +554,7 @@ export async function closeRiskRegister(id: string): Promise<APIResponse> {
 export async function deleteRiskRegister(id: string): Promise<APIResponse> {
   try {
     await authenticatedApiClient({
-      url:`/api/v1/risk-registers/${id}`,
+      url: `/api/v1/risk-registers/${id}`,
       method: "DELETE"
     });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
@@ -572,7 +570,7 @@ export async function deleteRiskRegister(id: string): Promise<APIResponse> {
 export async function getBranchRiskRegisters(branchId: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/branches/${branchId}/risk-registers`,
+      url: `/api/v1/branches/${branchId}/risk-registers`,
       method: "GET"
     });
     return successResponse(response.data.data);
@@ -594,11 +592,11 @@ export async function getBranchRiskRegisters(branchId: string): Promise<APIRespo
  */
 export async function createRiskStepOne(input: RiskInput): Promise<APIResponse> {
   try {
-     const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: "/api/v1/risks/step-one",
       data: input,
-      method: "POST",
-    })
+      method: "POST"
+    });
     revalidatePath("/dashboard/(modules)/risks/[id]");
     return successResponse(response.data.data);
   } catch (error) {
@@ -611,11 +609,11 @@ export async function createRiskStepOne(input: RiskInput): Promise<APIResponse> 
  */
 export async function updateRiskStepTwo(id: string, input: RiskStepTwoInput): Promise<APIResponse> {
   try {
-     const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: `/api/v1/risks/${id}/step-two`,
       data: input,
-      method: "PUT",
-    })
+      method: "PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks/[id]");
     return successResponse(response.data.data);
   } catch (error) {
@@ -631,11 +629,11 @@ export async function updateRiskStepThree(
   input: RiskStepThreeInput
 ): Promise<APIResponse> {
   try {
-    const response = await authenticatedApiClient( {
+    const response = await authenticatedApiClient({
       url: `/api/v1/risks/${id}/step-three`,
       data: input,
-      method: "PUT",
-    })
+      method: "PUT"
+    });
     revalidatePath("/dashboard/(modules)/risks/[id]");
     return successResponse(response.data.data);
   } catch (error) {
@@ -686,7 +684,7 @@ export async function getRisksInRegister(
 export async function updateRiskStatus(id: string, status: RiskStatus): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/risks/${id}/status`,
+      url: `/api/v1/risks/${id}/status`,
       data: { status },
       method: "PUT"
     });
@@ -705,12 +703,10 @@ export async function submitDepartmentRisks(
   departmentId: string
 ): Promise<APIResponse> {
   try {
-    const response = await authenticatedApiClient(
-     {
-      url:`/api/v1/risk-registers/${registerId}/departments/${departmentId}/submit`,
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-registers/${registerId}/departments/${departmentId}/submit`,
       method: "POST"
-     }
-    );
+    });
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
   } catch (error) {
@@ -731,7 +727,7 @@ export async function submitDepartmentRisks(
  */
 export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
   try {
-        const queryParams = new URLSearchParams();
+    const queryParams = new URLSearchParams();
 
     if (params?.search) queryParams.append("search", params.search);
     if (params?.category) queryParams.append("category", params.category);
@@ -740,15 +736,13 @@ export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
     if (params?.limit) queryParams.append("limit", String(params.limit));
     if (params?.risk_owner_id) queryParams.append("risk_owner_id", String(params.risk_owner_id));
 
-    const url = `/api/v1/risks${
-      queryParams.toString() ? `?${queryParams.toString()}` : ""
-    }`;
+    const url = `/api/v1/risks${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
-   const response = await  authenticatedApiClient({
+    const response = await authenticatedApiClient({
       url: url,
       method: "GET"
-    })
-    
+    });
+
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET RISKS", "/api/v1/risks");
@@ -760,9 +754,9 @@ export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
  */
 export async function getRisk(id: string): Promise<APIResponse> {
   try {
-   const response = await authenticatedApiClient({
-      url:`/api/v1/risks/${id}`, 
-      method:"GET"
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risks/${id}`,
+      method: "GET"
     });
     return successResponse(response.data.data);
   } catch (error) {
@@ -776,12 +770,12 @@ export async function getRisk(id: string): Promise<APIResponse> {
 export async function createRisk(input: any): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:"/api/v1/risks", 
-      data:input,
-      method:"POST"
+      url: "/api/v1/risks",
+      data: input,
+      method: "POST"
     });
     revalidatePath("/dashboard/(modules)/risks");
-   return successResponse(response.data);
+    return successResponse(response.data);
   } catch (error) {
     return handleError(error, "POST | CREATE RISK", "/api/v1/risks");
   }
@@ -793,10 +787,10 @@ export async function createRisk(input: any): Promise<APIResponse> {
 export async function updateRisk(id: string, input: Partial<Risk>): Promise<APIResponse> {
   try {
     // TODO: Replace with real API call
-   const response =  await authenticatedApiClient({
-      url:`/api/v1/risks/${id}`, 
-      data:input,
-      method:"PUT"
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risks/${id}`,
+      data: input,
+      method: "PUT"
     });
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
@@ -810,10 +804,10 @@ export async function updateRisk(id: string, input: Partial<Risk>): Promise<APIR
  */
 export async function deleteRisk(id: string): Promise<APIResponse> {
   try {
-   const response = await authenticatedApiClient({
-    url:`/api/v1/risks/${id}`,
-    method:"DELETE"
-   })
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risks/${id}`,
+      method: "DELETE"
+    });
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
   } catch (error) {
@@ -843,13 +837,14 @@ export async function getRiskMatrix(): Promise<APIResponse> {
  */
 export async function getHeatMap(): Promise<APIResponse> {
   try {
+    // TODO: Replace with real API call when backend is ready
     const response = await authenticatedApiClient({
-      url: "/api/v1/heatmap",
+      url: "/api/v1/risks/heatmap",
       method: "GET"
     });
     return successResponse(response.data.data, "Heat map fetched successfully");
   } catch (error) {
-    return handleError(error, "GET | GET HEAT MAP", "/api/v1/heatmap");
+    return handleError(error, "GET | GET HEAT MAP", "/api/v1/risks/heatmap");
   }
 }
 
@@ -869,8 +864,7 @@ export async function getKRIRegisters(params?: {
   try {
     const queryParams = new URLSearchParams();
 
-    if (params?.is_active !== undefined)
-      queryParams.append("is_active", String(params.is_active));
+    if (params?.is_active !== undefined) queryParams.append("is_active", String(params.is_active));
     if (params?.search) queryParams.append("search", params.search);
     if (params?.page) queryParams.append("page", String(params.page));
     if (params?.page_size) queryParams.append("page_size", String(params.page_size));
@@ -896,8 +890,8 @@ export async function getKRIRegisters(params?: {
 export async function getKRIRegister(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/kri-registers/${id}`, 
-      method:"GET"
+      url: `/api/v1/kri-registers/${id}`,
+      method: "GET"
     });
     return successResponse(response.data.data);
   } catch (error) {
@@ -911,9 +905,9 @@ export async function getKRIRegister(id: string): Promise<APIResponse> {
 export async function createKRIRegister(input: KRIRegisterInput): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:"/api/v1/kri-registers", 
-      data:input,
-      method:"POST"
+      url: "/api/v1/kri-registers",
+      data: input,
+      method: "POST"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
@@ -931,8 +925,8 @@ export async function updateKRIRegister(
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/kri-registers/${id}`, 
-      data:input,
+      url: `/api/v1/kri-registers/${id}`,
+      data: input,
       method: "PUT"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
@@ -948,7 +942,7 @@ export async function updateKRIRegister(
 export async function deleteKRIRegister(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/kri-registers/${id}`, 
+      url: `/api/v1/kri-registers/${id}`,
       method: "DELETE"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
@@ -974,25 +968,25 @@ export async function getKRIs(params?: {
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/kris", 
+      url: "/api/v1/kris",
       params,
-      method: "GET" 
+      method: "GET"
     });
     const transformedData = response.data.data.data.map((kri: any) => {
       const targetValue = parseFloat(kri.target_value);
       const triggerValue = parseFloat(kri.trigger_value);
       const limitValue = parseFloat(kri.limit_value);
       const currentValue = kri.last_measured_value || targetValue;
-      
+
       let status: "normal" | "warning" | "critical" = "normal";
       if (currentValue <= limitValue) {
         status = "critical";
       } else if (currentValue <= triggerValue) {
         status = "warning";
       }
-      
+
       const trend = currentValue >= targetValue ? "up" : "down";
-      
+
       return {
         ...kri,
         currentValue,
@@ -1002,10 +996,10 @@ export async function getKRIs(params?: {
         status,
         trend,
         unit: "%",
-        lastUpdated: kri.updated_at || kri.created_at,
+        lastUpdated: kri.updated_at || kri.created_at
       };
     });
-    
+
     return successResponse(transformedData);
   } catch (error) {
     return handleError(error, "GET | GET KRIs", "/api/v1/kris");
@@ -1018,8 +1012,8 @@ export async function getKRIs(params?: {
 export async function getKRI(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/kris/${id}`, 
-      method:"GET"
+      url: `/api/v1/kris/${id}`,
+      method: "GET"
     });
     return successResponse(response);
   } catch (error) {
@@ -1033,9 +1027,9 @@ export async function getKRI(id: string): Promise<APIResponse> {
 export async function createKRI(input: KRIInput): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:"/api/v1/kris", 
-      data:input,
-      method:"POST"
+      url: "/api/v1/kris",
+      data: input,
+      method: "POST"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
@@ -1050,8 +1044,8 @@ export async function createKRI(input: KRIInput): Promise<APIResponse> {
 export async function updateKRI(id: string, input: Partial<KRIInput>): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/kris/${id}`, 
-      data:input,
+      url: `/api/v1/kris/${id}`,
+      data: input,
       method: "PUT"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
@@ -1066,10 +1060,10 @@ export async function updateKRI(id: string, input: Partial<KRIInput>): Promise<A
  */
 export async function deleteKRI(id: string): Promise<APIResponse> {
   try {
-   const response =  await authenticatedApiClient({
-      url:`/api/v1/kris/${id}`, 
+    const response = await authenticatedApiClient({
+      url: `/api/v1/kris/${id}`,
       method: "DELETE"
-   });
+    });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {
@@ -1090,8 +1084,8 @@ export async function addKRIMeasurement(
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/kris/${kriId}/measurements`, 
-      data:input,
+      url: `/api/v1/kris/${kriId}/measurements`,
+      data: input,
       method: "POST"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
@@ -1113,7 +1107,7 @@ export async function getKRIMeasurements(
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url:`/api/v1/kris/${kriId}/measurements`, 
+      url: `/api/v1/kris/${kriId}/measurements`,
       params,
       method: "GET"
     });
@@ -1131,7 +1125,7 @@ export async function getKRIsDueMeasurement(params?: {
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/kris/due-measurement", 
+      url: "/api/v1/kris/due-measurement",
       params,
       method: "GET"
     });
@@ -1150,7 +1144,7 @@ export async function getKRIStatusSummary(params?: {
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/kris/status-summary", 
+      url: "/api/v1/kris/status-summary",
       params,
       method: "GET"
     });

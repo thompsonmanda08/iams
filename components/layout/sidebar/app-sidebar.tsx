@@ -29,15 +29,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useSystemSetup } from "@/hooks/use-users-query-data";
 
 export function AppSidebar({
-  user,
+  user: userData,
   isAuthenticated,
   ...props
 }: React.ComponentProps<typeof Sidebar> & { user: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
+
+  const isLoadingUser = !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
+
+  const { data: session } = useSystemSetup(isLoadingUser);
+
+  const user = React.useMemo(() => {
+    return {
+      ...userData,
+      ...session?.data?.user
+    };
+  }, [session?.data, userData, isLoadingUser]);
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);

@@ -192,8 +192,6 @@ export function transformModulesToNavCustom(
 export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  // const routes = setup?.data?.navigation || [];
-  // console.log("NAV", setup);
 
   const routes = useMemo(() => {
     return user?.user_type === "BACKOFFICE_USER" && pathname.startsWith("/admin/")

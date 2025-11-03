@@ -1,29 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { KRIHistory } from "../kri/kri-history";
+import type { KRI } from "@/app/_actions/risk-module-actions";
 
 interface KRIHistoryButtonProps {
-  kriId: string;
+  kri: KRI; // Pass the full KRI object instead
 }
 
-export function KRIHistoryButton({ kriId }: KRIHistoryButtonProps) {
-  const [selectedKRI, setSelectedKRI] = useState<string | null>(null);
+export function KRIHistoryButton({ kri }: KRIHistoryButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={() => setSelectedKRI(kriId)}
-      >
+      <Button variant="ghost" size="sm" onClick={() => setIsOpen(true)}>
         View History
       </Button>
-      <KRIHistory 
-        kriId={selectedKRI} 
-        onClose={() => setSelectedKRI(null)} 
-      />
+      {isOpen && <KRIHistory kri={kri} onClose={() => setIsOpen(false)} />}
     </>
   );
 }

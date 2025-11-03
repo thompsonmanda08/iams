@@ -42,11 +42,19 @@ export async function createWorkflow(data: {
   entity_type: "RISK" | "AUDIT_PLAN" | "FINDING" | "RECOMMENDATION";
   description?: string;
 }): Promise<APIResponse> {
+  console.log("=== SERVER ACTION: CREATE WORKFLOW ===");
+  console.log("Received data:", JSON.stringify(data, null, 2));
+  console.log("data.name:", data.name);
+  console.log("data.entity_type:", data.entity_type);
+  console.log("data.description:", data.description);
+  console.log("======================================");
+
   if (!data.name) {
     return handleBadRequest("Workflow name is required");
   }
 
   if (!data.entity_type) {
+    console.log("ERROR: entity_type is missing or undefined!");
     return handleBadRequest("Entity type is required");
   }
 
@@ -57,9 +65,20 @@ export async function createWorkflow(data: {
       data
     });
 
-    revalidatePath("/dashboard/admin/workflows");
+    console.log("=== WORKFLOW CREATED ===");
+    console.log("API Response:", response.data);
+    console.log("Revalidating paths...");
+
+    revalidatePath("/dashboard/system-configs/workflow", "page");
+
+    console.log("Path revalidated: /dashboard/system-configs/workflow");
+    console.log("========================");
+
     return successResponse(response.data, "Workflow created successfully");
   } catch (error: any) {
+    console.log("=== CREATE WORKFLOW ERROR ===");
+    console.log("Error:", error);
+    console.log("=============================");
     return handleError(error, "POST | CREATE WORKFLOW", "/api/v1/workflows");
   }
 }
@@ -80,7 +99,11 @@ export async function getWorkflowDetails(workflowId: string): Promise<APIRespons
 
     return successResponse(response.data, "Workflow details fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | WORKFLOW DETAILS", `/api/v1/workflows/details?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "GET | WORKFLOW DETAILS",
+      `/api/v1/workflows/details?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -109,7 +132,11 @@ export async function updateWorkflow(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE WORKFLOW", `/api/v1/workflows/update?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "PUT | UPDATE WORKFLOW",
+      `/api/v1/workflows/update?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -130,7 +157,11 @@ export async function deleteWorkflow(workflowId: string): Promise<APIResponse> {
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | DELETE WORKFLOW", `/api/v1/workflows/delete?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "DELETE | DELETE WORKFLOW",
+      `/api/v1/workflows/delete?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -154,7 +185,11 @@ export async function getWorkflowStates(workflowId: string): Promise<APIResponse
 
     return successResponse(response.data?.data || [], "Workflow states fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | WORKFLOW STATES", `/api/v1/workflows/states?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "GET | WORKFLOW STATES",
+      `/api/v1/workflows/states?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -188,7 +223,11 @@ export async function createWorkflowState(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow state created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE WORKFLOW STATE", `/api/v1/workflows/states?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "POST | CREATE WORKFLOW STATE",
+      `/api/v1/workflows/states?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -218,7 +257,11 @@ export async function updateWorkflowState(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow state updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE WORKFLOW STATE", `/api/v1/workflows/states/update?state_id=${stateId}`);
+    return handleError(
+      error,
+      "PUT | UPDATE WORKFLOW STATE",
+      `/api/v1/workflows/states/update?state_id=${stateId}`
+    );
   }
 }
 
@@ -239,7 +282,11 @@ export async function deleteWorkflowState(stateId: string): Promise<APIResponse>
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow state deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | DELETE WORKFLOW STATE", `/api/v1/workflows/states/delete?state_id=${stateId}`);
+    return handleError(
+      error,
+      "DELETE | DELETE WORKFLOW STATE",
+      `/api/v1/workflows/states/delete?state_id=${stateId}`
+    );
   }
 }
 
@@ -263,7 +310,11 @@ export async function getWorkflowTransitions(workflowId: string): Promise<APIRes
 
     return successResponse(response.data?.data || [], "Workflow transitions fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | WORKFLOW TRANSITIONS", `/api/v1/workflows/transitions?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "GET | WORKFLOW TRANSITIONS",
+      `/api/v1/workflows/transitions?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -298,7 +349,11 @@ export async function createWorkflowTransition(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow transition created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE WORKFLOW TRANSITION", `/api/v1/workflows/transitions?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "POST | CREATE WORKFLOW TRANSITION",
+      `/api/v1/workflows/transitions?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -327,7 +382,11 @@ export async function updateWorkflowTransition(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow transition updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE WORKFLOW TRANSITION", `/api/v1/workflows/transitions/update?transition_id=${transitionId}`);
+    return handleError(
+      error,
+      "PUT | UPDATE WORKFLOW TRANSITION",
+      `/api/v1/workflows/transitions/update?transition_id=${transitionId}`
+    );
   }
 }
 
@@ -348,7 +407,11 @@ export async function deleteWorkflowTransition(transitionId: string): Promise<AP
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Workflow transition deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | DELETE WORKFLOW TRANSITION", `/api/v1/workflows/transitions/delete?transition_id=${transitionId}`);
+    return handleError(
+      error,
+      "DELETE | DELETE WORKFLOW TRANSITION",
+      `/api/v1/workflows/transitions/delete?transition_id=${transitionId}`
+    );
   }
 }
 
@@ -372,7 +435,11 @@ export async function getTransitionTriggers(transitionId: string): Promise<APIRe
 
     return successResponse(response.data?.data || [], "Transition triggers fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | TRANSITION TRIGGERS", `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`);
+    return handleError(
+      error,
+      "GET | TRANSITION TRIGGERS",
+      `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`
+    );
   }
 }
 
@@ -405,7 +472,11 @@ export async function createTransitionTrigger(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Transition trigger created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE TRANSITION TRIGGER", `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`);
+    return handleError(
+      error,
+      "POST | CREATE TRANSITION TRIGGER",
+      `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`
+    );
   }
 }
 
@@ -433,7 +504,11 @@ export async function updateTransitionTrigger(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Transition trigger updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE TRANSITION TRIGGER", `/api/v1/workflows/transitions/triggers/update?trigger_id=${triggerId}`);
+    return handleError(
+      error,
+      "PUT | UPDATE TRANSITION TRIGGER",
+      `/api/v1/workflows/transitions/triggers/update?trigger_id=${triggerId}`
+    );
   }
 }
 
@@ -454,7 +529,11 @@ export async function deleteTransitionTrigger(triggerId: string): Promise<APIRes
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Transition trigger deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | DELETE TRANSITION TRIGGER", `/api/v1/workflows/transitions/triggers/delete?trigger_id=${triggerId}`);
+    return handleError(
+      error,
+      "DELETE | DELETE TRANSITION TRIGGER",
+      `/api/v1/workflows/transitions/triggers/delete?trigger_id=${triggerId}`
+    );
   }
 }
 
@@ -476,9 +555,16 @@ export async function getWorkflowEntryTriggers(workflowId: string): Promise<APIR
       url: `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`
     });
 
-    return successResponse(response.data?.data || [], "Workflow entry triggers fetched successfully");
+    return successResponse(
+      response.data?.data || [],
+      "Workflow entry triggers fetched successfully"
+    );
   } catch (error: any) {
-    return handleError(error, "GET | WORKFLOW ENTRY TRIGGERS", `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "GET | WORKFLOW ENTRY TRIGGERS",
+      `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -510,7 +596,11 @@ export async function createEntryTrigger(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Entry trigger created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE ENTRY TRIGGER", `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`);
+    return handleError(
+      error,
+      "POST | CREATE ENTRY TRIGGER",
+      `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`
+    );
   }
 }
 
@@ -537,7 +627,11 @@ export async function updateEntryTrigger(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Entry trigger updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE ENTRY TRIGGER", `/api/v1/workflows/entry-triggers/update?trigger_id=${triggerId}`);
+    return handleError(
+      error,
+      "PUT | UPDATE ENTRY TRIGGER",
+      `/api/v1/workflows/entry-triggers/update?trigger_id=${triggerId}`
+    );
   }
 }
 
@@ -558,7 +652,11 @@ export async function deleteEntryTrigger(triggerId: string): Promise<APIResponse
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Entry trigger deleted successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | DELETE ENTRY TRIGGER", `/api/v1/workflows/entry-triggers/delete?trigger_id=${triggerId}`);
+    return handleError(
+      error,
+      "DELETE | DELETE ENTRY TRIGGER",
+      `/api/v1/workflows/entry-triggers/delete?trigger_id=${triggerId}`
+    );
   }
 }
 
@@ -582,14 +680,21 @@ export async function getTransitionRoles(transitionId: string): Promise<APIRespo
 
     return successResponse(response.data?.data || [], "Transition roles fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | TRANSITION ROLES", `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`);
+    return handleError(
+      error,
+      "GET | TRANSITION ROLES",
+      `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`
+    );
   }
 }
 
 /**
  * Get a specific transition role
  */
-export async function getTransitionRole(transitionId: string, roleId: string): Promise<APIResponse> {
+export async function getTransitionRole(
+  transitionId: string,
+  roleId: string
+): Promise<APIResponse> {
   if (!transitionId) {
     return handleBadRequest("Transition ID is required");
   }
@@ -606,7 +711,11 @@ export async function getTransitionRole(transitionId: string, roleId: string): P
 
     return successResponse(response.data, "Transition role fetched successfully");
   } catch (error: any) {
-    return handleError(error, "GET | TRANSITION ROLE", `/api/v1/workflows/transitions/roles/details?transition_id=${transitionId}&role_id=${roleId}`);
+    return handleError(
+      error,
+      "GET | TRANSITION ROLE",
+      `/api/v1/workflows/transitions/roles/details?transition_id=${transitionId}&role_id=${roleId}`
+    );
   }
 }
 
@@ -635,7 +744,11 @@ export async function assignRoleToTransition(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Role assigned to transition successfully");
   } catch (error: any) {
-    return handleError(error, "POST | ASSIGN ROLE TO TRANSITION", `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`);
+    return handleError(
+      error,
+      "POST | ASSIGN ROLE TO TRANSITION",
+      `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`
+    );
   }
 }
 
@@ -663,7 +776,11 @@ export async function removeRoleFromTransition(
     revalidatePath("/dashboard/admin/workflows");
     return successResponse(response.data, "Role removed from transition successfully");
   } catch (error: any) {
-    return handleError(error, "DELETE | REMOVE ROLE FROM TRANSITION", `/api/v1/workflows/transitions/roles/remove?transition_id=${transitionId}&role_id=${roleId}`);
+    return handleError(
+      error,
+      "DELETE | REMOVE ROLE FROM TRANSITION",
+      `/api/v1/workflows/transitions/roles/remove?transition_id=${transitionId}&role_id=${roleId}`
+    );
   }
 }
 
@@ -699,6 +816,10 @@ export async function triggerBackgroundWorker(): Promise<APIResponse> {
 
     return successResponse(response.data, "Background worker triggered successfully");
   } catch (error: any) {
-    return handleError(error, "POST | TRIGGER BACKGROUND WORKER", "/api/v1/workflows/worker/process");
+    return handleError(
+      error,
+      "POST | TRIGGER BACKGROUND WORKER",
+      "/api/v1/workflows/worker/process"
+    );
   }
 }

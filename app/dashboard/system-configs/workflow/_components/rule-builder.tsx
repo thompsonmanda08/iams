@@ -11,6 +11,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Condition, OperatorType } from "@/lib/types/workflow";
+import CustomAlert from "@/components/ui/custom-alert";
 
 interface RuleBuilderProps {
   conditions: Condition[];
@@ -36,8 +37,7 @@ export const RuleBuilder = ({ conditions, onAdd, onUpdate, onDelete }: RuleBuild
     <div className="space-y-3">
       {conditions.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed py-6 text-center">
-          <p className="text-muted-foreground mb-3 text-sm">No conditions defined</p>
-          <Button size="sm" variant="outline" onClick={handleAdd}>
+          <Button size="sm" variant="outline" type="button" onClick={handleAdd}>
             <Plus className="mr-1 h-3 w-3" />
             Add Condition
           </Button>
@@ -81,14 +81,18 @@ export const RuleBuilder = ({ conditions, onAdd, onUpdate, onDelete }: RuleBuild
                   className="flex-1"
                 />
 
-                <Button size="icon" variant="ghost" onClick={() => onDelete(condition.id)}>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  type="button"
+                  onClick={() => onDelete(condition.id)}>
                   <Trash2 className="text-destructive h-4 w-4" />
                 </Button>
               </div>
             </div>
           ))}
 
-          <Button size="sm" variant="outline" onClick={handleAdd} className="w-full">
+          <Button size="sm" variant="outline" type="button" onClick={handleAdd} className="w-full">
             <Plus className="mr-1 h-3 w-3" />
             Add Condition
           </Button>

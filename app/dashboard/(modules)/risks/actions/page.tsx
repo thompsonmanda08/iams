@@ -1,12 +1,15 @@
 import { getRisks } from "@/app/_actions/risk-module-actions";
 import { ActionsTable } from "./actions-table";
-import { initializeSystemSetupCached } from "@/app/_actions/auth-actions";
 import { User } from "@/lib/types/account";
+import PageHeader from "@/components/page-header";
+import { verifySession } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export default async function ActionsPage() {
-  const systemInit = await initializeSystemSetupCached();
-  const user = systemInit?.data?.user as User;
+  // const systemInit = await initializeSystemSetup();
+  // const user = systemInit?.data?.user as User;
+  const { session } = await verifySession();
+  const user = session?.user as User;
 
   const response = await getRisks({
     risk_owner_id: user?.id
@@ -25,10 +28,11 @@ export default async function ActionsPage() {
     <main className="bg-background min-h-screen">
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Actions</h1>
-            <p className="text-muted-foreground mt-1 text-sm">Your Active Risk Actions</p>
-          </div>
+          <PageHeader
+            title="My Actions"
+            description="Your Active Risk Actions"
+            icon="AlertTriangle"
+          />
         </div>
       </div>
       <div className="container mx-auto px-4 py-8">
