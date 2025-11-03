@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/layout/header";
 import { User } from "@/lib/types/account";
 import { initializeSystemSetup } from "../_actions/auth-actions";
 import { redirect } from "next/navigation";
-import { getUserSession } from "@/lib/session";
+import { getUserSession, verifySession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,8 @@ export default async function DashLayout({
   // const systemInit = await initializeSystemSetup();
   // const user = systemInit?.data?.user as User;
 
-  const user = await getUserSession();
+  const { session } = await verifySession();
+  const user = session?.user as User;
 
   if (user == null) return redirect("/login");
 

@@ -1,14 +1,12 @@
-import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 import { ActionDetails } from "../action-details";
-import { getRisk, getRisks } from "@/app/_actions/risk-module-actions";
+import { getRisks } from "@/app/_actions/risk-module-actions";
 import { User } from "@/lib/types/account";
-import { getUserSession } from "@/lib/session";
+import { verifySession } from "@/lib/session";
 
 export default async function ActionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // const systemInit = await initializeSystemSetup();
-  // const user = systemInit?.data?.user as User;
-  const user = await getUserSession();
+  const { session } = await verifySession();
+  const user = session?.user as User;
 
   const response = await getRisks({
     risk_owner_id: user?.id

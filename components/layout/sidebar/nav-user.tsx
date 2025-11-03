@@ -22,21 +22,9 @@ import { logUserOut } from "@/app/_actions/auth-actions";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSystemSetup } from "@/hooks/use-users-query-data";
-import { useMemo } from "react";
 
-export function NavUser({ user: userData }: { user: User }) {
+export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
-  const isLoadingUser = !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
-
-  const { data: session } = useSystemSetup(true);
-
-  const user = useMemo(() => {
-    return {
-      ...userData,
-      ...session?.data?.user
-    };
-  }, [session?.data, userData, isLoadingUser]);
 
   const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
   const userEmail = user?.email || "example@mail.com";
@@ -53,7 +41,7 @@ export function NavUser({ user: userData }: { user: User }) {
   };
 
   // LOADING STATE
-  return isLoadingUser ? (
+  return user == null ? (
     <>
       <Skeleton className="h-10 w-full rounded-lg" />
     </>

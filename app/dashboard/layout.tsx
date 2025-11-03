@@ -21,8 +21,8 @@ export default async function DashLayout({
     cookieStore.get("sidebar_state")?.value === "true" ||
     cookieStore.get("sidebar_state") === undefined;
 
-  const user = await getUserSession();
-  // const user = systemInit?.data?.user as User;
+  const session = await verifySession();
+  const user = session?.user as User;
 
   // const systemInit = await initializeSystemSetup();
   // const user = systemInit?.data?.user as User;
