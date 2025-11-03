@@ -1,3 +1,4 @@
+import BackButton from "@/components/back-button";
 import BudgetForm from "../_components/budget-form";
 import PageHeader from "@/components/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,7 @@ const NewBudgetsPage = async () => {
               description="Set up a new budget with budget lines"
               icon="Wallet"
             />
+            <BackButton title="Back to Budgets"/>
           </div>
         </div>
       </div>
