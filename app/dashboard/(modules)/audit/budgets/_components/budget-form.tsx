@@ -5,444 +5,633 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, Save, X, Calendar, DollarSign, FileText } from "lucide-react";
-import { notify } from "@/lib/utils";
-import { Budget, BudgetItem, BudgetLine } from "@/lib/types/audit-types";
-import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Save, FileText, DollarSign, Calendar, Building2, Wallet } from "lucide-react";
+import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
+import { CURRENCIES } from "@/lib/constants";
+import { createBudget, createBudgetLine, getBudgets } from "@/app/_actions/audit-module-actions";
+import { getDepartments } from "@/app/_actions/config-actions";
 
-export const mockBudgets: Budget[] = [
-  {
-    id: "1",
-    name: "Departmental Budget",
-    amount: 1000000,
-    description: "This is the annual budget for all departments in the company",
-    status: "BUDGET_CREATION",
-    start_date: "2025-10-27",
-    end_date: "2026-10-27",
-    budget_lines: [
-      {
-        id: "1-1",
-        name: "Operations",
-        amount: 350000,
-        description: "Budget under operations department",
-        start_date: "2025-10-29",
-        end_date: "2026-10-21"
-      },
-      {
-        id: "1-2",
-        name: "Finance",
-        amount: 200000,
-        description: "Budget under finance department",
-        start_date: "2025-10-27",
-        end_date: "2026-10-14"
-      }
-    ]
-  },
-  {
-    id: "2",
-    name: "Scheduled Budget",
-    amount: 200000,
-    description: "Quarterly scheduled budget allocations",
-    status: "UNDER_REVIEW",
-    start_date: "2025-10-22",
-    end_date: "2027-02-27",
-    budget_lines: [
-      {
-        id: "2-1",
-        name: "Supplies",
-        amount: 120000,
-        description: "Office and operational supplies",
-        start_date: "2025-10-22",
-        end_date: "2027-02-27"
-      },
-      {
-        id: "2-2",
-        name: "Contingency",
-        amount: 80000,
-        description: "Emergency and contingency fund",
-        start_date: "2025-10-22",
-        end_date: "2027-02-27"
-      }
-    ]
-  },
-  {
-    id: "3",
-    name: "Latest Budget",
-    amount: 200000,
-    description: "Most recent budget allocation",
-    status: "APPROVED",
-    start_date: "2025-10-21",
-    end_date: "2026-07-15",
-    budget_lines: [
-      {
-        id: "3-1",
-        name: "Training and Certifications",
-        amount: 120000,
-        description: "Employee development programs",
-        start_date: "2025-10-21",
-        end_date: "2026-07-15"
-      },
-      {
-        id: "3-2",
-        name: "Transport",
-        amount: 80000,
-        description: "Transportation and logistics",
-        start_date: "2025-10-21",
-        end_date: "2026-07-15"
-      }
-    ]
-  }
-];
+const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
-export const mockBudgetItems: BudgetItem[] = [
-  {
-    id: "item-1",
-    budget_line_id: "1-1",
-    name: "Office Equipment",
-    amount: 50000,
-    description: "New computers and furniture",
-    date: "2025-11-15"
-  },
-  {
-    id: "item-2",
-    budget_line_id: "1-1",
-    name: "Software Licenses",
-    amount: 30000,
-    description: "Annual software subscriptions",
-    date: "2025-12-01"
-  },
-  {
-    id: "item-3",
-    budget_line_id: "1-2",
-    name: "Audit Services",
-    amount: 75000,
-    description: "External audit engagement",
-    date: "2026-03-15"
-  }
-];
+interface Department {
+  id: string;
+  name: string;
+  code: string;
+}
 
-const INIT_FORM_DATA: Budget = {
-  id: "",
-  name: "",
-  amount: 0,
-  description: "",
-  status: "BUDGET_CREATION",
+interface Budget {
+  id: string;
+  title: string;
+  total_amount: number;
+  currency: string;
+}
+
+interface BudgetFormData {
+  department_id: string;
+  year: number;
+  title: string;
+  total_amount: number;
+  currency: string;
+  start_date: string;
+  end_date: string;
+  description: string;
+}
+
+interface BudgetLineFormData {
+  budget_id: string;
+  name: string;
+  description: string;
+  allocated_amount: number;
+  spent_amount: number;
+  currency: string;
+  start_date: string;
+  end_date: string;
+  category: string;
+}
+
+const INIT_BUDGET_DATA: BudgetFormData = {
+  department_id: "",
+  year: new Date().getFullYear(),
+  title: "",
+  total_amount: 0,
+  currency: "ZMW",
   start_date: "",
   end_date: "",
-  budget_lines: []
+  description: ""
 };
-const BudgetForm = ({ budgetId, initialData }: { budgetId?: string; initialData?: Budget }) => {
-  const router = useRouter();
 
-  const [formData, setFormData] = useState<Budget>(
-    initialData && budgetId ? initialData : INIT_FORM_DATA
-  );
+const INIT_LINE_DATA: BudgetLineFormData = {
+  budget_id: "",
+  name: "",
+  description: "",
+  allocated_amount: 0,
+  spent_amount: 0,
+  currency: "ZMW",
+  start_date: "",
+  end_date: "",
+  category: "PERSONNEL"
+};
 
-  const updateFormData = (fields: Partial<Budget>) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      ...fields
-    }));
-  };
+const BudgetForm = ({
+  budgetId,
+  departmentId,
+  mode = "budget"
+}: {
+  budgetId?: string;
+  departmentId?: string;
+  mode?: "budget" | "line";
+}) => {
+  const [budgetData, setBudgetData] = useState<BudgetFormData>({
+    ...INIT_BUDGET_DATA,
+    department_id: departmentId || ""
+  });
+  const [lineData, setLineData] = useState<BudgetLineFormData>({
+    ...INIT_LINE_DATA,
+    budget_id: budgetId || ""
+  });
+  const [isCreating, setIsCreating] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [loadingBudgets, setLoadingBudgets] = useState(false);
+
+  // Fetch departments
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setLoadingDepartments(true);
+      try {
+        const response = await getDepartments({ isActive: true });
+        if (response.success && response.data.data) {
+          setDepartments(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+        toast.error("Failed to load departments");
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   useEffect(() => {
-    if (budgetId) {
-      const budget = mockBudgets.find((b) => b.id === budgetId);
-      if (budget) {
-        updateFormData(budget);
-      }
+    if (mode === "line") {
+      const fetchBudgets = async () => {
+        setLoadingBudgets(true);
+        try {
+          const response = await getBudgets();
+          if (response.success && response.data.data) {
+            setBudgets(response.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching budgets:", error);
+          toast.error("Failed to load budgets");
+        } finally {
+          setLoadingBudgets(false);
+        }
+      };
+
+      fetchBudgets();
     }
-  }, [budgetId]);
+  }, [mode]);
 
-  const addBudgetLine = () => {
-    const newLine: BudgetLine = {
-      id: `line-${Date.now()}`,
-      name: "",
-      amount: 0,
-      description: "",
-      start_date: "",
-      end_date: ""
-    };
-    updateFormData({
-      budget_lines: [...formData.budget_lines, newLine]
-    });
-    // setBudgetLines([...budget_lines, newLine]);
+  const updateBudgetData = (fields: Partial<BudgetFormData>) => {
+    setBudgetData((prev) => ({ ...prev, ...fields }));
   };
 
-  const removeBudgetLine = (id: string) => {
-    updateFormData({
-      budget_lines: formData.budget_lines.filter((line) => line.id !== id)
-    });
+  const updateLineData = (fields: Partial<BudgetLineFormData>) => {
+    setLineData((prev) => ({ ...prev, ...fields }));
   };
 
-  const updateBudgetLine = (id: string, field: keyof BudgetLine, value: string | number) => {
-    updateFormData({
-      budget_lines: formData.budget_lines.filter((line) => line.id !== id)
-    });
+  const createBudgetHandler = async () => {
+    setIsCreating(true);
+    try {
+      const budgetPayload = {
+        department_id: budgetData.department_id,
+        year: budgetData.year,
+        title: budgetData.title,
+        total_amount: budgetData.total_amount,
+        currency: budgetData.currency,
+        start_date: new Date(budgetData.start_date).toISOString(),
+        end_date: new Date(budgetData.end_date).toISOString(),
+        description: budgetData.description
+      };
+
+      const response = await createBudget(budgetPayload);
+
+      if (response.success) {
+        toast.success(response.message || "Budget created successfully");
+      } else {
+        toast.error(response.message || "Failed to create budget");
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      toast.error("Failed to create budget. Please try again");
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const createBudgetLineHandler = async () => {
+    setIsCreating(true);
+    try {
+      const linePayload = {
+        name: lineData.name,
+        description: lineData.description,
+        allocated_amount: lineData.allocated_amount,
+        spent_amount: lineData.spent_amount,
+        currency: lineData.currency,
+        start_date: new Date(lineData.start_date).toISOString(),
+        end_date: new Date(lineData.end_date).toISOString(),
+        category: lineData.category
+      };
+
+      const response = await createBudgetLine(lineData.budget_id, linePayload);
+
+      if (response.success) {
+        toast.success(response.message || "Budget line created successfully");
+      } else {
+        toast.error(response.message || "Failed to create budget line");
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      toast.error("Failed to create budget line. Please try again.");
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    notify({
-      title: budgetId ? "Budget Updated" : "Budget Created",
-      description: `${formData.name} has been ${budgetId ? "updated" : "created"} successfully.`
-    });
-    router.push("/budget");
+
+    try {
+      if (mode === "budget") {
+        await createBudgetHandler();
+      } else {
+        await createBudgetLineHandler();
+      }
+    } catch (error) {
+      console.error("Error creating:", error);
+    }
   };
 
-  const isEditMode = !!budgetId;
+  const isEditMode = !!budgetId && mode === "budget";
+  const selectedBudget = budgets?.find((b) => b.id === lineData.budget_id);
+
+  console.log("BUDGETS:", budgets);
 
   return (
-    <div className="from-background via-background to-muted/30 min-h-screen bg-linear-to-br">
-      <div className="container mx-auto max-w-7xl px-4 py-8">
-        {/* Header */}
-        <div className="animate-slide-up mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-foreground mb-2 text-4xl font-bold">
-              {isEditMode ? "Edit Budget" : "Create New Budget"}
-            </h1>
-            <p className="text-muted-foreground">
-              {isEditMode
-                ? "Update budget details and budget lines"
-                : "Set up a new budget with budget lines"}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/budget")}
-              className="gap-2">
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
-            <Button type="submit" form="budget-form" className="gap-2 shadow-lg">
-              <Save className="h-4 w-4" />
-              {isEditMode ? "Save Changes" : "Create Budget"}
-            </Button>
-          </div>
-        </div>
-
-        <form id="budget-form" onSubmit={handleSubmit} className="space-y-6">
-          {/* Budget Information */}
-          <Card className="animate-fade-in p-8 shadow-xl">
+    <div className="from-background via-background to-muted/30 bg-gradient-to-br">
+      <form id="budget-form" onSubmit={handleSubmit} className="space-y-6">
+        {mode === "budget" ? (
+          <Card className="animate-fade-in p-8">
             <div className="mb-6 flex items-center gap-3 border-b pb-4">
               <div className="bg-primary/10 rounded-lg p-2.5">
                 <FileText className="text-primary h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-foreground text-2xl font-bold">Budget Information</h2>
+                <h2 className="text-2xl font-bold">Budget Information</h2>
                 <p className="text-muted-foreground text-sm">Basic details about the budget</p>
               </div>
             </div>
 
             <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="department"
+                    className="flex items-center gap-2 text-sm font-semibold">
+                    <Building2 className="text-muted-foreground h-4 w-4" />
+                    Department *
+                  </Label>
+                  <Select
+                    value={budgetData.department_id}
+                    onValueChange={(value) => updateBudgetData({ department_id: value })}
+                    disabled={loadingDepartments}>
+                    <SelectTrigger id="department" className="w-full">
+                      <SelectValue placeholder="Select department">
+                        {loadingDepartments
+                          ? "Loading..."
+                          : budgetData.department_id
+                            ? departments.find((d) => d.id === budgetData.department_id)?.name ||
+                              "Select department"
+                            : "Select department"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {departments?.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4" />
+                            <span>{dept.name}</span>
+                            <span className="text-muted-foreground text-xs">({dept.code})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="year" className="flex items-center gap-2 text-sm font-semibold">
+                    <Calendar className="text-muted-foreground h-4 w-4" />
+                    Year *
+                  </Label>
+                  <Input
+                    id="year"
+                    type="text"
+                    min="2020"
+                    max="2100"
+                    value={budgetData.year}
+                    onChange={(e) => updateBudgetData({ year: Number(e.target.value) })}
+                    placeholder="2025"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="flex items-center gap-2 text-sm font-semibold">
+                    <FileText className="text-muted-foreground h-4 w-4" />
+                    Budget Title *
+                  </Label>
+                  <Input
+                    id="title"
+                    value={budgetData.title}
+                    onChange={(e) => updateBudgetData({ title: e.target.value })}
+                    placeholder="e.g., Q4 2025 Departmental Budget"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="totalAmount"
+                    className="flex items-center gap-2 text-sm font-semibold">
+                    <DollarSign className="text-muted-foreground h-4 w-4" />
+                    Total Amount *
+                  </Label>
+                  <Input
+                    id="totalAmount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={budgetData.total_amount || ""}
+                    onChange={(e) => updateBudgetData({ total_amount: Number(e.target.value) })}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label
-                    htmlFor="budgetName"
-                    className="flex items-center gap-2 text-sm font-semibold">
-                    <FileText className="text-muted-foreground h-4 w-4" />
-                    Budget Title
-                  </Label>
-                  <Input
-                    id="budgetName"
-                    // label="Budget Title"
-                    value={formData.name}
-                    onChange={(e) => updateFormData({ name: e.target.value })}
-                    placeholder="Enter budget name"
-                    className="h-11"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="budgetAmount"
+                    htmlFor="currency"
                     className="flex items-center gap-2 text-sm font-semibold">
                     <DollarSign className="text-muted-foreground h-4 w-4" />
-                    Total Amount
+                    Currency *
                   </Label>
-                  <Input
-                    id="budgetAmount"
-                    type="number"
-                    value={formData.amount}
-                    onChange={(e) => updateFormData({ amount: Number(e.target.value) })}
-                    placeholder="0.00"
-                    className="h-11"
-                    required
+                  <Select
+                    value={budgetData.currency}
+                    onValueChange={(value) => updateBudgetData({ currency: value })}>
+                    <SelectTrigger id="currency" className="w-full">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {CURRENCIES.map((curr) => (
+                        <SelectItem key={curr.currency} value={curr.currency}>
+                          {curr.currency} - {curr.country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm font-semibold">
+                    <Calendar className="text-muted-foreground h-4 w-4" />
+                    Start Date *
+                  </Label>
+                  <DatePicker
+                    value={
+                      budgetData?.start_date
+                        ? (new Date(budgetData.start_date) as unknown as any)
+                        : undefined
+                    }
+                    onValueChange={(date) =>
+                      updateBudgetData({ start_date: date?.toISOString().split("T")[0] || "" })
+                    }
                   />
                 </div>
+
                 <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm font-semibold">
+                    <Calendar className="text-muted-foreground h-4 w-4" />
+                    End Date *
+                  </Label>
                   <DatePicker
-                    label="Start Date"
-                    required
-                    value={(formData.start_date ?? undefined) as any}
+                    value={
+                      budgetData.end_date
+                        ? (new Date(budgetData.end_date) as unknown as any)
+                        : undefined
+                    }
                     onValueChange={(date) =>
-                      updateFormData({ start_date: date?.toISOString().split("T")[0] || null })
+                      updateBudgetData({ end_date: date?.toISOString().split("T")[0] || "" })
                     }
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                <div className="space-y-2 md:col-span-3">
-                  <Textarea
-                    id="description"
-                    label="  Description"
-                    value={formData.description}
-                    onChange={(e) => updateFormData({ description: e.target.value })}
-                    rows={4}
-                    placeholder="Provide a detailed description of the budget..."
-                    className="resize-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <DatePicker
-                    label="End Date"
-                    required
-                    value={(formData.end_date ?? undefined) as any}
-                    onValueChange={(date) =>
-                      updateFormData({ end_date: date?.toISOString().split("T")[0] || null })
-                    }
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm font-semibold">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={budgetData.description}
+                  onChange={(e) => updateBudgetData({ description: e.target.value })}
+                  rows={4}
+                  placeholder="Provide a detailed description of the budget purpose and scope..."
+                  className="resize-none"
+                />
               </div>
             </div>
-          </Card>
-
-          {/* Budget Lines */}
-          <Card className="animate-fade-in p-8 shadow-xl [animation-delay:100ms]">
-            <div className="mb-6 flex items-center justify-between border-b pb-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-accent/10 rounded-lg p-2.5">
-                  <DollarSign className="text-accent h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-foreground text-2xl font-bold">Budget Lines</h2>
-                  <p className="text-muted-foreground text-sm">
-                    Departmental allocations within the budget
-                  </p>
-                </div>
-              </div>
+            <div className="flex justify-end">
               <Button
-                type="button"
-                onClick={addBudgetLine}
-                variant="outline"
-                className="hover:bg-accent/10 hover:text-accent hover:border-accent gap-2 transition-all">
-                <Plus className="h-4 w-4" />
-                Add Line
+                type="submit"
+                form="budget-form"
+                disabled={isCreating || loadingDepartments}
+                className="gap-2 shadow-lg">
+                <Save className="h-4 w-4" />
+                {isCreating ? "Creating..." : isEditMode ? "Save Changes" : "Create Budget"}
               </Button>
             </div>
-
-            {formData.budget_lines?.length === 0 ? (
-              <div className="rounded-xl border-2 border-dashed py-12 text-center">
-                <DollarSign className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
-                <h3 className="text-foreground mb-2 text-lg font-semibold">No budget lines yet</h3>
-                <p className="text-muted-foreground mb-6">
-                  Add budget lines to organize departmental allocations
-                </p>
-                <Button type="button" onClick={addBudgetLine} variant="outline" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add First Line
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {formData.budget_lines?.map((line, index) => (
-                  <div
-                    key={line.id}
-                    className="from-card to-muted/20 animate-slide-in rounded-xl border-2 bg-linear-to-br p-6 transition-all hover:shadow-lg"
-                    style={{ animationDelay: `${index * 50}ms` }}>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-                        <div className="space-y-2">
-                          <Label htmlFor={`lineName-${line.id}`} className="text-sm font-medium">
-                            Line Name
-                          </Label>
-                          <Input
-                            id={`lineName-${line.id}`}
-                            value={line.name}
-                            onChange={(e) => updateBudgetLine(line.id, "name", e.target.value)}
-                            placeholder="e.g., Operations"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`lineAmount-${line.id}`} className="text-sm font-medium">
-                            Amount
-                          </Label>
-                          <Input
-                            id={`lineAmount-${line.id}`}
-                            type="number"
-                            value={line.amount}
-                            onChange={(e) =>
-                              updateBudgetLine(line.id, "amount", Number(e.target.value))
-                            }
-                            placeholder="0.00"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <DatePicker
-                            id={`lineStartDate-${line.id}`}
-                            type="date"
-                            value={line.start_date as any}
-                            onValueChange={(date) =>
-                              updateBudgetLine(
-                                line.id,
-                                "start_date",
-                                date?.toISOString().split("T")[0] as string
-                              )
-                            }
-                            required
-                          />
-                          <DatePicker
-                            id={`lineEndDate-${line.id}`}
-                            type="date"
-                            label="End Date"
-                            value={line.end_date as any}
-                            onValueChange={(date) =>
-                              updateBudgetLine(
-                                line.id,
-                                "end_date",
-                                date?.toISOString().split("T")[0] || ""
-                              )
-                            }
-                            required
-                          />
-                        </div>
-
-                        <div className="flex items-end">
-                          <Button
-                            type="button"
-                            onClick={() => removeBudgetLine(line.id)}
-                            variant="destructive"
-                            size="icon"
-                            className="h-10 w-full">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Textarea
-                          id={`lineDescription-${line.id}`}
-                          label="  Description"
-                          value={line.description}
-                          onChange={(e) => updateBudgetLine(line.id, "description", e.target.value)}
-                          rows={2}
-                          placeholder="Describe this budget line..."
-                          className="resize-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </Card>
-        </form>
-      </div>
+        ) : (
+          <Card className="animate-fade-in p-8">
+            <div className="mb-6 flex items-center gap-3 border-b pb-4">
+              <div className="bg-primary/10 rounded-lg p-2.5">
+                <DollarSign className="text-primary h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Budget Line Information</h2>
+                <p className="text-muted-foreground text-sm">
+                  Details for the budget line allocation
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="budget" className="flex items-center gap-2 text-sm font-semibold">
+                  <Wallet className="text-muted-foreground h-4 w-4" />
+                  Select Budget *
+                </Label>
+                <Select
+                  value={lineData.budget_id}
+                  onValueChange={(value) => updateLineData({ budget_id: value })}
+                  disabled={loadingBudgets}>
+                  <SelectTrigger id="budget" className="w-full">
+                    <SelectValue placeholder="Select a budget">
+                      {loadingBudgets
+                        ? "Loading..."
+                        : lineData.budget_id
+                          ? budgets.find((b) => b.id === lineData.budget_id)?.title ||
+                            "Select a budget"
+                          : "Select a budget"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {budgets.length === 0 && !loadingBudgets ? (
+                      <div className="text-muted-foreground p-4 text-center text-sm">
+                        No budgets available. Create a budget first.
+                      </div>
+                    ) : (
+                      budgets.map((budget) => (
+                        <SelectItem key={budget.id} value={budget.id}>
+                          {budget.title} - {budget.currency} {budget.total_amount.toLocaleString()}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {selectedBudget && (
+                  <div className="bg-muted/50 mt-2 rounded-lg p-3">
+                    <p className="text-sm">
+                      <strong>Selected Budget:</strong> {selectedBudget.title}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      Total: {selectedBudget.currency}{" "}
+                      {selectedBudget.total_amount.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="lineName" className="text-sm font-semibold">
+                    Line Name *
+                  </Label>
+                  <Input
+                    id="lineName"
+                    value={lineData.name}
+                    onChange={(e) => updateLineData({ name: e.target.value })}
+                    placeholder="e.g., Personnel Costs"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lineCategory" className="text-sm font-semibold">
+                    Category *
+                  </Label>
+                  <Select
+                    value={lineData.category}
+                    onValueChange={(value) => updateLineData({ category: value })}>
+                    <SelectTrigger id="lineCategory" className="w-full">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {BUDGET_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="lineAllocated" className="text-sm font-semibold">
+                    Allocated Amount *
+                  </Label>
+                  <Input
+                    id="lineAllocated"
+                    type="text"
+                    step="0.01"
+                    min="0"
+                    value={lineData.allocated_amount || ""}
+                    onChange={(e) => updateLineData({ allocated_amount: Number(e.target.value) })}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lineSpent" className="text-sm font-semibold">
+                    Spent Amount
+                  </Label>
+                  <Input
+                    id="lineSpent"
+                    type="text"
+                    step="0.01"
+                    min="0"
+                    value={lineData.spent_amount || ""}
+                    onChange={(e) => updateLineData({ spent_amount: Number(e.target.value) })}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lineCurrency" className="text-sm font-semibold">
+                    Currency *
+                  </Label>
+                  <Select
+                    value={lineData.currency}
+                    onValueChange={(value) => updateLineData({ currency: value })}>
+                    <SelectTrigger id="lineCurrency" className="w-full">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {CURRENCIES.map((curr) => (
+                        <SelectItem key={curr.currency} value={curr.currency}>
+                          {curr.currency} - {curr.country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm font-semibold">
+                    <Calendar className="text-muted-foreground h-4 w-4" />
+                    Start Date *
+                  </Label>
+                  <DatePicker
+                    value={
+                      lineData.start_date
+                        ? (new Date(lineData.start_date) as unknown as any)
+                        : undefined
+                    }
+                    onValueChange={(date) =>
+                      updateLineData({ start_date: date?.toISOString().split("T")[0] || "" })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm font-semibold">
+                    <Calendar className="text-muted-foreground h-4 w-4" />
+                    End Date *
+                  </Label>
+                  <DatePicker
+                    value={
+                      lineData.end_date
+                        ? (new Date(lineData.end_date) as unknown as any)
+                        : undefined
+                    }
+                    onValueChange={(date) =>
+                      updateLineData({ end_date: date?.toISOString().split("T")[0] || "" })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lineDescription" className="text-sm font-semibold">
+                  Description
+                </Label>
+                <Textarea
+                  id="lineDescription"
+                  value={lineData.description}
+                  onChange={(e) => updateLineData({ description: e.target.value })}
+                  rows={3}
+                  placeholder="Describe the purpose and scope of this budget line..."
+                  className="resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                form="budget-form"
+                disabled={isCreating || loadingBudgets}
+                className="gap-2 shadow-lg">
+                <Save className="h-4 w-4" />
+                {isCreating ? "Creating..." : "Create Budget Line"}
+              </Button>
+            </div>
+          </Card>
+        )}
+      </form>
     </div>
   );
 };

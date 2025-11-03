@@ -1,7 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,34 +9,109 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, Search, Wallet, TrendingUp, DollarSign } from "lucide-react";
-import { mockBudgets } from "./budget-form";
+import { Pencil, Trash2, Wallet, TrendingUp, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { BudgetLinesList } from "./budget-line-list";
 import { BudgetStatusBadge } from "./budget-status-badge";
+import Search from "@/components/ui/search-field";
+import { CustomPagination } from "@/components/ui/pagination";
+import { Pagination } from "@/lib/types";
+import { BudgetStatus } from "@/lib/types/audit-types";
 
-const BudgetList = () => {
+interface BudgetLine {
+  id: string;
+  name: string;
+  description: string;
+  allocated_amount: number;
+  spent_amount: number;
+  currency: string;
+  start_date: string;
+  end_date: string;
+  category: string;
+}
+
+interface Budget {
+  id: string;
+  title: string;
+  total_amount: number;
+  currency: string;
+  start_date: string;
+  end_date: string;
+  description: string;
+  status: string;
+  year: number;
+  department_id: string | null;
+  created_at: string;
+  budget_lines?: BudgetLine[];
+}
+
+interface BudgetListProps {
+  budgets: Budget[];
+  budgetLinesMap?: Record<string, BudgetLine[]>;
+}
+
+const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [entriesPerPage, setEntriesPerPage] = useState("10");
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    page_size: 10,
+    total_pages: 1,
+    totalCount: 0,
+    has_next: false,
+    has_prev: false
+  });
 
-  const filteredBudgets = mockBudgets.filter((budget) =>
-    budget.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Combine budgets with their budget lines
+  const budgetsWithLines = useMemo(() => {
+    return budgets.map((budget) => ({
+      ...budget,
+      budget_lines: budgetLinesMap[budget.id] || []
+    }));
+  }, [budgets, budgetLinesMap]);
 
-  const totalBudgets = mockBudgets.length;
-  const totalAmount = mockBudgets.reduce((sum, b) => sum + b.amount, 0);
-  const approvedBudgets = mockBudgets.filter((b) => b.status === "APPROVED").length;
+  // Filter budgets based on search
+  const filteredBudgets = useMemo(() => {
+    return budgetsWithLines.filter((budget) =>
+      budget.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [budgetsWithLines, searchTerm]);
 
-  const formatCurrency = (amount: number) => {
-    return `ZMW ${amount.toLocaleString()}`;
+  // Calculate pagination
+  const paginatedBudgets = useMemo(() => {
+    const startIndex = (pagination.page - 1) * pagination.page_size;
+    const endIndex = startIndex + pagination.page_size;
+    return filteredBudgets.slice(startIndex, endIndex);
+  }, [filteredBudgets, pagination.page, pagination.page_size]);
+
+  // Update pagination data
+  const customPaginationData = useMemo(() => {
+    const totalCount = filteredBudgets.length;
+    const total_pages = Math.ceil(totalCount / pagination.page_size);
+
+    return {
+      ...pagination,
+      total_pages,
+      totalCount,
+      has_next: pagination.page < total_pages,
+      has_prev: pagination.page > 1
+    };
+  }, [filteredBudgets.length, pagination]);
+
+  const updatePagination = ({ page, page_size }: { page: number; page_size?: number }) => {
+    setPagination((prev) => ({
+      ...prev,
+      page,
+      page_size: page_size ?? prev.page_size
+    }));
+  };
+
+  const totalBudgets = budgets.length;
+  const totalAmount = budgets.reduce((sum, b) => sum + b.total_amount, 0);
+  const approvedBudgets = budgets.filter((b) => b.status === "APPROVED").length;
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return `${currency} ${amount.toLocaleString()}`;
   };
 
   const formatDate = (date: string) => {
@@ -49,7 +123,7 @@ const BudgetList = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
+    <div className="container">
       {/* Stats Cards */}
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card className="border-l-primary animate-slide-in border-l-4 p-6 transition-all duration-300 hover:shadow-lg">
@@ -68,7 +142,9 @@ const BudgetList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground mb-1 text-sm font-medium">Total Allocated</p>
-              <p className="text-foreground text-3xl font-bold">{formatCurrency(totalAmount)}</p>
+              <p className="text-foreground text-3xl font-bold">
+                {formatCurrency(totalAmount, budgets[0]?.currency || "ZMW")}
+              </p>
             </div>
             <div className="bg-accent/10 rounded-xl p-3">
               <DollarSign className="text-accent h-8 w-8" />
@@ -89,38 +165,17 @@ const BudgetList = () => {
         </Card>
       </div>
 
-      {/* Main Content Card */}
-      <Card className="animate-fade-in shadow-xl [animation-delay:300ms]">
+      <Card className="animate-fade-in [animation-delay:300ms]">
         <div className="from-card to-muted/20 border-b bg-linear-to-r p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground font-medium">Show</span>
-                <Select value={entriesPerPage} onValueChange={setEntriesPerPage}>
-                  <SelectTrigger className="h-9 w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-muted-foreground font-medium">entries</span>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
-              <Input
-                type="text"
-                placeholder="Search budgets..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 w-80 pl-10"
-              />
-            </div>
+          <div className="flex items-center justify-end">
+            <Search
+              placeholder="Search budgets..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e);
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
+            />
           </div>
         </div>
 
@@ -128,91 +183,93 @@ const BudgetList = () => {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="text-foreground font-bold">Budget Name</TableHead>
+                <TableHead className="text-foreground font-bold">Budget Title</TableHead>
                 <TableHead className="text-foreground font-bold">Amount</TableHead>
                 <TableHead className="text-foreground font-bold">Budget Lines</TableHead>
                 <TableHead className="text-foreground font-bold">Status</TableHead>
+                <TableHead className="text-foreground font-bold">Year</TableHead>
                 <TableHead className="text-foreground font-bold">Start Date</TableHead>
                 <TableHead className="text-foreground font-bold">End Date</TableHead>
                 <TableHead className="text-foreground text-center font-bold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBudgets.map((budget, index) => (
-                <TableRow
-                  key={budget.id}
-                  className="hover:bg-muted/30 group transition-colors"
-                  style={{ animationDelay: `${index * 50}ms` }}>
-                  <TableCell>
-                    <Link
-                      href={`/budget/${budget.id}/${budget.budget_lines[0]?.id}/details`}
-                      className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
-                      {budget.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-lg font-bold">
-                    {formatCurrency(budget.amount)}
-                  </TableCell>
-                  <TableCell>
-                    <BudgetLinesList budgetLines={budget.budget_lines} />
-                  </TableCell>
-                  <TableCell>
-                    <BudgetStatusBadge status={budget.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(budget.start_date || "")}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(budget.end_date || "")}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-8 gap-1.5">
-                        <Link
-                          href={`/budget/edit?id=${budget.id}`}
-                          className="flex cursor-pointer items-center gap-2">
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
-                        </Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {
+                paginatedBudgets.map((budget, index) => (
+                  <TableRow
+                    key={budget.id}
+                    className="hover:bg-muted/30 group transition-colors"
+                    style={{ animationDelay: `${index * 50}ms` }}>
+                    <TableCell>
+                      <Link
+                        href={`/dashboard/audit/budgets/${budget.id}`}
+                        className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
+                        {budget.title}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-lg font-bold">
+                      {formatCurrency(budget.total_amount, budget.currency)}
+                    </TableCell>
+                    <TableCell>
+                      <BudgetLinesList budgetLines={budget?.budget_lines || []} />
+                    </TableCell>
+                    <TableCell>
+                      <BudgetStatusBadge status={budget?.status as BudgetStatus} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{budget.year}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(budget.start_date)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(budget.end_date)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-8 gap-1.5">
+                          <Link
+                            href={`/dashboard/audit/budgets/edit?id=${budget.id}`}
+                            className="flex cursor-pointer items-center gap-2">
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </Link>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              }
             </TableBody>
           </Table>
         </div>
 
-        {filteredBudgets.length === 0 && (
+        {filteredBudgets.length === 0 && searchTerm && (
           <div className="p-12 text-center">
             <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
             <h3 className="text-foreground mb-2 text-lg font-semibold">No budgets found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchTerm
-                ? "Try adjusting your search terms"
-                : "Get started by creating your first budget"}
-            </p>
-            {!searchTerm && (
-              <Link href="/budget/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Budget
-                </Button>
-              </Link>
-            )}
+            <p className="text-muted-foreground mb-6">Try adjusting your search terms</p>
           </div>
+        )}
+
+        {filteredBudgets.length > 0 && (
+          <CustomPagination
+            pagination={customPaginationData}
+            updatePagination={updatePagination}
+            allowSetPageSize={true}
+            showDetails={true}
+            className="border-t"
+          />
         )}
       </Card>
     </div>

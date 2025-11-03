@@ -27,6 +27,29 @@ import { getUsers } from "./user-actions";
 // AUDIT PLAN ACTIONS
 // ============================================================================
 
+interface CreateBudgetPayload {
+  department_id: string;
+  year: number;
+  title: string;
+  total_amount: number;
+  currency: string;
+  start_date: string; 
+  end_date: string; 
+  description: string;
+}
+
+interface CreateBudgetLinePayload {
+  name: string;
+  description: string;
+  allocated_amount: number;
+  spent_amount: number;
+  currency: string;
+  start_date: string; 
+  end_date: string;
+  category: string;
+}
+
+
 /**
  * Get all audit plans with optional filters
  */
@@ -1413,6 +1436,216 @@ export async function getAuditLogsByEntity(
       error,
       "GET | ENTITY AUDIT LOGS",
       `/api/v1/audit-logs/entity/${entityType}/${entityId}`
+    );
+  }
+}
+
+/**
+ * Create a new budget
+ */
+export async function createBudget(
+  payload: CreateBudgetPayload
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/audit/budgets",
+      data: payload
+    });
+    
+    revalidatePath("/dashboard/audit/budgets/new");
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE BUDGET",
+      "/api/v1/audit/budgets"
+    );
+  }
+}
+
+/**
+ * Create a budget line for a specific budget
+ */
+export async function createBudgetLine(
+  budgetId: string,
+  payload: CreateBudgetLinePayload
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit/budgets/${budgetId}/lines`,
+      data: payload
+    });
+    
+    revalidatePath("/dashboard/audit/budgets/new");
+    revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
+    
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE BUDGET LINE",
+      `/api/v1/audit/budgets/${budgetId}/lines`
+    );
+  }
+}
+
+/**
+ * Get all budgets
+ */
+export async function getBudgets(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: "/api/v1/audit/budgets"
+    });
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FETCH BUDGETS",
+      "/api/v1/audit/budgets"
+    );
+  }
+}
+
+/**
+ * Get a single budget by ID
+ */
+export async function getBudgetById(budgetId: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit/budgets/${budgetId}`
+    });
+    
+    return successResponse(response.data, "Budget fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FETCH BUDGET",
+      `/api/v1/audit/budgets/${budgetId}`
+    );
+  }
+}
+
+/**
+ * Get budget lines for a specific budget
+ */
+export async function getBudgetLines(budgetId: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit/budgets/${budgetId}/lines`
+    });
+    
+    return successResponse(response.data, "Budget lines fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FETCH BUDGET LINES",
+      `/api/v1/audit/budgets/${budgetId}/lines`
+    );
+  }
+}
+
+/**
+ * Update a budget
+ */
+export async function updateBudget(
+  budgetId: string,
+  payload: Partial<CreateBudgetPayload>
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/audit/budgets/${budgetId}`,
+      data: payload
+    });   
+    
+    return successResponse(response.data, "Budget updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE BUDGET",
+      `/api/v1/audit/budgets/${budgetId}`
+    );
+  }
+}
+
+/**
+ * Update a budget line
+ */
+export async function updateBudgetLine(
+  lineId: string,
+  payload: Partial<CreateBudgetLinePayload>,
+  budgetId: string,
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/audit/budget-lines/${lineId}`,
+      data: payload
+    });
+    
+    revalidatePath("/dashboard/audit/budgets");
+    revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
+    
+    return successResponse(response.data, "Budget line updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE BUDGET LINE",
+      `/api/v1/audit/budget-lines/${lineId}`
+    );
+  }
+}
+
+/**
+ * Delete a budget
+ */
+export async function deleteBudget(budgetId: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/audit/budgets/${budgetId}`
+    });
+    
+    revalidatePath("/dashboard/audit/budgets");
+    
+    return successResponse(response.data, "Budget deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE BUDGET",
+      `/api/v1/audit/budgets/${budgetId}`
+    );
+  }
+}
+
+/**
+ * Delete a budget line
+ */
+export async function deleteBudgetLine(
+  budgetId: string,
+  lineId: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/audit/budget-lines/${lineId}`
+    });
+    
+    revalidatePath("/dashboard/audit/budgets");
+    revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
+    
+    return successResponse(response.data, "Budget line deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE BUDGET LINE",
+      `/api/v1/audit/budget-lines/${lineId}`
     );
   }
 }

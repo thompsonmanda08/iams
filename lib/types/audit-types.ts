@@ -871,15 +871,15 @@ export interface ClauseInfo {
   description?: string;
 }
 
-export type BudgetStatus = "BUDGET_CREATION" | "UNDER_REVIEW" | "APPROVED";
+export type BudgetStatus = "BUDGET_CREATION" | "UNDER_REVIEW" | "APPROVED"| "DRAFT";
 
 export interface BudgetLine {
-  id: string;
-  name: string;
-  amount: number;
-  description: string;
-  start_date: string | null;
-  end_date: string | null;
+  id?: string;
+  name?: string;
+  amount?: number;
+  description?: string;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface Budget {
