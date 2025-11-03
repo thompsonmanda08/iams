@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import type { GeneralWorkpaperInput, WorkpaperTemplate } from "@/lib/types/audit-types";
+import type { WorkpaperTemplate } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import {
   createWorkingPaperTemplate,
@@ -163,8 +163,7 @@ export function ISOWorkpaperTemplateForm({
                 type="button"
                 variant="destructive"
                 onClick={() => router.back()}
-                disabled={isSubmitting}
-                >
+                disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button
