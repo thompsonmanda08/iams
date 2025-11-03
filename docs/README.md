@@ -1,251 +1,315 @@
-# Documentation Index
+# INFRATEL IAMS Documentation
 
-**Last Updated:** 2025-10-24
+**Last Updated:** November 3, 2025
 
----
-
-## 📚 Active Documentation (Use These)
-
-### Primary References
-
-1. **[API_DOCS.md](./API_DOCS.md)** - 📖 Complete Backend API Reference
-   - **Use for:** Understanding all available backend endpoints
-   - **Audience:** Backend & Frontend developers
-   - **Size:** 62 KB
-   - **Status:** ✅ Current (from backend team)
-
-2. **[API_INTEGRATION_STATUS.md](./API_INTEGRATION_STATUS.md)** - 📊 Current Integration Status
-   - **Use for:** Quick overview of what's implemented and what's pending
-   - **Audience:** All developers, project managers
-   - **Size:** ~15 KB
-   - **Status:** ✅ Current
-   - **Contains:**
-     - Feature status (complete, partial, blocked)
-     - Endpoint integration checklist
-     - Next steps and priorities
-     - Quick reference commands
-
-### Feature-Specific Documentation
-
-3. **[MODULE_ASSIGNMENT_VERIFICATION.md](./MODULE_ASSIGNMENT_VERIFICATION.md)** - ✅ Testing Report
-   - **Use for:** Understanding department module assignment implementation
-   - **Audience:** QA, developers working on similar features
-   - **Size:** 9.5 KB
-   - **Status:** ✅ Current
-   - **Contains:**
-     - Implementation details
-     - Verification checklist
-     - Testing scenarios and results
-     - Performance metrics
+Welcome to the INFRATEL IAMS (Integrated Audit and Risk Management System) documentation.
 
 ---
 
-## 📦 Archived Documentation (Reference Only)
+## Quick Navigation
 
-These documents contain valuable historical information but have been superseded by the consolidated docs above.
+### 🚀 For New Developers
 
-4. **[IMPLEMENTATION_REPORT.md](./IMPLEMENTATION_REPORT.md)** - 📝 Detailed Implementation Log
-   - **Status:** 📦 Archive
-   - **Superseded by:** API_INTEGRATION_STATUS.md
-   - **Keep for:** Detailed change history and original analysis
-   - **Size:** 35 KB
+**Start here:**
+1. [Getting Started](GETTING_STARTED.md) - Setup and quick start guide
+2. [Architecture](ARCHITECTURE.md) - Understand the system architecture
+3. [Authentication](AUTHENTICATION.md) - Learn about authentication & sessions
 
-5. **[ENDPOINT_INTEGRATION_STATUS.md](./ENDPOINT_INTEGRATION_STATUS.md)** - 📋 Old Endpoint Tracking
-   - **Status:** 📦 Archive
-   - **Superseded by:** API_INTEGRATION_STATUS.md (Quick Overview table)
-   - **Keep for:** Historical endpoint integration tracking
-   - **Size:** 19 KB
+### 📚 Core Documentation
 
-6. **[API_UI_ALIGNMENT_ANALYSIS.md](./API_UI_ALIGNMENT_ANALYSIS.md)** - 🔍 Original Analysis
-   - **Status:** 📦 Archive (updated with current status)
-   - **Superseded by:** API_INTEGRATION_STATUS.md
-   - **Keep for:** Original problem identification and phased approach
-   - **Size:** 43 KB
-
-7. **[DEPARTMENT_MODULE_ASSIGNMENT.md](./DEPARTMENT_MODULE_ASSIGNMENT.md)** - 🎯 Feature Documentation
-   - **Status:** 📦 Archive
-   - **Superseded by:** MODULE_ASSIGNMENT_VERIFICATION.md
-   - **Keep for:** Original feature design notes
-   - **Size:** 13 KB
-
-8. **[SESSION_SUMMARY.md](./SESSION_SUMMARY.md)** - 📓 Development Session Log
-   - **Status:** 📦 Archive
-   - **Use for:** Understanding what was done in the last session
-   - **Size:** 13 KB
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [Getting Started](GETTING_STARTED.md) | Setup, quick start, common tasks | All developers |
+| [Architecture](ARCHITECTURE.md) | System architecture, tech stack, patterns | All developers |
+| [Authentication](AUTHENTICATION.md) | Auth flow, session management, security | Backend & frontend |
+| [Features](FEATURES.md) | Feature documentation, usage examples | All developers, QA |
+| [API Guide](API_GUIDE.md) | API endpoints, integration patterns | Frontend developers |
+| [Deployment](DEPLOYMENT.md) | Deployment guide, configuration | DevOps, backend |
 
 ---
 
-## 🚀 Quick Start Guide
-
-### For New Developers
-
-1. **Start with:** `API_INTEGRATION_STATUS.md`
-   - Get quick overview of current state
-   - Understand what's implemented
-   - See what's pending
-
-2. **Then read:** `API_DOCS.md`
-   - Learn backend API structure
-   - Understand authentication
-   - See all available endpoints
-
-3. **For specific features:** Check feature-specific docs
-   - `MODULE_ASSIGNMENT_VERIFICATION.md` for module assignment example
-
-### For Backend Developers
-
-1. **Primary:** `API_DOCS.md` - Your complete API spec
-2. **Check:** `API_INTEGRATION_STATUS.md` - See what frontend needs
-3. **Look for:** `TODO` comments in server action files for mock implementations
-
-### For Frontend Developers
-
-1. **Primary:** `API_INTEGRATION_STATUS.md` - Current integration status
-2. **Reference:** `API_DOCS.md` - API endpoint details
-3. **Example:** Look at implemented components:
-   - `app/dashboard/system-configs/branches/_components/` - TanStack Query patterns
-   - `app/dashboard/system-configs/_components/index.tsx` - ModuleSelection component
-
-### For QA/Testing
-
-1. **Test Plan:** `MODULE_ASSIGNMENT_VERIFICATION.md` - Example test scenarios
-2. **Status:** `API_INTEGRATION_STATUS.md` - What to test
-3. **Coverage:** Testing Status section shows what's not tested yet
-
----
-
-## 📁 Documentation Structure
+## Documentation Structure
 
 ```
 docs/
-├── README.md                              # This file - Documentation index
+├── README.md                    # This file - Documentation index
+├── GETTING_STARTED.md           # ⭐ Start here for new developers
+├── ARCHITECTURE.md              # System architecture overview
+├── AUTHENTICATION.md            # Authentication & session management
+├── FEATURES.md                  # Features documentation
+├── API_GUIDE.md                 # API integration guide
+├── DEPLOYMENT.md                # Deployment guide
 │
-├── 📖 ACTIVE DOCS
-│   ├── API_DOCS.md                        # Backend API reference (from backend team)
-│   ├── API_INTEGRATION_STATUS.md          # Current state - USE THIS FIRST!
-│   └── MODULE_ASSIGNMENT_VERIFICATION.md  # Feature verification example
+├── WORKFLOW_*.md               # Workflow system documentation
+├── MIGRATION_SUMMARY.md        # Migration guides
+├── TEMPLATE_USAGE_GUIDE.md     # Template system guide
+├── MFA_OTP_IMPLEMENTATION.md   # MFA implementation details
+├── SESSION_MANAGEMENT_AUDIT.md # Session management details
+├── FRONTEND_API_GUIDE.md       # Extended API guide
 │
-└── 📦 ARCHIVED DOCS (Reference only)
+└── archive/                    # 📦 Historical documents
+    ├── SESSION_SUMMARY.md
     ├── IMPLEMENTATION_REPORT.md
-    ├── ENDPOINT_INTEGRATION_STATUS.md
-    ├── API_UI_ALIGNMENT_ANALYSIS.md
-    ├── DEPARTMENT_MODULE_ASSIGNMENT.md
-    └── SESSION_SUMMARY.md
+    ├── *_AUDIT_*.md
+    ├── *_FIXES_*.md
+    └── ... (old implementation docs)
 ```
 
 ---
 
-## 🔄 Maintenance Guidelines
+## Quick Reference
 
-### When to Update Documentation
+### Common Tasks
 
-1. **API_INTEGRATION_STATUS.md** - Update when:
-   - New features are implemented
-   - Endpoints change from mock to real
-   - Backend adds new endpoints
-   - Integration status changes
+| Task | Documentation |
+|------|---------------|
+| Setting up development environment | [Getting Started](GETTING_STARTED.md#quick-start-5-minutes) |
+| Understanding authentication flow | [Authentication](AUTHENTICATION.md#authentication-flow) |
+| Integrating an API endpoint | [API Guide](API_GUIDE.md#server-actions-pattern) |
+| Deploying to production | [Deployment](DEPLOYMENT.md#deployment-options) |
+| Adding a new feature | [Getting Started](GETTING_STARTED.md#creating-a-new-feature) |
+| Configuring permissions | [Features](FEATURES.md#role-based-access-control-rbac) |
+| Setting up workflows | [Features](FEATURES.md#workflow-administration) |
 
-2. **MODULE_ASSIGNMENT_VERIFICATION.md** - Update when:
-   - Implementation changes
-   - New test scenarios are added
-   - Bugs are fixed
+### Technology Stack
 
-3. **API_DOCS.md** - Update when:
-   - Backend team provides new version
-   - New endpoints are added
-   - Endpoint specifications change
+- **Framework:** Next.js 16.0 with App Router
+- **UI:** React 19, TypeScript 5.8, Tailwind CSS 4.1
+- **State:** TanStack React Query, Zustand
+- **Auth:** JWT with encrypted session cookies
+- **API:** Next.js Server Actions, Axios
 
-### Archive Process
-
-When creating new detailed documentation:
-1. Add to "Active Documentation" section initially
-2. After feature stabilizes, consolidate into `API_INTEGRATION_STATUS.md`
-3. Move detailed doc to "Archived Documentation"
-4. Update this README
+See [Architecture](ARCHITECTURE.md#technology-stack) for complete stack.
 
 ---
 
-## 📝 Documentation Standards
+## Feature Documentation
 
-### Active Documents Should:
-- ✅ Be concise and scannable
-- ✅ Have clear status indicators (✅ ⚠️ ❌)
-- ✅ Include "Last Updated" dates
-- ✅ Have quick reference sections
-- ✅ Focus on current state, not history
+### Risk Management
+- [Risk Registers](FEATURES.md#risk-registers)
+- [Risk Assessment](FEATURES.md#risk-assessment)
+- [KRI Management](FEATURES.md#key-risk-indicators-kri)
+- [Risk Actions](FEATURES.md#risk-mitigation-actions)
+- [Heat Maps](FEATURES.md#risk-heat-map)
 
-### Archived Documents:
-- 📦 Contain valuable historical context
-- 📦 Show detailed implementation decisions
-- 📦 Useful for understanding "why"
-- 📦 Not needed for day-to-day work
+### Audit Management
+- [Audit Planning](FEATURES.md#audit-planning)
+- [Audit Execution](FEATURES.md#audit-execution)
+- [Findings Management](FEATURES.md#audit-execution)
+- [Reports](FEATURES.md#audit-reporting)
 
----
-
-## 🎯 Common Tasks
-
-### I want to implement a new feature
-1. Check `API_INTEGRATION_STATUS.md` → "Next Steps" section
-2. Look for similar implemented features → `branches/_components/` examples
-3. Check if server actions exist → Files listed in "Server Actions Files" section
-4. Refer to `API_DOCS.md` for endpoint specs
-
-### I need to integrate a new endpoint
-1. Check `API_DOCS.md` for endpoint spec
-2. Add server action to appropriate file in `app/_actions/`
-3. Update component to use TanStack Query (see `ModuleSelection` example)
-4. Update `API_INTEGRATION_STATUS.md`
-
-### I'm fixing a bug
-1. Check `MODULE_ASSIGNMENT_VERIFICATION.md` for testing patterns
-2. Review similar components for implementation patterns
-3. Update verification docs if bug was in test coverage
-
-### Backend is ready for mocked endpoint
-1. Find mock implementation (marked with `TODO` comment)
-2. Replace mock with real API call
-3. Test integration
-4. Update `API_INTEGRATION_STATUS.md` - change ⚠️ to ✅
+### System Configuration
+- [Organization Structure](FEATURES.md#organization-structure)
+- [RBAC](FEATURES.md#role-based-access-control-rbac)
+- [Workflow Engine](FEATURES.md#workflow-administration)
 
 ---
 
-## 🛠️ Code Examples Location
+## API Integration
 
-### TanStack Query Pattern
-**File:** `app/dashboard/system-configs/_components/index.tsx`
-- useQuery for data fetching
-- useMutation for updates
-- Cache invalidation
-- Loading states
+### Quick Start
 
-### Server-Side Rendering (SSR)
-**File:** `app/dashboard/system-configs/branches/page.tsx`
-- Async server component
-- Server-side data fetching
-- Props to client components
+```typescript
+// 1. Create Server Action
+export async function getResources(): Promise<APIResponse> {
+  const url = `/api/v1/resources`;
+  try {
+    const response = await authenticatedApiClient({ url });
+    return successResponse(response.data, "Success");
+  } catch (error) {
+    return handleError(error, "GET", url);
+  }
+}
 
-### Client Components with CRUD
-**Files:** `app/dashboard/system-configs/branches/_components/`
-- provinces-tab.tsx - Full CRUD example
-- towns-tab.tsx - Cascading dropdowns example
-- branches-tab.tsx - Complex form with validation
+// 2. Use in Component
+const { data } = useQuery({
+  queryKey: ['resources'],
+  queryFn: getResources
+});
+```
 
-### Server Actions
-**Files:** `app/_actions/`
-- config-actions.ts - Real endpoint examples
-- permissions-actions.ts - RBAC implementation
-- audit-module-actions.ts - Mock implementation pattern
+See [API Guide](API_GUIDE.md) for complete reference.
 
 ---
 
-## 📞 Questions?
+## Authentication
 
-- **For API questions:** See `API_DOCS.md` or contact backend team
-- **For integration status:** Check `API_INTEGRATION_STATUS.md`
-- **For implementation examples:** Browse `app/_actions/` and `app/dashboard/system-configs/`
-- **For testing:** See `MODULE_ASSIGNMENT_VERIFICATION.md`
+### Login Flow
+
+```
+Login → [MFA?] → OTP Verification → Initialize Setup → Dashboard
+```
+
+**Quick Links:**
+- [Authentication Flow](AUTHENTICATION.md#authentication-flow)
+- [Session Management](AUTHENTICATION.md#session-management)
+- [MFA Implementation](AUTHENTICATION.md#multi-factor-authentication-mfa)
+- [Security](AUTHENTICATION.md#security-best-practices)
 
 ---
 
-**Last Updated:** 2025-10-24
+## Deployment
+
+### Quick Deploy
+
+```bash
+# Build
+npm run build
+
+# Start
+npm run start
+```
+
+**Deployment Options:**
+- [Vercel](DEPLOYMENT.md#option-1-vercel-recommended)
+- [Docker](DEPLOYMENT.md#option-2-docker)
+- [VPS/Server](DEPLOYMENT.md#option-3-traditional-vpsserver)
+
+See [Deployment Guide](DEPLOYMENT.md) for details.
+
+---
+
+## Development Guidelines
+
+### Code Style
+
+- **Components:** PascalCase (`UserProfile.tsx`)
+- **Files:** kebab-case (`api-client.ts`)
+- **Server Actions:** camelCase functions
+- **Types:** Interfaces over types
+
+### Best Practices
+
+1. **Always use Server Actions** for API calls
+2. **Type everything** with TypeScript
+3. **Handle errors** gracefully
+4. **Show loading states** during async operations
+5. **Invalidate cache** after mutations
+6. **Follow existing patterns** in the codebase
+
+See [Getting Started](GETTING_STARTED.md#code-style-guide) for complete guidelines.
+
+---
+
+## Testing
+
+### Running Tests
+
+```bash
+npm run test           # Run all tests
+npm run test:watch     # Watch mode
+npm run type-check     # TypeScript check
+npm run lint           # Lint code
+```
+
+### Manual Testing
+
+- **Login Flow:** Test with/without MFA
+- **CRUD Operations:** Create, read, update, delete
+- **Permissions:** Test role-based access
+- **Workflows:** Test state transitions
+- **Error Handling:** Test error scenarios
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Port already in use | `npx kill-port 3000` |
+| Module not found | `rm -rf .next node_modules && npm install` |
+| API connection failed | Check `BASE_URL` in `.env.local` |
+| Auth errors | Clear cookies, check `AUTH_SECRET` |
+| Build errors | Run `npm run type-check` |
+
+See [Getting Started](GETTING_STARTED.md#common-issues) for more.
+
+---
+
+## Getting Help
+
+### Resources
+
+- **Documentation:** This folder
+- **Code Examples:** Browse `app/` directory
+- **Slack:** #infratel-iams channel
+- **Email:** dev-team@infratel.co.zm
+
+### External Resources
+
+- [Next.js Docs](https://nextjs.org/docs)
+- [React Docs](https://react.dev)
+- [TanStack Query](https://tanstack.com/query)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+
+---
+
+## Contributing
+
+### Before You Start
+
+1. Read [Getting Started](GETTING_STARTED.md)
+2. Understand [Architecture](ARCHITECTURE.md)
+3. Follow code style guidelines
+4. Test your changes
+
+### Submitting Changes
+
+1. Create feature branch
+2. Make changes
+3. Run tests: `npm test`
+4. Run linting: `npm run lint`
+5. Submit pull request
+
+---
+
+## Archive
+
+Historical documentation has been moved to `archive/` folder:
+
+- Session summaries
+- Implementation reports
+- Audit reports
+- Progress tracking docs
+- Old fix plans
+
+These are kept for reference but superseded by current documentation.
+
+---
+
+## Document Maintenance
+
+### When to Update
+
+- **Getting Started:** When setup process changes
+- **Architecture:** When tech stack or patterns change
+- **Authentication:** When auth flow changes
+- **Features:** When features are added/changed
+- **API Guide:** When endpoints change
+- **Deployment:** When deployment process changes
+
+### Last Updated
+
+- Getting Started: November 3, 2025
+- Architecture: November 3, 2025
+- Authentication: November 3, 2025
+- Features: November 3, 2025
+- API Guide: November 3, 2025
+- Deployment: November 3, 2025
+
+---
+
+## Feedback
+
+Have suggestions for improving documentation?
+
+- Open GitHub issue
+- Message on Slack
+- Email dev-team@infratel.co.zm
+
+---
+
 **Maintained by:** Development Team
+**Last Updated:** November 3, 2025

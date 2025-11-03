@@ -41,20 +41,20 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
 
   const [
     templatesResponse,
-    auditableAreasResponse,
-    indicativeTargetsResponse,
-    pillarsResponse,
-    initiativesResponse,
+    // auditableAreasResponse,
+    // indicativeTargetsResponse,
+    // pillarsResponse,
+    // initiativesResponse,
     townsResponse,
     departmentsResponse
     // categoriesResponse,
     // processActivitiesResponse,
   ] = await Promise.all([
     getWorkingPaperTemplates(),
-    getAuditableAreas(),
-    getIndicativeTargets(),
-    getStrategicPillars(),
-    getStrategicInitiatives(),
+    // getAuditableAreas(),
+    // getIndicativeTargets(),
+    // getStrategicPillars(),
+    // getStrategicInitiatives(),
     getTowns({ page, page_size }),
     getDepartments()
     // getBranches({ page, page_size }),
@@ -63,26 +63,31 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     // getProcessActivities(),
   ]);
 
-  const departments = departmentsResponse.success ? departmentsResponse.data?.data : [];
-  const templates = templatesResponse.success ? templatesResponse.data?.data?.data : [];
+  const templates = templatesResponse.success ? templatesResponse.data?.data?.data || [] : [];
 
-  const areas = auditableAreasResponse.success ? auditableAreasResponse.data?.data : [];
+  const departments = departmentsResponse.success ? departmentsResponse.data?.data || [] : [];
+
+  // const areas = auditableAreasResponse.success ? auditableAreasResponse.data?.data || [] : [];
 
   const towns = townsResponse.success ? townsResponse.data?.data || [] : [];
   const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
 
   // Audit settings data
-  const pillars = pillarsResponse.success ? pillarsResponse.data?.data : [];
-  const initiatives = initiativesResponse.success ? initiativesResponse.data?.data?.data : [];
+  // const pillars = pillarsResponse.success ? pillarsResponse.data?.data : [];
+
+  // const initiatives = initiativesResponse.success ? initiativesResponse.data?.data?.data : [];
+
   // const categories = categoriesResponse.success ? categoriesResponse.data?.data : [];
+
   // const processActivities = processActivitiesResponse.success
   //   ? processActivitiesResponse.data?.data
   //   : [];
-  const indicativeTargets = indicativeTargetsResponse.success
-    ? indicativeTargetsResponse.data?.data
-    : [];
 
-  console.log("WP templates:", initiatives);
+  // const indicativeTargets = indicativeTargetsResponse.success
+  //   ? indicativeTargetsResponse.data?.data
+  //   : [];
+
+  // console.log("WP templates:", initiatives);
 
   return (
     <div className="">
@@ -149,7 +154,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           </TabsContent>
 
           {/* Auditable Areas Tab */}
-          <TabsContent value="areas">
+          {/* <TabsContent value="areas">
             <Suspense fallback={<TableLoading />}>
               <AuditableAreaConfig
                 areas={areas}
@@ -157,28 +162,28 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
                 pagination={townsPagination}
               />
             </Suspense>
-          </TabsContent>
+          </TabsContent> */}
 
           {/* Indicative Targets Tab */}
-          <TabsContent value="targets">
+          {/* <TabsContent value="targets">
             <Suspense fallback={<TableLoading />}>
               <IndicativeTargetsTab targets={indicativeTargets} departments={departments} />
             </Suspense>
-          </TabsContent>
+          </TabsContent> */}
 
           {/* Strategic Pillars Tab */}
-          <TabsContent value="pillars">
+          {/* <TabsContent value="pillars">
             <Suspense fallback={<TableLoading />}>
               <StrategicPillarsTab pillars={pillars} />
             </Suspense>
-          </TabsContent>
+          </TabsContent> */}
 
           {/* Strategic Initiative Tab */}
-          <TabsContent value="initiative">
+          {/* <TabsContent value="initiative">
             <Suspense fallback={<TableLoading />}>
               <StrategicInitiativeTab initiatives={initiatives} />
             </Suspense>
-          </TabsContent>
+          </TabsContent> */}
 
           {/* Findings Categories Tab */}
           {/* <TabsContent value="findings">
