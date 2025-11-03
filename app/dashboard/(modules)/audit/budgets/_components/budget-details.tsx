@@ -1,4 +1,3 @@
-// budget-details.tsx
 "use client";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,6 +46,7 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/back-button";
 
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
@@ -165,12 +165,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
           <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
           <h2 className="mb-4 text-2xl font-bold">Budget Not Found</h2>
           <p className="text-muted-foreground mb-6">The budget you're looking for doesn't exist.</p>
-          <Link href="/dashboard/audit/budgets">
-            <Button className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Budgets
-            </Button>
-          </Link>
+          <BackButton title="Back to Budgets"/>
         </Card>
       </div>
     );
