@@ -58,14 +58,14 @@ export async function updateCountry(data: {
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/backoffice/countries/update",
+      url: "/api/v1/countries/update",
       method: "PUT",
       data
     });
 
     return successResponse(response.data.data, "Country updated successfully");
   } catch (error) {
-    return handleError(error, "PUT | UPDATE COUNTRY", "/api/v1/backoffice/countries/update");
+    return handleError(error, "PUT | UPDATE COUNTRY", "/api/v1/countries/update");
   }
 }
 
@@ -85,7 +85,7 @@ export async function getProvincesByCountry(
     if (params?.page_size) queryParams.append("limit", params.page_size.toString());
 
     const response = await authenticatedApiClient({
-      url: `/api/v1/backoffice/provinces?${queryParams.toString()}`,
+      url: `/api/v1/provinces?${queryParams.toString()}`,
       method: "GET"
     });
 
@@ -94,24 +94,25 @@ export async function getProvincesByCountry(
       pagination: response.data.pagination
     };
   } catch (error) {
-    return handleError(error, "GET | GET PROVINCES", "/api/v1/backoffice/provinces");
+    return handleError(error, "GET | GET PROVINCES", "/api/v1/provinces");
   }
 }
 
 export async function createProvince(data: {
   name: string;
   country_id: string;
+  code:string;
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/backoffice/provinces",
+      url: "/api/v1/provinces",
       method: "POST",
       data
     });
 
     return successResponse(response.data.data, "Province created successfully");
   } catch (error) {
-    return handleError(error, "POST | CREATE PROVINCE", "/api/v1/backoffice/provinces");
+    return handleError(error, "POST | CREATE PROVINCE", "/api/v1/provinces");
   }
 }
 
@@ -131,7 +132,7 @@ export async function getTownsByProvince(
     if (params?.page_size) queryParams.append("limit", params.page_size.toString());
 
     const response = await authenticatedApiClient({
-      url: `/api/v1/backoffice/towns?${queryParams.toString()}`,
+      url: `/api/v1/towns?${queryParams.toString()}`,
       method: "GET"
     });
 
@@ -140,24 +141,25 @@ export async function getTownsByProvince(
       pagination: response.data.pagination
     };
   } catch (error) {
-    return handleError(error, "GET | GET TOWNS", "/api/v1/backoffice/towns");
+    return handleError(error, "GET | GET TOWNS", "/api/v1/towns");
   }
 }
 
 export async function createTown(data: {
   name: string;
   province_id: string;
+  code:string;
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/backoffice/towns",
+      url: "/api/v1/towns",
       method: "POST",
       data
     });
 
     return successResponse(response.data.data, "Town created successfully");
   } catch (error) {
-    return handleError(error, "POST | CREATE TOWN", "/api/v1/backoffice/towns");
+    return handleError(error, "POST | CREATE TOWN", "/api/v1/towns");
   }
 }
 

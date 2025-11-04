@@ -88,7 +88,7 @@ export function TownsTab({ countries }: TownsTabProps) {
     enabled: !!selectedCountry
   });
 
-  const provinces: Province[] = provincesResponse?.success ? provincesResponse.data : [];
+  const provinces: Province[] = provincesResponse?.success ? provincesResponse.data?.data : [];
 
   // Fetch towns when province is selected
   const { data: townsResponse, isLoading: loadingTowns } = useQuery({
@@ -97,7 +97,7 @@ export function TownsTab({ countries }: TownsTabProps) {
     enabled: !!selectedProvince
   });
 
-  const towns: Town[] = townsResponse?.success ? townsResponse.data : [];
+  const towns: Town[] = townsResponse?.success ? townsResponse.data?.data : [];
   const pagination = (townsResponse?.pagination as {
     total: number;
     page: number;
@@ -120,15 +120,21 @@ export function TownsTab({ countries }: TownsTabProps) {
   }, [selectedCountry]);
 
   const getProvinceName = (provinceId: string) => {
-    const province = provinces.find((p) => p.id === provinceId);
+    const province = provinces?.find((p) => p.id === provinceId);
     return province ? province.name : "Unknown";
   };
 
-  const activeCountries = useMemo(() => countries.filter((c) => c.is_active), [countries]);
+  const activeCountries = useMemo(() => countries?.filter((c) => c.is_active), [countries]);
 
-  const activeProvinces = useMemo(() => provinces.filter((p) => p.is_active), [provinces]);
+  const activeProvinces = useMemo(() => provinces?.filter((p) => p.is_active), [provinces]);
 
-  const handlePageChange = ({ page: newPage, page_size: newPageSize }: { page: number; page_size?: number }) => {
+  const handlePageChange = ({
+    page: newPage,
+    page_size: newPageSize
+  }: {
+    page: number;
+    page_size?: number;
+  }) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(newPage));
     if (newPageSize) {
@@ -162,18 +168,20 @@ export function TownsTab({ countries }: TownsTabProps) {
           </Button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex">
           <SelectField
+            className="w-full max-w-sm"
             label="Select Country"
             placeholder="Choose a country"
-            options={activeCountries.map((c) => ({ id: c.id, name: c.name }))}
+            options={activeCountries?.map((c) => ({ id: c.id, name: c.name }))}
             value={selectedCountry}
             onValueChange={setSelectedCountry}
           />
           <SelectField
+            className="w-full max-w-sm"
             label="Select Province / State"
             placeholder={selectedCountry ? "Choose a province" : "Select country first"}
-            options={activeProvinces.map((p) => ({ id: p.id, name: p.name }))}
+            options={activeProvinces?.map((p) => ({ id: p.id, name: p.name }))}
             value={selectedProvince}
             onValueChange={setSelectedProvince}
             disabled={!selectedCountry || loadingProvinces}
@@ -225,7 +233,7 @@ export function TownsTab({ countries }: TownsTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {towns.length === 0 ? (
+              {towns?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     <Empty>
@@ -251,7 +259,7 @@ export function TownsTab({ countries }: TownsTabProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                towns.map((town) => (
+                towns?.map((town) => (
                   <TableRow key={town.id}>
                     <TableCell>
                       <span className="font-medium">{town.name}</span>
@@ -291,7 +299,7 @@ export function TownsTab({ countries }: TownsTabProps) {
           </Table>
 
           {/* Pagination */}
-          {pagination && towns.length > 0 && (
+          {pagination && towns?.length > 0 && (
             <div className="mt-4">
               <CustomPagination
                 pagination={{
@@ -327,7 +335,8 @@ export function TownsTab({ countries }: TownsTabProps) {
 
 const TOWN_INITIAL_STATE = {
   name: "",
-  province_id: ""
+  province_id: "",
+  code: ""
 };
 
 interface CreateTownDialogProps {
@@ -363,7 +372,8 @@ function CreateTownDialog({
     mutationFn: async (data: typeof formData) => {
       const response = await createTown({
         name: data.name,
-        province_id: data.province_id
+        province_id: data.province_id,
+        code: data.code
       });
 
       if (!response.success) {
@@ -410,9 +420,10 @@ function CreateTownDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <SelectField
+            className="w-full"
             label="Province / State"
             placeholder="Select a province"
-            options={provinces.map((p) => ({ id: p.id, name: p.name }))}
+            options={provinces?.map((p) => ({ id: p.id, name: p.name }))}
             value={formData.province_id}
             onValueChange={(province_id) => {
               setError({ status: false, message: "" });
@@ -426,6 +437,16 @@ function CreateTownDialog({
             onChange={(e) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, name: e.target.value }));
+            }}
+            required
+          />
+          <Input
+            label="Town Code"
+            placeholder="e.g. LSK, CNC, NDL"
+            value={formData.code}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, code: e.target.value }));
             }}
             required
           />

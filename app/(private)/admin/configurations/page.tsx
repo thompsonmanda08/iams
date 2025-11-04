@@ -19,13 +19,13 @@ export default async function AdminConfigurationsPage({ searchParams }: PageProp
   const countriesResponse = await getCountries({ page, page_size });
   const countries = countriesResponse.success ? countriesResponse.data : [];
   const countriesPagination = countriesResponse.success && countriesResponse.pagination ? {
-    total: countriesResponse.pagination.total || 0,
-    page: countriesResponse.pagination.page || 1,
-    page_size: countriesResponse.pagination.page_size || 10,
-    total_pages: countriesResponse.pagination.total_pages || 0,
-    has_next: countriesResponse.pagination.has_next || false,
-    has_prev: countriesResponse.pagination.has_prev || false
-  } : undefined;
+    total: countriesResponse.data.pagination.total || 0,
+    page: countriesResponse.data.pagination.page || 1,
+    page_size: countriesResponse.data.pagination.page_size || 10,
+    total_pages: countriesResponse.data.pagination.total_pages || 0,
+    has_next: countriesResponse.data.pagination.has_next || false,
+    has_prev: countriesResponse.data.pagination.has_prev || false
+  } : undefined;  
 
   return (
     <div className="container mx-auto space-y-6 p-6">
