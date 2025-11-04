@@ -9,8 +9,8 @@ const NewAuditUniversePage = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
-              title="New Audit"
-              description="ISO 27001 compliance monitoring and audit tracking"
+              title="New Universe"
+              description="Set up a new audit universe with entries"
               icon="FileText"
             />
             {/* <div className="flex gap-2">

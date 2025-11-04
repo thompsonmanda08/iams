@@ -89,7 +89,7 @@ export default function AuditUniverseForm({
   return (
     <div className="bg-background min-h-screen">
       <div className="container mx-auto space-y-8 px-6 py-8">
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <div>
             <h2 className="text-foreground text-4xl font-bold tracking-tight">
               {isEditing ? "Update Audit Universe" : "Create New Audit Universe"}
@@ -106,9 +106,9 @@ export default function AuditUniverseForm({
               Submit for Approval
             </Button>
           )}
-        </div>
+        </div> */}
 
-        <Card className="animate-fade-in shadow-lg">
+        <Card className="animate-fade-in">
           <div className="space-y-8 p-8">
             <div>
               <h3 className="text-foreground mb-6 text-lg font-semibold">Basic Information</h3>
@@ -182,7 +182,7 @@ export default function AuditUniverseForm({
                   entries.map((entry, index) => (
                     <Card
                       key={entry.id}
-                      className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
+                      className="overflow-hidden">
                       <div
                         className="bg-muted/20 hover:bg-muted/30 flex cursor-pointer items-center justify-between p-5 transition-colors"
                         onClick={() => toggleEntry(entry.id)}>

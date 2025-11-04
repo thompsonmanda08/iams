@@ -10,8 +10,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Wallet, TrendingUp, DollarSign, Plus } from "lucide-react";
-import Link from "next/link";
+import { Pencil, Trash2, Wallet, TrendingUp, DollarSign, View } from "lucide-react";
 import { BudgetLinesList } from "./budget-line-list";
 import { BudgetStatusBadge } from "./budget-status-badge";
 import Search from "@/components/ui/search-field";
@@ -265,11 +264,9 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                       className="hover:bg-muted/30 group transition-colors"
                       style={{ animationDelay: `${index * 50}ms` }}>
                       <TableCell>
-                        <Link
-                          href={`/dashboard/audit/budgets/${budget.id}`}
-                          className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
+                        <span className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
                           {budget.title}
-                        </Link>
+                        </span>
                       </TableCell>
                       <TableCell className="text-lg font-bold">
                         {formatCurrency(budget.total_amount, budget.currency)}
@@ -289,6 +286,17 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              router.push(`/dashboard/audit/budgets/${budget.id}`);
+                              e.stopPropagation();
+                            }}
+                            className="h-8 gap-1.5">
+                            <View className="h-3.5 w-3.5" />
+                            View
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
