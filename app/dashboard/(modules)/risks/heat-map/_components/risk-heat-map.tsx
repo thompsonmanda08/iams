@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import { RiskSummaryStats } from "./summary";
+import { useRouter } from "next/navigation";
 
 interface Risk {
   id: string;
@@ -163,6 +164,7 @@ const RiskMatrix = ({
 };
 
 export function RiskHeatMap({ heatmapData }: { heatmapData: HeatmapData }) {
+  const router = useRouter();
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
 
   const handleCellClick = (cell: MatrixCell) => {
@@ -345,7 +347,12 @@ export function RiskHeatMap({ heatmapData }: { heatmapData: HeatmapData }) {
                                     {risk.risk_appetite_status} Appetite
                                   </Badge>
                                 </div>
-                                <Button size="sm" variant="outline">
+                                <Button
+                                  onClick={() => {
+                                    router.push(`/dashboard/risks/actions/${risk.id}`);
+                                  }}
+                                  size="sm"
+                                  variant="outline">
                                   View Details
                                 </Button>
                               </div>
