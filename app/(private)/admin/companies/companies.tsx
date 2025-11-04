@@ -118,23 +118,25 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
                     <TableCell>{company.contact_phone || "-"}</TableCell>
                     <TableCell>{company.address || "-"}</TableCell>
                     <TableCell>
-                      <StatusBadge status={company.status === "active" ? "ACTIVE" : "INACTIVE"} />
+                      <StatusBadge status={true ? "ACTIVE" : "INACTIVE"} />
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
-                        <Link href={`/admin/companies/mapping`}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            // onClick={() => {
-                            //   setEditingCompany(company);
-                            //   setShowEditModal(true);
-                            // }}
-                            className="h-8 gap-1.5">
-                            <View className="h-3.5 w-3.5" />
-                            View Mapping
-                          </Button>
-                        </Link>
+                        {/* {process.env.NODE_ENV !== "production" && (
+                          <Link href={`/admin/companies/mapping`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              // onClick={() => {
+                              //   setEditingCompany(company);
+                              //   setShowEditModal(true);
+                              // }}
+                              className="h-8 gap-1.5">
+                              <View className="h-3.5 w-3.5" />
+                              View Mapping
+                            </Button>
+                          </Link>
+                        )} */}
                         <Button
                           size="sm"
                           variant="outline"
