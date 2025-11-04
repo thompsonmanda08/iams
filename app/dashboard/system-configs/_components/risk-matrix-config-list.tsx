@@ -45,8 +45,8 @@ export function RiskMatrixConfigList() {
     try {
       const response = await getRiskMatrices();
 
-      if (response.success && response.data) {
-        setMatrices(Array.isArray(response.data) ? response.data : [response.data]);
+      if (response.success && response.data.data) {
+        setMatrices(Array.isArray(response.data.data) ? response.data.data : [response.data.data]);
       }
     } catch (error: any) {
       toast.error(error?.message || "Failed to load risk matrices");
