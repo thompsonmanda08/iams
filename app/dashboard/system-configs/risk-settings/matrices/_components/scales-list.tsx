@@ -1,14 +1,24 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit2, Trash2, Loader2, Pencil } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getMatrixScales, deleteScale } from "@/app/_actions/config-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateScaleDialog } from "./create-scale-dialog";
 import { EditScaleDialog } from "./edit-scale-dialog";
+import { CustomPagination } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
+import { Pagination } from "@/lib/types";
 
 type Scale = {
   id: string;
@@ -38,10 +48,20 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
   const [scales, setScales] = useState<Scale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    page_size: 10,
+    total_pages: 1,
+    totalCount: 0,
+    has_next: false,
+    has_prev: false
+  });
+
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
     scale: Scale | null;
   }>({ open: false, scale: null });
+
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     scaleId: string | null;
@@ -73,6 +93,35 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Paginated data
+  const paginatedScales = useMemo(() => {
+    const startIndex = (pagination.page - 1) * pagination.page_size;
+    const endIndex = startIndex + pagination.page_size;
+    return scales.slice(startIndex, endIndex);
+  }, [scales, pagination.page, pagination.page_size]);
+
+  // Update pagination metadata
+  const customPaginationData = useMemo(() => {
+    const totalCount = scales.length;
+    const total_pages = Math.ceil(totalCount / pagination.page_size);
+
+    return {
+      ...pagination,
+      total_pages,
+      totalCount,
+      has_next: pagination.page < total_pages,
+      has_prev: pagination.page > 1
+    };
+  }, [scales.length, pagination]);
+
+  const updatePagination = ({ page, page_size }: { page: number; page_size?: number }) => {
+    setPagination((prev) => ({
+      ...prev,
+      page,
+      page_size: page_size ?? prev.page_size
+    }));
   };
 
   const handleDeleteClick = (scale: Scale) => {
@@ -133,7 +182,7 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
 
       {scales.length === 0 ? (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="flex flex-col items-center justify-center py-16">
             <div className="bg-muted mb-4 rounded-full p-4">
               <Plus className="text-muted-foreground h-8 w-8" />
             </div>
@@ -148,51 +197,79 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
               <Plus className="h-4 w-4" />
               Add Your First Level
             </Button>
-          </CardContent>
+          </div>
         </Card>
       ) : (
-        <div className="grid gap-3">
-          {scales.map((scale, index) => (
-            <Card key={scale.id} style={{ animationDelay: `${index * 50}ms` }}>
-              <CardHeader className="pb-4">
-                <div className="flex items-start gap-4">
-                  <div
-                    className={cn(
-                      "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-white",
-                      getLevelColor(scale.level)
-                    )}>
-                    <span className="text-lg font-bold">{scale.level}</span>
-                  </div>
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="text-foreground w-24">Level</TableHead>
+                  <TableHead className="text-foreground">Name</TableHead>
+                  <TableHead className="text-foreground">Description</TableHead>
+                  <TableHead className="text-foreground text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedScales.map((scale, index) => (
+                  <TableRow
+                    key={scale.id}
+                    className="hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 50}ms` }}>
+                    <TableCell>
+                      <div
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-lg text-white shadow-sm",
+                          getLevelColor(scale.level)
+                        )}>
+                        <span className="text-base font-bold">{scale.level}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold">{scale.name}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">
+                        {scale.description || "No description provided"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditClick(scale)}
+                          className="h-8 gap-1.5">
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteClick(scale)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="mb-1 text-lg font-semibold">{scale.name}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {scale.description || "No description provided"}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditClick(scale)}
-                      className="h-8 gap-1.5">
-                      <Pencil className="h-3.5 w-3.5" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteClick(scale)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+          {scales.length > 0 && (
+            <CustomPagination
+              pagination={customPaginationData}
+              updatePagination={updatePagination}
+              allowSetPageSize={true}
+              showDetails={true}
+              className="border-t"
+            />
+          )}
+        </Card>
       )}
 
       <CreateScaleDialog
