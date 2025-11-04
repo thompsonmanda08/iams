@@ -21,7 +21,7 @@ type CreateRatingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   matrixId: string;
-  matrix_id: string;
+  matrix_id?: string;
   onSuccess: () => void;
 };
 

@@ -1309,12 +1309,14 @@ export async function getMatrixRatings(): Promise<APIResponse> {
 export async function getMatrixRatingsById(matrixId:string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/rating-levels/${matrixId}`,
+      url: `/api/v1/risk-configs/rating-levels?matrix_id=${matrixId}`,
       method: "GET"
     });
+    console.log("RES:", response);
+    
     return successResponse(response.data?.data);
   } catch (error: any) {
-    return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels/${matrixId}`);
+    return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels?matrix_id=${matrixId}`);
   }
 }
 

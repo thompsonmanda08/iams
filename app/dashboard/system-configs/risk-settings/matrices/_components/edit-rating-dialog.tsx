@@ -24,7 +24,7 @@ type Rating = {
   max_score: number;
   color_hex: string;
   description: string;
-  matrix_id: string;
+  matrix_id?: string;
 };
 
 type EditRatingDialogProps = {
