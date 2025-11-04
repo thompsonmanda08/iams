@@ -223,12 +223,22 @@ export async function deleteStrategicPillar(id: string): Promise<APIResponse> {
  * Get all strategic initiatives for a pillar
  * Endpoint: GET /api/v1/audit/strategic-pillars/{pillar_id}/initiatives
  */
-export async function getStrategicInitiatives(pillarId?: string): Promise<APIResponse> {
+export async function getStrategicInitiatives(
+  pillarId?: string,
+  params?: { page?: number; page_size?: number }
+): Promise<APIResponse> {
   // If pillarId is provided, get initiatives for specific pillar
   // Otherwise, get all initiatives (we'll need to check if backend supports this)
-  const url = pillarId
-    ? `/api/v1/audit/strategic-pillars/${pillarId}/initiatives`
-    : `/api/v1/audit/strategic-initiatives`;
+  const queryParams = new URLSearchParams();
+
+  queryParams.append("page_size", String(params?.page_size || 10));
+  queryParams.append("page", String(params?.page || 1));
+
+  if (!pillarId) {
+    return handleBadRequest("Pillar ID is required");
+  }
+
+  const url = `/api/v1/audit/strategic-pillars/${pillarId}/initiatives${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
@@ -288,8 +298,9 @@ export async function updateStrategicInitiative(data: any): Promise<APIResponse>
       url,
       method: "PUT",
       data: {
-        title: data.name,
-        description: data.description,
+        ...data,
+        start_date: data.start_date || new Date().toISOString(),
+        end_date: data.end_date || new Date().toISOString(),
         is_active: data.is_active
       }
     });
