@@ -18,6 +18,10 @@ import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { BudgetStatus } from "@/lib/types/audit-types";
+import { ConfirmationModal } from "@/components/confirmation-modal";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { deleteBudget } from "@/app/_actions/audit-module-actions";
 
 interface BudgetLine {
   id: string;
@@ -52,6 +56,7 @@ interface BudgetListProps {
 }
 
 const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -61,6 +66,10 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
     has_next: false,
     has_prev: false
   });
+
+  const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Combine budgets with their budget lines
   const budgetsWithLines = useMemo(() => {
@@ -120,6 +129,32 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
       month: "short",
       day: "2-digit"
     });
+  };
+  const handleDeleteClick = (budget: Budget) => {
+    setBudgetToDelete(budget);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!budgetToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await deleteBudget(budgetToDelete.id);
+
+      if (response.success) {
+        toast.success(response.message || "Budget  deleted successfully");
+        setShowDeleteModal(false);
+        setBudgetToDelete(null);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to delete budget");
+      }
+    } catch (error) {
+      toast.error("Failed to delete budget. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -194,62 +229,60 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {
-                paginatedBudgets.map((budget, index) => (
-                  <TableRow
-                    key={budget.id}
-                    className="hover:bg-muted/30 group transition-colors"
-                    style={{ animationDelay: `${index * 50}ms` }}>
-                    <TableCell>
-                      <Link
-                        href={`/dashboard/audit/budgets/${budget.id}`}
-                        className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
-                        {budget.title}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-lg font-bold">
-                      {formatCurrency(budget.total_amount, budget.currency)}
-                    </TableCell>
-                    <TableCell>
-                      <BudgetLinesList budgetLines={budget?.budget_lines || []} />
-                    </TableCell>
-                    <TableCell>
-                      <BudgetStatusBadge status={budget?.status as BudgetStatus} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{budget.year}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(budget.start_date)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(budget.end_date)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-8 gap-1.5">
-                          <Link
-                            href={`/dashboard/audit/budgets/edit?id=${budget.id}`}
-                            className="flex cursor-pointer items-center gap-2">
-                            <Pencil className="h-3.5 w-3.5" />
-                            Edit
-                          </Link>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              }
+              {paginatedBudgets.map((budget, index) => (
+                <TableRow
+                  key={budget.id}
+                  className="hover:bg-muted/30 group transition-colors"
+                  style={{ animationDelay: `${index * 50}ms` }}>
+                  <TableCell>
+                    <Link
+                      href={`/dashboard/audit/budgets/${budget.id}`}
+                      className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
+                      {budget.title}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-lg font-bold">
+                    {formatCurrency(budget.total_amount, budget.currency)}
+                  </TableCell>
+                  <TableCell>
+                    <BudgetLinesList budgetLines={budget?.budget_lines || []} />
+                  </TableCell>
+                  <TableCell>
+                    <BudgetStatusBadge status={budget?.status as BudgetStatus} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{budget.year}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(budget.start_date)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(budget.end_date)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-8 gap-1.5">
+                        <Link
+                          href={`/dashboard/audit/budgets/edit?id=${budget.id}`}
+                          className="flex cursor-pointer items-center gap-2">
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(budget)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
@@ -272,6 +305,15 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
           />
         )}
       </Card>
+      <ConfirmationModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Delete Budget"
+        description={`Are you sure you want to delete "${budgetToDelete?.title}"? This action cannot be undone.`}
+        type="delete"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
