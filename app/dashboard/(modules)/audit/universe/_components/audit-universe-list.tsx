@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Plus, Search, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -27,6 +26,7 @@ import Link from "next/link";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
+import Search from "@/components/ui/search-field";
 
 export const mockAuditUniverses: AuditUniverse[] = [
   {
@@ -172,34 +172,14 @@ export default function AuditUniverseList({
           </Card>
         </div>
 
-        <Card className="animate-fade-in shadow-lg">
+        <Card className="animate-fade-in">
           <div className="bg-card border-b p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground text-sm font-medium">Show</span>
-                <Select value={entriesPerPage} onValueChange={setEntriesPerPage}>
-                  <SelectTrigger className="h-9 w-24">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-muted-foreground text-sm font-medium">entries</span>
-              </div>
-
-              <div className="relative max-w-md flex-1">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <Input
-                  placeholder="Search universes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 pl-10"
-                />
-              </div>
+            <div className="max-w-md flex-1">
+              <Search
+                placeholder="Search universes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e)}
+              />
             </div>
           </div>
 
@@ -248,7 +228,7 @@ export default function AuditUniverseList({
                           {item.auditableAreas.map((area, idx) => (
                             <span
                               key={idx}
-                              className="text-accent bg-accent/10 rounded-md px-2.5 py-1 text-xs font-medium">
+                              className="bg-primary/70 rounded-md px-2.5 py-1 text-xs font-medium text-white">
                               {area}
                             </span>
                           ))}
