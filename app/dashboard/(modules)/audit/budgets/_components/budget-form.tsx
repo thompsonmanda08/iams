@@ -200,6 +200,10 @@ const BudgetForm = ({
 
       if (response.success) {
         toast.success(response.message || "Budget line created successfully");
+        setLineData({
+          ...INIT_LINE_DATA,
+          budget_id: budgetId as string
+        });
       } else {
         toast.error(response.message || "Failed to create budget line");
         throw new Error(response.message);
