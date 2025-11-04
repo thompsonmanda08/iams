@@ -75,7 +75,8 @@ export const QUERY_KEYS = {
   ROLE_PERMISSIONS: "role-permissions",
   COUNTRIES: "countries",
   PROVINCES: "provinces",
-  TOWNS: "towns"
+  TOWNS: "towns",
+  COMPANIES: "companies"
 };
 
 // ANIMATION_VARIANTS

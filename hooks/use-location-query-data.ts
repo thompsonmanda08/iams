@@ -1,4 +1,8 @@
-import { getCountries, getProvincesByCountry, getTownsByProvince } from "@/app/_actions/backoffice-actions";
+import {
+  getCountries,
+  getProvincesByCountry,
+  getTownsByProvince
+} from "@/app/_actions/backoffice-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
 
@@ -32,10 +36,10 @@ export const useProvinces = (countryId?: string, enabled?: boolean) =>
  * @param provinceId - The ID of the province to fetch towns for
  * @param enabled - Optional boolean to enable/disable the query (defaults to true if provinceId exists)
  */
-export const useTowns = (provinceId?: string, enabled?: boolean) =>
+export const useTowns = (provinceId?: string, enabled?: boolean, params?: any) =>
   useQuery({
     queryKey: [QUERY_KEYS.TOWNS, provinceId],
-    queryFn: () => getTownsByProvince(provinceId!),
+    queryFn: () => getTownsByProvince(provinceId!, params),
     staleTime: Infinity,
     enabled: enabled !== undefined ? enabled : !!provinceId
   });

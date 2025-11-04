@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { MultiStepCompanyForm } from "@/components/forms/multi-step-company-form";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
+import { QUERY_KEYS } from "@/lib/constants";
 
 export default function Companies({ initialCountries }: { initialCountries?: Country[] }) {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
 
   // Fetch companies
   const { data: companiesResponse, isLoading } = useQuery({
-    queryKey: ["organizations"],
+    queryKey: [QUERY_KEYS.COMPANIES],
     queryFn: () => getOrganizations(),
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
@@ -80,6 +81,7 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
                 <TableHead>Company Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Physical Address</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead align="center" className="text-right">
                   Actions
@@ -112,8 +114,9 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{company.name}</TableCell>
-                    <TableCell>{company.email || "-"}</TableCell>
-                    <TableCell>{company.phone || "-"}</TableCell>
+                    <TableCell>{company.contact_email || "-"}</TableCell>
+                    <TableCell>{company.contact_phone || "-"}</TableCell>
+                    <TableCell>{company.address || "-"}</TableCell>
                     <TableCell>
                       <StatusBadge status={company.status === "active" ? "ACTIVE" : "INACTIVE"} />
                     </TableCell>
@@ -154,26 +157,13 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
       </Card>
 
       {/* Multi-Step Company Creation Form */}
-      <MultiStepCompanyForm
-        open={showCreateModal}
-        onOpenChange={setShowCreateModal}
-        onSuccess={() => {
-          // Invalidate cache and trigger refetch
-          queryClient.invalidateQueries({ queryKey: ["organizations"] });
-          router.refresh();
-        }}
-      />
+      <MultiStepCompanyForm open={showCreateModal} onOpenChange={setShowCreateModal} />
 
       {/* Multi-Step Company Edit Form */}
       <MultiStepCompanyForm
         open={showEditModal}
         onOpenChange={setShowEditModal}
         company={editingCompany}
-        onSuccess={() => {
-          // Invalidate cache and trigger refetch
-          queryClient.invalidateQueries({ queryKey: ["organizations"] });
-          router.refresh();
-        }}
       />
     </div>
   );

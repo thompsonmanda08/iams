@@ -101,7 +101,7 @@ export async function getProvincesByCountry(
 export async function createProvince(data: {
   name: string;
   country_id: string;
-  code:string;
+  code: string;
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
@@ -148,7 +148,7 @@ export async function getTownsByProvince(
 export async function createTown(data: {
   name: string;
   province_id: string;
-  code:string;
+  code: string;
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
@@ -208,7 +208,8 @@ export async function createOrganization(data: Company): Promise<APIResponse> {
 export async function updateOrganization(data: Company): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/backoffice/organizations/${data.id}`,
+      url: `/api/v1/backoffice/organizations/update/`,
+      // url: `/api/v1/backoffice/organizations/update/${data.id}`,
       method: "PUT",
       data
     });

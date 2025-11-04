@@ -32,13 +32,19 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { createOrganization } from "@/app/_actions/backoffice-actions";
+import {
+  createOrganization,
+  getTownsByProvince,
+  updateOrganization
+} from "@/app/_actions/backoffice-actions";
 import { SelectField } from "@/components/ui/select-field";
 import { ACCEPTABLE_FILE_TYPES, SingleFileDropzone } from "@/components/ui/file-dropzone";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { Spinner } from "@/components/ui/spinner";
-import { cn, notify } from "@/lib/utils";
+import { cn, generateRandomString, notify } from "@/lib/utils";
 import { useCountries, useProvinces, useTowns } from "@/hooks/use-location-query-data";
+import { QUERY_KEYS } from "@/lib/constants";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type Country = {
   id: string;
@@ -111,6 +117,8 @@ export function MultiStepCompanyForm({
 
   const isEditMode = !!company;
 
+  const queryClient = useQueryClient();
+
   // Use internal state for trigger mode, external state for controlled mode
   const dialogOpen = showTrigger ? internalOpen : open;
   const setDialogOpen = showTrigger ? setInternalOpen : onOpenChange;
@@ -138,20 +146,38 @@ export function MultiStepCompanyForm({
   const { data: provincesResponse, isLoading: loadingProvinces } = useProvinces(
     stepTwoData.country_id
   );
-  const { data: townsResponse, isLoading: loadingTowns } = useTowns(stepTwoData.province_id);
+
+  // Fetch towns when province is selected
+  const { data: townsResponse, isLoading: loadingTowns } = useQuery({
+    queryKey: [QUERY_KEYS.TOWNS, stepTwoData.province_id],
+    queryFn: () => getTownsByProvince(stepTwoData.province_id, { page: 1, page_size: 100 }),
+    enabled: !!stepTwoData.province_id
+  });
+
+  // const towns: Town[] = townsResponse?.success ? townsResponse.data?.data : [];
+  // const { data: townsResponse, isLoading: loadingTowns } = useTowns(
+  //   stepTwoData.province_id,
+  //   stepTwoData.province_id !== "",
+  //   {
+  //     page: 1,
+  //     page_size: 100
+  //   }
+  // );
 
   // Extract data from responses
   const countries =
     countriesResponse?.success && countriesResponse.data
       ? countriesResponse.data.filter((c: Country) => c.is_active)
       : [];
+
   const provinces =
-    provincesResponse?.success && provincesResponse.data
-      ? provincesResponse.data.filter((p: Province) => p.is_active)
+    provincesResponse?.success && provincesResponse?.data?.data
+      ? provincesResponse?.data?.data.filter((p: Province) => p.is_active)
       : [];
+
   const towns =
-    townsResponse?.success && townsResponse.data
-      ? townsResponse.data.filter((t: Town) => t.is_active)
+    townsResponse?.success && townsResponse.data?.data
+      ? townsResponse.data?.data.filter((t: Town) => t.is_active)
       : [];
 
   const [stepThreeData, setStepThreeData] = useState<StepThreeData>({
@@ -161,7 +187,7 @@ export function MultiStepCompanyForm({
     admin_email: company?.admin_email || "",
     admin_first_name: company?.admin_first_name || "",
     admin_last_name: company?.admin_last_name || "",
-    admin_password: ""
+    admin_password: generateRandomString()
   });
 
   // Reset form when dialog closes
@@ -268,6 +294,8 @@ export function MultiStepCompanyForm({
   };
 
   const validateStepThree = (): boolean => {
+    if (isEditMode) return true;
+
     if (!stepThreeData.admin_username.trim()) {
       toast.error("Admin username is required");
       return false;
@@ -336,13 +364,16 @@ export function MultiStepCompanyForm({
         payload.id = company.id;
       }
 
-      const response = await createOrganization(payload);
+      const response = isEditMode
+        ? await updateOrganization(payload)
+        : await createOrganization(payload);
 
       if (response.success) {
         toast.success(`Company ${isEditMode ? "updated" : "created"} successfully!`);
         onSuccess?.(); // This will invalidate cache and trigger refetch
         handleCloseModal(); // Close dialog
         router.refresh();
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COMPANIES] });
       } else {
         toast.error(response.message || `Failed to ${isEditMode ? "update" : "create"} company`);
       }
