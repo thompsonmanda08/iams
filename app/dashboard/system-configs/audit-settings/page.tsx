@@ -37,7 +37,7 @@ type PageProps = {
 export default async function AuditSettingsPage({ searchParams }: PageProps) {
   const urlParams = await searchParams;
   const page = urlParams.page ? Number(urlParams.page) : 1;
-  const page_size = urlParams.page_size ? Number(urlParams.page_size) : 10;
+  const page_size = urlParams.page_size ? Number(urlParams.page_size) : 100;
 
   const [
     templatesResponse,
@@ -87,7 +87,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
   //   ? indicativeTargetsResponse.data?.data
   //   : [];
 
-  console.log("WP templates:", areas);
+  console.log("WP templates:", auditableAreasResponse);
 
   return (
     <div className="">

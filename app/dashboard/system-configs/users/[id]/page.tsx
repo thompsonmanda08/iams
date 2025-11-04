@@ -23,7 +23,7 @@ export default async function UserDetailsPage({ params }: UserDetailsPageProps) 
     notFound();
   }
 
-  const user = userResponse.data;
+  const user = userResponse.data?.data || {};
 
   return (
     <Suspense fallback={<UserDetailsSkeleton />}>

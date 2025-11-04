@@ -20,7 +20,7 @@ export default async function AdminUserDetailsPage({ params }: AdminUserDetailsP
     notFound();
   }
 
-  const user = userResponse.data;
+  const user = userResponse.data?.data || {};
 
   return (
     <Suspense fallback={<UserDetailsSkeleton />}>

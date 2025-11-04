@@ -30,7 +30,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
   ]);
 
   const branchesData = branchesResponse.success ? branchesResponse.data : null;
-  const provinces = provincesResponse.success ? provincesResponse.data?.data : [];
+  const provinces = provincesResponse.success ? provincesResponse.data : [];
   const towns = townsResponse.success ? townsResponse.data?.data : [];
 
   const branches = branchesData?.data || [];
@@ -43,6 +43,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
     has_prev: false
   };
 
+  console.log("provinces", provinces);
   return (
     <div>
       <div className="bg-card border-b">

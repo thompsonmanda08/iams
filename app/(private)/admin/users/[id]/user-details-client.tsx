@@ -281,33 +281,6 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Organization Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Building2 className="h-5 w-5" />
-                  Organization Details
-                </CardTitle>
-                <CardDescription>User's position within the organization</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs font-medium">Role</p>
-                    <p className="text-sm font-medium">{user.role?.name || "Not assigned"}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs font-medium">Department</p>
-                    <p className="text-sm font-medium">{user.department?.name || "Not assigned"}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs font-medium">Branch</p>
-                    <p className="text-sm font-medium">{user.branch?.name || "Not assigned"}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Security Tab */}

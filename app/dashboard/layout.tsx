@@ -24,13 +24,13 @@ export default async function DashLayout({
   const { session, isAuthenticated, user_type } = await verifySession();
   const user = session?.user as User;
 
-  console.log("[DASHBOARD LAYOUT] Session Data:", {
-    isAuthenticated,
-    user_type,
-    sessionUserType: session?.user_type,
-    userObjectUserType: user?.user_type,
-    path: "/dashboard/*"
-  });
+  // console.log("[DASHBOARD LAYOUT] Session Data:", {
+  //   isAuthenticated,
+  //   user_type,
+  //   sessionUserType: session?.user_type,
+  //   userObjectUserType: user?.user_type,
+  //   path: "/dashboard/*"
+  // });
 
   if (!isAuthenticated) return redirect("/login");
 
