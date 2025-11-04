@@ -10,7 +10,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Wallet, TrendingUp, DollarSign } from "lucide-react";
+import { Pencil, Trash2, Wallet, TrendingUp, DollarSign, Plus } from "lucide-react";
 import Link from "next/link";
 import { BudgetLinesList } from "./budget-line-list";
 import { BudgetStatusBadge } from "./budget-status-badge";
@@ -22,6 +22,7 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { deleteBudget } from "@/app/_actions/audit-module-actions";
+import { BudgetEditModal } from "./budget-edit-modal";
 
 interface BudgetLine {
   id: string;
@@ -70,6 +71,8 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [budgetToEdit, setBudgetToEdit] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Combine budgets with their budget lines
   const budgetsWithLines = useMemo(() => {
@@ -130,6 +133,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
       day: "2-digit"
     });
   };
+
   const handleDeleteClick = (budget: Budget) => {
     setBudgetToDelete(budget);
     setShowDeleteModal(true);
@@ -143,7 +147,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
       const response = await deleteBudget(budgetToDelete.id);
 
       if (response.success) {
-        toast.success(response.message || "Budget  deleted successfully");
+        toast.success(response.message || "Budget deleted successfully");
         setShowDeleteModal(false);
         setBudgetToDelete(null);
         router.refresh();
@@ -156,6 +160,30 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
       setIsDeleting(false);
     }
   };
+
+  const handleEditClick = (budgetId: string) => {
+    setBudgetToEdit(budgetId);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    router.refresh();
+    toast.success("Budget updated successfully");
+  };
+
+  if (budgets.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
+        <div className="text-center">
+          <p className="text-muted-foreground text-lg font-medium">No Budgets Found</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Get started by creating your first budget to track and manage your department's
+            financial allocations.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
@@ -214,97 +242,104 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="text-foreground font-bold">Budget Title</TableHead>
-                <TableHead className="text-foreground font-bold">Amount</TableHead>
-                <TableHead className="text-foreground font-bold">Budget Lines</TableHead>
-                <TableHead className="text-foreground font-bold">Status</TableHead>
-                <TableHead className="text-foreground font-bold">Year</TableHead>
-                <TableHead className="text-foreground font-bold">Start Date</TableHead>
-                <TableHead className="text-foreground font-bold">End Date</TableHead>
-                <TableHead className="text-foreground text-center font-bold">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedBudgets.map((budget, index) => (
-                <TableRow
-                  key={budget.id}
-                  className="hover:bg-muted/30 group transition-colors"
-                  style={{ animationDelay: `${index * 50}ms` }}>
-                  <TableCell>
-                    <Link
-                      href={`/dashboard/audit/budgets/${budget.id}`}
-                      className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
-                      {budget.title}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-lg font-bold">
-                    {formatCurrency(budget.total_amount, budget.currency)}
-                  </TableCell>
-                  <TableCell>
-                    <BudgetLinesList budgetLines={budget?.budget_lines || []} />
-                  </TableCell>
-                  <TableCell>
-                    <BudgetStatusBadge status={budget?.status as BudgetStatus} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{budget.year}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(budget.start_date)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(budget.end_date)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-8 gap-1.5">
+        {filteredBudgets.length > 0 ? (
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="text-foreground font-bold">Budget Title</TableHead>
+                    <TableHead className="text-foreground font-bold">Amount</TableHead>
+                    <TableHead className="text-foreground font-bold">Budget Lines</TableHead>
+                    <TableHead className="text-foreground font-bold">Status</TableHead>
+                    <TableHead className="text-foreground font-bold">Year</TableHead>
+                    <TableHead className="text-foreground font-bold">Start Date</TableHead>
+                    <TableHead className="text-foreground font-bold">End Date</TableHead>
+                    <TableHead className="text-foreground text-center font-bold">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedBudgets.map((budget, index) => (
+                    <TableRow
+                      key={budget.id}
+                      className="hover:bg-muted/30 group transition-colors"
+                      style={{ animationDelay: `${index * 50}ms` }}>
+                      <TableCell>
                         <Link
-                          href={`/dashboard/audit/budgets/edit?id=${budget.id}`}
-                          className="flex cursor-pointer items-center gap-2">
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
+                          href={`/dashboard/audit/budgets/${budget.id}`}
+                          className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
+                          {budget.title}
                         </Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteClick(budget)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                      </TableCell>
+                      <TableCell className="text-lg font-bold">
+                        {formatCurrency(budget.total_amount, budget.currency)}
+                      </TableCell>
+                      <TableCell>
+                        <BudgetLinesList budgetLines={budget?.budget_lines || []} />
+                      </TableCell>
+                      <TableCell>
+                        <BudgetStatusBadge status={budget?.status as BudgetStatus} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{budget.year}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(budget.start_date)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(budget.end_date)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditClick(budget.id)}
+                            className="h-8 gap-1.5">
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteClick(budget)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
-        {filteredBudgets.length === 0 && searchTerm && (
+            <CustomPagination
+              pagination={customPaginationData}
+              updatePagination={updatePagination}
+              allowSetPageSize={true}
+              showDetails={true}
+              className="border-t"
+            />
+          </>
+        ) : (
           <div className="p-12 text-center">
             <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
             <h3 className="text-foreground mb-2 text-lg font-semibold">No budgets found</h3>
-            <p className="text-muted-foreground mb-6">Try adjusting your search terms</p>
+            <p className="text-muted-foreground mb-6">
+              No budgets match your search "{searchTerm}"
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm("");
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}>
+              Clear Search
+            </Button>
           </div>
         )}
-
-        {filteredBudgets.length > 0 && (
-          <CustomPagination
-            pagination={customPaginationData}
-            updatePagination={updatePagination}
-            allowSetPageSize={true}
-            showDetails={true}
-            className="border-t"
-          />
-        )}
       </Card>
+
       <ConfirmationModal
         open={showDeleteModal}
         onOpenChange={setShowDeleteModal}
@@ -314,6 +349,16 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
         type="delete"
         isLoading={isDeleting}
       />
+
+      {budgetToEdit && (
+        <BudgetEditModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          budgetId={budgetToEdit}
+          mode="budget"
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 };
