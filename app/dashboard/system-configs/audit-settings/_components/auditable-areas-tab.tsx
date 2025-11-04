@@ -378,12 +378,14 @@ export function CreateOrUpdateArea({
     }
   }, [openModal, setOpenModal, setInitialData]);
 
+  console.log("🎯 formData:", initialData);
+
   // Create/Update mutation
   const router = useRouter();
   const saveMutation = useMutation({
     mutationFn: (data: AuditConfigurableItem) => {
       return initialData && areaId
-        ? updateAuditableArea({ ...data, id: String(areaId) })
+        ? updateAuditableArea({ ...initialData, ...data })
         : createAuditableArea(data);
     },
     onSuccess: (response) => {

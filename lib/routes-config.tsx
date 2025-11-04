@@ -124,24 +124,25 @@ export const navItems: NavGroup[] = [
         icon: Settings,
         items: [
           {
-            title: "Users",
-            href: "/dashboard/system-configs/users",
-            icon: Users
+            title: "Branches",
+            href: "/dashboard/system-configs/branches",
+            icon: MapPin
           },
           {
             title: "Departments",
             href: "/dashboard/system-configs/departments",
             icon: Building
           },
-          {
-            title: "Branches",
-            href: "/dashboard/system-configs/branches",
-            icon: MapPin
-          },
+
           {
             title: "Workflow",
             href: "/dashboard/system-configs/workflow",
             icon: Workflow
+          },
+          {
+            title: "Users",
+            href: "/dashboard/system-configs/users",
+            icon: Users
           }
         ]
       },

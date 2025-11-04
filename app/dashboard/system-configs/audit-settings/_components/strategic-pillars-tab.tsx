@@ -44,6 +44,7 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface PillarFormData extends Omit<AuditConfigurableItem, "id"> {
   start_date?: string;
@@ -115,7 +116,7 @@ export default function StrategicPillarsTab({
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="font-medium text-sm leading-none">Strategic Pillars</h4>
+            <h4 className="text-sm leading-none font-medium">Strategic Pillars</h4>
             <p className="text-muted-foreground text-sm">
               Define strategic pillars that guide your organization&apos;s direction
             </p>
@@ -421,22 +422,40 @@ function CreateOrUpdate({
             }}
           />
           <div>
-            <label className="mb-2 block text-sm font-medium">Strategic Pillar Duration</label>
+            <label className="mb-2 block text-sm font-medium">
+              Strategic Pillar Duration (Start - End Dates)
+            </label>
             <div className="grid grid-cols-2 gap-2">
-              <Input
+              <DatePicker
                 type="date"
-                value={formData.start_date}
-                onChange={(e) => {
+                // label="Start Date"
+                placeholder="Start Date"
+                value={
+                  formData.start_date
+                    ? (new Date(formData.start_date) as unknown as any)
+                    : undefined
+                }
+                onValueChange={(date) => {
                   setError({ status: false, message: "" });
-                  setFormData((c) => ({ ...c, start_date: e.target.value }));
+                  setFormData((c) => ({
+                    ...c,
+                    start_date: date?.toISOString().split("T")[0] || ""
+                  }));
                 }}
               />
-              <Input
+              <DatePicker
                 type="date"
-                value={formData.end_date}
-                onChange={(e) => {
+                // label="End Date"
+                placeholder="Start Date"
+                value={
+                  formData.end_date ? (new Date(formData.end_date) as unknown as any) : undefined
+                }
+                onValueChange={(date) => {
                   setError({ status: false, message: "" });
-                  setFormData((c) => ({ ...c, end_date: e.target.value }));
+                  setFormData((c) => ({
+                    ...c,
+                    end_date: date?.toISOString().split("T")[0] || ""
+                  }));
                 }}
               />
             </div>
@@ -454,7 +473,7 @@ function CreateOrUpdate({
                   setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
-                 Close
+                Close
               </Button>
             </DialogClose>
             <Button
@@ -463,7 +482,7 @@ function CreateOrUpdate({
               disabled={saveMutation.isPending || !formData.name.trim()}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
-               Save changes
+              Save changes
             </Button>
           </div>
         </form>
