@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
-  ArrowLeft,
   TrendingUp,
   Target,
   Shield,
