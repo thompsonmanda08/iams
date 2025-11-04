@@ -140,7 +140,7 @@ export default function StrategicInitiativeTab({
       id: pillar.id,
       name: pillar.title
     }));
-  }, []);
+  }, [pillars]);
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
