@@ -1,10 +1,9 @@
-"use client";
 import PageHeader from "@/components/page-header";
 import BudgetForm from "../../_components/budget-form";
-import { Wallet } from "lucide-react";
 
 const BudgetsUpdatePage = async ({ params }: { params: Promise<{ budgetId: string }> }) => {
   const { budgetId } = await params;
+  console.log("PARAM", budgetId);
 
   return (
     <div className="bg-background min-h-screen">
@@ -15,7 +14,7 @@ const BudgetsUpdatePage = async ({ params }: { params: Promise<{ budgetId: strin
             <PageHeader
               title="[Budget Name]"
               description="ISO 27001 compliance monitoring and audit tracking"
-              Icon={Wallet}
+              icon="Wallet"
             />
           </div>
         </div>
@@ -23,7 +22,7 @@ const BudgetsUpdatePage = async ({ params }: { params: Promise<{ budgetId: strin
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <BudgetForm budgetId={budgetId}  />
+        <BudgetForm budgetId={budgetId} mode="budget" />
       </div>
     </div>
   );

@@ -10,18 +10,23 @@ export const BudgetStatusBadge = ({ status }: BudgetStatusBadgeProps) => {
   const config = {
     BUDGET_CREATION: {
       variant: "secondary" as const,
-      label: "Draft",
+      label: "DRAFT",
       icon: Clock
     },
     UNDER_REVIEW: {
       variant: "warning" as const,
-      label: "Under Review",
+      label: "UNDER REVIEW",
       icon: FileSearch
     },
     APPROVED: {
       variant: "success" as const,
-      label: "Approved",
+      label: "APPROVED",
       icon: CheckCircle2
+    },
+    DRAFT: {
+      variant: "secondary" as const,
+      label: "DRAFT",
+      icon: Clock
     }
   };
 

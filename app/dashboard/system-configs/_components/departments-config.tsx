@@ -40,7 +40,6 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CustomPagination } from "@/components/ui/pagination";
 import { CreateOrUpdateDepartment } from "./department-users";
 import Link from "next/link";

@@ -48,7 +48,7 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
     <div className="bg-background min-h-screen">
       {/* Header */}
       <div className="bg-card border-b">
-        <div className="container mx-auto flex items-center justify-between py-6">
+        <div className="container mx-auto flex items-center justify-between py-6 px-4">
           <PageHeader
             title="Risk Registers"
             description="Manage and organize your risk assessment registers"
@@ -60,7 +60,7 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
       </div>
 
       {/* Stats */}
-      <div className="container mx-auto grid grid-cols-1 gap-4 py-8 md:grid-cols-4">
+      <div className="container mx-auto grid grid-cols-1 gap-4 py-8 md:grid-cols-4 px-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -108,7 +108,7 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filters and Table */}
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 px-4">
         <Suspense fallback={<div>Loading...</div>}>
           <RiskRegistersTable
             registers={registers}

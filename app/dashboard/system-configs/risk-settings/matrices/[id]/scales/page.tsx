@@ -17,7 +17,7 @@ export default async function MatrixScalesPage({ params }: PageProps) {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 px-4">
         <BackButton title="Back to Configurations" />
         <div className="mb-2">
           <h1 className="text-foreground text-3xl font-bold">{matrix.name}</h1>
@@ -27,7 +27,7 @@ export default async function MatrixScalesPage({ params }: PageProps) {
         </div>
       </div>
 
-      <main className="container mx-auto">
+      <main className="container mx-auto px-4">
         <RiskScalesManager matrixId={id} />
       </main>
     </div>
