@@ -76,7 +76,14 @@ export const QUERY_KEYS = {
   COUNTRIES: "countries",
   PROVINCES: "provinces",
   TOWNS: "towns",
-  COMPANIES: "companies"
+  COMPANIES: "companies",
+  STRATEGIC_PILLARS: "strategic-pillars",
+  STRATEGIC_INITIATIVES: "strategic-initiatives",
+  FINDINGS_CATEGORIES: "findings-categories",
+  PROCESS_ACTIVITIES: "process-activities",
+  INDICATIVE_TARGETS: "indicative-targets",
+  AUDITABLE_AREAS: "auditable-areas",
+  WORKPAPER_TEMPLATES: "workpaper-templates"
 };
 
 // ANIMATION_VARIANTS

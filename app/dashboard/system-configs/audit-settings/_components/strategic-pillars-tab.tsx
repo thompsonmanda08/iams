@@ -52,7 +52,7 @@ interface PillarFormData extends Omit<AuditConfigurableItem, "id"> {
 }
 
 const INIT_FORM_DATA: PillarFormData = {
-  name: "",
+  title: "",
   description: "",
   department_id: null,
   start_date: "",
@@ -187,7 +187,7 @@ export default function StrategicPillarsTab({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Target className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium">{item.title}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -282,7 +282,7 @@ function CreateOrUpdate({
   const [formData, setFormData] = useState<PillarFormData>(() => {
     if (initialData && selectedId) {
       return {
-        name: initialData.name || "",
+        title: initialData.title || "",
         department_id: initialData.department_id || "",
         description: initialData.description || "",
         start_date: (initialData as any).start_date || "",
@@ -304,7 +304,7 @@ function CreateOrUpdate({
     if (openModal) {
       if (initialData && selectedId) {
         setFormData({
-          name: initialData.name || "",
+          title: initialData.title || "",
           department_id: initialData.department_id || "",
           description: initialData.description || "",
           start_date: (initialData as any).start_date || "",
@@ -405,10 +405,10 @@ function CreateOrUpdate({
           <Input
             label="Strategic Pillar"
             placeholder="Strategic Pillar Title"
-            value={formData.name}
+            value={formData.title}
             onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, name: e.target.value }));
+              setFormData((c) => ({ ...c, title: e.target.value }));
             }}
             required
           />
@@ -439,7 +439,7 @@ function CreateOrUpdate({
                   setError({ status: false, message: "" });
                   setFormData((c) => ({
                     ...c,
-                    start_date: date?.toISOString().split("T")[0] || ""
+                    start_date: date?.toISOString() || ""
                   }));
                 }}
               />
@@ -454,7 +454,7 @@ function CreateOrUpdate({
                   setError({ status: false, message: "" });
                   setFormData((c) => ({
                     ...c,
-                    end_date: date?.toISOString().split("T")[0] || ""
+                    end_date: date?.toISOString() || ""
                   }));
                 }}
               />
@@ -479,7 +479,7 @@ function CreateOrUpdate({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name.trim()}
+              disabled={saveMutation.isPending || !formData.title.trim()}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
               Save changes

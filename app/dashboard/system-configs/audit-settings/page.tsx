@@ -40,23 +40,23 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
   const page_size = urlParams.page_size ? Number(urlParams.page_size) : 100;
 
   const [
-    templatesResponse,
-    auditableAreasResponse,
-    indicativeTargetsResponse,
-    pillarsResponse,
-    initiativesResponse,
-    townsResponse,
-    departmentsResponse
+    templatesResponse, //1
+    auditableAreasResponse, //2
+    indicativeTargetsResponse, //3
+    pillarsResponse, //4
+    initiativesResponse, //5
+    townsResponse, // 6
+    departmentsResponse //7
     // categoriesResponse,
     // processActivitiesResponse,
   ] = await Promise.all([
-    getWorkingPaperTemplates(),
-    getAuditableAreas(),
-    getIndicativeTargets(),
-    getStrategicInitiatives(),
-    getStrategicPillars(),
-    getTowns({ page, page_size }),
-    getDepartments()
+    getWorkingPaperTemplates(), //1
+    getAuditableAreas(), //2
+    getIndicativeTargets(), //3
+    getStrategicPillars(), //4
+    getStrategicInitiatives(), //5
+    getTowns({ page, page_size }), //6
+    getDepartments() //7
     // getBranches({ page, page_size }),
     // getProvinces(),
     // getFindingsCategories(),
@@ -94,7 +94,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     ? indicativeTargetsResponse.data?.data || []
     : [];
 
-  console.log("WP indicativeTargets:", indicativeTargets);
+  console.log("initiatives:", initiatives);
 
   return (
     <div className="">

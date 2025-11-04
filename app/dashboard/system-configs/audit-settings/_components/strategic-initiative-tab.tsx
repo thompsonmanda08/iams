@@ -27,10 +27,11 @@ import { Input } from "@/components/ui/input";
 import {
   createStrategicInitiative,
   updateStrategicInitiative,
-  deleteStrategicInitiative
+  deleteStrategicInitiative,
+  getStrategicPillars
 } from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -44,16 +45,19 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface InitiativeFormData extends Omit<AuditConfigurableItem, "id"> {
   pillar_id?: string;
 }
 
 const INIT_FORM_DATA: InitiativeFormData = {
-  name: "",
+  title: "",
   description: "",
   department_id: null,
-  pillar_id: ""
+  pillar_id: "",
+  start_date: new Date().toISOString(),
+  end_date: new Date().toISOString()
 };
 
 export default function StrategicInitiativeTab({
@@ -113,7 +117,7 @@ export default function StrategicInitiativeTab({
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="font-medium text-sm leading-none">Strategic Initiatives</h4>
+            <h4 className="text-sm leading-none font-medium">Strategic Initiatives</h4>
             <p className="text-muted-foreground text-sm">
               Manage strategic initiatives aligned with your organization&apos;s pillars
             </p>
@@ -181,7 +185,7 @@ export default function StrategicInitiativeTab({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Lightbulb className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium">{item.title}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -276,7 +280,7 @@ function CreateOrUpdate({
   const [formData, setFormData] = useState<InitiativeFormData>(() => {
     if (initialData && selectedId) {
       return {
-        name: initialData.name || "",
+        title: initialData.title || "",
         department_id: initialData.department_id || "",
         pillar_id: (initialData as any).pillar_id || "",
         description: initialData.description || ""
@@ -293,18 +297,19 @@ function CreateOrUpdate({
 
   const departments = (data?.data?.data || []) as Department[];
 
-  // Mock pillars data - replace with actual API call
-  const pillars = [
-    { id: "1", name: "Customer Excellence" },
-    { id: "2", name: "Operational Efficiency" },
-    { id: "3", name: "Innovation & Growth" }
-  ];
+  const { data: pillarsResponse, isLoading: loadingPillars } = useQuery({
+    queryKey: [QUERY_KEYS.STRATEGIC_PILLARS],
+    queryFn: () => getStrategicPillars(undefined, { page: 1, page_size: 100 }),
+    enabled: !!formData?.department_id
+  });
+
+  const pillars = pillarsResponse?.data?.data || [];
 
   useEffect(() => {
     if (openModal) {
       if (initialData && selectedId) {
         setFormData({
-          name: initialData.name || "",
+          title: initialData.title || "",
           department_id: initialData.department_id || "",
           pillar_id: (initialData as any).pillar_id || "",
           description: initialData.description || ""
@@ -337,7 +342,7 @@ function CreateOrUpdate({
     onSuccess: (response) => {
       if (response.success) {
         toast.success(`Strategic Initiative ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES] });
         router.refresh();
         setOpenModal?.(false);
         setInitialData?.(null);
@@ -357,6 +362,9 @@ function CreateOrUpdate({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
+
+    console.log("Form data:", formData);
+
     saveMutation.mutate(formData);
   }
 
@@ -370,7 +378,7 @@ function CreateOrUpdate({
   const pillarOptions = useMemo(() => {
     return pillars.map((pillar) => ({
       id: pillar.id,
-      name: pillar.name
+      name: pillar.title
     }));
   }, []);
 
@@ -406,12 +414,14 @@ function CreateOrUpdate({
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, department_id: value }));
             }}
+            isLoading={loadingPillars}
             options={departmentOptions}
           />
           <SearchSelectField
             label="Strategic Pillar"
             placeholder="--Select Strategic Pillar--"
             value={formData?.pillar_id || ""}
+            isDisabled={!formData?.department_id}
             onValueChange={(value) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, pillar_id: value }));
@@ -421,10 +431,10 @@ function CreateOrUpdate({
           <Input
             label="Strategic Initiative"
             placeholder="Strategic Initiative"
-            value={formData.name}
+            value={formData.title}
             onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, name: e.target.value }));
+              setFormData((c) => ({ ...c, title: e.target.value }));
             }}
             required
           />
@@ -437,6 +447,46 @@ function CreateOrUpdate({
               setFormData((c) => ({ ...c, description: e.target.value }));
             }}
           />
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Strategic Initiative Duration (Start - End Dates)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <DatePicker
+                type="date"
+                // label="Start Date"
+                placeholder="Start Date"
+                value={
+                  formData.start_date
+                    ? (new Date(formData.start_date) as unknown as any)
+                    : undefined
+                }
+                onValueChange={(date) => {
+                  setError({ status: false, message: "" });
+                  setFormData((c) => ({
+                    ...c,
+                    start_date: date?.toISOString() || ""
+                  }));
+                }}
+              />
+              <DatePicker
+                type="date"
+                // label="End Date"
+                placeholder="Start Date"
+                value={
+                  formData.end_date ? (new Date(formData.end_date) as unknown as any) : undefined
+                }
+                onValueChange={(date) => {
+                  setError({ status: false, message: "" });
+                  setFormData((c) => ({
+                    ...c,
+                    end_date: date?.toISOString() || ""
+                  }));
+                }}
+              />
+            </div>
+          </div>
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
 
           <div className="flex justify-end gap-3 pt-2">
@@ -450,16 +500,16 @@ function CreateOrUpdate({
                   setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
-                 Close
+                Close
               </Button>
             </DialogClose>
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name.trim()}
+              disabled={saveMutation.isPending || !formData.title.trim()}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
-               Save changes
+              Save changes
             </Button>
           </div>
         </form>
