@@ -147,8 +147,6 @@ export default function StrategicInitiativeTab({
     return department ? department.name : "No department assigned - Global";
   };
 
-  console.log("initiatives", initiatives);
-
   return (
     <>
       <Card className="p-4">
