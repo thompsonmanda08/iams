@@ -1,7 +1,11 @@
 "use server";
 
 import type { APIResponse } from "@/lib/types";
-import authenticatedApiClient, { handleError, successResponse, handleBadRequest } from "./api-config";
+import authenticatedApiClient, {
+  handleError,
+  successResponse,
+  handleBadRequest
+} from "./api-config";
 import { revalidatePath } from "next/cache";
 
 // ============================================================================
@@ -17,7 +21,7 @@ export async function getAuditableAreas(): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
-    return successResponse(response?.data, "Auditable areas fetched successfully");
+    return successResponse(response?.data?.data, "Auditable areas fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -119,7 +123,7 @@ export async function getStrategicPillars(): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
-    return successResponse(response?.data, "Strategic pillars fetched successfully");
+    return successResponse(response?.data?.data, "Strategic pillars fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -150,7 +154,7 @@ export async function createStrategicPillar(data: any): Promise<APIResponse> {
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
-    return successResponse(response?.data, "Strategic pillar created successfully");
+    return successResponse(response?.data?.data, "Strategic pillar created successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }
@@ -224,7 +228,7 @@ export async function getStrategicInitiatives(pillarId?: string): Promise<APIRes
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
-    return successResponse(response?.data, "Strategic initiatives fetched successfully");
+    return successResponse(response?.data?.data, "Strategic initiatives fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -328,7 +332,7 @@ export async function getFindingsCategories(): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
-    return successResponse(response?.data, "Findings categories fetched successfully");
+    return successResponse(response?.data?.data, "Findings categories fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -421,7 +425,7 @@ export async function getProcessActivities(): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
-    return successResponse(response?.data, "Process activities fetched successfully");
+    return successResponse(response?.data?.data, "Process activities fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }
@@ -522,7 +526,7 @@ export async function getIndicativeTargets(): Promise<APIResponse> {
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
-    return successResponse(response?.data, "Indicative targets fetched successfully");
+    return successResponse(response?.data?.data, "Indicative targets fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
   }

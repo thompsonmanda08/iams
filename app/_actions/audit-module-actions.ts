@@ -33,8 +33,8 @@ interface CreateBudgetPayload {
   title: string;
   total_amount: number;
   currency: string;
-  start_date: string; 
-  end_date: string; 
+  start_date: string;
+  end_date: string;
   description: string;
 }
 
@@ -44,11 +44,10 @@ interface CreateBudgetLinePayload {
   allocated_amount: number;
   spent_amount: number;
   currency: string;
-  start_date: string; 
+  start_date: string;
   end_date: string;
   category: string;
 }
-
 
 /**
  * Get all audit plans with optional filters
@@ -834,7 +833,7 @@ export async function getWorkingPaperTemplates(
       url
     });
 
-    return successResponse(response.data, "Working paper templates fetched successfully");
+    return successResponse(response.data?.data, "Working paper templates fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | WORKING PAPER TEMPLATES", "/api/v1/working-paper-templates");
   }
@@ -1443,24 +1442,18 @@ export async function getAuditLogsByEntity(
 /**
  * Create a new budget
  */
-export async function createBudget(
-  payload: CreateBudgetPayload
-): Promise<APIResponse> {
+export async function createBudget(payload: CreateBudgetPayload): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       method: "POST",
       url: "/api/v1/audit/budgets",
       data: payload
     });
-    
+
     revalidatePath("/dashboard/audit/budgets/new");
     return successResponse(response.data.data);
   } catch (error: any) {
-    return handleError(
-      error,
-      "POST | CREATE BUDGET",
-      "/api/v1/audit/budgets"
-    );
+    return handleError(error, "POST | CREATE BUDGET", "/api/v1/audit/budgets");
   }
 }
 
@@ -1477,10 +1470,10 @@ export async function createBudgetLine(
       url: `/api/v1/audit/budgets/${budgetId}/lines`,
       data: payload
     });
-    
+
     revalidatePath("/dashboard/audit/budgets/new");
     revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
-    
+
     return successResponse(response.data.data);
   } catch (error: any) {
     return handleError(
@@ -1502,11 +1495,7 @@ export async function getBudgets(): Promise<APIResponse> {
     });
     return successResponse(response.data.data);
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | FETCH BUDGETS",
-      "/api/v1/audit/budgets"
-    );
+    return handleError(error, "GET | FETCH BUDGETS", "/api/v1/audit/budgets");
   }
 }
 
@@ -1519,14 +1508,10 @@ export async function getBudgetById(budgetId: string): Promise<APIResponse> {
       method: "GET",
       url: `/api/v1/audit/budgets/${budgetId}`
     });
-    
+
     return successResponse(response.data, "Budget fetched successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | FETCH BUDGET",
-      `/api/v1/audit/budgets/${budgetId}`
-    );
+    return handleError(error, "GET | FETCH BUDGET", `/api/v1/audit/budgets/${budgetId}`);
   }
 }
 
@@ -1539,7 +1524,7 @@ export async function getBudgetLines(budgetId: string): Promise<APIResponse> {
       method: "GET",
       url: `/api/v1/audit/budgets/${budgetId}/lines`
     });
-    
+
     return successResponse(response.data, "Budget lines fetched successfully");
   } catch (error: any) {
     return handleError(
@@ -1562,15 +1547,11 @@ export async function updateBudget(
       method: "PUT",
       url: `/api/v1/audit/budgets/${budgetId}`,
       data: payload
-    });   
-    
+    });
+
     return successResponse(response.data, "Budget updated successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE BUDGET",
-      `/api/v1/audit/budgets/${budgetId}`
-    );
+    return handleError(error, "PUT | UPDATE BUDGET", `/api/v1/audit/budgets/${budgetId}`);
   }
 }
 
@@ -1580,7 +1561,7 @@ export async function updateBudget(
 export async function updateBudgetLine(
   lineId: string,
   payload: Partial<CreateBudgetLinePayload>,
-  budgetId: string,
+  budgetId: string
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
@@ -1588,17 +1569,13 @@ export async function updateBudgetLine(
       url: `/api/v1/audit/budget-lines/${lineId}`,
       data: payload
     });
-    
+
     revalidatePath("/dashboard/audit/budgets");
     revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
-    
+
     return successResponse(response.data, "Budget line updated successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE BUDGET LINE",
-      `/api/v1/audit/budget-lines/${lineId}`
-    );
+    return handleError(error, "PUT | UPDATE BUDGET LINE", `/api/v1/audit/budget-lines/${lineId}`);
   }
 }
 
@@ -1611,35 +1588,28 @@ export async function deleteBudget(budgetId: string): Promise<APIResponse> {
       method: "DELETE",
       url: `/api/v1/audit/budgets/${budgetId}`
     });
-    
+
     revalidatePath("/dashboard/audit/budgets");
-    
+
     return successResponse(response.data, "Budget deleted successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | DELETE BUDGET",
-      `/api/v1/audit/budgets/${budgetId}`
-    );
+    return handleError(error, "DELETE | DELETE BUDGET", `/api/v1/audit/budgets/${budgetId}`);
   }
 }
 
 /**
  * Delete a budget line
  */
-export async function deleteBudgetLine(
-  budgetId: string,
-  lineId: string
-): Promise<APIResponse> {
+export async function deleteBudgetLine(budgetId: string, lineId: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       method: "DELETE",
       url: `/api/v1/audit/budget-lines/${lineId}`
     });
-    
+
     revalidatePath("/dashboard/audit/budgets");
     revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
-    
+
     return successResponse(response.data, "Budget line deleted successfully");
   } catch (error: any) {
     return handleError(

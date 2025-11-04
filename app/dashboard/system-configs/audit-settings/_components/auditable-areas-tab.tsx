@@ -76,7 +76,7 @@ export default function AuditableAreaConfig({
   const [areaId, setAreaId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [items, setItems] = useState<AuditConfigurableItem[]>(areas);
+  const [items, setItems] = useState<AuditConfigurableItem[]>([...areas]);
 
   useEffect(() => {
     setItems(areas);
@@ -142,16 +142,16 @@ export default function AuditableAreaConfig({
               setOpenModal(true);
             }}>
             <Plus className="h-4 w-4" />
-            New Auditable AuditConfigurableItem
+            New Auditable Area
           </Button>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Auditable AuditConfigurableItem</TableHead>
+              <TableHead>Auditable Area</TableHead>
               <TableHead>Department</TableHead>
-              <TableHead>Description of AuditConfigurableItem</TableHead>
+              <TableHead>Description of Area</TableHead>
               {/* <TableHead>Status</TableHead> */}
               <TableHead className="w-24" align="center">
                 Actions
@@ -181,7 +181,7 @@ export default function AuditableAreaConfig({
                             setFormData(null);
                             setOpenModal(true);
                           }}>
-                          <Plus className="h-4 w-4" /> Create New Auditable AuditConfigurableItem
+                          <Plus className="h-4 w-4" /> Create New Auditable Area
                         </Button>
                       </div>
                     </EmptyContent>
@@ -189,6 +189,7 @@ export default function AuditableAreaConfig({
                 </TableCell>
               </TableRow>
             ) : (
+              items &&
               items?.map((item) => {
                 const departmentName =
                   item?.department ||
@@ -274,7 +275,7 @@ export default function AuditableAreaConfig({
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete AuditConfigurableItem"
+        title="Delete Area"
         description="Are you sure you want to delete this item? This action cannot be undone and may affect related data."
         onConfirm={handleDeleteConfirm}
         isLoading={deleteMutation.isPending}
@@ -387,9 +388,7 @@ export function CreateOrUpdateArea({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(
-          `Auditable AuditConfigurableItem ${initialData ? "updated" : "created"} successfully`
-        );
+        toast.success(`Auditable Area ${initialData ? "updated" : "created"} successfully`);
         router.refresh();
         setOpenModal?.(false);
         setInitialData?.(null);
@@ -414,7 +413,7 @@ export function CreateOrUpdateArea({
 
   const departmentOptions = useMemo(() => {
     return items
-      .filter((dept) => dept.id !== areaId) // Prevent self-parenting
+      .filter((dept) => dept.id !== formData.department_id) // Prevent self-parenting
       .map((item) => ({
         id: item?.id as string,
         name: item?.name
@@ -428,11 +427,11 @@ export function CreateOrUpdateArea({
           <Button size="sm">
             {initialData ? (
               <>
-                <PencilLine className="mr-2 h-4 w-4" /> Update AuditConfigurableItem
+                <PencilLine className="mr-2 h-4 w-4" /> Update Area
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" /> Create New AuditConfigurableItem
+                <Plus className="mr-2 h-4 w-4" /> Create New Area
               </>
             )}
           </Button>
@@ -440,9 +439,7 @@ export function CreateOrUpdateArea({
       )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {initialData ? "Update AuditConfigurableItem" : "Create New AuditConfigurableItem"}
-          </DialogTitle>
+          <DialogTitle>{initialData ? "Update Area" : "Create New Area"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleCreateOrUpdate} className="space-y-3">
           <SearchSelectField
@@ -457,7 +454,7 @@ export function CreateOrUpdateArea({
           />
           <Input
             label="Name"
-            placeholder="AuditConfigurableItem Name"
+            placeholder="Area Name"
             value={formData.name}
             onChange={(e) => {
               setError({ status: false, message: "" });
@@ -468,7 +465,7 @@ export function CreateOrUpdateArea({
           />
           <Textarea
             label="Description"
-            placeholder="AuditConfigurableItem description (optional)"
+            placeholder="Area description (optional)"
             value={formData.description || ""}
             onChange={(e) => {
               setError({ status: false, message: "" });
