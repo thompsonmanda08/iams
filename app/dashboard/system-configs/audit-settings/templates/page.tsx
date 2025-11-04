@@ -8,7 +8,9 @@ import PageHeader from "@/components/page-header";
 
 export default async function WorkpaperTemplatesPage() {
   const templatesResponse = await getWorkingPaperTemplates();
-  const templates = templatesResponse.success ? templatesResponse.data?.data?.data : [];
+  const templates = templatesResponse.success ? templatesResponse.data?.data : [];
+
+
 
   return (
     <div className="bg-background min-h-screen">

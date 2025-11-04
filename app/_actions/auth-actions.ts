@@ -300,7 +300,7 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
   const url = `/api/v1/auth/setup`;
 
   try {
-    console.log("🔧 [InitializeSystemSetup] Starting...");
+    console.log("🔧 [System Setup] Starting...");
     const response = await authenticatedApiClient({ url });
     const session = response?.data;
     const userData = session?.user;
@@ -309,7 +309,7 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       id: userData?.id,
       username: userData?.username,
       email: userData?.email,
-      role: userData?.role?.name,
+      role: userData?.role || userData?.role?.name || "Viewer",
       first_name: userData?.first_name,
       last_name: userData?.last_name,
       user_type: userData?.user_type,
@@ -328,10 +328,10 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
     await updateAuthSession({ user });
     // await createUserSession(user as any);
 
-    console.log("🔧 [InitializeSystemSetup] Completed");
+    console.log("🔧 [System Setup] Completed", user);
     return successResponse(session, response?.data?.message);
   } catch (error: Error | any) {
-    console.error("❌ [InitializeSystemSetup] Error:", error?.message);
+    console.error("❌ [System Setup] Error:", error?.message);
     return handleError(error, "GET | SYSTEM SETUP", url);
   }
 }

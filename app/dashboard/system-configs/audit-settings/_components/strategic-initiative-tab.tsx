@@ -27,10 +27,12 @@ import { Input } from "@/components/ui/input";
 import {
   createStrategicInitiative,
   updateStrategicInitiative,
-  deleteStrategicInitiative
+  deleteStrategicInitiative,
+  getStrategicPillars,
+  getStrategicInitiatives
 } from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -44,35 +46,42 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Spinner } from "@/components/ui/spinner";
+import Loader from "@/components/ui/loader";
 
 interface InitiativeFormData extends Omit<AuditConfigurableItem, "id"> {
   pillar_id?: string;
 }
 
 const INIT_FORM_DATA: InitiativeFormData = {
-  name: "",
+  title: "",
   description: "",
   department_id: null,
-  pillar_id: ""
+  pillar_id: "",
+  start_date: new Date().toISOString(),
+  end_date: new Date().toISOString()
 };
 
 export default function StrategicInitiativeTab({
-  initiatives = [],
-  pagination
+  // initiatives = [],
+  // pagination
+  departments
 }: {
   initiatives: AuditConfigurableItem[];
   pagination?: Pagination;
+  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<InitiativeFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [items, setItems] = useState<AuditConfigurableItem[]>(initiatives);
+  // const [items, setItems] = useState<AuditConfigurableItem[]>(initiatives);
 
-  useEffect(() => {
-    setItems(initiatives);
-  }, [initiatives]);
+  // useEffect(() => {
+  //   setItems(initiatives);
+  // }, [initiatives]);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -82,7 +91,7 @@ export default function StrategicInitiativeTab({
     onSuccess: (response) => {
       if (response.success) {
         toast.success("Strategic Initiative deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES] });
         router.refresh();
       } else {
         toast.error(response.message || "Failed to delete initiative");
@@ -107,128 +116,193 @@ export default function StrategicInitiativeTab({
     if (!selectedId) return;
     deleteMutation.mutate(selectedId);
   };
+  const [pillarId, setPillarId] = useState<string | null>(null);
+
+  const { data: initiativesResponse, isLoading: loadingInitiatives } = useQuery({
+    queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES, pillarId],
+    queryFn: () => getStrategicInitiatives(String(pillarId), { page: 1, page_size: 100 }),
+    enabled: !!pillarId
+  });
+
+  const initiatives = initiativesResponse?.data?.data || [];
+  const pagination = initiativesResponse?.data?.pagination || null;
+
+  const { data: pillarsResponse, isLoading: loadingPillars } = useQuery({
+    queryKey: [QUERY_KEYS.STRATEGIC_PILLARS],
+    queryFn: () => getStrategicPillars(undefined, { page: 1, page_size: 100 })
+    // enabled: !!formData?.department_id
+  });
+
+  const pillars = pillarsResponse?.data?.data || [];
+
+  const pillarOptions = useMemo(() => {
+    return pillars.map((pillar: any) => ({
+      id: pillar.id,
+      name: pillar.title
+    }));
+  }, [pillars]);
+
+  const getDepartmentName = (departmentId: string) => {
+    const department = departments.find((d) => d.id === departmentId);
+    return department ? department.name : "No department assigned - Global";
+  };
 
   return (
     <>
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="font-medium text-sm leading-none">Strategic Initiatives</h4>
+            <h4 className="text-sm leading-none font-medium">Strategic Initiatives</h4>
             <p className="text-muted-foreground text-sm">
               Manage strategic initiatives aligned with your organization&apos;s pillars
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => {
-              setFormData(null);
-              setOpenModal(true);
-            }}>
-            <Plus className="h-4 w-4" />
-            New Strategic Initiative
-          </Button>
+          <div className="flex items-end gap-2">
+            <SearchSelectField
+              placeholder="--Select Strategic Pillar--"
+              value={pillarId || ""}
+              onValueChange={setPillarId}
+              isLoading={loadingPillars}
+              options={pillarOptions}
+              className="min-w-60"
+              classNames={{
+                wrapper: "min-w-60"
+              }}
+            />
+            <Button
+              size="sm"
+              className="h-9"
+              onClick={() => {
+                setFormData(null);
+                setOpenModal(true);
+              }}>
+              <Plus className="h-4 w-4" />
+              New Strategic Initiative
+            </Button>
+          </div>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Strategic Initiative</TableHead>
-              <TableHead>Strategic Pillar</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="w-24" align="center">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.length === 0 ? (
+        {loadingInitiatives ? (
+          <Loader className="flex items-center justify-center">
+            {/* <Spinner className="h-8 w-8 " /> */}
+          </Loader>
+        ) : (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Lightbulb />
-                      </EmptyMedia>
-                      <EmptyTitle>No strategic initiatives yet</EmptyTitle>
-                      <EmptyDescription>
-                        You haven&apos;t created any strategic initiatives yet. Get started by
-                        creating your first strategic initiative.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setFormData(null);
-                            setOpenModal(true);
-                          }}>
-                          <Plus className="h-4 w-4" /> Create New Strategic Initiative
-                        </Button>
-                      </div>
-                    </EmptyContent>
-                  </Empty>
-                </TableCell>
+                <TableHead>Strategic Initiative</TableHead>
+                <TableHead>Strategic Pillar</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead className="w-24" align="center">
+                  Actions
+                </TableHead>
               </TableRow>
-            ) : (
-              items.map((item: any) => {
-                const departmentName = item?.department || "No department assigned - Global";
-                const pillarName = item?.pillar || "No pillar assigned";
+            </TableHeader>
+            <TableBody>
+              {initiatives.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <Lightbulb />
+                        </EmptyMedia>
+                        <EmptyTitle>No strategic pillar selected yet</EmptyTitle>
+                        <EmptyDescription>
+                          If you haven&apos;t created any strategic initiatives yet. Get started by
+                          creating your first strategic initiative.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                      <EmptyContent>
+                        <div className="flex items-center gap-2">
+                          <SearchSelectField
+                            placeholder="--Select Strategic Pillar--"
+                            value={pillarId || ""}
+                            onValueChange={setPillarId}
+                            isLoading={loadingPillars}
+                            options={pillarOptions}
+                            className="min-w-60"
+                            classNames={{
+                              wrapper: "min-w-40"
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            className="h-9"
+                            onClick={() => {
+                              setFormData(null);
+                              setOpenModal(true);
+                            }}>
+                            <Plus className="h-4 w-4" />
+                            New Strategic Initiative
+                          </Button>
+                        </div>
+                      </EmptyContent>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                initiatives.map((item: any) => {
+                  return (
+                    <TableRow key={item.id} className="cursor-pointer">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Lightbulb className="text-muted-foreground h-4 w-4" />
+                          <span className="font-medium">{item.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {item?.pillar || "No pillar assigned"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {item.description || "No description provided"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {getDepartmentName(item.department_id)}
+                        </span>
+                      </TableCell>
 
-                return (
-                  <TableRow key={item.id} className="cursor-pointer">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Lightbulb className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{pillarName}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{departmentName}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">
-                        {item.description || "No description provided"}
-                      </span>
-                    </TableCell>
-                    <TableCell align="center">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            setFormData(item);
-                            setSelectedId(item.id);
-                            setOpenModal(true);
-                            e.stopPropagation();
-                          }}
-                          className="h-8 gap-1.5">
-                          <Edit className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            handleDeleteClick(String(item.id));
-                            e.stopPropagation();
-                          }}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                      <TableCell align="center">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              setFormData(item);
+                              setSelectedId(item.id);
+                              setOpenModal(true);
+                              e.stopPropagation();
+                            }}
+                            className="h-8 gap-1.5">
+                            <Edit className="h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              handleDeleteClick(String(item.id));
+                              e.stopPropagation();
+                            }}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        )}
       </Card>
 
       <CreateOrUpdate
@@ -276,7 +350,7 @@ function CreateOrUpdate({
   const [formData, setFormData] = useState<InitiativeFormData>(() => {
     if (initialData && selectedId) {
       return {
-        name: initialData.name || "",
+        title: initialData.title || "",
         department_id: initialData.department_id || "",
         pillar_id: (initialData as any).pillar_id || "",
         description: initialData.description || ""
@@ -293,18 +367,26 @@ function CreateOrUpdate({
 
   const departments = (data?.data?.data || []) as Department[];
 
-  // Mock pillars data - replace with actual API call
-  const pillars = [
-    { id: "1", name: "Customer Excellence" },
-    { id: "2", name: "Operational Efficiency" },
-    { id: "3", name: "Innovation & Growth" }
-  ];
+  const { data: pillarsResponse, isLoading: loadingPillars } = useQuery({
+    queryKey: [QUERY_KEYS.STRATEGIC_PILLARS],
+    queryFn: () => getStrategicPillars(undefined, { page: 1, page_size: 100 }),
+    enabled: !!formData?.department_id
+  });
+
+  const pillars = pillarsResponse?.data?.data || [];
+
+  const pillarOptions = useMemo(() => {
+    return pillars.map((pillar) => ({
+      id: pillar.id,
+      name: pillar.title
+    }));
+  }, []);
 
   useEffect(() => {
     if (openModal) {
       if (initialData && selectedId) {
         setFormData({
-          name: initialData.name || "",
+          title: initialData.title || "",
           department_id: initialData.department_id || "",
           pillar_id: (initialData as any).pillar_id || "",
           description: initialData.description || ""
@@ -337,7 +419,7 @@ function CreateOrUpdate({
     onSuccess: (response) => {
       if (response.success) {
         toast.success(`Strategic Initiative ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES] });
         router.refresh();
         setOpenModal?.(false);
         setInitialData?.(null);
@@ -357,6 +439,9 @@ function CreateOrUpdate({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
+
+    console.log("Form data:", formData);
+
     saveMutation.mutate(formData);
   }
 
@@ -366,13 +451,6 @@ function CreateOrUpdate({
       name: dept?.name
     }));
   }, [departments]);
-
-  const pillarOptions = useMemo(() => {
-    return pillars.map((pillar) => ({
-      id: pillar.id,
-      name: pillar.name
-    }));
-  }, []);
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -406,12 +484,14 @@ function CreateOrUpdate({
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, department_id: value }));
             }}
+            isLoading={loadingPillars}
             options={departmentOptions}
           />
           <SearchSelectField
             label="Strategic Pillar"
             placeholder="--Select Strategic Pillar--"
             value={formData?.pillar_id || ""}
+            isDisabled={!formData?.department_id}
             onValueChange={(value) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, pillar_id: value }));
@@ -421,10 +501,10 @@ function CreateOrUpdate({
           <Input
             label="Strategic Initiative"
             placeholder="Strategic Initiative"
-            value={formData.name}
+            value={formData.title}
             onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, name: e.target.value }));
+              setFormData((c) => ({ ...c, title: e.target.value }));
             }}
             required
           />
@@ -437,6 +517,46 @@ function CreateOrUpdate({
               setFormData((c) => ({ ...c, description: e.target.value }));
             }}
           />
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Strategic Initiative Duration (Start - End Dates)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <DatePicker
+                type="date"
+                // label="Start Date"
+                placeholder="Start Date"
+                value={
+                  formData.start_date
+                    ? (new Date(formData.start_date) as unknown as any)
+                    : undefined
+                }
+                onValueChange={(date) => {
+                  setError({ status: false, message: "" });
+                  setFormData((c) => ({
+                    ...c,
+                    start_date: date?.toISOString() || ""
+                  }));
+                }}
+              />
+              <DatePicker
+                type="date"
+                // label="End Date"
+                placeholder="Start Date"
+                value={
+                  formData.end_date ? (new Date(formData.end_date) as unknown as any) : undefined
+                }
+                onValueChange={(date) => {
+                  setError({ status: false, message: "" });
+                  setFormData((c) => ({
+                    ...c,
+                    end_date: date?.toISOString() || ""
+                  }));
+                }}
+              />
+            </div>
+          </div>
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
 
           <div className="flex justify-end gap-3 pt-2">
@@ -450,16 +570,16 @@ function CreateOrUpdate({
                   setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
-                 Close
+                Close
               </Button>
             </DialogClose>
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name.trim()}
+              disabled={saveMutation.isPending || !formData.title.trim()}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
-               Save changes
+              Save changes
             </Button>
           </div>
         </form>

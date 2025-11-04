@@ -152,8 +152,8 @@ export default function IndicativeTargetsTab({
           <TableHeader>
             <TableRow>
               <TableHead>Indicative Target</TableHead>
-              <TableHead>Department</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead>Department</TableHead>
               {/* <TableHead>Status</TableHead> */}
               <TableHead className="w-24" align="center">
                 Actions

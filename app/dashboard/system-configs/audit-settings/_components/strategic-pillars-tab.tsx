@@ -44,6 +44,7 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface PillarFormData extends Omit<AuditConfigurableItem, "id"> {
   start_date?: string;
@@ -51,7 +52,7 @@ interface PillarFormData extends Omit<AuditConfigurableItem, "id"> {
 }
 
 const INIT_FORM_DATA: PillarFormData = {
-  name: "",
+  title: "",
   description: "",
   department_id: null,
   start_date: "",
@@ -60,10 +61,12 @@ const INIT_FORM_DATA: PillarFormData = {
 
 export default function StrategicPillarsTab({
   pillars = [],
+  departments = [],
   pagination
 }: {
   pillars: AuditConfigurableItem[];
   pagination?: Pagination;
+  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<PillarFormData | null>(INIT_FORM_DATA);
@@ -110,12 +113,19 @@ export default function StrategicPillarsTab({
     deleteMutation.mutate(selectedId);
   };
 
+  console.log("departments:", departments);
+
+  const getDepartmentName = (departmentId: string) => {
+    const department = departments.find((d) => d.id === departmentId);
+    return department ? department.name : "No department assigned - Global";
+  };
+
   return (
     <>
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="font-medium text-sm leading-none">Strategic Pillars</h4>
+            <h4 className="text-sm leading-none font-medium">Strategic Pillars</h4>
             <p className="text-muted-foreground text-sm">
               Define strategic pillars that guide your organization&apos;s direction
             </p>
@@ -135,9 +145,9 @@ export default function StrategicPillarsTab({
           <TableHeader>
             <TableRow>
               <TableHead>Strategic Pillar</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Duration</TableHead>
-              <TableHead>Description</TableHead>
               <TableHead className="w-24" align="center">
                 Actions
               </TableHead>
@@ -175,29 +185,29 @@ export default function StrategicPillarsTab({
               </TableRow>
             ) : (
               items.map((item: any) => {
-                const departmentName = item?.department || "No department assigned - Global";
-                const duration =
-                  item.start_date && item.end_date
-                    ? `${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`
-                    : "No duration set";
-
                 return (
                   <TableRow key={item.id} className="cursor-pointer">
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Target className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium">{item.title}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{departmentName}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{duration}</span>
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-sm">
                         {item.description || "No description provided"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">
+                        {getDepartmentName(item.department_id)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">
+                        {item.start_date && item.end_date
+                          ? `${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`
+                          : "No duration set"}
                       </span>
                     </TableCell>
                     <TableCell align="center">
@@ -281,7 +291,7 @@ function CreateOrUpdate({
   const [formData, setFormData] = useState<PillarFormData>(() => {
     if (initialData && selectedId) {
       return {
-        name: initialData.name || "",
+        title: initialData.title || "",
         department_id: initialData.department_id || "",
         description: initialData.description || "",
         start_date: (initialData as any).start_date || "",
@@ -303,7 +313,7 @@ function CreateOrUpdate({
     if (openModal) {
       if (initialData && selectedId) {
         setFormData({
-          name: initialData.name || "",
+          title: initialData.title || "",
           department_id: initialData.department_id || "",
           description: initialData.description || "",
           start_date: (initialData as any).start_date || "",
@@ -404,10 +414,10 @@ function CreateOrUpdate({
           <Input
             label="Strategic Pillar"
             placeholder="Strategic Pillar Title"
-            value={formData.name}
+            value={formData.title}
             onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, name: e.target.value }));
+              setFormData((c) => ({ ...c, title: e.target.value }));
             }}
             required
           />
@@ -421,22 +431,40 @@ function CreateOrUpdate({
             }}
           />
           <div>
-            <label className="mb-2 block text-sm font-medium">Strategic Pillar Duration</label>
+            <label className="mb-2 block text-sm font-medium">
+              Strategic Pillar Duration (Start - End Dates)
+            </label>
             <div className="grid grid-cols-2 gap-2">
-              <Input
+              <DatePicker
                 type="date"
-                value={formData.start_date}
-                onChange={(e) => {
+                // label="Start Date"
+                placeholder="Start Date"
+                value={
+                  formData.start_date
+                    ? (new Date(formData.start_date) as unknown as any)
+                    : undefined
+                }
+                onValueChange={(date) => {
                   setError({ status: false, message: "" });
-                  setFormData((c) => ({ ...c, start_date: e.target.value }));
+                  setFormData((c) => ({
+                    ...c,
+                    start_date: date?.toISOString() || ""
+                  }));
                 }}
               />
-              <Input
+              <DatePicker
                 type="date"
-                value={formData.end_date}
-                onChange={(e) => {
+                // label="End Date"
+                placeholder="Start Date"
+                value={
+                  formData.end_date ? (new Date(formData.end_date) as unknown as any) : undefined
+                }
+                onValueChange={(date) => {
                   setError({ status: false, message: "" });
-                  setFormData((c) => ({ ...c, end_date: e.target.value }));
+                  setFormData((c) => ({
+                    ...c,
+                    end_date: date?.toISOString() || ""
+                  }));
                 }}
               />
             </div>
@@ -454,16 +482,16 @@ function CreateOrUpdate({
                   setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
-                 Close
+                Close
               </Button>
             </DialogClose>
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name.trim()}
+              disabled={saveMutation.isPending || !formData.title.trim()}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
-               Save changes
+              Save changes
             </Button>
           </div>
         </form>

@@ -74,10 +74,7 @@ export async function updateAuditableArea(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        name: data.name,
-        description: data.description,
-        risk_level: data.risk_level,
-        is_active: data.is_active
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -118,8 +115,22 @@ export async function deleteAuditableArea(id: string): Promise<APIResponse> {
  * Get all strategic pillars
  * Endpoint: GET /api/v1/audit/strategic-pillars
  */
-export async function getStrategicPillars(): Promise<APIResponse> {
-  const url = `/api/v1/audit/strategic-pillars`;
+export async function getStrategicPillars(
+  pillarId?: string,
+  params?: {
+    page?: number;
+    page_size?: number;
+    [key: string]: string | number | undefined;
+  }
+): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  queryParams.append("page_size", String(params?.page_size || 10));
+  queryParams.append("page", String(params?.page || 1));
+
+  const url = pillarId
+    ? `/api/v1/audit/strategic-pillars/${pillarId}`
+    : `/api/v1/audit/strategic-pillars${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
@@ -136,22 +147,11 @@ export async function getStrategicPillars(): Promise<APIResponse> {
 export async function createStrategicPillar(data: any): Promise<APIResponse> {
   const url = `/api/v1/audit/strategic-pillars`;
 
-  if (!data.name) {
-    return handleBadRequest("Title is required");
-  }
-
   try {
     const response = await authenticatedApiClient({
       url,
       method: "POST",
-      data: {
-        title: data.name,
-        description: data.description || "",
-        start_date: data.start_date || null,
-        end_date: data.end_date || null,
-        is_active: data.is_active !== undefined ? data.is_active : true,
-        sort_order: data.sort_order || 1
-      }
+      data
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
     return successResponse(response?.data?.data, "Strategic pillar created successfully");
@@ -176,9 +176,7 @@ export async function updateStrategicPillar(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        title: data.name,
-        description: data.description,
-        is_active: data.is_active
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -219,15 +217,26 @@ export async function deleteStrategicPillar(id: string): Promise<APIResponse> {
  * Get all strategic initiatives for a pillar
  * Endpoint: GET /api/v1/audit/strategic-pillars/{pillar_id}/initiatives
  */
-export async function getStrategicInitiatives(pillarId?: string): Promise<APIResponse> {
+export async function getStrategicInitiatives(
+  pillarId?: string,
+  params?: { page?: number; page_size?: number }
+): Promise<APIResponse> {
   // If pillarId is provided, get initiatives for specific pillar
   // Otherwise, get all initiatives (we'll need to check if backend supports this)
-  const url = pillarId
-    ? `/api/v1/audit/strategic-pillars/${pillarId}/initiatives`
-    : `/api/v1/audit/strategic-initiatives`;
+  const queryParams = new URLSearchParams();
+
+  queryParams.append("page_size", String(params?.page_size || 10));
+  queryParams.append("page", String(params?.page || 1));
+
+  if (!pillarId) {
+    return handleBadRequest("Pillar ID is required");
+  }
+
+  const url = `/api/v1/audit/strategic-pillars/${pillarId}/initiatives${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
+    revalidatePath("/dashboard/system-configs/audit-settings");
     return successResponse(response?.data?.data, "Strategic initiatives fetched successfully");
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -245,7 +254,7 @@ export async function createStrategicInitiative(data: any): Promise<APIResponse>
 
   const url = `/api/v1/audit/strategic-pillars/${data.pillar_id}/initiatives`;
 
-  if (!data.name) {
+  if (!data.title) {
     return handleBadRequest("Title is required");
   }
 
@@ -254,10 +263,9 @@ export async function createStrategicInitiative(data: any): Promise<APIResponse>
       url,
       method: "POST",
       data: {
-        title: data.name,
-        description: data.description || "",
-        start_date: data.start_date || null,
-        end_date: data.end_date || null,
+        ...data,
+        start_date: data.start_date || new Date().toISOString(),
+        end_date: data.end_date || new Date().toISOString(),
         is_active: data.is_active !== undefined ? data.is_active : true
       }
     });
@@ -284,8 +292,9 @@ export async function updateStrategicInitiative(data: any): Promise<APIResponse>
       url,
       method: "PUT",
       data: {
-        title: data.name,
-        description: data.description,
+        ...data,
+        start_date: data.start_date || new Date().toISOString(),
+        end_date: data.end_date || new Date().toISOString(),
         is_active: data.is_active
       }
     });
