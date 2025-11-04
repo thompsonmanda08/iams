@@ -33,6 +33,8 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
   const template = templateResponse.data;
   const categories = categoriesResponse.success ? categoriesResponse.data : [];
 
+  // console.log("templates:", template);
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -110,7 +112,8 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   Categories ({categories.length})
                 </TabsTrigger>
               </TabsList>
-              <Link href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
+              <Link
+                href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
                 <Button size="sm">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Category

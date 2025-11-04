@@ -63,15 +63,15 @@ const INIT_FORM_DATA: InitiativeFormData = {
   end_date: new Date().toISOString()
 };
 
-export default function StrategicInitiativeTab(
-  {
-    // initiatives = [],
-    // pagination
-  }: {
-    initiatives: AuditConfigurableItem[];
-    pagination?: Pagination;
-  }
-) {
+export default function StrategicInitiativeTab({
+  // initiatives = [],
+  // pagination
+  departments
+}: {
+  initiatives: AuditConfigurableItem[];
+  pagination?: Pagination;
+  departments: Department[];
+}) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<InitiativeFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -136,13 +136,18 @@ export default function StrategicInitiativeTab(
   const pillars = pillarsResponse?.data?.data || [];
 
   const pillarOptions = useMemo(() => {
-    return pillars.map((pillar) => ({
+    return pillars.map((pillar: any) => ({
       id: pillar.id,
       name: pillar.title
     }));
   }, []);
 
-  console.log("pillars", pillars, initiatives);
+  const getDepartmentName = (departmentId: string) => {
+    const department = departments.find((d) => d.id === departmentId);
+    return department ? department.name : "No department assigned - Global";
+  };
+
+  console.log("initiatives", initiatives);
 
   return (
     <>
@@ -189,8 +194,8 @@ export default function StrategicInitiativeTab(
               <TableRow>
                 <TableHead>Strategic Initiative</TableHead>
                 <TableHead>Strategic Pillar</TableHead>
-                <TableHead>Department</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Department</TableHead>
                 <TableHead className="w-24" align="center">
                   Actions
                 </TableHead>
@@ -241,9 +246,6 @@ export default function StrategicInitiativeTab(
                 </TableRow>
               ) : (
                 initiatives.map((item: any) => {
-                  const departmentName = item?.department || "No department assigned - Global";
-                  const pillarName = item?.pillar || "No pillar assigned";
-
                   return (
                     <TableRow key={item.id} className="cursor-pointer">
                       <TableCell>
@@ -253,16 +255,21 @@ export default function StrategicInitiativeTab(
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm">{pillarName}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{departmentName}</span>
+                        <span className="font-mono text-sm">
+                          {item?.pillar || "No pillar assigned"}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-sm">
                           {item.description || "No description provided"}
                         </span>
                       </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {getDepartmentName(item.department_id)}
+                        </span>
+                      </TableCell>
+
                       <TableCell align="center">
                         <div className="flex justify-end gap-2">
                           <Button

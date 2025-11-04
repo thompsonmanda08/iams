@@ -150,8 +150,8 @@ export default function AuditableAreaConfig({
           <TableHeader>
             <TableRow>
               <TableHead>Auditable Area</TableHead>
-              <TableHead>Department</TableHead>
               <TableHead>Description of Area</TableHead>
+              <TableHead>Department</TableHead>
               {/* <TableHead>Status</TableHead> */}
               <TableHead className="w-24" align="center">
                 Actions
@@ -206,7 +206,7 @@ export default function AuditableAreaConfig({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Building className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium">{item.name || item?.title}</span>
                       </div>
                     </TableCell>
                     <TableCell>

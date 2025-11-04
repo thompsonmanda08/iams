@@ -61,10 +61,12 @@ const INIT_FORM_DATA: PillarFormData = {
 
 export default function StrategicPillarsTab({
   pillars = [],
+  departments = [],
   pagination
 }: {
   pillars: AuditConfigurableItem[];
   pagination?: Pagination;
+  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<PillarFormData | null>(INIT_FORM_DATA);
@@ -111,6 +113,13 @@ export default function StrategicPillarsTab({
     deleteMutation.mutate(selectedId);
   };
 
+  console.log("departments:", departments);
+
+  const getDepartmentName = (departmentId: string) => {
+    const department = departments.find((d) => d.id === departmentId);
+    return department ? department.name : "No department assigned - Global";
+  };
+
   return (
     <>
       <Card className="p-4">
@@ -136,9 +145,9 @@ export default function StrategicPillarsTab({
           <TableHeader>
             <TableRow>
               <TableHead>Strategic Pillar</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Duration</TableHead>
-              <TableHead>Description</TableHead>
               <TableHead className="w-24" align="center">
                 Actions
               </TableHead>
@@ -176,12 +185,6 @@ export default function StrategicPillarsTab({
               </TableRow>
             ) : (
               items.map((item: any) => {
-                const departmentName = item?.department || "No department assigned - Global";
-                const duration =
-                  item.start_date && item.end_date
-                    ? `${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`
-                    : "No duration set";
-
                 return (
                   <TableRow key={item.id} className="cursor-pointer">
                     <TableCell>
@@ -191,14 +194,20 @@ export default function StrategicPillarsTab({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm">{departmentName}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{duration}</span>
+                      <span className="font-mono text-sm">
+                        {item.description || "No description provided"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-sm">
-                        {item.description || "No description provided"}
+                        {getDepartmentName(item.department_id)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">
+                        {item.start_date && item.end_date
+                          ? `${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`
+                          : "No duration set"}
                       </span>
                     </TableCell>
                     <TableCell align="center">

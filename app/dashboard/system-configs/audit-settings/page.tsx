@@ -94,7 +94,15 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     ? indicativeTargetsResponse.data?.data || []
     : [];
 
-  console.log("initiatives:", initiatives);
+  console.log("Audit Settings Page:", {
+    // templates,
+    // areas,
+    pillars
+    // initiatives
+    // towns,
+    // departments,
+    // indicativeTargets
+  });
 
   return (
     <div className="">
@@ -181,14 +189,14 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           {/* Strategic Pillars Tab */}
           <TabsContent value="pillars">
             <Suspense fallback={<TableLoading />}>
-              <StrategicPillarsTab pillars={pillars} />
+              <StrategicPillarsTab pillars={pillars} departments={departments} />
             </Suspense>
           </TabsContent>
 
           {/* Strategic Initiative Tab */}
           <TabsContent value="initiative">
             <Suspense fallback={<TableLoading />}>
-              <StrategicInitiativeTab initiatives={initiatives} />
+              <StrategicInitiativeTab initiatives={initiatives} departments={departments} />
             </Suspense>
           </TabsContent>
 

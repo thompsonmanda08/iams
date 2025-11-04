@@ -147,10 +147,6 @@ export async function getStrategicPillars(
 export async function createStrategicPillar(data: any): Promise<APIResponse> {
   const url = `/api/v1/audit/strategic-pillars`;
 
-  if (!data.name) {
-    return handleBadRequest("Title is required");
-  }
-
   try {
     const response = await authenticatedApiClient({
       url,
@@ -180,9 +176,7 @@ export async function updateStrategicPillar(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        title: data.name,
-        description: data.description,
-        is_active: data.is_active
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
