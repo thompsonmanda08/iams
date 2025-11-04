@@ -1223,17 +1223,25 @@ export async function getMatrixScales(
   scaleType?: "LIKELIHOOD" | "IMPACT"
 ): Promise<APIResponse> {
   try {
-    const params = scaleType ? `?scale_type=${scaleType}` : "";
+    const params = new URLSearchParams({ matrix_id: matrixId });
+    if (scaleType) {
+      params.append("scale_type", scaleType);
+    }
+    
     const response = await authenticatedApiClient({
-      url: `/api/v1/risk-configs/matrix-scales/${matrixId}${params}`,
+      url: `/api/v1/risk-configs/matrix-scales?${params.toString()}`,
       method: "GET"
     });
+    
     return successResponse(response.data.data);
   } catch (error: any) {
-    return handleError(error, "GET | MATRIX SCALES", `/api/v1/risk-configs/matrix-scales/${matrixId}`);
+    return handleError(
+      error, 
+      "GET | MATRIX SCALES", 
+      `/api/v1/risk-configs/matrix-scales?matrix_id=${matrixId}`
+    );
   }
 }
-
 export async function createScale(
   matrixId: string,
   data: {
