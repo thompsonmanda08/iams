@@ -27,13 +27,7 @@ export default async function DashLayout({
   const { session, isAuthenticated, user_type } = await verifySession();
   const user = session?.user as User;
 
-  console.log("[PRIVATE LAYOUT] Session Data:", {
-    isAuthenticated,
-    user_type,
-    sessionUserType: session?.user_type,
-    userObjectUserType: user?.user_type,
-    path: "/admin/*"
-  });
+  // console.log("[PRIVATE LAYOUT] Session Data:", session);
 
   if (!isAuthenticated) return redirect("/login");
 
