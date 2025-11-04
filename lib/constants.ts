@@ -14,7 +14,7 @@ export const placeHolderImage = "/images/placeholder-image.webp";
 export const DefaultCover = "/images/profile-cover.jpg";
 export const backgroundAuthImage = "/images/background-auth.jpg";
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // MB
+export const MAX_FILE_SIZE = 5 * 1024 * 1024; // MB
 export const DEFAULT_DATE_RANGE_DAYS = 30; // 30 DAYS
 export const DEFAULT_PAGINATION = { page: 1, limit: 20 };
 
@@ -75,7 +75,10 @@ export const QUERY_KEYS = {
   MODULES: "modules",
   DEPARTMENT_MODULES: "department-modules",
   ROLES: "roles",
-  ROLE_PERMISSIONS: "role-permissions"
+  ROLE_PERMISSIONS: "role-permissions",
+  COUNTRIES: "countries",
+  PROVINCES: "provinces",
+  TOWNS: "towns"
 };
 
 // ANIMATION_VARIANTS

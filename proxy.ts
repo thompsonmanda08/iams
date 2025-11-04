@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { AUTH_SESSION } from "./lib/constants";
-import { decrypt } from "./lib/session";
+import { verifySession } from "./lib/session";
 
 /**
  * Next.js 16 Proxy - Optimized for fast edge checks
@@ -59,28 +59,28 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If has auth cookie and on auth page, redirect to dashboard
-  // (Layouts/pages will handle MFA checks and user routing)
-  if (hasAuthCookie && isAuthPage) {
-    url.pathname = "/dashboard/home";
-    return NextResponse.redirect(url);
-  }
+  // If has auth cookie and on auth page, let the (auth)/layout.tsx handle routing
+  // The layout will check user_type and redirect appropriately
+  // We don't redirect here to avoid conflicts
 
   // ✅ NEW: Admin route protection
   // Verify user_type for admin routes (requires JWT decode - acceptable for security)
   if (isAdminRoute && hasAuthCookie) {
     try {
-      const cookie = request.cookies.get(AUTH_SESSION)?.value;
-      if (cookie) {
-        const decrypted = await decrypt(cookie);
-        const session = decrypted as any;
+      const { session, isAuthenticated, user_type } = await verifySession();
 
-        // If not a BACKOFFICE_USER, redirect to regular dashboard
-        if (session?.user_type !== "BACKOFFICE_USER") {
-          console.log("[Proxy] Non-admin user attempting to access admin route, redirecting");
-          url.pathname = "/dashboard/home";
-          return NextResponse.redirect(url);
-        }
+      console.log("[Proxy] Admin route check:", {
+        path: pathname,
+        isAuthenticated,
+        user_type,
+        sessionUserType: session?.user_type
+      });
+
+      // If not authenticated or not a BACKOFFICE_ADMIN, redirect to regular dashboard
+      if (!isAuthenticated || user_type !== "BACKOFFICE_ADMIN") {
+        console.log("[Proxy] Non-admin user attempting to access admin route, redirecting to /dashboard/home");
+        url.pathname = "/dashboard/home";
+        return NextResponse.redirect(url);
       }
     } catch (error) {
       // If decryption fails, let it through (layout will handle)

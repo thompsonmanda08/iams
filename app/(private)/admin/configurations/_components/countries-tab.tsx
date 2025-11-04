@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, MapPin } from "lucide-react";
+import { Plus, Edit, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -20,16 +20,15 @@ import {
   DialogClose,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { SelectField } from "@/components/ui/select-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ErrorState, Pagination } from "@/lib/types";
-import { createTown, updateTown, deleteTown } from "@/app/_actions/config-actions";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { ErrorState } from "@/lib/types";
+import { createCountry, updateCountry, getCountries } from "@/app/_actions/backoffice-actions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
+import { CustomPagination } from "@/components/ui/pagination";
 import {
   Empty,
   EmptyContent,
@@ -38,84 +37,88 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
-import { CustomPagination } from "@/components/ui/pagination";
 
-interface Province {
+interface Country {
   id: string;
   name: string;
   code: string;
+  region?: string;
   is_active: boolean;
 }
 
-interface Town {
-  id: string;
-  name: string;
-  province_id: string;
-  is_active: boolean;
+interface CountriesTabProps {
+  initialCountries: Country[];
+  initialPagination?: {
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
 }
 
-interface TownsTabProps {
-  initialTowns: Town[];
-  provinces: Province[];
-  pagination: Pagination | null;
-}
-
-export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps) {
+export function CountriesTab({ initialCountries, initialPagination }: CountriesTabProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [towns, setTowns] = useState<Town[]>(initialTowns);
   const [openModal, setOpenModal] = useState(false);
-  const [editingTown, setEditingTown] = useState<Town | null>(null);
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
 
-  const getProvinceName = (provinceId: string) => {
-    const province = provinces.find((p) => p.id === provinceId);
-    return province ? province.name : "Unknown";
-  };
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const page_size = parseInt(searchParams.get("page_size") || "10", 10);
 
-  const deleteTownMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await deleteTown(id);
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response;
+  // Use React Query with server-side data as initial data
+  const { data: countriesResponse } = useQuery({
+    queryKey: [QUERY_KEYS.COUNTRIES, page, page_size],
+    queryFn: async () => {
+      return getCountries({ page, page_size });
     },
-    onSuccess: () => {
-      toast.success("Town deleted successfully");
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
+    initialData: {
+      success: true,
+      data: initialCountries,
+      pagination: initialPagination,
+      message: ""
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete town");
-    }
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 
-  const handleDeleteTown = async (id: string) => {
-    if (true) {
-      return toast.warning("This action currently is disabled");
-    }
-    deleteTownMutation.mutate(id);
+  const countries = countriesResponse?.success ? countriesResponse.data : [];
+  const pagination = countriesResponse?.pagination || initialPagination || {
+    total: 0,
+    page: 1,
+    page_size: 10,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
   };
 
-  function handlePageChange({ page, page_size }: { page: number; page_size?: number }) {
+  const handlePageChange = ({ page: newPage, page_size: newPageSize }: { page: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    params.set("page_size", String(page_size || pagination?.page_size || 10));
+    params.set("page", String(newPage));
+    if (newPageSize) {
+      params.set("page_size", String(newPageSize));
+    }
     router.push(`?${params.toString()}`);
-  }
+  };
 
   return (
     <Card className="p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Towns</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Countries</h3>
+          <p className="text-muted-foreground text-sm">
+            Manage countries where your organization operates globally
+          </p>
+        </div>
         <Button
           size="sm"
           onClick={() => {
-            setEditingTown(null);
+            setEditingCountry(null);
             setOpenModal(true);
           }}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Town
+          Add Country
         </Button>
       </div>
 
@@ -123,24 +126,25 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Province</TableHead>
+            <TableHead>Code</TableHead>
+            <TableHead>Region</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-24">Actions</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {towns.length === 0 ? (
+          {countries.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} align="center">
+              <TableCell colSpan={5} align="center">
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia variant="icon">
-                      <MapPin />
+                      <Globe />
                     </EmptyMedia>
-                    <EmptyTitle>No Towns Yet</EmptyTitle>
+                    <EmptyTitle>No Countries Yet</EmptyTitle>
                     <EmptyDescription>
-                      You haven&apos;t created any towns yet. Get started by creating your first
-                      town.
+                      You haven&apos;t created any countries yet. Get started by creating your
+                      first country.
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
@@ -148,11 +152,11 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
                       <Button
                         size="sm"
                         onClick={() => {
-                          setEditingTown(null);
+                          setEditingCountry(null);
                           setOpenModal(true);
                         }}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Add Town
+                        Add Country
                       </Button>
                     </div>
                   </EmptyContent>
@@ -160,48 +164,40 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
               </TableCell>
             </TableRow>
           ) : (
-            towns.map((town) => (
-              <TableRow key={town.id}>
+            countries.map((country: Country) => (
+              <TableRow key={country.id}>
                 <TableCell>
-                  <span className="font-medium">{town.name}</span>
+                  <span className="font-medium">{country.name}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-muted-foreground text-sm">
-                    {getProvinceName(town.province_id)}
-                  </span>
+                  <span className="text-muted-foreground text-sm font-mono">{country.code}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-muted-foreground text-sm">{country.region || "N/A"}</span>
                 </TableCell>
                 <TableCell>
                   <span
                     className={cn(
                       "rounded-full px-2 py-1 text-xs font-medium",
-                      town.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                      country.is_active
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-secondary text-secondary-foreground"
                     )}>
-                    {town.is_active ? "Active" : "Inactive"}
+                    {country.is_active ? "Active" : "Inactive"}
                   </span>
                 </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (true) {
-                          return toast.warning("This action currently is disabled");
-                        }
-                        setEditingTown(town);
-                        setOpenModal(true);
-                      }}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTown(town.id)}
-                      className="text-destructive"
-                      disabled={deleteTownMutation.isPending}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <TableCell className="text-right">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingCountry(country);
+                      setOpenModal(true);
+                    }}
+                    className="h-8 gap-1.5">
+                    <Edit className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
                 </TableCell>
               </TableRow>
             ))
@@ -210,77 +206,82 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
       </Table>
 
       {/* Pagination */}
-      {pagination && (
-        <CustomPagination pagination={pagination} showDetails updatePagination={handlePageChange} />
+      {pagination && countries.length > 0 && (
+        <div className="mt-4">
+          <CustomPagination
+            pagination={{
+              page: pagination.page,
+              page_size: pagination.page_size,
+              total_pages: pagination.total_pages,
+              totalCount: pagination.total,
+              has_prev: pagination.has_prev,
+              has_next: pagination.has_next
+            }}
+            updatePagination={handlePageChange}
+            allowSetPageSize={true}
+            showDetails={true}
+          />
+        </div>
       )}
 
-      <CreateOrUpdateTownDialog
+      <CreateOrUpdateCountryDialog
         openModal={openModal}
         setOpenModal={setOpenModal}
-        initialData={editingTown}
-        setInitialData={setEditingTown}
-        provinces={provinces}
+        initialData={editingCountry}
+        setInitialData={setEditingCountry}
         onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
+          queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COUNTRIES] });
+          router.refresh();
         }}
       />
     </Card>
   );
 }
 
-const TOWN_INITIAL_STATE = {
+const COUNTRY_INITIAL_STATE = {
   name: "",
-  province_id: "",
-  is_active: true
+  code: "",
+  region: ""
 };
 
-interface CreateOrUpdateTownDialogProps {
+interface CreateOrUpdateCountryDialogProps {
   openModal: boolean;
   setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
-  initialData: Town | null;
-  setInitialData: React.Dispatch<React.SetStateAction<Town | null>>;
-  provinces: Province[];
+  initialData: Country | null;
+  setInitialData: React.Dispatch<React.SetStateAction<Country | null>>;
   onSuccess: () => void;
 }
 
-function CreateOrUpdateTownDialog({
+function CreateOrUpdateCountryDialog({
   openModal,
   setOpenModal,
   initialData,
   setInitialData,
-  provinces,
   onSuccess
-}: CreateOrUpdateTownDialogProps) {
+}: CreateOrUpdateCountryDialogProps) {
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
   });
-  const [formData, setFormData] = useState(initialData || TOWN_INITIAL_STATE);
-
-  const provinceOptions = useMemo(
-    () =>
-      provinces
-        .filter((p) => p.is_active)
-        .map((province) => ({
-          id: province.id,
-          name: province.name
-        })),
-    [provinces]
+  const [formData, setFormData] = useState(
+    initialData
+      ? { name: initialData.name, code: initialData.code, region: initialData.region || "" }
+      : COUNTRY_INITIAL_STATE
   );
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const response = initialData
-        ? await updateTown({
+        ? await updateCountry({
             id: initialData.id,
             name: data.name,
-            provinceId: data.province_id,
-            isActive: data.is_active
+            code: data.code,
+            region: data.region || undefined
           })
-        : await createTown({
+        : await createCountry({
             name: data.name,
-            provinceId: data.province_id,
-            isActive: data.is_active
+            code: data.code,
+            region: data.region || undefined
           });
 
       if (!response.success) {
@@ -289,10 +290,11 @@ function CreateOrUpdateTownDialog({
       return response;
     },
     onSuccess: () => {
-      toast.success(`Town ${initialData ? "updated" : "created"} successfully`);
+      toast.success(`Country ${initialData ? "updated" : "created"} successfully`);
       setOpenModal(false);
       setInitialData(null);
-      setFormData(TOWN_INITIAL_STATE);
+      setFormData(COUNTRY_INITIAL_STATE);
+      // Invalidate all country-related queries to trigger refetch
       onSuccess();
     },
     onError: (error: Error) => {
@@ -304,8 +306,13 @@ function CreateOrUpdateTownDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.province_id) {
-      setError({ status: true, message: "Please select a province" });
+    if (!formData.name || !formData.code) {
+      setError({ status: true, message: "Name and code are required" });
+      return;
+    }
+
+    if (formData.code.length < 2 || formData.code.length > 3) {
+      setError({ status: true, message: "Country code must be 2-3 characters" });
       return;
     }
 
@@ -318,19 +325,19 @@ function CreateOrUpdateTownDialog({
       onOpenChange={(open) => {
         setOpenModal(open);
         if (!open) {
-          setFormData(TOWN_INITIAL_STATE);
+          setFormData(COUNTRY_INITIAL_STATE);
           setError({ status: false, message: "" });
           setInitialData(null);
         }
       }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Update Town" : "Create New Town"}</DialogTitle>
+          <DialogTitle>{initialData ? "Update Country" : "Create New Country"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Town Name"
-            placeholder="e.g. Ndola, Kitwe"
+            label="Country Name"
+            placeholder="e.g. United States, Canada, Zambia"
             value={formData.name}
             onChange={(e) => {
               setError({ status: false, message: "" });
@@ -338,14 +345,24 @@ function CreateOrUpdateTownDialog({
             }}
             required
           />
-          <SelectField
-            label="Province"
-            placeholder="Select a province"
-            options={provinceOptions}
-            value={formData.province_id}
-            onValueChange={(province_id) => {
+          <Input
+            label="Country Code"
+            placeholder="e.g. US, CA, ZM"
+            value={formData.code}
+            onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, province_id }));
+              setFormData((c) => ({ ...c, code: e.target.value.toUpperCase() }));
+            }}
+            maxLength={3}
+            required
+          />
+          <Input
+            label="Region (Optional)"
+            placeholder="e.g. North America, Southern Africa"
+            value={formData.region}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, region: e.target.value }));
             }}
           />
           {error.status && (
@@ -362,7 +379,7 @@ function CreateOrUpdateTownDialog({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name || !formData.province_id}
+              disabled={saveMutation.isPending || !formData.name || !formData.code}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
               Save

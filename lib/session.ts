@@ -281,11 +281,23 @@ export async function verifySession(): Promise<{
     }
 
     // Session is valid
-    return {
+    const result = {
       isAuthenticated: true,
       session: session,
       user_type: session.user_type
     };
+
+    console.log("[verifySession] Returning:", {
+      isAuthenticated: result.isAuthenticated,
+      user_type: result.user_type,
+      sessionUserType: session.user_type,
+      sessionUser: session.user ? {
+        user_type: session.user.user_type,
+        email: session.user.email
+      } : null
+    });
+
+    return result;
   } catch (error) {
     console.error("[verifySession] Error:", error);
     // On any error, return unauthenticated

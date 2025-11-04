@@ -28,7 +28,7 @@ export async function uploadFile(file: File, fileRecordId?: string): Promise<API
     return unauthorizedResponse("UNAUTHORIZED");
   }
 
-  // if (session?.user?.user_type != "BACKOFFICE_USER") {
+  // if (session?.user?.user_type != "BACKOFFICE_ADMIN") {
   //   unauthorizedResponse("UNAUTHORIZED");
   // }
 

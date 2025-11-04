@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Search, Building2, Upload, X, Pencil } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
-import { Company } from "@/lib/types";
+import { Company, Country } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
-import { notify } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,111 +31,183 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  getOrganizations,
+  createOrganization,
+  updateOrganization
+} from "@/app/_actions/backoffice-actions";
+import { Spinner } from "@/components/ui/spinner";
+import { ACCEPTABLE_FILE_TYPES, SingleFileDropzone } from "@/components/ui/file-dropzone";
+import { uploadFile } from "@/app/_actions/pocketbase-actions";
+import { MultiStepCompanyForm } from "@/components/forms/multi-step-company-form";
+import { Card } from "@/components/ui/card";
 
-// TODO: Remove this mock data when backend is ready
-// Backend endpoints needed:
-// - GET /api/v1/backoffice/organizations (getOrganizations)
-// - POST /api/v1/backoffice/organizations (createOrganization)
-// - PUT /api/v1/backoffice/organizations/:id (updateOrganization)
-const mockCompanies: Company[] = [
-  {
-    id: "comp-1",
-    name: "Innovatech Solutions",
-    email: "contact@innovatech.com",
-    phone: "123-456-7890",
-    status: "active",
-    logo_url: "https://placehold.co/100x100/e2e8f0/475569?text=IS",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "comp-2",
-    name: "Quantum Logistics",
-    email: "support@quantumlog.com",
-    phone: "987-654-3210",
-    status: "inactive",
-    logo_url: "",
-    created_at: new Date().toISOString()
-  }
-];
-
-export default function Companies() {
-  const [companies, setCompanies] = useState<Company[]>(mockCompanies);
-  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+export default function Companies({ initialCountries }: { initialCountries?: Country[] }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Company, "id">>({
     name: "",
     email: "",
     phone: "",
     status: "active" as "active" | "inactive",
-    logo_url: ""
+    logo_url: "",
+    logo: ""
   });
 
-  useEffect(() => {
-    const filtered = companies.filter(
-      (company) =>
-        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredCompanies(filtered);
-  }, [searchTerm, companies]);
+  // Fetch companies
+  const { data: companiesResponse, isLoading } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () => getOrganizations(),
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+
+  const companies = companiesResponse?.success ? companiesResponse.data?.data : [];
+
+  // Filter companies
+  const filteredCompanies = companies.filter(
+    (company: Company) =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: createOrganization,
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ["organizations"] });
+        notify({
+          title: "Success",
+          description: "Company created successfully.",
+          type: "success"
+        });
+        closeModal();
+      } else {
+        notify({
+          title: "Error",
+          description: response.message || "Failed to create company.",
+          type: "error"
+        });
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to create company.",
+        type: "error"
+      });
+    }
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: updateOrganization,
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ["organizations"] });
+        notify({
+          title: "Success",
+          description: "Company updated successfully.",
+          type: "success"
+        });
+        closeModal();
+      } else {
+        notify({
+          title: "Error",
+          description: response.message || "Failed to update company.",
+          type: "error"
+        });
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to update company.",
+        type: "error"
+      });
+    }
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (editingCompany) {
-      // Simulate update
-      setCompanies(
-        companies.map((c) =>
-          c.id === editingCompany.id
-            ? { ...c, ...formData, updated_at: new Date().toISOString() }
-            : c
-        )
-      );
-      notify({ title: "Success", description: "Company updated successfully.", type: "success" });
+      updateMutation.mutate({
+        id: editingCompany.id,
+        ...formData
+      } as unknown as Company);
     } else {
-      // Simulate create
-      const newCompany: Company = {
-        id: uuidv4(),
-        ...formData,
-        created_at: new Date().toISOString()
-      };
-      setCompanies([newCompany, ...companies]);
-      notify({ title: "Success", description: "Company created successfully.", type: "success" });
+      createMutation.mutate(formData as unknown as Company);
     }
-    closeModal();
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      notify({
-        title: "Invalid File",
-        description: "Please upload an image file.",
-        type: "error"
-      });
-      return;
-    }
-
+  async function handleFileUpload(file: File, recordID?: string) {
     setUploading(true);
 
-    // Simulate file upload delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const response = await uploadFile(file, recordID);
 
-    // Use a placeholder image service
-    const placeholderUrl = `https://placehold.co/100x100/e2e8f0/475569?text=${formData.name
-      .substring(0, 2)
-      .toUpperCase()}`;
+    if (response?.success) {
+      notify({
+        type: "success",
+        title: "Logo Uploaded!",
+        description: "Logo File uploaded successfully!"
+      });
+      setFormData((prev) => ({
+        ...prev,
+        logo: response?.data?.file_name,
+        logo_url: response?.data?.file_url,
+        recordID: response?.data?.file_record_id
+      }));
+      setUploading(false);
 
-    setFormData({ ...formData, logo_url: placeholderUrl });
+      return response?.data;
+    }
 
+    notify({
+      title: "Error",
+      type: "error",
+      description: "Failed to upload file."
+    });
     setUploading(false);
+
+    return {};
   }
+
+  // async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   if (!file.type.startsWith("image/")) {
+  //     notify({
+  //       title: "Invalid File",
+  //       description: "Please upload an image file.",
+  //       type: "error"
+  //     });
+  //     return;
+  //   }
+
+  //   setUploading(true);
+
+  //   // TODO: Implement real file upload to PocketBase or similar
+  //   // For now, simulate file upload delay
+  //   await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  //   // Use a placeholder image service
+  //   const placeholderUrl = `https://placehold.co/100x100/e2e8f0/475569?text=${formData.name
+  //     .substring(0, 2)
+  //     .toUpperCase()}`;
+
+  //   setFormData({ ...formData, logo_url: placeholderUrl });
+
+  //   setUploading(false);
+  // }
 
   function openModal(company?: Company) {
     if (company) {
@@ -172,17 +244,25 @@ export default function Companies() {
     });
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-3xl font-bold text-slate-800">Companies</h2>
-        <Button onClick={() => openModal()}>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus size={20} />
           Add Company
         </Button>
       </div>
 
-      <div className="rounded-lg bg-white p-6 shadow-md">
+      <Card className="rounded-lg p-6">
         <div className="mb-4">
           <div className="relative">
             <Search
@@ -212,45 +292,55 @@ export default function Companies() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCompanies.map((company) => (
-                <TableRow key={company.id}>
-                  <TableCell>
-                    {company.logo_url ? (
-                      <img
-                        src={company.logo_url}
-                        alt={company.name}
-                        className="h-10 w-10 object-contain"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded bg-slate-200">
-                        <Building2 size={20} className="text-slate-400" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{company.name}</TableCell>
-                  <TableCell>{company.email || "-"}</TableCell>
-                  <TableCell>{company.phone || "-"}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={company.status === "active" ? "ACTIVE" : "INACTIVE"} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openModal(company)}
-                        className="h-8 gap-1.5">
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </Button>
-                    </div>
+              {filteredCompanies.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-slate-500">
+                    {searchTerm
+                      ? "No companies found matching your search."
+                      : "No companies yet. Click 'Add Company' to create one."}
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredCompanies.map((company: Company) => (
+                  <TableRow key={company.id}>
+                    <TableCell>
+                      {company.logo_url ? (
+                        <img
+                          src={company.logo_url}
+                          alt={company.name}
+                          className="h-10 w-10 object-contain"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded bg-slate-200">
+                          <Building2 size={20} className="text-slate-400" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{company.name}</TableCell>
+                    <TableCell>{company.email || "-"}</TableCell>
+                    <TableCell>{company.phone || "-"}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={company.status === "active" ? "ACTIVE" : "INACTIVE"} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openModal(company)}
+                          className="h-8 gap-1.5">
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
-      </div>
+      </Card>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md">
@@ -292,7 +382,23 @@ export default function Companies() {
             <div className="space-y-2">
               <Label>Logo</Label>
               <div className="flex items-center gap-4">
-                {formData.logo_url && (
+                <label
+                  className={cn("text-foreground/70 mb-1 pl-1 text-sm font-medium text-nowrap")}>
+                  Logo (Optional)
+                </label>
+                <SingleFileDropzone
+                  showPreview
+                  preview={formData?.logo_url}
+                  value={formData?.logo_url}
+                  isLoading={uploading}
+                  // dropzoneOptions={{
+                  //   accept: { "image/png": [".png"] }
+                  // }}
+                  onChange={async (file) =>
+                    await handleFileUpload(file as File, formData?.recordID)
+                  }
+                />
+                {/* {formData.logo_url && (
                   <img
                     src={formData.logo_url}
                     alt="Logo preview"
@@ -311,7 +417,7 @@ export default function Companies() {
                       className="hidden"
                     />
                   </Label>
-                </Button>
+                </Button> */}
               </div>
             </div>
 
@@ -338,11 +444,28 @@ export default function Companies() {
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">{editingCompany ? "Update" : "Create"}</Button>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {createMutation.isPending || updateMutation.isPending
+                  ? "Saving..."
+                  : editingCompany
+                    ? "Update"
+                    : "Create"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Multi-Step Company Creation Form */}
+      <MultiStepCompanyForm
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onSuccess={() => {
+          // Invalidate cache and trigger refetch
+          queryClient.invalidateQueries({ queryKey: ["organizations"] });
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

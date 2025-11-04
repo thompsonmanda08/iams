@@ -3,7 +3,7 @@ export type LoginPayload = {
   password: string;
 };
 
-export type UserType = "ORGANIZATION_USER" | "BACKOFFICE_USER";
+export type UserType = "ORGANIZATION_USER" | "BACKOFFICE_ADMIN";
 
 export type Branch = {
   id: string;

@@ -24,12 +24,29 @@ export default async function DashLayout({
   // const systemInit = await initializeSystemSetup();
   // const user = systemInit?.data?.user as User;
 
-  const { session } = await verifySession();
+  const { session, isAuthenticated, user_type } = await verifySession();
   const user = session?.user as User;
 
-  if (user == null) return redirect("/login");
+  console.log("[PRIVATE LAYOUT] Session Data:", {
+    isAuthenticated,
+    user_type,
+    sessionUserType: session?.user_type,
+    userObjectUserType: user?.user_type,
+    path: "/admin/*"
+  });
 
-  if (user?.user_type !== "BACKOFFICE_USER") return redirect("/dashboard/home");
+  if (!isAuthenticated) return redirect("/login");
+
+  if (user_type !== "BACKOFFICE_ADMIN") {
+    console.log("[PRIVATE LAYOUT] Redirecting to /dashboard/home - user_type:", user_type);
+    return redirect("/dashboard/home");
+  }
+
+  // Enrich user object with user_type from session
+  const enrichedUser = {
+    ...user,
+    user_type: user_type || session?.user_type
+  } as User;
 
   return (
     <SidebarProvider
@@ -40,9 +57,9 @@ export default async function DashLayout({
           "--header-height": "calc(var(--spacing) * 14)"
         } as React.CSSProperties
       }>
-      <AppSidebar variant="inset" user={user} isAuthenticated={!!user} />
+      <AppSidebar variant="inset" user={enrichedUser} isAuthenticated={!!user_type} />
       <SidebarInset>
-        <SiteHeader user={user as User} />
+        <SiteHeader user={enrichedUser} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
             {children}

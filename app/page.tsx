@@ -1,18 +1,24 @@
 import { redirect } from "next/navigation";
+import { verifySession } from "@/lib/session";
 
 /**
- * Root "/" page - Simplified routing
+ * Root "/" page - Entry point routing
  *
- * Authentication and routing logic is now handled by:
- * - proxy.ts: Fast cookie check and basic redirects
- * - (auth)/layout.tsx: Handles MFA and authenticated user routing
- * - dashboard/layout.tsx: Protects dashboard routes
- *
- * This root page just redirects to dashboard home.
- * If user is unauthenticated, proxy will intercept and redirect to /login.
+ * Routes users based on authentication status:
+ * - Authenticated users: Redirect to their appropriate dashboard
+ * - Unauthenticated users: Redirect to login
  */
 export default async function HomePage() {
-  // Direct redirect to dashboard
-  // Proxy ensures only authenticated users reach here
-  redirect("/dashboard/home");
+  const { isAuthenticated, session } = await verifySession();
+
+  if (isAuthenticated) {
+    // Redirect authenticated users to their dashboard
+    if (session?.user_type === "BACKOFFICE_ADMIN") {
+      redirect("/admin/home");
+    }
+    redirect("/dashboard/home");
+  }
+
+  // Redirect unauthenticated users to login
+  redirect("/login");
 }

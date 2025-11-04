@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Plus, X, MapPin, Trash2 } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
 import { Company, Country, Province, Town } from "@/lib/types";
 import { notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,14 +29,17 @@ import {
 } from "@/components/ui/empty";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  mockCompanies,
-  mockCountries,
-  mockProvinces,
-  mockTowns,
-  initialLocations,
-  LocationWithDetails
-} from "./_data";
+  getOrganizations,
+  getCountries,
+  getProvincesByCountry,
+  getTownsByProvince,
+  getCompanyLocations,
+  createCompanyLocation,
+  deleteCompanyLocation
+} from "@/app/_actions/backoffice-actions";
+import { Spinner } from "@/components/ui/spinner";
 
 // Custom hook for debouncing a value
 function useDebounce<T>(value: T, delay: number): T {
@@ -53,17 +55,22 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export default function CompanyMapping() {
-  const [companies, setCompanies] = useState<Company[]>(mockCompanies);
-  const [selectedCompany, setSelectedCompany] = useState<string>("");
-  const [allLocations, setAllLocations] = useState<LocationWithDetails[]>(initialLocations);
-  const [locations, setLocations] = useState<LocationWithDetails[]>([]);
-  const [countries] = useState<Country[]>(mockCountries);
-  const [provinces] = useState<Province[]>(mockProvinces);
-  const [towns] = useState<Town[]>(mockTowns);
+interface LocationWithDetails {
+  id: string;
+  company_id: string;
+  country_id: string;
+  province_id: string | null;
+  town_id: string | null;
+  created_at: string;
+  country_name?: string;
+  province_name?: string;
+  town_name?: string;
+}
 
-  const [rawSearchTerm, setRawSearchTerm] = useState(""); // Raw input value
-  const [searchTerm, setSearchTerm] = useState("");
+export default function CompanyMapping() {
+  const queryClient = useQueryClient();
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [rawSearchTerm, setRawSearchTerm] = useState("");
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState(false);
   const [locationToDeleteId, setLocationToDeleteId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -73,37 +80,122 @@ export default function CompanyMapping() {
     town_id: ""
   });
 
-  useEffect(() => {
-    if (selectedCompany) {
-      const companyLocations = allLocations.filter((loc) => loc.company_id === selectedCompany);
-      setLocations(companyLocations);
-    } else {
-      setLocations([]);
+  // Fetch companies
+  const { data: companiesResponse, isLoading: loadingCompanies } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () => getOrganizations(),
+    staleTime: 5 * 60 * 1000
+  });
+
+  const companies = companiesResponse?.success ? companiesResponse.data : [];
+
+  // Fetch countries
+  const { data: countriesResponse, isLoading: loadingCountries } = useQuery({
+    queryKey: ["countries"],
+    queryFn: () => getCountries(),
+    staleTime: 5 * 60 * 1000
+  });
+
+  const countries = countriesResponse?.success ? countriesResponse.data : [];
+
+  // Fetch provinces for selected country
+  const { data: provincesResponse } = useQuery({
+    queryKey: ["provinces", formData.country_id],
+    queryFn: () => getProvincesByCountry(formData.country_id),
+    enabled: !!formData.country_id,
+    staleTime: 5 * 60 * 1000
+  });
+
+  const provinces = provincesResponse?.success ? provincesResponse.data : [];
+
+  // Fetch towns for selected province
+  const { data: townsResponse } = useQuery({
+    queryKey: ["towns", formData.province_id],
+    queryFn: () => getTownsByProvince(formData.province_id!),
+    enabled: !!formData.province_id,
+    staleTime: 5 * 60 * 1000
+  });
+
+  const towns = townsResponse?.success ? townsResponse.data : [];
+
+  // Fetch company locations
+  const { data: locationsResponse, isLoading: loadingLocations } = useQuery({
+    queryKey: ["company-locations", selectedCompany],
+    queryFn: () => getCompanyLocations(selectedCompany),
+    enabled: !!selectedCompany,
+    staleTime: 1 * 60 * 1000 // 1 minute
+  });
+
+  const locations: LocationWithDetails[] = locationsResponse?.success
+    ? locationsResponse.data
+    : [];
+
+  // Create location mutation
+  const createMutation = useMutation({
+    mutationFn: createCompanyLocation,
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ["company-locations", selectedCompany] });
+        notify({
+          title: "Success",
+          description: "Location added successfully.",
+          type: "success"
+        });
+        closeModal();
+      } else {
+        notify({
+          title: "Error",
+          description: response.message || "Failed to add location.",
+          type: "error"
+        });
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to add location.",
+        type: "error"
+      });
     }
-    setRawSearchTerm(""); // Reset search on company change
-  }, [selectedCompany, allLocations]);
+  });
+
+  // Delete location mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteCompanyLocation,
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ["company-locations", selectedCompany] });
+        notify({
+          title: "Success",
+          description: "Location deleted successfully.",
+          type: "success"
+        });
+        setShowConfirmDeleteDialog(false);
+      } else {
+        notify({
+          title: "Error",
+          description: response.message || "Failed to delete location.",
+          type: "error"
+        });
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to delete location.",
+        type: "error"
+      });
+    }
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const newLocation: LocationWithDetails = {
-      id: uuidv4(),
+    createMutation.mutate({
       company_id: selectedCompany,
       country_id: formData.country_id,
       province_id: formData.province_id || null,
-      town_id: formData.town_id || null,
-      created_at: new Date().toISOString(),
-      country_name: countries.find((c) => c.id === formData.country_id)?.name,
-      province_name: provinces.find((p) => p.id === formData.province_id)?.name,
-      town_name: towns.find((t) => t.id === formData.town_id)?.name
-    };
-
-    setAllLocations((prev) => [newLocation, ...prev]);
-    closeModal();
-    notify({
-      title: "Success",
-      description: "Location added successfully.",
-      type: "success"
+      town_id: formData.town_id || null
     });
   }
 
@@ -113,23 +205,23 @@ export default function CompanyMapping() {
   }
 
   function confirmDelete() {
-    setAllLocations((prev) => prev.filter((loc) => loc.id !== locationToDeleteId));
-    setShowConfirmDeleteDialog(false);
-    notify({
-      title: "Success",
-      description: "Location deleted successfully.",
-      type: "success"
-    });
+    if (locationToDeleteId) {
+      deleteMutation.mutate(locationToDeleteId);
+    }
   }
 
-  const debouncedSearchTerm = useDebounce(rawSearchTerm, 500); // Debounce search term by 500ms
+  const debouncedSearchTerm = useDebounce(rawSearchTerm, 500);
 
   function openModal() {
     if (!selectedCompany) {
-      alert("Please select a company first");
+      notify({
+        title: "Warning",
+        description: "Please select a company first",
+        type: "warning"
+      });
       return;
     }
-    setFormData({ country_id: "", province_id: "", town_id: "" }); // Reset form data when opening modal
+    setFormData({ country_id: "", province_id: "", town_id: "" });
     setShowModal(true);
   }
 
@@ -138,19 +230,24 @@ export default function CompanyMapping() {
     setFormData({ country_id: "", province_id: "", town_id: "" });
   }
 
-  const filteredProvinces = provinces.filter((p) => p.country_id === formData.country_id);
-  const filteredTowns = towns.filter((t) => t.province_id === formData.province_id);
-
-  const selectedCompanyData = companies.find((c) => c.id === selectedCompany);
+  const selectedCompanyData = companies.find((c: Company) => c.id === selectedCompany);
 
   const filteredLocations = locations.filter((location) => {
-    const search = debouncedSearchTerm.toLowerCase(); // Use debounced term for filtering
+    const search = debouncedSearchTerm.toLowerCase();
     return (
       location.country_name?.toLowerCase().includes(search) ||
       location.province_name?.toLowerCase().includes(search) ||
       location.town_name?.toLowerCase().includes(search)
     );
   });
+
+  if (loadingCompanies || loadingCountries) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -164,11 +261,15 @@ export default function CompanyMapping() {
               <SelectValue placeholder="Choose a company..." />
             </SelectTrigger>
             <SelectContent>
-              {companies.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))}
+              {companies.length === 0 ? (
+                <div className="p-2 text-sm text-slate-500">No companies available</div>
+              ) : (
+                companies.map((company: Company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -200,7 +301,11 @@ export default function CompanyMapping() {
             />
           </div>
 
-          {locations.length === 0 ? ( // Still check original locations length for the empty state
+          {loadingLocations ? (
+            <div className="flex h-32 items-center justify-center">
+              <Spinner />
+            </div>
+          ) : locations.length === 0 ? (
             <div className="grid place-items-center p-12 text-center">
               <Empty>
                 <EmptyHeader>
@@ -210,7 +315,7 @@ export default function CompanyMapping() {
                   <EmptyTitle>No locations mapped yet</EmptyTitle>
                   <EmptyDescription>
                     You haven&apos;t created any location yet. Get started by creating your first
-                    town.
+                    location.
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
@@ -225,30 +330,37 @@ export default function CompanyMapping() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredLocations.map((location) => (
-                <div
-                  key={location.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 p-4 hover:bg-slate-50">
-                  <div className="flex items-center gap-3">
-                    <MapPin size={20} className="text-blue-600" />
-                    <div>
-                      <p className="font-medium text-slate-800">{location.country_name}</p>
-                      <p className="text-sm text-slate-600">
-                        {location.province_name && `${location.province_name}`}
-                        {location.town_name && ` / ${location.town_name}`}
-                        {!location.province_name && !location.town_name && "Country only"}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(location.id)}
-                    className="text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              {filteredLocations.length === 0 ? (
+                <div className="p-8 text-center text-slate-500">
+                  No locations found matching your search.
                 </div>
-              ))}
+              ) : (
+                filteredLocations.map((location) => (
+                  <div
+                    key={location.id}
+                    className="flex items-center justify-between rounded-lg border border-slate-200 p-4 hover:bg-slate-50">
+                    <div className="flex items-center gap-3">
+                      <MapPin size={20} className="text-blue-600" />
+                      <div>
+                        <p className="font-medium text-slate-800">{location.country_name}</p>
+                        <p className="text-sm text-slate-600">
+                          {location.province_name && `${location.province_name}`}
+                          {location.town_name && ` / ${location.town_name}`}
+                          {!location.province_name && !location.town_name && "Country only"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(location.id)}
+                      disabled={deleteMutation.isPending}
+                      className="text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
@@ -272,7 +384,7 @@ export default function CompanyMapping() {
                   <SelectValue placeholder="Select a country" />
                 </SelectTrigger>
                 <SelectContent>
-                  {countries.map((country) => (
+                  {countries.map((country: Country) => (
                     <SelectItem key={country.id} value={country.id}>
                       {country.name}
                     </SelectItem>
@@ -294,7 +406,7 @@ export default function CompanyMapping() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">None</SelectItem>
-                    {filteredProvinces.map((province) => (
+                    {provinces.map((province: Province) => (
                       <SelectItem key={province.id} value={province.id}>
                         {province.name}
                       </SelectItem>
@@ -315,7 +427,7 @@ export default function CompanyMapping() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">None</SelectItem>
-                    {filteredTowns.map((town) => (
+                    {towns.map((town: Town) => (
                       <SelectItem key={town.id} value={town.id}>
                         {town.name}
                       </SelectItem>
@@ -330,7 +442,9 @@ export default function CompanyMapping() {
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">Add Mapping</Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Adding..." : "Add Mapping"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -350,8 +464,12 @@ export default function CompanyMapping() {
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="button" variant="destructive" onClick={confirmDelete}>
-              Delete
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

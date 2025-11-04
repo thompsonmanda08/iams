@@ -36,13 +36,6 @@ export default function LoginForm() {
     });
 
     if (response.success) {
-      // Small delay to ensure cookie propagation (mitigates race condition)
-      // await new Promise((resolve) =>
-      //   setTimeout(async () => {
-      //     await initializeSystemSetup();
-      //   }, 300)
-      // );
-
       // Check if MFA is required
       if (response.data?.mfa_required) {
         toast.info("Please enter the OTP sent to your email");
@@ -51,10 +44,15 @@ export default function LoginForm() {
         router.push(`/otp?username=${encodeURIComponent(email)}`);
       } else {
         toast.success(response.message || "Login successful");
-        // Direct redirect to dashboard (proxy and layout will handle routing)
-        router.push(
-          response?.data?.user_type === "BACKOFFICE_USER" ? "/admin/home" : "/dashboard/home"
-        );
+        setError({ status: true, redirecting: true, message: "Redirecting to dashboard..." });
+
+        // Determine target route based on user_type
+        const targetRoute =
+          response?.data?.user_type === "BACKOFFICE_ADMIN" ? "/admin/home" : "/dashboard/home";
+
+        // Small delay to ensure cookie propagation, then force full page reload
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        window.location.href = targetRoute;
       }
     } else {
       setError({ status: true, message: response.message });

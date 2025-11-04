@@ -74,12 +74,11 @@ export default function CreateUserForm({
 }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const [internalOpen, setInternalOpen] = useState<boolean | undefined>(undefined);
+  const [internalOpen, setInternalOpen] = useState<boolean>(false);
 
   const isEditMode = !!user;
 
   // Use internal state for trigger mode, external state for controlled mode
-  // In trigger mode, start as undefined (uncontrolled), but we can set to false to close
   const dialogOpen = showTrigger ? internalOpen : isOpenModal;
   const setDialogOpen = showTrigger ? setInternalOpen : setIsOpenModal;
 
@@ -315,141 +314,149 @@ export default function CreateUserForm({
   );
 
   return (
-    <>
-      <Dialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          console.log("Dialog onOpenChange:", open, "showTrigger:", showTrigger, "dialogOpen:", dialogOpen);
-          if (showTrigger) {
-            // In trigger mode, reset to undefined when opening to allow DialogTrigger to work
-            if (open) {
-              setInternalOpen(undefined);
-            } else {
-              handleCloseModal();
-            }
+    <Dialog
+      open={dialogOpen}
+      onOpenChange={(open) => {
+        console.log(
+          "Dialog onOpenChange:",
+          open,
+          "showTrigger:",
+          showTrigger,
+          "dialogOpen:",
+          dialogOpen
+        );
+        if (showTrigger) {
+          // In trigger mode, manage internal state
+          if (open) {
+            setInternalOpen(true);
           } else {
-            // In controlled mode, just handle close
-            if (!open) {
-              handleCloseModal();
-            }
+            handleCloseModal();
           }
-        }}>
-        {showTrigger && (
-          <DialogTrigger asChild>
-            <Button size="sm">
-              {user ? (
-                <>
-                  <PencilLine className="mr-2 h-4 w-4" /> Update User
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create New User
-                </>
-              )}
-            </Button>
-          </DialogTrigger>
-        )}
+        } else {
+          // In controlled mode, just handle close
+          if (!open) {
+            handleCloseModal();
+          }
+        }
+      }}>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm">
+            {user ? (
+              <>
+                <PencilLine className="mr-2 h-4 w-4" /> Update User
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 h-4 w-4" />
+                Create New User
+              </>
+            )}
+          </Button>
+        </DialogTrigger>
+      )}
 
-        <DialogContent className="max-h-[90vh] w-full overflow-hidden p-0">
-          <DialogHeader className="border-b px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/5 text-primary hover:bg-primary/10 flex h-7 w-7 items-center justify-center rounded-full">
-                <UserCog className="h-4 w-4" />
-              </div>
-              <DialogTitle>{isEditMode ? "Edit User" : "Create New User"}</DialogTitle>
+      <DialogContent className="max-h-[90vh] w-full overflow-hidden p-0">
+        <DialogHeader className="border-b px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/5 text-primary hover:bg-primary/10 flex h-7 w-7 items-center justify-center rounded-full">
+              <UserCog className="h-4 w-4" />
             </div>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div className="overflow-y-auto px-6 py-6">
-                  <div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name="first_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                label="First Name"
-                                placeholder="Bob"
-                                {...field}
-                                className="focus-visible:ring-1"
-                                disabled={isSubmitting}
-                                required
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+            <DialogTitle>{isEditMode ? "Edit User" : "Create New User"}</DialogTitle>
+          </div>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="overflow-y-auto px-6 py-6">
+              <div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            label="First Name"
+                            placeholder="Bob"
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="last_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                label="Last Name"
-                                placeholder="Mwale"
-                                required
-                                {...field}
-                                className="focus-visible:ring-1"
-                                disabled={isSubmitting}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            label="Last Name"
+                            placeholder="Mwale"
+                            required
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                label="Username"
-                                placeholder="bmwale"
-                                {...field}
-                                className="focus-visible:ring-1"
-                                disabled={isSubmitting}
-                                required
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            label="Username"
+                            placeholder="bmwale"
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                label="Email Address"
-                                type="email"
-                                placeholder="mail@company.com"
-                                {...field}
-                                className="focus-visible:ring-1"
-                                disabled={isSubmitting}
-                                required
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            label="Email Address"
+                            type="email"
+                            placeholder="mail@company.com"
+                            {...field}
+                            className="focus-visible:ring-1"
+                            disabled={isSubmitting}
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
 
-                  <div className="mt-4">
-                    <div className="grid grid-cols-1 gap-4">
+              <div className="mt-4">
+                <div className="grid grid-cols-1 gap-4">
+                  {user_type === "ORGANIZATION_USER" && (
+                    <>
                       <FormField
                         control={form.control}
                         name="branch_id"
@@ -578,115 +585,121 @@ export default function CreateUserForm({
                           </FormItem>
                         )}
                       />
+                    </>
+                  )}
 
-                      {isEditMode && (
-                        <FormField
-                          control={form.control}
-                          name="is_active"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">Account Status</FormLabel>
-                                <FormDescription>
-                                  {field.value ? "Account is active" : "Account is deactivated"}
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
+                  {isEditMode && (
+                    <FormField
+                      control={form.control}
+                      name="is_active"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Account Status</FormLabel>
+                            <FormDescription>
+                              {field.value ? "Account is active" : "Account is deactivated"}
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {!isEditMode && (
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Password <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex w-full flex-col items-center gap-2 sm:flex-row">
+                              <div className="relative flex w-full items-center gap-2">
+                                <Input
+                                  {...field}
+                                  readOnly
+                                  className="cursor-default font-mono text-sm focus-visible:ring-1"
                                   disabled={isSubmitting}
                                 />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      )}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={handleCopyPassword}
+                                  className="hover:bg-muted/5 absolute right-1 shrink-0"
+                                  disabled={isSubmitting}>
+                                  {copied ? (
+                                    <Check className="h-4 w-4 text-green-600" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                              <Button
+                                type="button"
+                                // variant="ghost"
+                                onClick={isSubmitting ? undefined : handleGenerateNewPassword}>
+                                Generate new password
+                              </Button>
+                            </div>
+                          </FormControl>
 
-                      {!isEditMode && (
-                        <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                Password <span className="text-destructive">*</span>
-                              </FormLabel>
-                              <FormControl>
-                                <div className="flex w-full flex-col items-center gap-2 sm:flex-row">
-                                  <div className="relative flex w-full items-center gap-2">
-                                    <Input
-                                      {...field}
-                                      readOnly
-                                      className="cursor-default font-mono text-sm focus-visible:ring-1"
-                                      disabled={isSubmitting}
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={handleCopyPassword}
-                                      className="hover:bg-muted/5 absolute right-1 shrink-0"
-                                      disabled={isSubmitting}>
-                                      {copied ? (
-                                        <Check className="h-4 w-4 text-green-600" />
-                                      ) : (
-                                        <Copy className="h-4 w-4" />
-                                      )}
-                                    </Button>
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    // variant="ghost"
-                                    onClick={isSubmitting ? undefined : handleGenerateNewPassword}>
-                                    Generate new password
-                                  </Button>
-                                </div>
-                              </FormControl>
-
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </div>
-                  </div>
+                    />
+                  )}
+                </div>
               </div>
-              <DialogFooter className="flex justify-end gap-3 border-t p-4">
-                  <div className="flex w-full items-center justify-between gap-3">
-                    {/* Debug info - remove in production */}
-                    <div className="text-xs text-muted-foreground">
-                      {Object.keys(form.formState.errors).length > 0 && (
-                        <span className="text-destructive">
-                          Errors: {Object.keys(form.formState.errors).join(", ")}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-3">
-                      <DialogClose asChild>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          onClick={handleCloseModal}
-                          disabled={isSubmitting}>
-                          Cancel
-                        </Button>
-                      </DialogClose>
-                      <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        isLoading={isSubmitting}
-                        loadingText={isEditMode ? "Updating..." : "Creating..."}
-                        onClick={() => console.log("Submit button clicked!")}>
-                        {isEditMode ? "Update User" : "Create User"}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </>
+            </div>
+            <DialogFooter className="flex justify-end gap-3 border-t p-4">
+              <div className="flex w-full items-center justify-between gap-3">
+                {/* Debug info - remove in production */}
+                <div className="text-muted-foreground text-xs">
+                  {Object.keys(form.formState.errors).length > 0 && (
+                    <span className="text-destructive">
+                      Errors: {Object.keys(form.formState.errors).join(", ")}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <DialogClose asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleCloseModal}
+                      disabled={isSubmitting}>
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    isLoading={isSubmitting}
+                    loadingText={isEditMode ? "Updating..." : "Creating..."}
+                    onClick={() => console.log("Submit button clicked!")}>
+                    {isEditMode ? "Update User" : "Create User"}
+                  </Button>
+                </div>
+              </div>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
+}
+
+// Convenience wrapper component for just showing the button trigger
+export function CreateUserButton({ user_type }: { user_type: UserType }) {
+  return <CreateUserForm showTrigger={true} user_type={user_type} user={null} />;
 }

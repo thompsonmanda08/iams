@@ -1,8 +1,7 @@
 "use server";
 
-import authenticatedApiClient from "./api-config";
-import { APIResponse } from "@/lib/types";
-import { handleError, successResponse } from "@/lib/utils";
+import authenticatedApiClient, { handleError, successResponse } from "./api-config";
+import { APIResponse, Company } from "@/lib/types";
 
 // ==================== COUNTRIES ====================
 
@@ -24,7 +23,10 @@ export async function getCountries(params?: {
       method: "GET"
     });
 
-    return successResponse(response.data.data, "Countries fetched successfully");
+    return {
+      ...successResponse(response.data.data, "Countries fetched successfully"),
+      pagination: response.data.pagination
+    };
   } catch (error) {
     return handleError(error, "GET | GET COUNTRIES", "/api/v1/backoffice/countries");
   }
@@ -69,14 +71,28 @@ export async function updateCountry(data: {
 
 // ==================== PROVINCES ====================
 
-export async function getProvincesByCountry(countryId: string): Promise<APIResponse> {
+export async function getProvincesByCountry(
+  countryId: string,
+  params?: {
+    page?: number;
+    page_size?: number;
+  }
+): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    queryParams.append("country_id", countryId);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.page_size) queryParams.append("limit", params.page_size.toString());
+
     const response = await authenticatedApiClient({
-      url: `/api/v1/backoffice/provinces?country_id=${countryId}`,
+      url: `/api/v1/backoffice/provinces?${queryParams.toString()}`,
       method: "GET"
     });
 
-    return successResponse(response.data.data, "Provinces fetched successfully");
+    return {
+      ...successResponse(response.data.data, "Provinces fetched successfully"),
+      pagination: response.data.pagination
+    };
   } catch (error) {
     return handleError(error, "GET | GET PROVINCES", "/api/v1/backoffice/provinces");
   }
@@ -101,14 +117,28 @@ export async function createProvince(data: {
 
 // ==================== TOWNS ====================
 
-export async function getTownsByProvince(provinceId: string): Promise<APIResponse> {
+export async function getTownsByProvince(
+  provinceId: string,
+  params?: {
+    page?: number;
+    page_size?: number;
+  }
+): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    queryParams.append("province_id", provinceId);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.page_size) queryParams.append("limit", params.page_size.toString());
+
     const response = await authenticatedApiClient({
-      url: `/api/v1/backoffice/towns?province_id=${provinceId}`,
+      url: `/api/v1/backoffice/towns?${queryParams.toString()}`,
       method: "GET"
     });
 
-    return successResponse(response.data.data, "Towns fetched successfully");
+    return {
+      ...successResponse(response.data.data, "Towns fetched successfully"),
+      pagination: response.data.pagination
+    };
   } catch (error) {
     return handleError(error, "GET | GET TOWNS", "/api/v1/backoffice/towns");
   }
@@ -159,13 +189,7 @@ export async function getOrganizations(params?: {
   }
 }
 
-export async function createOrganization(data: {
-  name: string;
-  email?: string;
-  phone?: string;
-  logo_url?: string;
-  status?: "active" | "inactive";
-}): Promise<APIResponse> {
+export async function createOrganization(data: Company): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: "/api/v1/backoffice/organizations",
@@ -179,14 +203,7 @@ export async function createOrganization(data: {
   }
 }
 
-export async function updateOrganization(data: {
-  id: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  logo_url?: string;
-  status?: "active" | "inactive";
-}): Promise<APIResponse> {
+export async function updateOrganization(data: Company): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/backoffice/organizations/${data.id}`,
@@ -270,6 +287,10 @@ export async function getBackofficeStats(): Promise<APIResponse> {
 
     return successResponse(response.data.data, "Stats fetched successfully");
   } catch (error) {
-    return handleError(error, "GET | GET BACKOFFICE STATS", "/api/v1/backoffice/organizations/stats");
+    return handleError(
+      error,
+      "GET | GET BACKOFFICE STATS",
+      "/api/v1/backoffice/organizations/stats"
+    );
   }
 }

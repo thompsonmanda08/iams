@@ -192,7 +192,7 @@ The session now tracks:
 ```typescript
 {
   accessToken: string,
-  user_type: "BACKOFFICE_USER" | "REGULAR_USER",
+  user_type: "BACKOFFICE_ADMIN" | "REGULAR_USER",
   change_password: boolean,
   mfa_required: boolean,    // New field
   mfa_verified: boolean,    // New field
@@ -219,7 +219,7 @@ if (session?.isAuthenticated) {
   }
 
   // ROUTE PROTECTION - GLOBAL BACK_OFFICE USERS
-  if (session?.session?.user_type === "BACKOFFICE_USER") {
+  if (session?.session?.user_type === "BACKOFFICE_ADMIN") {
     redirect("/_/admin/home");
   }
 
@@ -234,7 +234,7 @@ redirect("/login");
 
 1. **Not authenticated** → `/login`
 2. **Authenticated but MFA required** → `/otp`
-3. **Authenticated + BACKOFFICE_USER** → `/_/admin/home`
+3. **Authenticated + BACKOFFICE_ADMIN** → `/_/admin/home`
 4. **Authenticated + Default user** → `/dashboard/home`
 
 ---
@@ -274,7 +274,7 @@ redirect("/login");
 
 6. **Redirect to Dashboard**
    - Based on `user_type`:
-     - `BACKOFFICE_USER` → `/_/admin/home`
+     - `BACKOFFICE_ADMIN` → `/_/admin/home`
      - Others → `/dashboard/home`
 
 ### Scenario 2: User without MFA
@@ -515,6 +515,6 @@ No new environment variables required. Uses existing:
 
 - Works with/without MFA
 - Routes based on `user_type`
-- Handles BACKOFFICE_USER separately
+- Handles BACKOFFICE_ADMIN separately
 
 The MFA/OTP implementation is complete and ready for testing! 🎉

@@ -194,7 +194,7 @@ export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated:
   const { isMobile } = useSidebar();
 
   const routes = useMemo(() => {
-    return user?.user_type === "BACKOFFICE_USER" && pathname.startsWith("/admin/")
+    return user?.user_type === "BACKOFFICE_ADMIN" && pathname.startsWith("/admin/")
       ? adminNavItems // ADMIN ROUTES
       : navItems; // DEFAULT ROUTES
   }, [navItems, user?.user_type]);

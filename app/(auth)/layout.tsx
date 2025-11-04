@@ -40,13 +40,14 @@ export default async function AuthLayout({ children }: PropsWithChildren) {
     }
 
     // Fully authenticated (MFA complete or not required)
-    // Redirect to appropriate dashboard
-    // const systemInit = await initializeSystemSetup();
-    // const user = systemInit?.data?.user as User;
+    // Redirect to appropriate dashboard based on user_type from session
+    console.log("[AUTH LAYOUT] Redirecting authenticated user:", {
+      user_type: session?.user_type,
+      mfa_required: session?.mfa_required,
+      mfa_verified: session?.mfa_verified
+    });
 
-    const user = await getUserSession();
-
-    if (user?.user_type === "BACKOFFICE_USER") {
+    if (session?.user_type === "BACKOFFICE_ADMIN") {
       redirect("/admin/home");
     }
 

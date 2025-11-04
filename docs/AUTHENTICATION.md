@@ -8,6 +8,7 @@
 ## Overview
 
 The INFRATEL IAMS application implements a comprehensive authentication system with:
+
 - Username/password login
 - Multi-Factor Authentication (MFA) with OTP
 - JWT-based session management
@@ -65,12 +66,13 @@ The INFRATEL IAMS application implements a comprehensive authentication system w
 The application uses three encrypted JWT cookies for session management:
 
 #### 1. AUTH_SESSION (Primary Authentication)
+
 Contains core authentication data:
 
 ```typescript
 {
   accessToken: string,              // JWT access token
-  user_type: "ORGANIZATION_USER" | "BACKOFFICE_USER",
+  user_type: "ORGANIZATION_USER" | "BACKOFFICE_ADMIN",
   user_id: string,
   mfa_required: boolean,
   mfa_verified: boolean,
@@ -83,6 +85,7 @@ Contains core authentication data:
 ```
 
 #### 2. USER_SESSION (User Profile Backup)
+
 Contains user profile information:
 
 ```typescript
@@ -101,6 +104,7 @@ Contains user profile information:
 ```
 
 #### 3. PERMISSIONS_SESSION (Role Permissions)
+
 Contains role-based permissions:
 
 ```typescript
@@ -119,7 +123,7 @@ Contains role-based permissions:
       can_configure: boolean,
       custom_permissions: object
     }
-  ]
+  ];
 }
 ```
 
@@ -129,6 +133,7 @@ Contains role-based permissions:
 **Expiration:** 1 hour (configurable)
 
 **Cookie Security Settings:**
+
 ```typescript
 {
   httpOnly: true,           // Prevents XSS attacks
@@ -185,6 +190,7 @@ The system supports optional MFA with OTP (One-Time Password) sent via email.
 #### Login with MFA Flow
 
 **1. User Login**
+
 ```typescript
 // POST /api/v1/auth/login
 {
@@ -194,6 +200,7 @@ The system supports optional MFA with OTP (One-Time Password) sent via email.
 ```
 
 **Response (MFA Required):**
+
 ```json
 {
   "access_token": "eyJ...",
@@ -204,6 +211,7 @@ The system supports optional MFA with OTP (One-Time Password) sent via email.
 ```
 
 **2. OTP Verification**
+
 ```typescript
 // POST /api/v1/auth/verify-otp
 {
@@ -213,6 +221,7 @@ The system supports optional MFA with OTP (One-Time Password) sent via email.
 ```
 
 **Response (Success):**
+
 ```json
 {
   "access_token": "eyJ...",
@@ -226,6 +235,7 @@ The system supports optional MFA with OTP (One-Time Password) sent via email.
 **Location:** `app/(auth)/otp/otp-form.tsx`
 
 **Features:**
+
 - 6-digit OTP input with visual separation (3-3)
 - Gets username from URL query parameters
 - Client-side validation
@@ -234,6 +244,7 @@ The system supports optional MFA with OTP (One-Time Password) sent via email.
 - Auto-clears OTP on error
 
 **Usage:**
+
 ```typescript
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -287,12 +298,14 @@ const handleSubmit = async (e: React.FormEvent) => {
 ### User Types
 
 **ORGANIZATION_USER:**
+
 - Standard organizational users
 - Access to dashboard and modules
 - Department-scoped permissions
 - Routes to `/dashboard/*`
 
-**BACKOFFICE_USER:**
+**BACKOFFICE_ADMIN:**
+
 - Administrative users
 - Access to admin panel
 - System-wide configuration access
@@ -312,7 +325,7 @@ if (session?.isAuthenticated) {
   }
 
   // Route based on user type
-  if (session?.session?.user_type === "BACKOFFICE_USER") {
+  if (session?.session?.user_type === "BACKOFFICE_ADMIN") {
     redirect("/admin/home");
   }
 
@@ -325,9 +338,10 @@ redirect("/login");
 ```
 
 **Routing Priority:**
+
 1. Not authenticated → `/login`
 2. Authenticated but MFA required → `/otp`
-3. Authenticated + BACKOFFICE_USER → `/admin/home`
+3. Authenticated + BACKOFFICE_ADMIN → `/admin/home`
 4. Authenticated + ORGANIZATION_USER → `/dashboard/home`
 
 ---
@@ -337,10 +351,12 @@ redirect("/login");
 ### Change Password
 
 **First Login Password Change:**
+
 - Modal prompt when `change_password` flag is set in session
 - User must change password before accessing dashboard
 
 **Authenticated Password Change:**
+
 ```typescript
 // POST /api/v1/auth/change-password
 {
@@ -350,6 +366,7 @@ redirect("/login");
 ```
 
 **Implementation:**
+
 ```typescript
 export async function changePassword({
   oldPassword,
@@ -385,6 +402,7 @@ export async function changePassword({
 ### Password Reset
 
 **Public Password Reset:**
+
 ```typescript
 // POST /api/v1/auth/password-reset
 {
@@ -403,14 +421,16 @@ Note: Token-based password reset flow requires backend implementation.
 **File:** `components/screen-lock.tsx`
 
 **Features:**
+
 - Automatic lock on user inactivity
 - Configurable idle timeout (default: 5 minutes)
 - Grace period before lock
 - Token refresh on unlock
 
 **Implementation:**
+
 ```typescript
-import { useIdleTimer } from 'react-idle-timer';
+import { useIdleTimer } from "react-idle-timer";
 
 const idleTimer = useIdleTimer({
   timeout: 1000 * 60 * 5, // 5 minutes
@@ -435,6 +455,7 @@ const handleUnlock = async () => {
 ```
 
 **Function:** `lockScreenOnUserIdle()`
+
 - Extends session on unlock
 - Validates user credentials
 - Resets idle timer
@@ -458,10 +479,9 @@ export const useRefreshToken = (enabled: boolean) =>
 ```
 
 **Usage in Screen Lock:**
+
 ```typescript
-const { data, refetch } = useRefreshToken(
-  Boolean(loggedIn && !isIdle)
-);
+const { data, refetch } = useRefreshToken(Boolean(loggedIn && !isIdle));
 ```
 
 ### Manual Token Refresh
@@ -526,6 +546,7 @@ export async function initializeSystemSetup({
 ```
 
 **API Response:**
+
 ```json
 {
   "user": {
@@ -557,10 +578,7 @@ export async function initializeSystemSetup({
 ### Login User
 
 ```typescript
-export async function loginUser({
-  username,
-  password
-}: LoginCredentials): Promise<APIResponse> {
+export async function loginUser({ username, password }: LoginCredentials): Promise<APIResponse> {
   const url = `/api/v1/auth/login`;
 
   try {
@@ -653,16 +671,16 @@ export async function logoutUser(): Promise<APIResponse> {
 
 ### Authentication Endpoints
 
-| Endpoint | Method | Purpose | Auth Required |
-|----------|--------|---------|---------------|
-| `/api/v1/auth/login` | POST | User login | No |
-| `/api/v1/auth/verify-otp` | POST | Verify OTP | No |
-| `/api/v1/auth/resend-otp` | POST | Resend OTP | No |
-| `/api/v1/auth/change-password` | POST | Change password | Yes |
-| `/api/v1/auth/register` | POST | Register user | Yes (Admin) |
-| `/api/v1/auth/logout` | POST | Logout | Yes |
-| `/api/v1/auth/refresh-token` | GET | Refresh token | Yes |
-| `/api/v1/auth/setup` | GET | Get user setup | Yes |
+| Endpoint                       | Method | Purpose         | Auth Required |
+| ------------------------------ | ------ | --------------- | ------------- |
+| `/api/v1/auth/login`           | POST   | User login      | No            |
+| `/api/v1/auth/verify-otp`      | POST   | Verify OTP      | No            |
+| `/api/v1/auth/resend-otp`      | POST   | Resend OTP      | No            |
+| `/api/v1/auth/change-password` | POST   | Change password | Yes           |
+| `/api/v1/auth/register`        | POST   | Register user   | Yes (Admin)   |
+| `/api/v1/auth/logout`          | POST   | Logout          | Yes           |
+| `/api/v1/auth/refresh-token`   | GET    | Refresh token   | Yes           |
+| `/api/v1/auth/setup`           | GET    | Get user setup  | Yes           |
 
 ---
 
@@ -671,11 +689,13 @@ export async function logoutUser(): Promise<APIResponse> {
 ### Input Validation
 
 **Client-side:**
+
 - React Hook Form with Zod validation
 - Email format validation
 - Password strength requirements
 
 **Server-side:**
+
 - Zod schema validation in Server Actions
 - SQL injection prevention
 - XSS protection
@@ -683,6 +703,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ### Error Handling
 
 **Standardized error responses:**
+
 ```typescript
 {
   success: false,
@@ -693,6 +714,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ```
 
 **Security principles:**
+
 - No sensitive data in error messages
 - Generic messages for authentication failures
 - Detailed logging server-side only
@@ -700,6 +722,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ### Session Security
 
 **Protection mechanisms:**
+
 1. **HTTP-Only Cookies** - Prevent XSS attacks
 2. **Secure Flag** - HTTPS only in production
 3. **SameSite Strict** - CSRF protection
@@ -714,6 +737,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ### Login Flow Test Cases
 
 **Test Case 1: Login without MFA**
+
 ```
 1. Enter valid credentials
 2. Submit login form
@@ -723,6 +747,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ```
 
 **Test Case 2: Login with MFA**
+
 ```
 1. Enter valid credentials
 2. Submit login form
@@ -734,6 +759,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ```
 
 **Test Case 3: Invalid Credentials**
+
 ```
 1. Enter invalid credentials
 2. Submit login form
@@ -743,6 +769,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ```
 
 **Test Case 4: Invalid OTP**
+
 ```
 1. Complete login (MFA enabled)
 2. Enter incorrect OTP
@@ -755,6 +782,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ### Session Management Test Cases
 
 **Test Case 5: Token Refresh**
+
 ```
 1. Login successfully
 2. Wait for idle timeout
@@ -764,6 +792,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ```
 
 **Test Case 6: Session Expiration**
+
 ```
 1. Login successfully
 2. Wait > 1 hour
@@ -773,6 +802,7 @@ export async function logoutUser(): Promise<APIResponse> {
 ```
 
 **Test Case 7: Logout**
+
 ```
 1. Login successfully
 2. Click logout
@@ -789,22 +819,27 @@ export async function logoutUser(): Promise<APIResponse> {
 ### Common Issues
 
 **Issue: User object missing after login**
+
 - **Cause:** `initializeSystemSetup` not called
 - **Solution:** Ensure setup is called after login/OTP verification
 
 **Issue: Screen flickering on login**
+
 - **Cause:** Multiple session updates in quick succession
 - **Solution:** Disable auto-refetch on useRefreshToken
 
 **Issue: Always redirects to OTP page**
+
 - **Cause:** `mfa_verified` not set to true
 - **Solution:** Verify `updateAuthSession` is called in verifyOTP
 
 **Issue: Session expires too quickly**
+
 - **Cause:** Token expiration set too low
 - **Solution:** Adjust JWT expiration in session config
 
 **Issue: Logout doesn't clear session**
+
 - **Cause:** Cookie deletion failing
 - **Solution:** Verify `deleteSession()` is called
 

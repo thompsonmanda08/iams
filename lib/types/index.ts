@@ -150,12 +150,30 @@ export type AuditConfigurableItem = {
 export interface Company {
   id: string;
   name: string;
+  code?: string;
   logo_url: string | null;
+  logo?: string;
   email: string | null;
   phone: string | null;
   status: "active" | "inactive";
+  address?: string;
+  description?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  country_id?: string;
+  province_id?: string;
+  town_id?: string;
+  subscription_tier?: "basic" | "premium" | "enterprise";
+  max_users?: number;
+  admin_username?: string;
+  admin_email?: string;
+  admin_first_name?: string;
+  admin_last_name?: string;
+  admin_password?: string;
+  recordID?: string;
   created_at?: string;
   updated_at?: string;
+  [x: string]: any;
 }
 
 export interface Country {
