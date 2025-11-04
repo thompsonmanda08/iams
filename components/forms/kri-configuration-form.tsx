@@ -510,7 +510,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                             : "Select KRI owner"}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-100">
                     {users.length === 0 ? (
                       <div className="text-muted-foreground p-2 text-sm">
                         {formData.department_id

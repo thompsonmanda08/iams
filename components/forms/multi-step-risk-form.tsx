@@ -531,7 +531,7 @@ export function MultiStepRiskForm({
                             : "Select category"}
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-100">
                       {categories.length === 0 ? (
                         <div className="text-muted-foreground p-2 text-sm">
                           No categories available
@@ -574,7 +574,7 @@ export function MultiStepRiskForm({
                             : "Select department"}
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-100">
                       {departments?.map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           <div className="flex items-center gap-2">
@@ -903,7 +903,7 @@ export function MultiStepRiskForm({
                             : "Select risk owner"}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-100">
                     {users.length === 0 ? (
                       <div className="text-muted-foreground p-2 text-sm">
                         {stepOneData.department_id

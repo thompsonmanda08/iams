@@ -1,25 +1,15 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
 import {
   ArrowLeft,
   TrendingUp,
@@ -33,15 +23,18 @@ import {
   ChevronDown,
   FileText
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import BackButton from "@/components/back-button";
 
 interface RiskOwner {
   id: string;
   email: string;
   first_name: string;
   last_name: string;
+  username?: string;
+  user_type?: string;
 }
 
 interface Category {
@@ -49,12 +42,14 @@ interface Category {
   name: string;
   code: string;
   color: string;
+  description?: string;
 }
 
 interface Department {
   id: string;
   name: string;
   code: string;
+  description?: string | null;
 }
 
 interface RiskAction {
@@ -62,6 +57,10 @@ interface RiskAction {
   organization_id: string;
   title: string;
   description: string;
+  category_id: string;
+  department_id: string;
+  matrix_id: string | null;
+  risk_register_id: string;
   category: Category;
   department: Department;
   risk_owner: RiskOwner;
@@ -74,16 +73,26 @@ interface RiskAction {
   department_status: string;
   inherent_likelihood: number;
   inherent_impact: number;
+  inherent_score: number | null;
+  inherent_rating: string | null;
   residual_likelihood: number;
   residual_impact: number;
+  residual_score: number | null;
+  residual_rating: string | null;
   existing_controls: string;
   control_effectiveness: number;
   treatment_plan: string;
   risk_response: string;
+  risk_owner_id: string;
   risk_appetite_status: string;
   target_closing_date: string;
+  revised_target_date: string | null;
+  date_closed: string | null;
   status: string;
+  overdue_days: number | null;
+  review_date: string | null;
   mitigation_cost: number;
+  latest_update: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -103,20 +112,16 @@ interface ActionDetailsProps {
 
 export function ActionDetails({ action }: ActionDetailsProps) {
   const router = useRouter();
-  const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [updates, setUpdates] = useState<Update[]>([]);
 
   const handleMitigationSelect = (option: string) => {
-    toast({
-      title: "Risk Response Updated",
-      description: `Risk response changed to: ${option}`
-    });
+    toast.success(`Risk response changed to: ${option}`);
   };
 
   // Calculate risk scores
-  const inherentScore = action.inherent_likelihood * action.inherent_impact;
-  const residualScore = action.residual_likelihood * action.residual_impact;
+  const inherentScore =
+    action.inherent_score || action.inherent_likelihood * action.inherent_impact;
+  const residualScore =
+    action.residual_score || action.residual_likelihood * action.residual_impact;
 
   // Get risk level
   const getRiskLevel = (score: number) => {
@@ -160,6 +165,26 @@ export function ActionDetails({ action }: ActionDetailsProps) {
     }
   };
 
+  // Format date safely
+  const formatDate = (dateString: string | null) => {
+    if (!dateString || dateString === "0001-01-01T00:00:00Z") return "Not set";
+    try {
+      return format(new Date(dateString), "MMMM dd, yyyy");
+    } catch {
+      return "Invalid date";
+    }
+  };
+
+  // Check if date is overdue
+  const isOverdue = (dateString: string | null) => {
+    if (!dateString || dateString === "0001-01-01T00:00:00Z") return false;
+    try {
+      return new Date(dateString) < new Date();
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <div className="bg-muted/30 min-h-screen">
       {/* Header Section */}
@@ -167,14 +192,13 @@ export function ActionDetails({ action }: ActionDetailsProps) {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
-              <Button variant="outline" size="sm" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Actions
-              </Button>
+              <BackButton title="Back to Actions" />
               <div>
                 <h1 className="text-foreground text-3xl font-bold">{action.title}</h1>
                 <p className="text-muted-foreground mt-2 max-w-2xl text-sm">{action.description}</p>
-                <p className="text-muted-foreground mt-2 font-mono text-xs">ID: {action.id}</p>
+                <p className="text-muted-foreground mt-2 font-mono text-xs uppercase">
+                  ID: {action.id}
+                </p>
               </div>
             </div>
             <DropdownMenu>
@@ -219,7 +243,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-muted-foreground text-sm">Status</p>
-                    <Badge variant={getStatusVariant(action?.status)} className="mt-1">
+                    <Badge variant={getStatusVariant(action.status)} className="mt-1">
                       {action.status}
                     </Badge>
                   </div>
@@ -235,7 +259,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-muted-foreground text-sm">Risk Response</p>
-                    <Badge className={cn("mt-1 border", getResponseColor(action?.risk_response))}>
+                    <Badge className={cn("mt-1 border", getResponseColor(action.risk_response))}>
                       {action.risk_response}
                     </Badge>
                   </div>
@@ -251,7 +275,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-muted-foreground text-sm">Risk Appetite</p>
-                    <p className="mt-1 text-lg font-semibold">{action?.risk_appetite_status}</p>
+                    <p className="mt-1 text-lg font-semibold">{action.risk_appetite_status}</p>
                   </div>
                 </div>
               </CardContent>
@@ -341,7 +365,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                     <div className="mt-1 flex items-center gap-2">
                       <div
                         className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: action?.category?.color }}
+                        style={{ backgroundColor: action.category?.color }}
                       />
                       <p className="font-semibold">{action.category.name}</p>
                       <Badge variant="outline" className="text-xs">
@@ -376,7 +400,16 @@ export function ActionDetails({ action }: ActionDetailsProps) {
 
                   <div>
                     <p className="text-muted-foreground text-sm">Strategic Objective</p>
-                    <p className="mt-1 font-semibold">{action.strategic_objective}</p>
+                    <p className="mt-1 font-semibold">
+                      {action.strategic_objective || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-muted-foreground text-sm">Step</p>
+                    <Badge variant="outline" className="mt-1">
+                      Step {action.step}
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
@@ -391,30 +424,42 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <div className="space-y-3">
                   <div>
                     <p className="text-muted-foreground text-sm">Macro Process</p>
-                    <p className="mt-1 font-semibold">{action.macro_process}</p>
+                    <p className="mt-1 font-semibold">{action.macro_process || "Not specified"}</p>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground text-sm">Sub Process</p>
-                    <p className="mt-1 font-semibold">{action.sub_process}</p>
+                    <p className="mt-1 font-semibold">{action.sub_process || "Not specified"}</p>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground text-sm">Target Closing Date</p>
                     <div className="mt-1 flex items-center gap-2">
                       <Calendar className="text-muted-foreground h-4 w-4" />
-                      <p className="font-semibold">
-                        {format(new Date(action.target_closing_date), "MMMM dd, yyyy")}
-                      </p>
+                      <div>
+                        <p className="font-semibold">{formatDate(action.target_closing_date)}</p>
+                        {isOverdue(action.target_closing_date) && (
+                          <p className="text-xs text-red-600">
+                            Overdue{action.overdue_days ? ` by ${action.overdue_days} days` : ""}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground text-sm">Recurrence</p>
-                    <Badge variant="outline" className="mt-1">
+                    <Badge variant="outline" className="mt-1 capitalize">
                       {action.recurrence}
                     </Badge>
                   </div>
+
+                  {action.review_date && (
+                    <div>
+                      <p className="text-muted-foreground text-sm">Review Date</p>
+                      <p className="mt-1 font-semibold">{formatDate(action.review_date)}</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -427,7 +472,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <CardTitle className="text-lg font-semibold">Root Cause</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{action.root_cause}</p>
+                <p className="text-sm">{action.root_cause || "Not specified"}</p>
               </CardContent>
             </Card>
 
@@ -439,7 +484,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{action.existing_controls}</p>
+                <p className="text-sm">{action.existing_controls || "No controls specified"}</p>
               </CardContent>
             </Card>
           </div>
@@ -453,74 +498,19 @@ export function ActionDetails({ action }: ActionDetailsProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">{action.treatment_plan}</p>
+              <p className="text-sm">{action.treatment_plan || "No treatment plan specified"}</p>
               <div className="mt-4 flex items-center gap-4 border-t pt-4">
                 <div className="flex items-center gap-2">
                   <DollarSign className="text-muted-foreground h-4 w-4" />
                   <div>
                     <p className="text-muted-foreground text-xs">Mitigation Cost</p>
-                    <p className="font-semibold">${action.mitigation_cost?.toLocaleString()}</p>
+                    <p className="font-semibold">
+                      {action.mitigation_cost
+                        ? `$${action.mitigation_cost.toLocaleString()}`
+                        : "Not specified"}
+                    </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Updates Table */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold">Risk Updates</CardTitle>
-                <Input
-                  placeholder="Search updates..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-xs"
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Update Type</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Attachment</TableHead>
-                      <TableHead>Progress</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {updates.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="py-12 text-center">
-                          <div className="flex flex-col items-center gap-2">
-                            <FileText className="text-muted-foreground/50 h-8 w-8" />
-                            <p className="text-muted-foreground">No updates available</p>
-                            <p className="text-muted-foreground text-xs">
-                              Updates will appear here as they are added
-                            </p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      updates.map((update, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{update.date}</TableCell>
-                          <TableCell>{update.updateType}</TableCell>
-                          <TableCell>{update.description}</TableCell>
-                          <TableCell>{update.attachment || "-"}</TableCell>
-                          <TableCell>{update.progress}%</TableCell>
-                          <TableCell>
-                            <Badge>{update.status}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
               </div>
             </CardContent>
           </Card>
