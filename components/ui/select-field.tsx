@@ -103,7 +103,7 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
             )}
           </SelectTrigger>
           <SelectContent className={cn(classNames?.options, classNames?.selectContent)}>
-            {options.map((item: any) => {
+            {options?.map((item: any) => {
               const itemValue = item.id || item?.value;
               const itemLabel = item?.[String(listItemName)] || item?.name || item?.label;
 

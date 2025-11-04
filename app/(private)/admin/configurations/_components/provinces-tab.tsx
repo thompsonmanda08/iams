@@ -26,10 +26,7 @@ import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ErrorState } from "@/lib/types";
-import {
-  createProvince,
-  getProvincesByCountry
-} from "@/app/_actions/backoffice-actions";
+import { createProvince, getProvincesByCountry } from "@/app/_actions/backoffice-actions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
@@ -47,6 +44,7 @@ interface Country {
   id: string;
   name: string;
   code: string;
+  iso2_code: string;
   is_active: boolean;
 }
 
@@ -74,16 +72,13 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
   const page_size = parseInt(searchParams.get("page_size") || "10", 10);
 
   // Fetch provinces when country is selected
-  const {
-    data: provincesResponse,
-    isLoading
-  } = useQuery({
+  const { data: provincesResponse, isLoading } = useQuery({
     queryKey: [QUERY_KEYS.PROVINCES, selectedCountry, page, page_size],
     queryFn: () => getProvincesByCountry(selectedCountry, { page, page_size }),
     enabled: !!selectedCountry
   });
 
-  const provinces: Province[] = provincesResponse?.success ? provincesResponse.data : [];
+  const provinces: Province[] = provincesResponse?.success ? provincesResponse.data?.data : [];
   const pagination = (provincesResponse?.pagination as {
     total: number;
     page: number;
@@ -105,12 +100,15 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
     return country ? country.name : "Unknown";
   };
 
-  const activeCountries = useMemo(
-    () => countries.filter((c) => c.is_active),
-    [countries]
-  );
+  const activeCountries = useMemo(() => countries.filter((c) => c.is_active), [countries]);
 
-  const handlePageChange = ({ page: newPage, page_size: newPageSize }: { page: number; page_size?: number }) => {
+  const handlePageChange = ({
+    page: newPage,
+    page_size: newPageSize
+  }: {
+    page: number;
+    page_size?: number;
+  }) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(newPage));
     if (newPageSize) {
@@ -147,6 +145,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
 
         <div className="w-full max-w-sm">
           <SelectField
+            className="w-full"
             label="Select Country"
             placeholder="Choose a country"
             options={activeCountries.map((c) => ({ id: c.id, name: c.name }))}
@@ -186,7 +185,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {provinces.length === 0 ? (
+              {provinces?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     <Empty>
@@ -196,8 +195,9 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                         </EmptyMedia>
                         <EmptyTitle>No Provinces Yet</EmptyTitle>
                         <EmptyDescription>
-                          You haven&apos;t created any provinces for {getCountryName(selectedCountry)}{" "}
-                          yet. Get started by creating your first province.
+                          You haven&apos;t created any provinces for{" "}
+                          {getCountryName(selectedCountry)} yet. Get started by creating your first
+                          province.
                         </EmptyDescription>
                       </EmptyHeader>
                       <EmptyContent>
@@ -217,7 +217,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                provinces.map((province) => (
+                provinces?.map((province) => (
                   <TableRow key={province.id}>
                     <TableCell>
                       <span className="font-medium">{province.name}</span>
@@ -257,7 +257,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
           </Table>
 
           {/* Pagination */}
-          {pagination && provinces.length > 0 && (
+          {pagination && provinces?.length > 0 && (
             <div className="mt-4">
               <CustomPagination
                 pagination={{
@@ -293,7 +293,8 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
 
 const PROVINCE_INITIAL_STATE = {
   name: "",
-  country_id: ""
+  country_id: "",
+  code: ""
 };
 
 interface CreateProvinceDialogProps {
@@ -329,7 +330,8 @@ function CreateProvinceDialog({
     mutationFn: async (data: typeof formData) => {
       const response = await createProvince({
         name: data.name,
-        country_id: data.country_id
+        country_id: data.country_id,
+        code: data.code
       });
 
       if (!response.success) {
@@ -377,12 +379,18 @@ function CreateProvinceDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <SelectField
             label="Country"
+            className="w-full"
             placeholder="Select a country"
             options={countries.map((c) => ({ id: c.id, name: c.name }))}
             value={formData.country_id}
             onValueChange={(country_id) => {
+              const country = countries.find((c) => c.id === country_id);
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, country_id }));
+              setFormData((c) => ({
+                ...c,
+                country_id,
+                code: country?.code || ""
+              }));
             }}
           />
           <Input
@@ -392,6 +400,16 @@ function CreateProvinceDialog({
             onChange={(e) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, name: e.target.value }));
+            }}
+            required
+          />
+          <Input
+            label="Provincial Code"
+            placeholder="e.g. LSK, CNC, NDL"
+            value={formData.code}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, code: e.target.value }));
             }}
             required
           />
