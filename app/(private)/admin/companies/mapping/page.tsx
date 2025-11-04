@@ -1,6 +1,7 @@
 import CompanyMapping from "./mapping";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import PageHeader from "@/components/page-header";
 // import { getOrganizations, getCountries } from "@/app/_actions/backoffice-actions";
 // import { getProvinces, getTowns } from "@/app/_actions/config-actions";
 
@@ -49,9 +50,26 @@ async function CompanyMappingPage() {
   // return <CompanyMapping companies={companies} countries={countries} provinces={provinces} towns={towns} />;
 
   return (
-    <Suspense fallback={<MappingSkeleton />}>
-      <CompanyMapping />
-    </Suspense>
+    <div>
+      {/* Header */}
+      <div className="bg-card border-b">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <PageHeader
+              title="Company Location Mapping"
+              description="All Institutions and Organizations onboarded in the IAMS system"
+              icon="Building2"
+            />
+            {/* <MultiStepCompanyForm showTrigger={true} company={null} /> */}
+          </div>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 py-8">
+        <Suspense fallback={<MappingSkeleton />}>
+          <CompanyMapping />
+        </Suspense>
+      </div>
+    </div>
   );
 }
 

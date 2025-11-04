@@ -85,7 +85,7 @@ export async function getProvincesByCountry(
     if (params?.page_size) queryParams.append("limit", params.page_size.toString());
 
     const response = await authenticatedApiClient({
-      url: `/api/v1/backoffice/provinces?${queryParams.toString()}`,
+      url: `/api/v1/provinces?${queryParams.toString()}`,
       method: "GET"
     });
 
@@ -94,7 +94,7 @@ export async function getProvincesByCountry(
       pagination: response.data.pagination
     };
   } catch (error) {
-    return handleError(error, "GET | GET PROVINCES", "/api/v1/backoffice/provinces");
+    return handleError(error, "GET | GET PROVINCES", "/api/v1/provinces");
   }
 }
 

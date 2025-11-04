@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Plus, X, MapPin, Trash2 } from "lucide-react";
+import { Plus, X, MapPin, Trash2, Building2 } from "lucide-react";
 import { Company, Country, Province, Town } from "@/lib/types";
 import { notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,8 @@ import {
   deleteCompanyLocation
 } from "@/app/_actions/backoffice-actions";
 import { Spinner } from "@/components/ui/spinner";
+import { SelectField } from "@/components/ui/select-field";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Custom hook for debouncing a value
 function useDebounce<T>(value: T, delay: number): T {
@@ -87,7 +89,7 @@ export default function CompanyMapping() {
     staleTime: 5 * 60 * 1000
   });
 
-  const companies = companiesResponse?.success ? companiesResponse.data : [];
+  const companies = companiesResponse?.success ? companiesResponse.data?.data || [] : [];
 
   // Fetch countries
   const { data: countriesResponse, isLoading: loadingCountries } = useQuery({
@@ -96,7 +98,7 @@ export default function CompanyMapping() {
     staleTime: 5 * 60 * 1000
   });
 
-  const countries = countriesResponse?.success ? countriesResponse.data : [];
+  const countries = countriesResponse?.success ? countriesResponse.data?.data || [] : [];
 
   // Fetch provinces for selected country
   const { data: provincesResponse } = useQuery({
@@ -126,9 +128,7 @@ export default function CompanyMapping() {
     staleTime: 1 * 60 * 1000 // 1 minute
   });
 
-  const locations: LocationWithDetails[] = locationsResponse?.success
-    ? locationsResponse.data
-    : [];
+  const locations: LocationWithDetails[] = locationsResponse?.success ? locationsResponse.data : [];
 
   // Create location mutation
   const createMutation = useMutation({
@@ -251,32 +251,21 @@ export default function CompanyMapping() {
 
   return (
     <div>
-      <h2 className="mb-6 text-3xl font-bold text-slate-800">Company Location Mapping</h2>
-
-      <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
-        <div className="w-full">
-          <Label htmlFor="company-select">Select Company</Label>
-          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-            <SelectTrigger id="company-select">
-              <SelectValue placeholder="Choose a company..." />
-            </SelectTrigger>
-            <SelectContent>
-              {companies.length === 0 ? (
-                <div className="p-2 text-sm text-slate-500">No companies available</div>
-              ) : (
-                companies.map((company: Company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+      <Card className="mb-4 p-4">
+        <div className="flex w-full items-center">
+          <SelectField
+            label="Select Company"
+            value={selectedCompany}
+            placeholder="Choose a company..."
+            onValueChange={setSelectedCompany}
+            options={companies}
+            className="min-w-60"
+          />
         </div>
-      </div>
+      </Card>
 
-      {selectedCompany && (
-        <div className="rounded-lg bg-white p-6 shadow-md">
+      {selectedCompany ? (
+        <Card className="p-4">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-slate-800">
@@ -363,7 +352,52 @@ export default function CompanyMapping() {
               )}
             </div>
           )}
-        </div>
+        </Card>
+      ) : (
+        <Card className="bg-canvas/50 border-2 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+            <div className="relative mb-4">
+              <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+              <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                <Building2 className="text-primary h-16 w-16" strokeWidth={1.5} />
+              </div>
+            </div>
+
+            <h3 className="text-foreground mb-2 text-2xl font-semibold">No Company Selected</h3>
+            <p className="text-muted-foreground mb-8 max-w-md text-center">
+              Choose a company to get started with mapping out locations.
+            </p>
+
+            <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                <div className="text-primary mb-1 font-mono">COMPANY</div>
+                <div className="text-muted-foreground">Entities & Organizations</div>
+              </div>
+              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                <div className="text-primary mb-1 font-mono">LOCATIONS</div>
+                <div className="text-muted-foreground">Countries, States & Cities</div>
+              </div>
+              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                <div className="text-primary mb-1 font-mono">MAP</div>
+                <div className="text-muted-foreground">Execute Mapping</div>
+              </div>
+            </div>
+
+            <div>
+              <SelectField
+                // label="Select Company"
+                value={selectedCompany}
+                placeholder="Choose a company..."
+                onValueChange={setSelectedCompany}
+                options={companies}
+                classNames={{
+                  input: "text-primary-foreground!  dark:text-white! font-medium"
+                }}
+                className="bg-primary text-primary-foreground placeholder:text-primary-foreground min-w-60"
+              />
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <Dialog open={showModal} onOpenChange={setShowModal}>

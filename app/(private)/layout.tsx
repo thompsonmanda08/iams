@@ -45,7 +45,8 @@ export default async function DashLayout({
   // Enrich user object with user_type from session
   const enrichedUser = {
     ...user,
-    user_type: user_type || session?.user_type
+    user_type: user_type || session?.user_type,
+    role: session?.role
   } as User;
 
   return (

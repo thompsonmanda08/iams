@@ -1,8 +1,5 @@
 export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
 
-export const SERVICES_BASE_URL =
-  process.env.NEXT_PUBLIC_SERVICES_BASE_URL || process.env.SERVICES_BASE_URL;
-
 export const POCKET_BASE_URL =
   process.env.POCKET_BASE_URL || process.env.NEXT_PUBLIC_POCKET_BASE_URL;
 
@@ -169,39 +166,39 @@ export const SERVICE_PROVIDER_COLOR_MAP = {
 };
 
 export const CURRENCIES = [
-  {currency: "ZAR", country: "South Africa"},
-  {currency: "BWP", country: "Botswana"},
-  {currency: "NAD", country: "Namibia"},
-  {currency: "ZMW", country: "Zambia"},
-  {currency: "ZWL", country: "Zimbabwe"},
-  {currency: "MZN", country: "Mozambique"},
-  {currency: "MWK", country: "Malawi"},
-  {currency: "SZL", country: "Eswatini"},
-  {currency: "LSL", country: "Lesotho"},
-  {currency: "MUR", country: "Mauritius"},
-  {currency: "SCR", country: "Seychelles"},
-  {currency: "MGA", country: "Madagascar"},
-  {currency: "AOA", country: "Angola"},
-  {currency: "TZS", country: "Tanzania"},
+  { currency: "ZAR", country: "South Africa" },
+  { currency: "BWP", country: "Botswana" },
+  { currency: "NAD", country: "Namibia" },
+  { currency: "ZMW", country: "Zambia" },
+  { currency: "ZWL", country: "Zimbabwe" },
+  { currency: "MZN", country: "Mozambique" },
+  { currency: "MWK", country: "Malawi" },
+  { currency: "SZL", country: "Eswatini" },
+  { currency: "LSL", country: "Lesotho" },
+  { currency: "MUR", country: "Mauritius" },
+  { currency: "SCR", country: "Seychelles" },
+  { currency: "MGA", country: "Madagascar" },
+  { currency: "AOA", country: "Angola" },
+  { currency: "TZS", country: "Tanzania" },
 
-  {currency: "USD", country: "United States"},
-  {currency: "EUR", country: "European Union"},
-  {currency: "GBP", country: "United Kingdom"},
-  {currency: "JPY", country: "Japan"},
-  {currency: "CHF", country: "Switzerland"},
-  {currency: "CAD", country: "Canada"},
-  {currency: "AUD", country: "Australia"},
-  {currency: "CNY", country: "China"},
-  {currency: "INR", country: "India"},
-  {currency: "SGD", country: "Singapore"},
-  {currency: "HKD", country: "Hong Kong"},
-  {currency: "SEK", country: "Sweden"},
-  {currency: "NOK", country: "Norway"},
-  {currency: "DKK", country: "Denmark"},
-  {currency: "NZD", country: "New Zealand"},
-  {currency: "KRW", country: "South Korea"},
-  {currency: "TRY", country: "Turkey"},
-  {currency: "RUB", country: "Russia"},
-  {currency: "BRL", country: "Brazil"},
-  {currency: "MXN", country: "Mexico"}
-]
+  { currency: "USD", country: "United States" },
+  { currency: "EUR", country: "European Union" },
+  { currency: "GBP", country: "United Kingdom" },
+  { currency: "JPY", country: "Japan" },
+  { currency: "CHF", country: "Switzerland" },
+  { currency: "CAD", country: "Canada" },
+  { currency: "AUD", country: "Australia" },
+  { currency: "CNY", country: "China" },
+  { currency: "INR", country: "India" },
+  { currency: "SGD", country: "Singapore" },
+  { currency: "HKD", country: "Hong Kong" },
+  { currency: "SEK", country: "Sweden" },
+  { currency: "NOK", country: "Norway" },
+  { currency: "DKK", country: "Denmark" },
+  { currency: "NZD", country: "New Zealand" },
+  { currency: "KRW", country: "South Korea" },
+  { currency: "TRY", country: "Turkey" },
+  { currency: "RUB", country: "Russia" },
+  { currency: "BRL", country: "Brazil" },
+  { currency: "MXN", country: "Mexico" }
+];

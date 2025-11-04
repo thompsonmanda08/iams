@@ -41,7 +41,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
 
   const [
     templatesResponse,
-    // auditableAreasResponse,
+    auditableAreasResponse,
     // indicativeTargetsResponse,
     // pillarsResponse,
     // initiativesResponse,
@@ -51,7 +51,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     // processActivitiesResponse,
   ] = await Promise.all([
     getWorkingPaperTemplates(),
-    // getAuditableAreas(),
+    getAuditableAreas(),
     // getIndicativeTargets(),
     // getStrategicPillars(),
     // getStrategicInitiatives(),
@@ -67,7 +67,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
 
   const departments = departmentsResponse.success ? departmentsResponse.data?.data || [] : [];
 
-  // const areas = auditableAreasResponse.success ? auditableAreasResponse.data?.data || [] : [];
+  const areas = auditableAreasResponse.success ? auditableAreasResponse.data?.data || [] : [];
 
   const towns = townsResponse.success ? townsResponse.data?.data || [] : [];
   const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
@@ -87,7 +87,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
   //   ? indicativeTargetsResponse.data?.data
   //   : [];
 
-  // console.log("WP templates:", initiatives);
+  console.log("WP templates:", areas);
 
   return (
     <div className="">
@@ -154,7 +154,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           </TabsContent>
 
           {/* Auditable Areas Tab */}
-          {/* <TabsContent value="areas">
+          <TabsContent value="areas">
             <Suspense fallback={<TableLoading />}>
               <AuditableAreaConfig
                 areas={areas}
@@ -162,7 +162,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
                 pagination={townsPagination}
               />
             </Suspense>
-          </TabsContent> */}
+          </TabsContent>
 
           {/* Indicative Targets Tab */}
           {/* <TabsContent value="targets">

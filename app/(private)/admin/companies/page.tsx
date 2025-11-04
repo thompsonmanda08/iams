@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MultiStepCompanyForm } from "@/components/forms/multi-step-company-form";
 // import { getOrganizations } from "@/app/_actions/backoffice-actions";
 
 function CompaniesSkeleton() {
@@ -38,10 +39,11 @@ async function CompaniesPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
-              title="Dashboard Overview"
-              description="A summary of key metrics and statistics for your dashboard."
+              title="Companies, Institutions & Organizations"
+              description="All Institutions and Organizations onboarded in the IAMS system"
               icon="Building2"
             />
+            <MultiStepCompanyForm showTrigger={true} company={null} />
           </div>
         </div>
       </div>

@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Building2, Upload, X, Pencil } from "lucide-react";
+import { Search, Building2, Pencil, View } from "lucide-react";
 import { Company, Country } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
-import { cn, notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,51 +14,20 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getOrganizations,
-  createOrganization,
-  updateOrganization
-} from "@/app/_actions/backoffice-actions";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getOrganizations } from "@/app/_actions/backoffice-actions";
 import { Spinner } from "@/components/ui/spinner";
-import { ACCEPTABLE_FILE_TYPES, SingleFileDropzone } from "@/components/ui/file-dropzone";
-import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { MultiStepCompanyForm } from "@/components/forms/multi-step-company-form";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function Companies({ initialCountries }: { initialCountries?: Country[] }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
-  const [uploading, setUploading] = useState(false);
-
-  const [formData, setFormData] = useState<Omit<Company, "id">>({
-    name: "",
-    email: "",
-    phone: "",
-    status: "active" as "active" | "inactive",
-    logo_url: "",
-    logo: ""
-  });
 
   // Fetch companies
   const { data: companiesResponse, isLoading } = useQuery({
@@ -77,173 +45,6 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
       company.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: createOrganization,
-    onSuccess: (response) => {
-      if (response.success) {
-        queryClient.invalidateQueries({ queryKey: ["organizations"] });
-        notify({
-          title: "Success",
-          description: "Company created successfully.",
-          type: "success"
-        });
-        closeModal();
-      } else {
-        notify({
-          title: "Error",
-          description: response.message || "Failed to create company.",
-          type: "error"
-        });
-      }
-    },
-    onError: (error: any) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to create company.",
-        type: "error"
-      });
-    }
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: updateOrganization,
-    onSuccess: (response) => {
-      if (response.success) {
-        queryClient.invalidateQueries({ queryKey: ["organizations"] });
-        notify({
-          title: "Success",
-          description: "Company updated successfully.",
-          type: "success"
-        });
-        closeModal();
-      } else {
-        notify({
-          title: "Error",
-          description: response.message || "Failed to update company.",
-          type: "error"
-        });
-      }
-    },
-    onError: (error: any) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to update company.",
-        type: "error"
-      });
-    }
-  });
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (editingCompany) {
-      updateMutation.mutate({
-        id: editingCompany.id,
-        ...formData
-      } as unknown as Company);
-    } else {
-      createMutation.mutate(formData as unknown as Company);
-    }
-  }
-
-  async function handleFileUpload(file: File, recordID?: string) {
-    setUploading(true);
-
-    const response = await uploadFile(file, recordID);
-
-    if (response?.success) {
-      notify({
-        type: "success",
-        title: "Logo Uploaded!",
-        description: "Logo File uploaded successfully!"
-      });
-      setFormData((prev) => ({
-        ...prev,
-        logo: response?.data?.file_name,
-        logo_url: response?.data?.file_url,
-        recordID: response?.data?.file_record_id
-      }));
-      setUploading(false);
-
-      return response?.data;
-    }
-
-    notify({
-      title: "Error",
-      type: "error",
-      description: "Failed to upload file."
-    });
-    setUploading(false);
-
-    return {};
-  }
-
-  // async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-
-  //   if (!file.type.startsWith("image/")) {
-  //     notify({
-  //       title: "Invalid File",
-  //       description: "Please upload an image file.",
-  //       type: "error"
-  //     });
-  //     return;
-  //   }
-
-  //   setUploading(true);
-
-  //   // TODO: Implement real file upload to PocketBase or similar
-  //   // For now, simulate file upload delay
-  //   await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  //   // Use a placeholder image service
-  //   const placeholderUrl = `https://placehold.co/100x100/e2e8f0/475569?text=${formData.name
-  //     .substring(0, 2)
-  //     .toUpperCase()}`;
-
-  //   setFormData({ ...formData, logo_url: placeholderUrl });
-
-  //   setUploading(false);
-  // }
-
-  function openModal(company?: Company) {
-    if (company) {
-      setEditingCompany(company);
-      setFormData({
-        name: company.name,
-        email: company.email || "",
-        phone: company.phone || "",
-        status: company.status,
-        logo_url: company.logo_url || ""
-      });
-    } else {
-      setEditingCompany(null);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        status: "active",
-        logo_url: ""
-      });
-    }
-    setShowModal(true);
-  }
-
-  function closeModal() {
-    setShowModal(false);
-    setEditingCompany(null);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      status: "active",
-      logo_url: ""
-    });
-  }
-
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -254,14 +55,6 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-slate-800">Companies</h2>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus size={20} />
-          Add Company
-        </Button>
-      </div>
-
       <Card className="rounded-lg p-6">
         <div className="mb-4">
           <div className="relative">
@@ -288,7 +81,9 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead align="center" className="text-right">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -324,10 +119,26 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
+                        <Link href={`/admin/companies/mapping`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            // onClick={() => {
+                            //   setEditingCompany(company);
+                            //   setShowEditModal(true);
+                            // }}
+                            className="h-8 gap-1.5">
+                            <View className="h-3.5 w-3.5" />
+                            View Mapping
+                          </Button>
+                        </Link>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => openModal(company)}
+                          onClick={() => {
+                            setEditingCompany(company);
+                            setShowEditModal(true);
+                          }}
                           className="h-8 gap-1.5">
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
@@ -342,124 +153,22 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
         </div>
       </Card>
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingCompany ? "Edit Company" : "Add Company"}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="company-name">Company Name</Label>
-              <Input
-                id="company-name"
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Logo</Label>
-              <div className="flex items-center gap-4">
-                <label
-                  className={cn("text-foreground/70 mb-1 pl-1 text-sm font-medium text-nowrap")}>
-                  Logo (Optional)
-                </label>
-                <SingleFileDropzone
-                  showPreview
-                  preview={formData?.logo_url}
-                  value={formData?.logo_url}
-                  isLoading={uploading}
-                  // dropzoneOptions={{
-                  //   accept: { "image/png": [".png"] }
-                  // }}
-                  onChange={async (file) =>
-                    await handleFileUpload(file as File, formData?.recordID)
-                  }
-                />
-                {/* {formData.logo_url && (
-                  <img
-                    src={formData.logo_url}
-                    alt="Logo preview"
-                    className="h-16 w-16 rounded-md border object-contain"
-                  />
-                )}
-                <Button asChild variant="outline" type="button">
-                  <Label className="cursor-pointer">
-                    <Upload size={18} />
-                    <span className="ml-2 text-sm">{uploading ? "Uploading..." : "Upload"}</span>
-                    <Input
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg"
-                      onChange={handleFileUpload}
-                      disabled={uploading}
-                      className="hidden"
-                    />
-                  </Label>
-                </Button> */}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value as "active" | "inactive" })
-                }>
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <DialogFooter className="pt-4">
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  Cancel
-                </Button>
-              </DialogClose>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : editingCompany
-                    ? "Update"
-                    : "Create"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
       {/* Multi-Step Company Creation Form */}
       <MultiStepCompanyForm
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
+        onSuccess={() => {
+          // Invalidate cache and trigger refetch
+          queryClient.invalidateQueries({ queryKey: ["organizations"] });
+          router.refresh();
+        }}
+      />
+
+      {/* Multi-Step Company Edit Form */}
+      <MultiStepCompanyForm
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        company={editingCompany}
         onSuccess={() => {
           // Invalidate cache and trigger refetch
           queryClient.invalidateQueries({ queryKey: ["organizations"] });

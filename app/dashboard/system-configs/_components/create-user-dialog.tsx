@@ -3,7 +3,6 @@
 import { PencilLine, Plus, UserPlus } from "lucide-react";
 
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -21,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { signupSchema, updateUserSchema, type SignupFormValues } from "@/app/schemas/auth";
+import { type SignupFormValues } from "@/app/schemas/auth";
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { Check, Copy, UserCog, X } from "lucide-react";
 import {
@@ -103,12 +102,6 @@ export default function CreateUserForm({
   const isLoading = branchesLoading || departmentsLoading || rolesLoading;
   const isSubmitting = createUserMutation.isPending || updateUserMutation.isPending;
 
-  // Use different schema based on edit mode
-  const validationSchema = useMemo(
-    () => (isEditMode ? updateUserSchema : signupSchema),
-    [isEditMode]
-  );
-
   // Initialize form with user data if in edit mode to prevent flash
   const initialValues = useMemo(() => {
     if (isEditMode && user) {
@@ -142,7 +135,6 @@ export default function CreateUserForm({
   }, [isEditMode, user?.id]);
 
   const form = useForm<any>({
-    resolver: zodResolver(validationSchema),
     defaultValues: initialValues
   });
 
@@ -301,7 +293,14 @@ export default function CreateUserForm({
   const onSubmit = form.handleSubmit(
     async (data) => {
       console.log("Form validation passed, calling processForm with data:", data);
-      await processForm(data);
+
+      // Remove all falsy values from the data object
+      const cleanedData = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => Boolean(value))
+      );
+
+      console.log("Cleaned data:", cleanedData);
+      await processForm(cleanedData as any);
     },
     (errors) => {
       console.error("Form validation failed:", errors);
@@ -664,7 +663,7 @@ export default function CreateUserForm({
             <DialogFooter className="flex justify-end gap-3 border-t p-4">
               <div className="flex w-full items-center justify-between gap-3">
                 {/* Debug info - remove in production */}
-                <div className="text-muted-foreground text-xs">
+                <div className="bg-red-50 p-2 text-xs text-red-500">
                   {Object.keys(form.formState.errors).length > 0 && (
                     <span className="text-destructive">
                       Errors: {Object.keys(form.formState.errors).join(", ")}
@@ -698,7 +697,6 @@ export default function CreateUserForm({
     </Dialog>
   );
 }
-
 // Convenience wrapper component for just showing the button trigger
 export function CreateUserButton({ user_type }: { user_type: UserType }) {
   return <CreateUserForm showTrigger={true} user_type={user_type} user={null} />;

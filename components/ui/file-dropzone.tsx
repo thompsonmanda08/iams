@@ -15,14 +15,12 @@ import { twMerge } from "tailwind-merge";
 import { MAX_FILE_SIZE, staggerContainerItemVariants } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import Loader from "./loader";
-// import { validateInput, FileUploadSchema } from '@/lib/validation';
 
 const variants = {
   base: cn(
     "relative rounded-md flex justify-center items-center flex-col cursor-pointer min-h-[150px] min-w-[200px] border border-dashed border-gray-400 dark:border-gray-300 transition-colors duration-200 ease-in-out"
   ),
-  image:
-    "border-0 p-0 min-h-0 min-w-0 relative shadow-md bg-foreground-200 dark:bg-foreground-900 rounded-md",
+  image: "border-0 p-0 min-h-0 min-w-0 relative  dark:bg-foreground-900 rounded-md",
   active: "border-2",
   disabled:
     "bg-gray-200 border-gray-300 cursor-default pointer-events-none bg-opacity-30 dark:bg-gray-700",
@@ -295,7 +293,7 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
               loadingText="Uploading..."
             />
           ) : showPreview && (imagePreview || acceptedFiles[0] || file) ? (
-            <div className="h-[120px] w-80 rounded-md">
+            <div className="aspect-video max-h-40 w-80">
               <img
                 alt={acceptedFiles[0]?.name || file?.name}
                 className="h-full w-full rounded-md object-contain"
@@ -305,11 +303,11 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
           ) : (isUploaded && file) || acceptedFiles[0] ? (
             // ********************* FILE UPLOAD PREVIEW ******************* //
             <div
-              className={cn("relative flex flex-col items-center gap-4 py-2", {
+              className={cn("relative flex flex-col items-center py-2", {
                 "w-full flex-row items-center justify-between": isLandscape
               })}>
               <DocumentArrowUpIcon
-                className={cn("absolute -z-0 h-24 w-24 text-gray-200", {
+                className={cn("absolute h-24 w-24 text-gray-200", {
                   "m-0 h-8 w-8": isLandscape
                 })}
               />
@@ -335,7 +333,7 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
                   </Button>
                 )} */}
                 {isLandscape && (
-                  <XMarkIcon className="absolute -right-0 aspect-square w-5 rounded-md bg-red-100 p-0.5 text-red-500 hover:text-red-500" />
+                  <XMarkIcon className="absolute right-0 aspect-square w-5 rounded-md bg-red-100 p-0.5 text-red-500 hover:text-red-500" />
                 )}
               </div>
             </div>
@@ -373,8 +371,8 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
                 void onChange?.(undefined);
                 e.stopPropagation();
               }}>
-              <div className="bg-background flex h-5 w-5 items-center justify-center rounded-md border border-solid border-gray-500 transition-all duration-300 hover:h-6 hover:w-6 dark:border-gray-400 dark:bg-black">
-                <XMarkIcon className="text-gray-500 dark:text-gray-400" height={16} width={16} />
+              <div className="flex h-5 w-5 items-center justify-center rounded-md border border-solid border-red-100 bg-red-50 transition-all duration-300 hover:h-6 hover:w-6 dark:border-red-100 dark:bg-red-50/50">
+                <XMarkIcon className="text-red-500" height={16} width={16} />
               </div>
             </div>
           )}
@@ -491,6 +489,9 @@ export const ACCEPTABLE_FILE_TYPES = {
     "image/png": [".png"],
     "image/jpeg": [".jpg", ".jpeg"],
     "image/webp": [".webp"]
+  },
+  png: {
+    "image/png": [".png"]
   },
 
   word: {

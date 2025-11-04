@@ -61,7 +61,7 @@ const INIT_FORM_DATA: AreaFormData = {
 };
 
 export default function AuditableAreaConfig({
-  areas,
+  areas = [],
   pagination,
   departments
 }: {
@@ -159,7 +159,7 @@ export default function AuditableAreaConfig({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.length === 0 ? (
+            {!items || items?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} align="center">
                   <Empty>
@@ -189,7 +189,7 @@ export default function AuditableAreaConfig({
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item) => {
+              items?.map((item) => {
                 const departmentName =
                   item?.department ||
                   departments.find((d) => d.id === item.department_id)?.name ||

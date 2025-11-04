@@ -2,14 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, MapPin, User, Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Building2,
+  MapPin,
+  User,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,11 +33,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { createOrganization } from "@/app/_actions/backoffice-actions";
-import { getCountries, getProvincesByCountry, getTownsByProvince } from "@/app/_actions/backoffice-actions";
 import { SelectField } from "@/components/ui/select-field";
 import { ACCEPTABLE_FILE_TYPES, SingleFileDropzone } from "@/components/ui/file-dropzone";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { Spinner } from "@/components/ui/spinner";
+import { cn, notify } from "@/lib/utils";
+import { useCountries, useProvinces, useTowns } from "@/hooks/use-location-query-data";
 
 type Country = {
   id: string;
@@ -52,9 +62,11 @@ type Town = {
 };
 
 interface MultiStepCompanyFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
+  company?: any; // Company object for edit mode
+  showTrigger?: boolean; // Whether to show the dialog trigger button
 }
 
 type StepOneData = {
@@ -65,6 +77,7 @@ type StepOneData = {
   contact_email: string;
   contact_phone: string;
   logo_url: string;
+  logo_url_id?: string;
 };
 
 type StepTwoData = {
@@ -83,130 +96,113 @@ type StepThreeData = {
   admin_password: string;
 };
 
-export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiStepCompanyFormProps) {
+export function MultiStepCompanyForm({
+  open,
+  onOpenChange,
+  onSuccess,
+  company,
+  showTrigger = false
+}: MultiStepCompanyFormProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
 
-  // Data loaders
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [loadingCountries, setLoadingCountries] = useState(false);
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [loadingProvinces, setLoadingProvinces] = useState(false);
-  const [towns, setTowns] = useState<Town[]>([]);
-  const [loadingTowns, setLoadingTowns] = useState(false);
+  const isEditMode = !!company;
 
-  // Form state
+  // Use internal state for trigger mode, external state for controlled mode
+  const dialogOpen = showTrigger ? internalOpen : open;
+  const setDialogOpen = showTrigger ? setInternalOpen : onOpenChange;
+
+  // Form state - Initialize with company data if in edit mode
   const [stepOneData, setStepOneData] = useState<StepOneData>({
-    name: "",
-    code: "",
-    address: "",
-    description: "",
-    contact_email: "",
-    contact_phone: "",
-    logo_url: ""
+    name: company?.name || "",
+    code: company?.code || "",
+    address: company?.address || "",
+    description: company?.description || "",
+    contact_email: company?.contact_email || "",
+    contact_phone: company?.contact_phone || "",
+    logo_url: company?.logo_url || "",
+    logo_url_id: company?.logo_url_id || ""
   });
 
   const [stepTwoData, setStepTwoData] = useState<StepTwoData>({
-    country_id: "",
-    province_id: "",
-    town_id: ""
+    country_id: company?.country_id || "",
+    province_id: company?.province_id || "",
+    town_id: company?.town_id || ""
   });
 
+  // TanStack Query hooks for location data
+  const { data: countriesResponse, isLoading: loadingCountries } = useCountries(dialogOpen);
+  const { data: provincesResponse, isLoading: loadingProvinces } = useProvinces(
+    stepTwoData.country_id
+  );
+  const { data: townsResponse, isLoading: loadingTowns } = useTowns(stepTwoData.province_id);
+
+  // Extract data from responses
+  const countries =
+    countriesResponse?.success && countriesResponse.data
+      ? countriesResponse.data.filter((c: Country) => c.is_active)
+      : [];
+  const provinces =
+    provincesResponse?.success && provincesResponse.data
+      ? provincesResponse.data.filter((p: Province) => p.is_active)
+      : [];
+  const towns =
+    townsResponse?.success && townsResponse.data
+      ? townsResponse.data.filter((t: Town) => t.is_active)
+      : [];
+
   const [stepThreeData, setStepThreeData] = useState<StepThreeData>({
-    subscription_tier: "basic",
-    max_users: 50,
-    admin_username: "",
-    admin_email: "",
-    admin_first_name: "",
-    admin_last_name: "",
+    subscription_tier: company?.subscription_tier || "basic",
+    max_users: company?.max_users || 50,
+    admin_username: company?.admin_username || "",
+    admin_email: company?.admin_email || "",
+    admin_first_name: company?.admin_first_name || "",
+    admin_last_name: company?.admin_last_name || "",
     admin_password: ""
   });
 
-  // Load countries when dialog opens
-  useEffect(() => {
-    if (open) {
-      loadCountries();
-    }
-  }, [open]);
-
-  // Load provinces when country changes
-  useEffect(() => {
-    if (stepTwoData.country_id) {
-      loadProvinces(stepTwoData.country_id);
-      // Reset province and town when country changes
-      setStepTwoData((prev) => ({ ...prev, province_id: "", town_id: "" }));
-      setTowns([]);
-    }
-  }, [stepTwoData.country_id]);
-
-  // Load towns when province changes
-  useEffect(() => {
-    if (stepTwoData.province_id) {
-      loadTowns(stepTwoData.province_id);
-      // Reset town when province changes
-      setStepTwoData((prev) => ({ ...prev, town_id: "" }));
-    }
-  }, [stepTwoData.province_id]);
-
   // Reset form when dialog closes
   useEffect(() => {
-    if (!open) {
+    if (!dialogOpen) {
       setCurrentStep(1);
-      resetForm();
-    }
-  }, [open]);
-
-  const loadCountries = async () => {
-    setLoadingCountries(true);
-    try {
-      const response = await getCountries();
-      if (response.success && response.data) {
-        setCountries(response.data.filter((c: Country) => c.is_active));
-      } else {
-        toast.error("Failed to load countries");
+      if (!isEditMode) {
+        resetForm();
       }
-    } catch (error) {
-      toast.error("Error loading countries");
-    } finally {
-      setLoadingCountries(false);
     }
-  };
+  }, [dialogOpen, isEditMode]);
 
-  const loadProvinces = async (countryId: string) => {
-    setLoadingProvinces(true);
-    try {
-      const response = await getProvincesByCountry(countryId);
-      if (response.success && response.data) {
-        setProvinces(response.data.filter((p: Province) => p.is_active));
-      } else {
-        setProvinces([]);
-      }
-    } catch (error) {
-      toast.error("Error loading provinces");
-      setProvinces([]);
-    } finally {
-      setLoadingProvinces(false);
+  // Update form when company prop changes (for edit mode)
+  useEffect(() => {
+    if (company) {
+      setStepOneData({
+        name: company.name || "",
+        code: company.code || "",
+        address: company.address || "",
+        description: company.description || "",
+        contact_email: company.contact_email || "",
+        contact_phone: company.contact_phone || "",
+        logo_url: company.logo_url || "",
+        logo_url_id: company.logo_url_id || ""
+      });
+      setStepTwoData({
+        country_id: company.country_id || "",
+        province_id: company.province_id || "",
+        town_id: company.town_id || ""
+      });
+      setStepThreeData({
+        subscription_tier: company.subscription_tier || "basic",
+        max_users: company.max_users || 50,
+        admin_username: company.admin_username || "",
+        admin_email: company.admin_email || "",
+        admin_first_name: company.admin_first_name || "",
+        admin_last_name: company.admin_last_name || "",
+        admin_password: ""
+      });
     }
-  };
-
-  const loadTowns = async (provinceId: string) => {
-    setLoadingTowns(true);
-    try {
-      const response = await getTownsByProvince(provinceId);
-      if (response.success && response.data) {
-        setTowns(response.data.filter((t: Town) => t.is_active));
-      } else {
-        setTowns([]);
-      }
-    } catch (error) {
-      toast.error("Error loading towns");
-      setTowns([]);
-    } finally {
-      setLoadingTowns(false);
-    }
-  };
+  }, [company]);
 
   const resetForm = () => {
     setStepOneData({
@@ -216,7 +212,8 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
       description: "",
       contact_email: "",
       contact_phone: "",
-      logo_url: ""
+      logo_url: "/images/logo-placeholder.png",
+      logo_url_id: ""
     });
     setStepTwoData({
       country_id: "",
@@ -232,28 +229,6 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
       admin_last_name: "",
       admin_password: ""
     });
-    setProvinces([]);
-    setTowns([]);
-  };
-
-  const handleFileUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const response = await uploadFile(file);
-      if (response?.success) {
-        toast.success("Logo uploaded successfully");
-        setStepOneData((prev) => ({
-          ...prev,
-          logo_url: response.data.file_url
-        }));
-      } else {
-        toast.error("Failed to upload logo");
-      }
-    } catch (error) {
-      toast.error("Error uploading logo");
-    } finally {
-      setUploading(false);
-    }
   };
 
   const validateStepOne = (): boolean => {
@@ -338,6 +313,11 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
     }
   };
 
+  const handleCloseModal = () => {
+    resetForm();
+    setDialogOpen?.(false);
+  };
+
   const handleSubmit = async () => {
     if (!validateStepThree()) {
       return;
@@ -345,20 +325,26 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
 
     setIsLoading(true);
     try {
-      const payload = {
+      const payload: any = {
         ...stepOneData,
         ...stepTwoData,
         ...stepThreeData
       };
 
-      const response = await createOrganization(payload as any);
+      // If in edit mode, include company ID
+      if (isEditMode && company?.id) {
+        payload.id = company.id;
+      }
+
+      const response = await createOrganization(payload);
 
       if (response.success) {
-        toast.success("Company created successfully!");
-        onSuccess(); // This will invalidate cache and trigger refetch
-        onOpenChange(false); // Close dialog
+        toast.success(`Company ${isEditMode ? "updated" : "created"} successfully!`);
+        onSuccess?.(); // This will invalidate cache and trigger refetch
+        handleCloseModal(); // Close dialog
+        router.refresh();
       } else {
-        toast.error(response.message || "Failed to create company");
+        toast.error(response.message || `Failed to ${isEditMode ? "update" : "create"} company`);
       }
     } catch (error: any) {
       toast.error(error.message || "An unexpected error occurred");
@@ -368,13 +354,14 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
   };
 
   const getStepTitle = () => {
+    const prefix = isEditMode ? "Edit" : "Create";
     switch (currentStep) {
       case 1:
-        return "Company Information";
+        return `${prefix} Company Information`;
       case 2:
         return "Location Details";
       case 3:
-        return "Admin User Setup";
+        return isEditMode ? "Update Settings" : "Admin User Setup";
       default:
         return "";
     }
@@ -383,11 +370,15 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
   const getStepDescription = () => {
     switch (currentStep) {
       case 1:
-        return "Enter basic company information and contact details";
+        return isEditMode
+          ? "Update company information and contact details"
+          : "Enter basic company information and contact details";
       case 2:
         return "Select the company's location (country, province, town)";
       case 3:
-        return "Create admin user and configure subscription settings";
+        return isEditMode
+          ? "Update subscription settings"
+          : "Create admin user and configure subscription settings";
       default:
         return "";
     }
@@ -406,9 +397,80 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
     }
   };
 
+  async function handleFileUpload(file: File, recordID?: string) {
+    setUploading(true);
+
+    try {
+      const response = await uploadFile(file, recordID);
+
+      if (response?.success) {
+        notify({
+          type: "success",
+          description: "Logo File uploaded successfully!"
+        });
+        setStepOneData((prev) => ({
+          ...prev,
+          logo: response?.data?.file_name,
+          logo_url: response?.data?.file_url,
+          logo_url_id: response?.data?.file_record_id
+        }));
+
+        return response?.data;
+      } else {
+        notify({
+          type: "error",
+          description: response?.message || "Failed to upload file."
+        });
+        return {};
+      }
+    } catch (error) {
+      notify({
+        type: "error",
+        description: "An error occurred while uploading the file."
+      });
+      return {};
+    } finally {
+      // Always reset loading state
+      setUploading(false);
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={dialogOpen}
+      onOpenChange={(open) => {
+        if (showTrigger) {
+          // In trigger mode, manage internal state
+          if (open) {
+            setInternalOpen(true);
+          } else {
+            handleCloseModal();
+          }
+        } else {
+          // In controlled mode, just handle close
+          if (!open) {
+            handleCloseModal();
+          }
+        }
+      }}>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm">
+            {isEditMode ? (
+              <>
+                <Building2 className="mr-2 h-4 w-4" /> Edit Company
+              </>
+            ) : (
+              <>
+                <Building2 className="mr-2 h-4 w-4" />
+                Create Company
+              </>
+            )}
+          </Button>
+        </DialogTrigger>
+      )}
+
+      <DialogContent className="max-h-[90vh] max-w-xl! overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
             {getStepIcon()}
@@ -417,130 +479,157 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
           <DialogDescription>{getStepDescription()}</DialogDescription>
         </DialogHeader>
 
-        {/* Progress Indicator */}
-        <div className="flex items-center justify-center gap-2 py-4">
-          {[1, 2, 3].map((step) => (
-            <div
-              key={step}
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                step === currentStep
-                  ? "bg-primary text-primary-foreground"
-                  : step < currentStep
-                  ? "bg-primary/20 text-primary"
-                  : "bg-muted text-muted-foreground"
-              }`}>
-              {step}
-            </div>
-          ))}
+        {/* Progress Steps */}
+        <div className="mb-4">
+          <div className="relative flex items-start justify-between">
+            {[
+              { id: 1, name: "Company Info", icon: Building2 },
+              { id: 2, name: "Location", icon: MapPin },
+              { id: 3, name: "Admin Setup", icon: User }
+            ].map((step, index) => {
+              const Icon = step.icon;
+              const isActive = currentStep === step.id;
+              const isCompleted = currentStep > step.id;
+
+              return (
+                <div key={step.id} className="relative z-10 flex flex-1 flex-col items-center">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${isActive ? "border-primary bg-primary text-primary-foreground" : ""} ${isCompleted ? "border-primary bg-primary text-primary-foreground" : ""} ${!isActive && !isCompleted ? "border-muted bg-background text-muted-foreground" : ""} `}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : (
+                      <Icon className="h-5 w-5" />
+                    )}
+                  </div>
+                  <span
+                    className={`mt-2 text-sm font-medium text-nowrap ${isActive ? "text-foreground" : "text-muted-foreground"} `}>
+                    {step.name}
+                  </span>
+                  {index < 2 && (
+                    <div
+                      className={`absolute top-5 left-[calc(50%+1.25rem)] -z-10 h-0.5 w-[calc(100%-1.25rem)] transition-colors ${isCompleted ? "bg-primary" : "bg-muted"} `}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Step 1: Company Information */}
         {currentStep === 1 && (
           <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  Company Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  placeholder="e.g. Acme Corporation"
-                  value={stepOneData.name}
-                  onChange={(e) =>
-                    setStepOneData((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="code">
-                  Company Code <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="code"
-                  placeholder="e.g. ACME_CORP"
-                  value={stepOneData.code}
-                  onChange={(e) =>
-                    setStepOneData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
-                  }
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Brief description of the company..."
-                value={stepOneData.description}
+            <div className="grid gap-2 md:grid-cols-2">
+              <Input
+                id="name"
+                label="  Company Name"
+                placeholder="e.g. Acme Corporation"
+                value={stepOneData.name}
+                onChange={(e) => setStepOneData((prev) => ({ ...prev, name: e.target.value }))}
+                required
+              />
+              <Input
+                id="code"
+                label="Company Code"
+                placeholder="e.g. ACME_CORP"
+                value={stepOneData.code}
                 onChange={(e) =>
-                  setStepOneData((prev) => ({ ...prev, description: e.target.value }))
+                  setStepOneData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
                 }
-                rows={3}
+                required
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Physical Address</Label>
-              <Textarea
-                id="address"
-                placeholder="e.g. 123 Business St, Suite 100"
-                value={stepOneData.address}
+            <Textarea
+              id="description"
+              label="Description"
+              placeholder="Brief description of the company..."
+              value={stepOneData.description}
+              onChange={(e) => setStepOneData((prev) => ({ ...prev, description: e.target.value }))}
+              rows={3}
+            />
+
+            <Textarea
+              id="address"
+              label="Physical Address"
+              placeholder="e.g. 123 Business St, Suite 100"
+              value={stepOneData.address}
+              onChange={(e) => setStepOneData((prev) => ({ ...prev, address: e.target.value }))}
+            />
+
+            <div className="grid gap-2 md:grid-cols-2">
+              <Input
+                id="contact_email"
+                type="email"
+                autoComplete="email"
+                label="Company email"
+                placeholder="contact@company.com"
+                value={stepOneData.contact_email}
                 onChange={(e) =>
-                  setStepOneData((prev) => ({ ...prev, address: e.target.value }))
+                  setStepOneData((prev) => ({ ...prev, contact_email: e.target.value }))
                 }
-                rows={2}
+                required
+              />
+              <Input
+                id="contact_phone"
+                type="tel"
+                autoComplete="tel"
+                label="Contact Phone"
+                placeholder="+1-555-1234"
+                value={stepOneData.contact_phone}
+                onChange={(e) =>
+                  setStepOneData((prev) => ({ ...prev, contact_phone: e.target.value }))
+                }
+                required
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="contact_email">
-                  Contact Email <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="contact_email"
-                  type="email"
-                  placeholder="contact@company.com"
-                  value={stepOneData.contact_email}
-                  onChange={(e) =>
-                    setStepOneData((prev) => ({ ...prev, contact_email: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact_phone">
-                  Contact Phone <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="contact_phone"
-                  type="tel"
-                  placeholder="+1-555-1234"
-                  value={stepOneData.contact_phone}
-                  onChange={(e) =>
-                    setStepOneData((prev) => ({ ...prev, contact_phone: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Company Logo (Optional)</Label>
+            <div className="flex w-full flex-col">
+              <label className={cn("text-foreground/90 mb-1 pl-1 text-sm font-medium text-nowrap")}>
+                Logo (Optional)
+              </label>
               <SingleFileDropzone
-                value={stepOneData.logo_url ? { preview: stepOneData.logo_url } as File : undefined}
-                onChange={handleFileUpload}
-                disabled={uploading}
-                acceptedFileTypes={ACCEPTABLE_FILE_TYPES.IMAGES}
+                className={"w-full"}
+                showPreview
+                preview={stepOneData?.logo_url || undefined}
+                value={stepOneData?.logo_url || undefined}
+                isLoading={uploading}
+                dropzoneOptions={{
+                  accept: ACCEPTABLE_FILE_TYPES.png
+                }}
+                onChange={async (file) => {
+                  if (file) {
+                    await handleFileUpload(file as File, stepOneData?.logo_url_id);
+                  } else {
+                    // Clear the logo when X is clicked
+                    setStepOneData((prev) => ({
+                      ...prev,
+                      logo_url: "",
+                      logo_url_id: ""
+                    }));
+                  }
+                }}
               />
-              {uploading && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Spinner className="h-4 w-4" />
-                  <span>Uploading logo...</span>
-                </div>
-              )}
+              {/* {formData.logo_url && (
+                  <img
+                    src={formData.logo_url}
+                    alt="Logo preview"
+                    className="h-16 w-16 rounded-md border object-contain"
+                  />
+                )}
+                <Button asChild variant="outline" type="button">
+                  <Label className="cursor-pointer">
+                    <Upload size={18} />
+                    <span className="ml-2 text-sm">{uploading ? "Uploading..." : "Upload"}</span>
+                    <Input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                  </Label>
+                </Button> */}
             </div>
           </div>
         )}
@@ -553,9 +642,8 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
               placeholder={loadingCountries ? "Loading countries..." : "Select a country"}
               options={countries.map((c) => ({ id: c.id, name: c.name }))}
               value={stepTwoData.country_id}
-              onValueChange={(value) =>
-                setStepTwoData((prev) => ({ ...prev, country_id: value }))
-              }
+              className="w-full"
+              onValueChange={(value) => setStepTwoData((prev) => ({ ...prev, country_id: value }))}
               disabled={loadingCountries}
               required
             />
@@ -566,14 +654,13 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
                 loadingProvinces
                   ? "Loading provinces..."
                   : stepTwoData.country_id
-                  ? "Select a province"
-                  : "Select country first"
+                    ? "Select a province"
+                    : "Select country first"
               }
+              className="w-full"
               options={provinces.map((p) => ({ id: p.id, name: p.name }))}
               value={stepTwoData.province_id}
-              onValueChange={(value) =>
-                setStepTwoData((prev) => ({ ...prev, province_id: value }))
-              }
+              onValueChange={(value) => setStepTwoData((prev) => ({ ...prev, province_id: value }))}
               disabled={!stepTwoData.country_id || loadingProvinces}
               required
             />
@@ -584,14 +671,13 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
                 loadingTowns
                   ? "Loading towns..."
                   : stepTwoData.province_id
-                  ? "Select a town"
-                  : "Select province first"
+                    ? "Select a town"
+                    : "Select province first"
               }
+              className="w-full"
               options={towns.map((t) => ({ id: t.id, name: t.name }))}
               value={stepTwoData.town_id}
-              onValueChange={(value) =>
-                setStepTwoData((prev) => ({ ...prev, town_id: value }))
-              }
+              onValueChange={(value) => setStepTwoData((prev) => ({ ...prev, town_id: value }))}
               disabled={!stepTwoData.province_id || loadingTowns}
               required
             />
@@ -601,8 +687,8 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
         {/* Step 3: Admin User Setup */}
         {currentStep === 3 && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-muted/50 p-4">
-              <h4 className="mb-2 font-medium flex items-center gap-2">
+            <div className="border-border bg-muted/50 rounded-lg border p-4">
+              <h4 className="mb-2 flex items-center gap-2 font-medium">
                 <Shield className="h-4 w-4" />
                 Subscription Settings
               </h4>
@@ -642,100 +728,102 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-muted/50 p-4">
-              <h4 className="mb-2 font-medium flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Administrator Account
-              </h4>
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
+            {!isEditMode && (
+              <div className="border-border bg-muted/50 rounded-lg border p-4">
+                <h4 className="mb-2 flex items-center gap-2 font-medium">
+                  <User className="h-4 w-4" />
+                  Administrator Account
+                </h4>
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="admin_first_name">
+                        First Name <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="admin_first_name"
+                        placeholder="John"
+                        value={stepThreeData.admin_first_name}
+                        onChange={(e) =>
+                          setStepThreeData((prev) => ({
+                            ...prev,
+                            admin_first_name: e.target.value
+                          }))
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="admin_last_name">
+                        Last Name <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="admin_last_name"
+                        placeholder="Doe"
+                        value={stepThreeData.admin_last_name}
+                        onChange={(e) =>
+                          setStepThreeData((prev) => ({
+                            ...prev,
+                            admin_last_name: e.target.value
+                          }))
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="admin_first_name">
-                      First Name <span className="text-destructive">*</span>
+                    <Label htmlFor="admin_username">
+                      Username <span className="text-destructive">*</span>
                     </Label>
                     <Input
-                      id="admin_first_name"
-                      placeholder="John"
-                      value={stepThreeData.admin_first_name}
+                      id="admin_username"
+                      placeholder="admin.user"
+                      value={stepThreeData.admin_username}
                       onChange={(e) =>
-                        setStepThreeData((prev) => ({
-                          ...prev,
-                          admin_first_name: e.target.value
-                        }))
+                        setStepThreeData((prev) => ({ ...prev, admin_username: e.target.value }))
                       }
                       required
                     />
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="admin_last_name">
-                      Last Name <span className="text-destructive">*</span>
+                    <Label htmlFor="admin_email">
+                      Email <span className="text-destructive">*</span>
                     </Label>
                     <Input
-                      id="admin_last_name"
-                      placeholder="Doe"
-                      value={stepThreeData.admin_last_name}
+                      id="admin_email"
+                      type="email"
+                      placeholder="admin@company.com"
+                      value={stepThreeData.admin_email}
                       onChange={(e) =>
-                        setStepThreeData((prev) => ({
-                          ...prev,
-                          admin_last_name: e.target.value
-                        }))
+                        setStepThreeData((prev) => ({ ...prev, admin_email: e.target.value }))
                       }
                       required
                     />
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="admin_username">
-                    Username <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="admin_username"
-                    placeholder="admin.user"
-                    value={stepThreeData.admin_username}
-                    onChange={(e) =>
-                      setStepThreeData((prev) => ({ ...prev, admin_username: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="admin_email">
-                    Email <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="admin_email"
-                    type="email"
-                    placeholder="admin@company.com"
-                    value={stepThreeData.admin_email}
-                    onChange={(e) =>
-                      setStepThreeData((prev) => ({ ...prev, admin_email: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="admin_password">
-                    Password <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="admin_password"
-                    type="password"
-                    placeholder="Minimum 8 characters"
-                    value={stepThreeData.admin_password}
-                    onChange={(e) =>
-                      setStepThreeData((prev) => ({ ...prev, admin_password: e.target.value }))
-                    }
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Password must be at least 8 characters long
-                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin_password">
+                      Password <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="admin_password"
+                      type="password"
+                      placeholder="Minimum 8 characters"
+                      value={stepThreeData.admin_password}
+                      onChange={(e) =>
+                        setStepThreeData((prev) => ({ ...prev, admin_password: e.target.value }))
+                      }
+                      required
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Password must be at least 8 characters long
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -749,11 +837,7 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
             )}
           </div>
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}>
+            <Button type="button" variant="outline" onClick={handleCloseModal} disabled={isLoading}>
               Cancel
             </Button>
             {currentStep < 3 ? (
@@ -767,8 +851,8 @@ export function MultiStepCompanyForm({ open, onOpenChange, onSuccess }: MultiSte
                 onClick={handleSubmit}
                 disabled={isLoading}
                 isLoading={isLoading}
-                loadingText="Creating Company...">
-                Create Company
+                loadingText={isEditMode ? "Updating Company..." : "Creating Company..."}>
+                {isEditMode ? "Update Company" : "Create Company"}
               </Button>
             )}
           </div>
