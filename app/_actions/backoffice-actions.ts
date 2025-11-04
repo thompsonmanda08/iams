@@ -208,8 +208,7 @@ export async function createOrganization(data: Company): Promise<APIResponse> {
 export async function updateOrganization(data: Company): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/backoffice/organizations/update/`,
-      // url: `/api/v1/backoffice/organizations/update/${data.id}`,
+      url: `/api/v1/backoffice/organizations/${data.id}`,
       method: "PUT",
       data
     });
