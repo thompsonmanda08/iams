@@ -758,7 +758,7 @@ export async function getRisk(id: string): Promise<APIResponse> {
       url: `/api/v1/risks/${id}`,
       method: "GET"
     });
-    return successResponse(response.data.data);
+    return successResponse(response.data);
   } catch (error) {
     return handleError(error, "GET | GET RISK", `/api/v1/risks/${id}`);
   }

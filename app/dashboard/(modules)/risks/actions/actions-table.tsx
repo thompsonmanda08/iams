@@ -210,7 +210,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {actions.length === 0 ? (
+              {!actions?.length ? (
                 <TableRow>
                   <TableCell colSpan={9} className="py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -345,7 +345,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               )}
             </TableBody>
           </Table>
-          {actions.length > 0 && (
+          {actions?.length > 0 && (
             <CustomPagination
               pagination={customPaginationData}
               updatePagination={updatePagination}
