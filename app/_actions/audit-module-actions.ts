@@ -911,6 +911,7 @@ export async function createWorkingPaperTemplate(data: {
     });
 
     revalidatePath("/dashboard/audit/templates");
+    revalidatePath("/dashboard/system-configs/audit-settings");
 
     return successResponse(response.data, "Working paper template created successfully");
   } catch (error: any) {

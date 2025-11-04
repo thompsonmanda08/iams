@@ -27,7 +27,7 @@ import { SelectField } from "@/components/ui/select-field";
 
 const INIT_WORKPAPER_TEMPLATE: Omit<WorkpaperTemplate, "id"> = {
   name: "",
-  standard: "",
+  standard: "ISO",
   description: "",
   version: "",
   is_active: true
@@ -174,7 +174,7 @@ export function CreateOrUpdateISOTemplateDialog({
             </div>
 
             <SelectField
-              label="Workpaper Template"
+              label="Management Standard"
               placeholder="Select template standard"
               className="w-full max-w-none"
               classNames={{
@@ -182,7 +182,7 @@ export function CreateOrUpdateISOTemplateDialog({
               }}
               value={formData.standard}
               onValueChange={(value) => setFormData({ ...formData, standard: value })}
-              options={[{ id: "ISO27001", name: "ISO 27001 ISMS Audit" }]}
+              options={[{ id: "ISO", name: "ISO 27001" }]}
               required
             />
 
