@@ -343,11 +343,8 @@ export default function RisksTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={(e) => {
-                          // router.push(
-                          //   `/dashboard/risks/risk-registers/${registerId}/risks/${risk.id}`
-                          // );
-                          e.stopPropagation();
+                        onClick={() => {
+                          router.push(`/dashboard/risks/actions/${risk.id}`);
                         }}
                         className="h-8 gap-1.5">
                         <View className="h-3.5 w-3.5" />
