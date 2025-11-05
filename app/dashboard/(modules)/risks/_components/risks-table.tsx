@@ -211,7 +211,7 @@ export default function RisksTable({
   };
 
   return (
-    <>
+    <div className="px-4">
       <Card className="container mx-auto mb-8 px-4 py-8">
         <div className="flex flex-col gap-4 md:flex-row">
           <Search
@@ -419,6 +419,6 @@ export default function RisksTable({
         isLoading={isDeleting}
         type="delete"
       />
-    </>
+    </div>
   );
 }
