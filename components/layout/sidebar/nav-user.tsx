@@ -26,8 +26,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
 
-  const fullName = `${user?.first_name || "No"} ${user?.last_name || "Session"}`;
-  const userEmail = user?.email || "example@mail.com";
+  const fullName = `${user?.first_name} ${user?.last_name}`;
+  const userEmail = user?.email;
 
   const handleUserLogOut = async () => {
     // Clear session initialization flag
@@ -41,7 +41,7 @@ export function NavUser({ user }: { user: User }) {
   };
 
   // LOADING STATE
-  return user == null ? (
+  return user == null || Object.keys(user).length <= 0 ? (
     <>
       <Skeleton className="h-10 w-full rounded-lg" />
     </>

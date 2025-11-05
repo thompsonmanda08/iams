@@ -17,7 +17,7 @@ import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UserMenu({ user }: { user: User }) {
-  const fullName = `${user?.first_name || "User"} ${user?.last_name || ""}`;
+  const fullName = `${user?.first_name} ${user?.last_name}`;
   const userEmail = user?.email || "user@mail.com";
 
   const handleUserLogOut = async () => {
@@ -35,7 +35,7 @@ export default function UserMenu({ user }: { user: User }) {
     console.error("Logout failed:", response.message);
   };
 
-  return !user || Object.keys(user || {}).length < 0 ? (
+  return !user || Object.keys(user).length <= 0 ? (
     <>
       <Skeleton className="h-10 w-10 rounded-lg" />
     </>
