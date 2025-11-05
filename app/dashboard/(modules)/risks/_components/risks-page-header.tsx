@@ -18,7 +18,7 @@ export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderPro
   return (
     <>
       <div className="bg-card border-b">
-        <div className="container mx-auto py-6 flex items-center justify-between">
+        <div className="container mx-auto py-6 flex items-center justify-between px-4">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => router.back()}>

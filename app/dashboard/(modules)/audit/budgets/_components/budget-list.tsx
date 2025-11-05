@@ -208,8 +208,8 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                 {formatCurrency(totalAmount, budgets[0]?.currency || "ZMW")}
               </p>
             </div>
-            <div className="bg-accent/10 rounded-xl p-3">
-              <DollarSign className="text-accent h-8 w-8" />
+            <div className="bg-primary/10 rounded-xl p-3">
+              <DollarSign className="text-primary h-8 w-8" />
             </div>
           </div>
         </Card>
@@ -220,8 +220,8 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
               <p className="text-muted-foreground mb-1 text-sm font-medium">Approved</p>
               <p className="text-foreground text-3xl font-bold">{approvedBudgets}</p>
             </div>
-            <div className="bg-success/10 rounded-xl p-3">
-              <TrendingUp className="text-success h-8 w-8" />
+            <div className="bg-primary/10 rounded-xl p-3">
+              <TrendingUp className="text-primary h-8 w-8" />
             </div>
           </div>
         </Card>
