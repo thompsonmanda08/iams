@@ -350,9 +350,7 @@ function EditUserRoleDialog({
             <Button
               type="submit"
               disabled={
-                updateRoleMutation.isPending ||
-                !selectedRoleId ||
-                selectedRoleId === user?.role?.id
+                updateRoleMutation.isPending || !selectedRoleId || selectedRoleId === user?.role?.id
               }
               isLoading={updateRoleMutation.isPending}>
               Update Role
@@ -522,7 +520,20 @@ export function CreateOrUpdateDepartment({
               setFormData((c) => ({ ...c, name: e.target.value }));
             }}
             required
-            descriptionText="A unique code will be automatically generated from the name"
+            // descriptionText="A unique code will be automatically generated from the name"
+          />
+          <Input
+            label="Code"
+            placeholder="e.g., HR, ICT, IT, "
+            value={formData.code}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, code: e.target.value }));
+            }}
+            max={20}
+            maxLength={20}
+            required
+            // descriptionText="A unique code will be automatically generated from the name"
           />
           <Textarea
             label="Description"

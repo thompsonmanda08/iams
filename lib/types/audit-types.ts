@@ -788,6 +788,29 @@ export interface AuditUniverse {
 }
 
 /**
+ * API Payload Types for Audit Universe
+ */
+export interface CreateUniversePayload {
+  universe_name: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+}
+
+export interface CreateUniverseItemPayload {
+  audit_universe_id: number;
+  department_id: string;
+  strategic_pillar_id?: string | null;
+  auditable_area_id?: string | null;
+  indicative_target_id?: string | null;
+  strategic_initiative_id?: string | null;
+  risk_id?: string | null;
+  process_activity: string;
+  audit_frequency: string;
+  is_active: boolean;
+}
+
+/**
  * Complete analytics data
  */
 export interface AuditAnalytics {
