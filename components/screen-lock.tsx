@@ -27,12 +27,19 @@ function ScreenLock({ open, onStillHere }: ScreenLockProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [seconds, setSeconds] = useState(DEFAULT_TIMEOUT / 1000); // REMAINING SECONDS
   const hasLoggedOutRef = useRef(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reset countdown when dialog opens
+  // Reset countdown when dialog opens or closes
   useEffect(() => {
     if (open) {
       setSeconds(DEFAULT_TIMEOUT / 1000);
       hasLoggedOutRef.current = false;
+    } else {
+      // Clear interval when dialog closes
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
   }, [open]);
 
@@ -68,29 +75,42 @@ function ScreenLock({ open, onStillHere }: ScreenLockProps) {
         signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!res.ok) {
         throw new Error("Network response was not ok");
       }
 
       const response = await res.json();
 
-      if (response?.redirect) {
-        window.location.href = response.redirect;
-      }
+      // Force a hard redirect to ensure clean state
+      window.location.replace(response?.redirect || "/login");
     } catch (error) {
-      console.error("Logout error:", error);
-      // Force redirect even on error
-      window.location.href = "/login";
-    } finally {
       clearTimeout(timeoutId);
+      console.error("Logout error:", error);
+      // Force redirect even on error using replace to avoid back button issues
+      window.location.replace("/login");
+    } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Clear any existing interval when dialog closes
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
 
-    const interval = setInterval(() => {
+    // Clear any existing interval before starting a new one
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
       setSeconds((prevSeconds) => {
         const newSeconds = prevSeconds - 1;
 
@@ -98,7 +118,10 @@ function ScreenLock({ open, onStillHere }: ScreenLockProps) {
 
         // Trigger logout when reaching 0
         if (newSeconds <= 0) {
-          clearInterval(interval);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
           handleUserLogOut();
           return 0;
         }
@@ -108,7 +131,10 @@ function ScreenLock({ open, onStillHere }: ScreenLockProps) {
     }, 1000);
 
     return () => {
-      clearInterval(interval);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, [open, handleUserLogOut]);
 
@@ -201,14 +227,18 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
   // Callback to handle "I'm still here" button click
   const handleStillHere = useCallback(async () => {
+    // First reset local idle state to close the dialog immediately
+    setState("Active");
+
     // Update server session to unlock screen
     const success = await lockScreenOnUserIdle(false);
 
     if (success) {
-      // Reset local idle state
-      setState("Active");
       // Reset the idle timer to restart the countdown
       idleTimer.reset();
+    } else {
+      // If unlock fails, revert to idle state
+      setState("Idle");
     }
   }, [idleTimer]);
 

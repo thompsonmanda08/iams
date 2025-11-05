@@ -32,7 +32,7 @@ export default async function DashLayout({
   //   path: "/dashboard/*"
   // });
 
-  if (!isAuthenticated) return redirect("/login");
+  // if (!isAuthenticated) return redirect("/login");
 
   if (user_type === "BACKOFFICE_ADMIN") {
     console.log("[DASHBOARD LAYOUT] Redirecting to /admin/home - user_type:", user_type);

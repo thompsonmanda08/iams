@@ -45,9 +45,11 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RolesPermissionsProps {
-  departmentId?: string;
+  departmentId: string;
 }
 
 interface Role {
@@ -57,6 +59,7 @@ interface Role {
   department_id: string;
   description: string;
   is_active: boolean;
+  is_department_head: boolean;
 }
 
 interface Module {
@@ -99,7 +102,7 @@ const PERMISSION_LABELS: Record<PermissionType, string> = {
   can_configure: "Configure"
 };
 
-export default function UserRolesConfig({ departmentId }: { departmentId: string }) {
+export default function UserRolesConfig({ departmentId }: RolesPermissionsProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
@@ -588,7 +591,8 @@ const ROLE_INITIAL_STATE: Omit<Role, "id" | "department_id"> = {
   name: "",
   code: "",
   description: "",
-  is_active: true
+  is_active: true,
+  is_department_head: false
 };
 
 interface CreateOrUpdateRoleDialogProps {
@@ -692,6 +696,25 @@ function CreateOrUpdateRoleDialog({
             value={formData.description}
             onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
           />
+          <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
+            <Checkbox
+              // type="checkbox"
+              id="is_department_head"
+              checked={formData.is_department_head}
+              onCheckedChange={(checked) =>
+                setFormData((p) => ({ ...p, is_department_head: Boolean(checked || false) }))
+              }
+              className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
+            />
+            <Label
+              htmlFor="is_department_head"
+              className="flex w-full flex-1 cursor-pointer flex-col items-start gap-0 text-sm font-medium select-none">
+              Department Head
+              <span className="text-muted-foreground block text-xs font-normal">
+                One department can only have one department head.
+              </span>
+            </Label>
+          </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <DialogClose asChild>

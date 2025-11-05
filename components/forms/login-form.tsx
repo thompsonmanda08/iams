@@ -103,7 +103,7 @@ export default function LoginForm() {
           </button>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <Label className="flex cursor-pointer items-center">
+          {/* <Label className="flex cursor-pointer items-center">
             <Checkbox
               checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(checked as boolean)}
@@ -111,10 +111,10 @@ export default function LoginForm() {
               disabled={isLoading || true}
             />
             <span className="text-slate-600">Remember me</span>
-          </Label>
+          </Label> */}
           <Link
             href="/#forgot-password"
-            className="text-primary hover:text-primary/70 text-xs font-medium transition-colors sm:text-sm">
+            className="text-primary hover:text-primary/70 ml-auto text-xs font-medium transition-colors sm:text-sm">
             Forgot password?
           </Link>
         </div>

@@ -94,7 +94,6 @@ export function ConfirmationModal({
             <DialogTitle className="tracking-tight">{title || config.title}</DialogTitle>
           </div>
           <DialogDescription className="text-muted-foreground text-xs font-medium sm:text-sm">
-            {" "}
             {description || config.description}
           </DialogDescription>
         </DialogHeader>

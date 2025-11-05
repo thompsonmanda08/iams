@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ModuleSelection } from "../../_components";
-import { Plus } from "lucide-react";
+import { FolderCogIcon, Plus, UserCog, UserLock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -60,9 +60,18 @@ export default async function DepartmentDetailsPage({
 
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="general">General Config</TabsTrigger>
-          <TabsTrigger value="users">Department Users</TabsTrigger>
-          <TabsTrigger value="permissions">Roles & Permissions</TabsTrigger>
+          <TabsTrigger value="general" className="gap-2">
+            <FolderCogIcon className="h-4 w-4" />
+            General Config
+          </TabsTrigger>
+          <TabsTrigger value="users" className="gap-2">
+            <Users className="h-4 w-4" />
+            Department Users
+          </TabsTrigger>
+          <TabsTrigger value="permissions" className="gap-2">
+            <UserLock className="h-4 w-4" />
+            Roles & Permissions
+          </TabsTrigger>
         </TabsList>
 
         {/* General Configs */}

@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/empty";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "QUARTERLY", "MONTHLY", "AS_NEEDED"];
 
@@ -615,11 +616,11 @@ export default function AuditUniverseForm({
               {/* Status */}
               <div className="border-t pt-6">
                 <div className="bg-muted/30 hover:bg-muted/50 flex items-center space-x-3 rounded-lg border p-4 transition-colors">
-                  <input
-                    type="checkbox"
+                  <Checkbox
+                    // type="checkbox"
                     id="is_active"
                     checked={itemData.is_active}
-                    onChange={(e) => updateItemData({ is_active: e.target.checked })}
+                    onCheckedChange={(checked) => updateItemData({ is_active: Boolean(checked) })}
                     className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
                   />
                   <Label
