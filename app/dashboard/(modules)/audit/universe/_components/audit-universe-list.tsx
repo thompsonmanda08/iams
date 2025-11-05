@@ -29,6 +29,14 @@ import { StatusBadge } from "@/components/status-badge";
 import Search from "@/components/ui/search-field";
 import { deleteUniverse } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent
+} from "@/components/ui/empty";
 
 // Mock data removed - using real backend data only
 
@@ -139,26 +147,26 @@ export default function AuditUniverseList({
         </div>
 
         {data.length === 0 ? (
-          <Card className="animate-fade-in p-12">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="bg-muted/20 rounded-full p-6">
-                <Globe className="text-muted-foreground h-16 w-16" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-foreground text-xl font-semibold">No Universes Yet</h3>
-                <p className="text-muted-foreground max-w-md text-sm">
-                  Get started by creating your first audit universe. Universes help you organize and
-                  manage your audit scope.
-                </p>
-              </div>
+          <Empty className="animate-fade-in">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Globe />
+              </EmptyMedia>
+              <EmptyTitle>No Universes Yet</EmptyTitle>
+              <EmptyDescription>
+                Get started by creating your first audit universe. Universes help you organize and
+                manage your audit scope.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
               <Link href="/dashboard/audit/universe/new">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create New Universe
                 </Button>
               </Link>
-            </div>
-          </Card>
+            </EmptyContent>
+          </Empty>
         ) : (
           <Card className="animate-fade-in">
             <div className="bg-card border-b p-6">
@@ -334,8 +342,25 @@ export default function AuditUniverseList({
         title="Delete Universe"
         description={`Are you sure you want to delete "${selectedUniverse?.name}"? This action cannot be undone.`}
         confirmText="Delete"
+        type="delete"
         isLoading={isDeleting}
       />
+
+      {/* <ConfirmationModal
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedUniverse(null);
+            setDeleteConfirmOpen(false);
+          }
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Universe"
+        description={`Are you sure you want to delete "${selectedUniverse?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        isLoading={isDeleting}
+        type="delete"
+      /> */}
     </div>
   );
 }

@@ -30,8 +30,24 @@ import {
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
 import BackButton from "@/components/back-button";
-import { getDepartments } from "@/app/_actions/org-actions";
-import { useQueryClient } from "@tanstack/react-query";
+import { getDepartments } from "@/app/_actions/config-actions";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SelectField } from "@/components/ui/select-field";
+import {
+  getAuditableAreas,
+  getStrategicPillars,
+  getStrategicInitiatives,
+  getIndicativeTargets
+} from "@/app/_actions/audit-settings-actions";
+import { getRisks } from "@/app/_actions/risk-module-actions";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent
+} from "@/components/ui/empty";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "QUARTERLY", "MONTHLY", "AS_NEEDED"];
 
@@ -104,6 +120,106 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const safeUniverseItems = Array.isArray(universeItems) ? universeItems : [];
+
+  // Fetch dropdown data using TanStack Query
+  const { data: departmentsData } = useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
+      const result = await getDepartments();
+      return result.data?.data || result.data || [];
+    }
+  });
+
+  const { data: auditableAreasData } = useQuery({
+    queryKey: ["auditableAreas"],
+    queryFn: async () => {
+      const result = await getAuditableAreas();
+      return result.data?.data || result.data || [];
+    }
+  });
+
+  const { data: strategicPillarsData } = useQuery({
+    queryKey: ["strategicPillars"],
+    queryFn: async () => {
+      const result = await getStrategicPillars();
+      return result.data?.data || result.data || [];
+    }
+  });
+
+  const { data: strategicInitiativesData } = useQuery({
+    queryKey: ["strategicInitiatives", itemData.strategic_pillar_id],
+    queryFn: async () => {
+      if (!itemData.strategic_pillar_id) return [];
+      const result = await getStrategicInitiatives(itemData.strategic_pillar_id);
+      return result.data?.data || result.data || [];
+    },
+    enabled: !!itemData.strategic_pillar_id
+  });
+
+  const { data: indicativeTargetsData } = useQuery({
+    queryKey: ["indicativeTargets"],
+    queryFn: async () => {
+      const result = await getIndicativeTargets();
+      return result.data?.data || result.data || [];
+    }
+  });
+
+  const { data: risksData } = useQuery({
+    queryKey: ["risks"],
+    queryFn: async () => {
+      const result = await getRisks();
+      return result.data?.data || result.data || [];
+    }
+  });
+
+  // Memoized options for dropdowns
+  const departmentsOptions = useMemo(() => {
+    return departmentsData?.map((department: any) => ({
+      id: department.id,
+      name: department?.name
+    }));
+  }, [departmentsData]);
+
+  const auditableAreasOptions = useMemo(() => {
+    return auditableAreasData?.map((area: any) => ({
+      id: area.id,
+      name: area.name || area.title
+    }));
+  }, [auditableAreasData]);
+
+  const strategicPillarsOptions = useMemo(() => {
+    return strategicPillarsData?.map((pillar: any) => ({
+      id: pillar.id,
+      name: pillar.name || pillar.title
+    }));
+  }, [strategicPillarsData]);
+
+  const indicativeTargetsOptions = useMemo(() => {
+    return indicativeTargetsData?.map((target: any) => ({
+      id: target.id,
+      name: target.name || target.title
+    }));
+  }, [indicativeTargetsData]);
+
+  const risksOptions = useMemo(() => {
+    return risksData?.map((risk: any) => ({
+      id: risk.id,
+      name: risk.risk_name || risk.name || risk.title
+    }));
+  }, [risksData]);
+
+  const strategicInitiativesOptions = useMemo(() => {
+    return strategicInitiativesData?.map((initiative: any) => ({
+      id: initiative.id,
+      name: initiative.strategic_initiative_name || initiative.name || initiative.title
+    }));
+  }, [strategicInitiativesData]);
+
+  // Helper function to get department name by ID
+  const getDepartmentName = (departmentId: string) => {
+    const department = departmentsData?.find((d: any) => d.id === departmentId);
+    return department?.name || departmentId;
+  };
 
   if (!universe) {
     return (
@@ -253,15 +369,7 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
           <h2 className="text-foreground text-2xl font-bold">{universe.universe_name}</h2>
           <div className="flex gap-2">
             <StatusBadge status={universe.status || "UNIVERSE_CREATION"} />
-            {universe.is_active ? (
-              <span className="bg-success/10 text-success rounded-md px-3 py-1 text-sm font-medium">
-                Active
-              </span>
-            ) : (
-              <span className="bg-muted text-muted-foreground rounded-md px-3 py-1 text-sm font-medium">
-                Inactive
-              </span>
-            )}
+            <StatusBadge status={universe.is_active ? "ACTIVE" : "INACTIVE"} />
           </div>
         </div>
 
@@ -290,21 +398,17 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
               Manage individual items and audit areas
             </p>
           </div>
-          <Button onClick={() => setShowItemForm(!showItemForm)} className="gap-2">
-            {showItemForm ? (
-              <>Cancel</>
-            ) : (
-              <>
-                <Plus className="h-4 w-4" />
-                Add Item
-              </>
-            )}
-          </Button>
+          {!showItemForm && (
+            <Button onClick={() => setShowItemForm(!showItemForm)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
+          )}
         </div>
 
         {/* Add/Edit Form */}
         {showItemForm && (
-          <Card className="animate-fade-in mb-6 bg-muted/20 p-6">
+          <Card className="animate-fade-in bg-muted/20 mb-6 p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <h4 className="text-foreground font-semibold">
                 {editingItem ? "Edit Universe Item" : "Add New Universe Item"}
@@ -312,15 +416,15 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="department_id">
-                    Department ID <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
+                  <SelectField
                     id="department_id"
-                    value={itemData.department_id}
-                    onChange={(e) => updateItemData({ department_id: e.target.value })}
-                    placeholder="Enter department ID"
+                    label="Department"
                     required
+                    placeholder="--Select a department--"
+                    value={itemData.department_id || ""}
+                    onValueChange={(value) => updateItemData({ department_id: value })}
+                    options={departmentsOptions}
+                    className="w-full"
                   />
                 </div>
 
@@ -338,50 +442,85 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="audit_frequency">Audit Frequency</Label>
-                  <Select
+                  <SelectField
+                    id="audit_frequency"
+                    label="Audit Frequency"
+                    required
+                    placeholder="--Select an audit frequency--"
                     value={itemData.audit_frequency}
-                    onValueChange={(value) => updateItemData({ audit_frequency: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AUDIT_FREQUENCIES.map((freq) => (
-                        <SelectItem key={freq} value={freq}>
-                          {freq.replace("_", " ")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value) => updateItemData({ audit_frequency: value })}
+                    options={AUDIT_FREQUENCIES.map((freq) => ({
+                      id: freq,
+                      name: freq.replace("_", " ")
+                    }))}
+                    className="w-full"
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="strategic_pillar_id">Strategic Pillar ID</Label>
-                  <Input
+                  <SelectField
                     id="strategic_pillar_id"
-                    value={itemData.strategic_pillar_id}
-                    onChange={(e) => updateItemData({ strategic_pillar_id: e.target.value })}
-                    placeholder="Optional"
+                    label="Strategic Pillar"
+                    placeholder="Select a pillar (optional)"
+                    value={itemData.strategic_pillar_id || ""}
+                    onValueChange={(value) =>
+                      updateItemData({ strategic_pillar_id: value, strategic_initiative_id: "" })
+                    }
+                    options={strategicPillarsOptions}
+                    className="w-full"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="auditable_area_id">Auditable Area ID</Label>
-                  <Input
+                  <SelectField
                     id="auditable_area_id"
-                    value={itemData.auditable_area_id}
-                    onChange={(e) => updateItemData({ auditable_area_id: e.target.value })}
-                    placeholder="Optional"
+                    label="Auditable Area"
+                    placeholder="Select an area (optional)"
+                    value={itemData.auditable_area_id || ""}
+                    onValueChange={(value) => updateItemData({ auditable_area_id: value })}
+                    options={auditableAreasOptions}
+                    className="w-full"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="risk_id">Risk ID</Label>
-                  <Input
+                  <SelectField
                     id="risk_id"
-                    value={itemData.risk_id}
-                    onChange={(e) => updateItemData({ risk_id: e.target.value })}
-                    placeholder="Optional"
+                    label="Associated Risk"
+                    placeholder="Select a risk (optional)"
+                    value={itemData.risk_id || ""}
+                    onValueChange={(value) => updateItemData({ risk_id: value })}
+                    options={risksOptions}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <SelectField
+                    id="strategic_initiative_id"
+                    label="Strategic Initiative"
+                    placeholder={
+                      itemData.strategic_pillar_id
+                        ? "Select an initiative (optional)"
+                        : "Select a pillar first"
+                    }
+                    value={itemData.strategic_initiative_id || ""}
+                    onValueChange={(value) => updateItemData({ strategic_initiative_id: value })}
+                    disabled={!itemData.strategic_pillar_id}
+                    options={strategicInitiativesOptions}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <SelectField
+                    id="indicative_target_id"
+                    label="Indicative Target"
+                    placeholder="Select a target (optional)"
+                    value={itemData.indicative_target_id || ""}
+                    onValueChange={(value) => updateItemData({ indicative_target_id: value })}
+                    options={indicativeTargetsOptions}
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -390,15 +529,14 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isCreating} className="gap-2">
+                <Button
+                  type="submit"
+                  disabled={isCreating}
+                  isLoading={isCreating}
+                  loadingText={editingItem ? "Updating..." : "Creating..."}
+                  className="gap-2">
                   <Save className="h-4 w-4" />
-                  {isCreating
-                    ? editingItem
-                      ? "Updating..."
-                      : "Creating..."
-                    : editingItem
-                      ? "Update Item"
-                      : "Create Item"}
+                  {editingItem ? "Update Item" : "Create Item"}
                 </Button>
               </div>
             </form>
@@ -407,17 +545,28 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
 
         {/* Items Table */}
         {safeUniverseItems.length === 0 ? (
-          <div className="text-muted-foreground bg-muted/10 rounded-lg border-2 border-dashed py-12 text-center">
-            <p className="font-medium">No universe items yet</p>
-            <p className="mt-2 text-sm">Click "Add Item" to create your first universe item</p>
-          </div>
+          <Empty className="border-2">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Globe />
+              </EmptyMedia>
+              <EmptyTitle>No universe items yet</EmptyTitle>
+              <EmptyDescription>Get started by creating your first universe item</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={() => setShowItemForm(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Item
+              </Button>
+            </EmptyContent>
+          </Empty>
         ) : (
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30">
                   <TableHead className="font-semibold">Process/Activity</TableHead>
-                  <TableHead className="font-semibold">Department ID</TableHead>
+                  <TableHead className="font-semibold">Department</TableHead>
                   <TableHead className="font-semibold">Audit Frequency</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -428,7 +577,7 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
                   <TableRow key={item.id} className="hover:bg-muted/20">
                     <TableCell className="font-medium">{item.process_activity}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {item.department_id}
+                      {getDepartmentName(item.department_id)}
                     </TableCell>
                     <TableCell>
                       <span className="bg-primary/10 text-primary rounded-md px-2.5 py-1 text-xs font-medium">
@@ -470,12 +619,17 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        open={showDeleteModal}
+        onOpenChange={(open) => {
+          if (open) {
+            setShowDeleteModal(false);
+          }
+        }}
         onConfirm={handleDeleteConfirm}
         title="Delete Universe Item"
         description={`Are you sure you want to delete this universe item? This action cannot be undone.`}
         confirmText="Delete"
+        type="delete"
         isLoading={isDeleting}
       />
     </div>

@@ -1,13 +1,24 @@
+"use client";
+import { useState } from "react";
 import BackButton from "@/components/back-button";
 import AuditUniverseForm from "../_components/audit-universe-form";
 import PageHeader from "@/components/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUniverses } from "@/app/_actions/audit-module-actions";
+import { useQuery } from "@tanstack/react-query";
+import { Globe, List } from "lucide-react";
 
-const NewAuditUniversePage = async () => {
+const NewAuditUniversePage = () => {
+  const [activeTab, setActiveTab] = useState("universe");
+
   // Fetch universes for the Universe Item dropdown
-  const universesResponse = await getUniverses();
-  const universes = universesResponse?.data?.data || universesResponse?.data || [];
+  const { data: universes = [] } = useQuery({
+    queryKey: ["universes"],
+    queryFn: async () => {
+      const universesResponse = await getUniverses();
+      return universesResponse?.data?.data || universesResponse?.data || [];
+    }
+  });
 
   return (
     <div className="bg-background min-h-screen">
@@ -27,16 +38,26 @@ const NewAuditUniversePage = async () => {
 
       {/* Main Content */}
       <div className="container mx-auto space-y-6 px-4 py-8">
-        <Tabs defaultValue="universe" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="w-full">
-            <TabsTrigger value="universe">New Universe</TabsTrigger>
-            <TabsTrigger value="item">Universe Item</TabsTrigger>
+            <TabsTrigger value="universe" className="gap-2">
+              <Globe className="h-4 w-4" />
+              New Universe
+            </TabsTrigger>
+            <TabsTrigger value="item" className="gap-2">
+              <List className="h-4 w-4" />
+              Universe Item
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="universe">
             <AuditUniverseForm mode="universe" />
           </TabsContent>
           <TabsContent value="item">
-            <AuditUniverseForm mode="item" universes={universes} />
+            <AuditUniverseForm
+              mode="item"
+              universes={universes}
+              onSwitchToUniverseTab={() => setActiveTab("universe")}
+            />
           </TabsContent>
         </Tabs>
       </div>

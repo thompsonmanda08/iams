@@ -34,6 +34,16 @@ import {
 import { getRisks } from "@/app/_actions/risk-module-actions";
 import { SelectField } from "@/components/ui/select-field";
 import { undefined } from "zod";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent
+} from "@/components/ui/empty";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "QUARTERLY", "MONTHLY", "AS_NEEDED"];
 
@@ -81,12 +91,14 @@ export default function AuditUniverseForm({
   initialData,
   universeId,
   mode = "universe",
-  universes = []
+  universes = [],
+  onSwitchToUniverseTab
 }: {
   initialData?: any;
   universeId?: string;
   mode?: "universe" | "item";
   universes?: any[];
+  onSwitchToUniverseTab?: () => void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -98,12 +110,14 @@ export default function AuditUniverseForm({
 
     return {
       universe_name: initialData.universe_name || "",
-      start_date: initialData.start_date instanceof Date && !isNaN(initialData.start_date.getTime())
-        ? initialData.start_date
-        : undefined,
-      end_date: initialData.end_date instanceof Date && !isNaN(initialData.end_date.getTime())
-        ? initialData.end_date
-        : undefined,
+      start_date:
+        initialData.start_date instanceof Date && !isNaN(initialData.start_date.getTime())
+          ? initialData.start_date
+          : undefined,
+      end_date:
+        initialData.end_date instanceof Date && !isNaN(initialData.end_date.getTime())
+          ? initialData.end_date
+          : undefined,
       is_active: initialData.is_active ?? true
     };
   });
@@ -232,16 +246,10 @@ export default function AuditUniverseForm({
         toast.success(
           response.message || `Universe ${isEditing ? "updated" : "created"} successfully`
         );
+        router.push("/dashboard/audit/universe");
         // Invalidate all relevant query caches
         queryClient.invalidateQueries({ queryKey: ["universes"] });
-        queryClient.invalidateQueries({ queryKey: ["departments"] });
-        queryClient.invalidateQueries({ queryKey: ["auditableAreas"] });
-        queryClient.invalidateQueries({ queryKey: ["strategicPillars"] });
-        queryClient.invalidateQueries({ queryKey: ["strategicInitiatives"] });
-        queryClient.invalidateQueries({ queryKey: ["indicativeTargets"] });
-        queryClient.invalidateQueries({ queryKey: ["risks"] });
-        router.push("/dashboard/audit/universe");
-        router.refresh();
+        // router.refresh();
       } else {
         toast.error(response.message || `Failed to ${isEditing ? "update" : "create"} universe`);
       }
@@ -316,8 +324,15 @@ export default function AuditUniverseForm({
   };
 
   const universeOptions = useMemo(() => {
-    const data = universesData || universes || [];
-    if (!data || data.length === 0) return [];
+    // Ensure data is always an array
+    const data = Array.isArray(universesData)
+      ? universesData
+      : Array.isArray(universes)
+        ? universes
+        : [];
+
+    if (data.length === 0) return [];
+
     return data.map((universe: any) => ({
       id: String(universe.id),
       name: universe.universe_name || universe.universeName || "Unnamed Universe"
@@ -367,388 +382,355 @@ export default function AuditUniverseForm({
   }, [strategicInitiativesData]);
 
   if (mode === "item") {
+    // Show Empty state if no universes exist
+    if (universeOptions.length === 0) {
+      return (
+        <Empty className="animate-fade-in">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Globe />
+            </EmptyMedia>
+            <EmptyTitle>No Universes Available</EmptyTitle>
+            <EmptyDescription>
+              You need to create a universe first before you can add universe items.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            {onSwitchToUniverseTab ? (
+              <Button onClick={onSwitchToUniverseTab} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Universe First
+              </Button>
+            ) : (
+              <Link href="/dashboard/audit/universe/new">
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create Universe First
+                </Button>
+              </Link>
+            )}
+          </EmptyContent>
+        </Empty>
+      );
+    }
+
     return (
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Form Section - 2 columns */}
         <Card className="animate-fade-in lg:col-span-2">
           <form onSubmit={handleItemSubmit} className="p-6 sm:p-8">
-          {/* Header Section */}
-          <div className="mb-8">
-            <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
-              <span className="bg-primary h-8 w-1 rounded-full"></span>
-              Universe Item Information
-            </h3>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Configure the universe item details and associations
-            </p>
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-8">
-            {/* Primary Information */}
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* Universe Selection */}
-                <div className="space-y-2">
-                  <SelectField
-                    id="audit_universe_id"
-                    label="Universe"
-                    required
-                    placeholder="--Select a universe--"
-                    value={String(itemData.audit_universe_id || "")}
-                    onValueChange={(value) => updateItemData({ audit_universe_id: value })}
-                    options={universeOptions}
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                  />
-                </div>
-
-                {/* Department Selection */}
-                <div className="space-y-2">
-                  <SelectField
-                    id="department_id"
-                    label="Department"
-                    required
-                    placeholder="--Select a department--"
-                    value={itemData.department_id || ""}
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    onValueChange={(value) => updateItemData({ department_id: value })}
-                    options={departmentsOptions}
-                  />
-                </div>
-              </div>
-
-              {/* Process/Activity - Full Width */}
-              <div className="space-y-2">
-                <Label htmlFor="process_activity" className="text-sm font-medium">
-                  Process/Activity <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="process_activity"
-                  value={itemData.process_activity}
-                  onChange={(e) => updateItemData({ process_activity: e.target.value })}
-                  placeholder="e.g., Information security policy"
-                  required
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            {/* Audit Configuration */}
-            <div className="border-t pt-6">
-              <h4 className="text-foreground mb-4 text-sm font-semibold">Audit Configuration</h4>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="space-y-2">
-                  <SelectField
-                    id="audit_frequency"
-                    label="Audit Frequency"
-                    required
-                    placeholder="--Select an audit frequency--"
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    value={itemData.audit_frequency}
-                    onValueChange={(value) => updateItemData({ audit_frequency: value })}
-                    options={AUDIT_FREQUENCIES.map((freq) => ({
-                      id: freq,
-                      name: freq.replace("_", " ")
-                    }))}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <SelectField
-                    id="auditable_area_id"
-                    label="Auditable Area"
-                    placeholder="Select an area (optional)"
-                    required
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    value={itemData.auditable_area_id}
-                    onValueChange={(value) => updateItemData({ auditable_area_id: value })}
-                    options={auditableAreasOptions}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Strategic Alignment */}
-            <div className="border-t pt-6">
-              <h4 className="text-foreground mb-4 text-sm font-semibold">Strategic Alignment</h4>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="space-y-2">
-                  <SelectField
-                    id="strategic_pillar_id"
-                    label="Strategic Pillar"
-                    placeholder="Select a pillar (optional)"
-                    required
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    value={itemData.strategic_pillar_id}
-                    onValueChange={(value) =>
-                      updateItemData({ strategic_pillar_id: value, strategic_initiative_id: "" })
-                    }
-                    options={strategicPillarsOptions}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <SelectField
-                    id="strategic_initiative_id"
-                    label="Strategic Initiative"
-                    placeholder={
-                      itemData.strategic_pillar_id
-                        ? "Select an initiative (optional)"
-                        : "Select a pillar first"
-                    }
-                    required
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    value={itemData.strategic_initiative_id}
-                    onValueChange={(value) => updateItemData({ strategic_initiative_id: value })}
-                    disabled={!itemData.strategic_pillar_id}
-                    options={strategicInitiativesOptions}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Associations */}
-            <div className="border-t pt-6">
-              <h4 className="text-foreground mb-4 text-sm font-semibold">
-                Additional Associations
-              </h4>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="space-y-2">
-                  <SelectField
-                    id="indicative_target_id"
-                    label="Indicative Target"
-                    placeholder="Select a target (optional)"
-                    required
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    value={itemData.indicative_target_id}
-                    onValueChange={(value) => updateItemData({ indicative_target_id: value })}
-                    options={indicativeTargetsOptions}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <SelectField
-                    id="risk_id"
-                    label="Associated Risk"
-                    placeholder="Select a risk (optional)"
-                    required
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    value={itemData.risk_id}
-                    onValueChange={(value) => updateItemData({ risk_id: value })}
-                    options={risksOptions}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="border-t pt-6">
-              <div className="bg-muted/30 hover:bg-muted/50 flex items-center space-x-3 rounded-lg border p-4 transition-colors">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={itemData.is_active}
-                  onChange={(e) => updateItemData({ is_active: e.target.checked })}
-                  className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
-                />
-                <Label
-                  htmlFor="is_active"
-                  className="flex-1 cursor-pointer text-sm font-medium select-none">
-                  Active Status
-                  <span className="text-muted-foreground mt-0.5 block text-xs font-normal">
-                    Enable this universe item for use in the system
-                  </span>
-                </Label>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 -mx-6 mt-8 flex flex-col-reverse justify-end gap-3 border-t px-6 pt-6 pb-6 backdrop-blur sm:-mx-8 sm:flex-row sm:px-8 sm:pb-8">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/audit/universe")}
-              disabled={isSubmitting}
-              className="w-full min-w-[120px] sm:w-auto">
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full min-w-[180px] gap-2 sm:w-auto">
-              <Save className="h-4 w-4" />
-              {isSubmitting ? "Creating..." : "Create Universe Item"}
-            </Button>
-          </div>
-        </form>
-      </Card>
-
-      {/* Universe Items List - 1 column */}
-      <Card className="animate-fade-in h-fit lg:sticky lg:top-6">
-        <div className="p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-foreground flex items-center gap-2 text-lg font-semibold">
-              <span className="bg-primary h-6 w-1 rounded-full"></span>
-              Universe Entries
-            </h3>
-            {universeItemsData && universeItemsData.length > 0 && (
-              <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-medium">
-                {universeItemsData.length}
-              </span>
-            )}
-          </div>
-
-          {!itemData.audit_universe_id ? (
-            <div className="text-muted-foreground flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-              <Globe className="mb-3 h-10 w-10 opacity-20" />
-              <p className="text-sm">Select a universe to view entries</p>
-            </div>
-          ) : isLoadingItems ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            </div>
-          ) : !universeItemsData || universeItemsData.length === 0 ? (
-            <div className="text-muted-foreground flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-              <p className="text-sm">No entries yet</p>
-              <p className="text-muted-foreground/60 mt-1 text-xs">
-                Create your first entry using the form
+            {/* Header Section */}
+            <div className="mb-8">
+              <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
+                <span className="bg-primary h-8 w-1 rounded-full"></span>
+                Universe Item Information
+              </h3>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Configure the universe item details and associations
               </p>
             </div>
-          ) : (
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {universeItemsData.map((item: any, index: number) => (
-                <div
-                  key={item.id || index}
-                  className="hover:bg-muted/50 group rounded-lg border p-3 transition-colors">
-                  <div className="mb-1.5 flex items-start justify-between">
-                    <h4 className="text-foreground line-clamp-2 text-sm font-medium">
-                      {item.process_activity || "Unnamed Activity"}
-                    </h4>
+
+            {/* Form Fields */}
+            <div className="space-y-8">
+              {/* Primary Information */}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  {/* Universe Selection */}
+                  <div className="space-y-2">
+                    <SelectField
+                      id="audit_universe_id"
+                      label="Universe"
+                      required
+                      placeholder="--Select a universe--"
+                      value={String(itemData.audit_universe_id || "")}
+                      onValueChange={(value) => updateItemData({ audit_universe_id: value })}
+                      options={universeOptions}
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                    />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">
-                      <span className="font-medium">Frequency:</span>{" "}
-                      {item.audit_frequency?.replace("_", " ") || "N/A"}
-                    </p>
-                    {item.department?.name && (
-                      <p className="text-muted-foreground text-xs">
-                        <span className="font-medium">Department:</span> {item.department.name}
-                      </p>
-                    )}
-                    {item.auditable_area?.name && (
-                      <p className="text-muted-foreground text-xs">
-                        <span className="font-medium">Area:</span> {item.auditable_area.name}
-                      </p>
-                    )}
+
+                  {/* Department Selection */}
+                  <div className="space-y-2">
+                    <SelectField
+                      id="department_id"
+                      label="Department"
+                      required
+                      placeholder="--Select a department--"
+                      value={itemData.department_id || ""}
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                      onValueChange={(value) => updateItemData({ department_id: value })}
+                      options={departmentsOptions}
+                    />
                   </div>
                 </div>
-              ))}
+
+                {/* Process/Activity - Full Width */}
+                <div className="space-y-2">
+                  <Label htmlFor="process_activity" className="text-sm font-medium">
+                    Process/Activity <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="process_activity"
+                    value={itemData.process_activity}
+                    onChange={(e) => updateItemData({ process_activity: e.target.value })}
+                    placeholder="e.g., Information security policy"
+                    required
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Audit Configuration */}
+              <div className="border-t pt-6">
+                <h4 className="text-foreground mb-4 text-sm font-semibold">Audit Configuration</h4>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <div className="space-y-2">
+                    <SelectField
+                      id="audit_frequency"
+                      label="Audit Frequency"
+                      required
+                      placeholder="--Select an audit frequency--"
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                      value={itemData.audit_frequency}
+                      onValueChange={(value) => updateItemData({ audit_frequency: value })}
+                      options={AUDIT_FREQUENCIES.map((freq) => ({
+                        id: freq,
+                        name: freq.replace("_", " ")
+                      }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <SelectField
+                      id="auditable_area_id"
+                      label="Auditable Area"
+                      placeholder="Select an area (optional)"
+                      required
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                      value={itemData.auditable_area_id}
+                      onValueChange={(value) => updateItemData({ auditable_area_id: value })}
+                      options={auditableAreasOptions}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Strategic Alignment */}
+              <div className="border-t pt-6">
+                <h4 className="text-foreground mb-4 text-sm font-semibold">Strategic Alignment</h4>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <div className="space-y-2">
+                    <SelectField
+                      id="strategic_pillar_id"
+                      label="Strategic Pillar"
+                      placeholder="Select a pillar (optional)"
+                      required
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                      value={itemData.strategic_pillar_id}
+                      onValueChange={(value) =>
+                        updateItemData({ strategic_pillar_id: value, strategic_initiative_id: "" })
+                      }
+                      options={strategicPillarsOptions}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <SelectField
+                      id="strategic_initiative_id"
+                      label="Strategic Initiative"
+                      placeholder={
+                        itemData.strategic_pillar_id
+                          ? "Select an initiative (optional)"
+                          : "Select a pillar first"
+                      }
+                      required
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                      value={itemData.strategic_initiative_id}
+                      onValueChange={(value) => updateItemData({ strategic_initiative_id: value })}
+                      disabled={!itemData.strategic_pillar_id}
+                      options={strategicInitiativesOptions}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Associations */}
+              <div className="border-t pt-6">
+                <h4 className="text-foreground mb-4 text-sm font-semibold">
+                  Additional Associations
+                </h4>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <div className="space-y-2">
+                    <SelectField
+                      id="indicative_target_id"
+                      label="Indicative Target"
+                      placeholder="Select a target (optional)"
+                      required
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                      value={itemData.indicative_target_id}
+                      onValueChange={(value) => updateItemData({ indicative_target_id: value })}
+                      options={indicativeTargetsOptions}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <SelectField
+                      id="risk_id"
+                      label="Associated Risk"
+                      placeholder="Select a risk (optional)"
+                      required
+                      className="w-full"
+                      classNames={{
+                        wrapper: "w-full"
+                      }}
+                      value={itemData.risk_id}
+                      onValueChange={(value) => updateItemData({ risk_id: value })}
+                      options={risksOptions}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="border-t pt-6">
+                <div className="bg-muted/30 hover:bg-muted/50 flex items-center space-x-3 rounded-lg border p-4 transition-colors">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    checked={itemData.is_active}
+                    onChange={(e) => updateItemData({ is_active: e.target.checked })}
+                    className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
+                  />
+                  <Label
+                    htmlFor="is_active"
+                    className="flex-1 cursor-pointer text-sm font-medium select-none">
+                    Active Status
+                    <span className="text-muted-foreground mt-0.5 block text-xs font-normal">
+                      Enable this universe item for use in the system
+                    </span>
+                  </Label>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </Card>
-    </div>
+
+            {/* Action Buttons */}
+            <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 -mx-6 mt-8 flex flex-col-reverse justify-end gap-3 border-t px-6 pt-6 pb-6 backdrop-blur sm:-mx-8 sm:flex-row sm:px-8 sm:pb-8">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/dashboard/audit/universe")}
+                disabled={isSubmitting}
+                className="w-full min-w-[120px] sm:w-auto">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full min-w-[180px] gap-2 sm:w-auto">
+                <Save className="h-4 w-4" />
+                {isSubmitting ? "Creating..." : "Create Universe Item"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+
+        {/* Universe Items List - 1 column */}
+        <Card className="animate-fade-in h-fit lg:sticky lg:top-6">
+          <div className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-foreground flex items-center gap-2 text-lg font-semibold">
+                <span className="bg-primary h-6 w-1 rounded-full"></span>
+                Universe Entries
+              </h3>
+              {universeItemsData && universeItemsData.length > 0 && (
+                <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-medium">
+                  {universeItemsData.length}
+                </span>
+              )}
+            </div>
+
+            {!itemData.audit_universe_id ? (
+              <div className="text-muted-foreground flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
+                <Globe className="mb-3 h-10 w-10 opacity-20" />
+                <p className="text-sm">Select a universe to view entries</p>
+              </div>
+            ) : isLoadingItems ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"></div>
+              </div>
+            ) : !Array.isArray(universeItemsData) || universeItemsData.length === 0 ? (
+              <Empty className="border-0 py-8">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Globe />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-base">No entries yet</EmptyTitle>
+                  <EmptyDescription className="text-xs">
+                    Create your first entry using the form on the left
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <div className="max-h-[600px] space-y-2 overflow-y-auto">
+                {universeItemsData.map((item: any, index: number) => (
+                  <div
+                    key={item.id || index}
+                    className="hover:bg-muted/50 group rounded-lg border p-3 transition-colors">
+                    <div className="mb-1.5 flex items-start justify-between">
+                      <h4 className="text-foreground line-clamp-2 text-sm font-medium">
+                        {item.process_activity || "Unnamed Activity"}
+                      </h4>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-xs">
+                        <span className="font-medium">Frequency:</span>{" "}
+                        {item.audit_frequency?.replace("_", " ") || "N/A"}
+                      </p>
+                      {item.department?.name && (
+                        <p className="text-muted-foreground text-xs">
+                          <span className="font-medium">Department:</span> {item.department.name}
+                        </p>
+                      )}
+                      {item.auditable_area?.name && (
+                        <p className="text-muted-foreground text-xs">
+                          <span className="font-medium">Area:</span> {item.auditable_area.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     );
   }
 
   // Universe mode
   return (
-    // <Card className="animate-fade-in p-8">
-    //   <form onSubmit={handleUniverseSubmit} className="space-y-6">
-    //     <div>
-    //       <h3 className="text-foreground mb-6 text-lg font-semibold">Basic Information</h3>
-    //       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-    //         <div className="space-y-2 md:col-span-2">
-    //           <Label htmlFor="universe_name">
-    //             Universe Name <span className="text-destructive">*</span>
-    //           </Label>
-    //           <Input
-    //             id="universe_name"
-    //             value={universeData.universe_name}
-    //             onChange={(e) => updateUniverseData({ universe_name: e.target.value })}
-    //             placeholder="Enter universe name"
-    //             required
-    //           />
-    //         </div>
-
-    //         <DatePicker
-    //           label="Start Date"
-    //           name="start_date"
-    //           value={universeData.start_date as any}
-    //           onValueChange={(date) => updateUniverseData({ start_date: date })}
-    //           required
-    //         />
-
-    //         <DatePicker
-    //           label="End Date"
-    //           name="end_date"
-    //           value={universeData.end_date as any}
-    //           onValueChange={(date) => updateUniverseData({ end_date: date })}
-    //           required
-    //         />
-
-    //         <div className="flex items-center space-x-2">
-    //           <input
-    //             type="checkbox"
-    //             id="is_active"
-    //             checked={universeData.is_active}
-    //             onChange={(e) => updateUniverseData({ is_active: e.target.checked })}
-    //             className="h-4 w-4 rounded border-gray-300"
-    //           />
-    //           <Label htmlFor="is_active" className="cursor-pointer">
-    //             Active
-    //           </Label>
-    //         </div>
-    //       </div>
-    //     </div>
-
-    //     <div className="flex justify-end gap-3 border-t pt-6">
-    //       <Button
-    //         type="button"
-    //         variant="outline"
-    //         onClick={() => router.push("/dashboard/audit/universe")}
-    //         disabled={isSubmitting}>
-    //         Cancel
-    //       </Button>
-    //       <Button type="submit" disabled={isSubmitting} className="gap-2">
-    //         <Save className="h-4 w-4" />
-    //         {isSubmitting
-    //           ? isEditing
-    //             ? "Updating..."
-    //             : "Creating..."
-    //           : isEditing
-    //             ? "Update Universe"
-    //             : "Create Universe"}
-    //       </Button>
-    //     </div>
-    //   </form>
-    // </Card>
-    <Card className="animate-fade-in mx-auto w-full max-w-4xl shadow-lg">
+    <Card className="animate-fade-in mx-auto w-full max-w-4xl">
       <form onSubmit={handleUniverseSubmit}>
         {/* Header Section */}
         <div className="p-6 pb-0 sm:p-8">
@@ -836,15 +818,11 @@ export default function AuditUniverseForm({
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-w-[160px] gap-2 sm:w-auto">
+            className="w-full min-w-[160px] gap-2 sm:w-auto"
+            isLoading={isSubmitting}
+            loadingText={isEditing ? "Updating..." : "Creating..."}>
             <Save className="h-4 w-4" />
-            {isSubmitting
-              ? isEditing
-                ? "Updating..."
-                : "Creating..."
-              : isEditing
-                ? "Update Universe"
-                : "Create Universe"}
+            {isEditing ? "Update Universe" : "Create Universe"}
           </Button>
         </div>
       </form>

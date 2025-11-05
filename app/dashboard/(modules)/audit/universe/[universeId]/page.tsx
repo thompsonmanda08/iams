@@ -18,13 +18,13 @@ const UniversePage = async ({ params }: { params: Promise<{ universeId: string }
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <BackButton />
               <PageHeader
                 title="Universe Details"
                 description="Manage universe items and track auditable areas"
                 icon="Globe"
               />
             </div>
+            <BackButton title="Back to Universes" />
           </div>
         </div>
       </div>

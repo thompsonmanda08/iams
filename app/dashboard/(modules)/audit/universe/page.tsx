@@ -8,22 +8,23 @@ import { getUniverses, getUniverseItems } from "@/app/_actions/audit-module-acti
 const AuditUniversePage = async () => {
   const universesResponse = await getUniverses();
 
-  const universes = universesResponse?.data?.data || universesResponse?.data || [];
+  const universes = universesResponse?.data?.data || [];
   const universeItemsMap: Record<string, any[]> = {};
   const pagination = universesResponse?.data?.pagination;
 
   // Fetch all universe items for each universe
   await Promise.all(
-    universes.map(async (universe: any) => {
-      try {
-        const itemsResponse = await getUniverseItems({ audit_universe_id: universe.id });
-        const itemsData = itemsResponse?.data?.data?.data || itemsResponse?.data?.data || [];
-        universeItemsMap[universe.id] = Array.isArray(itemsData) ? itemsData : [];
-      } catch (error) {
-        console.error(`Error fetching universe items for ${universe.id}:`, error);
-        universeItemsMap[universe.id] = [];
-      }
-    })
+    universes &&
+      universes?.map(async (universe: any) => {
+        try {
+          const itemsResponse = await getUniverseItems({ audit_universe_id: universe.id });
+          const itemsData = itemsResponse?.data?.data?.data || itemsResponse?.data?.data || [];
+          universeItemsMap[universe.id] = Array.isArray(itemsData) ? itemsData : [];
+        } catch (error) {
+          console.error(`Error fetching universe items for ${universe.id}:`, error);
+          universeItemsMap[universe.id] = [];
+        }
+      })
   );
 
   console.log("UNIVERSE", universes);
@@ -37,7 +38,7 @@ const AuditUniversePage = async () => {
             <PageHeader
               title="Audit Universe"
               description="Comprehensive Audit Management System"
-              icon="FileText"
+              icon="Globe"
             />
             <div className="flex gap-2">
               <Link href="/dashboard/audit/universe/new">
