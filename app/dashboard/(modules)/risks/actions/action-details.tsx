@@ -95,15 +95,6 @@ interface RiskAction {
   updated_at: string;
 }
 
-interface Update {
-  date: string;
-  updateType: string;
-  description: string;
-  attachment?: string;
-  progress: number;
-  status: string;
-}
-
 interface ActionDetailsProps {
   action: RiskAction;
 }
@@ -115,11 +106,16 @@ export function ActionDetails({ action }: ActionDetailsProps) {
     toast.success(`Risk response changed to: ${option}`);
   };
 
+  // Safe accessors with fallbacks
+  const safeGet = <T,>(value: T | undefined | null, fallback: T): T => {
+    return value ?? fallback;
+  };
+
   // Calculate risk scores
   const inherentScore =
-    action.inherent_score || action.inherent_likelihood * action.inherent_impact;
+    action?.inherent_score || (action?.inherent_likelihood || 0) * (action?.inherent_impact || 0);
   const residualScore =
-    action.residual_score || action.residual_likelihood * action.residual_impact;
+    action?.residual_score || (action?.residual_likelihood || 0) * (action?.residual_impact || 0);
 
   // Get risk level
   const getRiskLevel = (score: number) => {
@@ -164,7 +160,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
   };
 
   // Format date safely
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString || dateString === "0001-01-01T00:00:00Z") return "Not set";
     try {
       return format(new Date(dateString), "MMMM dd, yyyy");
@@ -174,7 +170,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
   };
 
   // Check if date is overdue
-  const isOverdue = (dateString: string | null) => {
+  const isOverdue = (dateString: string | null | undefined) => {
     if (!dateString || dateString === "0001-01-01T00:00:00Z") return false;
     try {
       return new Date(dateString) < new Date();
@@ -192,10 +188,14 @@ export function ActionDetails({ action }: ActionDetailsProps) {
             <div className="space-y-3">
               <BackButton title="Back to Actions" />
               <div>
-                <h1 className="text-foreground text-3xl font-bold">{action.title}</h1>
-                <p className="text-muted-foreground mt-2 max-w-2xl text-sm">{action.description}</p>
+                <h1 className="text-foreground text-3xl font-bold">
+                  {action?.title || "Untitled Risk"}
+                </h1>
+                <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
+                  {action?.description || "No description available"}
+                </p>
                 <p className="text-muted-foreground mt-2 font-mono text-xs uppercase">
-                  ID: {action.id}
+                  ID: {action?.id || "N/A"}
                 </p>
               </div>
             </div>
@@ -241,8 +241,8 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-muted-foreground text-sm">Status</p>
-                    <Badge variant={getStatusVariant(action.status)} className="mt-1">
-                      {action.status}
+                    <Badge variant={getStatusVariant(action?.status)} className="mt-1">
+                      {action?.status || "Unknown"}
                     </Badge>
                   </div>
                 </div>
@@ -257,8 +257,8 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-muted-foreground text-sm">Risk Response</p>
-                    <Badge className={cn("mt-1 border", getResponseColor(action.risk_response))}>
-                      {action.risk_response}
+                    <Badge className={cn("mt-1 border", getResponseColor(action?.risk_response))}>
+                      {action?.risk_response || "Not set"}
                     </Badge>
                   </div>
                 </div>
@@ -273,7 +273,9 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-muted-foreground text-sm">Risk Appetite</p>
-                    <p className="mt-1 text-lg font-semibold">{action.risk_appetite_status}</p>
+                    <p className="mt-1 text-lg font-semibold">
+                      {action?.risk_appetite_status || "Not specified"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -301,11 +303,11 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">Likelihood</p>
-                    <p className="text-2xl font-bold">{action.inherent_likelihood}</p>
+                    <p className="text-2xl font-bold">{action?.inherent_likelihood || 0}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">Impact</p>
-                    <p className="text-2xl font-bold">{action.inherent_impact}</p>
+                    <p className="text-2xl font-bold">{action?.inherent_impact || 0}</p>
                   </div>
                 </div>
                 <div className="border-t pt-2">
@@ -334,11 +336,11 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">Likelihood</p>
-                    <p className="text-2xl font-bold">{action.residual_likelihood}</p>
+                    <p className="text-2xl font-bold">{action?.residual_likelihood || 0}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">Impact</p>
-                    <p className="text-2xl font-bold">{action.residual_impact}</p>
+                    <p className="text-2xl font-bold">{action?.residual_impact || 0}</p>
                   </div>
                 </div>
                 <div className="border-t pt-2">
@@ -363,11 +365,11 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                     <div className="mt-1 flex items-center gap-2">
                       <div
                         className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: action.category?.color }}
+                        style={{ backgroundColor: action?.category?.color || "#ccc" }}
                       />
-                      <p className="font-semibold">{action.category.name}</p>
+                      <p className="font-semibold">{action?.category?.name || "Not specified"}</p>
                       <Badge variant="outline" className="text-xs">
-                        {action.category.code}
+                        {action?.category?.code || "N/A"}
                       </Badge>
                     </div>
                   </div>
@@ -376,9 +378,9 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                     <p className="text-muted-foreground text-sm">Department</p>
                     <div className="mt-1 flex items-center gap-2">
                       <Building className="text-muted-foreground h-4 w-4" />
-                      <p className="font-semibold">{action.department.name}</p>
+                      <p className="font-semibold">{action?.department?.name || "Not specified"}</p>
                       <Badge variant="outline" className="text-xs">
-                        {action.department.code}
+                        {action?.department?.code || "N/A"}
                       </Badge>
                     </div>
                   </div>
@@ -389,9 +391,13 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                       <User className="text-muted-foreground h-4 w-4" />
                       <div>
                         <p className="font-semibold">
-                          {action.risk_owner.first_name} {action.risk_owner.last_name}
+                          {action?.risk_owner?.first_name || action?.risk_owner?.last_name
+                            ? `${action.risk_owner.first_name || ""} ${action.risk_owner.last_name || ""}`.trim()
+                            : "Not assigned"}
                         </p>
-                        <p className="text-muted-foreground text-xs">{action.risk_owner.email}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {action?.risk_owner?.email || "No email"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -399,14 +405,14 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   <div>
                     <p className="text-muted-foreground text-sm">Strategic Objective</p>
                     <p className="mt-1 font-semibold">
-                      {action.strategic_objective || "Not specified"}
+                      {action?.strategic_objective || "Not specified"}
                     </p>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground text-sm">Step</p>
                     <Badge variant="outline" className="mt-1">
-                      Step {action.step}
+                      Step {action?.step || 0}
                     </Badge>
                   </div>
                 </div>
@@ -422,12 +428,12 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <div className="space-y-3">
                   <div>
                     <p className="text-muted-foreground text-sm">Macro Process</p>
-                    <p className="mt-1 font-semibold">{action.macro_process || "Not specified"}</p>
+                    <p className="mt-1 font-semibold">{action?.macro_process || "Not specified"}</p>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground text-sm">Sub Process</p>
-                    <p className="mt-1 font-semibold">{action.sub_process || "Not specified"}</p>
+                    <p className="mt-1 font-semibold">{action?.sub_process || "Not specified"}</p>
                   </div>
 
                   <div>
@@ -435,10 +441,11 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                     <div className="mt-1 flex items-center gap-2">
                       <Calendar className="text-muted-foreground h-4 w-4" />
                       <div>
-                        <p className="font-semibold">{formatDate(action.target_closing_date)}</p>
-                        {isOverdue(action.target_closing_date) && (
+                        <p className="font-semibold">{formatDate(action?.target_closing_date)}</p>
+                        {isOverdue(action?.target_closing_date) && (
                           <p className="text-xs text-red-600">
-                            Overdue{action.overdue_days ? ` by ${action.overdue_days} days` : ""}
+                            Overdue
+                            {action?.overdue_days ? ` by ${action.overdue_days} days` : ""}
                           </p>
                         )}
                       </div>
@@ -448,11 +455,11 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   <div>
                     <p className="text-muted-foreground text-sm">Recurrence</p>
                     <Badge variant="outline" className="mt-1 capitalize">
-                      {action.recurrence}
+                      {action?.recurrence || "Not specified"}
                     </Badge>
                   </div>
 
-                  {action.review_date && (
+                  {action?.review_date && (
                     <div>
                       <p className="text-muted-foreground text-sm">Review Date</p>
                       <p className="mt-1 font-semibold">{formatDate(action.review_date)}</p>
@@ -470,7 +477,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <CardTitle className="text-lg font-semibold">Root Cause</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{action.root_cause || "Not specified"}</p>
+                <p className="text-sm">{action?.root_cause || "Not specified"}</p>
               </CardContent>
             </Card>
 
@@ -478,11 +485,13 @@ export function ActionDetails({ action }: ActionDetailsProps) {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-lg font-semibold">
                   Existing Controls
-                  <Badge variant="outline">Effectiveness: {action.control_effectiveness}/5</Badge>
+                  <Badge variant="outline">
+                    Effectiveness: {action?.control_effectiveness || 0}/5
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{action.existing_controls || "No controls specified"}</p>
+                <p className="text-sm">{action?.existing_controls || "No controls specified"}</p>
               </CardContent>
             </Card>
           </div>
@@ -496,14 +505,14 @@ export function ActionDetails({ action }: ActionDetailsProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">{action.treatment_plan || "No treatment plan specified"}</p>
+              <p className="text-sm">{action?.treatment_plan || "No treatment plan specified"}</p>
               <div className="mt-4 flex items-center gap-4 border-t pt-4">
                 <div className="flex items-center gap-2">
                   <DollarSign className="text-muted-foreground h-4 w-4" />
                   <div>
                     <p className="text-muted-foreground text-xs">Mitigation Cost</p>
                     <p className="font-semibold">
-                      {action.mitigation_cost
+                      {action?.mitigation_cost
                         ? `$${action.mitigation_cost.toLocaleString()}`
                         : "Not specified"}
                     </p>
