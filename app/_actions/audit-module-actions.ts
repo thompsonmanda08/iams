@@ -17,7 +17,9 @@ import type {
   ScheduledReport,
   AuditSettings,
   SettingsInput,
-  TemplateCategory
+  TemplateCategory,
+  CreateUniversePayload,
+  CreateUniverseItemPayload
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
@@ -1617,6 +1619,253 @@ export async function deleteBudgetLine(budgetId: string, lineId: string): Promis
       error,
       "DELETE | DELETE BUDGET LINE",
       `/api/v1/audit/budget-lines/${lineId}`
+    );
+  }
+}
+
+// ============================================================================
+// AUDIT UNIVERSE ACTIONS
+// ============================================================================
+
+/**
+ * Create a new audit universe
+ */
+export async function createUniverse(payload: CreateUniversePayload): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/audit/universes",
+      data: payload
+    });
+
+    revalidatePath("/dashboard/audit/universe");
+    revalidatePath("/dashboard/audit/universe/new");
+    return successResponse(response.data.data, "Universe created successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE UNIVERSE", "/api/v1/audit/universes");
+  }
+}
+
+/**
+ * Get all audit universes
+ */
+export async function getUniverses(params?: {
+  page?: number;
+  page_size?: number;
+  is_active?: boolean;
+}): Promise<APIResponse> {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.page_size) queryParams.append("page_size", params.page_size.toString());
+    if (params?.is_active !== undefined)
+      queryParams.append("is_active", params.is_active.toString());
+
+    const url = `/api/v1/audit/universes${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data.data, "Universes fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | FETCH UNIVERSES", "/api/v1/audit/universes");
+  }
+}
+
+/**
+ * Get a single audit universe by ID
+ */
+export async function getUniverseById(universeId: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit/universes/${universeId}`
+    });
+
+    return successResponse(response.data.data, "Universe fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | FETCH UNIVERSE", `/api/v1/audit/universes/${universeId}`);
+  }
+}
+
+/**
+ * Update an audit universe
+ */
+export async function updateUniverse(
+  universeId: string,
+  payload: Partial<CreateUniversePayload>
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url: `/api/v1/audit/universes/${universeId}`,
+      data: payload
+    });
+
+    revalidatePath("/dashboard/audit/universe");
+    revalidatePath(`/dashboard/audit/universe/${universeId}`);
+
+    return successResponse(response.data.data, "Universe updated successfully");
+  } catch (error: any) {
+    return handleError(error, "PATCH | UPDATE UNIVERSE", `/api/v1/audit/universes/${universeId}`);
+  }
+}
+
+/**
+ * Delete an audit universe
+ */
+export async function deleteUniverse(universeId: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/audit/universes/${universeId}`
+    });
+
+    revalidatePath("/dashboard/audit/universe");
+
+    return successResponse(response.data, "Universe deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | DELETE UNIVERSE", `/api/v1/audit/universes/${universeId}`);
+  }
+}
+
+// ============================================================================
+// AUDIT UNIVERSE ITEM ACTIONS
+// ============================================================================
+
+/**
+ * Create a new universe item
+ */
+export async function createUniverseItem(
+  payload: CreateUniverseItemPayload
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: "/api/v1/audit/universe-items",
+      data: payload
+    });
+
+    revalidatePath("/dashboard/audit/universe");
+    revalidatePath("/dashboard/audit/universe/new");
+    if (payload.audit_universe_id) {
+      revalidatePath(`/dashboard/audit/universe/${payload.audit_universe_id}`);
+    }
+
+    return successResponse(response.data.data, "Universe item created successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE UNIVERSE ITEM", "/api/v1/audit/universe-items");
+  }
+}
+
+/**
+ * Get all universe items
+ */
+export async function getUniverseItems(params?: {
+  page?: number;
+  page_size?: number;
+  audit_universe_id?: string;
+}): Promise<APIResponse> {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.page_size) queryParams.append("page_size", params.page_size.toString());
+    if (params?.audit_universe_id)
+      queryParams.append("audit_universe_id", params.audit_universe_id);
+
+    const url = `/api/v1/audit/universe-items${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data.data, "Universe items fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | FETCH UNIVERSE ITEMS", "/api/v1/audit/universe-items");
+  }
+}
+
+/**
+ * Get a single universe item by ID
+ */
+export async function getUniverseItemById(itemId: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/audit/universe-items/${itemId}`
+    });
+
+    return successResponse(response.data.data, "Universe item fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FETCH UNIVERSE ITEM",
+      `/api/v1/audit/universe-items/${itemId}`
+    );
+  }
+}
+
+/**
+ * Update a universe item
+ */
+export async function updateUniverseItem(
+  itemId: string,
+  payload: Partial<CreateUniverseItemPayload>,
+  universeId?: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/audit/universe-items/${itemId}`,
+      data: payload
+    });
+
+    revalidatePath("/dashboard/audit/universe");
+    if (universeId) {
+      revalidatePath(`/dashboard/audit/universe/${universeId}`);
+    }
+
+    return successResponse(response.data.data, "Universe item updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE UNIVERSE ITEM",
+      `/api/v1/audit/universe-items/${itemId}`
+    );
+  }
+}
+
+/**
+ * Delete a universe item
+ */
+export async function deleteUniverseItem(
+  itemId: string,
+  universeId?: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/audit/universe-items/${itemId}`
+    });
+
+    revalidatePath("/dashboard/audit/universe");
+    if (universeId) {
+      revalidatePath(`/dashboard/audit/universe/${universeId}`);
+    }
+
+    return successResponse(response.data, "Universe item deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE UNIVERSE ITEM",
+      `/api/v1/audit/universe-items/${itemId}`
     );
   }
 }

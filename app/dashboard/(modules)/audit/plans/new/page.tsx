@@ -45,7 +45,7 @@ export default function NewAuditPlanPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
-  const teamMembers = ((teamMemberResponse?.data || []) as User[]) ?? [];
+  const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
 
   // Form state
   const [formData, setFormData] = useState({

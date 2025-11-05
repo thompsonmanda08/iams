@@ -67,7 +67,9 @@ export function DatePicker({
               classNames?.input
             )}
             disabled={isDisabled || props?.disabled}>
-            {value ? format(value, "PPP") : <span>Pick a date</span>}
+            {value && value instanceof Date && !isNaN(value.getTime())
+              ? format(value, "PPP")
+              : <span>Pick a date</span>}
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
