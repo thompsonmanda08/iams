@@ -591,7 +591,7 @@ export function MultiStepRiskForm({
           {currentStep === 1 && (
             <>
               <div className="grid gap-2">
-                <Label htmlFor="title">Risk Title *</Label>
+                <Label htmlFor="title">Risk Title<span className="text-destructive">*</span></Label>
                 <Input
                   id="title"
                   placeholder="Enter risk title"
@@ -602,7 +602,7 @@ export function MultiStepRiskForm({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="recurrence">Recurrence</Label>
+                <Label htmlFor="recurrence">Recurrence<span className="text-destructive">*</span></Label>
                 <Select
                   value={stepOneData.recurrence}
                   onValueChange={(value) =>
@@ -620,7 +620,7 @@ export function MultiStepRiskForm({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">Description <span className="text-destructive">*</span></Label>
                 <Textarea
                   id="description"
                   placeholder="Describe the risk in detail"
@@ -724,7 +724,7 @@ export function MultiStepRiskForm({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="root_cause">Root Cause</Label>
+                <Label htmlFor="root_cause">Root Cause<span className="text-destructive">*</span></Label>
                 <Textarea
                   id="root_cause"
                   placeholder="Describe the underlying cause of this risk"
