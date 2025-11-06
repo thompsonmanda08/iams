@@ -15,18 +15,29 @@ import { Button } from "@/components/ui/button";
 import { useRefreshToken } from "@/hooks/use-users-query-data";
 import { lockScreenOnUserIdle } from "@/app/_actions/auth-actions";
 import { AuthSession } from "@/lib/types";
+import { toast } from "sonner";
 
 const DEFAULT_TIMEOUT = 90 * 1000; // SECONDS
 
 interface ScreenLockProps {
   open: boolean;
   onStillHere?: () => Promise<void>;
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  handleUserLogOut: () => void;
+  hasLoggedOutRef: React.MutableRefObject<boolean>;
 }
 
-function ScreenLock({ open, onStillHere }: ScreenLockProps) {
-  const [isLoading, setIsLoading] = useState(false);
+function ScreenLock({
+  open,
+  onStillHere,
+  isLoading,
+  setIsLoading,
+  handleUserLogOut,
+  hasLoggedOutRef
+}: ScreenLockProps) {
   const [seconds, setSeconds] = useState(DEFAULT_TIMEOUT / 1000); // REMAINING SECONDS
-  const hasLoggedOutRef = useRef(false);
+
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset countdown when dialog opens or closes
@@ -56,44 +67,6 @@ function ScreenLock({ open, onStillHere }: ScreenLockProps) {
 
     setIsLoading(false);
   }, [onStillHere]);
-
-  const handleUserLogOut = useCallback(async () => {
-    if (hasLoggedOutRef.current) return; // Prevent multiple logout calls
-    hasLoggedOutRef.current = true;
-
-    setIsLoading(true);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
-
-    try {
-      const res = await fetch("/api/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ reason: "User session timed out." }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const response = await res.json();
-
-      // Force a hard redirect to ensure clean state
-      window.location.replace(response?.redirect || "/login");
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error("Logout error:", error);
-      // Force redirect even on error using replace to avoid back button issues
-      window.location.replace("/login");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -193,7 +166,8 @@ function ScreenLock({ open, onStillHere }: ScreenLockProps) {
 
 export function IdleTimerContainer({ session }: { session: AuthSession | null }) {
   const pathname = usePathname();
-
+  const [isLoading, setIsLoading] = useState(false);
+  const hasLoggedOutRef = useRef(false);
   const [state, setState] = useState("Active");
   const [count, setCount] = useState(0);
 
@@ -225,6 +199,44 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     disabled: !loggedIn
   });
 
+  const handleUserLogOut = useCallback(async () => {
+    if (hasLoggedOutRef.current) return; // Prevent multiple logout calls
+    hasLoggedOutRef.current = true;
+
+    setIsLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+    try {
+      const res = await fetch("/api/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ reason: "User session timed out." }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const response = await res.json();
+
+      // Force a hard redirect to ensure clean state
+      window.location.replace(response?.redirect || "/login");
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error("Logout error:", error);
+      // Force redirect even on error using replace to avoid back button issues
+      window.location.replace("/login");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Callback to handle "I'm still here" button click
   const handleStillHere = useCallback(async () => {
     // First reset local idle state to close the dialog immediately
@@ -238,7 +250,9 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
       idleTimer.reset();
     } else {
       // If unlock fails, revert to idle state
-      setState("Idle");
+      // setState("Idle");
+      toast.error("Your session might have expired, redirecting...");
+      handleUserLogOut();
     }
   }, [idleTimer]);
 
@@ -249,7 +263,16 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
   // Render the ScreenLock component when idle
   if (isIdle && session?.screen_locked) {
-    return <ScreenLock open={isIdle} onStillHere={handleStillHere} />;
+    return (
+      <ScreenLock
+        open={isIdle}
+        onStillHere={handleStillHere}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        handleUserLogOut={handleUserLogOut}
+        hasLoggedOutRef={hasLoggedOutRef}
+      />
+    );
   }
 
   return null;
