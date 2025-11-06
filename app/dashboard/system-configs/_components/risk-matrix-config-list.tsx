@@ -107,7 +107,7 @@ export function RiskMatrixConfigList() {
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Matrix
+          Create Risk Matrix
         </Button>
       </div>
 

@@ -1,14 +1,12 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { CreateRiskResponseDialog } from "./create-risk-response-dialog";
-import { EditRiskResponseDialog } from "./edit-risk-response-dialog";
 import { deleteRiskResponse, getRiskResponses } from "@/app/_actions/config-actions";
+import { RiskCauseDialog } from "./risk-causes-dialog";
 
 type RiskResponse = {
   id: string;
@@ -18,11 +16,10 @@ type RiskResponse = {
   updated_at: string;
 };
 
-export function RiskResponsesList() {
+export function RiskCausesList() {
   const [responses, setResponses] = useState<RiskResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialog, setEditDialog] = useState<{
+  const [dialog, setDialog] = useState<{
     open: boolean;
     response: RiskResponse | null;
   }>({ open: false, response: null });
@@ -75,8 +72,12 @@ export function RiskResponsesList() {
     }
   };
 
+  const handleCreateClick = () => {
+    setDialog({ open: true, response: null });
+  };
+
   const handleEditClick = (response: RiskResponse) => {
-    setEditDialog({ open: true, response });
+    setDialog({ open: true, response });
   };
 
   if (isLoading) {
@@ -91,14 +92,12 @@ export function RiskResponsesList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-foreground text-2xl font-semibold">Risk Responses</h2>
-          <p className="text-muted-foreground text-sm">
-            Define response strategies for risk management
-          </p>
+          <h2 className="text-foreground text-2xl font-semibold">Risk Causes</h2>
+          <p className="text-muted-foreground text-sm">Define risk causes for risk management</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={handleCreateClick}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Risk Strategy Response
+          Create Risk Cause
         </Button>
       </div>
 
@@ -140,30 +139,22 @@ export function RiskResponsesList() {
         {responses.length === 0 && (
           <Card className="md:col-span-2 lg:col-span-3">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">No risk responses configured</p>
-              <Button onClick={() => setCreateDialogOpen(true)}>
+              <p className="text-muted-foreground mb-4">No risk causes configured</p>
+              <Button onClick={handleCreateClick}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Your First Response
+                Create Your Risk Cause
               </Button>
             </CardContent>
           </Card>
         )}
       </div>
 
-      <CreateRiskResponseDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
+      <RiskCauseDialog
+        open={dialog.open}
+        onOpenChange={(open) => setDialog({ open, response: null })}
+        response={dialog.response}
         onSuccess={fetchResponses}
       />
-
-      {editDialog.response && (
-        <EditRiskResponseDialog
-          open={editDialog.open}
-          onOpenChange={(open) => setEditDialog({ open, response: null })}
-          response={editDialog.response}
-          onSuccess={fetchResponses}
-        />
-      )}
 
       <ConfirmationModal
         open={deleteDialog.open}
