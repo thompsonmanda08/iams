@@ -1,8 +1,11 @@
+import { Grid3x3, FolderTree, Shield, GitBranch, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RiskCategoriesConfig } from "../_components/risk-categories-config";
 import { RiskMatrixConfigList } from "../_components/risk-matrix-config-list";
 import { RiskResponsesList } from "../_components/risk-responses-list";
 import PageHeader from "@/components/page-header";
+import { BusinessProcessList } from "../_components/business-process-list";
+import { RiskCausesList } from "../_components/risk-causes-list";
 
 export default async function RiskConfigurationsPage() {
   return (
@@ -17,14 +20,6 @@ export default async function RiskConfigurationsPage() {
             Manage risk assessment parameters and settings"
               icon="ShieldAlert"
             />
-            {/* <div className="flex gap-2">
-              <Link href="/dashboard/audit/budgets/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Action
-                </Button>
-              </Link>
-            </div> */}
           </div>
         </div>
       </div>
@@ -33,9 +28,26 @@ export default async function RiskConfigurationsPage() {
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="matrix" className="space-y-4">
           <TabsList className="w-full">
-            <TabsTrigger value="matrix">Risk Matrix</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="response">Response Strategies</TabsTrigger>
+            <TabsTrigger value="matrix" className="gap-2">
+              <Grid3x3 className="h-4 w-4" />
+              Risk Matrix
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="gap-2">
+              <FolderTree className="h-4 w-4" />
+              Categories
+            </TabsTrigger>
+            <TabsTrigger value="response" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Response Strategies
+            </TabsTrigger>
+            <TabsTrigger value="processes" className="gap-2">
+              <GitBranch className="h-4 w-4" />
+              Business Processes
+            </TabsTrigger>
+            <TabsTrigger value="causes" className="gap-2">
+              <AlertCircle className="h-4 w-4" />
+              Risk Causes
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="matrix">
@@ -48,6 +60,14 @@ export default async function RiskConfigurationsPage() {
 
           <TabsContent value="response">
             <RiskResponsesList />
+          </TabsContent>
+
+          <TabsContent value="processes">
+            <BusinessProcessList />
+          </TabsContent>
+
+          <TabsContent value="causes">
+            <RiskCausesList />
           </TabsContent>
         </Tabs>
       </main>

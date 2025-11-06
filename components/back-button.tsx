@@ -11,7 +11,7 @@ const BackButton = ({ title }: BackButtonProps) => {
   const router = useRouter();
   return (
     <div className="mb-2 flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={() => router.back()}>
+      <Button variant="outline" onClick={() => router.back()}>
         <ArrowLeft className="mr-2 size-4" />
         {title}
       </Button>

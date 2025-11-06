@@ -1,36 +1,30 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Plus, Trash2, Edit2, Save, X, Building2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  createRiskCategory,
-  updateRiskCategory,
-  getRiskCategories
-} from "@/app/_actions/risk-module-actions";
+import { getRiskCategories } from "@/app/_actions/risk-module-actions";
 import { deleteRiskCategory, getDepartments } from "@/app/_actions/config-actions";
 import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { Badge } from "@/components/ui/badge";
+import { RiskCategoryFormDialog } from "./risk-category-dialog";
 
 type RiskCategory = {
-  id?: string;
+  id: string;
   department_id: string;
   name: string;
   code: string;
   description: string | null;
   sort_order: number;
   is_active: boolean;
-  editing?: boolean;
+  department?: {
+    id: string;
+    name: string;
+    code: string;
+  };
 };
 
 type Department = {
@@ -44,7 +38,18 @@ export function RiskCategoriesConfig() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+
+  // Modal states
+  const [formDialog, setFormDialog] = useState<{
+    open: boolean;
+    mode: "create" | "edit";
+    category: RiskCategory | null;
+  }>({
+    open: false,
+    mode: "create",
+    category: null
+  });
+
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     categoryId: string | null;
@@ -54,6 +59,7 @@ export function RiskCategoriesConfig() {
     categoryId: null,
     categoryName: null
   });
+
   const router = useRouter();
 
   // Fetch initial data
@@ -67,10 +73,14 @@ export function RiskCategoriesConfig() {
       setIsLoading(true);
       const response = await getRiskCategories();
       if (response.success && response.data?.data) {
-        setCategories(response.data?.data);
+        setCategories(response.data.data);
+      } else {
+        setCategories([]);
       }
     } catch (error) {
+      console.error("Error fetching categories:", error);
       toast.error("Failed to load risk categories");
+      setCategories([]);
     } finally {
       setIsLoading(false);
     }
@@ -79,103 +89,43 @@ export function RiskCategoriesConfig() {
   const fetchDepartments = async () => {
     try {
       setLoadingDepartments(true);
-      const response = await getDepartments({ isActive: true });
+      const response = await getDepartments();
       if (response.success && response.data?.data) {
-        setDepartments(response.data?.data);
+        setDepartments(response.data.data);
+      } else {
+        setDepartments([]);
       }
     } catch (error) {
+      console.error("Error fetching departments:", error);
       toast.error("Failed to load departments");
+      setDepartments([]);
     } finally {
       setLoadingDepartments(false);
     }
   };
 
   const handleAddCategory = () => {
-    const tempId = `temp-${Date.now()}`;
-    const newCategory: RiskCategory = {
-      id: tempId,
-      department_id: "",
-      name: "",
-      code: "",
-      description: "",
-      sort_order: categories.length + 1,
-      is_active: true,
-      editing: true
-    };
-    setCategories([...categories, newCategory]);
+    setFormDialog({
+      open: true,
+      mode: "create",
+      category: null
+    });
   };
 
-  const handleEditCategory = (id: string) => {
-    setCategories(categories?.map((cat) => (cat.id === id ? { ...cat, editing: true } : cat)));
+  const handleEditCategory = (category: RiskCategory) => {
+    setFormDialog({
+      open: true,
+      mode: "edit",
+      category
+    });
   };
 
-  const handleSaveCategory = async (category: RiskCategory) => {
-    if (!category.name.trim()) {
-      toast.info("Category name is required");
-      return;
-    }
-    if (!category.code.trim()) {
-      toast.info("Category code is required");
-      return;
-    }
-    if (!category.department_id) {
-      toast.info("Department is required");
-      return;
-    }
-    setSavingIds((prev) => new Set(prev).add(category.id!));
-
-    try {
-      const isNew = category.id?.startsWith("temp-");
-      const payload = {
-        department_id: category.department_id,
-        name: category.name,
-        code: category.code,
-        description: category.description || "",
-        sort_order: category.sort_order
-      };
-
-      let response;
-      if (isNew) {
-        response = await createRiskCategory(payload);
-      } else {
-        response = await updateRiskCategory(category.id!, payload);
-      }
-
-      if (response.success) {
-        toast.success(`Risk category ${isNew ? "created" : "updated"} successfully`);
-        await fetchCategories();
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to save category");
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save category");
-    } finally {
-      setSavingIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(category.id!);
-        return newSet;
-      });
-    }
-  };
-
-  const handleDeleteClick = (id: string) => {
-    // Handle temp categories immediately
-    if (id?.startsWith("temp-")) {
-      setCategories(categories.filter((cat) => cat.id !== id));
-      toast.success("Draft category removed");
-      return;
-    }
-
-    // For existing categories, open confirmation dialog
-    const category = categories.find((cat) => cat.id === id);
-    if (category) {
-      setDeleteDialog({
-        open: true,
-        categoryId: id,
-        categoryName: category.name
-      });
-    }
+  const handleDeleteClick = (category: RiskCategory) => {
+    setDeleteDialog({
+      open: true,
+      categoryId: category.id,
+      categoryName: category.name
+    });
   };
 
   const handleDeleteConfirm = async () => {
@@ -192,23 +142,23 @@ export function RiskCategoriesConfig() {
         toast.error(response.message || "Failed to delete category");
       }
     } catch (error) {
+      console.error("Error deleting category:", error);
       toast.error("Failed to delete risk category");
     }
   };
 
-  const handleCancelEdit = (id: string) => {
-    if (id?.startsWith("temp-")) {
-      setCategories(categories.filter((cat) => cat.id !== id));
-    } else {
-      setCategories(categories.map((cat) => (cat.id === id ? { ...cat, editing: false } : cat)));
-    }
+  const handleFormSuccess = async () => {
+    await fetchCategories();
+    router.refresh();
   };
 
-  const handleUpdateCategory = (id: string, field: keyof RiskCategory, value: any) => {
-    setCategories(categories.map((cat) => (cat.id === id ? { ...cat, [field]: value } : cat)));
+  // Get department name for display
+  const getDepartmentName = (departmentId: string) => {
+    const dept = departments.find((d) => d.id === departmentId);
+    return dept ? `${dept.name} | ${dept.code}` : "Unknown Department";
   };
 
-  if (isLoading) {
+  if (isLoading || loadingDepartments) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
@@ -220,186 +170,85 @@ export function RiskCategoriesConfig() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-foreground text-2xl font-semibold">Risk Categories</h2>
-          <p className="text-muted-foreground text-sm">
+          <h2 className="text-foreground text-2xl font-bold">Risk Categories</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
             Manage risk categories and their classifications
           </p>
         </div>
-        <Button onClick={handleAddCategory}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Category
+        <Button onClick={handleAddCategory} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create Risk Category
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {categories?.map((category) => {
-          const isSaving = savingIds.has(category.id!);
-          const isNew = category.id?.startsWith("temp-");
-
-          return (
-            <Card key={category.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    {category.editing ? (
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="mb-2" htmlFor={`name-${category.id}`}>
-                            Category Name *
-                          </Label>
-                          <Input
-                            id={`name-${category.id}`}
-                            value={category.name}
-                            onChange={(e) =>
-                              handleUpdateCategory(category.id!, "name", e.target.value)
-                            }
-                            placeholder="e.g., Financial Risk"
-                            disabled={isSaving}
-                          />
-                        </div>
-                        <div>
-                          <Label className="mb-2" htmlFor={`code-${category.id}`}>
-                            Code *
-                          </Label>
-                          <Input
-                            id={`code-${category.id}`}
-                            value={category.code}
-                            onChange={(e) =>
-                              handleUpdateCategory(
-                                category.id!,
-                                "code",
-                                e.target.value.toUpperCase()
-                              )
-                            }
-                            placeholder="e.g., FIN"
-                            maxLength={10}
-                            disabled={isSaving}
-                          />
-                        </div>
-                        <div>
-                          <Label className="mb-2" htmlFor={`department-${category.id}`}>
-                            Department *
-                          </Label>
-                          <Select
-                            value={category.department_id}
-                            onValueChange={(value) =>
-                              handleUpdateCategory(category.id!, "department_id", value)
-                            }
-                            disabled={loadingDepartments || isSaving}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select department">
-                                {loadingDepartments
-                                  ? "Loading..."
-                                  : category.department_id
-                                    ? departments.find((d) => d.id === category.department_id)
-                                        ?.name || "Select department"
-                                    : "Select department"}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {departments?.map((dept) => (
-                                <SelectItem key={dept.id} value={dept.id}>
-                                  <div className="flex items-center gap-2">
-                                    <Building2 className="h-4 w-4" />
-                                    <span>{dept.name}</span>
-                                    <span className="text-muted-foreground text-xs">
-                                      ({dept.code})
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="mb-2" htmlFor={`description-${category.id}`}>
-                            Description
-                          </Label>
-                          <Input
-                            id={`description-${category.id}`}
-                            value={category.description || ""}
-                            onChange={(e) =>
-                              handleUpdateCategory(category.id!, "description", e.target.value)
-                            }
-                            placeholder="Brief description"
-                            disabled={isSaving}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <CardTitle className="mb-2 flex items-center gap-2">
-                          {category.name}
-                        </CardTitle>
-                        <CardDescription>
-                          Code: {category.code} |{" "}
-                          {departments.find((d) => d.id === category.department_id)?.name}
-                        </CardDescription>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {category.editing ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleSaveCategory(category)}
-                          disabled={isSaving}>
-                          {isSaving ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Save className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleCancelEdit(category.id!)}
-                          disabled={isSaving}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditCategory(category.id!)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(category.id!)}>
-                          <Trash2 className="text-destructive h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              {!category.editing && category.description && (
-                <CardContent>
-                  <p className="text-muted-foreground text-sm">{category.description}</p>
-                </CardContent>
-              )}
-            </Card>
-          );
-        })}
-      </div>
-
-      {categories.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">No risk categories found</p>
-            <Button onClick={handleAddCategory}>
-              <Plus className="mr-2 h-4 w-4" />
+      {categories.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="bg-muted mb-4 rounded-full p-4">
+              <Plus className="text-muted-foreground h-8 w-8" />
+            </div>
+            <h3 className="text-foreground mb-2 text-lg font-semibold">No Risk Categories Yet</h3>
+            <p className="text-muted-foreground mb-6 text-center text-sm">
+              Get started by creating your first risk category to organize and classify risks.
+            </p>
+            <Button onClick={handleAddCategory} className="gap-2">
+              <Plus className="h-4 w-4" />
               Add Your First Category
             </Button>
           </CardContent>
         </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {categories.map((category) => (
+            <Card key={category.id} className="group transition-all">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="mb-2 text-lg">{category.name}</CardTitle>
+                    <Badge variant="outline" className="text-xs">
+                      {getDepartmentName(category.department_id)}
+                    </Badge>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0 font-mono text-xs">
+                    {category.code}
+                  </Badge>
+                </div>
+                <CardDescription className="mt-2 line-clamp-2">
+                  {category.description || "No description provided"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditCategory(category)}
+                    className="flex-1 gap-1.5">
+                    <Edit2 className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteClick(category)}
+                    className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
+      <RiskCategoryFormDialog
+        open={formDialog.open}
+        onOpenChange={(open) => setFormDialog({ open, mode: "create", category: null })}
+        category={formDialog.category}
+        departments={departments}
+        onSuccess={handleFormSuccess}
+        mode={formDialog.mode}
+      />
 
       <ConfirmationModal
         open={deleteDialog.open}

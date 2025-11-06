@@ -107,6 +107,7 @@ type StepOneData = {
   strategic_objective: string;
   root_cause: string;
   recurrence: "ongoing" | "one-time";
+  status?: string;
 };
 
 type StepTwoData = {
@@ -172,7 +173,8 @@ export function MultiStepRiskForm({
     sub_process: mode === "edit" && riskData ? riskData.sub_process : "",
     strategic_objective: mode === "edit" && riskData ? riskData.strategic_objective : "",
     root_cause: mode === "edit" && riskData ? riskData.root_cause : "",
-    recurrence: mode === "edit" && riskData ? riskData.recurrence : "ongoing"
+    recurrence: mode === "edit" && riskData ? riskData.recurrence : "ongoing",
+    status: mode === "edit" && riskData ? riskData.status.toUpperCase() : ""
   });
 
   const [stepTwoData, setStepTwoData] = useState<StepTwoData>({
