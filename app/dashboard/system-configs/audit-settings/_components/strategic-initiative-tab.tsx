@@ -27,12 +27,10 @@ import { Input } from "@/components/ui/input";
 import {
   createStrategicInitiative,
   updateStrategicInitiative,
-  deleteStrategicInitiative,
-  getStrategicPillars,
-  getStrategicInitiatives
+  deleteStrategicInitiative
 } from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -45,6 +43,10 @@ import {
 import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
+import {
+  useStrategicPillars,
+  useStrategicInitiatives
+} from "@/hooks/use-audit-settings-query-data";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Spinner } from "@/components/ui/spinner";
@@ -118,22 +120,20 @@ export default function StrategicInitiativeTab({
   };
   const [pillarId, setPillarId] = useState<string | null>(null);
 
-  const { data: initiativesResponse, isLoading: loadingInitiatives } = useQuery({
-    queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES, pillarId],
-    queryFn: () => getStrategicInitiatives(String(pillarId), { page: 1, page_size: 100 }),
-    enabled: !!pillarId
+  const { data: initiativesResponse, isLoading: loadingInitiatives } = useStrategicInitiatives(
+    pillarId || undefined,
+    { page: 1, page_size: 100 }
+  );
+
+  const initiatives = initiativesResponse?.data || [];
+  const pagination = initiativesResponse?.pagination || null;
+
+  const { data: pillarsResponse, isLoading: loadingPillars } = useStrategicPillars(undefined, {
+    page: 1,
+    page_size: 100
   });
 
-  const initiatives = initiativesResponse?.data?.data || [];
-  const pagination = initiativesResponse?.data?.pagination || null;
-
-  const { data: pillarsResponse, isLoading: loadingPillars } = useQuery({
-    queryKey: [QUERY_KEYS.STRATEGIC_PILLARS],
-    queryFn: () => getStrategicPillars(undefined, { page: 1, page_size: 100 })
-    // enabled: !!formData?.department_id
-  });
-
-  const pillars = pillarsResponse?.data?.data || [];
+  const pillars = pillarsResponse?.data || [];
 
   const pillarOptions = useMemo(() => {
     return pillars.map((pillar: any) => ({
@@ -264,7 +264,7 @@ export default function StrategicInitiativeTab({
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-sm">
-                          {item?.pillar || "No pillar assigned"}
+                          {item?.pillar || selectedPillar?.title || "No pillar assigned"}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -368,27 +368,27 @@ function CreateOrUpdate({
   });
 
   const { data } = useDepartments({
-    isActive: true,
+    is_active: true,
     page_size: 100,
     page: 1
   });
 
   const departments = (data?.data?.data || []) as Department[];
 
-  const { data: pillarsResponse, isLoading: loadingPillars } = useQuery({
-    queryKey: [QUERY_KEYS.STRATEGIC_PILLARS],
-    queryFn: () => getStrategicPillars(undefined, { page: 1, page_size: 100 }),
-    enabled: !!formData?.department_id
+  const { data: pillarsResponse, isLoading: loadingPillars } = useStrategicPillars(undefined, {
+    page: 1,
+    page_size: 100,
+    department_id: formData?.department_id
   });
 
-  const pillars = pillarsResponse?.data?.data || [];
+  const pillars = pillarsResponse?.data || [];
 
   const pillarOptions = useMemo(() => {
     return pillars.map((pillar: any) => ({
       id: pillar.id,
       name: pillar.title
     }));
-  }, []);
+  }, [pillars]);
 
   useEffect(() => {
     if (openModal) {
@@ -535,6 +535,7 @@ function CreateOrUpdate({
                 type="date"
                 // label="Start Date"
                 placeholder="Start Date"
+                minDate={new Date()}
                 value={
                   formData.start_date
                     ? (new Date(formData.start_date) as unknown as any)
@@ -551,7 +552,8 @@ function CreateOrUpdate({
               <DatePicker
                 type="date"
                 // label="End Date"
-                placeholder="Start Date"
+                placeholder="End Date"
+                minDate={new Date()}
                 value={
                   formData.end_date ? (new Date(formData.end_date) as unknown as any) : undefined
                 }

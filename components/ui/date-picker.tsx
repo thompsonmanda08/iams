@@ -22,6 +22,8 @@ export function DatePicker({
   classNames,
   value,
   onValueChange,
+  minDate,
+  maxDate,
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
@@ -33,6 +35,8 @@ export function DatePicker({
   isInvalid?: boolean;
   value?: Date;
   onValueChange?: (value?: Date) => void;
+  minDate?: Date;
+  maxDate?: Date;
   classNames?: {
     wrapper?: string;
     input?: string;
@@ -42,6 +46,17 @@ export function DatePicker({
   };
 }) {
   const [open, setOpen] = React.useState(false);
+
+  // Create disabled matcher for dates
+  const disabledDates = React.useMemo(() => {
+    if (!minDate && !maxDate) return undefined;
+
+    return (date: Date) => {
+      if (minDate && date < minDate) return true;
+      if (maxDate && date > maxDate) return true;
+      return false;
+    };
+  }, [minDate, maxDate]);
 
   return (
     <div className={cn("flex w-full flex-col", classNames?.wrapper)}>
@@ -77,7 +92,7 @@ export function DatePicker({
           <Calendar
             mode="single"
             selected={value}
-            disabled={isDisabled || props?.disabled}
+            disabled={disabledDates || (isDisabled || props?.disabled)}
             captionLayout="dropdown"
             onSelect={(date) => {
               onValueChange && onValueChange(date);

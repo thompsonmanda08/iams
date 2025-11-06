@@ -309,8 +309,6 @@ export function CreateOrUpdate({
 
   // Update form when initialData changes
   useEffect(() => {
-    console.log("🔄 Effect triggered:", { initialData, selectedId, openModal });
-
     if (openModal) {
       if (initialData && selectedId) {
         setFormData({
