@@ -1376,3 +1376,136 @@ export async function deleteRating(id: string): Promise<APIResponse> {
     return handleError(error, "DELETE | DELETE RATING", `/api/v1/risk-configs/rating-levels/${id}`);
   }
 }
+
+// Business Process Actions
+export async function getBusinessProcesses(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/business-processes",
+      method: "GET"
+    });
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "GET | BUSINESS PROCESSES", "/api/v1/business-processes");
+  }
+}
+
+export async function createBusinessProcess(data: {
+  name: string;
+  description: string | null;
+  parent_id: string | null;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/business-processes",
+      method: "POST",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "CREATE | BUSINESS PROCESS", "/api/v1/business-processes");
+  }
+}
+
+export async function updateBusinessProcess(
+  id: string,
+  data: {
+    name: string;
+    description: string | null;
+    parent_id: string | null;
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/business-processes/${id}`,
+      method: "PUT",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "UPDATE | BUSINESS PROCESS", `/api/v1/business-processes/${id}`);
+  }
+}
+
+export async function deleteBusinessProcess(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/business-processes/${id}`,
+      method: "DELETE"
+    });
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "DELETE | BUSINESS PROCESS", `/api/v1/business-processes/${id}`);
+  }
+}
+
+// Risk Causes Actions
+export async function getRiskCauses(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-causes",
+      method: "GET"
+    });
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "GET | RISK CAUSES", "/api/v1/risk-causes");
+  }
+}
+
+export async function createRiskCause(data: {
+  name: string;
+  description: string | null;
+  parent_id: string | null;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-causes",
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "CREATE | RISK CAUSE", "/api/v1/risk-causes");
+  }
+}
+
+export async function updateRiskCause(
+  id: string,
+  data: {
+    name: string;
+    description: string | null;
+    parent_id: string | null;
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-causes/${id}`,
+      method: "PUT",
+      data
+    });
+
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "UPDATE | RISK CAUSE", `/api/v1/risk-causes/${id}`);
+  }
+}
+
+export async function deleteRiskCause(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-causes/${id}`,
+      method: "DELETE"
+    });
+
+    revalidatePath("/dashboard/system-configs/risk-configs");
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "DELETE | RISK CAUSE", `/api/v1/risk-causes/${id}`);
+  }
+}

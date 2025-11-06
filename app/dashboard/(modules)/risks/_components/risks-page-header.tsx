@@ -19,8 +19,10 @@ export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderPro
       <div className="bg-card border-b">
         <div className="container mx-auto flex items-center justify-between px-4 py-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Risk Register</h1>
-            {registerName && <p className="text-muted-foreground mt-2">{registerName}</p>}
+            <h1 className="text-3xl font-bold tracking-tight">
+              {registerName ? registerName : "Risk Register"}
+            </h1>
+            <p className="text-muted-foreground mt-2">Manage and monitor organizational risks</p>
           </div>
           <div className="flex gap-4">
             <BackButton title="Back to registers" />

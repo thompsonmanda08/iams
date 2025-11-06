@@ -14,60 +14,87 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { createRiskResponse, updateRiskResponse } from "@/app/_actions/config-actions";
+import { createRiskCause, updateRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
 
-type RiskResponse = {
+type RiskCause = {
   id: string;
+  parent_id: string | null;
   name: string;
   description: string;
+  created_at: string;
+  updated_at: string;
 };
 
 type RiskCauseDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  response?: RiskResponse | null;
+  cause?: RiskCause | null;
 };
 
-export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: RiskCauseDialogProps) {
+export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCauseDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [availableCauses, setAvailableCauses] = useState<RiskCause[]>([]);
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    parent_id: string | null;
+  }>({
     name: "",
     description: "",
-    cause_id: ""
+    parent_id: null
   });
 
-  const isEditMode = !!response;
+  const isEditMode = !!cause;
+
   useEffect(() => {
-    if (open && response) {
+    if (open) {
+      fetchAvailableCauses();
+    }
+  }, [open]);
+
+  const fetchAvailableCauses = async () => {
+    try {
+      const response = await getRiskCauses();
+      if (response.success && response.data?.data) {
+        const causes = response.data.data.filter((c: RiskCause) => c.id !== cause?.id);
+        setAvailableCauses(causes);
+      }
+    } catch (error) {
+      toast.error("Failed to load available risk causes");
+    }
+  };
+
+  useEffect(() => {
+    if (open && cause) {
       setFormData({
-        name: response.name,
-        description: response.description,
-        cause_id: response.id
+        name: cause.name,
+        description: cause.description,
+        parent_id: cause.parent_id || null
       });
     } else if (!open) {
-      setFormData({ name: "", description: "", cause_id: "" });
+      setFormData({ name: "", description: "", parent_id: null });
     }
-  }, [open, response]);
+  }, [open, cause]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Response name is required");
+      toast.error("Risk cause name is required");
       return;
     }
 
     setIsLoading(true);
     try {
       const result = isEditMode
-        ? await updateRiskResponse(response.id, formData)
-        : await createRiskResponse(formData);
+        ? await updateRiskCause(cause.id, formData)
+        : await createRiskCause(formData);
 
       if (result.success) {
         toast.success(`Risk cause ${isEditMode ? "updated" : "created"} successfully`);
-        setFormData({ name: "", description: "", cause_id: "" });
+        setFormData({ name: "", description: "", parent_id: null });
         onOpenChange(false);
         onSuccess();
       } else {
@@ -80,10 +107,12 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
     }
   };
 
-  const options = [
-    { id: "extetret", name: "Risk" },
-    { id: "extetretxcx", name: "Audit" }
-  ];
+  const parentRiskCauses = availableCauses
+    .filter((p) => !p.parent_id)
+    .map((p) => ({
+      id: p.id,
+      name: p.name
+    }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,7 +132,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
               </Label>
               <Input
                 id="name"
-                placeholder="e.g., Enhance, Exploit"
+                placeholder="e.g., Root Cause Analysis, Technical Failure"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={isLoading}
@@ -111,22 +140,25 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cause">Risk Cause Parent (Optional)</Label>
+              <Label htmlFor="parent_id">Risk Cause Parent (Optional)</Label>
               <SelectField
-                value={formData.cause_id}
-                onValueChange={(value) => setFormData({ ...formData, cause_id: value })}
-                placeholder="Select risk cause"
-                options={options}
+                value={formData.parent_id || ""}
+                onValueChange={(value) => setFormData({ ...formData, parent_id: value || null })}
+                placeholder="Select risk cause parent"
+                options={parentRiskCauses}
                 disabled={isLoading}
                 className="w-full"
               />
+              <p className="text-muted-foreground text-xs">
+                Select a parent if this is a sub-cause
+              </p>
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe this response strategy"
+                placeholder="Describe this risk cause"
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
