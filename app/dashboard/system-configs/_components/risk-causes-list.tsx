@@ -2,14 +2,16 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Edit2, Trash2, Loader2, AlertCircle} from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { deleteRiskResponse, getRiskResponses } from "@/app/_actions/config-actions";
+import { deleteRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
 import { RiskCauseDialog } from "./risk-causes-dialog";
 
-type RiskResponse = {
+type RiskCause = {
   id: string;
+  parent_id: string | null;
   name: string;
   description: string;
   created_at: string;
@@ -17,67 +19,79 @@ type RiskResponse = {
 };
 
 export function RiskCausesList() {
-  const [responses, setResponses] = useState<RiskResponse[]>([]);
+  const [causes, setCauses] = useState<RiskCause[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{
     open: boolean;
-    response: RiskResponse | null;
-  }>({ open: false, response: null });
+    cause: RiskCause | null;
+  }>({ open: false, cause: null });
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    responseId: string | null;
-    responseName: string | null;
-  }>({ open: false, responseId: null, responseName: null });
+    causeId: string | null;
+    causeName: string | null;
+  }>({ open: false, causeId: null, causeName: null });
 
   useEffect(() => {
-    fetchResponses();
+    fetchCauses();
   }, []);
 
-  const fetchResponses = async () => {
+  const fetchCauses = async () => {
     setIsLoading(true);
     try {
-      const response = await getRiskResponses();
+      const response = await getRiskCauses();
       if (response.success && response.data?.data) {
-        setResponses(response.data?.data);
+        setCauses(response.data.data);
+      } else {
+        setCauses([]);
       }
     } catch (error) {
-      toast.error("Failed to load risk responses");
+      console.error("Error fetching risk causes:", error);
+      toast.error("Failed to load risk causes");
+      setCauses([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteClick = (response: RiskResponse) => {
+  const handleDeleteClick = (cause: RiskCause) => {
     setDeleteDialog({
       open: true,
-      responseId: response.id,
-      responseName: response.name
+      causeId: cause.id,
+      causeName: cause.name
     });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteDialog.responseId) return;
+    if (!deleteDialog.causeId) return;
 
     try {
-      const response = await deleteRiskResponse(deleteDialog.responseId);
+      const response = await deleteRiskCause(deleteDialog.causeId);
       if (response.success) {
-        toast.success("Risk response deleted successfully");
-        await fetchResponses();
-        setDeleteDialog({ open: false, responseId: null, responseName: null });
+        toast.success("Risk cause deleted successfully");
+        await fetchCauses();
+        setDeleteDialog({ open: false, causeId: null, causeName: null });
       } else {
-        toast.error(response.message || "Failed to delete risk response");
+        toast.error(response.message || "Failed to delete risk cause");
       }
     } catch (error) {
-      toast.error("Failed to delete risk response");
+      console.error("Error deleting risk cause:", error);
+      toast.error("Failed to delete risk cause");
     }
   };
 
   const handleCreateClick = () => {
-    setDialog({ open: true, response: null });
+    setDialog({ open: true, cause: null });
   };
 
-  const handleEditClick = (response: RiskResponse) => {
-    setDialog({ open: true, response });
+  const handleEditClick = (cause: RiskCause) => {
+    setDialog({ open: true, cause });
+  };
+
+  // Get parent cause name
+  const getParentCauseName = (parentId: string | null) => {
+    if (!parentId) return null;
+    const parent = causes.find((c) => c.id === parentId);
+    return parent ? parent.name : "Unknown Parent";
   };
 
   if (isLoading) {
@@ -92,76 +106,95 @@ export function RiskCausesList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-foreground text-2xl font-semibold">Risk Causes</h2>
-          <p className="text-muted-foreground text-sm">Define risk causes for risk management</p>
+          <h2 className="text-foreground text-2xl font-bold">Risk Causes</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Define and manage risk causes for comprehensive risk management
+          </p>
         </div>
-        <Button onClick={handleCreateClick}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Risk Cause
+        <Button onClick={handleCreateClick} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create a Risk Cause
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {responses.map((response) => (
-          <Card key={response.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="mb-2">{response.name}</CardTitle>
+      {causes.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="bg-muted mb-4 rounded-full p-4">
+              <AlertCircle className="text-muted-foreground h-8 w-8" />
+            </div>
+            <h3 className="text-foreground mb-2 text-lg font-semibold">
+              No Risk Causes Yet
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-md text-center text-sm">
+              Get started by creating your first risk cause to identify and manage potential risks.
+            </p>
+            <Button onClick={handleCreateClick} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Your First Risk Cause
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {causes.map((cause) => {
+            const parentName = getParentCauseName(cause.parent_id);
+            return (
+              <Card key={cause.id} className="group transition-all">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 flex gap-4">
+                      <CardTitle>{cause.name}</CardTitle>
+                      {parentName && (
+                        <Badge variant="success" className="gap-1 text-xs">
+                          <AlertCircle className="h-3 w-3" />
+                          {parentName}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                   <CardDescription className="line-clamp-2">
-                    {response.description || "No description"}
+                    {cause.description || "No description provided"}
                   </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditClick(response)}
-                  className="flex-1">
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteClick(response)}
-                  className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        {responses.length === 0 && (
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">No risk causes configured</p>
-              <Button onClick={handleCreateClick}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Your Risk Cause
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditClick(cause)}
+                      className="flex-1">
+                      <Edit2 className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(cause)}
+                      className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <RiskCauseDialog
         open={dialog.open}
-        onOpenChange={(open) => setDialog({ open, response: null })}
-        response={dialog.response}
-        onSuccess={fetchResponses}
+        onOpenChange={(open) => setDialog({ open, cause: null })}
+        cause={dialog?.cause}
+        onSuccess={fetchCauses}
       />
 
       <ConfirmationModal
         open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog({ open, responseId: null, responseName: null })}
+        onOpenChange={(open) => setDeleteDialog({ open, causeId: null, causeName: null })}
         onConfirm={handleDeleteConfirm}
-        title="Delete Risk Response"
-        description={`Are you sure you want to delete "${deleteDialog.responseName}"?`}
+        title="Delete Risk Cause"
+        description={`Are you sure you want to delete "${deleteDialog.causeName}"? This action cannot be undone.`}
         type="delete"
       />
     </div>

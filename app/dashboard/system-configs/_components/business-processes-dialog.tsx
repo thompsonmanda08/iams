@@ -14,86 +14,129 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { createRiskResponse, updateRiskResponse } from "@/app/_actions/config-actions";
+import { Loader2 } from "lucide-react";
+import {
+  createBusinessProcess,
+  updateBusinessProcess,
+  getBusinessProcesses
+} from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
 
-type RiskResponse = {
+type BusinessProcess = {
   id: string;
-  parent_id: string;
+  parent_id: string | null;
   name: string;
-  description: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 type BusinessProcessesDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  response?: RiskResponse | null;
+  process?: BusinessProcess | null;
 };
 
 export function BusinessProcessesDialog({
   open,
   onOpenChange,
   onSuccess,
-  response
+  process
 }: BusinessProcessesDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProcesses, setLoadingProcesses] = useState(false);
+  const [availableProcesses, setAvailableProcesses] = useState<BusinessProcess[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     parent_id: ""
   });
 
-  const isEditMode = !!response;
+  const isEditMode = !!process;
 
-  // Reset form when dialog opens/closes or response changes
   useEffect(() => {
-    if (open && response) {
+    if (open) {
+      fetchBusinessProcesses();
+    }
+  }, [open]);
+
+  const fetchBusinessProcesses = async () => {
+    setLoadingProcesses(true);
+    try {
+      const response = await getBusinessProcesses();
+      if (response.success && response.data?.data) {
+        const processes = response.data.data.filter(
+          (p: BusinessProcess) => !process || p.id !== process.id
+        );
+        setAvailableProcesses(processes);
+      }
+    } catch (error) {
+      console.error("Error fetching processes:", error);
+      toast.error("Failed to load business processes");
+    } finally {
+      setLoadingProcesses(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open && process) {
       setFormData({
-        name: response.name,
-        description: response.description,
-        parent_id: response.parent_id
+        name: process.name,
+        description: process.description || "",
+        parent_id: process.parent_id || ""
       });
     } else if (!open) {
       setFormData({ name: "", description: "", parent_id: "" });
     }
-  }, [open, response]);
+  }, [open, process]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Response name is required");
+      toast.error("Process name is required");
       return;
     }
 
     setIsLoading(true);
     try {
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || "",
+        parent_id: formData.parent_id || null
+      };
+
       const result = isEditMode
-        ? await updateRiskResponse(response.id, formData)
-        : await createRiskResponse(formData);
+        ? await updateBusinessProcess(process.id, payload)
+        : await createBusinessProcess(payload);
 
       if (result.success) {
-        toast.success(`Risk response ${isEditMode ? "updated" : "created"} successfully`);
+        toast.success(
+          result.message || `Business process ${isEditMode ? "updated" : "created"} successfully`
+        );
         setFormData({ name: "", description: "", parent_id: "" });
         onOpenChange(false);
         onSuccess();
       } else {
         toast.error(
-          result.message || `Failed to ${isEditMode ? "update" : "create"} risk response`
+          result.message || `Failed to ${isEditMode ? "update" : "create"} business process`
         );
       }
     } catch (error) {
+      console.error("Error saving process:", error);
       toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const options = [
-    { id: "extetret", name: "Risk" },
-    { id: "extetretxcx", name: "Audit" }
-  ];
+  const parentProcessOptions = availableProcesses
+    .filter((p) => !p.parent_id)
+    .map((p) => ({
+      id: p.id,
+      name: p.name
+    }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -104,45 +147,52 @@ export function BusinessProcessesDialog({
               {isEditMode ? "Edit Business Process" : "Create Business Process"}
             </DialogTitle>
             <DialogDescription>
-              {isEditMode ? "Update business process" : "Add a new business process"}
+              {isEditMode
+                ? "Update business process information"
+                : "Add a new business process to your organization"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">
-                Business Process Name <span className="text-destructive">*</span>
+                Process Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
-                placeholder="e.g., Enhance, Exploit"
+                placeholder="e.g., IT Operations, Security Management"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={isLoading}
+                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="process">Business Process Parent (Optional)</Label>
+              <Label htmlFor="parent_id">Parent Process (Optional)</Label>
               <SelectField
                 value={formData.parent_id}
                 onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
-                placeholder="Select business process"
-                options={options}
-                disabled={isLoading}
+                placeholder={loadingProcesses ? "Loading processes..." : "Select parent process"}
+                options={parentProcessOptions}
+                disabled={isLoading || loadingProcesses}
                 className="w-full"
               />
+              <p className="text-muted-foreground text-xs">
+                Select a parent if this is a sub-process
+              </p>
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe this response strategy"
+                placeholder="Describe this business process..."
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 disabled={isLoading}
+                className="resize-none"
               />
             </div>
           </div>
@@ -155,7 +205,8 @@ export function BusinessProcessesDialog({
               disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || loadingProcesses}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading
                 ? `${isEditMode ? "Updating" : "Creating"}...`
                 : `${isEditMode ? "Update" : "Create"} Process`}
