@@ -1,4 +1,4 @@
-import { getRisksInRegister } from "@/app/_actions/risk-module-actions";
+import { getRiskRegister, getRisksInRegister } from "@/app/_actions/risk-module-actions";
 import { RisksPageHeader } from "../../_components/risks-page-header";
 import RisksTable from "../../_components/risks-table";
 
@@ -122,10 +122,13 @@ export default async function RisksPage({ params, searchParams }: PageProps) {
       limit: Number(limit)
     });
 
+    const registerDetails = await getRiskRegister(id);
+    const name = registerDetails.data.data.register.name;
+
     if (!response?.data?.data) {
       return (
         <div className="space-y-6">
-          <RisksPageHeader registerId={id} registerName="Manage and monitor organizational risks" />
+          <RisksPageHeader registerId={id} registerName={name} />
           <RisksTable
             risks={[]}
             meta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
@@ -143,7 +146,7 @@ export default async function RisksPage({ params, searchParams }: PageProps) {
 
     return (
       <div className="space-y-6">
-        <RisksPageHeader registerId={id} registerName="Manage and monitor organizational risks" />
+        <RisksPageHeader registerId={id} registerName={name} />
         <RisksTable
           risks={transformedRisks as unknown as any}
           meta={transformedMeta}
@@ -158,7 +161,7 @@ export default async function RisksPage({ params, searchParams }: PageProps) {
     console.error("Error loading risks:", error);
     return (
       <div className="space-y-6">
-        <RisksPageHeader registerId={id} registerName="Manage and monitor organizational risks" />
+        <RisksPageHeader registerId={id}/>
         <RisksTable
           risks={[]}
           meta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
