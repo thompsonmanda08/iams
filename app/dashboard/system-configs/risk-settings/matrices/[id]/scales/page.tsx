@@ -17,14 +17,14 @@ export default async function MatrixScalesPage({ params }: PageProps) {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="container mx-auto py-6 px-4">
-        <BackButton title="Back to Configurations" />
+      <div className="container mx-auto px-4 py-6 flex justify-between">
         <div className="mb-2">
           <h1 className="text-foreground text-3xl font-bold">{matrix.name}</h1>
           <p className="text-muted-foreground mt-1">
             Configure likelihood scales, impact scales, and rating levels
           </p>
         </div>
+        <BackButton title="Back to Configurations" />
       </div>
 
       <main className="container mx-auto px-4">

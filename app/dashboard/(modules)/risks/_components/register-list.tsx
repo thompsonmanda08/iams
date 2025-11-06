@@ -386,7 +386,7 @@ export default function KRIRegistersClient({
                           onClick={() => handleNavigateToRegister(register.id)}
                           className="h-8 gap-1.5">
                           <View className="h-3.5 w-3.5" />
-                          View
+                          View KRI Register
                         </Button>
                         <Button
                           size="sm"

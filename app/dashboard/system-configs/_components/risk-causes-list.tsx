@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Loader2, AlertCircle} from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, AlertCircle, Cable } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
@@ -123,9 +123,7 @@ export function RiskCausesList() {
             <div className="bg-muted mb-4 rounded-full p-4">
               <AlertCircle className="text-muted-foreground h-8 w-8" />
             </div>
-            <h3 className="text-foreground mb-2 text-lg font-semibold">
-              No Risk Causes Yet
-            </h3>
+            <h3 className="text-foreground mb-2 text-lg font-semibold">No Risk Causes Yet</h3>
             <p className="text-muted-foreground mb-6 max-w-md text-center text-sm">
               Get started by creating your first risk cause to identify and manage potential risks.
             </p>
@@ -143,11 +141,11 @@ export function RiskCausesList() {
               <Card key={cause.id} className="group transition-all">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1 flex gap-4">
+                    <div className="flex min-w-0 flex-1 gap-4">
                       <CardTitle>{cause.name}</CardTitle>
                       {parentName && (
                         <Badge variant="success" className="gap-1 text-xs">
-                          <AlertCircle className="h-3 w-3" />
+                          <Cable className="h-3 w-3" />
                           {parentName}
                         </Badge>
                       )}

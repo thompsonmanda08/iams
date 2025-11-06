@@ -231,6 +231,15 @@ export async function getDepartmentById(id: string): Promise<APIResponse> {
     return handleError(error, "GET", url);
   }
 }
+export async function getDepartmentRiskCategories(id: string): Promise<APIResponse> {
+  const url = `/api/v1/departments/${id}/risk-categories`;
+  try {
+    const response = await authenticatedApiClient({ url });  
+    return successResponse(response?.data.data);
+  } catch (error: Error | any) {
+    return handleError(error, "GET", url);
+  }
+}
 
 /**
  * Create new department
@@ -1382,6 +1391,18 @@ export async function getBusinessProcesses(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: "/api/v1/business-processes",
+      method: "GET"
+    });
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "GET | BUSINESS PROCESSES", "/api/v1/business-processes");
+  }
+}
+
+export async function getBusinessProcessesHierarchy(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/business-processes/hierarchy/root",
       method: "GET"
     });
     return successResponse(response.data.data);

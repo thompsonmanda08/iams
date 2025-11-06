@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, CalendarIcon, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,20 +22,22 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { getDepartments } from "@/app/_actions/config-actions";
+import { getBusinessProcessesHierarchy, getDepartments } from "@/app/_actions/config-actions";
 import {
   createRiskStepOne,
   updateRiskStepTwo,
   updateRiskStepThree,
-  getRiskCategories,
   updateRisk,
   RiskResponse
 } from "@/app/_actions/risk-module-actions";
+import { getDepartmentRiskCategories } from "@/app/_actions/config-actions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format, formatISO, parseISO } from "date-fns";
 import { getUsers } from "@/app/_actions/user-actions";
+import { SearchSelectField } from "../ui/search-select-field";
+import { getStrategicPillars } from "@/app/_actions/audit-settings-actions";
 
 type Department = {
   id: string;
@@ -53,6 +55,24 @@ type RiskCategory = {
   color: string;
   is_active: boolean;
   department_id: string;
+};
+
+type SubProcess = {
+  id: string;
+  name: string;
+};
+
+type BusinessProcess = {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  is_active: boolean;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+  sub_process: SubProcess[];
 };
 
 type Risk = {
@@ -102,9 +122,9 @@ type StepOneData = {
   description: string;
   category_id: string;
   department_id: string;
-  macro_process: string;
-  sub_process: string;
-  strategic_objective: string;
+  macro_process_id: string;
+  sub_process_id: string;
+  strategic_objective_id: string;
   root_cause: string;
   recurrence: "ongoing" | "one-time";
   status?: string;
@@ -151,12 +171,27 @@ export function MultiStepRiskForm({
   const [createdRiskId, setCreatedRiskId] = useState<string | null>(
     mode === "edit" && riskData ? riskData.id : null
   );
+
+  // Department state
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+
+  // Categories state
   const [categories, setCategories] = useState<RiskCategory[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  // Users state
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Business pillar state
+  const [pillars, setPillars] = useState<[]>([]);
+  const [loadingPillars, setLoadingPillars] = useState(false);
+  
+  // Business processes state
+  const [businessProcesses, setBusinessProcesses] = useState<BusinessProcess[]>([]);
+  const [loadingProcesses, setLoadingProcesses] = useState(false);
+
   const [closeDate, setCloseDate] = useState<Date | undefined>(
     mode === "edit" && riskData?.target_closing_date
       ? parseISO(riskData.target_closing_date)
@@ -169,9 +204,9 @@ export function MultiStepRiskForm({
     description: mode === "edit" && riskData ? riskData.description : "",
     category_id: mode === "edit" && riskData ? riskData.category_id : "",
     department_id: mode === "edit" && riskData ? riskData.department_id : "",
-    macro_process: mode === "edit" && riskData ? riskData.macro_process : "",
-    sub_process: mode === "edit" && riskData ? riskData.sub_process : "",
-    strategic_objective: mode === "edit" && riskData ? riskData.strategic_objective : "",
+    macro_process_id: mode === "edit" && riskData ? riskData.macro_process : "",
+    sub_process_id: mode === "edit" && riskData ? riskData.sub_process : "",
+    strategic_objective_id: mode === "edit" && riskData ? riskData.strategic_objective : "",
     root_cause: mode === "edit" && riskData ? riskData.root_cause : "",
     recurrence: mode === "edit" && riskData ? riskData.recurrence : "ongoing",
     status: mode === "edit" && riskData ? riskData.status.toUpperCase() : ""
@@ -195,18 +230,50 @@ export function MultiStepRiskForm({
     mitigation_cost: mode === "edit" && riskData ? riskData.mitigation_cost : 0
   });
 
+ 
+  const availableSubProcesses = useMemo(() => {
+    if (!stepOneData.macro_process_id) return [];
+    
+    const selectedMacroProcess = businessProcesses.find(
+      (process) => process.id === stepOneData.macro_process_id
+    );
+    
+    return selectedMacroProcess?.sub_process || [];
+  }, [stepOneData.macro_process_id, businessProcesses]);
+
   useEffect(() => {
     if (open) {
       loadDepartments();
-      loadCategories();
+      loadProcesses();
+      if (stepOneData.department_id) {
+        loadCategories(stepOneData.department_id);
+        loadPillars(stepOneData.department_id);
+      }
     }
   }, [open]);
 
   useEffect(() => {
     if (stepOneData.department_id) {
       loadUsers(stepOneData.department_id);
+      loadCategories(stepOneData.department_id);
+      loadPillars(stepOneData.department_id);
+    } else {
+      setCategories([]);
+      setUsers([]);
+      if (stepOneData.category_id) {
+        setStepOneData((prev) => ({ ...prev, category_id: "" }));
+      }
     }
   }, [stepOneData.department_id]);
+
+  useEffect(() => {
+    if (mode === "create") {
+      setStepOneData((prev) => ({
+        ...prev,
+        sub_process_id: ""
+      }));
+    }
+  }, [stepOneData.macro_process_id, mode]);
 
   useEffect(() => {
     if (!open) {
@@ -235,21 +302,66 @@ export function MultiStepRiskForm({
   };
 
   const loadCategories = async (departmentId?: string) => {
+    if (!departmentId) {
+      setCategories([]);
+      return;
+    }
     setLoadingCategories(true);
     try {
-      const response = await getRiskCategories({
-        is_active: true,
-        department_id: departmentId
-      });
-      if (response.success && response.data.data) {
-        setCategories(response.data.data);
+      const response = await getDepartmentRiskCategories(departmentId);
+      if (response.success && response.data) {
+        setCategories(response.data);
       } else {
-        toast.error("Failed to load risk categories");
+        setCategories([]);
+        toast.error("No risk categories to load");
       }
     } catch (error) {
+      setCategories([]);
       toast.error("Error loading risk categories");
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const loadPillars = async (departmentId?: string) => {
+    if (!departmentId) {
+      setPillars([]);
+      return;
+    }
+    setLoadingPillars(true);
+    try {
+      const response = await getStrategicPillars(undefined, {
+        department_id: departmentId
+      });
+      if (response.success && response.data.data) {
+        setPillars(response.data.data);
+      } else {
+        setPillars([]);
+        toast.error("No strategic objectives to load");
+      }
+    } catch (error) {
+      setPillars([]);
+      toast.error("Error loading strategic objectives");
+    } finally {
+      setLoadingPillars(false);
+    }
+  };
+
+  const loadProcesses = async () => {
+    setLoadingProcesses(true);
+    try {
+      const response = await getBusinessProcessesHierarchy();
+      if (response.success && response.data) {
+        setBusinessProcesses(response.data);
+      } else {
+        setBusinessProcesses([]);
+        toast.error("No business processes to load");
+      }
+    } catch (error) {
+      setBusinessProcesses([]);
+      toast.error("Error loading business processes");
+    } finally {
+      setLoadingProcesses(false);
     }
   };
 
@@ -279,9 +391,9 @@ export function MultiStepRiskForm({
       description: "",
       category_id: "",
       department_id: "",
-      macro_process: "",
-      sub_process: "",
-      strategic_objective: "",
+      macro_process_id: "",
+      sub_process_id: "",
+      strategic_objective_id: "",
       root_cause: "",
       recurrence: "ongoing"
     });
@@ -422,6 +534,11 @@ export function MultiStepRiskForm({
     return fullName || user.username || user.email;
   };
 
+  const transformedUsers = users.map((user) => ({
+    id: user.id,
+    name: getUserDisplayName(user)
+  }));
+
   const getRiskLevel = (score: number) => {
     if (score >= 15) return { label: "Critical", color: "text-red-600" };
     if (score >= 10) return { label: "High", color: "text-orange-600" };
@@ -516,118 +633,93 @@ export function MultiStepRiskForm({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="category">Risk Category *</Label>
-                  <Select
-                    value={stepOneData.category_id}
-                    onValueChange={(value) =>
-                      setStepOneData({ ...stepOneData, category_id: value })
-                    }
-                    disabled={isLoading || loadingCategories}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select category">
-                        {loadingCategories
-                          ? "Loading categories..."
-                          : stepOneData.category_id
-                            ? categories.find((c) => c.id === stepOneData.category_id)?.name ||
-                              "Select category"
-                            : "Select category"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="max-h-100">
-                      {categories.length === 0 ? (
-                        <div className="text-muted-foreground p-2 text-sm">
-                          No categories available
-                        </div>
-                      ) : (
-                        categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="h-3 w-3 rounded-full"
-                                style={{ backgroundColor: category.color }}
-                              />
-                              <span>{category.name}</span>
-                              <span className="text-muted-foreground text-xs">
-                                ({category.code})
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="department">Department *</Label>
-                  <Select
+                  <SearchSelectField
+                    label="Department"
+                    required
+                    placeholder="Select department"
+                    options={departments}
                     value={stepOneData.department_id}
                     onValueChange={(value) =>
                       setStepOneData({ ...stepOneData, department_id: value })
                     }
-                    disabled={isLoading || loadingDepartments}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select department">
-                        {loadingDepartments
-                          ? "Loading..."
-                          : stepOneData.department_id
-                            ? departments.find((d) => d.id === stepOneData.department_id)?.name ||
-                              "Select department"
-                            : "Select department"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="max-h-100">
-                      {departments?.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4" />
-                            <span>{dept.name}</span>
-                            <span className="text-muted-foreground text-xs">({dept.code})</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    isLoading={loadingDepartments}
+                    isDisabled={isLoading || loadingDepartments}
+                    classNames={{ wrapper: "max-w-full" }}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <SearchSelectField
+                    label="Risk Category"
+                    required
+                    placeholder="Select category"
+                    options={categories}
+                    value={stepOneData.category_id}
+                    onValueChange={(value) =>
+                      setStepOneData({ ...stepOneData, category_id: value })
+                    }
+                    isLoading={loadingCategories}
+                    isDisabled={isLoading || loadingCategories}
+                    classNames={{ wrapper: "max-w-full" }}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="macro_process">Macro Process</Label>
-                  <Input
-                    id="macro_process"
-                    placeholder="e.g., Infrastructure Management"
-                    value={stepOneData.macro_process}
-                    onChange={(e) =>
-                      setStepOneData({ ...stepOneData, macro_process: e.target.value })
+                  <SearchSelectField
+                    label="Macro Process"
+                    required
+                    placeholder="Select macro process"
+                    options={businessProcesses}
+                    value={stepOneData.macro_process_id}
+                    onValueChange={(value) =>
+                      setStepOneData({ ...stepOneData, macro_process_id: value })
                     }
-                    disabled={isLoading}
+                    isLoading={loadingProcesses}
+                    isDisabled={isLoading || loadingProcesses}
+                    classNames={{ wrapper: "max-w-full" }}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="sub_process">Sub Process</Label>
-                  <Input
-                    id="sub_process"
-                    placeholder="e.g., Power Management"
-                    value={stepOneData.sub_process}
-                    onChange={(e) =>
-                      setStepOneData({ ...stepOneData, sub_process: e.target.value })
+                  <SearchSelectField
+                    label="Sub Process"
+                    required
+                    placeholder={
+                      !stepOneData.macro_process_id
+                        ? "Select macro process first"
+                        : "Select sub process"
                     }
-                    disabled={isLoading}
+                    options={availableSubProcesses}
+                    value={stepOneData.sub_process_id}
+                    onValueChange={(value) =>
+                      setStepOneData({ ...stepOneData, sub_process_id: value })
+                    }
+                    isLoading={loadingProcesses}
+                    isDisabled={isLoading || loadingProcesses || !stepOneData.macro_process_id}
+                    classNames={{ wrapper: "max-w-full" }}
+                    descriptionText={
+                      !stepOneData.macro_process_id
+                        ? "Please select a macro process first"
+                        : undefined
+                    }
                   />
                 </div>
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="strategic_objective">Strategic Objective</Label>
-                <Input
-                  id="strategic_objective"
-                  placeholder="e.g., Ensure 99.9% uptime for critical systems"
-                  value={stepOneData.strategic_objective}
-                  onChange={(e) =>
-                    setStepOneData({ ...stepOneData, strategic_objective: e.target.value })
+                <SearchSelectField
+                  label="Strategic Objective"
+                  required
+                  placeholder="Select strategic objective"
+                  options={pillars}
+                  value={stepOneData.strategic_objective_id}
+                  onValueChange={(value) =>
+                    setStepOneData({ ...stepOneData, strategic_objective_id: value })
                   }
-                  disabled={isLoading}
+                  isLoading={loadingPillars}
+                  isDisabled={isLoading || loadingPillars}
+                  classNames={{ wrapper: "max-w-full" }}
+                  listItemName="title"
                 />
               </div>
 
@@ -859,7 +951,6 @@ export function MultiStepRiskForm({
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="risk_appetite_status">Risk Appetite Status</Label>
                   <Select
@@ -883,53 +974,26 @@ export function MultiStepRiskForm({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="risk_owner_id">Risk Owner *</Label>
-                <Select
+                <SearchSelectField
+                  label="Risk Owner"
+                  required
+                  placeholder={
+                    !stepOneData.department_id ? "Select department first" : "Select risk owner"
+                  }
+                  options={transformedUsers}
                   value={stepThreeData.risk_owner_id}
                   onValueChange={(value) =>
                     setStepThreeData({ ...stepThreeData, risk_owner_id: value })
                   }
-                  disabled={isLoading || loadingUsers || !stepOneData.department_id}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select risk owner">
-                      {loadingUsers
-                        ? "Loading users..."
-                        : !stepOneData.department_id
-                          ? "Select department first"
-                          : stepThreeData.risk_owner_id
-                            ? users.find((u) => u.id === stepThreeData.risk_owner_id)
-                              ? getUserDisplayName(
-                                  users.find((u) => u.id === stepThreeData.risk_owner_id)!
-                                )
-                              : "Select risk owner"
-                            : "Select risk owner"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="max-h-100">
-                    {users.length === 0 ? (
-                      <div className="text-muted-foreground p-2 text-sm">
-                        {stepOneData.department_id
-                          ? "No users found in this department"
-                          : "Please select a department first"}
-                      </div>
-                    ) : (
-                      users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span>{getUserDisplayName(user)}</span>
-                            <span className="text-muted-foreground text-xs">({user.email})</span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                {!stepOneData.department_id && (
-                  <p className="text-muted-foreground text-xs">
-                    Please select a department in Step 1 to load users
-                  </p>
-                )}
+                  isLoading={loadingUsers}
+                  isDisabled={isLoading || loadingUsers || !stepOneData.department_id}
+                  descriptionText={
+                    !stepOneData.department_id
+                      ? "Please select a department in Step 1 to load users"
+                      : undefined
+                  }
+                  classNames={{ wrapper: "max-w-full" }}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -966,7 +1030,6 @@ export function MultiStepRiskForm({
                     </PopoverContent>
                   </Popover>
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="mitigation_cost">Mitigation Cost</Label>
                   <Input

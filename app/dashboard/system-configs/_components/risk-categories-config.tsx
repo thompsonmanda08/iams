@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Loader2, FolderTree } from "lucide-react";
 import { toast } from "sonner";
 import { getRiskCategories } from "@/app/_actions/risk-module-actions";
 import { deleteRiskCategory, getDepartments } from "@/app/_actions/config-actions";
@@ -185,7 +185,7 @@ export function RiskCategoriesConfig() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="bg-muted mb-4 rounded-full p-4">
-              <Plus className="text-muted-foreground h-8 w-8" />
+              <FolderTree className="text-muted-foreground h-8 w-8" />
             </div>
             <h3 className="text-foreground mb-2 text-lg font-semibold">No Risk Categories Yet</h3>
             <p className="text-muted-foreground mb-6 text-center text-sm">

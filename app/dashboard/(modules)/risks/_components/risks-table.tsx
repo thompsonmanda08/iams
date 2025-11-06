@@ -287,7 +287,9 @@ export default function RisksTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{risk.category}</span>
+                    <span className="block max-w-[200px] text-sm break-all whitespace-normal">
+                      {risk.category}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
