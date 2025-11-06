@@ -45,11 +45,14 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface CategoryFormData {
   name: string;
+  code: string;
   description: string;
+  [key: string]: any;
 }
 
 const INIT_FORM_DATA: CategoryFormData = {
   name: "",
+  code: "",
   description: ""
 };
 
@@ -57,7 +60,7 @@ export default function FindingsCategoryTab({
   categories = [],
   pagination
 }: {
-  categories: AuditConfigurableItem[];
+  categories: CategoryFormData[];
   pagination?: Pagination;
 }) {
   const [openModal, setOpenModal] = useState(false);
@@ -65,7 +68,7 @@ export default function FindingsCategoryTab({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [items, setItems] = useState<AuditConfigurableItem[]>(categories);
+  const [items, setItems] = useState<CategoryFormData[]>(categories);
 
   useEffect(() => {
     setItems(categories);
@@ -110,7 +113,7 @@ export default function FindingsCategoryTab({
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="font-medium text-sm leading-none">Findings Categories</h4>
+            <h4 className="text-sm leading-none font-medium">Findings Categories</h4>
             <p className="text-muted-foreground text-sm">
               Define categories for classifying audit findings
             </p>
@@ -186,10 +189,7 @@ export default function FindingsCategoryTab({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
-                          setFormData({
-                            name: item.name,
-                            description: item.description || ""
-                          });
+                          setFormData({ ...item });
                           setSelectedId(item.id);
                           setOpenModal(true);
                           e.stopPropagation();
@@ -264,6 +264,7 @@ function CreateOrUpdate({
     if (initialData && selectedId) {
       return {
         name: initialData.name || "",
+        code: initialData.code || "",
         description: initialData.description || ""
       };
     }
@@ -275,6 +276,7 @@ function CreateOrUpdate({
       if (initialData && selectedId) {
         setFormData({
           name: initialData.name || "",
+          code: initialData.code || "",
           description: initialData.description || ""
         });
       } else if (!initialData) {
@@ -305,7 +307,7 @@ function CreateOrUpdate({
     onSuccess: (response) => {
       if (response.success) {
         toast.success(`Findings Category ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.FINDINGS_CATEGORIES] });
         router.refresh();
         setOpenModal?.(false);
         setInitialData?.(null);
@@ -362,6 +364,16 @@ function CreateOrUpdate({
             }}
             required
           />
+          <Input
+            label="Category Code"
+            placeholder="e.g. CAT-001, CAT-002, etc"
+            value={formData.code}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((c) => ({ ...c, code: e.target.value }));
+            }}
+            required
+          />
           <Textarea
             label="Category Description"
             placeholder="Enter category description"
@@ -384,7 +396,7 @@ function CreateOrUpdate({
                   setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
-                 Close
+                Cancel
               </Button>
             </DialogClose>
             <Button
@@ -393,7 +405,7 @@ function CreateOrUpdate({
               disabled={saveMutation.isPending || !formData.name.trim()}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
-               Save changes
+              Save changes
             </Button>
           </div>
         </form>

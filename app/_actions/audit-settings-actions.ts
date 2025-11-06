@@ -337,7 +337,7 @@ export async function deleteStrategicInitiative(id: string): Promise<APIResponse
  * Note: Endpoint may not be in Postman collection yet
  */
 export async function getFindingsCategories(): Promise<APIResponse> {
-  const url = `/api/v1/audit/findings-categories`;
+  const url = `/api/v1/findings-categories`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
@@ -351,7 +351,7 @@ export async function getFindingsCategories(): Promise<APIResponse> {
  * Create new findings category
  */
 export async function createFindingsCategory(data: any): Promise<APIResponse> {
-  const url = `/api/v1/audit/findings-categories`;
+  const url = `/api/v1/findings-categories`;
 
   if (!data.name) {
     return handleBadRequest("Name is required");
@@ -362,8 +362,7 @@ export async function createFindingsCategory(data: any): Promise<APIResponse> {
       url,
       method: "POST",
       data: {
-        name: data.name,
-        description: data.description || ""
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -377,7 +376,7 @@ export async function createFindingsCategory(data: any): Promise<APIResponse> {
  * Update findings category
  */
 export async function updateFindingsCategory(data: any): Promise<APIResponse> {
-  const url = `/api/v1/audit/findings-categories/${data.id}`;
+  const url = `/api/v1/findings-categories/${data.id}`;
 
   if (!data.id) {
     return handleBadRequest("ID is required");
@@ -388,8 +387,7 @@ export async function updateFindingsCategory(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        name: data.name,
-        description: data.description
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -403,7 +401,7 @@ export async function updateFindingsCategory(data: any): Promise<APIResponse> {
  * Delete findings category
  */
 export async function deleteFindingsCategory(id: string): Promise<APIResponse> {
-  const url = `/api/v1/audit/findings-categories/${id}`;
+  const url = `/api/v1/findings-categories/${id}`;
 
   if (!id) {
     return handleBadRequest("ID is required");
@@ -430,7 +428,7 @@ export async function deleteFindingsCategory(id: string): Promise<APIResponse> {
  * Note: Endpoint may not be in Postman collection yet
  */
 export async function getProcessActivities(): Promise<APIResponse> {
-  const url = `/api/v1/audit/process-activities`;
+  const url = `/api/v1/process-activities`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
@@ -444,7 +442,7 @@ export async function getProcessActivities(): Promise<APIResponse> {
  * Create new process activity
  */
 export async function createProcessActivity(data: any): Promise<APIResponse> {
-  const url = `/api/v1/audit/process-activities`;
+  const url = `/api/v1/process-activities`;
 
   if (!data.name) {
     return handleBadRequest("Process name is required");
@@ -474,7 +472,7 @@ export async function createProcessActivity(data: any): Promise<APIResponse> {
  * Update process activity
  */
 export async function updateProcessActivity(data: any): Promise<APIResponse> {
-  const url = `/api/v1/audit/process-activities/${data.id}`;
+  const url = `/api/v1/process-activities/${data.id}`;
 
   if (!data.id) {
     return handleBadRequest("ID is required");
@@ -504,7 +502,7 @@ export async function updateProcessActivity(data: any): Promise<APIResponse> {
  * Delete process activity
  */
 export async function deleteProcessActivity(id: string): Promise<APIResponse> {
-  const url = `/api/v1/audit/process-activities/${id}`;
+  const url = `/api/v1/process-activities/${id}`;
 
   if (!id) {
     return handleBadRequest("ID is required");
@@ -548,7 +546,7 @@ export async function getIndicativeTargets(): Promise<APIResponse> {
 export async function createIndicativeTarget(data: any): Promise<APIResponse> {
   const url = `/api/v1/audit/indicative-targets`;
 
-  if (!data.name) {
+  if (!data.title) {
     return handleBadRequest("Name is required");
   }
 
@@ -557,13 +555,7 @@ export async function createIndicativeTarget(data: any): Promise<APIResponse> {
       url,
       method: "POST",
       data: {
-        department_id: data.department_id,
-        name: data.name,
-        metric_type: data.metric_type || "Performance",
-        target_value: data.target_value || "",
-        measurement_unit: data.measurement_unit || "",
-        frequency_of_review: data.frequency_of_review || "QUARTERLY",
-        is_active: data.is_active !== undefined ? data.is_active : true
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -589,10 +581,7 @@ export async function updateIndicativeTarget(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        name: data.name,
-        target_value: data.target_value,
-        frequency_of_review: data.frequency_of_review,
-        is_active: data.is_active
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");

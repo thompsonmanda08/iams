@@ -46,9 +46,9 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     pillarsResponse, //4
     initiativesResponse, //5
     townsResponse, // 6
-    departmentsResponse //7
-    // categoriesResponse,
-    // processActivitiesResponse,
+    departmentsResponse, //7
+    categoriesResponse, //8
+    processActivitiesResponse //9
   ] = await Promise.all([
     getWorkingPaperTemplates(), //1
     getAuditableAreas(), //2
@@ -56,11 +56,11 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     getStrategicPillars(), //4
     getStrategicInitiatives(), //5
     getTowns({ page, page_size }), //6
-    getDepartments() //7
+    getDepartments(), //7
     // getBranches({ page, page_size }),
     // getProvinces(),
-    // getFindingsCategories(),
-    // getProcessActivities(),
+    getFindingsCategories(),
+    getProcessActivities()
   ]);
 
   const templates = templatesResponse.success ? templatesResponse.data?.data || [] : [];
@@ -84,11 +84,19 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     ? initiativesResponse.data?.data || []
     : [];
 
-  // const categories = categoriesResponse.success ? categoriesResponse.data?.data : [];
+  const findingsCategories = categoriesResponse.success ? categoriesResponse.data?.data : [];
 
-  // const processActivities = processActivitiesResponse.success
-  //   ? processActivitiesResponse.data?.data
-  //   : [];
+  const findingsCategoriesPagination = categoriesResponse.success
+    ? categoriesResponse.data?.pagination
+    : null;
+
+  const processActivities = processActivitiesResponse.success
+    ? processActivitiesResponse.data?.data || []
+    : [];
+
+  // const processActivitiesPagination = processActivitiesResponse.success
+  //   ? processActivitiesResponse.data?.pagination
+  //   : null;
 
   const indicativeTargets = indicativeTargetsResponse.success
     ? indicativeTargetsResponse.data?.data || []
@@ -97,11 +105,13 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
   console.log("Audit Settings Page:", {
     // templates,
     // areas,
-    pillars
+    // pillars
     // initiatives
     // towns,
     // departments,
-    // indicativeTargets
+    // indicativeTargets,
+    // findingsCategories
+    processActivities
   });
 
   return (
@@ -151,14 +161,14 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
                 <Lightbulb className="h-4 w-4" />
                 Strategic Initiative
               </TabsTrigger>
-              {/* <TabsTrigger value="findings" className="gap-2">
+              <TabsTrigger value="findings" className="gap-2">
                 <AlertCircle className="h-4 w-4" />
                 Findings Categories
               </TabsTrigger>
               <TabsTrigger value="process" className="gap-2">
                 <Workflow className="h-4 w-4" />
                 Process/Activity
-              </TabsTrigger> */}
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -201,18 +211,18 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           </TabsContent>
 
           {/* Findings Categories Tab */}
-          {/* <TabsContent value="findings">
+          <TabsContent value="findings">
             <Suspense fallback={<TableLoading />}>
-              <FindingsCategoryTab categories={categories} />
+              <FindingsCategoryTab categories={findingsCategories} />
             </Suspense>
-          </TabsContent> */}
+          </TabsContent>
 
           {/* Process Activity Tab */}
-          {/* <TabsContent value="process">
+          <TabsContent value="process">
             <Suspense fallback={<TableLoading />}>
-              <ProcessActivityTab processes={processActivities} />
+              <ProcessActivityTab processes={processActivities} departments={departments} />
             </Suspense>
-          </TabsContent> */}
+          </TabsContent>
         </Tabs>
       </div>
     </div>

@@ -147,6 +147,16 @@ export default function StrategicInitiativeTab({
     return department ? department.name : "No department assigned - Global";
   };
 
+  const selectedPillar = useMemo(() => {
+    if (!pillarId) return null;
+    return pillars.find((pillar: any) => pillar.id === pillarId) || null;
+  }, [pillarId, pillars]);
+
+  const departmentName = useMemo(() => {
+    if (!selectedPillar) return "No department assigned - Global";
+    return getDepartmentName(selectedPillar.department_id);
+  }, [selectedPillar]);
+
   return (
     <>
       <Card className="p-4">
@@ -263,9 +273,7 @@ export default function StrategicInitiativeTab({
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm">
-                          {getDepartmentName(item.department_id)}
-                        </span>
+                        <span className="font-mono text-sm">{departmentName}</span>
                       </TableCell>
 
                       <TableCell align="center">
@@ -376,7 +384,7 @@ function CreateOrUpdate({
   const pillars = pillarsResponse?.data?.data || [];
 
   const pillarOptions = useMemo(() => {
-    return pillars.map((pillar) => ({
+    return pillars.map((pillar: any) => ({
       id: pillar.id,
       name: pillar.title
     }));
