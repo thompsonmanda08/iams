@@ -1,7 +1,12 @@
 "use server";
 
 import { APIResponse } from "@/lib/types";
-import authenticatedApiClient, { axios, handleError, successResponse } from "./api-config";
+import authenticatedApiClient, {
+  axios,
+  handleError,
+  successResponse,
+  unauthorizedResponse
+} from "./api-config";
 import {
   createAuthSession,
   createUserSession,
@@ -343,6 +348,12 @@ export const initializeSystemSetup = cache(_initializeSystemSetup);
  */
 export async function getRefreshToken(): Promise<APIResponse> {
   const url = `api/v1/auth/refresh-token`;
+
+  const { isAuthenticated } = await verifySession();
+
+  if (!isAuthenticated) {
+    return unauthorizedResponse("UNAUTHORIZED");
+  }
 
   try {
     const response = await authenticatedApiClient({ url });

@@ -18,6 +18,7 @@ import {
   getIndicativeTargets
 } from "@/app/_actions/audit-settings-actions";
 import { QUERY_KEYS } from "@/lib/constants";
+import { UserQueryParams } from "@/lib/types/account";
 
 // ============================================================================
 // AUDITABLE AREAS HOOKS
@@ -27,11 +28,13 @@ import { QUERY_KEYS } from "@/lib/constants";
  * Hook to fetch all auditable areas
  * @returns Query result with auditable areas data
  */
-export const useAuditableAreas = () => {
+export const useAuditableAreas = (
+  params?: { page?: number; page_size?: number; department_id?: string } | undefined
+) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.AUDITABLE_AREAS],
+    queryKey: [QUERY_KEYS.AUDITABLE_AREAS, params],
     queryFn: async () => {
-      const response = await getAuditableAreas();
+      const response = await getAuditableAreas(params);
       if (!response.success) {
         throw new Error(response.message);
       }
@@ -50,15 +53,18 @@ export const useAuditableAreas = () => {
  * @param params - Optional parameters for filtering and pagination
  * @returns Query result with strategic pillars data
  */
-export const useStrategicPillars = (params?: {
-  pillarId?: string;
-  page?: number;
-  page_size?: number;
-}) => {
+export const useStrategicPillars = (
+  pillarId?: string,
+  params?: {
+    department_id?: string;
+    page?: number;
+    page_size?: number;
+  }
+) => {
   return useQuery({
     queryKey: [QUERY_KEYS.STRATEGIC_PILLARS, params],
     queryFn: async () => {
-      const response = await getStrategicPillars(params?.pillarId, params);
+      const response = await getStrategicPillars(pillarId, params);
       if (!response.success) {
         throw new Error(response.message);
       }

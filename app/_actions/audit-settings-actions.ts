@@ -16,8 +16,20 @@ import { revalidatePath } from "next/cache";
  * Get all auditable areas
  * Endpoint: GET /api/v1/audit/auditable-areas
  */
-export async function getAuditableAreas(): Promise<APIResponse> {
-  const url = `/api/v1/audit/auditable-areas`;
+export async function getAuditableAreas(params?: {
+  page?: number;
+  page_size?: number;
+  department_id?: string;
+  [key: string]: string | number | undefined;
+}): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
+  if (params?.page) queryParams.append("page", String(params?.page || 1));
+  if (params?.department_id)
+    queryParams.append("department_id", String(params?.department_id || ""));
+
+  const url = `/api/v1/audit/auditable-areas${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
@@ -120,13 +132,16 @@ export async function getStrategicPillars(
   params?: {
     page?: number;
     page_size?: number;
+    department_id?: string;
     [key: string]: string | number | undefined;
   }
 ): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
 
-  queryParams.append("page_size", String(params?.page_size || 10));
-  queryParams.append("page", String(params?.page || 1));
+  if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
+  if (params?.page) queryParams.append("page", String(params?.page || 1));
+  if (params?.department_id)
+    queryParams.append("department_id", String(params?.department_id || ""));
 
   const url = pillarId
     ? `/api/v1/audit/strategic-pillars/${pillarId}`
@@ -225,8 +240,8 @@ export async function getStrategicInitiatives(
   // Otherwise, get all initiatives (we'll need to check if backend supports this)
   const queryParams = new URLSearchParams();
 
-  queryParams.append("page_size", String(params?.page_size || 10));
-  queryParams.append("page", String(params?.page || 1));
+  if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
+  if (params?.page) queryParams.append("page", String(params?.page || 1));
 
   if (!pillarId) {
     return handleBadRequest("Pillar ID is required");
@@ -336,8 +351,17 @@ export async function deleteStrategicInitiative(id: string): Promise<APIResponse
  * Get all findings categories
  * Note: Endpoint may not be in Postman collection yet
  */
-export async function getFindingsCategories(): Promise<APIResponse> {
-  const url = `/api/v1/findings-categories`;
+export async function getFindingsCategories(params?: {
+  page?: number;
+  page_size?: number;
+  [key: string]: string | number | undefined;
+}): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
+  if (params?.page) queryParams.append("page", String(params?.page || 1));
+
+  const url = `/api/v1/findings-categories${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
@@ -427,8 +451,17 @@ export async function deleteFindingsCategory(id: string): Promise<APIResponse> {
  * Get all process activities
  * Note: Endpoint may not be in Postman collection yet
  */
-export async function getProcessActivities(): Promise<APIResponse> {
-  const url = `/api/v1/process-activities`;
+export async function getProcessActivities(params?: {
+  page?: number;
+  page_size?: number;
+  [key: string]: string | number | undefined;
+}): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
+  if (params?.page) queryParams.append("page", String(params?.page || 1));
+
+  const url = `/api/v1/process-activities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
@@ -444,21 +477,12 @@ export async function getProcessActivities(): Promise<APIResponse> {
 export async function createProcessActivity(data: any): Promise<APIResponse> {
   const url = `/api/v1/process-activities`;
 
-  if (!data.name) {
-    return handleBadRequest("Process name is required");
-  }
-
   try {
     const response = await authenticatedApiClient({
       url,
       method: "POST",
       data: {
-        name: data.name,
-        department_id: data.department_id,
-        auditable_area_id: data.auditable_area_id,
-        pillar_id: data.pillar_id,
-        description: data.description || "",
-        activities: data.activities || []
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -483,12 +507,7 @@ export async function updateProcessActivity(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        name: data.name,
-        department_id: data.department_id,
-        auditable_area_id: data.auditable_area_id,
-        pillar_id: data.pillar_id,
-        description: data.description,
-        activities: data.activities
+        ...data
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -528,8 +547,17 @@ export async function deleteProcessActivity(id: string): Promise<APIResponse> {
  * Get all indicative targets
  * Endpoint: GET /api/v1/audit/indicative-targets
  */
-export async function getIndicativeTargets(): Promise<APIResponse> {
-  const url = `/api/v1/audit/indicative-targets`;
+export async function getIndicativeTargets(params?: {
+  page?: number;
+  page_size?: number;
+  [key: string]: string | number | undefined;
+}): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
+  if (params?.page) queryParams.append("page", String(params?.page || 1));
+
+  const url = `/api/v1/audit/indicative-targets${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url, method: "GET" });
