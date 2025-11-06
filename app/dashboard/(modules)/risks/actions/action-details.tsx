@@ -185,46 +185,47 @@ export function ActionDetails({ action }: ActionDetailsProps) {
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-3">
-              <BackButton title="Back to Actions" />
-              <div>
-                <h1 className="text-foreground text-3xl font-bold">
-                  {action?.title || "Untitled Risk"}
-                </h1>
-                <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
-                  {action?.description || "No description available"}
-                </p>
-                <p className="text-muted-foreground mt-2 font-mono text-xs uppercase">
-                  ID: {action?.id || "N/A"}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-foreground text-3xl font-bold">
+                {action?.title || "Untitled Risk"}
+              </h1>
+              <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
+                {action?.description || "No description available"}
+              </p>
+              <p className="text-muted-foreground mt-2 font-mono text-xs uppercase">
+                ID: {action?.id || "N/A"}
+              </p>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="lg" className="gap-2">
-                  Change Risk Response
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => handleMitigationSelect("Reduce")}>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Reduce
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleMitigationSelect("Accept")}>
-                  <Target className="mr-2 h-4 w-4" />
-                  Accept
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleMitigationSelect("Avoid")}>
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  Avoid
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleMitigationSelect("Transfer")}>
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  Transfer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+            <div className="flex gap-4">
+              <BackButton title="Back to Actions" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="gap-2">
+                    Change Risk Response
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => handleMitigationSelect("Reduce")}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Reduce
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleMitigationSelect("Accept")}>
+                    <Target className="mr-2 h-4 w-4" />
+                    Accept
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleMitigationSelect("Avoid")}>
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Avoid
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleMitigationSelect("Transfer")}>
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    Transfer
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
