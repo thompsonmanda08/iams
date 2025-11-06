@@ -22,7 +22,14 @@ type SelectInputProps = React.InputHTMLAttributes<HTMLSelectElement> & {
   value?: string;
   className?: string;
   listItemName?: string;
-  options: { id: string; name: string; [x: string]: any }[];
+  options: {
+    id: string;
+    name?: string;
+    value?: string;
+    label?: string;
+    title?: string;
+    [x: string]: any;
+  }[];
   onValueChange?: (value: string) => void;
   classNames?: {
     wrapper?: string;
@@ -103,9 +110,14 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
             )}
           </SelectTrigger>
           <SelectContent className={cn(classNames?.options, classNames?.selectContent)}>
-            {options?.map((item: any) => {
-              const itemValue = item.id || item?.value;
-              const itemLabel = item?.[String(listItemName)] || item?.name || item?.label;
+            {options?.map((item: any, index) => {
+              const itemValue = item?.value || item.id || index.toString();
+              const itemLabel =
+                item?.[String(listItemName)] ||
+                item.name ||
+                item?.title ||
+                item?.label ||
+                itemValue;
 
               return (
                 <SelectItem key={itemValue} value={itemValue}>

@@ -13,6 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Spinner } from "./spinner";
+import { title } from "process";
 
 type SelectInputProps = React.InputHTMLAttributes<HTMLSelectElement> & {
   label?: string;
@@ -27,7 +28,14 @@ type SelectInputProps = React.InputHTMLAttributes<HTMLSelectElement> & {
   value?: string;
   className?: string;
   listItemName?: string;
-  options: { id: string; name: string; [x: string]: any }[];
+  options: {
+    id: string;
+    name?: string;
+    value?: string;
+    label?: string;
+    title?: string;
+    [x: string]: any;
+  }[];
   onValueChange?: (value: string) => void;
   classNames?: {
     wrapper?: string;
@@ -112,9 +120,14 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 </div>
               ) : (
                 <>
-                  {selected
-                    ? options.find((item) => item?.id === selected)?.name
-                    : placeholder || "Select an item..."}
+                  {selected ? (() => {
+                    const selectedItem = options.find((item) => item.id === selected);
+                    return selectedItem?.[String(listItemName)] ||
+                      selectedItem?.name ||
+                      selectedItem?.title ||
+                      selectedItem?.label ||
+                      selectedItem;
+                  })() : placeholder || "Select an item..."}
                 </>
               )}
 
@@ -127,9 +140,14 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
               <CommandList>
                 <CommandEmpty>No items found.</CommandEmpty>
                 <CommandGroup>
-                  {options.map((item) => {
-                    const itemValue = item.id;
-                    const itemLabel = item?.[String(listItemName)] || item.name;
+                  {options.map((item, index) => {
+                    const itemValue = item.id || index.toString();
+                    const itemLabel =
+                      item?.[String(listItemName)] ||
+                      item.name ||
+                      item?.title ||
+                      item?.label ||
+                      itemValue;
 
                     return (
                       <CommandItem
