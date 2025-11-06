@@ -9,13 +9,12 @@
 
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Target, Clipboard, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileText, Target, Clipboard, CheckCircle2 } from "lucide-react";
 import type { TemplateCategory } from "@/lib/types/audit-types";
 
 interface CategoryDetailsClientProps {
@@ -27,7 +26,7 @@ export function CategoryDetailsClient({ category, templateId }: CategoryDetailsC
   const router = useRouter();
 
   const handleBack = () => {
-    router.push(`/dashboard/audit/workpapers/templates/${templateId}`);
+    router.back();
   };
 
   const getGroupDisplayName = (group: "main-clauses" | "annex-a-controls"): string => {

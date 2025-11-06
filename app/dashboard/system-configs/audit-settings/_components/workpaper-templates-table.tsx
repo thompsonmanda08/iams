@@ -11,29 +11,9 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Loader2,
-  Copy,
-  ArrowRight,
-  Pencil,
-  View,
-  Trash,
-  ClipboardCheck,
-  Plus
-} from "lucide-react";
+import { Trash2, Pencil, View, ClipboardCheck, Plus } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,7 +28,6 @@ import { deleteWorkingPaperTemplate } from "@/app/_actions/audit-module-actions"
 import { useToast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/status-badge";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Spinner } from "../../../../../components/ui/spinner";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -211,7 +190,7 @@ export function WorkpaperTemplatesTable({
                 <span className="text-sm">{template.version || "1.0"}</span>
               </TableCell>
               <TableCell>
-                <StatusBadge status={template.is_active ? "ACTIVE" : "INACTIVE"} size="sm" />
+                <StatusBadge status={template.is_active ? "ACTIVE" : "INACTIVE"} />
               </TableCell>
               <TableCell>
                 <span className="text-sm">

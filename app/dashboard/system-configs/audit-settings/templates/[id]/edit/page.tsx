@@ -8,11 +8,7 @@ import type { WorkpaperBuilderTemplateId } from "@/lib/types/audit-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export default async function UpdateTemplatePage({
-  params
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function UpdateTemplatePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: templateId } = await params;
 
   // Fetch the template data
@@ -22,10 +18,11 @@ export default async function UpdateTemplatePage({
     notFound();
   }
 
-  const template = templateResponse.data;
+  const template = templateResponse?.success ? templateResponse.data?.data || [] : [];
 
   // Map the standard to builderId
-  const builderId: WorkpaperBuilderTemplateId = (template.standard?.toUpperCase() || "GENERAL") as WorkpaperBuilderTemplateId;
+  const builderId: WorkpaperBuilderTemplateId = (template.standard?.toUpperCase() ||
+    "GENERAL") as WorkpaperBuilderTemplateId;
 
   const description =
     builderId === "ISO27001"
@@ -41,6 +38,8 @@ export default async function UpdateTemplatePage({
         ? "Update General Workpaper Template"
         : "Update Custom Workpaper Template";
 
+  console.log(template);
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -54,7 +53,7 @@ export default async function UpdateTemplatePage({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {builderId === "ISO27001" && (
+        {/* {builderId === "ISO27001" && (
           <ISOWorkpaperTemplateForm templateId={templateId} initialData={template} />
         )}
 
@@ -97,11 +96,8 @@ export default async function UpdateTemplatePage({
               <CustomTemplateBuilder initialData={template as any} />
             </CardContent>
           </Card>
-        )}
-
-        {builderId !== "ISO27001" && builderId !== "GENERAL" && builderId !== "CUSTOM" && (
-          <ISOWorkpaperTemplateForm templateId={templateId} initialData={template} />
-        )}
+        )} */}
+        <ISOWorkpaperTemplateForm templateId={templateId} initialData={template} />
       </div>
     </div>
   );

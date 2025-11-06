@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -113,12 +113,13 @@ export default function StrategicPillarsTab({
     deleteMutation.mutate(selectedId);
   };
 
-  console.log("departments:", departments);
-
-  const getDepartmentName = (departmentId: string) => {
-    const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : "No department assigned - Global";
-  };
+  const getDepartmentName = useCallback(
+    (departmentId: string) => {
+      const department = departments.find((d) => d.id === departmentId);
+      return department ? department.name : "No department assigned";
+    },
+    [departments]
+  );
 
   return (
     <>
@@ -302,7 +303,7 @@ function CreateOrUpdate({
   });
 
   const { data } = useDepartments({
-    isActive: true,
+    is_active: true,
     page_size: 100,
     page: 1
   });

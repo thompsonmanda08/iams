@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import {
 import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
-import { AuditConfigurableItem, Department, ErrorState, Pagination } from "@/lib/types";
+import { Department, ErrorState, Pagination } from "@/lib/types";
 import {
   Dialog,
   DialogClose,
@@ -44,16 +44,17 @@ import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
 
-interface AreaFormData {
+interface TargetFormData {
+  id: string;
   name: string;
   department_id: string;
   description: string;
 }
 
-const INIT_FORM_DATA: Omit<AuditConfigurableItem, "id"> = {
+const INIT_FORM_DATA: Omit<TargetFormData, "id"> = {
   name: "",
   description: "",
-  department_id: null
+  department_id: ""
   // code: "",
   // is_active: true
 };
@@ -63,18 +64,16 @@ export default function IndicativeTargetsTab({
   pagination,
   departments = []
 }: {
-  targets: AuditConfigurableItem[];
+  targets: any[];
   pagination?: Pagination;
   departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
-  const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id"> | null>(
-    INIT_FORM_DATA
-  );
+  const [formData, setFormData] = useState<Omit<TargetFormData, "id"> | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [items, setItems] = useState<AuditConfigurableItem[]>(targets);
+  const [items, setItems] = useState<TargetFormData[]>(targets);
 
   useEffect(() => {
     setItems(targets);
@@ -115,6 +114,14 @@ export default function IndicativeTargetsTab({
     // }
     deleteMutation.mutate(selectedId as any);
   };
+
+  const getDepartmentName = useCallback(
+    (departmentId: string) => {
+      const department = departments.find((d) => d.id === departmentId);
+      return department ? department.name : "No department assigned ";
+    },
+    [departments]
+  );
 
   return (
     <>
@@ -181,18 +188,8 @@ export default function IndicativeTargetsTab({
               </TableRow>
             ) : (
               items.map((item) => {
-                const departmentName =
-                  item?.department ||
-                  departments.find((d) => d.id === item.department_id)?.name ||
-                  "No department assigned - Global";
                 return (
-                  <TableRow
-                    key={item.id}
-                    className="cursor-pointer"
-                    // onClick={() => {
-                    //   router.push(`/dashboard/system-configs/items/${item.id}`);
-                    // }}
-                  >
+                  <TableRow key={item.id} className="cursor-pointer">
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Building className="text-muted-foreground h-4 w-4" />
@@ -205,19 +202,11 @@ export default function IndicativeTargetsTab({
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm">{departmentName}</span>
+                      <span className="font-mono text-sm">
+                        {getDepartmentName(item.department_id)}
+                      </span>
                     </TableCell>
-                    {/* <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium",
-                        item.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      )}>
-                      {item.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </TableCell> */}
+
                     <TableCell align="center">
                       <div className="flex justify-end gap-2">
                         <Button
@@ -285,8 +274,8 @@ export function CreateOrUpdate({
   showTrigger?: boolean;
   openModal?: boolean;
   selectedId: string | null;
-  initialData?: Omit<AuditConfigurableItem, "id"> | null;
-  setInitialData?: React.Dispatch<React.SetStateAction<Omit<AuditConfigurableItem, "id"> | null>>;
+  initialData?: Omit<TargetFormData, "id"> | null;
+  setInitialData?: React.Dispatch<React.SetStateAction<Omit<TargetFormData, "id"> | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const queryClient = useQueryClient();
@@ -296,7 +285,7 @@ export function CreateOrUpdate({
   });
 
   // Initialize with initialData if provided, otherwise use INIT_FORM_DATA
-  const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id">>(() => {
+  const [formData, setFormData] = useState<Omit<TargetFormData, "id">>(() => {
     if (initialData && selectedId) {
       return {
         // id: selectedId,
@@ -305,18 +294,18 @@ export function CreateOrUpdate({
         description: initialData.description || ""
         // parent_id: initialData.parent_id || undefined,
         // is_active: initialData.is_active || true
-      } as AuditConfigurableItem;
+      } as TargetFormData;
     }
     return INIT_FORM_DATA;
   });
 
   const { data } = useDepartments({
-    isActive: true,
+    is_active: true,
     page_size: 100,
     page: 1
   });
 
-  const items = (data?.data?.data || []) as AuditConfigurableItem[];
+  const departments = (data?.data?.data || []) as TargetFormData[];
 
   // Update form when initialData changes
   useEffect(() => {
@@ -357,7 +346,7 @@ export function CreateOrUpdate({
   // Create/Update mutation
   const router = useRouter();
   const saveMutation = useMutation({
-    mutationFn: (data: AuditConfigurableItem) => {
+    mutationFn: (data: TargetFormData) => {
       return initialData && selectedId
         ? updateIndicativeTarget({ ...data, id: String(selectedId) })
         : createIndicativeTarget(data);
@@ -384,17 +373,17 @@ export function CreateOrUpdate({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveMutation.mutate(formData);
+    saveMutation.mutate(formData as any);
   }
 
   const departmentOptions = useMemo(() => {
-    return items
+    return departments
       .filter((dept) => dept.id !== selectedId) // Prevent self-parenting
       .map((item) => ({
         id: item?.id as string,
         name: item?.name
       }));
-  }, [items, selectedId]);
+  }, [departments, selectedId]);
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -403,11 +392,11 @@ export function CreateOrUpdate({
           <Button size="sm">
             {initialData ? (
               <>
-                <PencilLine className="mr-2 h-4 w-4" /> Update AuditConfigurableItem
+                <PencilLine className="mr-2 h-4 w-4" /> Update Target
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" /> Create New AuditConfigurableItem
+                <Plus className="mr-2 h-4 w-4" /> Create New Target
               </>
             )}
           </Button>
@@ -415,9 +404,7 @@ export function CreateOrUpdate({
       )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {initialData ? "Update AuditConfigurableItem" : "Create New AuditConfigurableItem"}
-          </DialogTitle>
+          <DialogTitle>{initialData ? "Update Target " : "Create New Target"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleCreateOrUpdate} className="space-y-3">
           <SearchSelectField
@@ -450,21 +437,7 @@ export function CreateOrUpdate({
               setFormData((c) => ({ ...c, description: e.target.value }));
             }}
           />
-          {/* <div className="flex items-center space-x-2 self-end pl-2">
-            <Checkbox
-              id="is_active"
-              checked={formData?.is_active}
-              title="Define whether this item is currently active"
-              onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, is_active: checked }) as any)
-              }
-            />
-            <Label
-              htmlFor="is_active"
-              className="text-foreground cursor-pointer text-sm font-medium text-nowrap">
-              Is Active AuditConfigurableItem
-            </Label>
-          </div> */}
+
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
 
           <div className="flex justify-end gap-3 pt-2">
@@ -484,7 +457,12 @@ export function CreateOrUpdate({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name.trim()}
+              disabled={
+                saveMutation.isPending ||
+                !formData.name.trim() ||
+                !formData.department_id.trim() ||
+                !formData.description.trim()
+              }
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
               {initialData ? "Update" : "Create"}

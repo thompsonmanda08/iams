@@ -109,7 +109,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     // initiatives
     // towns,
     // departments,
-    // indicativeTargets,
+    indicativeTargets
     // findingsCategories
     // processActivities
   });

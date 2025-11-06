@@ -8,13 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import type { WorkpaperTemplate } from "@/lib/types/audit-types";
-import { useToast } from "@/hooks/use-toast";
 import {
   createWorkingPaperTemplate,
   updateWorkingPaperTemplate
 } from "@/app/_actions/audit-module-actions";
 import { Switch } from "@/components/ui/switch";
 import { SelectField } from "@/components/ui/select-field";
+import { notify } from "@/lib/utils";
 
 export function ISOWorkpaperTemplateForm({
   templateId,
@@ -24,7 +24,6 @@ export function ISOWorkpaperTemplateForm({
   initialData?: WorkpaperTemplate | null;
 }) {
   const router = useRouter();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState(
@@ -43,10 +42,10 @@ export function ISOWorkpaperTemplateForm({
     e.preventDefault();
 
     if (!formData.name || !formData.standard) {
-      toast({
+      notify({
         title: "Validation Error",
         description: "Template name and standard are required",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -66,23 +65,23 @@ export function ISOWorkpaperTemplateForm({
         : await createWorkingPaperTemplate(newData);
 
       if (result.success) {
-        toast({
+        notify({
           title: "Success",
           description: `Working paper template ${templateId ? "updated" : "created"} successfully`
         });
         router.push("/dashboard/system-configs/audit-settings/templates");
       } else {
-        toast({
+        notify({
           title: "Error",
           description: result.message || `Failed to ${templateId ? "update" : "create"} template`,
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsSubmitting(false);

@@ -223,15 +223,21 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
 
   if (!universe) {
     return (
-      <div className="from-background via-background to-muted/30 flex min-h-screen items-center justify-center bg-gradient-to-br">
-        <Card className="max-w-md p-8 text-center">
-          <Globe className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
-          <h2 className="mb-4 text-2xl font-bold">Universe Not Found</h2>
-          <p className="text-muted-foreground mb-6">
-            The universe you're looking for doesn't exist.
-          </p>
-          <BackButton title="Back to Universes" />
-        </Card>
+      <div className="flex min-h-screen items-center justify-center">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Globe className="h-6 w-6" />
+            </EmptyMedia>
+            <EmptyTitle>Universe Not Found</EmptyTitle>
+            <EmptyDescription>
+              The universe you're looking for doesn't exist or may have been removed.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <BackButton title="Back to Universes" />
+          </EmptyContent>
+        </Empty>
       </div>
     );
   }
