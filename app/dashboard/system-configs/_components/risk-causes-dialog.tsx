@@ -111,7 +111,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cause">Risk Cause Parent ID (Optional)</Label>
+              <Label htmlFor="cause">Risk Cause Parent (Optional)</Label>
               <SelectField
                 value={formData.cause_id}
                 onValueChange={(value) => setFormData({ ...formData, cause_id: value })}
@@ -146,7 +146,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
             <Button type="submit" disabled={isLoading}>
               {isLoading
                 ? `${isEditMode ? "Updating" : "Creating"}...`
-                : `${isEditMode ? "Update" : "Create"} Causes`}
+                : `${isEditMode ? "Update" : "Create"} Cause`}
             </Button>
           </DialogFooter>
         </form>
