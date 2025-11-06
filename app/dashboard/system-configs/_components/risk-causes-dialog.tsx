@@ -19,6 +19,7 @@ import { SelectField } from "@/components/ui/select-field";
 
 type RiskResponse = {
   id: string;
+  parent_id: string;
   name: string;
   description: string;
 };
@@ -35,7 +36,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    cause_id: ""
+    parent_id: ""
   });
 
   const isEditMode = !!response;
@@ -44,10 +45,10 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
       setFormData({
         name: response.name,
         description: response.description,
-        cause_id: response.id
+        parent_id: response.parent_id
       });
     } else if (!open) {
-      setFormData({ name: "", description: "", cause_id: "" });
+      setFormData({ name: "", description: "", parent_id: "" });
     }
   }, [open, response]);
 
@@ -67,7 +68,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
 
       if (result.success) {
         toast.success(`Risk cause ${isEditMode ? "updated" : "created"} successfully`);
-        setFormData({ name: "", description: "", cause_id: "" });
+        setFormData({ name: "", description: "", parent_id: "" });
         onOpenChange(false);
         onSuccess();
       } else {
@@ -113,8 +114,8 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
             <div className="space-y-2">
               <Label htmlFor="cause">Risk Cause Parent (Optional)</Label>
               <SelectField
-                value={formData.cause_id}
-                onValueChange={(value) => setFormData({ ...formData, cause_id: value })}
+                value={formData.parent_id}
+                onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
                 placeholder="Select risk cause"
                 options={options}
                 disabled={isLoading}

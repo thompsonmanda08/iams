@@ -19,6 +19,7 @@ import { SelectField } from "@/components/ui/select-field";
 
 type RiskResponse = {
   id: string;
+  parent_id: string;
   name: string;
   description: string;
 };
@@ -40,7 +41,7 @@ export function BusinessProcessesDialog({
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    process_id: ""
+    parent_id: ""
   });
 
   const isEditMode = !!response;
@@ -51,10 +52,10 @@ export function BusinessProcessesDialog({
       setFormData({
         name: response.name,
         description: response.description,
-        process_id: response.id
+        parent_id: response.parent_id
       });
     } else if (!open) {
-      setFormData({ name: "", description: "", process_id: "" });
+      setFormData({ name: "", description: "", parent_id: "" });
     }
   }, [open, response]);
 
@@ -74,7 +75,7 @@ export function BusinessProcessesDialog({
 
       if (result.success) {
         toast.success(`Risk response ${isEditMode ? "updated" : "created"} successfully`);
-        setFormData({ name: "", description: "", process_id: "" });
+        setFormData({ name: "", description: "", parent_id: "" });
         onOpenChange(false);
         onSuccess();
       } else {
@@ -124,8 +125,8 @@ export function BusinessProcessesDialog({
             <div className="space-y-2">
               <Label htmlFor="process">Business Process Parent (Optional)</Label>
               <SelectField
-                value={formData.process_id}
-                onValueChange={(value) => setFormData({ ...formData, process_id: value })}
+                value={formData.parent_id}
+                onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
                 placeholder="Select business process"
                 options={options}
                 disabled={isLoading}
