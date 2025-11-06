@@ -60,7 +60,7 @@ function transformRiskData(apiRisks: ApiRisk[]): TransformedRisk[] {
 
     return {
       id: risk.id,
-      riskId: `${risk.category?.code ? risk.category?.code : 'N/A'}-${risk.id.slice(0, 4).toUpperCase()}`,
+      riskId: `${risk.category?.code ? risk.category?.code : "N/A"}-${risk.id.slice(0, 4).toUpperCase()}`,
       title: risk.title || "Untitled Risk",
       description: risk.description || "No description provided",
       category: risk.category?.name || "Uncategorized",
