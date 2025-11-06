@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Settings, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Settings, Loader2, Grid3x3 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -158,11 +158,19 @@ export function RiskMatrixConfigList() {
         ))}
 
         {matrices.length === 0 && (
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">No risk matrices configured</p>
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+          <Card className="border-dashed md:col-span-2 lg:col-span-3">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="bg-muted mb-4 rounded-full p-4">
+                <Grid3x3 className="text-muted-foreground h-8 w-8" />
+              </div>
+              <h3 className="text-foreground mb-2 text-lg font-semibold">
+                No risk matrices configured
+              </h3>
+              <p className="text-muted-foreground mb-6 text-center text-sm">
+                Get started by creating your first risk matrix to organize and classify risks.
+              </p>
+              <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
                 Create Your First Matrix
               </Button>
             </CardContent>
