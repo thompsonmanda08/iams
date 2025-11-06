@@ -38,6 +38,7 @@ import { format, formatISO, parseISO } from "date-fns";
 import { getUsers } from "@/app/_actions/user-actions";
 import { SearchSelectField } from "../ui/search-select-field";
 import { getStrategicPillars } from "@/app/_actions/audit-settings-actions";
+import { Slider } from "../ui/slider";
 
 type Department = {
   id: string;
@@ -72,7 +73,7 @@ type BusinessProcess = {
   updated_by: string;
   created_at: string;
   updated_at: string;
-  sub_process: SubProcess[];
+  sub_processes: SubProcess[];
 };
 
 type Risk = {
@@ -187,7 +188,7 @@ export function MultiStepRiskForm({
   // Business pillar state
   const [pillars, setPillars] = useState<[]>([]);
   const [loadingPillars, setLoadingPillars] = useState(false);
-  
+
   // Business processes state
   const [businessProcesses, setBusinessProcesses] = useState<BusinessProcess[]>([]);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
@@ -230,15 +231,14 @@ export function MultiStepRiskForm({
     mitigation_cost: mode === "edit" && riskData ? riskData.mitigation_cost : 0
   });
 
- 
   const availableSubProcesses = useMemo(() => {
     if (!stepOneData.macro_process_id) return [];
-    
+
     const selectedMacroProcess = businessProcesses.find(
       (process) => process.id === stepOneData.macro_process_id
     );
-    
-    return selectedMacroProcess?.sub_process || [];
+
+    return selectedMacroProcess?.sub_processes || [];
   }, [stepOneData.macro_process_id, businessProcesses]);
 
   useEffect(() => {
@@ -591,7 +591,9 @@ export function MultiStepRiskForm({
           {currentStep === 1 && (
             <>
               <div className="grid gap-2">
-                <Label htmlFor="title">Risk Title<span className="text-destructive">*</span></Label>
+                <Label htmlFor="title">
+                  Risk Title<span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="title"
                   placeholder="Enter risk title"
@@ -602,7 +604,9 @@ export function MultiStepRiskForm({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="recurrence">Recurrence<span className="text-destructive">*</span></Label>
+                <Label htmlFor="recurrence">
+                  Recurrence<span className="text-destructive">*</span>
+                </Label>
                 <Select
                   value={stepOneData.recurrence}
                   onValueChange={(value) =>
@@ -620,7 +624,9 @@ export function MultiStepRiskForm({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="description">Description <span className="text-destructive">*</span></Label>
+                <Label htmlFor="description">
+                  Description <span className="text-destructive">*</span>
+                </Label>
                 <Textarea
                   id="description"
                   placeholder="Describe the risk in detail"
@@ -724,7 +730,9 @@ export function MultiStepRiskForm({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="root_cause">Root Cause<span className="text-destructive">*</span></Label>
+                <Label htmlFor="root_cause">
+                  Root Cause<span className="text-destructive">*</span>
+                </Label>
                 <Textarea
                   id="root_cause"
                   placeholder="Describe the underlying cause of this risk"
@@ -753,16 +761,16 @@ export function MultiStepRiskForm({
                         {stepTwoData.inherent_likelihood}
                       </span>
                     </Label>
-                    <input
-                      type="range"
+                    <Slider
                       id="inherent_likelihood"
-                      min="1"
-                      max="5"
-                      value={stepTwoData.inherent_likelihood}
-                      onChange={(e) =>
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={[stepTwoData.inherent_likelihood]}
+                      onValueChange={(value) =>
                         setStepTwoData({
                           ...stepTwoData,
-                          inherent_likelihood: Number(e.target.value)
+                          inherent_likelihood: value[0]
                         })
                       }
                       className="w-full"
@@ -777,16 +785,16 @@ export function MultiStepRiskForm({
                         {stepTwoData.inherent_impact}
                       </span>
                     </Label>
-                    <input
-                      type="range"
+                    <Slider
                       id="inherent_impact"
-                      min="1"
-                      max="5"
-                      value={stepTwoData.inherent_impact}
-                      onChange={(e) =>
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={[stepTwoData.inherent_impact]}
+                      onValueChange={(value) =>
                         setStepTwoData({
                           ...stepTwoData,
-                          inherent_impact: Number(e.target.value)
+                          inherent_impact: value[0]
                         })
                       }
                       className="w-full"
@@ -848,7 +856,7 @@ export function MultiStepRiskForm({
           )}
 
           {/* Step 3: Response Strategy */}
-          {currentStep === 3 && (
+          {currentStep === 3&& (
             <>
               <div className="space-y-4 rounded-lg border p-4">
                 <h3 className="font-semibold">Residual Risk Assessment</h3>
@@ -863,16 +871,16 @@ export function MultiStepRiskForm({
                         {stepThreeData.residual_likelihood}
                       </span>
                     </Label>
-                    <input
-                      type="range"
+                    <Slider
                       id="residual_likelihood"
-                      min="1"
-                      max="5"
-                      value={stepThreeData.residual_likelihood}
-                      onChange={(e) =>
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={[stepThreeData.residual_likelihood]}
+                      onValueChange={(value) =>
                         setStepThreeData({
                           ...stepThreeData,
-                          residual_likelihood: Number(e.target.value)
+                          residual_likelihood: value[0]
                         })
                       }
                       className="w-full"
@@ -886,16 +894,16 @@ export function MultiStepRiskForm({
                         {stepThreeData.residual_impact}
                       </span>
                     </Label>
-                    <input
-                      type="range"
+                    <Slider
                       id="residual_impact"
-                      min="1"
-                      max="5"
-                      value={stepThreeData.residual_impact}
-                      onChange={(e) =>
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={[stepThreeData.residual_impact]}
+                      onValueChange={(value) =>
                         setStepThreeData({
                           ...stepThreeData,
-                          residual_impact: Number(e.target.value)
+                          residual_impact: value[0]
                         })
                       }
                       className="w-full"
