@@ -47,6 +47,8 @@ import {
 } from "@/components/ui/empty";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 interface RolesPermissionsProps {
   departmentId: string;
@@ -66,19 +68,8 @@ interface Module {
   id: string;
   name: string;
   description?: string;
-}
-
-interface Permission {
-  role_id: string;
-  module_id: string;
-  can_view: boolean;
-  can_create: boolean;
-  can_edit: boolean;
-  can_delete: boolean;
-  can_approve: boolean;
-  can_export: boolean;
-  can_assign: boolean;
-  can_configure: boolean;
+  parent_module_id?: string | null;
+  module_code?: string;
 }
 
 type PermissionType =
@@ -102,8 +93,22 @@ const PERMISSION_LABELS: Record<PermissionType, string> = {
   can_configure: "Configure"
 };
 
+// Format module name - use module_code for "Overview" modules
+const formatModuleName = (name: string, moduleCode?: string): string => {
+  // If name is "Overview", use module_code instead
+  if (name.toLowerCase().trim() === "overview" && moduleCode) {
+    // Format: "RISK_OVERVIEW" -> "Risk Overview"
+    return moduleCode
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+  return name;
+};
+
 export default function UserRolesConfig({ departmentId }: RolesPermissionsProps) {
   const router = useRouter();
+
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [permissionsMatrix, setPermissionsMatrix] = useState<
@@ -112,6 +117,8 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
   const [hasChanges, setHasChanges] = useState(false);
   const [openRoleModal, setOpenRoleModal] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [confirmSwitchRole, setConfirmSwitchRole] = useState(false);
+  const [pendingRoleId, setPendingRoleId] = useState<string | null>(null);
 
   // Fetch roles for this department
   const { data: rolesResponse, isLoading: rolesLoading } = useQuery({
@@ -168,19 +175,40 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
         };
       });
 
-      // Fill in actual permissions
-      (permissionsResponse.data as Permission[]).forEach((perm) => {
-        if (matrix[perm.module_id]) {
-          matrix[perm.module_id] = {
-            can_view: perm.can_view,
-            can_create: perm.can_create,
-            can_edit: perm.can_edit,
-            can_delete: perm.can_delete,
-            can_approve: perm.can_approve,
-            can_export: perm.can_export,
-            can_assign: perm.can_assign,
-            can_configure: perm.can_configure
+      // Fill in actual permissions from nested structure
+      const responseData = permissionsResponse.data as any[];
+
+      responseData.forEach((moduleData: any) => {
+        // Handle parent module permissions
+        if (moduleData.permissions && matrix[moduleData.id]) {
+          matrix[moduleData.id] = {
+            can_view: moduleData.permissions.can_view || false,
+            can_create: moduleData.permissions.can_create || false,
+            can_edit: moduleData.permissions.can_edit || false,
+            can_delete: moduleData.permissions.can_delete || false,
+            can_approve: moduleData.permissions.can_approve || false,
+            can_export: moduleData.permissions.can_export || false,
+            can_assign: moduleData.permissions.can_assign || false,
+            can_configure: moduleData.permissions.can_configure || false
           };
+        }
+
+        // Handle sub_modules permissions
+        if (moduleData.sub_modules && Array.isArray(moduleData.sub_modules)) {
+          moduleData.sub_modules.forEach((subModule: any) => {
+            if (subModule.permissions && matrix[subModule.id]) {
+              matrix[subModule.id] = {
+                can_view: subModule.permissions.can_view || false,
+                can_create: subModule.permissions.can_create || false,
+                can_edit: subModule.permissions.can_edit || false,
+                can_delete: subModule.permissions.can_delete || false,
+                can_approve: subModule.permissions.can_approve || false,
+                can_export: subModule.permissions.can_export || false,
+                can_assign: subModule.permissions.can_assign || false,
+                can_configure: subModule.permissions.can_configure || false
+              };
+            }
+          });
         }
       });
 
@@ -240,6 +268,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
           const modulePerms = permissionsMatrix[module.id];
           return {
             moduleId: module.id,
+            parentModuleId: module.parent_module_id || null,
             canView: modulePerms?.can_view || false,
             canCreate: modulePerms?.can_create || false,
             canEdit: modulePerms?.can_edit || false,
@@ -314,6 +343,15 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     savePermissionsMutation.mutate();
   };
 
+  const handleConfirmRoleSwitch = () => {
+    if (pendingRoleId) {
+      setSelectedRole(pendingRoleId);
+      setHasChanges(false);
+      setPendingRoleId(null);
+    }
+    setConfirmSwitchRole(false);
+  };
+
   const isLoading = rolesLoading || modulesLoading;
   const isSaving = savePermissionsMutation.isPending;
 
@@ -337,10 +375,89 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner className="h-8 w-8" />
-        <span className="text-muted-foreground ml-2">Loading roles and permissions...</span>
-      </div>
+      <Card className="p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-9 w-32" />
+        </div>
+
+        <div className="space-y-6">
+          {/* Roles Overview Skeleton */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="mb-2 h-6 w-56" />
+              <Skeleton className="h-4 w-72" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="rounded-md border p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Permissions Matrix Skeleton */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="mb-2 h-6 w-64" />
+              <Skeleton className="h-4 w-80" />
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <Skeleton className="h-4 w-20" />
+                      </TableHead>
+                      {[...Array(8)].map((_, i) => (
+                        <TableHead key={i} className="text-center">
+                          <Skeleton className="mx-auto h-4 w-16" />
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...Array(5)].map((_, rowIndex) => (
+                      <TableRow key={rowIndex}>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        {[...Array(8)].map((_, colIndex) => (
+                          <TableCell key={colIndex} className="text-center">
+                            <Skeleton className="mx-auto h-6 w-10 rounded-full" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Save Button Area Skeleton */}
+          <div className="rounded-md border p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-9 w-36" />
+            </div>
+          </div>
+        </div>
+      </Card>
     );
   }
 
@@ -444,13 +561,9 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
                     key={role.id}
                     onClick={() => {
                       if (hasChanges) {
-                        if (
-                          !confirm(
-                            "You have unsaved changes. Are you sure you want to switch roles?"
-                          )
-                        ) {
-                          return;
-                        }
+                        setPendingRoleId(role.id);
+                        setConfirmSwitchRole(true);
+                        return;
                       }
                       setSelectedRole(role.id);
                       setHasChanges(false);
@@ -530,7 +643,9 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
                       <TableBody>
                         {modules.map((module) => (
                           <TableRow key={module.id}>
-                            <TableCell className="font-medium">{module.name}</TableCell>
+                            <TableCell className="font-medium">
+                              {formatModuleName(module.name, module.module_code)}
+                            </TableCell>
                             {Object.keys(PERMISSION_LABELS).map((permType) => (
                               <TableCell key={permType} className="text-center">
                                 <Switch
@@ -583,6 +698,17 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
         initialData={editingRole}
         setInitialData={setEditingRole}
       />
+
+      <ConfirmationModal
+        open={confirmSwitchRole}
+        onOpenChange={setConfirmSwitchRole}
+        onConfirm={handleConfirmRoleSwitch}
+        type="close"
+        title="Unsaved Changes"
+        description="You have unsaved changes. Are you sure you want to switch roles? All unsaved changes will be lost."
+        confirmText="Switch Role"
+        cancelText="Cancel"
+      />
     </>
   );
 }
@@ -627,14 +753,16 @@ function CreateOrUpdateRoleDialog({
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => {
-      const payload = {
-        name: data.name,
-        code: data.code,
-        description: data.description,
-        departmentId: departmentId,
-        isActive: data.is_active
-      };
-      return initialData ? updateRole({ ...payload, id: initialData.id }) : createRole(payload);
+      // const payload = {
+      //   name: data.name,
+      //   code: data.code,
+      //   description: data.description,
+      //   departmentId: departmentId,
+      //   isActive: data.is_active
+      // };
+      return initialData
+        ? updateRole({ ...data, id: initialData.id, department_id: departmentId })
+        : createRole({ ...data, department_id: departmentId });
     },
     onSuccess: (response) => {
       if (response.success) {
@@ -700,7 +828,7 @@ function CreateOrUpdateRoleDialog({
             <Checkbox
               // type="checkbox"
               id="is_department_head"
-              checked={formData.is_department_head}
+              checked={Boolean(formData.is_department_head || false)}
               onCheckedChange={(checked) =>
                 setFormData((p) => ({ ...p, is_department_head: Boolean(checked || false) }))
               }

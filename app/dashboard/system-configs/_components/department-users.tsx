@@ -544,7 +544,8 @@ export function CreateOrUpdateDepartment({
               setFormData((c) => ({ ...c, description: e.target.value }));
             }}
           />
-          <div className="flex items-center space-x-2 self-end pl-2">
+
+          <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
             <Checkbox
               id="is_active"
               checked={formData?.is_active}
@@ -552,11 +553,15 @@ export function CreateOrUpdateDepartment({
               onCheckedChange={(checked) =>
                 setFormData((prev) => ({ ...prev, is_active: checked }) as any)
               }
+              className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
             />
             <Label
-              htmlFor="is_active"
-              className="text-foreground cursor-pointer text-sm font-medium text-nowrap">
+              htmlFor="is_department_head"
+              className="flex w-full flex-1 cursor-pointer flex-col items-start gap-0 text-sm font-medium select-none">
               Is Active Department
+              <span className="text-muted-foreground block text-xs font-normal">
+                Set the active status of this department.
+              </span>
             </Label>
           </div>
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
@@ -566,7 +571,7 @@ export function CreateOrUpdateDepartment({
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="destructive"
                 onClick={() => {
                   setOpenModal?.(false);
                   setFormData(INIT_DEPARTMENT);

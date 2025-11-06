@@ -659,20 +659,18 @@ export async function getRoleById(id: string): Promise<APIResponse> {
  * Endpoint: POST /api/v1/roles
  * Status: ✅ Documented in API
  */
-export async function createRole({
-  departmentId,
-  name,
-  code,
-  description
-}: {
-  departmentId: string;
+export async function createRole(role: {
+  id: string;
   name: string;
   code: string;
   description?: string;
+  is_active?: boolean;
+  department_id?: string;
+  is_department_head?: boolean;
 }): Promise<APIResponse> {
   const url = `/api/v1/roles`;
 
-  if (!departmentId || !name || !code) {
+  if (!role.department_id || !role.name || !role.code) {
     return handleBadRequest("Department ID, name, and code are required");
   }
 
@@ -681,10 +679,8 @@ export async function createRole({
       url,
       method: "POST",
       data: {
-        department_id: departmentId,
-        name,
-        code,
-        description
+        ...role,
+        is_active: true
       }
     });
     revalidatePath("/dashboard/system-configs/departments");
@@ -700,22 +696,18 @@ export async function createRole({
  * Status: ✅ Documented in API
  * NOTE: department_id cannot be changed per API docs
  */
-export async function updateRole({
-  id,
-  name,
-  code,
-  description,
-  isActive
-}: {
+export async function updateRole(role: {
   id: string;
   name: string;
   code: string;
   description?: string;
-  isActive?: boolean;
+  is_active?: boolean;
+  department_id?: string;
+  is_department_head?: boolean;
 }): Promise<APIResponse> {
-  const url = `/api/v1/roles/${id}`;
+  const url = `/api/v1/roles/${role.id}`;
 
-  if (!id || !name || !code) {
+  if (!role.id || !role.name || !role.code) {
     return handleBadRequest("ID, name, and code are required");
   }
 
@@ -724,10 +716,7 @@ export async function updateRole({
       url,
       method: "PUT",
       data: {
-        name,
-        code,
-        description,
-        is_active: isActive
+        ...role
       }
     });
     revalidatePath("/dashboard/system-configs/departments");
@@ -1035,10 +1024,10 @@ export async function deleteTown(id: string): Promise<APIResponse> {
  */
 export async function createRiskCategory(input: RiskCategoryInput): Promise<APIResponse> {
   try {
-     const response = await authenticatedApiClient({
-      url:"/api/v1/risk-categories", 
-      data:input,
-      method:"POST"
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-categories",
+      data: input,
+      method: "POST"
     });
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response.data.data);
@@ -1055,10 +1044,10 @@ export async function updateRiskCategory(
   input: Partial<RiskCategoryInput>
 ): Promise<APIResponse> {
   try {
- const response = await authenticatedApiClient({
-      url:`/api/v1/risk-categories/${id}`, 
-      data:input,
-      method:"PUT"
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-categories/${id}`,
+      data: input,
+      method: "PUT"
     });
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response.data.data);
@@ -1072,9 +1061,9 @@ export async function updateRiskCategory(
  */
 export async function deleteRiskCategory(id: string): Promise<APIResponse> {
   try {
-     const response = await authenticatedApiClient({
-      url:`/api/v1/risk-categories/${id}`, 
-      method:"DELETE"
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-categories/${id}`,
+      method: "DELETE"
     });
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response.data.data);
@@ -1091,8 +1080,8 @@ export async function getRiskMatrices(): Promise<APIResponse> {
       method: "GET"
     });
     console.log("RES:", response);
-    
-     revalidatePath("/dashboard/system-configs/risk-settings");
+
+    revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(error, "GET | GET MATRICES", `/api/v1/risk-configs/matrices`);
@@ -1111,9 +1100,9 @@ export async function createRiskMatrix(data: {
       data
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
-    return  successResponse(response?.data);
+    return successResponse(response?.data);
   } catch (error: any) {
-    return handleError(error,"POST | CREATE MATRICES", "/api/v1/risk-configs/matrices");
+    return handleError(error, "POST | CREATE MATRICES", "/api/v1/risk-configs/matrices");
   }
 }
 
@@ -1147,14 +1136,18 @@ export async function getRiskMatrix(id: string): Promise<APIResponse> {
 
 export async function deleteRiskMatrix(id: string): Promise<APIResponse> {
   try {
-    const response =  await authenticatedApiClient({
+    const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/matrix-configs/${id}`,
       method: "DELETE"
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
-   return successResponse(response.data);
+    return successResponse(response.data);
   } catch (error: any) {
-    return handleError(error, "DELETE | DELETE MATRICES", `/api/v1/risk-configs/matrix-configs/${id}`);
+    return handleError(
+      error,
+      "DELETE | DELETE MATRICES",
+      `/api/v1/risk-configs/matrix-configs/${id}`
+    );
   }
 }
 
@@ -1165,7 +1158,7 @@ export async function getRiskResponses(): Promise<APIResponse> {
       url: "/api/v1/risk-responses",
       method: "GET"
     });
-     return successResponse(response.data?.data);
+    return successResponse(response.data?.data);
   } catch (error: any) {
     return handleError(error, "GET | GET RESPONSE", "/api/v1/risk-responses");
   }
@@ -1182,9 +1175,9 @@ export async function createRiskResponse(data: {
       data
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
-   return successResponse(response.data );
+    return successResponse(response.data);
   } catch (error: any) {
-     return handleError(error, "POST | CREATE RESPONSE", "/api/v1/risk-responses");
+    return handleError(error, "POST | CREATE RESPONSE", "/api/v1/risk-responses");
   }
 }
 
@@ -1199,22 +1192,22 @@ export async function updateRiskResponse(
       data
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
-    return successResponse(response.data );
+    return successResponse(response.data);
   } catch (error: any) {
-   return handleError(error, "PUT | UPDATE RESPONSE", `/api/v1/risk-responses/${id}`)
+    return handleError(error, "PUT | UPDATE RESPONSE", `/api/v1/risk-responses/${id}`);
   }
 }
 
 export async function deleteRiskResponse(id: string): Promise<APIResponse> {
   try {
-   const response =  await authenticatedApiClient({
+    const response = await authenticatedApiClient({
       url: `/api/v1/risk-responses/${id}`,
       method: "DELETE"
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
-return successResponse(response.data );
+    return successResponse(response.data);
   } catch (error: any) {
-     return handleError(error, "DELETE | DELETE RESPONSE", `/api/v1/risk-responses/${id}`);
+    return handleError(error, "DELETE | DELETE RESPONSE", `/api/v1/risk-responses/${id}`);
   }
 }
 
@@ -1227,17 +1220,17 @@ export async function getMatrixScales(
     if (scaleType) {
       params.append("scale_type", scaleType);
     }
-    
+
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/matrix-scales?${params.toString()}`,
       method: "GET"
     });
-    
+
     return successResponse(response.data.data);
   } catch (error: any) {
     return handleError(
-      error, 
-      "GET | MATRIX SCALES", 
+      error,
+      "GET | MATRIX SCALES",
       `/api/v1/risk-configs/matrix-scales?matrix_id=${matrixId}`
     );
   }
@@ -1306,17 +1299,21 @@ export async function getMatrixRatings(): Promise<APIResponse> {
     return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels`);
   }
 }
-export async function getMatrixRatingsById(matrixId:string): Promise<APIResponse> {
+export async function getMatrixRatingsById(matrixId: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/rating-levels?matrix_id=${matrixId}`,
       method: "GET"
     });
     console.log("RES:", response);
-    
+
     return successResponse(response.data?.data);
   } catch (error: any) {
-    return handleError(error, "GET | MATRIX RATINGS", `/api/v1/risk-configs/rating-levels?matrix_id=${matrixId}`);
+    return handleError(
+      error,
+      "GET | MATRIX RATINGS",
+      `/api/v1/risk-configs/rating-levels?matrix_id=${matrixId}`
+    );
   }
 }
 
@@ -1328,7 +1325,7 @@ export async function createRating(
     max_score: number;
     color_hex: string;
     description: string;
-    matrix_id:string;
+    matrix_id: string;
   }
 ): Promise<APIResponse> {
   try {

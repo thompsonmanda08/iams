@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/empty";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const AddNewRoleForm = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -516,10 +517,81 @@ export function ModuleSelection({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner className="h-8 w-8" />
-        <span className="text-muted-foreground ml-2">Loading modules...</span>
-      </div>
+      <>
+        <div className="space-y-1">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <div className="flex w-full flex-col gap-4">
+          {/* Info Banner Skeleton */}
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+            <Skeleton className="mb-2 h-5 w-64" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Module Categories Skeleton */}
+            {[...Array(3)].map((_, categoryIndex) => (
+              <div key={categoryIndex} className="space-y-3">
+                {/* Category Header */}
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/20 h-px flex-1" />
+                  <Skeleton className="h-4 w-32" />
+                  <div className="bg-primary/20 h-px flex-1" />
+                </div>
+
+                {/* Parent Module with Children */}
+                <div className="border-primary/20 rounded-lg border-2 border-dashed p-4">
+                  {/* Parent Module Item */}
+                  <div className="hover:bg-primary/10 border-primary/30 bg-primary/10 relative flex w-full gap-2 rounded-lg border p-3">
+                    <Skeleton className="h-4 w-4 absolute top-3 right-2 rounded" />
+                    <div className="flex items-center justify-center gap-3 rounded">
+                      <Skeleton className="h-8 w-8 rounded" />
+                      <div className="flex w-max flex-col items-start justify-start gap-1">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Child Modules */}
+                  <div className="border-primary/20 mt-3 ml-4 space-y-2 border-l-2 pl-4">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {[...Array(4)].map((_, childIndex) => (
+                        <div
+                          key={childIndex}
+                          className="hover:bg-primary/10 border-primary/10 bg-primary/5 relative flex w-full gap-2 rounded-lg border p-3">
+                          <Skeleton className="h-4 w-4 absolute top-3 right-2 rounded" />
+                          <div className="flex items-center justify-center gap-3 rounded">
+                            <Skeleton className="h-8 w-8 rounded" />
+                            <div className="flex w-max flex-col items-start justify-start gap-1">
+                              <Skeleton className="h-4 w-32" />
+                              <Skeleton className="h-3 w-24" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Save Button Area Skeleton */}
+          <div className="space-y-3">
+            <div className="flex w-full items-center justify-between">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-10 w-36" />
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 

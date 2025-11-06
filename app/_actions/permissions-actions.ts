@@ -65,7 +65,8 @@ export async function grantOrUpdateRolePermission({
   canExport = false,
   canAssign = false,
   canConfigure = false,
-  customPermissions
+  customPermissions,
+  parentModuleId
 }: {
   roleId: string;
   moduleId: string;
@@ -78,6 +79,7 @@ export async function grantOrUpdateRolePermission({
   canAssign?: boolean;
   canConfigure?: boolean;
   customPermissions?: Record<string, any>;
+  parentModuleId?: string | null;
 }): Promise<APIResponse> {
   const url = `/api/v1/roles/${roleId}/permissions`;
 
@@ -91,6 +93,7 @@ export async function grantOrUpdateRolePermission({
       method: "POST",
       data: {
         module_id: moduleId,
+        parent_module_id: parentModuleId || null,
         can_view: canView,
         can_create: canCreate,
         can_edit: canEdit,
@@ -182,6 +185,7 @@ export async function bulkUpdateRolePermissions({
     canAssign?: boolean;
     canConfigure?: boolean;
     customPermissions?: Record<string, any>;
+    parentModuleId?: string | null;
   }>;
 }): Promise<APIResponse> {
   if (!roleId || !permissions || permissions.length === 0) {
@@ -311,6 +315,7 @@ export async function copyRolePermissions({
   sourceRoleId: string;
   targetRoleId: string;
 }): Promise<APIResponse> {
+  
   if (!sourceRoleId || !targetRoleId) {
     return handleBadRequest("Source and target role IDs are required");
   }
