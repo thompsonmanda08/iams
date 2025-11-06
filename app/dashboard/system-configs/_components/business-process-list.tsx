@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Loader2, GitBranch } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, GitBranch, Cable } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteBusinessProcess, getBusinessProcesses } from "@/app/_actions/config-actions";
@@ -148,7 +148,7 @@ export function BusinessProcessList() {
                       <CardTitle >{process.name}</CardTitle>
                       {parentName && (
                         <Badge variant="success" className="gap-1 text-xs">
-                          <GitBranch className="h-3 w-3" />
+                          <Cable className="h-3 w-3" />
                           {parentName}
                         </Badge>
                       )}
