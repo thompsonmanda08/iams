@@ -12,24 +12,11 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Building, ArrowRight, Pencil, View } from "lucide-react";
+import { Plus, Trash2, Building, Pencil, View } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department } from "@/lib/types";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  updateDepartment,
-  deleteDepartment,
-  createDepartment
-} from "@/app/_actions/config-actions";
+import { deleteDepartment } from "@/app/_actions/config-actions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {

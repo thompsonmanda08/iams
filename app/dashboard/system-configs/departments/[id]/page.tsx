@@ -1,26 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { ModuleSelection } from "../../_components";
-import { FolderCogIcon, Plus, UserCog, UserLock, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
+import { FolderCogIcon, UserLock, Users } from "lucide-react";
 import { Department, DepartmentUser } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { getUsers } from "@/app/_actions/user-actions";
 import { getDepartmentById } from "@/app/_actions/config-actions";
 import { notFound } from "next/navigation";
 import DepartmentUsersConfig, {
   CreateOrUpdateDepartment
 } from "../../_components/department-users";
-import { User } from "@/lib/types/account";
 import UserRolesConfig from "../../_components/user-roles-config";
 
 export default async function DepartmentDetailsPage({
@@ -64,13 +52,13 @@ export default async function DepartmentDetailsPage({
             <FolderCogIcon className="h-4 w-4" />
             General Config
           </TabsTrigger>
-          <TabsTrigger value="users" className="gap-2">
-            <Users className="h-4 w-4" />
-            Department Users
-          </TabsTrigger>
           <TabsTrigger value="permissions" className="gap-2">
             <UserLock className="h-4 w-4" />
             Roles & Permissions
+          </TabsTrigger>
+          <TabsTrigger value="users" className="gap-2">
+            <Users className="h-4 w-4" />
+            Department Users
           </TabsTrigger>
         </TabsList>
 
