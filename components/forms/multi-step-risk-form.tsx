@@ -73,7 +73,7 @@ type BusinessProcess = {
   updated_by: string;
   created_at: string;
   updated_at: string;
-  sub_process: SubProcess[];
+  sub_processes: SubProcess[];
 };
 
 type Risk = {
@@ -238,7 +238,7 @@ export function MultiStepRiskForm({
       (process) => process.id === stepOneData.macro_process_id
     );
 
-    return selectedMacroProcess?.sub_process || [];
+    return selectedMacroProcess?.sub_processes || [];
   }, [stepOneData.macro_process_id, businessProcesses]);
 
   useEffect(() => {
