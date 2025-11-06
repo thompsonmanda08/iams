@@ -110,9 +110,9 @@ export interface RiskInput {
   description: string;
   category_id: string;
   department_id: string;
-  macro_process: string;
-  sub_process: string;
-  strategic_objective: string;
+  macro_process_id: string;
+  sub_process_id: string;
+  strategic_objective_id: string;
   root_cause: string;
   recurrence: "ongoing" | "one-time";
 }

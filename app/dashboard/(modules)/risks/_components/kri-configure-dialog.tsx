@@ -50,7 +50,7 @@ export function KRIConfigureDialog({ registerId }: KRIConfigureDialogProps) {
 
   return (
     <>
-      <Button size="sm" onClick={() => setConfigureOpen(true)}>
+      <Button onClick={() => setConfigureOpen(true)}>
         <AlertCircle className="mr-2 h-4 w-4" />
         Configure KRIs
       </Button>

@@ -50,13 +50,14 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
       <div className="bg-card border-b">
         <div className="container mx-auto flex items-center justify-between px-4 py-6">
           <div>
-            <BackButton title="Back to KRI Registers" />
             <h1 className="text-3xl font-bold tracking-tight">Key Risk Indicators (KRI)</h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Monitor critical risk metrics and thresholds
             </p>
           </div>
-          <KRIConfigureDialog registerId={id} />
+          <div className="flex gap-4">
+            <BackButton title="Back to KRI Registers" /> <KRIConfigureDialog registerId={id} />
+          </div>
         </div>
       </div>
 
