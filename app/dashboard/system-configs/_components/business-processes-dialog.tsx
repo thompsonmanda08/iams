@@ -122,7 +122,7 @@ export function BusinessProcessesDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="process">Business Process (Optional)</Label>
+              <Label htmlFor="process">Business Process Parent ID (Optional)</Label>
               <SelectField
                 value={formData.process_id}
                 onValueChange={(value) => setFormData({ ...formData, process_id: value })}

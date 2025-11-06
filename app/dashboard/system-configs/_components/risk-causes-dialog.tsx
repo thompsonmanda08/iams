@@ -111,7 +111,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, response }: Ris
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cause">Risk Cause (Optional)</Label>
+              <Label htmlFor="cause">Risk Cause Parent ID (Optional)</Label>
               <SelectField
                 value={formData.cause_id}
                 onValueChange={(value) => setFormData({ ...formData, cause_id: value })}
