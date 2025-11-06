@@ -370,13 +370,6 @@ function CreateOrUpdate({
     saveMutation.mutate(formData);
   }
 
-  const departmentOptions = useMemo(() => {
-    return departments.map((dept) => ({
-      id: dept?.id as string,
-      name: dept?.name
-    }));
-  }, [departments]);
-
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       {showTrigger && (
@@ -409,7 +402,7 @@ function CreateOrUpdate({
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, department_id: value }));
             }}
-            options={departmentOptions}
+            options={departments as any}
           />
           <Input
             label="Strategic Pillar"

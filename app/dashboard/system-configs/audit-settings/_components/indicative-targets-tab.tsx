@@ -81,7 +81,6 @@ export default function IndicativeTargetsTab({
   }, [targets]);
 
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   // Delete item mutation
   const deleteMutation = useMutation({
@@ -104,12 +103,6 @@ export default function IndicativeTargetsTab({
     }
   });
 
-  /*************  ✨ Windsurf Command ⭐  *************/
-  /**
-   * Opens the delete item dialog for the item with the given id.
-   * @param {string} id - The id of the item to delete.
-   */
-  /*******  7df535e1-228a-4281-91c5-50dc0fe4cb5b  *******/
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
     setDeleteDialogOpen(true);

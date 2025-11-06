@@ -56,9 +56,9 @@ export const useAuditableAreas = (
 export const useStrategicPillars = (
   pillarId?: string,
   params?: {
-    department_id?: string;
     page?: number;
     page_size?: number;
+    department_id?: string;
   }
 ) => {
   return useQuery({

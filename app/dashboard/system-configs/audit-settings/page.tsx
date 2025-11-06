@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getBranches, getDepartments, getProvinces, getTowns } from "@/app/_actions/config-actions";
+import { getDepartments, getTowns } from "@/app/_actions/config-actions";
 import { Pagination } from "@/lib/types";
 import { Suspense } from "react";
 import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
@@ -111,7 +111,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     // departments,
     // indicativeTargets,
     // findingsCategories
-    processActivities
+    // processActivities
   });
 
   return (
@@ -220,7 +220,12 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           {/* Process Activity Tab */}
           <TabsContent value="process">
             <Suspense fallback={<TableLoading />}>
-              <ProcessActivityTab processes={processActivities} departments={departments} />
+              <ProcessActivityTab
+                processes={processActivities}
+                departments={departments}
+                pillars={pillars}
+                areas={areas}
+              />
             </Suspense>
           </TabsContent>
         </Tabs>

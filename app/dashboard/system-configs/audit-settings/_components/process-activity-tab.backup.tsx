@@ -44,45 +44,35 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuditableAreas, useStrategicPillars } from "@/hooks/use-audit-settings-query-data";
-import { de } from "zod/v4/locales";
 
-interface ProcessFormData {
-  id?: string;
-  title: string;
-  description: string;
-  strategic_pillar_id: string;
-  auditable_area_id: string;
-  department_id: string;
+interface ProcessFormData extends Omit<AuditConfigurableItem, "id"> {
+  auditable_area_id?: string;
+  pillar_id?: string;
+  activities?: string[];
 }
 
 const INIT_FORM_DATA: ProcessFormData = {
-  title: "",
+  name: "",
   description: "",
-  strategic_pillar_id: "",
-  department_id: "",
-  auditable_area_id: ""
+  department_id: null,
+  auditable_area_id: "",
+  pillar_id: "",
+  activities: [""]
 };
 
 export default function ProcessActivityTab({
-  departments = [],
   processes = [],
-  pillars = [],
-  areas = [],
   pagination
 }: {
-  processes: ProcessFormData[];
-  pillars: any[];
-  areas: any[];
+  processes: AuditConfigurableItem[];
   pagination?: Pagination;
-  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<ProcessFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [items, setItems] = useState<ProcessFormData[]>(processes);
+  const [items, setItems] = useState<AuditConfigurableItem[]>(processes);
 
   useEffect(() => {
     setItems(processes);
@@ -96,7 +86,7 @@ export default function ProcessActivityTab({
     onSuccess: (response) => {
       if (response.success) {
         toast.success("Process/Activity deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROCESS_ACTIVITIES] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         router.refresh();
       } else {
         toast.error(response.message || "Failed to delete process");
@@ -122,26 +112,12 @@ export default function ProcessActivityTab({
     deleteMutation.mutate(selectedId);
   };
 
-  const getDepartmentName = (departmentId: string) => {
-    const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : "No department assigned";
-  };
-  const getPillarName = (pillarId: string) => {
-    const pillar = pillars.find((d) => d.id === pillarId);
-    return pillar ? pillar.title : "No pillar assigned";
-  };
-
-  const getAuditableArea = (auditableAreaId: string) => {
-    const auditableArea = areas.find((d) => d.id === auditableAreaId);
-    return auditableArea ? auditableArea.name : "No auditable area assigned";
-  };
-
   return (
     <>
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="text-sm leading-none font-medium">Process/Activity</h4>
+            <h4 className="font-medium text-sm leading-none">Process/Activity</h4>
             <p className="text-muted-foreground text-sm">
               Manage business processes and their associated activities
             </p>
@@ -164,7 +140,7 @@ export default function ProcessActivityTab({
               <TableHead>Functional Area</TableHead>
               <TableHead>Strategic Pillar</TableHead>
               <TableHead>Auditable Area</TableHead>
-
+              <TableHead>Activities</TableHead>
               <TableHead className="w-24" align="center">
                 Actions
               </TableHead>
@@ -202,45 +178,44 @@ export default function ProcessActivityTab({
               </TableRow>
             ) : (
               items.map((item: any) => {
+                const departmentName = item?.department || "No department assigned - Global";
+                const pillarName = item?.pillar || "N/A";
+                const auditableArea = item?.auditable_area || "N/A";
+                const activities = item?.activities || [];
+
                 return (
                   <TableRow key={item.id} className="cursor-pointer">
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Workflow className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.title}</span>
+                        <span className="font-medium">{item.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm">
-                        {getDepartmentName(item.department_id)}
-                      </span>
+                      <span className="font-mono text-sm">{departmentName}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm">
-                        {getPillarName(item.strategic_pillar_id)}
-                      </span>
+                      <span className="font-mono text-sm">{pillarName}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm">
-                        {getAuditableArea(item.auditable_area_id)}
-                      </span>
+                      <span className="font-mono text-sm">{auditableArea}</span>
                     </TableCell>
-                    {/* <TableCell>
+                    <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {activities.slice(0, 3).map((activity: string, idx: number) => (
                           <span
                             key={idx}
-                            className="bg-primary/10 rounded-full px-2 py-0.5 text-xs">
+                            className="rounded-full bg-primary/10 px-2 py-0.5 text-xs">
                             {activity}
                           </span>
                         ))}
                         {activities.length > 3 && (
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-xs text-muted-foreground">
                             +{activities.length - 3} more
                           </span>
                         )}
                       </div>
-                    </TableCell> */}
+                    </TableCell>
                     <TableCell align="center">
                       <div className="flex justify-end gap-2">
                         <Button
@@ -314,50 +289,55 @@ function CreateOrUpdate({
 }) {
   const queryClient = useQueryClient();
   const router = useRouter();
-
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
   });
 
-  const { data: departmentsResponse, isLoading: isLoadingDepartments } = useDepartments({
-    page: 1,
-    page_size: 100
-  });
-
-  const departments = departmentsResponse?.data?.data || [];
-
   const [formData, setFormData] = useState<ProcessFormData>(() => {
     if (initialData && selectedId) {
       return {
-        title: initialData.title || "",
-        description: initialData.description || "",
+        name: initialData.name || "",
         department_id: initialData.department_id || "",
         auditable_area_id: (initialData as any).auditable_area_id || "",
-        strategic_pillar_id: (initialData as any).pillar_id || ""
+        pillar_id: (initialData as any).pillar_id || "",
+        description: initialData.description || "",
+        activities: (initialData as any).activities || [""]
       };
     }
     return INIT_FORM_DATA;
   });
 
-  const { data: areasResponse, isLoading: isLoadingAreas } = useAuditableAreas({
-    department_id: formData?.department_id || ""
-  });
-  const auditableAreas = areasResponse?.data || [];
-
-  const { data: pillarsResponse, isLoading: isLoadingPillars } = useStrategicPillars(undefined, {
-    page: 1,
+  const { data } = useDepartments({
+    isActive: true,
     page_size: 100,
-    department_id: formData?.department_id || ""
+    page: 1
   });
-  const pillars = pillarsResponse?.data || [];
+
+  const departments = (data?.data?.data || []) as Department[];
+
+  // Mock data - replace with actual API calls
+  const auditableAreas = [
+    { id: "1", name: "Financial Management" },
+    { id: "2", name: "IT Security" },
+    { id: "3", name: "Compliance" }
+  ];
+
+  const pillars = [
+    { id: "1", name: "Customer Excellence" },
+    { id: "2", name: "Operational Efficiency" }
+  ];
 
   useEffect(() => {
-    console.log({ initialData, selectedId, openModal });
     if (openModal) {
       if (initialData && selectedId) {
         setFormData({
-          ...initialData
+          name: initialData.name || "",
+          department_id: initialData.department_id || "",
+          auditable_area_id: (initialData as any).auditable_area_id || "",
+          pillar_id: (initialData as any).pillar_id || "",
+          description: initialData.description || "",
+          activities: (initialData as any).activities || [""]
         });
       } else if (!initialData) {
         setFormData(INIT_FORM_DATA);
@@ -380,7 +360,6 @@ function CreateOrUpdate({
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => {
-      console.log({ ...data });
       return initialData && selectedId
         ? updateProcessActivity({ ...data, id: String(selectedId) })
         : createProcessActivity(data);
@@ -411,7 +390,47 @@ function CreateOrUpdate({
     saveMutation.mutate(formData);
   }
 
-  console.log({ formData });
+  const departmentOptions = useMemo(() => {
+    return departments.map((dept) => ({
+      id: dept?.id as string,
+      name: dept?.name
+    }));
+  }, [departments]);
+
+  const auditableAreaOptions = useMemo(() => {
+    return auditableAreas.map((area) => ({
+      id: area.id,
+      name: area.name
+    }));
+  }, []);
+
+  const pillarOptions = useMemo(() => {
+    return pillars.map((pillar) => ({
+      id: pillar.id,
+      name: pillar.name
+    }));
+  }, []);
+
+  const handleAddActivity = () => {
+    setFormData((prev) => ({
+      ...prev,
+      activities: [...(prev.activities || []), ""]
+    }));
+  };
+
+  const handleRemoveActivity = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      activities: prev.activities?.filter((_, i) => i !== index) || []
+    }));
+  };
+
+  const handleActivityChange = (index: number, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      activities: prev.activities?.map((activity, i) => (i === index ? value : activity)) || []
+    }));
+  };
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -437,57 +456,76 @@ function CreateOrUpdate({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleCreateOrUpdate} className="space-y-3">
-          {/* DEPARTMENT */}
           <SearchSelectField
             label="Functional Area"
             placeholder="--Select Functional Area--"
             value={formData?.department_id || ""}
-            isLoading={isLoadingDepartments}
             onValueChange={(value) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, department_id: value }));
             }}
-            options={departments as any}
+            options={departmentOptions}
           />
-          {/* PILLAR */}
           <SearchSelectField
             label="Strategic Pillar"
             placeholder="--Select Strategic Pillar--"
-            value={formData?.strategic_pillar_id || ""}
-            isLoading={isLoadingPillars}
-            listItemName="title"
+            value={formData?.pillar_id || ""}
             onValueChange={(value) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, strategic_pillar_id: value }));
+              setFormData((c) => ({ ...c, pillar_id: value }));
             }}
-            options={pillars as any}
+            options={pillarOptions}
           />
-          {/* AUDITABLE AREA */}
           <SearchSelectField
             label="Auditable Area"
             placeholder="--Select Auditable Area--"
             value={formData?.auditable_area_id || ""}
-            isLoading={isLoadingAreas}
             onValueChange={(value) => {
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, auditable_area_id: value }));
             }}
-            options={auditableAreas as any}
+            options={auditableAreaOptions}
           />
 
-          <Input
-            label="Process/Activity Title"
-            placeholder={`E.g. Financial Management Process`}
-            value={formData.title || ""}
-            onChange={(e) => {
-              setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, title: e.target.value }));
-            }}
-          />
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium">Process/Activity Title(s)</label>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleAddActivity}
+                className="h-7 text-xs">
+                + Add Another Process
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {formData.activities?.map((activity, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    placeholder={`process/activity title ${index + 1}`}
+                    value={activity}
+                    onChange={(e) => handleActivityChange(index, e.target.value)}
+                    className="flex-1"
+                  />
+                  {formData.activities && formData.activities.length > 1 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveActivity(index)}
+                      className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
 
           <Textarea
             label="Process/Activity Description"
-            placeholder="E.g. To determine the usage of ..."
+            placeholder="process/activity description"
             value={formData.description || ""}
             onChange={(e) => {
               setError({ status: false, message: "" });
@@ -507,23 +545,16 @@ function CreateOrUpdate({
                   setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
-                Close
+                 Close
               </Button>
             </DialogClose>
             <Button
               type="submit"
               size="sm"
-              disabled={
-                saveMutation.isPending ||
-                !formData.title ||
-                !formData.description ||
-                !formData.department_id ||
-                !formData.strategic_pillar_id ||
-                !formData.auditable_area_id
-              }
+              disabled={saveMutation.isPending || !formData.activities?.some((a) => a.trim())}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
-              Save changes
+               Save changes
             </Button>
           </div>
         </form>

@@ -195,16 +195,16 @@ export async function deleteBranch(id: string): Promise<APIResponse> {
  */
 export async function getDepartments(
   params?: Partial<Pagination> & {
-    parentId?: string;
-    isActive?: boolean;
+    parent_id?: string;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
   queryParams.append("page_size", String(params?.page_size || 10));
   queryParams.append("page", String(params?.page || 1));
 
-  if (params?.parentId) queryParams.append("parent_id", params.parentId);
-  if (params?.isActive !== undefined) queryParams.append("is_active", String(params.isActive));
+  if (params?.parent_id) queryParams.append("parent_id", params.parent_id);
+  if (params?.is_active !== undefined) queryParams.append("is_active", String(params.is_active));
 
   const url = `/api/v1/departments${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 

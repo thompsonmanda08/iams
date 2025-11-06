@@ -3,15 +3,15 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { Pagination } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 
-export const useDepartments = (
-  params?: Partial<Pagination> & {
-    parentId?: string;
-    isActive?: boolean;
-  }
-) =>
+export const useDepartments = (params?: {
+  parent_id?: string;
+  is_active?: boolean;
+  page_size?: number;
+  page?: number;
+}) =>
   useQuery({
     queryKey: [QUERY_KEYS.DEPARTMENTS, params],
-    queryFn: () => getDepartments(params as any),
+    queryFn: () => getDepartments(params),
     staleTime: Infinity
   });
 

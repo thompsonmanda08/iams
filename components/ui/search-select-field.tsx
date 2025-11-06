@@ -75,6 +75,13 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
     const [open, setOpen] = React.useState(false);
     const [selected, setSelected] = React.useState("");
 
+    // Sync external value prop with internal state
+    React.useEffect(() => {
+      if (value !== undefined && value !== selected) {
+        setSelected(value);
+      }
+    }, [value]);
+
     return (
       <div
         className={cn(
@@ -120,14 +127,21 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 </div>
               ) : (
                 <>
-                  {selected ? (() => {
-                    const selectedItem = options.find((item) => item.id === selected);
-                    return selectedItem?.[String(listItemName)] ||
-                      selectedItem?.name ||
-                      selectedItem?.title ||
-                      selectedItem?.label ||
-                      selectedItem;
-                  })() : placeholder || "Select an item..."}
+                  {selected
+                    ? (() => {
+                        const selectedItem = options.find((item) => item.id === selected);
+                        if (!selectedItem) return placeholder || "Select an item...";
+
+                        const label = listItemName
+                          ? selectedItem[listItemName]
+                          : selectedItem?.name ||
+                            selectedItem?.title ||
+                            selectedItem?.label ||
+                            selectedItem?.value;
+
+                        return label || selectedItem;
+                      })()
+                    : placeholder || "Select an item..."}
                 </>
               )}
 

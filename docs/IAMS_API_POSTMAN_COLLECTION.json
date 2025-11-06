@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "42626049-4974-4524-93c7-68d028fc405d",
+		"_postman_id": "7feed604-2815-454e-8e38-0eab9737cec3",
 		"name": "Risk Audit Management System - Complete API",
 		"description": "Comprehensive API collection for Risk Audit Management System with all 279 endpoints organized by domain",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -63,6 +63,40 @@
 							"path": [
 								"auth",
 								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"new@example.com\",\n  \"password\": \"TestPass@2025\",\n  \"first_name\": \"New\",\n  \"last_name\": \"User\",\n  \"department_id\": null,\n  \"role_id\": null,\n  \"branch_id\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}/auth/register",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"register"
 							]
 						}
 					},
@@ -734,7 +768,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://{{host}}/roles?page=1&page_size=10&sort_by=name&sort_order=asc&department_id={{dept_id}}",
+							"raw": "http://{{host}}/roles?page=1&page_size=10&department_id={{dept_id}}&is_department_head=false",
 							"protocol": "http",
 							"host": [
 								"{{host}}"
@@ -752,16 +786,12 @@
 									"value": "10"
 								},
 								{
-									"key": "sort_by",
-									"value": "name"
-								},
-								{
-									"key": "sort_order",
-									"value": "asc"
-								},
-								{
 									"key": "department_id",
 									"value": "{{dept_id}}"
+								},
+								{
+									"key": "is_department_head",
+									"value": "false"
 								}
 							]
 						}
@@ -786,7 +816,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"New Role\",\n  \"code\": \"RL_new\",\n  \"department_id\": \"{{dept_id}}\",\n  \"description\": \"A new test role\"\n}",
+							"raw": "{\n  \"name\": \"New Role\",\n  \"code\": \"RL_new\",\n  \"department_id\": \"{{dept_id}}\",\n  \"description\": \"A new test role\",\n  \"is_department_head\": false\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -854,7 +884,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Updated Role\",\n  \"code\": \"RL_upd\",\n  \"description\": \"Updated role description\",\n  \"is_active\": true\n}",
+							"raw": "{\n  \"name\": \"Updated Role\",\n  \"code\": \"RL_upd\",\n  \"description\": \"Updated role description\",\n  \"is_active\": true,\n  \"is_department_head\": false\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -954,7 +984,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"module_id\": \"{{module_id}}\",\n  \"can_view\": true,\n  \"can_create\": true,\n  \"can_edit\": true,\n  \"can_delete\": false,\n  \"can_approve\": false,\n  \"can_export\": false,\n  \"can_assign\": false,\n  \"can_configure\": false,\n  \"custom_permissions\": {}\n}",
+							"raw": "{\n  \"module_id\": \"{{module_id}}\",\n  \"can_view\": true,\n  \"can_create\": true,\n  \"can_edit\": true,\n  \"can_delete\": false,\n  \"can_approve\": false,\n  \"can_export\": false,\n  \"can_assign\": false,\n  \"can_configure\": false\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1969,6 +1999,846 @@
 			]
 		},
 		{
+			"name": "Business Process & Risk Cause Management",
+			"item": [
+				{
+					"name": "Business Processes",
+					"item": [
+						{
+							"name": "Create Business Process",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Main Business Process\",\n  \"description\": \"Primary business process\",\n  \"parent_id\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/business-processes",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"business-processes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Business Processes",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/business-processes?page=1&page_size=10",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"business-processes"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Business Process Details",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/business-processes/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"business-processes",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Root Business Processes",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/business-processes/hierarchy/root",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"business-processes",
+										"hierarchy",
+										"root"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Business Process",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated Business Process\",\n  \"description\": \"Updated description\",\n  \"is_active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/business-processes/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"business-processes",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Business Process",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/business-processes/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"business-processes",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Risk Causes",
+					"item": [
+						{
+							"name": "Create Risk Cause",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Root Cause Analysis\",\n  \"description\": \"Primary root cause\",\n  \"parent_id\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/risk-causes",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-causes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Risk Causes",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/risk-causes?page=1&page_size=10",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-causes"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Risk Cause Details",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/risk-causes/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-causes",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Root Risk Causes",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/risk-causes/hierarchy/root",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-causes",
+										"hierarchy",
+										"root"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Risk Cause",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated Risk Cause\",\n  \"description\": \"Updated description\",\n  \"is_active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/risk-causes/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-causes",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Risk Cause",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/risk-causes/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-causes",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Findings Category Management",
+			"item": [
+				{
+					"name": "Create Findings Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Compliance Finding\",\n  \"code\": \"FC_001\",\n  \"description\": \"Finding category for compliance issues\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}/findings-categories",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"findings-categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Findings Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://{{host}}/findings-categories?page=1&page_size=10&is_active=true",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"findings-categories"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "10"
+								},
+								{
+									"key": "is_active",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Findings Category Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://{{host}}/findings-categories/{id}",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"findings-categories",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Findings Category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Compliance Finding\",\n  \"code\": \"FC_001\",\n  \"description\": \"Updated finding category description\",\n  \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}/findings-categories/{id}",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"findings-categories",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Findings Category",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://{{host}}/findings-categories/{id}",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"findings-categories",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Process Activity Management",
+			"item": [
+				{
+					"name": "Create Process Activity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Financial Close Process\",\n  \"description\": \"Monthly financial close and reporting\",\n  \"type\": \"PROCESS\",\n  \"frequency\": \"MONTHLY\",\n  \"strategic_pillar_id\": \"{{strategic_pillar_id}}\",\n  \"auditable_area_id\": \"{{auditable_area_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"risk_level\": \"HIGH\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}/process-activities",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"process-activities"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Process Activities",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://{{host}}/process-activities?page=1&page_size=10&is_active=true",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"process-activities"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "10"
+								},
+								{
+									"key": "is_active",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Process Activity Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://{{host}}/process-activities/{id}",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"process-activities",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Process Activities by Department",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://{{host}}/departments/{dept_id}/process-activities?page=1&page_size=10",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"departments",
+								"{dept_id}",
+								"process-activities"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Process Activity",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Financial Close Process\",\n  \"description\": \"Updated process description\",\n  \"type\": \"PROCESS\",\n  \"frequency\": \"MONTHLY\",\n  \"strategic_pillar_id\": \"{{strategic_pillar_id}}\",\n  \"auditable_area_id\": \"{{auditable_area_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"risk_level\": \"MEDIUM\",\n  \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}/process-activities/{id}",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"process-activities",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Process Activity",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://{{host}}/process-activities/{id}",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"process-activities",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Risk Categories",
 			"item": [
 				{
@@ -2211,7 +3081,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risks?page=1&page_size=10&sort_by=title&sort_order=asc&status=OPEN",
+									"raw": "http://{{host}}/risks?page=1&page_size=10&status=OPEN",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -2229,14 +3099,6 @@
 											"value": "10"
 										},
 										{
-											"key": "sort_by",
-											"value": "title"
-										},
-										{
-											"key": "sort_order",
-											"value": "asc"
-										},
-										{
 											"key": "status",
 											"value": "OPEN"
 										}
@@ -2246,7 +3108,7 @@
 							"response": []
 						},
 						{
-							"name": "Create Risk",
+							"name": "Create Risk (Step One)",
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2263,7 +3125,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"title\": \"New Risk\",\n  \"description\": \"Risk description\",\n  \"category_id\": \"{{risk_category_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"inherent_likelihood\": 3,\n  \"inherent_impact\": 4,\n  \"residual_likelihood\": 2,\n  \"residual_impact\": 3,\n  \"existing_controls\": \"Existing controls details\",\n  \"control_effectiveness\": 75,\n  \"treatment_plan\": \"Mitigation plan\",\n  \"risk_response\": \"Mitigate\",\n  \"risk_owner_id\": \"{{user_id}}\",\n  \"risk_appetite_status\": \"Within\",\n  \"target_closing_date\": \"2025-12-31T00:00:00Z\",\n  \"review_date\": \"2025-06-30T00:00:00Z\",\n  \"mitigation_cost\": 1000.5\n}",
+									"raw": "{\n  \"risk_register_id\": \"{{risk_register_id}}\",\n  \"title\": \"New Risk\",\n  \"description\": \"Risk description\",\n  \"category_id\": \"{{risk_category_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"macro_process\": \"Finance\",\n  \"sub_process\": \"Accounting\",\n  \"strategic_objective\": \"Audit objective\",\n  \"root_cause\": \"Cause analysis\",\n  \"recurrence\": \"ongoing\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2271,13 +3133,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/risks",
+									"raw": "http://{{host}}/risks/step-one",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"risks"
+										"risks",
+										"step-one"
 									]
 								}
 							},
@@ -2437,6 +3300,131 @@
 									"path": [
 										"risks",
 										"heatmap"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Risk Multi-Step Creation",
+					"item": [
+						{
+							"name": "Create Risk Step Two",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"inherent_likelihood\": 3,\n  \"inherent_impact\": 4,\n  \"existing_controls\": \"Existing control details\",\n  \"control_effectiveness\": 75\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/risks/{id}/step-two",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risks",
+										"{id}",
+										"step-two"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Risk Step Three",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"residual_likelihood\": 2,\n  \"residual_impact\": 3,\n  \"treatment_plan\": \"Mitigation plan\",\n  \"risk_response\": \"Mitigate\",\n  \"risk_owner_id\": \"{{user_id}}\",\n  \"risk_appetite_status\": \"Within\",\n  \"target_closing_date\": \"2025-12-31T00:00:00Z\",\n  \"mitigation_cost\": 1000.5\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/risks/{id}/step-three",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risks",
+										"{id}",
+										"step-three"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Risk Status",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"ACTIVE\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/risks/{id}/status",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risks",
+										"{id}",
+										"status"
 									]
 								}
 							},
@@ -3001,170 +3989,6 @@
 										"departments",
 										"{departmentId}",
 										"submit"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Multi-Step Risk Creation",
-					"item": [
-						{
-							"name": "Create Risk Step One",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"risk_register_id\": \"{{risk_register_id}}\",\n  \"title\": \"New Risk (Step 1)\",\n  \"description\": \"Initial risk details\",\n  \"category_id\": \"{{risk_category_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"macro_process\": \"Process A\",\n  \"sub_process\": \"Sub-process B\",\n  \"strategic_objective\": \"Objective C\",\n  \"root_cause\": \"Cause D\",\n  \"recurrence\": \"ongoing\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/risks/step-one",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"risks",
-										"step-one"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Create Risk Step Two",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"inherent_likelihood\": 3,\n  \"inherent_impact\": 4,\n  \"existing_controls\": \"Existing controls details\",\n  \"control_effectiveness\": 75\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/risks/{id}/step-two",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"risks",
-										"{id}",
-										"step-two"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Create Risk Step Three",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"residual_likelihood\": 2,\n  \"residual_impact\": 3,\n  \"treatment_plan\": \"Mitigation plan\",\n  \"risk_response\": \"Mitigate\",\n  \"risk_owner_id\": \"{{user_id}}\",\n  \"risk_appetite_status\": \"Within\",\n  \"target_closing_date\": \"2025-12-31T00:00:00Z\",\n  \"mitigation_cost\": 1000.5\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/risks/{id}/step-three",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"risks",
-										"{id}",
-										"step-three"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Risk Status",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"status\": \"ACTIVE\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/risks/{id}/status",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"risks",
-										"{id}",
-										"status"
 									]
 								}
 							},
@@ -3759,7 +4583,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"measurement_date\": \"2025-01-01T00:00:00Z\",\n  \"measured_value\": 92.5,\n  \"status\": \"Amber\",\n  \"notes\": \"Monthly measurement\",\n  \"measured_by\": \"{{user_id}}\"\n}",
+									"raw": "{\n  \"measurement_date\": \"2025-01-01T00:00:00Z\",\n  \"measured_value\": 92.5,\n  \"status\": \"Green\",\n  \"notes\": \"Monthly measurement\",\n  \"measured_by\": \"{{user_id}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3798,7 +4622,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/kris/{id}/measurements",
+									"raw": "http://{{host}}/kris/{id}/measurements?start_date=2025-01-01&end_date=2025-12-31",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3807,6 +4631,16 @@
 										"kris",
 										"{id}",
 										"measurements"
+									],
+									"query": [
+										{
+											"key": "start_date",
+											"value": "2025-01-01"
+										},
+										{
+											"key": "end_date",
+											"value": "2025-12-31"
+										}
 									]
 								}
 							},
@@ -3829,7 +4663,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/kris/due-measurement",
+									"raw": "http://{{host}}/kris/due-measurement?as_of_date=2025-01-01",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3837,6 +4671,12 @@
 									"path": [
 										"kris",
 										"due-measurement"
+									],
+									"query": [
+										{
+											"key": "as_of_date",
+											"value": "2025-01-01"
+										}
 									]
 								}
 							},
@@ -3859,7 +4699,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/kris/status-summary",
+									"raw": "http://{{host}}/kris/status-summary?department_id={{dept_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3867,6 +4707,12 @@
 									"path": [
 										"kris",
 										"status-summary"
+									],
+									"query": [
+										{
+											"key": "department_id",
+											"value": "{{dept_id}}"
+										}
 									]
 								}
 							},
@@ -3951,7 +4797,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"2025-12-31\",\n  \"ref_no\": \"AP-2025-01\",\n  \"audit_plan_date\": \"2024-11-15\",\n  \"audit_date\": \"2025-02-01\",\n  \"audit_area\": \"Financials\",\n  \"audit_scope\": \"Full scope\",\n  \"audit_criteria\": \"ISO 9001\",\n  \"audit_objective\": \"Compliance check\",\n  \"management_standard\": \"ISO 9001:2015\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Client Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": null,\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_id\": null,\n  \"audit_universe_item_id\": null\n}",
+									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan description\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"ref_no\": \"AP-2025-001\",\n  \"audit_plan_date\": \"2024-11-15T00:00:00Z\",\n  \"audit_date\": \"2025-02-01T00:00:00Z\",\n  \"audit_area\": \"Finance & Accounting\",\n  \"audit_scope\": \"Full scope audit\",\n  \"audit_criteria\": \"Internal controls\",\n  \"audit_objective\": \"Verify compliance\",\n  \"management_standard\": \"COSO Framework\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Management Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": \"{{template_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_id\": \"{{audit_universe_id}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5627,8 +6473,8 @@
 									}
 								],
 								"url": {
-									"raw": "https://{{host}}/workflows?page=1&page_size=10",
-									"protocol": "https",
+									"raw": "http://{{host}}/workflows?page=1&page_size=10",
+									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
@@ -5667,7 +6513,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"New Workflow\",\n  \"entity_type\": \"audit_plan\",\n  \"description\": \"Test workflow for audit process\"\n}",
+									"raw": "{\n  \"name\": \"Audit Plan Workflow\",\n  \"entity_type\": \"audit_plan\",\n  \"description\": \"Workflow for audit plan approval process\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5704,7 +6550,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/workflows/details",
+									"raw": "http://{{host}}/workflows/details?workflow_id={{workflow_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -5712,6 +6558,12 @@
 									"path": [
 										"workflows",
 										"details"
+									],
+									"query": [
+										{
+											"key": "workflow_id",
+											"value": "{{workflow_id}}"
+										}
 									]
 								}
 							},
@@ -5735,7 +6587,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Updated Workflow\",\n  \"entity_type\": \"audit_plan\",\n  \"description\": \"Updated workflow\"\n}",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Updated Workflow\",\n  \"description\": \"Updated workflow description\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5815,7 +6667,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Draft\",\n  \"description\": \"Initial state\",\n  \"is_initial\": true,\n  \"is_final\": false\n}",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Draft\",\n  \"description\": \"Initial draft state\",\n  \"is_initial\": true,\n  \"is_final\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5854,7 +6706,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"state_id\": \"{{state_id}}\",\n  \"name\": \"Updated State\"\n}",
+									"raw": "{\n  \"state_id\": \"{{state_id}}\",\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Updated State\",\n  \"description\": \"Updated state description\",\n  \"is_initial\": false,\n  \"is_final\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5935,7 +6787,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"from_state_id\": \"{{from_state_id}}\",\n  \"to_state_id\": \"{{to_state_id}}\",\n  \"name\": \"Submit\",\n  \"action_name\": \"SUBMIT\"\n}",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"from_state_id\": \"{{from_state_id}}\",\n  \"to_state_id\": \"{{to_state_id}}\",\n  \"name\": \"Submit for Review\",\n  \"action_name\": \"SUBMIT\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5974,7 +6826,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"Updated Transition\",\n  \"from_state_id\": \"{{from_state_id}}\",\n  \"to_state_id\": \"{{to_state_id}}\",\n  \"action_name\": \"SUBMIT\"\n}",
+									"raw": "{\n  \"transition_id\": \"{{transition_id}}\",\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Updated Transition\",\n  \"action_name\": \"SUBMIT\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5982,7 +6834,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/workflows/transitions/update?id={{transition_id}}&workflow_id={{workflow_id}}",
+									"raw": "http://{{host}}/workflows/transitions/update",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -5991,16 +6843,6 @@
 										"workflows",
 										"transitions",
 										"update"
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "{{transition_id}}"
-										},
-										{
-											"key": "workflow_id",
-											"value": "{{workflow_id}}"
-										}
 									]
 								}
 							},
@@ -6196,7 +7038,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"trigger_name\": \"Manual Trigger\",\n  \"trigger_type\": \"MANUAL\",\n  \"delay_duration\": null,\n  \"schedule_field\": null,\n  \"watch_field\": null,\n  \"trigger_value\": null,\n  \"event_type\": \"approval_submitted\",\n  \"event_params\": {},\n  \"is_active\": true,\n  \"priority\": 1,\n  \"max_retries\": 3,\n  \"retry_delay\": \"5m\",\n  \"description\": \"A manual trigger\"\n}",
+									"raw": "{\n  \"trigger_name\": \"Manual Approval Trigger\",\n  \"trigger_type\": \"MANUAL\",\n  \"delay_duration\": null,\n  \"schedule_field\": null,\n  \"watch_field\": null,\n  \"trigger_value\": null,\n  \"event_type\": \"approval_submitted\",\n  \"event_params\": {},\n  \"is_active\": true,\n  \"priority\": 1,\n  \"max_retries\": 3,\n  \"retry_delay\": \"5m\",\n  \"description\": \"Manual approval trigger\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6242,7 +7084,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"trigger_name\": \"Updated Trigger\",\n  \"trigger_type\": \"MANUAL\",\n  \"delay_duration\": null,\n  \"schedule_field\": null,\n  \"watch_field\": null,\n  \"trigger_value\": null,\n  \"event_type\": \"approval_submitted\",\n  \"event_params\": {},\n  \"is_active\": true,\n  \"priority\": 1,\n  \"max_retries\": 3,\n  \"retry_delay\": \"5m\",\n  \"description\": \"Updated trigger\"\n}",
+									"raw": "{\n  \"trigger_id\": \"{{trigger_id}}\",\n  \"trigger_name\": \"Updated Trigger\",\n  \"trigger_type\": \"MANUAL\",\n  \"is_active\": true,\n  \"priority\": 1,\n  \"max_retries\": 3,\n  \"retry_delay\": \"5m\",\n  \"description\": \"Updated trigger description\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6250,7 +7092,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/workflows/transitions/triggers/update?id={{trigger_id}}",
+									"raw": "http://{{host}}/workflows/transitions/triggers/update",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -6260,12 +7102,6 @@
 										"transitions",
 										"triggers",
 										"update"
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "{{trigger_id}}"
-										}
 									]
 								}
 							},
@@ -6368,7 +7204,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"trigger_name\": \"Auto Start\",\n  \"trigger_type\": \"AUTOMATIC\",\n  \"entity_type\": \"audit_plan\",\n  \"entity_filter\": {},\n  \"trigger_field\": null,\n  \"trigger_value\": null,\n  \"event_type\": \"audit_plan_created\",\n  \"event_params\": {},\n  \"schedule_field\": null,\n  \"schedule_offset\": null,\n  \"parent_entity_type\": null,\n  \"parent_state\": null,\n  \"is_active\": true,\n  \"priority\": 1,\n  \"auto_submit\": false,\n  \"description\": \"Auto-start trigger\"\n}",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"trigger_name\": \"On Plan Creation\",\n  \"trigger_type\": \"AUTOMATIC\",\n  \"entity_type\": \"audit_plan\",\n  \"entity_filter\": {},\n  \"event_type\": \"audit_plan_created\",\n  \"event_params\": {},\n  \"is_active\": true,\n  \"priority\": 1,\n  \"auto_submit\": false,\n  \"description\": \"Trigger workflow on plan creation\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6407,7 +7243,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"trigger_name\": \"Auto Start\",\n  \"trigger_type\": \"AUTOMATIC\",\n  \"entity_type\": \"audit_plan\",\n  \"entity_filter\": {},\n  \"trigger_field\": null,\n  \"trigger_value\": null,\n  \"event_type\": \"audit_plan_created\",\n  \"event_params\": {},\n  \"schedule_field\": null,\n  \"schedule_offset\": null,\n  \"parent_entity_type\": null,\n  \"parent_state\": null,\n  \"is_active\": true,\n  \"priority\": 1,\n  \"auto_submit\": false,\n  \"description\": \"Updated trigger\"\n}",
+									"raw": "{\n  \"entry_trigger_id\": \"{{entry_trigger_id}}\",\n  \"trigger_name\": \"On Plan Creation\",\n  \"trigger_type\": \"AUTOMATIC\",\n  \"is_active\": true,\n  \"priority\": 1,\n  \"auto_submit\": false,\n  \"description\": \"Updated entry trigger\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6415,7 +7251,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/workflows/entry-triggers/update?id={{entry_trigger_id}}",
+									"raw": "http://{{host}}/workflows/entry-triggers/update",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -6424,12 +7260,6 @@
 										"workflows",
 										"entry-triggers",
 										"update"
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "{{entry_trigger_id}}"
-										}
 									]
 								}
 							},
@@ -6575,7 +7405,38 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risk-configs/matrix-configs",
+									"raw": "http://{{host}}/risk-configs/matrix-configs/default",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-configs",
+										"matrix-configs",
+										"default"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List All Matrix Configs",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/risk-configs/matrix-configs?page=1&page_size=20",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -6583,6 +7444,16 @@
 									"path": [
 										"risk-configs",
 										"matrix-configs"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "20"
+										}
 									]
 								}
 							},
@@ -7296,7 +8167,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"title\": \"New Pillar\",\n  \"description\": \"A new strategic pillar\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"sort_order\": 10,\n  \"is_active\": true\n}",
+									"raw": "{\n  \"department_id\": \"{{dept_id}}\",\n  \"title\": \"New Pillar\",\n  \"description\": \"A new strategic pillar\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"sort_order\": 10,\n  \"is_active\": true\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -7365,7 +8236,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit/strategic-pillars?page=1&pageSize=10",
+									"raw": "http://{{host}}/audit/strategic-pillars?page=1&page_size=10&organization_id={{organization_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -7380,8 +8251,60 @@
 											"value": "1"
 										},
 										{
-											"key": "pageSize",
+											"key": "page_size",
 											"value": "10"
+										},
+										{
+											"key": "organization_id",
+											"value": "{{organization_id}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Strategic Pillars by Department",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/audit/strategic-pillars?page=1&page_size=10&organization_id={{organization_id}}&department_id={{dept_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"audit",
+										"strategic-pillars"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										},
+										{
+											"key": "organization_id",
+											"value": "{{organization_id}}"
+										},
+										{
+											"key": "department_id",
+											"value": "{{dept_id}}"
 										}
 									]
 								}
@@ -7406,7 +8329,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"title\": \"Updated Pillar\",\n  \"description\": \"Updated description\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2026-12-31T00:00:00Z\",\n  \"sort_order\": 20,\n  \"is_active\": false\n}",
+									"raw": "{\n  \"department_id\": \"{{dept_id}}\",\n  \"title\": \"Updated Pillar\",\n  \"description\": \"Updated description\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2026-12-31T00:00:00Z\",\n  \"sort_order\": 20,\n  \"is_active\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -7514,7 +8437,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"title\": \"New Initiative\",\n  \"description\": \"A new strategic initiative\",\n  \"is_active\": true,\n  \"start_date\":\"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\"\n}",
+									"raw": "{\n  \"strategic_pillar_id\": \"{{strategic_pillar_id}}\",\n  \"title\": \"New Initiative\",\n  \"description\": \"A new strategic initiative\",\n  \"is_active\": true\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -7522,7 +8445,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit/strategic-pillars/{{strategic_pillar_id}}/initiatives",
+									"raw": "http://{{host}}/audit/strategic-pillars/{pillarId}/initiatives",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -7530,7 +8453,7 @@
 									"path": [
 										"audit",
 										"strategic-pillars",
-										"{{strategic_pillar_id}}",
+										"{pillarId}",
 										"initiatives"
 									]
 								}
@@ -7554,7 +8477,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit/strategic-initiatives/{{initiativeId}}",
+									"raw": "http://{{host}}/audit/strategic-initiatives/{initiativeId}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -7562,7 +8485,7 @@
 									"path": [
 										"audit",
 										"strategic-initiatives",
-										"{{initiativeId}}"
+										"{initiativeId}"
 									]
 								}
 							},
@@ -7585,7 +8508,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit/strategic-pillars/{{strategic_pillar_id}}/initiatives?page=1&pageSize=10",
+									"raw": "http://{{host}}/audit/strategic-pillars/{pillarId}/initiatives",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -7593,18 +8516,8 @@
 									"path": [
 										"audit",
 										"strategic-pillars",
-										"{{strategic_pillar_id}}",
+										"{pillarId}",
 										"initiatives"
-									],
-									"query": [
-										{
-											"key": "page",
-											"value": "1"
-										},
-										{
-											"key": "pageSize",
-											"value": "10"
-										}
 									]
 								}
 							},
@@ -7636,7 +8549,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit/strategic-initiatives/{{initiativeId}}",
+									"raw": "http://{{host}}/audit/strategic-initiatives/{initiativeId}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -7644,7 +8557,7 @@
 									"path": [
 										"audit",
 										"strategic-initiatives",
-										"{{initiativeId}}"
+										"{initiativeId}"
 									]
 								}
 							},
@@ -7667,7 +8580,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit/strategic-initiatives/{{initiativeId}}",
+									"raw": "http://{{host}}/audit/strategic-initiatives/{initiativeId}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -7675,7 +8588,7 @@
 									"path": [
 										"audit",
 										"strategic-initiatives",
-										"{{initiativeId}}"
+										"{initiativeId}"
 									]
 								}
 							},
@@ -8729,7 +9642,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"audit_universe_id\": {{audit_universe_id}},\n  \"department_id\": \"{{dept_id}}\",\n  \"strategic_pillar_id\": null,\n  \"auditable_area_id\": null,\n  \"indicative_target_id\": null,\n  \"strategic_initiative_id\": null,\n  \"risk_id\": null,\n  \"process_activity\": \"Key process activity\",\n  \"audit_frequency\": \"ANNUALLY\",\n  \"is_active\": true\n}",
+									"raw": "{\n  \"audit_universe_id\": \"{{audit_universe_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"strategic_pillar_id\": null,\n  \"auditable_area_id\": null,\n  \"indicative_target_id\": null,\n  \"strategic_initiative_id\": null,\n  \"risk_id\": null,\n  \"process_activity\": \"Key process activity\",\n  \"audit_frequency\": \"ANNUALLY\",\n  \"is_active\": true\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -8815,6 +9728,94 @@
 										{
 											"key": "page_size",
 											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Universe Items by Audit Universe",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/audit/universe-items?page=1&page_size=10&audit_universe_id={{audit_universe_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"audit",
+										"universe-items"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										},
+										{
+											"key": "audit_universe_id",
+											"value": "{{audit_universe_id}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Universe Items by Department",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/audit/universe-items?page=1&page_size=10&department_id={{dept_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"audit",
+										"universe-items"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										},
+										{
+											"key": "department_id",
+											"value": "{{dept_id}}"
 										}
 									]
 								}
@@ -9484,6 +10485,42 @@
 			"value": "",
 			"type": "string",
 			"description": "From create entry trigger response"
+		},
+		{
+			"key": "business_process_id",
+			"value": "",
+			"type": "string",
+			"description": "From create business process response"
+		},
+		{
+			"key": "risk_cause_id",
+			"value": "",
+			"type": "string",
+			"description": "From create risk cause response"
+		},
+		{
+			"key": "findings_category_id",
+			"value": "",
+			"type": "string",
+			"description": "From create findings category response"
+		},
+		{
+			"key": "process_activity_id",
+			"value": "",
+			"type": "string",
+			"description": "From create process activity response"
+		},
+		{
+			"key": "strategic_pillar_id",
+			"value": "",
+			"type": "string",
+			"description": "From create strategic pillar response"
+		},
+		{
+			"key": "auditable_area_id",
+			"value": "",
+			"type": "string",
+			"description": "From create auditable area response"
 		}
 	]
 }
