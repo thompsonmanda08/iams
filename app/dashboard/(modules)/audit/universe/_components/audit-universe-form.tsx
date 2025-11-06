@@ -18,22 +18,21 @@ import { DatePicker } from "@/components/ui/date-picker";
 import {
   createUniverse,
   createUniverseItem,
-  updateUniverse,
-  getUniverseItems,
-  getUniverses
+  updateUniverse
 } from "@/app/_actions/audit-module-actions";
 import { CreateUniversePayload, CreateUniverseItemPayload } from "@/lib/types/audit-types";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDepartments } from "@/app/_actions/config-actions";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  getAuditableAreas,
-  getStrategicPillars,
-  getStrategicInitiatives,
-  getIndicativeTargets
-} from "@/app/_actions/audit-settings-actions";
-import { getRisks } from "@/app/_actions/risk-module-actions";
+  useAuditableAreas,
+  useStrategicPillars,
+  useStrategicInitiatives,
+  useIndicativeTargets,
+  useUniverses,
+  useUniverseItems
+} from "@/hooks/use-audit-settings-query-data";
+import { useDepartments } from "@/hooks/use-query-data";
+import { useRisks } from "@/hooks/use-risk-query-data";
 import { SelectField } from "@/components/ui/select-field";
-import { undefined } from "zod";
 import {
   Empty,
   EmptyHeader,
@@ -125,85 +124,41 @@ export default function AuditUniverseForm({
   const [itemData, setItemData] = useState<UniverseItemFormData>(INIT_ITEM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch dropdown data using TanStack Query
-  const { data: departmentsData } = useQuery({
-    queryKey: ["departments"],
-    queryFn: async () => {
-      const result = await getDepartments();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
+  // Fetch dropdown data using reusable hooks
+  const { data: departmentsResponse } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
   });
+  const departmentsData = mode === "item" ? (departmentsResponse?.data?.data || []) : [];
 
-  const { data: auditableAreasData } = useQuery({
-    queryKey: ["auditableAreas"],
-    queryFn: async () => {
-      const result = await getAuditableAreas();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
-  });
+  const { data: auditableAreasResponse } = useAuditableAreas();
+  const auditableAreasData = mode === "item" ? (auditableAreasResponse?.data || []) : [];
 
-  const { data: strategicPillarsData } = useQuery({
-    queryKey: ["strategicPillars"],
-    queryFn: async () => {
-      const result = await getStrategicPillars();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
-  });
+  const { data: strategicPillarsResponse } = useStrategicPillars();
+  const strategicPillarsData = mode === "item" ? (strategicPillarsResponse?.data || []) : [];
 
-  const { data: strategicInitiativesData } = useQuery({
-    queryKey: ["strategicInitiatives", itemData.strategic_pillar_id],
-    queryFn: async () => {
-      if (!itemData.strategic_pillar_id) return [];
-      const result = await getStrategicInitiatives(itemData.strategic_pillar_id);
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item" && !!itemData.strategic_pillar_id
-  });
+  const { data: strategicInitiativesResponse } = useStrategicInitiatives(
+    mode === "item" && itemData.strategic_pillar_id ? itemData.strategic_pillar_id : undefined
+  );
+  const strategicInitiativesData = mode === "item" ? (strategicInitiativesResponse?.data || []) : [];
 
-  const { data: indicativeTargetsData } = useQuery({
-    queryKey: ["indicativeTargets"],
-    queryFn: async () => {
-      const result = await getIndicativeTargets();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
-  });
+  const { data: indicativeTargetsResponse } = useIndicativeTargets();
+  const indicativeTargetsData = mode === "item" ? (indicativeTargetsResponse?.data || []) : [];
 
-  const { data: risksData } = useQuery({
-    queryKey: ["risks"],
-    queryFn: async () => {
-      const result = await getRisks();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
-  });
+  const { data: risksResponse } = useRisks();
+  const risksData = mode === "item" ? (risksResponse?.data || []) : [];
 
   // Fetch universes dynamically for the dropdown
-  const { data: universesData } = useQuery({
-    queryKey: ["universes"],
-    queryFn: async () => {
-      const result = await getUniverses();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item",
-    initialData: universes // Use server-fetched data as initial data
-  });
+  const { data: universesResponse } = useUniverses();
+  const universesData = mode === "item" ? (universesResponse?.data || universes) : [];
 
   // Fetch universe items for the selected universe
-  const { data: universeItemsData, isLoading: isLoadingItems } = useQuery({
-    queryKey: ["universeItems", itemData.audit_universe_id],
-    queryFn: async () => {
-      if (!itemData.audit_universe_id) return [];
-      const result = await getUniverseItems({
-        audit_universe_id: String(itemData.audit_universe_id)
-      });
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item" && !!itemData.audit_universe_id
-  });
+  const universeIdForItems = mode === "item" && itemData.audit_universe_id
+    ? String(itemData.audit_universe_id)
+    : undefined;
+  const { data: universeItemsResponse, isLoading: isLoadingItems } = useUniverseItems(universeIdForItems);
+  const universeItemsData = mode === "item" ? (universeItemsResponse?.data || []) : [];
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));

@@ -17,6 +17,7 @@ import {
   getProcessActivities,
   getIndicativeTargets
 } from "@/app/_actions/audit-settings-actions";
+import { getUniverses, getUniverseItems } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { UserQueryParams } from "@/lib/types/account";
 
@@ -167,6 +168,63 @@ export const useIndicativeTargets = () => {
       }
       return response.data;
     },
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+};
+
+// ============================================================================
+// AUDIT UNIVERSES HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch all audit universes
+ * @param params - Optional parameters for filtering and pagination
+ * @returns Query result with universes data
+ */
+export const useUniverses = (params?: {
+  page?: number;
+  page_size?: number;
+  is_active?: boolean;
+}) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.UNIVERSES, params],
+    queryFn: async () => {
+      const response = await getUniverses(params);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+};
+
+/**
+ * Hook to fetch universe items for a specific universe
+ * @param universeId - The ID of the audit universe
+ * @param params - Optional pagination parameters
+ * @returns Query result with universe items data
+ */
+export const useUniverseItems = (
+  universeId?: string,
+  params?: { page?: number; page_size?: number }
+) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.UNIVERSE_ITEMS, universeId, params],
+    queryFn: async () => {
+      if (!universeId) {
+        throw new Error("Universe ID is required");
+      }
+      const response = await getUniverseItems({
+        audit_universe_id: universeId,
+        ...params
+      });
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    enabled: !!universeId, // Only run query if universeId is provided
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };

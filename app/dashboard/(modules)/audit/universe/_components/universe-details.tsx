@@ -30,16 +30,16 @@ import {
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
 import BackButton from "@/components/back-button";
-import { getDepartments } from "@/app/_actions/config-actions";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { SelectField } from "@/components/ui/select-field";
 import {
-  getAuditableAreas,
-  getStrategicPillars,
-  getStrategicInitiatives,
-  getIndicativeTargets
-} from "@/app/_actions/audit-settings-actions";
-import { getRisks } from "@/app/_actions/risk-module-actions";
+  useAuditableAreas,
+  useStrategicPillars,
+  useStrategicInitiatives,
+  useIndicativeTargets
+} from "@/hooks/use-audit-settings-query-data";
+import { useDepartments } from "@/hooks/use-query-data";
+import { useRisks } from "@/hooks/use-risk-query-data";
 import {
   Empty,
   EmptyHeader,
@@ -121,56 +121,30 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
 
   const safeUniverseItems = Array.isArray(universeItems) ? universeItems : [];
 
-  // Fetch dropdown data using TanStack Query
-  const { data: departmentsData } = useQuery({
-    queryKey: ["departments"],
-    queryFn: async () => {
-      const result = await getDepartments();
-      return result.data?.data || result.data || [];
-    }
+  // Fetch dropdown data using reusable hooks
+  const { data: departmentsResponse } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
   });
+  const departmentsData = departmentsResponse?.data?.data || [];
 
-  const { data: auditableAreasData } = useQuery({
-    queryKey: ["auditableAreas"],
-    queryFn: async () => {
-      const result = await getAuditableAreas();
-      return result.data?.data || result.data || [];
-    }
-  });
+  const { data: auditableAreasResponse } = useAuditableAreas();
+  const auditableAreasData = auditableAreasResponse?.data || [];
 
-  const { data: strategicPillarsData } = useQuery({
-    queryKey: ["strategicPillars"],
-    queryFn: async () => {
-      const result = await getStrategicPillars();
-      return result.data?.data || result.data || [];
-    }
-  });
+  const { data: strategicPillarsResponse } = useStrategicPillars();
+  const strategicPillarsData = strategicPillarsResponse?.data || [];
 
-  const { data: strategicInitiativesData } = useQuery({
-    queryKey: ["strategicInitiatives", itemData.strategic_pillar_id],
-    queryFn: async () => {
-      if (!itemData.strategic_pillar_id) return [];
-      const result = await getStrategicInitiatives(itemData.strategic_pillar_id);
-      return result.data?.data || result.data || [];
-    },
-    enabled: !!itemData.strategic_pillar_id
-  });
+  const { data: strategicInitiativesResponse } = useStrategicInitiatives(
+    itemData.strategic_pillar_id || undefined
+  );
+  const strategicInitiativesData = strategicInitiativesResponse?.data || [];
 
-  const { data: indicativeTargetsData } = useQuery({
-    queryKey: ["indicativeTargets"],
-    queryFn: async () => {
-      const result = await getIndicativeTargets();
-      return result.data?.data || result.data || [];
-    }
-  });
+  const { data: indicativeTargetsResponse } = useIndicativeTargets();
+  const indicativeTargetsData = indicativeTargetsResponse?.data || [];
 
-  const { data: risksData } = useQuery({
-    queryKey: ["risks"],
-    queryFn: async () => {
-      const result = await getRisks();
-      return result.data?.data || result.data || [];
-    }
-  });
+  const { data: risksResponse } = useRisks();
+  const risksData = risksResponse?.data || [];
 
   // Memoized options for dropdowns
   const departmentsOptions = useMemo(() => {
