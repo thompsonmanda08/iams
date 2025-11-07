@@ -130,7 +130,7 @@ export default function ProcessActivityTab({
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : "No department assigned";
+    return department ? department.name : "No parent department";
   };
   const getPillarName = (pillarId: string) => {
     const pillar = pillars.find((d) => d.id === pillarId);
@@ -218,7 +218,7 @@ export default function ProcessActivityTab({
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-sm">
-                        {item?.department_name || "No department assigned"}
+                        {item?.department_name || "No parent department"}
                       </span>
                     </TableCell>
                     <TableCell>

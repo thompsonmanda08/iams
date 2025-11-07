@@ -122,7 +122,7 @@ export default function StrategicPillarsTab({
   const getDepartmentName = useCallback(
     (departmentId: string) => {
       const department = departments.find((d) => d.id === departmentId);
-      return department ? department.name : "No department assigned";
+      return department ? department.name : "No parent department";
     },
     [departments]
   );

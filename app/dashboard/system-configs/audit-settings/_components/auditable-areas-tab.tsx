@@ -200,7 +200,7 @@ export default function AuditableAreaConfig({
                 const departmentName =
                   item?.department ||
                   departments.find((d) => d.id === item.department_id)?.name ||
-                  "No department assigned";
+                  "No parent department";
                 return (
                   <TableRow
                     key={item.id}
@@ -209,22 +209,22 @@ export default function AuditableAreaConfig({
                     //   router.push(`/dashboard/system-configs/items/${item.id}`);
                     // }}
                   >
-                    <TableCell className="align-top p-3">
-                      <div className="flex items-start gap-2 min-w-0">
-                        <Building className="text-muted-foreground h-4 w-4 shrink-0 mt-0.5" />
-                        <div className="font-medium line-clamp-6 min-w-0 flex-1">
+                    <TableCell className="p-3 align-top">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <Building className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+                        <div className="line-clamp-6 min-w-0 flex-1 font-medium">
                           {item.name || item?.title}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="align-top p-3">
-                      <div className="font-mono text-sm line-clamp-6 min-w-0">
+                    <TableCell className="p-3 align-top">
+                      <div className="line-clamp-6 min-w-0 font-mono text-sm">
                         {item.description || "No description provided"}
                       </div>
                     </TableCell>
-                    <TableCell className="align-top p-3">
-                      <div className="font-mono text-sm line-clamp-6 min-w-0">
-                        {item?.department_name || "No department assigned"}
+                    <TableCell className="p-3 align-top">
+                      <div className="line-clamp-6 min-w-0 font-mono text-sm">
+                        {item?.department_name || "No parent department"}
                       </div>
                     </TableCell>
                     {/* <TableCell>

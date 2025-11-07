@@ -82,9 +82,11 @@ export function DatePicker({
               classNames?.input
             )}
             disabled={isDisabled || props?.disabled}>
-            {value && value instanceof Date && !isNaN(value.getTime())
-              ? format(value, "PPP")
-              : <span>Pick a date</span>}
+            {value && value instanceof Date && !isNaN(value.getTime()) ? (
+              format(value, "PPP")
+            ) : (
+              <span>Pick a date</span>
+            )}
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
@@ -92,7 +94,7 @@ export function DatePicker({
           <Calendar
             mode="single"
             selected={value}
-            disabled={disabledDates || (isDisabled || props?.disabled)}
+            disabled={disabledDates || isDisabled || props?.disabled}
             captionLayout="dropdown"
             startMonth={new Date(1900, 0)}
             endMonth={new Date(2099, 11)}
