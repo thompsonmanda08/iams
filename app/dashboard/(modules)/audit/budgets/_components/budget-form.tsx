@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,24 +15,13 @@ import {
 import { Save, FileText, DollarSign, Calendar, Building2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
+import { SearchSelectField } from "@/components/ui/search-select-field";
 import { CURRENCIES } from "@/lib/constants";
-import { createBudget, createBudgetLine, getBudgets } from "@/app/_actions/audit-module-actions";
-import { getDepartments } from "@/app/_actions/config-actions";
+import { createBudget, createBudgetLine } from "@/app/_actions/audit-module-actions";
+import { useDepartments } from "@/hooks/use-query-data";
+import { useBudgets } from "@/hooks/use-audit-settings-query-data";
 
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
-
-interface Department {
-  id: string;
-  name: string;
-  code: string;
-}
-
-interface Budget {
-  id: string;
-  title: string;
-  total_amount: number;
-  currency: string;
-}
 
 interface BudgetFormData {
   department_id: string;
@@ -98,51 +87,17 @@ const BudgetForm = ({
     budget_id: budgetId || ""
   });
   const [isCreating, setIsCreating] = useState(false);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [loadingDepartments, setLoadingDepartments] = useState(false);
-  const [loadingBudgets, setLoadingBudgets] = useState(false);
 
-  // Fetch departments
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      setLoadingDepartments(true);
-      try {
-        const response = await getDepartments({ isActive: true });
-        if (response.success && response.data.data) {
-          setDepartments(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching departments:", error);
-        toast.error("Failed to load departments");
-      } finally {
-        setLoadingDepartments(false);
-      }
-    };
+  // Use reusable hooks for data fetching
+  const { data: departmentsResponse, isLoading: loadingDepartments } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+  const departments = departmentsResponse?.data?.data || [];
 
-    fetchDepartments();
-  }, []);
-
-  useEffect(() => {
-    if (mode === "line") {
-      const fetchBudgets = async () => {
-        setLoadingBudgets(true);
-        try {
-          const response = await getBudgets();
-          if (response.success && response.data.data) {
-            setBudgets(response.data.data);
-          }
-        } catch (error) {
-          console.error("Error fetching budgets:", error);
-          toast.error("Failed to load budgets");
-        } finally {
-          setLoadingBudgets(false);
-        }
-      };
-
-      fetchBudgets();
-    }
-  }, [mode]);
+  const { data: budgetsResponse, isLoading: loadingBudgets } = useBudgets();
+  const budgetsData = budgetsResponse?.data?.data || [];
 
   const updateBudgetData = (fields: Partial<BudgetFormData>) => {
     setBudgetData((prev) => ({ ...prev, ...fields }));
@@ -226,14 +181,12 @@ const BudgetForm = ({
         await createBudgetLineHandler();
       }
     } catch (error) {
-      console.error("Error creating:", error);
+      // Error handling is done via toast notifications
     }
   };
 
   const isEditMode = !!budgetId && mode === "budget";
-  const selectedBudget = budgets?.find((b) => b.id === lineData.budget_id);
-
-  console.log("BUDGETS:", budgets);
+  const selectedBudget = budgetsData?.find((b) => b.id === lineData.budget_id);
 
   return (
     <div className="from-background via-background to-muted/30 bg-gradient-to-br">
@@ -253,38 +206,16 @@ const BudgetForm = ({
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="department"
-                    className="flex items-center gap-2 text-sm font-semibold">
-                    <Building2 className="text-muted-foreground h-4 w-4" />
-                    Department *
-                  </Label>
-                  <Select
+                  <SearchSelectField
+                    id="department"
+                    label="Department"
+                    required
+                    placeholder="Search and select a department..."
+                    options={departments}
                     value={budgetData.department_id}
                     onValueChange={(value) => updateBudgetData({ department_id: value })}
-                    disabled={loadingDepartments}>
-                    <SelectTrigger id="department" className="w-full">
-                      <SelectValue placeholder="Select department">
-                        {loadingDepartments
-                          ? "Loading..."
-                          : budgetData.department_id
-                            ? departments.find((d) => d.id === budgetData.department_id)?.name ||
-                              "Select department"
-                            : "Select department"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {departments?.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4" />
-                            <span>{dept.name}</span>
-                            <span className="text-muted-foreground text-xs">({dept.code})</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    isDisabled={loadingDepartments}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -294,7 +225,7 @@ const BudgetForm = ({
                   </Label>
                   <Input
                     id="year"
-                    type="text"
+                    type="number"
                     min="2020"
                     max="2100"
                     value={budgetData.year}
@@ -440,38 +371,21 @@ const BudgetForm = ({
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="budget" className="flex items-center gap-2 text-sm font-semibold">
-                  <Wallet className="text-muted-foreground h-4 w-4" />
-                  Select Budget *
-                </Label>
-                <Select
+                <SearchSelectField
+                  id="budget"
+                  label="Select Budget"
+                  required
+                  placeholder="Search and select a budget..."
+                  options={
+                    budgetsData?.map((budget: any) => ({
+                      id: budget.id,
+                      name: `${budget.title} - ${budget.currency} ${budget.total_amount.toLocaleString()}`
+                    })) || []
+                  }
                   value={lineData.budget_id}
                   onValueChange={(value) => updateLineData({ budget_id: value })}
-                  disabled={loadingBudgets}>
-                  <SelectTrigger id="budget" className="w-full">
-                    <SelectValue placeholder="Select a budget">
-                      {loadingBudgets
-                        ? "Loading..."
-                        : lineData.budget_id
-                          ? budgets.find((b) => b.id === lineData.budget_id)?.title ||
-                            "Select a budget"
-                          : "Select a budget"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {budgets.length === 0 && !loadingBudgets ? (
-                      <div className="text-muted-foreground p-4 text-center text-sm">
-                        No budgets available. Create a budget first.
-                      </div>
-                    ) : (
-                      budgets.map((budget) => (
-                        <SelectItem key={budget.id} value={budget.id}>
-                          {budget.title} - {budget.currency} {budget.total_amount.toLocaleString()}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  isDisabled={loadingBudgets}
+                />
                 {selectedBudget && (
                   <div className="bg-muted/50 mt-2 rounded-lg p-3">
                     <p className="text-sm">
@@ -487,11 +401,9 @@ const BudgetForm = ({
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="lineName" className="text-sm font-semibold">
-                    Line Name *
-                  </Label>
                   <Input
                     id="lineName"
+                    label="Line Name"
                     value={lineData.name}
                     onChange={(e) => updateLineData({ name: e.target.value })}
                     placeholder="e.g., Personnel Costs"
@@ -522,12 +434,10 @@ const BudgetForm = ({
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="lineAllocated" className="text-sm font-semibold">
-                    Allocated Amount *
-                  </Label>
                   <Input
                     id="lineAllocated"
-                    type="text"
+                    label="Allocated Amount"
+                    type="number"
                     step="0.01"
                     min="0"
                     value={lineData.allocated_amount || ""}
@@ -538,12 +448,10 @@ const BudgetForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lineSpent" className="text-sm font-semibold">
-                    Spent Amount
-                  </Label>
                   <Input
                     id="lineSpent"
-                    type="text"
+                    label="Spent Amount"
+                    type="number"
                     step="0.01"
                     min="0"
                     value={lineData.spent_amount || ""}

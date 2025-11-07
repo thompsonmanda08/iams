@@ -85,7 +85,8 @@ export const QUERY_KEYS = {
   AUDITABLE_AREAS: "auditable-areas",
   WORKPAPER_TEMPLATES: "workpaper-templates",
   UNIVERSES: "universes",
-  UNIVERSE_ITEMS: "universe-items"
+  UNIVERSE_ITEMS: "universe-items",
+  BUDGETS: "budgets"
 };
 
 // ANIMATION_VARIANTS

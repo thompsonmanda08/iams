@@ -17,7 +17,7 @@ import {
   getProcessActivities,
   getIndicativeTargets
 } from "@/app/_actions/audit-settings-actions";
-import { getUniverses, getUniverseItems } from "@/app/_actions/audit-module-actions";
+import { getUniverses, getUniverseItems, getBudgets } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { UserQueryParams } from "@/lib/types/account";
 
@@ -225,6 +225,28 @@ export const useUniverseItems = (
       return response.data;
     },
     enabled: !!universeId, // Only run query if universeId is provided
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+};
+
+// ============================================================================
+// BUDGETS HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch all budgets
+ * @returns Query result with budgets data
+ */
+export const useBudgets = () => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.BUDGETS],
+    queryFn: async () => {
+      const response = await getBudgets();
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };

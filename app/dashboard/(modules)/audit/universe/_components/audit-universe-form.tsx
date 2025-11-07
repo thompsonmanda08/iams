@@ -60,6 +60,7 @@ interface UniverseFormData {
 
 interface UniverseItemFormData {
   audit_universe_id: number | string;
+  name: string;
   department_id: string;
   strategic_pillar_id: string;
   auditable_area_id: string;
@@ -81,6 +82,7 @@ const INIT_UNIVERSE_DATA: UniverseFormData = {
 };
 
 const INIT_ITEM_DATA: UniverseItemFormData = {
+  name: "",
   audit_universe_id: "",
   department_id: "",
   strategic_pillar_id: "",
@@ -165,16 +167,19 @@ export default function AuditUniverseForm({
 
   // Fetch universes dynamically for the dropdown
   const { data: universesResponse } = useUniverses();
-  const universesData = mode === "item" ? universesResponse?.data || universes : [];
 
-  console.log("Universes", universesResponse);
+  const universesData = mode === "item" ? universesResponse?.data || universes : [];
 
   // Fetch universe items for the selected universe
   const universeIdForItems =
     mode === "item" && itemData.audit_universe_id ? String(itemData.audit_universe_id) : undefined;
+
   const { data: universeItemsResponse, isLoading: isLoadingItems } =
     useUniverseItems(universeIdForItems);
+
   const universeItemsData = mode === "item" ? universeItemsResponse?.data || [] : [];
+
+  console.log("universeItemsData", universeItemsData);
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -413,40 +418,46 @@ export default function AuditUniverseForm({
             <div className="space-y-8">
               {/* Primary Information */}
               <div className="space-y-6">
+                {/* Universe Item Name - Full Width */}
+                <Input
+                  id="name"
+                  label="Name"
+                  value={itemData.name}
+                  onChange={(e) => updateItemData({ name: e.target.value })}
+                  placeholder="Enter name"
+                  required={true}
+                />
+
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   {/* Universe Selection */}
-                  <div className="space-y-2">
-                    <SelectField
-                      id="audit_universe_id"
-                      label="Universe"
-                      required
-                      placeholder="--Select a universe--"
-                      value={String(itemData.audit_universe_id || "")}
-                      onValueChange={(value) => updateItemData({ audit_universe_id: value })}
-                      options={universeOptions}
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                    />
-                  </div>
+                  <SelectField
+                    id="audit_universe_id"
+                    label="Universe"
+                    required
+                    placeholder="--Select a universe--"
+                    value={String(itemData.audit_universe_id || "")}
+                    onValueChange={(value) => updateItemData({ audit_universe_id: value })}
+                    options={universeOptions}
+                    className="w-full"
+                    classNames={{
+                      wrapper: "w-full"
+                    }}
+                  />
 
                   {/* Department Selection */}
-                  <div className="space-y-2">
-                    <SelectField
-                      id="department_id"
-                      label="Department"
-                      required
-                      placeholder="--Select a department--"
-                      value={itemData.department_id || ""}
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      onValueChange={(value) => updateItemData({ department_id: value })}
-                      options={departmentsOptions}
-                    />
-                  </div>
+                  <SelectField
+                    id="department_id"
+                    label="Department"
+                    required
+                    placeholder="--Select a department--"
+                    value={itemData.department_id || ""}
+                    className="w-full"
+                    classNames={{
+                      wrapper: "w-full"
+                    }}
+                    onValueChange={(value) => updateItemData({ department_id: value })}
+                    options={departmentsOptions}
+                  />
                 </div>
 
                 {/* Process/Activity - Full Width */}

@@ -230,7 +230,7 @@ export default function NewAuditPlanPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="relative container mx-auto px-4 py-8">
         <div className="mx-auto max-w-4xl">
           {/* Progress Steps */}
           <div className="mb-4">
@@ -519,7 +519,7 @@ export default function NewAuditPlanPage() {
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex items-center justify-between border-t pt-6">
+              <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 -mx-6 mt-8 flex flex-col-reverse justify-end gap-3 border-t px-6 pt-6 pb-6 backdrop-blur sm:-mx-8 sm:flex-row sm:px-8 sm:pb-8">
                 <div>
                   {currentStep > 1 && (
                     <Button
