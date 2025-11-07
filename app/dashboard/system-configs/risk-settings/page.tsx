@@ -1,4 +1,4 @@
-import { Grid3x3, FolderTree, Shield, GitBranch, AlertCircle } from "lucide-react";
+import { Grid3x3, FolderTree, Shield, GitBranch, AlertCircle, TrendingUp, MonitorCog } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RiskCategoriesConfig } from "../_components/risk-categories-config";
 import { RiskMatrixConfigList } from "../_components/risk-matrix-config-list";
@@ -6,6 +6,8 @@ import { RiskResponsesList } from "../_components/risk-responses-list";
 import PageHeader from "@/components/page-header";
 import { BusinessProcessList } from "../_components/business-process-list";
 import { RiskCausesList } from "../_components/risk-causes-list";
+import { RiskAppetiteStatusList } from "../_components/risk-appetite-status-list";
+import { ControlEffectivenessList } from "../_components/control-effectiveness-list";
 
 export default async function RiskConfigurationsPage() {
   return (
@@ -48,6 +50,14 @@ export default async function RiskConfigurationsPage() {
               <AlertCircle className="h-4 w-4" />
               Risk Causes
             </TabsTrigger>
+            <TabsTrigger value="status" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Risk Appetite Status
+            </TabsTrigger>
+            <TabsTrigger value="controls" className="gap-2">
+              <MonitorCog className="h-4 w-4" />
+              Control Effective
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="matrix">
@@ -68,6 +78,12 @@ export default async function RiskConfigurationsPage() {
 
           <TabsContent value="causes">
             <RiskCausesList />
+          </TabsContent>
+          <TabsContent value="status">
+            <RiskAppetiteStatusList />
+          </TabsContent>
+          <TabsContent value="controls">
+            <ControlEffectivenessList />
           </TabsContent>
         </Tabs>
       </main>

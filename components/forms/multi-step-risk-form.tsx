@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, Fragment, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,142 +11,38 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { toast } from "sonner";
+import { formatISO, parseISO } from "date-fns";
 import {
   getBusinessProcessesHierarchy,
   getDepartments,
-  getRiskMatrices
+  getRiskMatrices,
+  getDepartmentRiskCategories
 } from "@/app/_actions/config-actions";
 import {
   createRiskStepOne,
   updateRiskStepTwo,
   updateRiskStepThree,
-  updateRisk,
-  RiskResponse
+  updateRisk
 } from "@/app/_actions/risk-module-actions";
-import { getDepartmentRiskCategories } from "@/app/_actions/config-actions";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { format, formatISO, parseISO } from "date-fns";
 import { getUsers } from "@/app/_actions/user-actions";
-import { SearchSelectField } from "../ui/search-select-field";
 import { getStrategicPillars } from "@/app/_actions/audit-settings-actions";
-import { Slider } from "../ui/slider";
 
-type RiskCategory = {
-  id: string;
-  name: string;
-  code: string;
-  description: string;
-  color: string;
-  is_active: boolean;
-  department_id: string;
-};
-
-type SubProcess = {
-  id: string;
-  name: string;
-};
-
-type BusinessProcess = {
-  id: string;
-  organization_id: string;
-  name: string;
-  description: string;
-  is_active: boolean;
-  created_by: string;
-  updated_by: string;
-  created_at: string;
-  updated_at: string;
-  sub_processes: SubProcess[];
-};
-
-type Risk = {
-  id: string;
-  risk_matrix_id: string;
-  organization_id: string;
-  title: string;
-  description: string;
-  category_id: string;
-  department_id: string;
-  matrix_id: string | null;
-  risk_register_id: string;
-  macro_process_id: string;
-  sub_process_id: string;
-  strategic_objective_id: string;
-  root_cause: string;
-  recurrence: "ongoing" | "one-time";
-  step: number;
-  department_status: string;
-  inherent_likelihood: number;
-  inherent_impact: number;
-  inherent_score: number;
-  inherent_rating: string;
-  residual_likelihood: number;
-  residual_impact: number;
-  residual_score: number;
-  residual_rating: string;
-  existing_controls: string;
-  control_effectiveness: number;
-  treatment_plan: string;
-  risk_response: RiskResponse;
-  risk_owner_id: string;
-  risk_appetite_status: "WITHIN" | "ABOVE";
-  target_closing_date: string;
-  revised_target_date: string;
-  date_closed: string;
-  status: string;
-  overdue_days: number;
-  review_date: string;
-  mitigation_cost: number;
-  latest_update: string;
-  created_by: string;
-  updated_by: string;
-  created_at: string;
-  updated_at: string;
-  category: Category;
-  department: Department;
-};
-
-type Category = {
-  id: string;
-  organization_id: string;
-  department_id: string;
-  name: string;
-  code: string;
-  description: string;
-  sort_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  updated_by: string;
-};
-
-type Department = {
-  id: string;
-  organization_id: string;
-  name: string;
-  code: string;
-  description: string | null;
-  parent_id: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-  updated_by: string | null;
-};
+import {
+  Risk,
+  Department,
+  RiskCategory,
+  BusinessProcess,
+  RiskMatrix,
+  User,
+  StepOneData,
+  StepTwoData,
+  StepThreeData
+} from "@/lib/types/risk-type";
+import { StepProgressIndicator } from "@/app/dashboard/(modules)/risks/_components/step-progress-indicator";
+import { StepOne } from "@/app/dashboard/(modules)/risks/_components/form/step-one";
+import { StepTwo } from "@/app/dashboard/(modules)/risks/_components/form/step-two";
+import { StepThree } from "@/app/dashboard/(modules)/risks/_components/form/step-three";
 
 interface MultiStepRiskFormProps {
   open: boolean;
@@ -154,64 +50,7 @@ interface MultiStepRiskFormProps {
   registerId: string;
   mode?: "create" | "edit";
   riskData?: Risk;
-  categories?: Array<{ id: string; name: string }>;
 }
-
-type StepOneData = {
-  title: string;
-  description: string;
-  category_id: string;
-  department_id: string;
-  macro_process_id: string;
-  sub_process_id: string;
-  strategic_objective_id: string;
-  root_cause: string;
-  recurrence: "ongoing" | "one-time";
-  status?: string;
-};
-
-type StepTwoData = {
-  risk_matrix_id: string;
-  inherent_likelihood: number;
-  inherent_impact: number;
-  existing_controls: string;
-  control_effectiveness: number;
-};
-
-type StepThreeData = {
-  residual_likelihood: number;
-  residual_impact: number;
-  treatment_plan: string;
-  risk_response: RiskResponse;
-  risk_owner_id: string;
-  risk_appetite_status: "WITHIN" | "ABOVE";
-  target_closing_date: string;
-  mitigation_cost: number;
-};
-
-type User = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  username: string;
-  department_id: string;
-  is_active: boolean;
-};
-
-type RiskMatrix = {
-  id: string;
-  organization_id: string;
-  name: string;
-  description: string;
-  is_default: boolean;
-  likelihood_min?: number;
-  likelihood_max?: number;
-  impact_min?: number;
-  impact_max?: number;
-  created_at: string;
-  updated_at: string;
-};
 
 export function MultiStepRiskForm({
   open,
@@ -227,30 +66,22 @@ export function MultiStepRiskForm({
     mode === "edit" && riskData ? riskData.id : null
   );
 
-  // Department state
+  // State for dropdowns
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [loadingDepartments, setLoadingDepartments] = useState(false);
-
-  // Categories state
   const [categories, setCategories] = useState<RiskCategory[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
-
-  // Users state
   const [users, setUsers] = useState<User[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-
-  // Business pillar state
-  const [pillars, setPillars] = useState<[]>([]);
-  const [loadingPillars, setLoadingPillars] = useState(false);
-
-  // Business processes state
+  const [pillars, setPillars] = useState<any[]>([]);
   const [businessProcesses, setBusinessProcesses] = useState<BusinessProcess[]>([]);
-  const [loadingProcesses, setLoadingProcesses] = useState(false);
-
-   // Matrix state
   const [riskMatrices, setRiskMatrices] = useState<RiskMatrix[]>([]);
-  const [loadingMatrices, setLoadingMatrices] = useState(false);
   const [selectedMatrix, setSelectedMatrix] = useState<RiskMatrix | null>(null);
+
+  // Loading states
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingPillars, setLoadingPillars] = useState(false);
+  const [loadingProcesses, setLoadingProcesses] = useState(false);
+  const [loadingMatrices, setLoadingMatrices] = useState(false);
 
   const [closeDate, setCloseDate] = useState<Date | undefined>(
     mode === "edit" && riskData?.target_closing_date
@@ -258,7 +89,7 @@ export function MultiStepRiskForm({
       : undefined
   );
 
-  // Initialize form data based on mode
+  // Form data states
   const [stepOneData, setStepOneData] = useState<StepOneData>({
     title: mode === "edit" && riskData ? riskData.title : "",
     description: mode === "edit" && riskData ? riskData.description : "",
@@ -291,15 +122,136 @@ export function MultiStepRiskForm({
     mitigation_cost: mode === "edit" && riskData ? riskData.mitigation_cost : 0
   });
 
+  // Computed values
   const availableSubProcesses = useMemo(() => {
     if (!stepOneData.macro_process_id) return [];
-
     const selectedMacroProcess = businessProcesses.find(
       (process) => process.id === stepOneData.macro_process_id
     );
-
     return selectedMacroProcess?.sub_processes || [];
   }, [stepOneData.macro_process_id, businessProcesses]);
+
+  const getLikelihoodRange = () => ({
+    min: selectedMatrix?.likelihood_min || 1,
+    max: selectedMatrix?.likelihood_max || 5
+  });
+
+  const getImpactRange = () => ({
+    min: selectedMatrix?.impact_min || 1,
+    max: selectedMatrix?.impact_max || 5
+  });
+
+  const likelihoodRange = getLikelihoodRange();
+  const impactRange = getImpactRange();
+
+  const transformedUsers = users.map((user) => ({
+    id: user.id,
+    name: `${user.first_name} ${user.last_name}`.trim() || user.username || user.email
+  }));
+
+  // Load functions
+  const loadDepartments = async () => {
+    setLoadingDepartments(true);
+    try {
+      const response = await getDepartments({ isActive: true });
+      if (response.success && response.data?.data) {
+        setDepartments(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Error loading departments");
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
+  const loadCategories = async (departmentId?: string) => {
+    if (!departmentId) {
+      setCategories([]);
+      return;
+    }
+    setLoadingCategories(true);
+    try {
+      const response = await getDepartmentRiskCategories(departmentId);
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      toast.error("Error loading categories");
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const loadPillars = async (departmentId?: string) => {
+    if (!departmentId) {
+      setPillars([]);
+      return;
+    }
+    setLoadingPillars(true);
+    try {
+      const response = await getStrategicPillars(undefined, {
+        department_id: departmentId
+      });
+      if (response.success && response.data.data) {
+        setPillars(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Error loading strategic objectives");
+    } finally {
+      setLoadingPillars(false);
+    }
+  };
+
+  const loadProcesses = async () => {
+    setLoadingProcesses(true);
+    try {
+      const response = await getBusinessProcessesHierarchy();
+      if (response.success && response.data) {
+        setBusinessProcesses(response.data);
+      }
+    } catch (error) {
+      toast.error("Error loading business processes");
+    } finally {
+      setLoadingProcesses(false);
+    }
+  };
+
+  const loadUsers = async (departmentId: string) => {
+    setLoadingUsers(true);
+    try {
+      const response = await getUsers({
+        departmentId: departmentId,
+        isActive: true
+      });
+      if (response.success && response.data?.data) {
+        setUsers(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Error loading users");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const loadRiskMatrices = async () => {
+    setLoadingMatrices(true);
+    try {
+      const response = await getRiskMatrices();
+      if (response.success && response.data?.data) {
+        setRiskMatrices(response.data.data);
+        if (mode === "edit" && riskData?.risk_matrix_id) {
+          const matrix = response.data.data.find(
+            (m: RiskMatrix) => m.id === riskData.risk_matrix_id
+          );
+          if (matrix) setSelectedMatrix(matrix);
+        }
+      }
+    } catch (error) {
+      toast.error("Error loading risk matrices");
+    } finally {
+      setLoadingMatrices(false);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -321,188 +273,45 @@ export function MultiStepRiskForm({
     } else {
       setCategories([]);
       setUsers([]);
-      if (stepOneData.category_id) {
-        setStepOneData((prev) => ({ ...prev, category_id: "" }));
-      }
     }
   }, [stepOneData.department_id]);
 
   useEffect(() => {
     if (mode === "create") {
-      setStepOneData((prev) => ({
-        ...prev,
-        sub_process_id: ""
-      }));
+      setStepOneData((prev) => ({ ...prev, sub_process_id: "" }));
     }
   }, [stepOneData.macro_process_id, mode]);
 
   useEffect(() => {
-    if (!open) {
+    if (!open && mode === "create") {
       setCurrentStep(1);
-      if (mode === "create") {
-        setCreatedRiskId(null);
-        resetForm();
-      }
+      setCreatedRiskId(null);
+      // Reset forms
     }
   }, [open, mode]);
 
-  const loadDepartments = async () => {
-    setLoadingDepartments(true);
-    try {
-      const response = await getDepartments({ isActive: true });
-      if (response.success && response.data?.data) {
-        setDepartments(response.data?.data);
-      } else {
-        toast.error("Failed to load departments");
-      }
-    } catch (error) {
-      toast.error("Error loading departments");
-    } finally {
-      setLoadingDepartments(false);
-    }
-  };
+  // Handlers
+  const handleMatrixChange = (matrixId: string) => {
+    const matrix = riskMatrices.find((m) => m.id === matrixId);
+    if (matrix) {
+      setSelectedMatrix(matrix);
+      const midLikelihood = Math.ceil(
+        ((matrix.likelihood_min ?? 1) + (matrix.likelihood_max ?? 5)) / 2
+      );
+      const midImpact = Math.ceil(((matrix.impact_min ?? 1) + (matrix.impact_max ?? 5)) / 2);
 
-  const loadCategories = async (departmentId?: string) => {
-    if (!departmentId) {
-      setCategories([]);
-      return;
+      setStepTwoData((prev) => ({
+        ...prev,
+        risk_matrix_id: matrixId,
+        inherent_likelihood: midLikelihood,
+        inherent_impact: midImpact
+      }));
+      setStepThreeData((prev) => ({
+        ...prev,
+        residual_likelihood: midLikelihood,
+        residual_impact: midImpact
+      }));
     }
-    setLoadingCategories(true);
-    try {
-      const response = await getDepartmentRiskCategories(departmentId);
-      if (response.success && response.data) {
-        setCategories(response.data);
-      } else {
-        setCategories([]);
-        toast.error("No risk categories to load");
-      }
-    } catch (error) {
-      setCategories([]);
-      toast.error("Error loading risk categories");
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
-  const loadPillars = async (departmentId?: string) => {
-    if (!departmentId) {
-      setPillars([]);
-      return;
-    }
-    setLoadingPillars(true);
-    try {
-      const response = await getStrategicPillars(undefined, {
-        department_id: departmentId
-      });
-      if (response.success && response.data.data) {
-        setPillars(response.data.data);
-      } else {
-        setPillars([]);
-        toast.error("No strategic objectives to load");
-      }
-    } catch (error) {
-      setPillars([]);
-      toast.error("Error loading strategic objectives");
-    } finally {
-      setLoadingPillars(false);
-    }
-  };
-
-  const loadProcesses = async () => {
-    setLoadingProcesses(true);
-    try {
-      const response = await getBusinessProcessesHierarchy();
-      if (response.success && response.data) {
-        setBusinessProcesses(response.data);
-      } else {
-        setBusinessProcesses([]);
-        toast.error("No business processes to load");
-      }
-    } catch (error) {
-      setBusinessProcesses([]);
-      toast.error("Error loading business processes");
-    } finally {
-      setLoadingProcesses(false);
-    }
-  };
-
-  const loadUsers = async (departmentId: string) => {
-    setLoadingUsers(true);
-    try {
-      const response = await getUsers({
-        departmentId: departmentId,
-        isActive: true
-      });
-      if (response.success && response.data?.data) {
-        setUsers(response.data?.data);
-      } else {
-        setUsers([]);
-      }
-    } catch (error) {
-      toast.error("Error loading users");
-      setUsers([]);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
-
-  const loadRiskMatrices = async () => {
-    setLoadingMatrices(true);
-    try {
-      const response = await getRiskMatrices();
-      if (response.success && response.data?.data) {
-        setRiskMatrices(response.data.data);
-
-        // If in edit mode and risk has a matrix, select it
-        if (mode === "edit" && riskData?.risk_matrix_id) {
-          const matrix = response.data.data.find(
-            (m: RiskMatrix) => m.id === riskData.risk_matrix_id
-          );
-          if (matrix) {
-            setSelectedMatrix(matrix);
-          }
-        }
-      } else {
-        toast.error("Failed to load risk matrices");
-      }
-    } catch (error) {
-      toast.error("Error loading risk matrices");
-    } finally {
-      setLoadingMatrices(false);
-    }
-  };
-
-  const resetForm = () => {
-    setStepOneData({
-      title: "",
-      description: "",
-      category_id: "",
-      department_id: "",
-      macro_process_id: "",
-      sub_process_id: "",
-      strategic_objective_id: "",
-      root_cause: "",
-      recurrence: "ongoing"
-    });
-    setStepTwoData({
-      inherent_likelihood: 3,
-      inherent_impact: 3,
-      existing_controls: "",
-      control_effectiveness: 2,
-      risk_matrix_id: ""
-    });
-    setStepThreeData({
-      residual_likelihood: 2,
-      residual_impact: 2,
-      treatment_plan: "",
-      risk_response: "REDUCE",
-      risk_owner_id: "",
-      risk_appetite_status: "WITHIN",
-      target_closing_date: "",
-      mitigation_cost: 0
-    });
-    setCloseDate(undefined);
-    setUsers([]);
   };
 
   const handleStepOne = async () => {
@@ -511,7 +320,7 @@ export function MultiStepRiskForm({
       if (mode === "edit" && createdRiskId) {
         const response = await updateRisk(createdRiskId, stepOneData);
         if (response.success) {
-          toast.success("Step 1 updated - Risk details saved");
+          toast.success("Step 1 updated");
           setCurrentStep(2);
         } else {
           toast.error(response.message || "Failed to update risk");
@@ -523,9 +332,8 @@ export function MultiStepRiskForm({
         });
         if (response.success && response.data) {
           setCreatedRiskId(response.data.id);
-          toast.success("Step 1 completed - Risk details saved");
+          toast.success("Step 1 completed");
           setCurrentStep(2);
-          updateRisk(response.data.id, stepOneData);
         } else {
           toast.error(response.message || "Failed to create risk");
         }
@@ -538,15 +346,12 @@ export function MultiStepRiskForm({
   };
 
   const handleStepTwo = async () => {
-    if (!createdRiskId) {
-      toast.error("Risk ID not found");
-      return;
-    }
+    if (!createdRiskId) return;
     setIsLoading(true);
     try {
       const response = await updateRiskStepTwo(createdRiskId, stepTwoData);
       if (response.success) {
-        toast.success("Step 2 completed - Risk evaluation saved");
+        toast.success("Step 2 completed");
         setCurrentStep(3);
       } else {
         toast.error(response.message || "Failed to update risk");
@@ -559,19 +364,12 @@ export function MultiStepRiskForm({
   };
 
   const handleStepThree = async () => {
-    if (!createdRiskId) {
-      toast.error("Risk ID not found");
-      return;
-    }
+    if (!createdRiskId) return;
     setIsLoading(true);
     try {
       const response = await updateRiskStepThree(createdRiskId, stepThreeData);
       if (response.success) {
-        toast.success(
-          mode === "edit"
-            ? "Risk updated successfully"
-            : "Risk created successfully and is now OPEN"
-        );
+        toast.success(mode === "edit" ? "Risk updated successfully" : "Risk created successfully");
         onOpenChange(false);
         router.refresh();
       } else {
@@ -585,19 +383,9 @@ export function MultiStepRiskForm({
   };
 
   const handleNext = () => {
-    if (currentStep === 1) {
-      handleStepOne();
-    } else if (currentStep === 2) {
-      handleStepTwo();
-    } else if (currentStep === 3) {
-      handleStepThree();
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep === 1) handleStepOne();
+    else if (currentStep === 2) handleStepTwo();
+    else if (currentStep === 3) handleStepThree();
   };
 
   const canProceed = () => {
@@ -610,71 +398,13 @@ export function MultiStepRiskForm({
       );
     }
     if (currentStep === 2) {
-      return true;
+      return !!stepTwoData.risk_matrix_id;
     }
     if (currentStep === 3) {
       return stepThreeData.risk_owner_id && stepThreeData.treatment_plan;
     }
     return false;
   };
-
-  const getUserDisplayName = (user: User) => {
-    const fullName = `${user.first_name} ${user.last_name}`.trim();
-    return fullName || user.username || user.email;
-  };
-
-  const transformedUsers = users.map((user) => ({
-    id: user.id,
-    name: getUserDisplayName(user)
-  }));
-
-  const getRiskLevel = (score: number) => {
-    if (score >= 15) return { label: "Critical", color: "text-red-600" };
-    if (score >= 10) return { label: "High", color: "text-orange-600" };
-    if (score >= 5) return { label: "Medium", color: "text-yellow-600" };
-    return { label: "Low", color: "text-green-600" };
-  };
-
-  const inherentScore = stepTwoData.inherent_likelihood * stepTwoData.inherent_impact;
-  const residualScore = stepThreeData.residual_likelihood * stepThreeData.residual_impact;
-  const inherentLevel = getRiskLevel(inherentScore);
-  const residualLevel = getRiskLevel(residualScore);
-
-  const handleMatrixChange = (matrixId: string) => {
-    const matrix = riskMatrices.find((m) => m.id === matrixId);
-    if (matrix) {
-      setSelectedMatrix(matrix);
-      setStepTwoData((prev) => ({
-        ...prev,
-        risk_matrix_id: matrixId,
-        // Reset to middle values of the new range
-        inherent_likelihood: Math.ceil(
-          (matrix.likelihood_min || 1 + matrix?.likelihood_max || 5) / 2
-        ),
-        inherent_impact: Math.ceil((matrix.impact_min || 1 + matrix?.impact_max || 5) / 2)
-      }));
-      setStepThreeData((prev) => ({
-        ...prev,
-        residual_likelihood: Math.ceil(
-          (matrix.likelihood_min || 1 + matrix?.likelihood_max || 5) / 2
-        ),
-        residual_impact: Math.ceil((matrix.impact_min || 1 + matrix?.impact_max || 5) / 2)
-      }));
-    }
-  };
-
-  const getLikelihoodRange = () => ({
-    min: selectedMatrix?.likelihood_min || 1,
-    max: selectedMatrix?.likelihood_max || 5
-  });
-
-  const getImpactRange = () => ({
-    min: selectedMatrix?.impact_min || 1,
-    max: selectedMatrix?.impact_max || 5
-  });
-
-  const likelihoodRange = getLikelihoodRange();
-  const impactRange = getImpactRange();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -690,524 +420,74 @@ export function MultiStepRiskForm({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress Indicator */}
-        <div className="flex w-full items-center justify-between">
-          {[1, 2, 3].map((step) => (
-            <Fragment key={step}>
-              <div
-                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-                  step <= currentStep
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                } font-semibold`}>
-                {step}
-              </div>
-              {step < 3 && (
-                <div
-                  className={`mx-2 h-1 flex-1 ${step < currentStep ? "bg-primary" : "bg-muted"}`}
-                />
-              )}
-            </Fragment>
-          ))}
-        </div>
+        <StepProgressIndicator
+          currentStep={currentStep}
+          totalSteps={3}
+          mode={mode}
+          onStepClick={setCurrentStep}
+        />
 
         <div className="space-y-4 py-4">
-          {/* Step 1: Risk Details */}
           {currentStep === 1 && (
-            <>
-              <div className="grid gap-2">
-                <Label htmlFor="title">
-                  Risk Title<span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="title"
-                  placeholder="Enter risk title"
-                  value={stepOneData.title}
-                  onChange={(e) => setStepOneData({ ...stepOneData, title: e.target.value })}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="recurrence">
-                  Recurrence<span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={stepOneData.recurrence}
-                  onValueChange={(value) =>
-                    setStepOneData({ ...stepOneData, recurrence: value as "ongoing" | "one-time" })
-                  }
-                  disabled={isLoading}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ongoing">Ongoing</SelectItem>
-                    <SelectItem value="one-time">One-time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="description">
-                  Description <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe the risk in detail"
-                  rows={3}
-                  value={stepOneData.description}
-                  onChange={(e) => setStepOneData({ ...stepOneData, description: e.target.value })}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <SearchSelectField
-                    label="Department"
-                    required
-                    placeholder="Select department"
-                    options={departments}
-                    value={stepOneData.department_id}
-                    onValueChange={(value) =>
-                      setStepOneData({ ...stepOneData, department_id: value })
-                    }
-                    isLoading={loadingDepartments}
-                    isDisabled={isLoading || loadingDepartments}
-                    classNames={{ wrapper: "max-w-full" }}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <SearchSelectField
-                    label="Risk Category"
-                    required
-                    placeholder="Select category"
-                    options={categories}
-                    value={stepOneData.category_id}
-                    onValueChange={(value) =>
-                      setStepOneData({ ...stepOneData, category_id: value })
-                    }
-                    isLoading={loadingCategories}
-                    isDisabled={isLoading || loadingCategories}
-                    classNames={{ wrapper: "max-w-full" }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <SearchSelectField
-                    label="Macro Process"
-                    required
-                    placeholder="Select macro process"
-                    options={businessProcesses}
-                    value={stepOneData.macro_process_id}
-                    onValueChange={(value) =>
-                      setStepOneData({ ...stepOneData, macro_process_id: value })
-                    }
-                    isLoading={loadingProcesses}
-                    isDisabled={isLoading || loadingProcesses}
-                    classNames={{ wrapper: "max-w-full" }}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <SearchSelectField
-                    label="Sub Process"
-                    required
-                    placeholder={
-                      !stepOneData.macro_process_id
-                        ? "Select macro process first"
-                        : "Select sub process"
-                    }
-                    options={availableSubProcesses}
-                    value={stepOneData.sub_process_id}
-                    onValueChange={(value) =>
-                      setStepOneData({ ...stepOneData, sub_process_id: value })
-                    }
-                    isLoading={loadingProcesses}
-                    isDisabled={isLoading || loadingProcesses || !stepOneData.macro_process_id}
-                    classNames={{ wrapper: "max-w-full" }}
-                    descriptionText={
-                      !stepOneData.macro_process_id
-                        ? "Please select a macro process first"
-                        : undefined
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <SearchSelectField
-                  label="Strategic Objective"
-                  required
-                  placeholder="Select strategic objective"
-                  options={pillars}
-                  value={stepOneData.strategic_objective_id}
-                  onValueChange={(value) =>
-                    setStepOneData({ ...stepOneData, strategic_objective_id: value })
-                  }
-                  isLoading={loadingPillars}
-                  isDisabled={isLoading || loadingPillars}
-                  classNames={{ wrapper: "max-w-full" }}
-                  listItemName="title"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="root_cause">
-                  Root Cause<span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="root_cause"
-                  placeholder="Describe the underlying cause of this risk"
-                  rows={2}
-                  value={stepOneData.root_cause}
-                  onChange={(e) => setStepOneData({ ...stepOneData, root_cause: e.target.value })}
-                  disabled={isLoading}
-                />
-              </div>
-            </>
+            <StepOne
+              data={stepOneData}
+              onChange={(updates) => setStepOneData({ ...stepOneData, ...updates })}
+              departments={departments}
+              categories={categories}
+              businessProcesses={businessProcesses}
+              availableSubProcesses={availableSubProcesses}
+              pillars={pillars}
+              isLoading={isLoading}
+              loadingDepartments={loadingDepartments}
+              loadingCategories={loadingCategories}
+              loadingProcesses={loadingProcesses}
+              loadingPillars={loadingPillars}
+            />
           )}
 
-          {/* Step 2: Evaluation */}
-          {currentStep === 2 && (
-            <>
-              <div className="space-y-4 rounded-lg border p-4">
-                <h3 className="font-semibold">Inherent Risk Assessment</h3>
-                <p className="text-muted-foreground text-sm">
-                  Assess the risk before considering any controls
-                </p>
-
-                <div className="grid gap-2">
-                  <SearchSelectField
-                    label="Risk Matrix"
-                    required
-                    placeholder="Select risk matrix"
-                    options={riskMatrices}
-                    value={stepTwoData.risk_matrix_id}
-                    onValueChange={handleMatrixChange}
-                    isLoading={loadingMatrices}
-                    isDisabled={isLoading || loadingMatrices}
-                    classNames={{ wrapper: "max-w-full" }}
-                    descriptionText={
-                      selectedMatrix
-                        ? `Likelihood: ${selectedMatrix.likelihood_min || 1}-${selectedMatrix.likelihood_max || 5}, Impact: ${selectedMatrix.impact_min || 1}-${selectedMatrix.impact_max || 5}`
-                        : "Select a matrix to define risk assessment ranges"
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="inherent_likelihood">
-                      Likelihood ({`${likelihoodRange.min}-${likelihoodRange.max}`})
-                      <span className="text-muted-foreground ml-2 text-sm">
-                        {stepTwoData.inherent_likelihood}
-                      </span>
-                    </Label>
-                    <Slider
-                      id="inherent_likelihood"
-                      min={likelihoodRange.min}
-                      max={likelihoodRange.max}
-                      step={1}
-                      value={[stepTwoData.inherent_likelihood]}
-                      onValueChange={(value) =>
-                        setStepTwoData({
-                          ...stepTwoData,
-                          inherent_likelihood: value[0]
-                        })
-                      }
-                      className="w-full"
-                      disabled={isLoading || !stepTwoData.risk_matrix_id}
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      {likelihoodRange.min} = Rare, {likelihoodRange.max} = Almost Certain
-                    </p>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="inherent_impact">
-                      Impact ({`${impactRange.min}-${impactRange.max}`})
-                      <span className="text-muted-foreground ml-2 text-sm">
-                        {stepTwoData.inherent_impact}
-                      </span>
-                    </Label>
-                    <Slider
-                      id="inherent_impact"
-                      min={impactRange.min}
-                      max={impactRange.max}
-                      step={1}
-                      value={[stepTwoData.inherent_impact]}
-                      onValueChange={(value) =>
-                        setStepTwoData({
-                          ...stepTwoData,
-                          inherent_impact: value[0]
-                        })
-                      }
-                      className="w-full"
-                      disabled={isLoading || !stepTwoData.risk_matrix_id}
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      {impactRange.min} = Insignificant, {impactRange.max} = Catastrophic
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
-                  <div>
-                    <span className="text-sm font-medium">Inherent Score:</span>
-                    <span className="ml-2 text-xl font-bold">{inherentScore}</span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium">Level:</span>
-                    <span className={`ml-2 font-semibold ${inherentLevel.color}`}>
-                      {inherentLevel.label}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="existing_controls">Existing Controls</Label>
-                <Textarea
-                  id="existing_controls"
-                  placeholder="Describe current controls in place (optional)"
-                  rows={3}
-                  value={stepTwoData.existing_controls}
-                  onChange={(e) =>
-                    setStepTwoData({ ...stepTwoData, existing_controls: e.target.value })
-                  }
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="control_effectiveness">Control Effectiveness</Label>
-                <Select
-                  value={String(stepTwoData.control_effectiveness)}
-                  onValueChange={(value) =>
-                    setStepTwoData({ ...stepTwoData, control_effectiveness: Number(value) })
-                  }
-                  disabled={isLoading}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 - Highly Effective</SelectItem>
-                    <SelectItem value="2">2 - Effective</SelectItem>
-                    <SelectItem value="3">3 - Partially Effective</SelectItem>
-                    <SelectItem value="4">4 - Ineffective</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
+          {currentStep === 1 && (
+            <StepTwo
+              data={stepTwoData}
+              onChange={(updates) => setStepTwoData({ ...stepTwoData, ...updates })}
+              riskMatrices={riskMatrices}
+              selectedMatrix={selectedMatrix}
+              onMatrixChange={handleMatrixChange}
+              likelihoodRange={likelihoodRange}
+              impactRange={impactRange}
+              isLoading={isLoading}
+              loadingMatrices={loadingMatrices}
+            />
           )}
 
-          {/* Step 3: Response Strategy */}
-          {currentStep === 3 && (
-            <>
-              <div className="space-y-4 rounded-lg border p-4">
-                <h3 className="font-semibold">Residual Risk Assessment</h3>
-                <p className="text-muted-foreground text-sm">
-                  Assess the risk after considering planned controls
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="residual_likelihood">
-                      Likelihood (1-5)
-                      <span className="text-muted-foreground ml-2 text-sm">
-                        {stepThreeData.residual_likelihood}
-                      </span>
-                    </Label>
-                    <Slider
-                      id="residual_likelihood"
-                      min={1}
-                      max={5}
-                      step={1}
-                      value={[stepThreeData.residual_likelihood]}
-                      onValueChange={(value) =>
-                        setStepThreeData({
-                          ...stepThreeData,
-                          residual_likelihood: value[0]
-                        })
-                      }
-                      className="w-full"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="residual_impact">
-                      Impact (1-5)
-                      <span className="text-muted-foreground ml-2 text-sm">
-                        {stepThreeData.residual_impact}
-                      </span>
-                    </Label>
-                    <Slider
-                      id="residual_impact"
-                      min={1}
-                      max={5}
-                      step={1}
-                      value={[stepThreeData.residual_impact]}
-                      onValueChange={(value) =>
-                        setStepThreeData({
-                          ...stepThreeData,
-                          residual_impact: value[0]
-                        })
-                      }
-                      className="w-full"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-                <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
-                  <div>
-                    <span className="text-sm font-medium">Residual Score:</span>
-                    <span className="ml-2 text-xl font-bold">{residualScore}</span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium">Level:</span>
-                    <span className={`ml-2 font-semibold ${residualLevel.color}`}>
-                      {residualLevel.label}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="treatment_plan">Treatment Plan *</Label>
-                <Textarea
-                  id="treatment_plan"
-                  placeholder="Describe the risk mitigation strategy"
-                  rows={3}
-                  value={stepThreeData.treatment_plan}
-                  onChange={(e) =>
-                    setStepThreeData({ ...stepThreeData, treatment_plan: e.target.value })
-                  }
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="risk_response">Risk Response</Label>
-                  <Select
-                    value={stepThreeData.risk_response}
-                    onValueChange={(value) =>
-                      setStepThreeData({ ...stepThreeData, risk_response: value as RiskResponse })
-                    }
-                    disabled={isLoading}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="REDUCE">Reduce</SelectItem>
-                      <SelectItem value="ACCEPT">Accept</SelectItem>
-                      <SelectItem value="TRANSFER">Transfer</SelectItem>
-                      <SelectItem value="AVOID">Avoid</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="risk_appetite_status">Risk Appetite Status</Label>
-                  <Select
-                    value={stepThreeData.risk_appetite_status}
-                    onValueChange={(value) =>
-                      setStepThreeData({
-                        ...stepThreeData,
-                        risk_appetite_status: value as "WITHIN" | "ABOVE"
-                      })
-                    }
-                    disabled={isLoading}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="WITHIN">Within Appetite</SelectItem>
-                      <SelectItem value="ABOVE">Above Appetite</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <SearchSelectField
-                  label="Risk Owner"
-                  required
-                  placeholder={
-                    !stepOneData.department_id ? "Select department first" : "Select risk owner"
-                  }
-                  options={transformedUsers}
-                  value={stepThreeData.risk_owner_id}
-                  onValueChange={(value) =>
-                    setStepThreeData({ ...stepThreeData, risk_owner_id: value })
-                  }
-                  isLoading={loadingUsers}
-                  isDisabled={isLoading || loadingUsers || !stepOneData.department_id}
-                  descriptionText={
-                    !stepOneData.department_id
-                      ? "Please select a department in Step 1 to load users"
-                      : undefined
-                  }
-                  classNames={{ wrapper: "max-w-full" }}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="target_closing_date">Target Closing Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !closeDate && "text-muted-foreground"
-                        )}
-                        disabled={isLoading}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {closeDate ? format(closeDate, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={closeDate}
-                        onSelect={(date) => {
-                          if (date) {
-                            setCloseDate(date);
-                            setStepThreeData((prev) => ({
-                              ...prev,
-                              target_closing_date: formatISO(date)
-                            }));
-                          }
-                        }}
-                        disabled={isLoading}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="mitigation_cost">Mitigation Cost</Label>
-                  <Input
-                    id="mitigation_cost"
-                    type="number"
-                    placeholder="0.00"
-                    value={stepThreeData.mitigation_cost || ""}
-                    onChange={(e) =>
-                      setStepThreeData({
-                        ...stepThreeData,
-                        mitigation_cost: parseFloat(e.target.value) || 0
-                      })
-                    }
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-            </>
+          {currentStep === 1 && (
+            <StepThree
+              data={stepThreeData}
+              onChange={(updates) => setStepThreeData({ ...stepThreeData, ...updates })}
+              users={transformedUsers}
+              closeDate={closeDate}
+              onCloseDateChange={(date) => {
+                setCloseDate(date);
+                if (date) {
+                  setStepThreeData({ ...stepThreeData, target_closing_date: formatISO(date) });
+                }
+              }}
+              likelihoodRange={likelihoodRange}
+              impactRange={impactRange}
+              hasMatrixSelected={!!stepTwoData.risk_matrix_id}
+              hasDepartmentSelected={!!stepOneData.department_id}
+              isLoading={isLoading}
+              loadingUsers={loadingUsers}
+            />
           )}
         </div>
 
         <DialogFooter className="gap-2">
           {currentStep > 1 && (
-            <Button type="button" variant="outline" onClick={handleBack} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCurrentStep(currentStep - 1)}
+              disabled={isLoading}>
               <ChevronLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
@@ -1230,8 +510,7 @@ export function MultiStepRiskForm({
               )
             ) : (
               <>
-                Next
-                <ChevronRight className="ml-2 h-4 w-4" />
+                Next <ChevronRight className="ml-2 h-4 w-4" />
               </>
             )}
           </Button>

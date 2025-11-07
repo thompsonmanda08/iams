@@ -128,7 +128,7 @@ export interface RiskStepThreeInput {
   residual_likelihood: number;
   residual_impact: number;
   treatment_plan: string;
-  risk_response: RiskResponse;
+  risk_response: string;
   risk_owner_id: string;
   risk_appetite_status: "WITHIN" | "ABOVE";
   target_closing_date: Date | string;
