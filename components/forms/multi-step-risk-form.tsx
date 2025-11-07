@@ -22,7 +22,11 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { getBusinessProcessesHierarchy, getDepartments } from "@/app/_actions/config-actions";
+import {
+  getBusinessProcessesHierarchy,
+  getDepartments,
+  getRiskMatrices
+} from "@/app/_actions/config-actions";
 import {
   createRiskStepOne,
   updateRiskStepTwo,
@@ -39,14 +43,6 @@ import { getUsers } from "@/app/_actions/user-actions";
 import { SearchSelectField } from "../ui/search-select-field";
 import { getStrategicPillars } from "@/app/_actions/audit-settings-actions";
 import { Slider } from "../ui/slider";
-
-type Department = {
-  id: string;
-  name: string;
-  code: string;
-  description: string;
-  is_active: boolean;
-};
 
 type RiskCategory = {
   id: string;
@@ -78,35 +74,78 @@ type BusinessProcess = {
 
 type Risk = {
   id: string;
-  riskId: string;
+  risk_matrix_id: string;
+  organization_id: string;
   title: string;
   description: string;
-  category: string;
   category_id: string;
   department_id: string;
-  macro_process: string;
-  sub_process: string;
-  strategic_objective: string;
+  matrix_id: string | null;
+  risk_register_id: string;
+  macro_process_id: string;
+  sub_process_id: string;
+  strategic_objective_id: string;
   root_cause: string;
   recurrence: "ongoing" | "one-time";
-  inherentScore: number;
-  inherentImpact: number;
-  inherentLikelihood: number;
-  residualScore: number;
-  residualImpact: number;
-  residualLikelihood: number;
+  step: number;
+  department_status: string;
+  inherent_likelihood: number;
+  inherent_impact: number;
+  inherent_score: number;
+  inherent_rating: string;
+  residual_likelihood: number;
+  residual_impact: number;
+  residual_score: number;
+  residual_rating: string;
   existing_controls: string;
   control_effectiveness: number;
   treatment_plan: string;
-  risk_response: "REDUCE" | "ACCEPT" | "TRANSFER" | "AVOID";
+  risk_response: RiskResponse;
   risk_owner_id: string;
   risk_appetite_status: "WITHIN" | "ABOVE";
   target_closing_date: string;
-  mitigation_cost: number;
-  riskMagnitude: string;
+  revised_target_date: string;
+  date_closed: string;
   status: string;
-  owner: string;
-  step?: number;
+  overdue_days: number;
+  review_date: string;
+  mitigation_cost: number;
+  latest_update: string;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+  category: Category;
+  department: Department;
+};
+
+type Category = {
+  id: string;
+  organization_id: string;
+  department_id: string;
+  name: string;
+  code: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+};
+
+type Department = {
+  id: string;
+  organization_id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  parent_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 };
 
 interface MultiStepRiskFormProps {
@@ -132,6 +171,7 @@ type StepOneData = {
 };
 
 type StepTwoData = {
+  risk_matrix_id: string;
   inherent_likelihood: number;
   inherent_impact: number;
   existing_controls: string;
@@ -157,6 +197,20 @@ type User = {
   username: string;
   department_id: string;
   is_active: boolean;
+};
+
+type RiskMatrix = {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  is_default: boolean;
+  likelihood_min?: number;
+  likelihood_max?: number;
+  impact_min?: number;
+  impact_max?: number;
+  created_at: string;
+  updated_at: string;
 };
 
 export function MultiStepRiskForm({
@@ -193,6 +247,11 @@ export function MultiStepRiskForm({
   const [businessProcesses, setBusinessProcesses] = useState<BusinessProcess[]>([]);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
 
+   // Matrix state
+  const [riskMatrices, setRiskMatrices] = useState<RiskMatrix[]>([]);
+  const [loadingMatrices, setLoadingMatrices] = useState(false);
+  const [selectedMatrix, setSelectedMatrix] = useState<RiskMatrix | null>(null);
+
   const [closeDate, setCloseDate] = useState<Date | undefined>(
     mode === "edit" && riskData?.target_closing_date
       ? parseISO(riskData.target_closing_date)
@@ -205,24 +264,25 @@ export function MultiStepRiskForm({
     description: mode === "edit" && riskData ? riskData.description : "",
     category_id: mode === "edit" && riskData ? riskData.category_id : "",
     department_id: mode === "edit" && riskData ? riskData.department_id : "",
-    macro_process_id: mode === "edit" && riskData ? riskData.macro_process : "",
-    sub_process_id: mode === "edit" && riskData ? riskData.sub_process : "",
-    strategic_objective_id: mode === "edit" && riskData ? riskData.strategic_objective : "",
+    macro_process_id: mode === "edit" && riskData ? riskData.macro_process_id : "",
+    sub_process_id: mode === "edit" && riskData ? riskData.sub_process_id : "",
+    strategic_objective_id: mode === "edit" && riskData ? riskData.strategic_objective_id : "",
     root_cause: mode === "edit" && riskData ? riskData.root_cause : "",
     recurrence: mode === "edit" && riskData ? riskData.recurrence : "ongoing",
     status: mode === "edit" && riskData ? riskData.status.toUpperCase() : ""
   });
 
   const [stepTwoData, setStepTwoData] = useState<StepTwoData>({
-    inherent_likelihood: mode === "edit" && riskData ? riskData.inherentLikelihood : 3,
-    inherent_impact: mode === "edit" && riskData ? riskData.inherentImpact : 3,
+    risk_matrix_id: mode === "edit" && riskData ? riskData.risk_matrix_id : "",
+    inherent_likelihood: mode === "edit" && riskData ? riskData.inherent_likelihood : 3,
+    inherent_impact: mode === "edit" && riskData ? riskData.inherent_impact : 3,
     existing_controls: mode === "edit" && riskData ? riskData.existing_controls : "",
     control_effectiveness: mode === "edit" && riskData ? riskData.control_effectiveness : 2
   });
 
   const [stepThreeData, setStepThreeData] = useState<StepThreeData>({
-    residual_likelihood: mode === "edit" && riskData ? riskData.residualLikelihood : 2,
-    residual_impact: mode === "edit" && riskData ? riskData.residualImpact : 2,
+    residual_likelihood: mode === "edit" && riskData ? riskData.residual_likelihood : 2,
+    residual_impact: mode === "edit" && riskData ? riskData.residual_impact : 2,
     treatment_plan: mode === "edit" && riskData ? riskData.treatment_plan : "",
     risk_response: mode === "edit" && riskData ? riskData.risk_response : "REDUCE",
     risk_owner_id: mode === "edit" && riskData ? riskData.risk_owner_id : "",
@@ -245,6 +305,7 @@ export function MultiStepRiskForm({
     if (open) {
       loadDepartments();
       loadProcesses();
+      loadRiskMatrices();
       if (stepOneData.department_id) {
         loadCategories(stepOneData.department_id);
         loadPillars(stepOneData.department_id);
@@ -385,6 +446,32 @@ export function MultiStepRiskForm({
     }
   };
 
+  const loadRiskMatrices = async () => {
+    setLoadingMatrices(true);
+    try {
+      const response = await getRiskMatrices();
+      if (response.success && response.data?.data) {
+        setRiskMatrices(response.data.data);
+
+        // If in edit mode and risk has a matrix, select it
+        if (mode === "edit" && riskData?.risk_matrix_id) {
+          const matrix = response.data.data.find(
+            (m: RiskMatrix) => m.id === riskData.risk_matrix_id
+          );
+          if (matrix) {
+            setSelectedMatrix(matrix);
+          }
+        }
+      } else {
+        toast.error("Failed to load risk matrices");
+      }
+    } catch (error) {
+      toast.error("Error loading risk matrices");
+    } finally {
+      setLoadingMatrices(false);
+    }
+  };
+
   const resetForm = () => {
     setStepOneData({
       title: "",
@@ -401,7 +488,8 @@ export function MultiStepRiskForm({
       inherent_likelihood: 3,
       inherent_impact: 3,
       existing_controls: "",
-      control_effectiveness: 2
+      control_effectiveness: 2,
+      risk_matrix_id: ""
     });
     setStepThreeData({
       residual_likelihood: 2,
@@ -437,6 +525,7 @@ export function MultiStepRiskForm({
           setCreatedRiskId(response.data.id);
           toast.success("Step 1 completed - Risk details saved");
           setCurrentStep(2);
+          updateRisk(response.data.id, stepOneData);
         } else {
           toast.error(response.message || "Failed to create risk");
         }
@@ -550,6 +639,42 @@ export function MultiStepRiskForm({
   const residualScore = stepThreeData.residual_likelihood * stepThreeData.residual_impact;
   const inherentLevel = getRiskLevel(inherentScore);
   const residualLevel = getRiskLevel(residualScore);
+
+  const handleMatrixChange = (matrixId: string) => {
+    const matrix = riskMatrices.find((m) => m.id === matrixId);
+    if (matrix) {
+      setSelectedMatrix(matrix);
+      setStepTwoData((prev) => ({
+        ...prev,
+        risk_matrix_id: matrixId,
+        // Reset to middle values of the new range
+        inherent_likelihood: Math.ceil(
+          (matrix.likelihood_min || 1 + matrix?.likelihood_max || 5) / 2
+        ),
+        inherent_impact: Math.ceil((matrix.impact_min || 1 + matrix?.impact_max || 5) / 2)
+      }));
+      setStepThreeData((prev) => ({
+        ...prev,
+        residual_likelihood: Math.ceil(
+          (matrix.likelihood_min || 1 + matrix?.likelihood_max || 5) / 2
+        ),
+        residual_impact: Math.ceil((matrix.impact_min || 1 + matrix?.impact_max || 5) / 2)
+      }));
+    }
+  };
+
+  const getLikelihoodRange = () => ({
+    min: selectedMatrix?.likelihood_min || 1,
+    max: selectedMatrix?.likelihood_max || 5
+  });
+
+  const getImpactRange = () => ({
+    min: selectedMatrix?.impact_min || 1,
+    max: selectedMatrix?.impact_max || 5
+  });
+
+  const likelihoodRange = getLikelihoodRange();
+  const impactRange = getImpactRange();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -753,18 +878,37 @@ export function MultiStepRiskForm({
                 <p className="text-muted-foreground text-sm">
                   Assess the risk before considering any controls
                 </p>
+
+                <div className="grid gap-2">
+                  <SearchSelectField
+                    label="Risk Matrix"
+                    required
+                    placeholder="Select risk matrix"
+                    options={riskMatrices}
+                    value={stepTwoData.risk_matrix_id}
+                    onValueChange={handleMatrixChange}
+                    isLoading={loadingMatrices}
+                    isDisabled={isLoading || loadingMatrices}
+                    classNames={{ wrapper: "max-w-full" }}
+                    descriptionText={
+                      selectedMatrix
+                        ? `Likelihood: ${selectedMatrix.likelihood_min || 1}-${selectedMatrix.likelihood_max || 5}, Impact: ${selectedMatrix.impact_min || 1}-${selectedMatrix.impact_max || 5}`
+                        : "Select a matrix to define risk assessment ranges"
+                    }
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="inherent_likelihood">
-                      Likelihood (1-5)
+                      Likelihood ({`${likelihoodRange.min}-${likelihoodRange.max}`})
                       <span className="text-muted-foreground ml-2 text-sm">
                         {stepTwoData.inherent_likelihood}
                       </span>
                     </Label>
                     <Slider
                       id="inherent_likelihood"
-                      min={1}
-                      max={5}
+                      min={likelihoodRange.min}
+                      max={likelihoodRange.max}
                       step={1}
                       value={[stepTwoData.inherent_likelihood]}
                       onValueChange={(value) =>
@@ -774,21 +918,23 @@ export function MultiStepRiskForm({
                         })
                       }
                       className="w-full"
-                      disabled={isLoading}
+                      disabled={isLoading || !stepTwoData.risk_matrix_id}
                     />
-                    <p className="text-muted-foreground text-xs">1 = Rare, 5 = Almost Certain</p>
+                    <p className="text-muted-foreground text-xs">
+                      {likelihoodRange.min} = Rare, {likelihoodRange.max} = Almost Certain
+                    </p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="inherent_impact">
-                      Impact (1-5)
+                      Impact ({`${impactRange.min}-${impactRange.max}`})
                       <span className="text-muted-foreground ml-2 text-sm">
                         {stepTwoData.inherent_impact}
                       </span>
                     </Label>
                     <Slider
                       id="inherent_impact"
-                      min={1}
-                      max={5}
+                      min={impactRange.min}
+                      max={impactRange.max}
                       step={1}
                       value={[stepTwoData.inherent_impact]}
                       onValueChange={(value) =>
@@ -798,10 +944,10 @@ export function MultiStepRiskForm({
                         })
                       }
                       className="w-full"
-                      disabled={isLoading}
+                      disabled={isLoading || !stepTwoData.risk_matrix_id}
                     />
                     <p className="text-muted-foreground text-xs">
-                      1 = Insignificant, 5 = Catastrophic
+                      {impactRange.min} = Insignificant, {impactRange.max} = Catastrophic
                     </p>
                   </div>
                 </div>
@@ -856,7 +1002,7 @@ export function MultiStepRiskForm({
           )}
 
           {/* Step 3: Response Strategy */}
-          {currentStep === 3&& (
+          {currentStep === 3 && (
             <>
               <div className="space-y-4 rounded-lg border p-4">
                 <h3 className="font-semibold">Residual Risk Assessment</h3>

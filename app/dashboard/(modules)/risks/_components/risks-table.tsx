@@ -21,7 +21,7 @@ import {
 import { Trash2, View, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { deleteRisk } from "@/app/_actions/risk-module-actions";
+import { deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
@@ -29,35 +29,84 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 
 type Risk = {
   id: string;
-  riskId: string;
+  risk_matrix_id: string;
+  organization_id: string;
   title: string;
   description: string;
-  category: string;
   category_id: string;
   department_id: string;
-  macro_process: string;
-  sub_process: string;
-  strategic_objective: string;
+  matrix_id: string;
+  risk_register_id: string;
+  macro_process_id: string;
+  sub_process_id: string;
+  strategic_objective_id: string;
   root_cause: string;
   recurrence: "ongoing" | "one-time";
-  inherentScore: number;
-  inherentImpact: number;
-  inherentLikelihood: number;
-  residualScore: number;
-  residualImpact: number;
-  residualLikelihood: number;
+  step: number;
+  department_status: string;
+  inherent_likelihood: number;
+  inherent_impact: number;
+  risk_magnitude: string;
+  inherent_score: number;
+  inherent_rating: string;
+  residual_likelihood: number;
+  residual_impact: number;
+  residual_score: number;
+  residual_rating: string;
   existing_controls: string;
   control_effectiveness: number;
   treatment_plan: string;
-  risk_response: "REDUCE" | "ACCEPT" | "TRANSFER" | "AVOID";
+  risk_response: RiskResponse;
   risk_owner_id: string;
   risk_appetite_status: "WITHIN" | "ABOVE";
   target_closing_date: string;
-  mitigation_cost: number;
-  riskMagnitude: string;
+  revised_target_date: string;
+  date_closed: string;
   status: string;
-  owner: string;
-  step?: number;
+  overdue_days: number;
+  review_date: string;
+  mitigation_cost: number;
+  latest_update: string;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+  category: Category;
+  department: Department;
+  owner: Owner;
+};
+
+type Category = {
+  id: string;
+  organization_id: string;
+  department_id: string;
+  name: string;
+  code: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+};
+type Owner = {
+  id: string;
+  name: string;
+};
+
+type Department = {
+  id: string;
+  organization_id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  parent_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 };
 
 type Meta = {
@@ -276,7 +325,7 @@ export default function RisksTable({
               risks?.map((risk) => (
                 <TableRow key={risk.id}>
                   <TableCell>
-                    <span className="font-mono text-sm font-medium">{risk.riskId}</span>
+                    <span className="font-mono text-sm font-medium uppercase">{`${risk.category.code}-${risk.id.slice(0, 4)}`}</span>
                   </TableCell>
                   <TableCell>
                     <div>
@@ -288,7 +337,7 @@ export default function RisksTable({
                   </TableCell>
                   <TableCell>
                     <span className="block max-w-[200px] text-sm break-all whitespace-normal">
-                      {risk.category}
+                      {risk.category.name}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -296,12 +345,12 @@ export default function RisksTable({
                       <span
                         className={cn(
                           "text-sm font-semibold",
-                          getRiskScoreColor(risk.inherentScore)
+                          getRiskScoreColor(risk.inherent_score || 0)
                         )}>
-                        {risk.inherentScore}
+                        {risk.inherent_score || 0}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        ({risk.inherentImpact}×{risk.inherentLikelihood})
+                        ({risk.inherent_impact || 0}×{risk.inherent_likelihood || 0})
                       </span>
                     </div>
                   </TableCell>
@@ -310,12 +359,12 @@ export default function RisksTable({
                       <span
                         className={cn(
                           "text-sm font-semibold",
-                          getRiskScoreColor(risk.residualScore)
+                          getRiskScoreColor(risk.residual_score || 0)
                         )}>
-                        {risk.residualScore}
+                        {risk.residual_score || 0}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        ({risk.residualImpact}×{risk.residualLikelihood})
+                        ({risk.residual_impact || 0}×{risk.residual_likelihood || 0})
                       </span>
                     </div>
                   </TableCell>
@@ -323,9 +372,9 @@ export default function RisksTable({
                     <span
                       className={cn(
                         "rounded-full px-2 py-1 text-xs font-medium capitalize",
-                        getMagnitudeColor(risk.riskMagnitude)
+                        getMagnitudeColor(risk?.risk_magnitude)
                       )}>
-                      {risk.riskMagnitude}
+                      {risk.inherent_score || "N/A"}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -338,7 +387,7 @@ export default function RisksTable({
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{risk.owner}</span>
+                    <span className="text-sm">{risk?.owner?.name || "Unassinged"}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">

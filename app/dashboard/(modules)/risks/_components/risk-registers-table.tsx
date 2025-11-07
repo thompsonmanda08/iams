@@ -211,7 +211,7 @@ export default function RiskRegistersTable({
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Timeline</TableHead>
-              <TableHead>Created At</TableHead>
+              <TableHead>Created Date</TableHead>
               <TableHead className="text-right">Options</TableHead>
             </TableRow>
           </TableHeader>
