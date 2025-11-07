@@ -320,8 +320,8 @@ export default function KRIRegistersClient({
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead>Last Updated</TableHead>
+                <TableHead>Created Date</TableHead>
+                <TableHead>Last Updated Date</TableHead>
                 <TableHead className="text-right">Options</TableHead>
               </TableRow>
             </TableHeader>
