@@ -94,6 +94,8 @@ export function DatePicker({
             selected={value}
             disabled={disabledDates || (isDisabled || props?.disabled)}
             captionLayout="dropdown"
+            startMonth={new Date(1900, 0)}
+            endMonth={new Date(2099, 11)}
             onSelect={(date) => {
               onValueChange && onValueChange(date);
               setOpen(false);
