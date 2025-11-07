@@ -61,12 +61,10 @@ const INIT_FORM_DATA: Omit<TargetFormData, "id"> = {
 
 export default function IndicativeTargetsTab({
   targets = [],
-  pagination,
-  departments = []
+  pagination
 }: {
   targets: any[];
   pagination?: Pagination;
-  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<Omit<TargetFormData, "id"> | null>(INIT_FORM_DATA);
@@ -74,6 +72,14 @@ export default function IndicativeTargetsTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [items, setItems] = useState<TargetFormData[]>(targets);
+
+  const { data } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+
+  const departments = (data?.data?.data || []) as Department[];
 
   useEffect(() => {
     setItems(targets);
@@ -300,7 +306,6 @@ export function CreateOrUpdate({
   });
 
   const { data } = useDepartments({
-    is_active: true,
     page_size: 100,
     page: 1
   });

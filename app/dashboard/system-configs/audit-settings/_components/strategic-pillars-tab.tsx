@@ -61,12 +61,10 @@ const INIT_FORM_DATA: PillarFormData = {
 
 export default function StrategicPillarsTab({
   pillars = [],
-  departments = [],
   pagination
 }: {
   pillars: AuditConfigurableItem[];
   pagination?: Pagination;
-  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<PillarFormData | null>(INIT_FORM_DATA);
@@ -74,6 +72,14 @@ export default function StrategicPillarsTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [items, setItems] = useState<AuditConfigurableItem[]>(pillars);
+
+  const { data } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+
+  const departments = (data?.data?.data || []) as Department[];
 
   useEffect(() => {
     setItems(pillars);

@@ -65,25 +65,29 @@ const INIT_FORM_DATA: InitiativeFormData = {
   end_date: new Date().toISOString()
 };
 
-export default function StrategicInitiativeTab({
-  // initiatives = [],
-  // pagination
-  departments
-}: {
-  initiatives: AuditConfigurableItem[];
-  pagination?: Pagination;
-  departments: Department[];
-}) {
+export default function StrategicInitiativeTab(
+  {
+    // initiatives = [],
+    // pagination
+    // departments
+  }: {
+    initiatives: AuditConfigurableItem[];
+    pagination?: Pagination;
+    departments: Department[];
+  }
+) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<InitiativeFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // const [items, setItems] = useState<AuditConfigurableItem[]>(initiatives);
+  const { data } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
 
-  // useEffect(() => {
-  //   setItems(initiatives);
-  // }, [initiatives]);
+  const departments = (data?.data?.data || []) as Department[];
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -121,7 +125,7 @@ export default function StrategicInitiativeTab({
   const [pillarId, setPillarId] = useState<string | null>(null);
 
   const { data: initiativesResponse, isLoading: loadingInitiatives } = useStrategicInitiatives(
-    pillarId || undefined,
+    pillarId || "",
     { page: 1, page_size: 100 }
   );
 
@@ -144,7 +148,7 @@ export default function StrategicInitiativeTab({
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : "No department assigned - Global";
+    return department ? department.name : "No parent department";
   };
 
   const selectedPillar = useMemo(() => {
@@ -153,7 +157,7 @@ export default function StrategicInitiativeTab({
   }, [pillarId, pillars]);
 
   const departmentName = useMemo(() => {
-    if (!selectedPillar) return "No department assigned - Global";
+    if (!selectedPillar) return "No parent department";
     return getDepartmentName(selectedPillar.department_id);
   }, [selectedPillar]);
 
@@ -201,8 +205,8 @@ export default function StrategicInitiativeTab({
             <TableHeader>
               <TableRow>
                 <TableHead>Strategic Initiative</TableHead>
-                <TableHead>Strategic Pillar</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Strategic Pillar</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead className="w-24" align="center">
                   Actions
@@ -256,11 +260,16 @@ export default function StrategicInitiativeTab({
                 initiatives.map((item: any) => {
                   return (
                     <TableRow key={item.id} className="cursor-pointer">
-                      <TableCell>
-                        <div className="flex items-center gap-2">
+                      <TableCell className="p-3 align-top">
+                        <div className="flex min-w-0 items-start gap-2">
                           <Lightbulb className="text-muted-foreground h-4 w-4" />
                           <span className="font-medium">{item.title}</span>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {item.description || "No description provided"}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-sm">
@@ -269,13 +278,9 @@ export default function StrategicInitiativeTab({
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-sm">
-                          {item.description || "No description provided"}
+                          {item?.department_name || departmentName}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{departmentName}</span>
-                      </TableCell>
-
                       <TableCell align="center">
                         <div className="flex justify-end gap-2">
                           <Button
