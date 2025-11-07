@@ -111,7 +111,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     // departments,
     // indicativeTargets
     // findingsCategories
-    processActivities
+    // processActivities
   });
 
   return (

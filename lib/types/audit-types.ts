@@ -887,7 +887,7 @@ export interface ClauseInfo {
   description?: string;
 }
 
-export type BudgetStatus = "BUDGET_CREATION" | "UNDER_REVIEW" | "APPROVED"| "DRAFT";
+export type BudgetStatus = "BUDGET_CREATION" | "UNDER_REVIEW" | "APPROVED" | "DRAFT";
 
 export interface BudgetLine {
   id?: string;

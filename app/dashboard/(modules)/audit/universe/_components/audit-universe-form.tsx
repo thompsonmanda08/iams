@@ -28,11 +28,13 @@ import {
   useStrategicInitiatives,
   useIndicativeTargets,
   useUniverses,
-  useUniverseItems
+  useUniverseItems,
+  useProcessActivities
 } from "@/hooks/use-audit-settings-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
 import { useRisks } from "@/hooks/use-risk-query-data";
 import { SelectField } from "@/components/ui/select-field";
+import { SearchSelectField } from "@/components/ui/search-select-field";
 import {
   Empty,
   EmptyHeader,
@@ -45,12 +47,14 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const AUDIT_FREQUENCIES = ["ANNUALLY", "QUARTERLY", "MONTHLY", "AS_NEEDED"];
+const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
 interface UniverseFormData {
   universe_name: string;
   start_date: Date | undefined;
   end_date: Date | undefined;
+  department_id?: string;
+  auditable_area_id?: string;
   is_active: boolean;
 }
 
@@ -71,6 +75,8 @@ const INIT_UNIVERSE_DATA: UniverseFormData = {
   universe_name: "",
   start_date: undefined,
   end_date: undefined,
+  department_id: undefined,
+  auditable_area_id: undefined,
   is_active: true
 };
 
@@ -130,35 +136,45 @@ export default function AuditUniverseForm({
     page_size: 100,
     page: 1
   });
-  const departmentsData = mode === "item" ? (departmentsResponse?.data?.data || []) : [];
 
-  const { data: auditableAreasResponse } = useAuditableAreas();
-  const auditableAreasData = mode === "item" ? (auditableAreasResponse?.data || []) : [];
+  const departmentsData = departmentsResponse?.data?.data || [];
+
+  const { data: auditableAreasResponse } = useAuditableAreas({
+    department_id: universeData.department_id
+    // page_size: 100,
+    // page: 1
+  });
+  const auditableAreasData = auditableAreasResponse?.data || [];
 
   const { data: strategicPillarsResponse } = useStrategicPillars();
-  const strategicPillarsData = mode === "item" ? (strategicPillarsResponse?.data || []) : [];
+  const strategicPillarsData = mode === "item" ? strategicPillarsResponse?.data || [] : [];
 
   const { data: strategicInitiativesResponse } = useStrategicInitiatives(
     mode === "item" && itemData.strategic_pillar_id ? itemData.strategic_pillar_id : undefined
   );
-  const strategicInitiativesData = mode === "item" ? (strategicInitiativesResponse?.data || []) : [];
+  const strategicInitiativesData = mode === "item" ? strategicInitiativesResponse?.data || [] : [];
 
   const { data: indicativeTargetsResponse } = useIndicativeTargets();
-  const indicativeTargetsData = mode === "item" ? (indicativeTargetsResponse?.data || []) : [];
+  const indicativeTargetsData = mode === "item" ? indicativeTargetsResponse?.data || [] : [];
 
   const { data: risksResponse } = useRisks();
-  const risksData = mode === "item" ? (risksResponse?.data || []) : [];
+  const risksData = mode === "item" ? risksResponse?.data || [] : [];
+
+  const { data: processActivitiesResponse } = useProcessActivities();
+  const processActivitiesData = mode === "item" ? processActivitiesResponse?.data || [] : [];
 
   // Fetch universes dynamically for the dropdown
   const { data: universesResponse } = useUniverses();
-  const universesData = mode === "item" ? (universesResponse?.data || universes) : [];
+  const universesData = mode === "item" ? universesResponse?.data || universes : [];
+
+  console.log("Universes", universesResponse);
 
   // Fetch universe items for the selected universe
-  const universeIdForItems = mode === "item" && itemData.audit_universe_id
-    ? String(itemData.audit_universe_id)
-    : undefined;
-  const { data: universeItemsResponse, isLoading: isLoadingItems } = useUniverseItems(universeIdForItems);
-  const universeItemsData = mode === "item" ? (universeItemsResponse?.data || []) : [];
+  const universeIdForItems =
+    mode === "item" && itemData.audit_universe_id ? String(itemData.audit_universe_id) : undefined;
+  const { data: universeItemsResponse, isLoading: isLoadingItems } =
+    useUniverseItems(universeIdForItems);
+  const universeItemsData = mode === "item" ? universeItemsResponse?.data || [] : [];
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -337,6 +353,13 @@ export default function AuditUniverseForm({
     }));
   }, [strategicInitiativesData]);
 
+  const processActivitiesOptions = useMemo(() => {
+    return processActivitiesData?.map((activity: any) => ({
+      id: activity.id,
+      name: activity.name || activity.title || activity.process_activity
+    }));
+  }, [processActivitiesData]);
+
   if (mode === "item") {
     // Show Empty state if no universes exist
     if (universeOptions.length === 0) {
@@ -427,19 +450,19 @@ export default function AuditUniverseForm({
                 </div>
 
                 {/* Process/Activity - Full Width */}
-                <div className="space-y-2">
-                  <Label htmlFor="process_activity" className="text-sm font-medium">
-                    Process/Activity <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="process_activity"
-                    value={itemData.process_activity}
-                    onChange={(e) => updateItemData({ process_activity: e.target.value })}
-                    placeholder="e.g., Information security policy"
-                    required
-                    className="w-full"
-                  />
-                </div>
+                <SearchSelectField
+                  id="process_activity"
+                  label="Process/Activity"
+                  required
+                  className="w-full max-w-none"
+                  classNames={{
+                    wrapper: "w-full max-w-none"
+                  }}
+                  placeholder="Search and select a process/activity..."
+                  options={processActivitiesOptions || []}
+                  value={itemData.process_activity}
+                  onValueChange={(value) => updateItemData({ process_activity: value })}
+                />
               </div>
 
               {/* Audit Configuration */}
@@ -742,11 +765,10 @@ export default function AuditUniverseForm({
           {/* Active Checkbox */}
           <div className="pt-2">
             <div className="bg-muted/30 hover:bg-muted/50 flex items-center space-x-3 rounded-lg border p-4 transition-colors">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="is_active"
                 checked={universeData.is_active}
-                onChange={(e) => updateUniverseData({ is_active: e.target.checked })}
+                onCheckedChange={(checked) => updateUniverseData({ is_active: Boolean(checked) })}
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
               />
               <Label

@@ -10,7 +10,8 @@ import {
   FileText,
   CheckCircle2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ClipboardCheckIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,6 +32,8 @@ import { notify } from "@/lib/utils";
 import { useTeamMembers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { MultiSelectField } from "@/components/ui/multi-select-field";
+import PageHeader from "@/components/page-header";
+import BackButton from "@/components/back-button";
 
 const STEPS = [
   { id: 1, name: "Basic Details", icon: Calendar },
@@ -215,18 +218,13 @@ export default function NewAuditPlanPage() {
       {/* Header */}
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard/audit/plans">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Create New Audit Plan</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Set up a new ISO 27001 audit plan with template and category selection
-              </p>
-            </div>
+          <div className="flex items-center justify-between gap-4">
+            <PageHeader
+              title="New Audit Plan"
+              description="Create a new audit plan and track its progress"
+              Icon={ClipboardCheckIcon}
+            />
+            <BackButton title="Back to plans" />
           </div>
         </div>
       </div>

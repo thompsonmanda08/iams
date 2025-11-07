@@ -83,7 +83,9 @@ export const QUERY_KEYS = {
   PROCESS_ACTIVITIES: "process-activities",
   INDICATIVE_TARGETS: "indicative-targets",
   AUDITABLE_AREAS: "auditable-areas",
-  WORKPAPER_TEMPLATES: "workpaper-templates"
+  WORKPAPER_TEMPLATES: "workpaper-templates",
+  UNIVERSES: "universes",
+  UNIVERSE_ITEMS: "universe-items"
 };
 
 // ANIMATION_VARIANTS
