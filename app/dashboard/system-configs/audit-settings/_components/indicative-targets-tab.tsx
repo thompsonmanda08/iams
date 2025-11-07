@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, Target } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department, ErrorState, Pagination } from "@/lib/types";
@@ -169,7 +169,7 @@ export default function IndicativeTargetsTab({
                   <Empty>
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
-                        <Building />
+                        <Target />
                       </EmptyMedia>
                       <EmptyTitle>No indicative targets yet</EmptyTitle>
                       <EmptyDescription>
@@ -198,7 +198,7 @@ export default function IndicativeTargetsTab({
                   <TableRow key={item.id} className="cursor-pointer">
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Building className="text-muted-foreground h-4 w-4" />
+                        <Target className="text-muted-foreground h-4 w-4" />
                         <span className="font-medium">{item.name}</span>
                       </div>
                     </TableCell>

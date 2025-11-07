@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Target, PencilLine, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2, Target, PencilLine, ShieldAlert, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { AuditConfigurableItem, Department, ErrorState, Pagination } from "@/lib/types";
@@ -167,7 +167,7 @@ export default function StrategicPillarsTab({
                   <Empty>
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
-                        <Target />
+                        <Building2 />
                       </EmptyMedia>
                       <EmptyTitle>No strategic pillars yet</EmptyTitle>
                       <EmptyDescription>
@@ -196,7 +196,7 @@ export default function StrategicPillarsTab({
                   <TableRow key={item.id} className="cursor-pointer">
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Target className="text-muted-foreground h-4 w-4" />
+                        <Building2 className="text-muted-foreground h-4 w-4" />
                         <span className="font-medium">{item.title}</span>
                       </div>
                     </TableCell>
