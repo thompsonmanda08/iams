@@ -671,6 +671,7 @@ export async function getRisksInRegister(
       url: url,
       method: "GET"
     });
+console.log("RES R:", response);
 
     return successResponse(response.data.data);
   } catch (error) {
@@ -788,14 +789,14 @@ export async function updateRisk(id: string, input: Partial<Risk>): Promise<APIR
   try {
     // TODO: Replace with real API call
     const response = await authenticatedApiClient({
-      url: `/api/v1/risks/${id}`,
+      url: `/api/v1/risks/${id}/step-one`,
       data: input,
       method: "PUT"
     });
     revalidatePath("/dashboard/(modules)/risks");
     return successResponse(response.data.data);
   } catch (error) {
-    return handleError(error, "PUT | UPDATE RISK", `/api/v1/risks/${id}`);
+    return handleError(error, "PUT | UPDATE RISK", `/api/v1/risks/${id}/step-one`);
   }
 }
 
