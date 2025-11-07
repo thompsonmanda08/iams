@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ErrorState } from "@/lib/types";
 import { createBranch, updateBranch, deleteBranch } from "@/app/_actions/config-actions";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
@@ -39,7 +38,6 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
-import { set } from "date-fns";
 import CustomAlert from "@/components/ui/custom-alert";
 
 interface Province {
@@ -61,6 +59,8 @@ interface Branch {
   id: string;
   name: string;
   code: string;
+  town: Town["name"];
+  province: Province["name"];
   town_id: string;
   province_id: string;
   address?: string;
@@ -92,16 +92,6 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null);
-
-  const getProvinceName = (provinceId: string) => {
-    const province = provinces.find((p) => p.id === provinceId);
-    return province ? province.name : "Unknown";
-  };
-
-  const getTownName = (townId: string) => {
-    const town = towns.find((t) => t.id === townId);
-    return town ? town.name : "Unknown";
-  };
 
   // GET TOWNS FROM SELECTED PROVINCE
 
@@ -231,10 +221,10 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                   <span className="font-mono text-sm">{branch.code}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm">{getProvinceName(branch.province_id)}</span>
+                  <span className="text-sm">{branch.province || "--"}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm">{getTownName(branch.town_id)}</span>
+                  <span className="text-sm">{branch.town || "--"}</span>
                 </TableCell>
                 <TableCell>
                   <span className="text-muted-foreground text-sm">{branch.address || "N/A"}</span>

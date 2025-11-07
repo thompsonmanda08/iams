@@ -1,15 +1,6 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  getBranches,
-  getProvinces,
-  getProvincesWithTowns,
-  getTowns
-} from "@/app/_actions/config-actions";
-import { ProvincesTab } from "../_components/provinces-tab";
-import { TownsTab } from "../_components/towns-tab";
+import { getBranches, getProvincesWithTowns, getTowns } from "@/app/_actions/config-actions";
 import { BranchesTab } from "../_components/branches-tab";
 import { Pagination } from "@/lib/types";
-import { get } from "http";
 import PageHeader from "@/components/page-header";
 
 type PageProps = {
@@ -43,7 +34,6 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
     has_prev: false
   };
 
-  console.log("provinces", provinces);
   return (
     <div>
       <div className="bg-card border-b">
@@ -64,31 +54,6 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
           towns={towns}
           pagination={branchesPagination}
         />
-
-        {/* <Tabs defaultValue={activeTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="provinces">Provinces</TabsTrigger>
-          <TabsTrigger value="towns">Towns</TabsTrigger>
-          <TabsTrigger value="branches">Branches</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="provinces">
-          <ProvincesTab initialProvinces={provinces} pagination={provincesPagination} />
-        </TabsContent>
-
-        <TabsContent value="towns">
-          <TownsTab initialTowns={towns} provinces={provinces} pagination={townsPagination} />
-        </TabsContent>
-
-        <TabsContent value="branches">
-          <BranchesTab
-            initialBranches={branches}
-            provinces={provinces}
-            towns={towns}
-            pagination={branchesPagination}
-          />
-        </TabsContent>
-      </Tabs> */}
       </div>
     </div>
   );

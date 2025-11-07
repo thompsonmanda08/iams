@@ -273,7 +273,7 @@ export default function StrategicInitiativeTab(
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-sm">
-                          {item?.pillar || selectedPillar?.title || "No pillar assigned"}
+                          {item?.pillar || selectedPillar?.title || "No parent pillar"}
                         </span>
                       </TableCell>
                       <TableCell>

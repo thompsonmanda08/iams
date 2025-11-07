@@ -134,7 +134,7 @@ export default function ProcessActivityTab({
   };
   const getPillarName = (pillarId: string) => {
     const pillar = pillars.find((d) => d.id === pillarId);
-    return pillar ? pillar.title : "No pillar assigned";
+    return pillar ? pillar.title : "No parent pillar";
   };
 
   const getAuditableArea = (auditableAreaId: string) => {
