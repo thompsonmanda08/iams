@@ -1431,6 +1431,17 @@ export async function getRiskCauses(): Promise<APIResponse> {
     return handleError(error, "GET | RISK CAUSES", "/api/v1/risk-causes");
   }
 }
+export async function getRiskCausesHierarchy(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-causes/hierarchy/root",
+      method: "GET"
+    });
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "GET | RISK CAUSES", "/api/v1/risk-causes/hierarchy/root");
+  }
+}
 
 export async function createRiskCause(data: {
   name: string;
