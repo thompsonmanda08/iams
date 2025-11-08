@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +14,7 @@ import {
   Department,
   RiskCategory,
   BusinessProcess,
- SubProcess
+  SubProcess
 } from "@/lib/types/risk-type";
 
 interface StepOneProps {
@@ -141,9 +140,6 @@ export function StepOne({
           isLoading={loadingProcesses}
           isDisabled={isLoading || loadingProcesses || !data.macro_process_id}
           classNames={{ wrapper: "max-w-full" }}
-          descriptionText={
-            !data.macro_process_id ? "Please select a macro process first" : undefined
-          }
         />
       </div>
 

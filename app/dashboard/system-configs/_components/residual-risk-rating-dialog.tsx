@@ -14,10 +14,10 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { createRiskAppetiteStatus, updateRiskAppetiteStatus } from "@/app/_actions/config-actions";
+import { createResidualRiskRating, updateResidualRiskRating } from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
 
-type RiskAppetiteStatus = {
+type ResidualRiskRating = {
   id: string;
   name: string;
   condition: string;
@@ -27,19 +27,19 @@ type RiskAppetiteStatus = {
   updated_at: string;
 };
 
-type RiskAppetiteStatusDialogProps = {
+type ResidualRiskRatingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  appetite?: RiskAppetiteStatus | null;
+  rating?: ResidualRiskRating | null;
 };
 
-export function RiskAppetiteStatusDialog({
+export function ResidualRiskRatingDialog({
   open,
   onOpenChange,
   onSuccess,
-  appetite
-}: RiskAppetiteStatusDialogProps) {
+  rating
+}: ResidualRiskRatingDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<{
     name: string;
@@ -53,43 +53,43 @@ export function RiskAppetiteStatusDialog({
     condition: ""
   });
 
-  const isEditMode = !!appetite;
+  const isEditMode = !!rating;
 
   useEffect(() => {
-    if (open && appetite) {
+    if (open && rating) {
       setFormData({
-        name: appetite.name,
-        description: appetite.description,
-        value: appetite.value,
-        condition: appetite.condition
+        name: rating.name,
+        description: rating.description,
+        value: rating.value,
+        condition: rating.condition
       });
     } else if (!open) {
       setFormData({ name: "", description: "", value: 1, condition: "" });
     }
-  }, [open, appetite]);
+  }, [open, rating]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Risk appetite status name is required");
+      toast.error("Residual risk rating name is required");
       return;
     }
 
     setIsLoading(true);
     try {
       const result = isEditMode
-        ? await updateRiskAppetiteStatus(appetite.id, formData)
-        : await createRiskAppetiteStatus(formData);
+        ? await updateResidualRiskRating(rating.id, formData)
+        : await createResidualRiskRating(formData);
 
       if (result.success) {
-        toast.success(`Risk appetite status ${isEditMode ? "updated" : "created"} successfully`);
+        toast.success(`Residual risk rating ${isEditMode ? "updated" : "created"} successfully`);
         setFormData({ name: "", description: "", value: 1, condition: "" });
         onOpenChange(false);
         onSuccess();
       } else {
         toast.error(
-          result.message || `Failed to ${isEditMode ? "update" : "create"} risk appetite status`
+          result.message || `Failed to ${isEditMode ? "update" : "create"} residual risk rating`
         );
       }
     } catch (error) {
@@ -98,6 +98,7 @@ export function RiskAppetiteStatusDialog({
       setIsLoading(false);
     }
   };
+
   const options = [
     {
       name: "Greater Than",
@@ -127,29 +128,29 @@ export function RiskAppetiteStatusDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? "Edit Risk Appetite Status" : "Create Risk Appetite Status"}
+              {isEditMode ? "Edit Residual Risk Rating" : "Create Residual Risk Rating"}
             </DialogTitle>
             <DialogDescription>
-              {isEditMode ? "Update risk appetite status" : "Add a new risk appetite status"}
+              {isEditMode ? "Update residual risk rating" : "Add a new residual risk rating"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">
-                Risk Appetite Name <span className="text-destructive">*</span>
+                Rating Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
-                placeholder="e.g., Above, Within, Below"
+                placeholder="e.g., Low, Medium, High, Critical"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">
-                Risk Appetite Value <span className="text-destructive">*</span>
+              <Label htmlFor="value">
+                Rating Value <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="value"
@@ -162,12 +163,14 @@ export function RiskAppetiteStatusDialog({
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="condition">Condition</Label>
               <SelectField
                 value={formData.condition}
                 onValueChange={(value) => setFormData({ ...formData, condition: value })}
                 placeholder="Select condition"
                 options={options as any}
                 className="w-full"
+                disabled={isLoading}
               />
             </div>
 
@@ -175,7 +178,7 @@ export function RiskAppetiteStatusDialog({
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe this risk appetite status"
+                placeholder="Describe this residual risk rating"
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -195,7 +198,7 @@ export function RiskAppetiteStatusDialog({
             <Button type="submit" disabled={isLoading}>
               {isLoading
                 ? `${isEditMode ? "Updating" : "Creating"}...`
-                : `${isEditMode ? "Update" : "Create"} Appetite`}
+                : `${isEditMode ? "Update" : "Create"} Rating`}
             </Button>
           </DialogFooter>
         </form>

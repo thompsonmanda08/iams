@@ -14,7 +14,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { createRiskCause, updateRiskCause } from "@/app/_actions/config-actions";
+import { createEffectivenessLevel, updateEffectivenessLevel } from "@/app/_actions/config-actions";
 
 type ControlEffectiveness = {
   id: string;
@@ -74,8 +74,8 @@ export function ControlEffectivenessDialog({
     setIsLoading(true);
     try {
       const result = isEditMode
-        ? await updateRiskCause(control.id, formData)
-        : await createRiskCause(formData);
+        ? await updateEffectivenessLevel(control.id, formData)
+        : await createEffectivenessLevel(formData);
 
       if (result.success) {
         toast.success(`Control effectiveness ${isEditMode ? "updated" : "created"} successfully`);
@@ -130,12 +130,9 @@ export function ControlEffectivenessDialog({
                 id="value"
                 type="number"
                 min="1"
-                max="10"
                 placeholder="e.g., 1, 2, 3..."
                 value={formData.value}
-                onChange={(e) =>
-                  setFormData({ ...formData, value: parseInt(e.target.value) || 1 })
-                }
+                onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
                 disabled={isLoading}
               />
             </div>

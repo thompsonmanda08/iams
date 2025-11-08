@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit2, Trash2, Loader2, TrendingUp } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, Columns3Cog } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { deleteRiskAppetiteStatus, getRiskAppetiteStatuses } from "@/app/_actions/config-actions";
-import { RiskAppetiteStatusDialog } from "./risk-appetite-dialog";
+import { deleteResidualRiskRating, getResidualRiskRatings } from "@/app/_actions/config-actions";
+import { ResidualRiskRatingDialog } from "./residual-risk-rating-dialog";
 import { Badge } from "@/components/ui/badge";
 
-type RiskAppetiteStatus = {
+type ResidualRiskRating = {
   id: string;
   name: string;
   value: number;
@@ -19,73 +19,73 @@ type RiskAppetiteStatus = {
   updated_at: string;
 };
 
-export function RiskAppetiteStatusList() {
-  const [causes, setCauses] = useState<RiskAppetiteStatus[]>([]);
+export function ResidualRiskRatingList() {
+  const [ratings, setRatings] = useState<ResidualRiskRating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{
     open: boolean;
-    appetite: RiskAppetiteStatus | null;
-  }>({ open: false, appetite: null });
+    rating: ResidualRiskRating | null;
+  }>({ open: false, rating: null });
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    appetiteId: string | null;
-    appetiteName: string | null;
-  }>({ open: false, appetiteId: null, appetiteName: null });
+    ratingId: string | null;
+    ratingName: string | null;
+  }>({ open: false, ratingId: null, ratingName: null });
 
   useEffect(() => {
-    fetchAppetites();
+    fetchRatings();
   }, []);
 
-  const fetchAppetites = async () => {
+  const fetchRatings = async () => {
     setIsLoading(true);
     try {
-      const response = await getRiskAppetiteStatuses();
+      const response = await getResidualRiskRatings();
       if (response.success && response.data?.data) {
-        setCauses(response.data.data);
+        setRatings(response.data.data);
       } else {
-        setCauses([]);
+        setRatings([]);
       }
     } catch (error) {
-      console.error("Error fetching risk appetite status:", error);
-      toast.error("Failed to load risk appetite status");
-      setCauses([]);
+      console.error("Error fetching residual risk ratings:", error);
+      toast.error("Failed to load residual risk ratings");
+      setRatings([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteClick = (appetite: RiskAppetiteStatus) => {
+  const handleDeleteClick = (rating: ResidualRiskRating) => {
     setDeleteDialog({
       open: true,
-      appetiteId: appetite.id,
-      appetiteName: appetite.name
+      ratingId: rating.id,
+      ratingName: rating.name
     });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteDialog.appetiteId) return;
+    if (!deleteDialog.ratingId) return;
 
     try {
-      const response = await deleteRiskAppetiteStatus(deleteDialog.appetiteId);
+      const response = await deleteResidualRiskRating(deleteDialog.ratingId);
       if (response.success) {
-        toast.success("Risk Appetite Atatus deleted successfully");
-        await fetchAppetites();
-        setDeleteDialog({ open: false, appetiteId: null, appetiteName: null });
+        toast.success("Residual risk rating deleted successfully");
+        await fetchRatings();
+        setDeleteDialog({ open: false, ratingId: null, ratingName: null });
       } else {
-        toast.error(response.message || "Failed to delete risk appetite status");
+        toast.error(response.message || "Failed to delete residual risk rating");
       }
     } catch (error) {
-      console.error("Error deleting risk appetite status:", error);
-      toast.error("Failed to delete risk appetite status");
+      console.error("Error deleting residual risk rating:", error);
+      toast.error("Failed to delete residual risk rating");
     }
   };
 
   const handleCreateClick = () => {
-    setDialog({ open: true, appetite: null });
+    setDialog({ open: true, rating: null });
   };
 
-  const handleEditClick = (appetite: RiskAppetiteStatus) => {
-    setDialog({ open: true, appetite });
+  const handleEditClick = (rating: ResidualRiskRating) => {
+    setDialog({ open: true, rating });
   };
 
   if (isLoading) {
@@ -100,50 +100,50 @@ export function RiskAppetiteStatusList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-foreground text-2xl font-bold">Risk Appetite Status</h2>
+          <h2 className="text-foreground text-2xl font-bold">Residual Risk Ratings</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Define and manage risk appetite status for comprehensive risk management
+            Define and manage residual risk ratings for comprehensive risk management
           </p>
         </div>
         <Button onClick={handleCreateClick} className="gap-2">
           <Plus className="h-4 w-4" />
-          Create a Risk Appetite Status
+          Create Residual Risk Rating
         </Button>
       </div>
 
-      {!causes.length ? (
+      {!ratings.length ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="bg-muted mb-4 rounded-full p-4">
-              <TrendingUp className="text-muted-foreground h-8 w-8" />
+              <Columns3Cog className="text-muted-foreground h-8 w-8" />
             </div>
             <h3 className="text-foreground mb-2 text-lg font-semibold">
-              No Risk Appetite Status Yet
+              No Residual Risk Ratings Yet
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md text-center text-sm">
-              Get started by creating your first risk appetite Status to identify and manage
-              potential risks.
+              Get started by creating your first residual risk rating to identify and manage
+              post-control risk levels.
             </p>
             <Button onClick={handleCreateClick} className="gap-2">
               <Plus className="h-4 w-4" />
-              Create Your First Risk Appetite Status
+              Create Your First Risk Rating
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {causes.map((appetite) => {
+          {ratings.map((rating) => {
             return (
-              <Card key={appetite.id} className="group transition-all">
+              <Card key={rating.id} className="group transition-all hover:shadow-md">
                 <CardHeader>
-                  <div className="flex justify-between items-center gap-2">
-                    <CardTitle>{appetite.name}</CardTitle>
-                    <Badge variant="secondary" className="text-xs">
-                      {`${appetite.condition} ${appetite.value}`}
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="text-lg">{rating.name}</CardTitle>
+                    <Badge variant="secondary" className="text-xs font-semibold">
+                      {`${rating.condition} ${rating.value}`}
                     </Badge>
                   </div>
                   <CardDescription className="line-clamp-2">
-                    {appetite.description || "No description provided"}
+                    {rating.description || "No description provided"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -151,7 +151,7 @@ export function RiskAppetiteStatusList() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEditClick(appetite)}
+                      onClick={() => handleEditClick(rating)}
                       className="flex-1">
                       <Edit2 className="mr-2 h-4 w-4" />
                       Edit
@@ -159,8 +159,8 @@ export function RiskAppetiteStatusList() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteClick(appetite)}
-                      className="text-destructive hover:text-destructive">
+                      onClick={() => handleDeleteClick(rating)}
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -171,19 +171,19 @@ export function RiskAppetiteStatusList() {
         </div>
       )}
 
-      <RiskAppetiteStatusDialog
+      <ResidualRiskRatingDialog
         open={dialog.open}
-        onOpenChange={(open) => setDialog({ open, appetite: null })}
-        appetite={dialog?.appetite as any}
-        onSuccess={fetchAppetites}
+        onOpenChange={(open) => setDialog({ open, rating: null })}
+        rating={dialog?.rating as any}
+        onSuccess={fetchRatings}
       />
 
       <ConfirmationModal
         open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog({ open, appetiteId: null, appetiteName: null })}
+        onOpenChange={(open) => setDeleteDialog({ open, ratingId: null, ratingName: null })}
         onConfirm={handleDeleteConfirm}
-        title="Delete Risk Appetite Status"
-        description={`Are you sure you want to delete "${deleteDialog.appetiteName}"? This action cannot be undone.`}
+        title="Delete Residual Risk Rating"
+        description={`Are you sure you want to delete "${deleteDialog.ratingName}"? This action cannot be undone.`}
         type="delete"
       />
     </div>

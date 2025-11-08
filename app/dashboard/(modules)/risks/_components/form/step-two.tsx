@@ -1,39 +1,37 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { StepTwoData, RiskMatrix } from "@/lib/types/risk-type";
 import { RiskSlider } from "../risk-slider";
 import { RiskScoreDisplay } from "../risk-score-display";
+import { log } from "console";
 
 interface StepTwoProps {
   data: StepTwoData;
   onChange: (data: Partial<StepTwoData>) => void;
   riskMatrices: RiskMatrix[];
+  controls: any;
   selectedMatrix: RiskMatrix | null;
   onMatrixChange: (matrixId: string) => void;
   likelihoodRange: { min: number; max: number };
   impactRange: { min: number; max: number };
   isLoading: boolean;
   loadingMatrices: boolean;
+  controlsLoading: boolean;
 }
 
 export function StepTwo({
   data,
   onChange,
   riskMatrices,
+  controls,
   selectedMatrix,
   onMatrixChange,
   likelihoodRange,
   impactRange,
   isLoading,
-  loadingMatrices
+  loadingMatrices,
+  controlsLoading
 }: StepTwoProps) {
   const inherentScore = data.inherent_likelihood * data.inherent_impact;
 
@@ -108,21 +106,17 @@ export function StepTwo({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="control_effectiveness">Control Effectiveness</Label>
-        <Select
+        <SearchSelectField
+          label="Control Effectiveness"
+          required
+          placeholder="Select control effectiveness"
+          options={controls}
           value={String(data.control_effectiveness)}
-          onValueChange={(value) => onChange({ control_effectiveness: Number(value) })}
-          disabled={isLoading}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">1 - Highly Effective</SelectItem>
-            <SelectItem value="2">2 - Effective</SelectItem>
-            <SelectItem value="3">3 - Partially Effective</SelectItem>
-            <SelectItem value="4">4 - Ineffective</SelectItem>
-          </SelectContent>
-        </Select>
+          onValueChange={(val) => onChange({ control_effectiveness: Number(val) })}
+          isLoading={controlsLoading}
+          isDisabled={isLoading || controlsLoading}
+          classNames={{ wrapper: "max-w-full" }}
+        />
       </div>
     </>
   );

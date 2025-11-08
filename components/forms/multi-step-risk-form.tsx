@@ -17,7 +17,9 @@ import {
   getBusinessProcessesHierarchy,
   getDepartments,
   getRiskMatrices,
-  getDepartmentRiskCategories
+  getDepartmentRiskCategories,
+  getRiskResponses,
+  getEffectivenessLevels
 } from "@/app/_actions/config-actions";
 import {
   createRiskStepOne,
@@ -37,7 +39,9 @@ import {
   User,
   StepOneData,
   StepTwoData,
-  StepThreeData
+  StepThreeData,
+  RiskResponse,
+  RiskControls
 } from "@/lib/types/risk-type";
 import { StepProgressIndicator } from "@/app/dashboard/(modules)/risks/_components/step-progress-indicator";
 import { StepOne } from "@/app/dashboard/(modules)/risks/_components/form/step-one";
@@ -73,6 +77,8 @@ export function MultiStepRiskForm({
   const [pillars, setPillars] = useState<any[]>([]);
   const [businessProcesses, setBusinessProcesses] = useState<BusinessProcess[]>([]);
   const [riskMatrices, setRiskMatrices] = useState<RiskMatrix[]>([]);
+  const [responses, setResponses] = useState<RiskResponse[]>([]);
+  const [controls, setControls] = useState<RiskControls[]>([]);
   const [selectedMatrix, setSelectedMatrix] = useState<RiskMatrix | null>(null);
 
   // Loading states
@@ -82,6 +88,8 @@ export function MultiStepRiskForm({
   const [loadingPillars, setLoadingPillars] = useState(false);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
   const [loadingMatrices, setLoadingMatrices] = useState(false);
+  const [loadingMrResponses, setLoadingResponses] = useState(false);
+  const [loadingControls, setLoadingControls] = useState(false);
 
   const [closeDate, setCloseDate] = useState<Date | undefined>(
     mode === "edit" && riskData?.target_closing_date
@@ -105,19 +113,16 @@ export function MultiStepRiskForm({
 
   const [stepTwoData, setStepTwoData] = useState<StepTwoData>({
     risk_matrix_id: mode === "edit" && riskData ? riskData.risk_matrix_id : "",
-    inherent_likelihood: mode === "edit" && riskData ? riskData.inherent_likelihood : 3,
-    inherent_impact: mode === "edit" && riskData ? riskData.inherent_impact : 3,
+    inherent_likelihood: mode === "edit" && riskData ? riskData.inherent_likelihood : 0,
+    inherent_impact: mode === "edit" && riskData ? riskData.inherent_impact : 0,
     existing_controls: mode === "edit" && riskData ? riskData.existing_controls : "",
-    control_effectiveness: mode === "edit" && riskData ? riskData.control_effectiveness : 2
+    control_effectiveness: mode === "edit" && riskData ? riskData.control_effectiveness : 0
   });
 
   const [stepThreeData, setStepThreeData] = useState<StepThreeData>({
-    residual_likelihood: mode === "edit" && riskData ? riskData.residual_likelihood : 2,
-    residual_impact: mode === "edit" && riskData ? riskData.residual_impact : 2,
     treatment_plan: mode === "edit" && riskData ? riskData.treatment_plan : "",
-    risk_response: mode === "edit" && riskData ? riskData.risk_response : "REDUCE",
+    risk_response_id: mode === "edit" && riskData ? riskData.risk_response_id : "",
     risk_owner_id: mode === "edit" && riskData ? riskData.risk_owner_id : "",
-    risk_appetite_status: mode === "edit" && riskData ? riskData.risk_appetite_status : "WITHIN",
     target_closing_date: mode === "edit" && riskData ? riskData.target_closing_date : "",
     mitigation_cost: mode === "edit" && riskData ? riskData.mitigation_cost : 0
   });
@@ -132,13 +137,13 @@ export function MultiStepRiskForm({
   }, [stepOneData.macro_process_id, businessProcesses]);
 
   const getLikelihoodRange = () => ({
-    min: selectedMatrix?.likelihood_min || 1,
-    max: selectedMatrix?.likelihood_max || 5
+    min: selectedMatrix?.likelihood_min || 0,
+    max: selectedMatrix?.likelihood_max || 0
   });
 
   const getImpactRange = () => ({
-    min: selectedMatrix?.impact_min || 1,
-    max: selectedMatrix?.impact_max || 5
+    min: selectedMatrix?.impact_min || 0,
+    max: selectedMatrix?.impact_max || 0
   });
 
   const likelihoodRange = getLikelihoodRange();
@@ -147,6 +152,11 @@ export function MultiStepRiskForm({
   const transformedUsers = users.map((user) => ({
     id: user.id,
     name: `${user.first_name} ${user.last_name}`.trim() || user.username || user.email
+  }));
+
+  const options = controls.map((ctrl: any) => ({
+    name: `${ctrl.value} - ${ctrl.name}`,
+    id: ctrl.value.toString()
   }));
 
   // Load functions
@@ -253,11 +263,41 @@ export function MultiStepRiskForm({
     }
   };
 
+  const loadResponses = async () => {
+    setLoadingResponses(true);
+    try {
+      const response = await getRiskResponses();
+      if (response.success && response.data.data) {
+        setResponses(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Error loading responses");
+    } finally {
+      setLoadingResponses(false);
+    }
+  };
+
+  const loadControls = async () => {
+    setLoadingControls(true);
+    try {
+      const response = await getEffectivenessLevels();
+      if (response.success && response.data.data) {
+        setControls(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Error loading responses");
+    } finally {
+      setLoadingControls(false);
+    }
+  };
+
   useEffect(() => {
     if (open) {
       loadDepartments();
       loadProcesses();
       loadRiskMatrices();
+      loadControls();
+      loadResponses();
       if (stepOneData.department_id) {
         loadCategories(stepOneData.department_id);
         loadPillars(stepOneData.department_id);
@@ -445,7 +485,7 @@ export function MultiStepRiskForm({
             />
           )}
 
-          {currentStep === 1 && (
+          {currentStep === 2 && (
             <StepTwo
               data={stepTwoData}
               onChange={(updates) => setStepTwoData({ ...stepTwoData, ...updates })}
@@ -456,10 +496,12 @@ export function MultiStepRiskForm({
               impactRange={impactRange}
               isLoading={isLoading}
               loadingMatrices={loadingMatrices}
+              controls={options}
+              controlsLoading={loadingControls}
             />
           )}
 
-          {currentStep === 1 && (
+          {currentStep === 3 && (
             <StepThree
               data={stepThreeData}
               onChange={(updates) => setStepThreeData({ ...stepThreeData, ...updates })}
@@ -477,6 +519,8 @@ export function MultiStepRiskForm({
               hasDepartmentSelected={!!stepOneData.department_id}
               isLoading={isLoading}
               loadingUsers={loadingUsers}
+              responses={responses}
+              loadingResponses={loadingMrResponses}
             />
           )}
         </div>

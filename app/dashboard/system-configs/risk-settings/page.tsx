@@ -1,4 +1,13 @@
-import { Grid3x3, FolderTree, Shield, GitBranch, AlertCircle, TrendingUp, MonitorCog } from "lucide-react";
+import {
+  Grid3x3,
+  FolderTree,
+  Shield,
+  GitBranch,
+  AlertCircle,
+  TrendingUp,
+  MonitorCog,
+  Columns3Cog
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RiskCategoriesConfig } from "../_components/risk-categories-config";
 import { RiskMatrixConfigList } from "../_components/risk-matrix-config-list";
@@ -8,6 +17,7 @@ import { BusinessProcessList } from "../_components/business-process-list";
 import { RiskCausesList } from "../_components/risk-causes-list";
 import { RiskAppetiteStatusList } from "../_components/risk-appetite-status-list";
 import { ControlEffectivenessList } from "../_components/control-effectiveness-list";
+import { ResidualRiskRatingList } from "../_components/residual-risk-rating-list";
 
 export default async function RiskConfigurationsPage() {
   return (
@@ -58,6 +68,10 @@ export default async function RiskConfigurationsPage() {
               <MonitorCog className="h-4 w-4" />
               Control Effective
             </TabsTrigger>
+            <TabsTrigger value="residual-rating" className="gap-2">
+              <Columns3Cog className="h-4 w-4" />
+              Residual Ratings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="matrix">
@@ -84,6 +98,9 @@ export default async function RiskConfigurationsPage() {
           </TabsContent>
           <TabsContent value="controls">
             <ControlEffectivenessList />
+          </TabsContent>
+          <TabsContent value="residual-rating">
+            <ResidualRiskRatingList />
           </TabsContent>
         </Tabs>
       </main>

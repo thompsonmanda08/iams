@@ -107,7 +107,7 @@ export type Risk = {
   existing_controls: string;
   control_effectiveness: number;
   treatment_plan: string;
-  risk_response: string;
+  risk_response_id: string;
   risk_owner_id: string;
   risk_appetite_status: "WITHIN" | "ABOVE";
   target_closing_date: string;
@@ -148,12 +148,31 @@ export type StepTwoData = {
 };
 
 export type StepThreeData = {
-  residual_likelihood: number;
-  residual_impact: number;
-  treatment_plan: string;
-  risk_response: string;
-  risk_owner_id: string;
-  risk_appetite_status: "WITHIN" | "ABOVE";
-  target_closing_date: string;
-  mitigation_cost: number;
+  residual_likelihood?: number;
+  residual_impact?: number;
+  treatment_plan?:string;
+  risk_response_id?: string;
+  risk_owner_id?: string;
+  risk_appetite_status?: "WITHIN" | "ABOVE";
+  target_closing_date?: string;
+  mitigation_cost?: number;
+  response_id?:string;
+  appetite_id?:string;
+  control_id?:string;
+};
+
+export type RiskResponse = {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+};
+export type RiskControls = {
+  id: string;
+  name: string;
+  value:number;
+  description: string;
+  created_at: string;
+  updated_at: string;
 };

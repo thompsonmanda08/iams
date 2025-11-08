@@ -1530,3 +1530,266 @@ export async function deleteRiskCause(id: string): Promise<APIResponse> {
     return handleError(error, "DELETE | RISK CAUSE", `/api/v1/risk-causes/${id}`);
   }
 }
+
+// Risk Appetite Status Actions
+export async function getRiskAppetiteStatuses(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/risk-appetite-statuses",
+      method: "GET"
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET RISK APPETITE STATUSES",
+      "/api/v1/risk-configs/risk-appetite-statuses"
+    );
+  }
+}
+
+export async function createRiskAppetiteStatus(data: {
+  name: string;
+  description: string;
+  value: number;
+  condition:string;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/risk-appetite-statuses",
+      method: "POST",
+      data
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE RISK APPETITE STATUS",
+      "/api/v1/risk-configs/risk-appetite-statuses"
+    );
+  }
+}
+
+export async function updateRiskAppetiteStatus(
+  id: string,
+  data: {
+    name: string;
+    description: string;
+    value: number;
+    condition:string;
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/risk-appetite-statuses/${id}`,
+      method: "PUT",
+      data
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE RISK APPETITE STATUS",
+      `/api/v1/risk-configs/risk-appetite-statuses/${id}`
+    );
+  }
+}
+
+export async function deleteRiskAppetiteStatus(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/risk-appetite-statuses/${id}`,
+      method: "DELETE"
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE RISK APPETITE STATUS",
+      `/api/v1/risk-configs/risk-appetite-statuses/${id}`
+    );
+  }
+}
+
+
+// Control Effectiveness Levels Actions
+export async function getEffectivenessLevels(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/effectiveness-levels",
+      method: "GET"
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET EFFECTIVENESS LEVELS",
+      "/api/v1/risk-configs/effectiveness-levels"
+    );
+  }
+}
+
+export async function createEffectivenessLevel(data: {
+  name: string;
+  description: string;
+  value: number;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/effectiveness-levels",
+      method: "POST",
+      data
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE EFFECTIVENESS LEVEL",
+      "/api/v1/risk-configs/effectiveness-levels"
+    );
+  }
+}
+
+export async function updateEffectivenessLevel(
+  id: string,
+  data: {
+    name: string;
+    description: string;
+    value: number;
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/effectiveness-levels/${id}`,
+      method: "PUT",
+      data
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE EFFECTIVENESS LEVEL",
+      `/api/v1/risk-configs/effectiveness-levels/${id}`
+    );
+  }
+}
+
+export async function deleteEffectivenessLevel(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/effectiveness-levels/${id}`,
+      method: "DELETE"
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE EFFECTIVENESS LEVEL",
+      `/api/v1/risk-configs/effectiveness-levels/${id}`
+    );
+  }
+}
+
+// Residual Risk Ratings Actions
+export async function getResidualRiskRatings(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/residual-risk-ratings",
+      method: "GET"
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET RESIDUAL RISK RATINGS",
+      "/api/v1/risk-configs/residual-risk-ratings"
+    );
+  }
+}
+
+export async function createResidualRiskRating(data: {
+  name: string;
+  description: string;
+  value: number;
+  condition: string;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-configs/residual-risk-ratings",
+      method: "POST",
+      data
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE RESIDUAL RISK RATING",
+      "/api/v1/risk-configs/residual-risk-ratings"
+    );
+  }
+}
+
+export async function updateResidualRiskRating(
+  id: string,
+  data: {
+    name: string;
+    description: string;
+    value: number;
+    condition: string;
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/residual-risk-ratings/${id}`,
+      method: "PUT",
+      data
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE RESIDUAL RISK RATING",
+      `/api/v1/risk-configs/residual-risk-ratings/${id}`
+    );
+  }
+}
+
+export async function deleteResidualRiskRating(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-configs/residual-risk-ratings/${id}`,
+      method: "DELETE"
+    });
+    
+    revalidatePath("/dashboard/system-configs/risk-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE RESIDUAL RISK RATING",
+      `/api/v1/risk-configs/residual-risk-ratings/${id}`
+    );
+  }
+}

@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit2, Trash2, Loader2, Shield } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, MonitorCog } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { deleteRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
+import { deleteEffectivenessLevel, getEffectivenessLevels } from "@/app/_actions/config-actions";
 import { Badge } from "@/components/ui/badge";
 import { ControlEffectivenessDialog } from "./control-effectiveness-dialog";
 
@@ -38,7 +38,7 @@ export function ControlEffectivenessList() {
   const fetchControls = async () => {
     setIsLoading(true);
     try {
-      const response = await getRiskCauses();
+      const response = await getEffectivenessLevels();
       if (response.success && response.data?.data) {
         setControls(response.data.data);
       } else {
@@ -65,7 +65,7 @@ export function ControlEffectivenessList() {
     if (!deleteDialog.controlId) return;
 
     try {
-      const response = await deleteRiskCause(deleteDialog.controlId);
+      const response = await deleteEffectivenessLevel(deleteDialog.controlId);
       if (response.success) {
         toast.success("Control effectiveness deleted successfully");
         await fetchControls();
@@ -114,7 +114,7 @@ export function ControlEffectivenessList() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="bg-muted mb-4 rounded-full p-4">
-              <Shield className="text-muted-foreground h-8 w-8" />
+              <MonitorCog className="text-muted-foreground h-8 w-8" />
             </div>
             <h3 className="text-foreground mb-2 text-lg font-semibold">
               No Control Effectiveness Yet
@@ -135,10 +135,10 @@ export function ControlEffectivenessList() {
             return (
               <Card key={control.id} className="group transition-all">
                 <CardHeader>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <CardTitle>{control.name}</CardTitle>
-                    <Badge variant="default" className="text-xs">
-                      {control.value || 0}
+                    <Badge variant="secondary" className="text-xs">
+                      {control.value}
                     </Badge>
                   </div>
                   <CardDescription className="line-clamp-2">
