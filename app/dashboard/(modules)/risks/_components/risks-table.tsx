@@ -73,7 +73,7 @@ type Risk = {
   updated_at: string;
   category: Category;
   department: Department;
-  owner: Owner;
+  risk_owner: Owner;
 };
 
 type Category = {
@@ -92,7 +92,8 @@ type Category = {
 };
 type Owner = {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
 };
 
 type Department = {
@@ -387,7 +388,10 @@ export default function RisksTable({
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{risk?.owner?.name || "Unassinged"}</span>
+                    <span className="text-sm">
+                      {`${risk?.risk_owner?.first_name} ${risk?.risk_owner?.last_name}` ||
+                        "Unassinged"}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">

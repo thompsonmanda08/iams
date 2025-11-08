@@ -60,8 +60,7 @@ export function CreateScaleDialog({
         level: formData.level,
         name: formData.name,
         description: formData.description,
-        matrix_id: matrixId,
-        
+        matrix_id: matrixId
       });
       if (response.success) {
         toast.success(response.message || "Scale created successfully");
@@ -98,13 +97,11 @@ export function CreateScaleDialog({
                 id="level"
                 type="number"
                 min="1"
-                max="10"
                 placeholder="e.g., 1, 2, 3..."
                 value={formData.level}
                 onChange={(e) => setFormData({ ...formData, level: parseInt(e.target.value) || 1 })}
                 disabled={isLoading}
               />
-              <p className="text-muted-foreground text-xs">Level must be between 1 and 10</p>
             </div>
 
             <div className="grid gap-2">

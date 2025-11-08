@@ -28,6 +28,7 @@ type SelectInputProps = React.InputHTMLAttributes<HTMLSelectElement> & {
   value?: string;
   className?: string;
   listItemName?: string;
+  listItemValue?: string;
   options: {
     id: string;
     name?: string;
@@ -61,6 +62,7 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
       placeholder,
       onValueChange,
       listItemName,
+      listItemValue,
       isInvalid,
       options,
       isDisabled,
@@ -155,7 +157,7 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 <CommandEmpty>No items found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((item, index) => {
-                    const itemValue = item.id || index.toString();
+                    const itemValue = item.id || item.value || index.toString();
                     const itemLabel =
                       item?.[String(listItemName)] ||
                       item.name ||

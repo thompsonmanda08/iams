@@ -1,0 +1,208 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { createResidualRiskRating, updateResidualRiskRating } from "@/app/_actions/config-actions";
+import { SelectField } from "@/components/ui/select-field";
+
+type ResidualRiskRating = {
+  id: string;
+  name: string;
+  condition: string;
+  description: string;
+  value: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type ResidualRiskRatingDialogProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+  rating?: ResidualRiskRating | null;
+};
+
+export function ResidualRiskRatingDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+  rating
+}: ResidualRiskRatingDialogProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    value: number;
+    condition: string;
+  }>({
+    name: "",
+    description: "",
+    value: 1,
+    condition: ""
+  });
+
+  const isEditMode = !!rating;
+
+  useEffect(() => {
+    if (open && rating) {
+      setFormData({
+        name: rating.name,
+        description: rating.description,
+        value: rating.value,
+        condition: rating.condition
+      });
+    } else if (!open) {
+      setFormData({ name: "", description: "", value: 1, condition: "" });
+    }
+  }, [open, rating]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name.trim()) {
+      toast.error("Residual risk rating name is required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = isEditMode
+        ? await updateResidualRiskRating(rating.id, formData)
+        : await createResidualRiskRating(formData);
+
+      if (result.success) {
+        toast.success(`Residual risk rating ${isEditMode ? "updated" : "created"} successfully`);
+        setFormData({ name: "", description: "", value: 1, condition: "" });
+        onOpenChange(false);
+        onSuccess();
+      } else {
+        toast.error(
+          result.message || `Failed to ${isEditMode ? "update" : "create"} residual risk rating`
+        );
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const options = [
+    {
+      name: "Greater Than",
+      value: ">"
+    },
+    {
+      name: "Less Than",
+      value: "<"
+    },
+    {
+      name: "Greater Than OR Equal To",
+      value: ">="
+    },
+    {
+      name: "Less Than OR Equal To",
+      value: "<="
+    },
+    {
+      name: "Equals",
+      value: "="
+    }
+  ];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>
+              {isEditMode ? "Edit Residual Risk Rating" : "Create Residual Risk Rating"}
+            </DialogTitle>
+            <DialogDescription>
+              {isEditMode ? "Update residual risk rating" : "Add a new residual risk rating"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">
+                Rating Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="name"
+                placeholder="e.g., Low, Medium, High, Critical"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="value">
+                Rating Value <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="value"
+                type="number"
+                min="1"
+                placeholder="e.g., 1, 2, 3..."
+                value={formData.value}
+                onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="condition">Condition</Label>
+              <SelectField
+                value={formData.condition}
+                onValueChange={(value) => setFormData({ ...formData, condition: value })}
+                placeholder="Select condition"
+                options={options as any}
+                className="w-full"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe this residual risk rating"
+                rows={3}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading
+                ? `${isEditMode ? "Updating" : "Creating"}...`
+                : `${isEditMode ? "Update" : "Create"} Rating`}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
