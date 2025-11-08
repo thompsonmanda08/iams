@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -19,62 +19,120 @@ import {
   FileSpreadsheet,
   Printer,
   AlertTriangle,
-  View,
-  Upload,
   Eye,
-  CheckCircle2,
-  Clock,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import Search from "@/components/ui/search-field";
-import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { ActionFindingsDialog } from "@/app/dashboard/(modules)/risks/_components/action-findings-dialog";
 import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_components/action-evidence-viewer-dialog";
-import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/action-review-dialog";
+import { getActions } from "@/app/_actions/risk-module-actions";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { Pagination } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
-interface ActionsTableProps {
+interface ActionsLogsTableWithInfiniteScrollProps {
   actions: ActionDefinition[];
   pagination: Pagination;
+  initialStatus?: string;
 }
 
-export function ActionsTable({ actions, pagination }: ActionsTableProps) {
+const STATUS_TABS = [
+  { value: "", label: "All" },
+  { value: "PENDING", label: "Pending" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" }
+];
+
+export function ActionsLogsTableWithInfiniteScroll({
+  actions: initialActions,
+  pagination: initialPagination,
+  initialStatus = ""
+}: ActionsLogsTableWithInfiniteScrollProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const searchParams = useSearchParams();
-  const [_, startTransition] = useTransition();
-  const [selectedActionForFindings, setSelectedActionForFindings] =
-    useState<ActionDefinition | null>(null);
-  const [findingsDialogOpen, setFindingsDialogOpen] = useState(false);
+  const [activeStatus, setActiveStatus] = useState(initialStatus);
+  const observerTarget = useRef<HTMLDivElement>(null);
   const [selectedActionForEvidence, setSelectedActionForEvidence] =
     useState<ActionDefinition | null>(null);
   const [evidenceDialogOpen, setEvidenceDialogOpen] = useState(false);
-  const [selectedActionForReview, setSelectedActionForReview] =
-    useState<ActionDefinition | null>(null);
-  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+
+  const handleStatusChange = (status: string) => {
+    setActiveStatus(status);
+    const params = new URLSearchParams();
+    if (status) {
+      params.set("status", status);
+    }
+    router.push(`?${params.toString()}`);
+  };
+
+  // Infinite query for fetching actions on scroll
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } = useInfiniteQuery({
+    queryKey: ["actions-logs", activeStatus],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await getActions({
+        page: pageParam,
+        page_size: 50,
+        status: activeStatus as any
+      });
+      return {
+        actions: response.success && response.data?.data ? response.data.data : [],
+        pagination: response.data?.pagination || {
+          total: 0,
+          page: pageParam,
+          page_size: 50,
+          total_pages: 0,
+          has_next: false,
+          has_prev: false
+        },
+        nextPage: pageParam + 1
+      };
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage.pagination.has_next ? lastPage.nextPage : undefined;
+    },
+    initialPageParam: 1,
+    initialData: {
+      pages: [
+        {
+          actions: initialActions,
+          pagination: initialPagination,
+          nextPage: 2
+        }
+      ],
+      pageParams: [1]
+    }
+  });
+
+  // Combine all actions from all pages
+  const allActions = data?.pages.flatMap((page) => page.actions) || [];
+
+  // Setup Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
     console.log(`Exporting as ${type}`);
-  };
-
-  const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (page !== undefined) {
-      params.set("page", String(page));
-    }
-
-    if (page_size !== undefined) {
-      params.set("page_size", String(page_size));
-      params.set("page", "1");
-    }
-
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
   };
 
   // Get action status badge variant and color
@@ -91,11 +149,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
       default:
         return { variant: "secondary", color: "bg-gray-100 text-gray-800" };
     }
-  };
-
-  // Get task status variant
-  const getTaskStatusVariant = (status: string) => {
-    return status === "COMPLETED" ? "default" : "secondary";
   };
 
   // Get execution status badge
@@ -122,14 +175,32 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-semibold">Risk Actions</CardTitle>
+            <CardTitle className="text-xl font-semibold">Action Execution Logs</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              Manage and track risk treatment actions
+              Complete history of all actions with submission and review status (scroll to load
+              more)
             </p>
           </div>
         </div>
       </CardHeader>
       <CardContent>
+        {/* Status Tabs */}
+        <div className="mb-6 flex items-center gap-2 overflow-x-auto border-b">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => handleStatusChange(tab.value)}
+              className={cn(
+                "border-b-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                activeStatus === tab.value
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              )}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => handleExport("copy")}>
@@ -154,7 +225,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
             </Button>
           </div>
           <Search
-            placeholder="Search risks..."
+            placeholder="Search actions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e)}
             className="max-w-xs"
@@ -167,36 +238,45 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               <TableRow>
                 <TableHead className="w-[250px]">Action Details</TableHead>
                 <TableHead>Risk</TableHead>
-                <TableHead>Assigned To</TableHead>
+                <TableHead>Executor</TableHead>
                 <TableHead>Reviewer</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Action Status</TableHead>
-                <TableHead>Task Type</TableHead>
+                <TableHead>Execution Status</TableHead>
+                <TableHead>Submitted</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!actions?.length ? (
+              {status === "pending" && !allActions.length ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-12 text-center">
+                  <TableCell colSpan={9} className="py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                      <p className="text-muted-foreground">Loading action logs...</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : !allActions.length ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <AlertTriangle className="text-muted-foreground/50 h-8 w-8" />
-                      <p className="text-muted-foreground">No actions assigned</p>
+                      <p className="text-muted-foreground">No action logs found</p>
                       <p className="text-muted-foreground text-xs">
-                        You will see your action items here
+                        Actions will appear here once they are executed
                       </p>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                actions?.map((actionDef) => {
+                allActions?.map((actionDef) => {
                   const action = actionDef.action;
-                  const task = actionDef.task;
                   const execution = actionDef.execution;
-                  const isUserExecutor = task.task_type === "EXECUTION";
-                  const isUserReviewer = task.task_type === "REVIEW";
                   const overdue = isOverdue(action.due_date, action.status);
-                  const executionStatus = getExecutionStatusBadge(execution?.status);
+                  const executionStatus = execution
+                    ? getExecutionStatusBadge(execution.status)
+                    : null;
 
                   return (
                     <TableRow key={action.id}>
@@ -208,13 +288,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                           <div className="text-muted-foreground line-clamp-2 text-xs">
                             {action.instructions.slice(0, 80)}
                           </div>
-                          {execution && (
-                            <div className="mt-2 flex items-center gap-1">
-                              <Badge className={cn("text-xs", executionStatus.color)}>
-                                {executionStatus.label}
-                              </Badge>
-                            </div>
-                          )}
                         </div>
                       </TableCell>
 
@@ -279,27 +352,36 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                       </TableCell>
 
                       <TableCell>
-                        <Badge variant={getTaskStatusVariant(task.status)}>
-                          {isUserExecutor ? "Executor" : "Reviewer"}
-                        </Badge>
+                        {execution ? (
+                          <Badge className={cn("text-xs", executionStatus?.color)}>
+                            {executionStatus?.label}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            Not Started
+                          </Badge>
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="text-sm">
+                          {execution?.submitted_at ? (
+                            <div>
+                              <div className="font-medium">
+                                {format(new Date(execution.submitted_at), "MMM dd, yyyy")}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                {format(new Date(execution.submitted_at), "h:mm a")}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {isUserExecutor && action.status !== "COMPLETED" && !execution && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => {
-                                setSelectedActionForFindings(actionDef);
-                                setFindingsDialogOpen(true);
-                              }}
-                              className="h-8 gap-1.5">
-                              <Upload className="h-3.5 w-3.5" />
-                              Submit
-                            </Button>
-                          )}
-
                           {execution && (
                             <Button
                               size="sm"
@@ -314,18 +396,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                             </Button>
                           )}
 
-                          {isUserReviewer && execution?.status === "SUBMITTED" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedActionForReview(actionDef);
-                                setReviewDialogOpen(true);
-                              }}
-                              className="h-8 gap-1.5">
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Review
-                            </Button>
+                          {!execution && (
+                            <span className="text-muted-foreground text-xs">No submission</span>
                           )}
                         </div>
                       </TableCell>
@@ -335,34 +407,21 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               )}
             </TableBody>
           </Table>
-          {actions?.length > 0 && (
-            <CustomPagination
-              pagination={pagination}
-              updatePagination={updatePagination}
-              allowSetPageSize={true}
-              showDetails={true}
-              className="border-t"
-            />
-          )}
+
+          {/* Infinite scroll trigger */}
+          <div ref={observerTarget} className="flex justify-center py-4">
+            {isFetchingNextPage && (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                <span className="text-muted-foreground text-sm">Loading more actions...</span>
+              </div>
+            )}
+            {!hasNextPage && allActions.length > 0 && (
+              <span className="text-muted-foreground text-sm">No more actions to load</span>
+            )}
+          </div>
         </div>
       </CardContent>
-
-      {/* Action Findings Dialog - For Executors to submit findings */}
-      {selectedActionForFindings && (
-        <ActionFindingsDialog
-          open={findingsDialogOpen}
-          onOpenChange={setFindingsDialogOpen}
-          risk={
-            {
-              id: selectedActionForFindings.action.risk_id,
-              title: selectedActionForFindings.action.risk,
-              description: selectedActionForFindings.action.instructions,
-              status: selectedActionForFindings.action.status
-            } as any
-          }
-          actionOwnerId={selectedActionForFindings.action.executer_id}
-        />
-      )}
 
       {/* Action Evidence Viewer Dialog - For viewing submitted evidence */}
       {selectedActionForEvidence && selectedActionForEvidence.execution && (
@@ -370,15 +429,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
           open={evidenceDialogOpen}
           onOpenChange={setEvidenceDialogOpen}
           execution={selectedActionForEvidence.execution}
-        />
-      )}
-
-      {/* Action Review Dialog - For Reviewers to review submissions */}
-      {selectedActionForReview && (
-        <ActionReviewDialog
-          open={reviewDialogOpen}
-          onOpenChange={setReviewDialogOpen}
-          actionDefinition={selectedActionForReview}
         />
       )}
     </Card>

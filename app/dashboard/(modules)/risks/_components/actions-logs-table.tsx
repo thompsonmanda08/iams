@@ -19,42 +19,30 @@ import {
   FileSpreadsheet,
   Printer,
   AlertTriangle,
-  View,
-  Upload,
   Eye,
-  CheckCircle2,
-  Clock,
   AlertCircle
 } from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { ActionFindingsDialog } from "@/app/dashboard/(modules)/risks/_components/action-findings-dialog";
 import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_components/action-evidence-viewer-dialog";
-import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/action-review-dialog";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { Pagination } from "@/lib/types";
 
-interface ActionsTableProps {
+interface ActionsLogsTableProps {
   actions: ActionDefinition[];
   pagination: Pagination;
 }
 
-export function ActionsTable({ actions, pagination }: ActionsTableProps) {
+export function ActionsLogsTable({ actions, pagination }: ActionsLogsTableProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const searchParams = useSearchParams();
   const [_, startTransition] = useTransition();
-  const [selectedActionForFindings, setSelectedActionForFindings] =
-    useState<ActionDefinition | null>(null);
-  const [findingsDialogOpen, setFindingsDialogOpen] = useState(false);
   const [selectedActionForEvidence, setSelectedActionForEvidence] =
     useState<ActionDefinition | null>(null);
   const [evidenceDialogOpen, setEvidenceDialogOpen] = useState(false);
-  const [selectedActionForReview, setSelectedActionForReview] =
-    useState<ActionDefinition | null>(null);
-  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
     console.log(`Exporting as ${type}`);
@@ -93,11 +81,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     }
   };
 
-  // Get task status variant
-  const getTaskStatusVariant = (status: string) => {
-    return status === "COMPLETED" ? "default" : "secondary";
-  };
-
   // Get execution status badge
   const getExecutionStatusBadge = (status?: string) => {
     switch (status?.toUpperCase()) {
@@ -122,9 +105,9 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-semibold">Risk Actions</CardTitle>
+            <CardTitle className="text-xl font-semibold">Action Execution Logs</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              Manage and track risk treatment actions
+              Complete history of all actions with submission and review status
             </p>
           </div>
         </div>
@@ -154,7 +137,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
             </Button>
           </div>
           <Search
-            placeholder="Search risks..."
+            placeholder="Search actions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e)}
             className="max-w-xs"
@@ -167,23 +150,24 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               <TableRow>
                 <TableHead className="w-[250px]">Action Details</TableHead>
                 <TableHead>Risk</TableHead>
-                <TableHead>Assigned To</TableHead>
+                <TableHead>Executor</TableHead>
                 <TableHead>Reviewer</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Action Status</TableHead>
-                <TableHead>Task Type</TableHead>
+                <TableHead>Execution Status</TableHead>
+                <TableHead>Submitted</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!actions?.length ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-12 text-center">
+                  <TableCell colSpan={9} className="py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <AlertTriangle className="text-muted-foreground/50 h-8 w-8" />
-                      <p className="text-muted-foreground">No actions assigned</p>
+                      <p className="text-muted-foreground">No action logs found</p>
                       <p className="text-muted-foreground text-xs">
-                        You will see your action items here
+                        Actions will appear here once they are executed
                       </p>
                     </div>
                   </TableCell>
@@ -191,12 +175,11 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               ) : (
                 actions?.map((actionDef) => {
                   const action = actionDef.action;
-                  const task = actionDef.task;
                   const execution = actionDef.execution;
-                  const isUserExecutor = task.task_type === "EXECUTION";
-                  const isUserReviewer = task.task_type === "REVIEW";
                   const overdue = isOverdue(action.due_date, action.status);
-                  const executionStatus = getExecutionStatusBadge(execution?.status);
+                  const executionStatus = execution
+                    ? getExecutionStatusBadge(execution.status)
+                    : null;
 
                   return (
                     <TableRow key={action.id}>
@@ -208,13 +191,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                           <div className="text-muted-foreground line-clamp-2 text-xs">
                             {action.instructions.slice(0, 80)}
                           </div>
-                          {execution && (
-                            <div className="mt-2 flex items-center gap-1">
-                              <Badge className={cn("text-xs", executionStatus.color)}>
-                                {executionStatus.label}
-                              </Badge>
-                            </div>
-                          )}
                         </div>
                       </TableCell>
 
@@ -279,27 +255,36 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                       </TableCell>
 
                       <TableCell>
-                        <Badge variant={getTaskStatusVariant(task.status)}>
-                          {isUserExecutor ? "Executor" : "Reviewer"}
-                        </Badge>
+                        {execution ? (
+                          <Badge className={cn("text-xs", executionStatus?.color)}>
+                            {executionStatus?.label}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            Not Started
+                          </Badge>
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="text-sm">
+                          {execution?.submitted_at ? (
+                            <div>
+                              <div className="font-medium">
+                                {format(new Date(execution.submitted_at), "MMM dd, yyyy")}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                {format(new Date(execution.submitted_at), "h:mm a")}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {isUserExecutor && action.status !== "COMPLETED" && !execution && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => {
-                                setSelectedActionForFindings(actionDef);
-                                setFindingsDialogOpen(true);
-                              }}
-                              className="h-8 gap-1.5">
-                              <Upload className="h-3.5 w-3.5" />
-                              Submit
-                            </Button>
-                          )}
-
                           {execution && (
                             <Button
                               size="sm"
@@ -314,18 +299,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                             </Button>
                           )}
 
-                          {isUserReviewer && execution?.status === "SUBMITTED" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedActionForReview(actionDef);
-                                setReviewDialogOpen(true);
-                              }}
-                              className="h-8 gap-1.5">
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Review
-                            </Button>
+                          {!execution && (
+                            <span className="text-muted-foreground text-xs">No submission</span>
                           )}
                         </div>
                       </TableCell>
@@ -347,38 +322,12 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
         </div>
       </CardContent>
 
-      {/* Action Findings Dialog - For Executors to submit findings */}
-      {selectedActionForFindings && (
-        <ActionFindingsDialog
-          open={findingsDialogOpen}
-          onOpenChange={setFindingsDialogOpen}
-          risk={
-            {
-              id: selectedActionForFindings.action.risk_id,
-              title: selectedActionForFindings.action.risk,
-              description: selectedActionForFindings.action.instructions,
-              status: selectedActionForFindings.action.status
-            } as any
-          }
-          actionOwnerId={selectedActionForFindings.action.executer_id}
-        />
-      )}
-
       {/* Action Evidence Viewer Dialog - For viewing submitted evidence */}
       {selectedActionForEvidence && selectedActionForEvidence.execution && (
         <ActionEvidenceViewerDialog
           open={evidenceDialogOpen}
           onOpenChange={setEvidenceDialogOpen}
           execution={selectedActionForEvidence.execution}
-        />
-      )}
-
-      {/* Action Review Dialog - For Reviewers to review submissions */}
-      {selectedActionForReview && (
-        <ActionReviewDialog
-          open={reviewDialogOpen}
-          onOpenChange={setReviewDialogOpen}
-          actionDefinition={selectedActionForReview}
         />
       )}
     </Card>

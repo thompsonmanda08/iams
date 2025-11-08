@@ -190,6 +190,80 @@ export interface AssessActionFindingsInput {
   decision: "APPROVE" | "REQUEST_CHANGES";
 }
 
+// Action Task Type
+export type TaskType = "EXECUTION" | "REVIEW";
+export type TaskStatus = "PENDING" | "COMPLETED";
+
+// Action Task
+export interface Task {
+  id: string;
+  organization_id: string;
+  action_id: string;
+  assigned_to: string;
+  task_type: TaskType;
+  status: TaskStatus;
+  due_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Action Execution
+export interface Execution {
+  id: string;
+  organization_id: string;
+  action_id: string;
+  executor_id: string;
+  evidence_description: string;
+  evidence_file_url: string | null;
+  evidence_file_name: string | null;
+  evidence_file_type: string | null;
+  status: "PENDING" | "SUBMITTED" | "REJECTED";
+  submitted_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+// Main Action
+export interface Action {
+  id: string;
+  organization_id: string;
+  risk: string;
+  risk_id: string;
+  instructions: string;
+  executer_id: string;
+  reviewer_id: string | null;
+  due_date: string;
+  overdue_by: number;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  completion_date: string | null;
+  created_by: string;
+  created_at: string;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+// Complete Action Definition with all related data
+export interface ActionDefinition {
+  action: Action;
+  task: Task;
+  execution: Execution | null;
+  executer_name: string;
+  executer_email: string;
+  reviewer_name: string | null;
+  reviewer_email: string | null;
+}
+
+// Query parameters for fetching actions
+export interface ActionQueryParams {
+  page?: number;
+  page_size?: number;
+  status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  risk_id?: string;
+  task_type?: TaskType;
+}
+
 // Risk Register
 export interface RiskRegister {
   id: string;
@@ -1522,5 +1596,32 @@ export async function createRiskAction(data: {
     return successResponse(response.data.data, "Risk action created successfully");
   } catch (error) {
     return handleError(error, "POST | CREATE RISK ACTION", url);
+  }
+}
+
+/**
+ * Get all actions for the logged-in user with pagination
+ * GET /api/v1/risks/actions?page=1&page_size=50&status=PENDING&risk_id=""&task_type="EXECUTION|REVIEW"
+ */
+export async function getActions(params: ActionQueryParams): Promise<APIResponse> {
+  try {
+    const queryParams = new URLSearchParams();
+
+    if (params.page) queryParams.append("page", String(params.page));
+    if (params.page_size) queryParams.append("page_size", String(params.page_size));
+    if (params.status) queryParams.append("status", params.status);
+    if (params.risk_id) queryParams.append("risk_id", params.risk_id);
+    if (params.task_type) queryParams.append("task_type", params.task_type);
+
+    const url = `/api/v1/risks/actions${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
+    const response = await authenticatedApiClient({
+      url,
+      method: "GET"
+    });
+
+    return successResponse(response.data, "Actions retrieved successfully");
+  } catch (error) {
+    return handleError(error, "GET | GET ACTIONS", "/api/v1/risks/actions");
   }
 }

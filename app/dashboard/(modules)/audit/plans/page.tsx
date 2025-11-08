@@ -4,6 +4,7 @@ import { Plus, Download } from "lucide-react";
 import Link from "next/link";
 import { AuditPlansTable } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plans-table";
 import { getAuditPlans } from "@/app/_actions/audit-module-actions";
+import PageHeader from "@/components/page-header";
 
 export default async function AuditPlansPage() {
   const plansResponse = await getAuditPlans();
@@ -15,12 +16,11 @@ export default async function AuditPlansPage() {
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Audit Plans</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Manage and track all audit plans and schedules
-              </p>
-            </div>
+            <PageHeader
+              title="Audit Plans"
+              description="  Manage and track all audit plans and schedules"
+              icon="ListCheck"
+            />
             <div className="flex gap-2">
               <Button variant="outline" className="gap-2">
                 <Download className="h-4 w-4" />
