@@ -400,7 +400,7 @@ export function CreateOrUpdateDepartment({
   const [formData, setFormData] = useState<Department>(INIT_DEPARTMENT);
 
   const { data } = useDepartments({
-    isActive: true,
+    is_active: true,
     page_size: 100,
     page: 1
   });

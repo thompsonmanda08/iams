@@ -35,7 +35,7 @@ export default function UserMenu({ user }: { user: User }) {
     console.error("Logout failed:", response.message);
   };
 
-  return !user || Object.keys(user).length <= 0 ? (
+  return !user?.email ? (
     <>
       <Skeleton className="h-10 w-10 rounded-lg" />
     </>

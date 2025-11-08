@@ -62,12 +62,10 @@ const INIT_FORM_DATA: AreaFormData = {
 
 export default function AuditableAreaConfig({
   areas = [],
-  pagination,
-  departments
+  pagination
 }: {
   areas: AuditConfigurableItem[];
   pagination?: Pagination;
-  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id"> | null>(
@@ -75,6 +73,14 @@ export default function AuditableAreaConfig({
   );
   const [areaId, setAreaId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const { data } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+
+  const departments = (data?.data?.data || []) as Department[];
 
   const [items, setItems] = useState<AuditConfigurableItem[]>([...areas]);
 
@@ -146,14 +152,14 @@ export default function AuditableAreaConfig({
           </Button>
         </div>
 
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>Auditable Area</TableHead>
-              <TableHead>Description of Area</TableHead>
-              <TableHead>Department</TableHead>
+              <TableHead className="w-1/4">Auditable Area</TableHead>
+              <TableHead className="w-1/3">Description</TableHead>
+              <TableHead className="w-1/4">Department</TableHead>
               {/* <TableHead>Status</TableHead> */}
-              <TableHead className="w-24" align="center">
+              <TableHead className="w-[120px]" align="center">
                 Actions
               </TableHead>
             </TableRow>
@@ -194,7 +200,7 @@ export default function AuditableAreaConfig({
                 const departmentName =
                   item?.department ||
                   departments.find((d) => d.id === item.department_id)?.name ||
-                  "No department assigned - Global";
+                  "No parent department";
                 return (
                   <TableRow
                     key={item.id}
@@ -203,19 +209,23 @@ export default function AuditableAreaConfig({
                     //   router.push(`/dashboard/system-configs/items/${item.id}`);
                     // }}
                   >
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Building className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.name || item?.title}</span>
+                    <TableCell className="p-3 align-top">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <Building className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+                        <div className="line-clamp-6 min-w-0 flex-1 font-medium">
+                          {item.name || item?.title}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">
+                    <TableCell className="p-3 align-top">
+                      <div className="line-clamp-6 min-w-0 font-mono text-sm">
                         {item.description || "No description provided"}
-                      </span>
+                      </div>
                     </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{departmentName}</span>
+                    <TableCell className="p-3 align-top">
+                      <div className="line-clamp-6 min-w-0 font-mono text-sm">
+                        {item?.department_name || "No parent department"}
+                      </div>
                     </TableCell>
                     {/* <TableCell>
                     <span
@@ -335,7 +345,7 @@ export function CreateOrUpdateArea({
   });
 
   const { data } = useDepartments({
-    isActive: true,
+    is_active: true,
     page_size: 100,
     page: 1
   });

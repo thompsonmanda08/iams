@@ -41,7 +41,7 @@ export function NavUser({ user }: { user: User }) {
   };
 
   // LOADING STATE
-  return user == null || Object.keys(user).length <= 0 ? (
+  return !user?.email ? (
     <>
       <Skeleton className="h-10 w-full rounded-lg" />
     </>

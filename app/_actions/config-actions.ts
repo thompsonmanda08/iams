@@ -234,7 +234,7 @@ export async function getDepartmentById(id: string): Promise<APIResponse> {
 export async function getDepartmentRiskCategories(id: string): Promise<APIResponse> {
   const url = `/api/v1/departments/${id}/risk-categories`;
   try {
-    const response = await authenticatedApiClient({ url });  
+    const response = await authenticatedApiClient({ url });
     return successResponse(response?.data.data);
   } catch (error: Error | any) {
     return handleError(error, "GET", url);
@@ -248,34 +248,15 @@ export async function getDepartmentRiskCategories(id: string): Promise<APIRespon
  *
  * NOTE: Supports hierarchical departments via parent_id
  */
-export async function createDepartment({
-  name,
-  code,
-  description,
-  parentId
-}: {
-  name: string;
-  code: string;
-  description?: string;
-  parentId?: string | null;
-}): Promise<APIResponse> {
+export async function createDepartment(data: Department): Promise<APIResponse> {
   const url = `/api/v1/departments`;
 
-  if (!name) {
+  if (!data?.name) {
     return handleBadRequest("Name and code are required");
   }
 
   try {
-    const response = await authenticatedApiClient({
-      url,
-      method: "POST",
-      data: {
-        name,
-        code: name.toUpperCase().replace(/\s+/g, "_"), // Generate code from name,
-        description,
-        parent_id: parentId || null
-      }
-    });
+    const response = await authenticatedApiClient({ url, method: "POST", data });
     revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Department created successfully");
   } catch (error: Error | any) {
@@ -288,39 +269,14 @@ export async function createDepartment({
  * Endpoint: PUT /api/v1/departments/{id}
  * Status: ✅ Documented in API
  */
-export async function updateDepartment({
-  id,
-  name,
-  code,
-  description,
-  parentId,
-  isActive
-}: {
-  id: string;
-  name: string;
-  code: string;
-  description?: string;
-  parentId?: string | null;
-  isActive?: boolean;
-}): Promise<APIResponse> {
-  const url = `/api/v1/departments/${id}`;
-
-  if (!id || !name || !code) {
-    return handleBadRequest("ID, name, and code are required");
+export async function updateDepartment(data: Department): Promise<APIResponse> {
+  if (!data?.id) {
+    return handleBadRequest("Department ID is required");
   }
+  const url = `/api/v1/departments/${data?.id}`;
 
   try {
-    const response = await authenticatedApiClient({
-      url,
-      method: "PUT",
-      data: {
-        name,
-        code,
-        description,
-        parent_id: parentId || null,
-        is_active: isActive
-      }
-    });
+    const response = await authenticatedApiClient({ url, method: "PUT", data });
     revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Department updated successfully");
   } catch (error: Error | any) {

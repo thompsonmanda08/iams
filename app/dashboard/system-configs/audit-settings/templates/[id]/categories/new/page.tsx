@@ -18,6 +18,8 @@ import { SelectField } from "@/components/ui/select-field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { group } from "console";
 import { toast } from "sonner";
+import BackButton from "@/components/back-button";
+import PageHeader from "@/components/page-header";
 
 interface NewCategoryPageProps {
   params: Promise<{
@@ -107,7 +109,7 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
         //   description: `Category ${isUpdating ? "updated" : "created"} successfully`
         // });
         router.push(`/dashboard/system-configs/audit-settings/templates/${templateId}`);
-      } else{
+      } else {
         toast.error(result.message || `Failed to ${isUpdating ? "update" : "create"} category`);
         // toast({
         //   title: "Error",
@@ -132,18 +134,12 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
       {/* Header */}
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.back()}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {isUpdating ? "Update" : "Create"} Template Category
-              </h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {isUpdating ? "Update" : "Create"} a new category for this template
-              </p>
-            </div>
+          <div className="flex items-center justify-between gap-4">
+            <PageHeader
+              title={`${isUpdating ? "Update" : "Create"} Template Category`}
+              description={`${isUpdating ? "Update" : "Create"} a new category for this template`}
+            />
+            <BackButton className="mb-0 h-8!" title="Back to Categories" />
           </div>
         </div>
       </div>
@@ -398,7 +394,7 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
                   </p>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t pt-6">
+                <div className="sticky bottom-0 flex flex-col-reverse justify-end gap-3 border-t pt-6 backdrop-blur sm:-mx-6 sm:flex-row sm:px-8 sm:pb-8">
                   <Button
                     type="button"
                     variant="outline"

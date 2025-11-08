@@ -109,7 +109,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     // initiatives
     // towns,
     // departments,
-    // indicativeTargets,
+    // indicativeTargets
     // findingsCategories
     // processActivities
   });
@@ -181,25 +181,21 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           {/* Auditable Areas Tab */}
           <TabsContent value="areas">
             <Suspense fallback={<TableLoading />}>
-              <AuditableAreaConfig
-                areas={areas}
-                departments={departments}
-                pagination={townsPagination}
-              />
+              <AuditableAreaConfig areas={areas} pagination={townsPagination} />
             </Suspense>
           </TabsContent>
 
           {/* Indicative Targets Tab */}
           <TabsContent value="targets">
             <Suspense fallback={<TableLoading />}>
-              <IndicativeTargetsTab targets={indicativeTargets} departments={departments} />
+              <IndicativeTargetsTab targets={indicativeTargets} />
             </Suspense>
           </TabsContent>
 
           {/* Strategic Pillars Tab */}
           <TabsContent value="pillars">
             <Suspense fallback={<TableLoading />}>
-              <StrategicPillarsTab pillars={pillars} departments={departments} />
+              <StrategicPillarsTab pillars={pillars} />
             </Suspense>
           </TabsContent>
 
@@ -220,12 +216,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           {/* Process Activity Tab */}
           <TabsContent value="process">
             <Suspense fallback={<TableLoading />}>
-              <ProcessActivityTab
-                processes={processActivities}
-                departments={departments}
-                pillars={pillars}
-                areas={areas}
-              />
+              <ProcessActivityTab processes={processActivities} pillars={pillars} areas={areas} />
             </Suspense>
           </TabsContent>
         </Tabs>

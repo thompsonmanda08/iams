@@ -6,7 +6,6 @@ import { ChevronDownIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -22,6 +21,8 @@ export function DatePicker({
   classNames,
   value,
   onValueChange,
+  minDate,
+  maxDate,
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
@@ -33,6 +34,8 @@ export function DatePicker({
   isInvalid?: boolean;
   value?: Date;
   onValueChange?: (value?: Date) => void;
+  minDate?: Date;
+  maxDate?: Date;
   classNames?: {
     wrapper?: string;
     input?: string;
@@ -42,6 +45,17 @@ export function DatePicker({
   };
 }) {
   const [open, setOpen] = React.useState(false);
+
+  // Create disabled matcher for dates
+  const disabledDates = React.useMemo(() => {
+    if (!minDate && !maxDate) return undefined;
+
+    return (date: Date) => {
+      if (minDate && date < minDate) return true;
+      if (maxDate && date > maxDate) return true;
+      return false;
+    };
+  }, [minDate, maxDate]);
 
   return (
     <div className={cn("flex w-full flex-col", classNames?.wrapper)}>
@@ -67,9 +81,11 @@ export function DatePicker({
               classNames?.input
             )}
             disabled={isDisabled || props?.disabled}>
-            {value && value instanceof Date && !isNaN(value.getTime())
-              ? format(value, "PPP")
-              : <span>Pick a date</span>}
+            {value && value instanceof Date && !isNaN(value.getTime()) ? (
+              format(value, "PPP")
+            ) : (
+              <span>Pick a date</span>
+            )}
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
@@ -77,8 +93,10 @@ export function DatePicker({
           <Calendar
             mode="single"
             selected={value}
-            disabled={isDisabled || props?.disabled}
+            disabled={disabledDates || isDisabled || props?.disabled}
             captionLayout="dropdown"
+            startMonth={new Date(1900, 0)}
+            endMonth={new Date(2099, 11)}
             onSelect={(date) => {
               onValueChange && onValueChange(date);
               setOpen(false);

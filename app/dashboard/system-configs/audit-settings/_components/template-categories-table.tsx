@@ -11,14 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash2, Loader2, ArrowUpDown, ArrowRight } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { Edit, Trash2, Loader2, ArrowRight, Pencil, View } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,10 +24,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { deleteTemplateCategory } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../../../../components/ui/tooltip";
 import { TemplateCategory } from "@/lib/types/audit-types";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface TemplateCategoriesTableProps {
   categories: TemplateCategory[];
@@ -148,7 +141,7 @@ export function TemplateCategoriesTable({
               key={category.id}
               onClick={(e) => {
                 router.push(
-                  `/dashboard/audit/workpapers/templates/${templateId}/categories/${category.id}`
+                  `/dashboard/system-configs/audit-settings/templates/${templateId}/categories/${category.id}`
                 );
                 e.stopPropagation();
               }}>
@@ -177,57 +170,38 @@ export function TemplateCategoriesTable({
                 </p>
               </TableCell>
               <TableCell>
-                <div className="flex gap-2">
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          router.push(
-                            `/dashboard/audit/workpapers/templates/${templateId}/categories/${category.id}/edit`
-                          );
-                          e.stopPropagation();
-                        }}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit Category</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => handleDeleteClick(category, e)}
-                        className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      classNames={{
-                        content: "bg-destructive text-white",
-                        arrow: "bg-destructive! fill-destructive!"
-                      }}>
-                      Delete Category
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          router.push(
-                            `/dashboard/audit/workpapers/templates/${templateId}/categories/${category.id}`
-                          );
-                          e.stopPropagation();
-                        }}>
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>View Template</TooltipContent>
-                  </Tooltip>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-8 gap-1.5">
+                    <Link
+                      href={`/dashboard/system-configs/audit-settings/templates/${templateId}/categories/${category.id}`}
+                      className="flex cursor-pointer items-center gap-2">
+                      <View className="h-3.5 w-3.5" />
+                      View
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-8 gap-1.5">
+                    <Link
+                      href={`/dashboard/system-configs/audit-settings/templates/${templateId}/categories/${category.id}/edit`}
+                      className="flex cursor-pointer items-center gap-2">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => handleDeleteClick(category, e)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>

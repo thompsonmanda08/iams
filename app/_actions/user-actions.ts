@@ -86,6 +86,20 @@ export async function getUsers(params?: {
   }
 }
 
+export async function getDepartmentHeads(params?: {
+  departmentId?: string;
+}): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+  if (params?.departmentId) queryParams.append("department_id", params.departmentId);
+  const url = `/api/v1/users/department-heads/list${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+  try {
+    const response = await authenticatedApiClient({ url: url, method: "GET" });
+    return successResponse(response.data.data, "Users fetched successfully");
+  } catch (error) {
+    return handleError(error, "GET", url);
+  }
+}
+
 export async function getUserById(id: string): Promise<APIResponse> {
   const url = `/api/v1/users/${id}`;
 

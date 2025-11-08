@@ -168,8 +168,7 @@ export default function ProcessActivityTab({
               </TableRow>
             ) : (
               items.map((item) => {
-                const departmentName =
-                  item?.department || "No department assigned - map from departments";
+                const departmentName = item?.department || "No parent department";
                 return (
                   <TableRow
                     key={item.id}

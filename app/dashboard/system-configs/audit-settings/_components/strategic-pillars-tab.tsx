@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Target, PencilLine, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2, Target, PencilLine, ShieldAlert, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { AuditConfigurableItem, Department, ErrorState, Pagination } from "@/lib/types";
@@ -61,12 +61,10 @@ const INIT_FORM_DATA: PillarFormData = {
 
 export default function StrategicPillarsTab({
   pillars = [],
-  departments = [],
   pagination
 }: {
   pillars: AuditConfigurableItem[];
   pagination?: Pagination;
-  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<PillarFormData | null>(INIT_FORM_DATA);
@@ -74,6 +72,14 @@ export default function StrategicPillarsTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [items, setItems] = useState<AuditConfigurableItem[]>(pillars);
+
+  const { data } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+
+  const departments = (data?.data?.data || []) as Department[];
 
   useEffect(() => {
     setItems(pillars);
@@ -113,12 +119,13 @@ export default function StrategicPillarsTab({
     deleteMutation.mutate(selectedId);
   };
 
-  console.log("departments:", departments);
-
-  const getDepartmentName = (departmentId: string) => {
-    const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : "No department assigned - Global";
-  };
+  const getDepartmentName = useCallback(
+    (departmentId: string) => {
+      const department = departments.find((d) => d.id === departmentId);
+      return department ? department.name : "No parent department";
+    },
+    [departments]
+  );
 
   return (
     <>
@@ -160,7 +167,7 @@ export default function StrategicPillarsTab({
                   <Empty>
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
-                        <Target />
+                        <Building2 />
                       </EmptyMedia>
                       <EmptyTitle>No strategic pillars yet</EmptyTitle>
                       <EmptyDescription>
@@ -189,7 +196,7 @@ export default function StrategicPillarsTab({
                   <TableRow key={item.id} className="cursor-pointer">
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Target className="text-muted-foreground h-4 w-4" />
+                        <Building2 className="text-muted-foreground h-4 w-4" />
                         <span className="font-medium">{item.title}</span>
                       </div>
                     </TableCell>
@@ -302,7 +309,7 @@ function CreateOrUpdate({
   });
 
   const { data } = useDepartments({
-    isActive: true,
+    is_active: true,
     page_size: 100,
     page: 1
   });

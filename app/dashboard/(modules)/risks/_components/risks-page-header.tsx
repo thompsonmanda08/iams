@@ -26,7 +26,7 @@ export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderPro
           </div>
           <div className="flex gap-4">
             <BackButton title="Back to registers" />
-            <Button onClick={() => setCreateDialogOpen(true)}>
+            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Risk
             </Button>

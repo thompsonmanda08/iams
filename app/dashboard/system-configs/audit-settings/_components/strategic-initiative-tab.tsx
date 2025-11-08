@@ -27,12 +27,10 @@ import { Input } from "@/components/ui/input";
 import {
   createStrategicInitiative,
   updateStrategicInitiative,
-  deleteStrategicInitiative,
-  getStrategicPillars,
-  getStrategicInitiatives
+  deleteStrategicInitiative
 } from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -45,6 +43,10 @@ import {
 import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
+import {
+  useStrategicPillars,
+  useStrategicInitiatives
+} from "@/hooks/use-audit-settings-query-data";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Spinner } from "@/components/ui/spinner";
@@ -63,25 +65,29 @@ const INIT_FORM_DATA: InitiativeFormData = {
   end_date: new Date().toISOString()
 };
 
-export default function StrategicInitiativeTab({
-  // initiatives = [],
-  // pagination
-  departments
-}: {
-  initiatives: AuditConfigurableItem[];
-  pagination?: Pagination;
-  departments: Department[];
-}) {
+export default function StrategicInitiativeTab(
+  {
+    // initiatives = [],
+    // pagination
+    // departments
+  }: {
+    initiatives: AuditConfigurableItem[];
+    pagination?: Pagination;
+    departments: Department[];
+  }
+) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<InitiativeFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // const [items, setItems] = useState<AuditConfigurableItem[]>(initiatives);
+  const { data } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
 
-  // useEffect(() => {
-  //   setItems(initiatives);
-  // }, [initiatives]);
+  const departments = (data?.data?.data || []) as Department[];
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -118,22 +124,20 @@ export default function StrategicInitiativeTab({
   };
   const [pillarId, setPillarId] = useState<string | null>(null);
 
-  const { data: initiativesResponse, isLoading: loadingInitiatives } = useQuery({
-    queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES, pillarId],
-    queryFn: () => getStrategicInitiatives(String(pillarId), { page: 1, page_size: 100 }),
-    enabled: !!pillarId
+  const { data: initiativesResponse, isLoading: loadingInitiatives } = useStrategicInitiatives(
+    pillarId || "",
+    { page: 1, page_size: 100 }
+  );
+
+  const initiatives = initiativesResponse?.data || [];
+  const pagination = initiativesResponse?.pagination || null;
+
+  const { data: pillarsResponse, isLoading: loadingPillars } = useStrategicPillars(undefined, {
+    page: 1,
+    page_size: 100
   });
 
-  const initiatives = initiativesResponse?.data?.data || [];
-  const pagination = initiativesResponse?.data?.pagination || null;
-
-  const { data: pillarsResponse, isLoading: loadingPillars } = useQuery({
-    queryKey: [QUERY_KEYS.STRATEGIC_PILLARS],
-    queryFn: () => getStrategicPillars(undefined, { page: 1, page_size: 100 })
-    // enabled: !!formData?.department_id
-  });
-
-  const pillars = pillarsResponse?.data?.data || [];
+  const pillars = pillarsResponse?.data || [];
 
   const pillarOptions = useMemo(() => {
     return pillars.map((pillar: any) => ({
@@ -144,7 +148,7 @@ export default function StrategicInitiativeTab({
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : "No department assigned - Global";
+    return department ? department.name : "No parent department";
   };
 
   const selectedPillar = useMemo(() => {
@@ -153,7 +157,7 @@ export default function StrategicInitiativeTab({
   }, [pillarId, pillars]);
 
   const departmentName = useMemo(() => {
-    if (!selectedPillar) return "No department assigned - Global";
+    if (!selectedPillar) return "No parent department";
     return getDepartmentName(selectedPillar.department_id);
   }, [selectedPillar]);
 
@@ -201,8 +205,8 @@ export default function StrategicInitiativeTab({
             <TableHeader>
               <TableRow>
                 <TableHead>Strategic Initiative</TableHead>
-                <TableHead>Strategic Pillar</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Strategic Pillar</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead className="w-24" align="center">
                   Actions
@@ -256,16 +260,11 @@ export default function StrategicInitiativeTab({
                 initiatives.map((item: any) => {
                   return (
                     <TableRow key={item.id} className="cursor-pointer">
-                      <TableCell>
-                        <div className="flex items-center gap-2">
+                      <TableCell className="p-3 align-top">
+                        <div className="flex min-w-0 items-start gap-2">
                           <Lightbulb className="text-muted-foreground h-4 w-4" />
                           <span className="font-medium">{item.title}</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">
-                          {item?.pillar || "No pillar assigned"}
-                        </span>
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-sm">
@@ -273,9 +272,15 @@ export default function StrategicInitiativeTab({
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm">{departmentName}</span>
+                        <span className="font-mono text-sm">
+                          {item?.pillar || selectedPillar?.title || "No parent pillar"}
+                        </span>
                       </TableCell>
-
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {item?.department_name || departmentName}
+                        </span>
+                      </TableCell>
                       <TableCell align="center">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -368,27 +373,27 @@ function CreateOrUpdate({
   });
 
   const { data } = useDepartments({
-    isActive: true,
+    is_active: true,
     page_size: 100,
     page: 1
   });
 
   const departments = (data?.data?.data || []) as Department[];
 
-  const { data: pillarsResponse, isLoading: loadingPillars } = useQuery({
-    queryKey: [QUERY_KEYS.STRATEGIC_PILLARS],
-    queryFn: () => getStrategicPillars(undefined, { page: 1, page_size: 100 }),
-    enabled: !!formData?.department_id
+  const { data: pillarsResponse, isLoading: loadingPillars } = useStrategicPillars(undefined, {
+    page: 1,
+    page_size: 100,
+    department_id: formData?.department_id
   });
 
-  const pillars = pillarsResponse?.data?.data || [];
+  const pillars = pillarsResponse?.data || [];
 
   const pillarOptions = useMemo(() => {
     return pillars.map((pillar: any) => ({
       id: pillar.id,
       name: pillar.title
     }));
-  }, []);
+  }, [pillars]);
 
   useEffect(() => {
     if (openModal) {
@@ -535,6 +540,7 @@ function CreateOrUpdate({
                 type="date"
                 // label="Start Date"
                 placeholder="Start Date"
+                minDate={new Date()}
                 value={
                   formData.start_date
                     ? (new Date(formData.start_date) as unknown as any)
@@ -551,7 +557,8 @@ function CreateOrUpdate({
               <DatePicker
                 type="date"
                 // label="End Date"
-                placeholder="Start Date"
+                placeholder="End Date"
+                minDate={new Date()}
                 value={
                   formData.end_date ? (new Date(formData.end_date) as unknown as any) : undefined
                 }

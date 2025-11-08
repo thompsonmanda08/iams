@@ -574,10 +574,6 @@ export async function getIndicativeTargets(params?: {
 export async function createIndicativeTarget(data: any): Promise<APIResponse> {
   const url = `/api/v1/audit/indicative-targets`;
 
-  if (!data.title) {
-    return handleBadRequest("Name is required");
-  }
-
   try {
     const response = await authenticatedApiClient({
       url,
@@ -598,11 +594,11 @@ export async function createIndicativeTarget(data: any): Promise<APIResponse> {
  * Endpoint: PUT /api/v1/audit/indicative-targets/{id}
  */
 export async function updateIndicativeTarget(data: any): Promise<APIResponse> {
-  const url = `/api/v1/audit/indicative-targets/${data.id}`;
-
   if (!data.id) {
     return handleBadRequest("ID is required");
   }
+
+  const url = `/api/v1/audit/indicative-targets/${data.id}`;
 
   try {
     const response = await authenticatedApiClient({

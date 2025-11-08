@@ -65,7 +65,6 @@ const INIT_FORM_DATA: ProcessFormData = {
 };
 
 export default function ProcessActivityTab({
-  departments = [],
   processes = [],
   pillars = [],
   areas = [],
@@ -75,7 +74,6 @@ export default function ProcessActivityTab({
   pillars: any[];
   areas: any[];
   pagination?: Pagination;
-  departments: Department[];
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<ProcessFormData | null>(INIT_FORM_DATA);
@@ -83,6 +81,14 @@ export default function ProcessActivityTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [items, setItems] = useState<ProcessFormData[]>(processes);
+
+  const { data } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+
+  const departments = (data?.data?.data || []) as Department[];
 
   useEffect(() => {
     setItems(processes);
@@ -124,11 +130,11 @@ export default function ProcessActivityTab({
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : "No department assigned";
+    return department ? department.name : "No parent department";
   };
   const getPillarName = (pillarId: string) => {
     const pillar = pillars.find((d) => d.id === pillarId);
-    return pillar ? pillar.title : "No pillar assigned";
+    return pillar ? pillar.title : "No parent pillar";
   };
 
   const getAuditableArea = (auditableAreaId: string) => {
@@ -161,11 +167,11 @@ export default function ProcessActivityTab({
           <TableHeader>
             <TableRow>
               <TableHead>Process Name</TableHead>
-              <TableHead>Functional Area</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Strategic Pillar</TableHead>
               <TableHead>Auditable Area</TableHead>
 
-              <TableHead className="w-24" align="center">
+              <TableHead className="text-right" align="center">
                 Actions
               </TableHead>
             </TableRow>
@@ -212,7 +218,7 @@ export default function ProcessActivityTab({
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-sm">
-                        {getDepartmentName(item.department_id)}
+                        {item?.department_name || "No parent department"}
                       </span>
                     </TableCell>
                     <TableCell>

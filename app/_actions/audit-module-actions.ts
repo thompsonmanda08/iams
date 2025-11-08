@@ -1000,19 +1000,14 @@ export async function getTemplateCategories(templateId: string): Promise<APIResp
     return handleBadRequest("Template ID is required");
   }
 
+  const url = `/api/v1/working-paper-templates/${templateId}/categories`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/working-paper-templates/${templateId}/categories-list`
-    });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     return successResponse(response.data, "Template categories fetched successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | TEMPLATE CATEGORIES",
-      `/api/v1/working-paper-templates/${templateId}/categories-list`
-    );
+    return handleError(error, "GET | TEMPLATE CATEGORIES", url);
   }
 }
 
@@ -1027,7 +1022,7 @@ export async function getTemplateCategory(categoryId: string): Promise<APIRespon
   try {
     const response = await authenticatedApiClient({
       method: "GET",
-      url: `/api/v1/working-paper-categories/${categoryId}`
+      url: `/api/v1/template-categories/${categoryId}`
     });
 
     return successResponse(response.data, "Template category fetched successfully");
@@ -1035,7 +1030,7 @@ export async function getTemplateCategory(categoryId: string): Promise<APIRespon
     return handleError(
       error,
       "GET | TEMPLATE CATEGORY",
-      `/api/v1/working-paper-categories/${categoryId}`
+      `/api/v1/template-categories/${categoryId}`
     );
   }
 }
@@ -1048,15 +1043,17 @@ export async function createTemplateCategory(data: TemplateCategory): Promise<AP
     return handleBadRequest("Template ID and category name are required");
   }
 
+  const url = `/api/v1/working-paper-templates/${data.template_id}/categories`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: "/api/v1/working-paper-categories",
-      data
-    });
+    const response = await authenticatedApiClient({ method: "POST", url, data });
 
     revalidatePath("/dashboard/audit/templates");
     revalidatePath(`/dashboard/audit/templates/${data.template_id}`);
+    revalidatePath(`/dashboard/system-configs/audit-settings/templates/${data.template_id}`);
+    revalidatePath(
+      `/dashboard/system-configs/audit-settings/templates/${data.template_id}/categories`
+    );
 
     return successResponse(response.data, "Template category created successfully");
   } catch (error: any) {
@@ -1074,6 +1071,8 @@ export async function createTemplateCategory(data: TemplateCategory): Promise<AP
 export async function updateTemplateCategory(
   categoryId: string,
   data: {
+    id?: string;
+    template_id?: string;
     name?: string;
     objectives?: string;
     scope?: string;
@@ -1090,14 +1089,21 @@ export async function updateTemplateCategory(
     return handleBadRequest("Category ID is required");
   }
 
+  const url = `/api/v1/template-categories/${categoryId}`;
+
   try {
     const response = await authenticatedApiClient({
       method: "PUT",
-      url: `/api/v1/working-paper-categories/${categoryId}`,
+      url,
       data
     });
 
     revalidatePath("/dashboard/audit/templates");
+    revalidatePath(`/dashboard/audit/templates/${data.id}`);
+    revalidatePath(`/dashboard/system-configs/audit-settings/templates/${data.id}/categories`);
+    revalidatePath(
+      `/dashboard/system-configs/audit-settings/templates/${data.id}/categories/${categoryId}`
+    );
 
     return successResponse(response.data, "Template category updated successfully");
   } catch (error: any) {
@@ -1117,13 +1123,18 @@ export async function deleteTemplateCategory(categoryId: string): Promise<APIRes
     return handleBadRequest("Category ID is required");
   }
 
+  const url = `/api/v1/template-categories/${categoryId}`;
+
   try {
-    await authenticatedApiClient({
-      method: "DELETE",
-      url: `/api/v1/working-paper-categories/${categoryId}`
-    });
+    await authenticatedApiClient({ method: "DELETE", url });
 
     revalidatePath("/dashboard/audit/templates");
+    revalidatePath(`/dashboard/audit/templates/[templateId]`);
+    revalidatePath(`/dashboard/system-configs/audit-settings/templates/[templateId]/categories`);
+    revalidatePath(
+      `/dashboard/system-configs/audit-settings/templates/[templateId]}/categories/[categoryId]`,
+      "page"
+    );
 
     return successResponse(null, "Template category deleted successfully");
   } catch (error: any) {
@@ -1740,9 +1751,7 @@ export async function deleteUniverse(universeId: string): Promise<APIResponse> {
 /**
  * Create a new universe item
  */
-export async function createUniverseItem(
-  payload: CreateUniverseItemPayload
-): Promise<APIResponse> {
+export async function createUniverseItem(payload: CreateUniverseItemPayload): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       method: "POST",

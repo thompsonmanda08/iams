@@ -117,7 +117,7 @@ export default function ProcessActivityTab({
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="font-medium text-sm leading-none">Process/Activity</h4>
+            <h4 className="text-sm leading-none font-medium">Process/Activity</h4>
             <p className="text-muted-foreground text-sm">
               Manage business processes and their associated activities
             </p>
@@ -178,7 +178,7 @@ export default function ProcessActivityTab({
               </TableRow>
             ) : (
               items.map((item: any) => {
-                const departmentName = item?.department || "No department assigned - Global";
+                const departmentName = item?.department || "No parent department";
                 const pillarName = item?.pillar || "N/A";
                 const auditableArea = item?.auditable_area || "N/A";
                 const activities = item?.activities || [];
@@ -205,12 +205,12 @@ export default function ProcessActivityTab({
                         {activities.slice(0, 3).map((activity: string, idx: number) => (
                           <span
                             key={idx}
-                            className="rounded-full bg-primary/10 px-2 py-0.5 text-xs">
+                            className="bg-primary/10 rounded-full px-2 py-0.5 text-xs">
                             {activity}
                           </span>
                         ))}
                         {activities.length > 3 && (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             +{activities.length - 3} more
                           </span>
                         )}
@@ -514,7 +514,7 @@ function CreateOrUpdate({
                       size="sm"
                       variant="ghost"
                       onClick={() => handleRemoveActivity(index)}
-                      className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10">
+                      className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
                       <X className="h-4 w-4" />
                     </Button>
                   )}
@@ -545,7 +545,7 @@ function CreateOrUpdate({
                   setFormData(INIT_FORM_DATA);
                   setError({ status: false, message: "" });
                 }}>
-                 Close
+                Close
               </Button>
             </DialogClose>
             <Button
@@ -554,7 +554,7 @@ function CreateOrUpdate({
               disabled={saveMutation.isPending || !formData.activities?.some((a) => a.trim())}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
-               Save changes
+              Save changes
             </Button>
           </div>
         </form>

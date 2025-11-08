@@ -10,7 +10,10 @@ import {
   getTemplateCategories
 } from "@/app/_actions/audit-module-actions";
 import { format } from "date-fns";
-import { TemplateCategoriesTable } from "@/components/audit/template-categories-table";
+import { TemplateCategoriesTable } from "@/app/dashboard/system-configs/audit-settings/_components/template-categories-table";
+import Page from "@/app/dashboard/profile/page";
+import PageHeader from "@/components/page-header";
+import BackButton from "@/components/back-button";
 
 interface TemplateDetailPageProps {
   params: Promise<{
@@ -30,10 +33,10 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
     notFound();
   }
 
-  const template = templateResponse.data;
-  const categories = categoriesResponse.success ? categoriesResponse.data : [];
+  const template = templateResponse.success ? templateResponse.data?.data || [] : [];
+  const categories = categoriesResponse.success ? categoriesResponse.data?.data || [] : [];
 
-  // console.log("templates:", template);
+  console.log("templates:", template);
 
   return (
     <div className="bg-background min-h-screen">
@@ -41,23 +44,15 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="/dashboard/system-configs/audit-settings/templates">
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold">{template.name}</h1>
-                <p className="text-muted-foreground mt-1">{template.standard}</p>
-              </div>
-            </div>
+            <PageHeader
+              title={template?.name || "Template Details"}
+              description={template?.description || "No description"}
+              // showBackButton
+              icon="FileCode2"
+            />
+
             <div className="flex items-center gap-3">
-              {template.is_active ? (
-                <Badge className="bg-green-500">Active</Badge>
-              ) : (
-                <Badge variant="secondary">Inactive</Badge>
-              )}
+              <BackButton className="mb-0 h-8!" title="Back to Templates" />
               <Link href={`/dashboard/system-configs/audit-settings/templates/${id}/edit`}>
                 <Button variant="outline" size="sm">
                   <Edit className="mr-2 h-4 w-4" />
@@ -73,28 +68,44 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           {/* Template Details */}
-          <Card className="p-6">
-            <h3 className="mb-4 text-lg font-semibold">Template Details</h3>
+          <Card className="border-blue-100 bg-blue-50 p-6">
+            {template.is_active ? (
+              <Badge className="bg-green-500">Active</Badge>
+            ) : (
+              <Badge variant="secondary">Inactive</Badge>
+            )}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <p className="text-muted-foreground text-sm font-medium">Description</p>
-                <p className="mt-1 text-sm">{template.description || "No description"}</p>
+                <p className="text-primary dark:text-muted-foreground text-sm font-semibold">
+                  Description
+                </p>
+                <p className="dark:text-foreground mt-1 text-sm text-blue-800">
+                  {template.description || "No description"}
+                </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-sm font-medium">Version</p>
-                <p className="mt-1 text-sm">{template.version || "1.0"}</p>
+                <p className="text-primary dark:text-muted-foreground text-sm font-semibold">
+                  Version
+                </p>
+                <p className="dark:text-foreground mt-1 text-sm text-blue-800">
+                  {template.version || "1.0"}
+                </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-sm font-medium">Created</p>
-                <p className="mt-1 text-sm">
+                <p className="text-primary dark:text-muted-foreground text-sm font-semibold">
+                  Created
+                </p>
+                <p className="dark:text-foreground mt-1 text-sm text-blue-800">
                   {template.created_at
                     ? format(new Date(template.created_at), "MMMM d, yyyy")
                     : "N/A"}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-sm font-medium">Last Updated</p>
-                <p className="mt-1 text-sm">
+                <p className="text-primary dark:text-muted-foreground text-sm font-semibold">
+                  Last Updated
+                </p>
+                <p className="dark:text-foreground mt-1 text-sm text-blue-800">
                   {template.updated_at
                     ? format(new Date(template.updated_at), "MMMM d, yyyy")
                     : "N/A"}
@@ -104,7 +115,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
           </Card>
 
           {/* Categories Section */}
-          <Tabs defaultValue="categories" className="space-y-6">
+          <Tabs defaultValue="categories" className="space-y-">
             <div className="flex items-center justify-between">
               <TabsList>
                 <TabsTrigger value="categories" className="gap-2">
@@ -121,7 +132,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
               </Link>
             </div>
 
-            <TabsContent value="categories" className="space-y-4">
+            <TabsContent value="categories" className="space-y-">
               <TemplateCategoriesTable categories={categories} templateId={id} />
             </TabsContent>
           </Tabs>

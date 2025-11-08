@@ -7,10 +7,19 @@
  * @module category-details-page
  */
 
-import { notFound } from "next/navigation";
 import { getTemplateCategory } from "@/app/_actions/audit-module-actions";
 import { CategoryDetailsClient } from "@/components/audit/category-details-client";
 import type { TemplateCategory } from "@/lib/types/audit-types";
+import { ShieldAlert } from "lucide-react";
+import BackButton from "@/components/back-button";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent
+} from "@/components/ui/empty";
 
 interface CategoryDetailsPageProps {
   params: Promise<{
@@ -25,11 +34,30 @@ export default async function CategoryDetailsPage({ params }: CategoryDetailsPag
   // Fetch category by ID from the API
   const response = await getTemplateCategory(categoryId);
 
-  if (!response.success || !response.data) {
-    notFound();
-  }
+  const category = (response?.data?.data || response.data || null) as TemplateCategory;
 
-  const category = response.data as TemplateCategory;
+  // console.log(category);
+
+  if (!category || categoryId != category?.id) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ShieldAlert className="h-6 w-6" />
+            </EmptyMedia>
+            <EmptyTitle>Category Not Found</EmptyTitle>
+            <EmptyDescription>
+              The category you're looking for doesn't exist or may have been removed.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <BackButton title="Back to categories" />
+          </EmptyContent>
+        </Empty>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto space-y-6 py-6">

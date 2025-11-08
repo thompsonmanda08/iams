@@ -18,22 +18,23 @@ import { DatePicker } from "@/components/ui/date-picker";
 import {
   createUniverse,
   createUniverseItem,
-  updateUniverse,
-  getUniverseItems,
-  getUniverses
+  updateUniverse
 } from "@/app/_actions/audit-module-actions";
 import { CreateUniversePayload, CreateUniverseItemPayload } from "@/lib/types/audit-types";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDepartments } from "@/app/_actions/config-actions";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  getAuditableAreas,
-  getStrategicPillars,
-  getStrategicInitiatives,
-  getIndicativeTargets
-} from "@/app/_actions/audit-settings-actions";
-import { getRisks } from "@/app/_actions/risk-module-actions";
+  useAuditableAreas,
+  useStrategicPillars,
+  useStrategicInitiatives,
+  useIndicativeTargets,
+  useUniverses,
+  useUniverseItems,
+  useProcessActivities
+} from "@/hooks/use-audit-settings-query-data";
+import { useDepartments } from "@/hooks/use-query-data";
+import { useRisks } from "@/hooks/use-risk-query-data";
 import { SelectField } from "@/components/ui/select-field";
-import { undefined } from "zod";
+import { SearchSelectField } from "@/components/ui/search-select-field";
 import {
   Empty,
   EmptyHeader,
@@ -46,17 +47,20 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const AUDIT_FREQUENCIES = ["ANNUALLY", "QUARTERLY", "MONTHLY", "AS_NEEDED"];
+const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
 interface UniverseFormData {
   universe_name: string;
   start_date: Date | undefined;
   end_date: Date | undefined;
+  department_id?: string;
+  auditable_area_id?: string;
   is_active: boolean;
 }
 
 interface UniverseItemFormData {
   audit_universe_id: number | string;
+  name: string;
   department_id: string;
   strategic_pillar_id: string;
   auditable_area_id: string;
@@ -72,10 +76,13 @@ const INIT_UNIVERSE_DATA: UniverseFormData = {
   universe_name: "",
   start_date: undefined,
   end_date: undefined,
+  department_id: undefined,
+  auditable_area_id: undefined,
   is_active: true
 };
 
 const INIT_ITEM_DATA: UniverseItemFormData = {
+  name: "",
   audit_universe_id: "",
   department_id: "",
   strategic_pillar_id: "",
@@ -125,85 +132,54 @@ export default function AuditUniverseForm({
   const [itemData, setItemData] = useState<UniverseItemFormData>(INIT_ITEM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch dropdown data using TanStack Query
-  const { data: departmentsData } = useQuery({
-    queryKey: ["departments"],
-    queryFn: async () => {
-      const result = await getDepartments();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
+  // Fetch dropdown data using reusable hooks
+  const { data: departmentsResponse } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
   });
 
-  const { data: auditableAreasData } = useQuery({
-    queryKey: ["auditableAreas"],
-    queryFn: async () => {
-      const result = await getAuditableAreas();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
-  });
+  const departmentsData = departmentsResponse?.data?.data || [];
 
-  const { data: strategicPillarsData } = useQuery({
-    queryKey: ["strategicPillars"],
-    queryFn: async () => {
-      const result = await getStrategicPillars();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
+  const { data: auditableAreasResponse } = useAuditableAreas({
+    department_id: universeData.department_id
+    // page_size: 100,
+    // page: 1
   });
+  const auditableAreasData = auditableAreasResponse?.data || [];
 
-  const { data: strategicInitiativesData } = useQuery({
-    queryKey: ["strategicInitiatives", itemData.strategic_pillar_id],
-    queryFn: async () => {
-      if (!itemData.strategic_pillar_id) return [];
-      const result = await getStrategicInitiatives(itemData.strategic_pillar_id);
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item" && !!itemData.strategic_pillar_id
-  });
+  const { data: strategicPillarsResponse } = useStrategicPillars();
+  const strategicPillarsData = mode === "item" ? strategicPillarsResponse?.data || [] : [];
 
-  const { data: indicativeTargetsData } = useQuery({
-    queryKey: ["indicativeTargets"],
-    queryFn: async () => {
-      const result = await getIndicativeTargets();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
-  });
+  const { data: strategicInitiativesResponse } = useStrategicInitiatives(
+    mode === "item" && itemData.strategic_pillar_id ? itemData.strategic_pillar_id : undefined
+  );
+  const strategicInitiativesData = mode === "item" ? strategicInitiativesResponse?.data || [] : [];
 
-  const { data: risksData } = useQuery({
-    queryKey: ["risks"],
-    queryFn: async () => {
-      const result = await getRisks();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item"
-  });
+  const { data: indicativeTargetsResponse } = useIndicativeTargets();
+  const indicativeTargetsData = mode === "item" ? indicativeTargetsResponse?.data || [] : [];
+
+  const { data: risksResponse } = useRisks();
+  const risksData = mode === "item" ? risksResponse?.data || [] : [];
+
+  const { data: processActivitiesResponse } = useProcessActivities();
+  const processActivitiesData = mode === "item" ? processActivitiesResponse?.data || [] : [];
 
   // Fetch universes dynamically for the dropdown
-  const { data: universesData } = useQuery({
-    queryKey: ["universes"],
-    queryFn: async () => {
-      const result = await getUniverses();
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item",
-    initialData: universes // Use server-fetched data as initial data
-  });
+  const { data: universesResponse } = useUniverses();
+
+  const universesData = mode === "item" ? universesResponse?.data || universes : [];
 
   // Fetch universe items for the selected universe
-  const { data: universeItemsData, isLoading: isLoadingItems } = useQuery({
-    queryKey: ["universeItems", itemData.audit_universe_id],
-    queryFn: async () => {
-      if (!itemData.audit_universe_id) return [];
-      const result = await getUniverseItems({
-        audit_universe_id: String(itemData.audit_universe_id)
-      });
-      return result.data?.data || result.data || [];
-    },
-    enabled: mode === "item" && !!itemData.audit_universe_id
-  });
+  const universeIdForItems =
+    mode === "item" && itemData.audit_universe_id ? String(itemData.audit_universe_id) : undefined;
+
+  const { data: universeItemsResponse, isLoading: isLoadingItems } =
+    useUniverseItems(universeIdForItems);
+
+  const universeItemsData = mode === "item" ? universeItemsResponse?.data || [] : [];
+
+  console.log("universeItemsData", universeItemsData);
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -382,6 +358,13 @@ export default function AuditUniverseForm({
     }));
   }, [strategicInitiativesData]);
 
+  const processActivitiesOptions = useMemo(() => {
+    return processActivitiesData?.map((activity: any) => ({
+      id: activity.id,
+      name: activity.name || activity.title || activity.process_activity
+    }));
+  }, [processActivitiesData]);
+
   if (mode === "item") {
     // Show Empty state if no universes exist
     if (universeOptions.length === 0) {
@@ -435,56 +418,62 @@ export default function AuditUniverseForm({
             <div className="space-y-8">
               {/* Primary Information */}
               <div className="space-y-6">
+                {/* Universe Item Name - Full Width */}
+                <Input
+                  id="name"
+                  label="Name"
+                  value={itemData.name}
+                  onChange={(e) => updateItemData({ name: e.target.value })}
+                  placeholder="Enter name"
+                  required={true}
+                />
+
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   {/* Universe Selection */}
-                  <div className="space-y-2">
-                    <SelectField
-                      id="audit_universe_id"
-                      label="Universe"
-                      required
-                      placeholder="--Select a universe--"
-                      value={String(itemData.audit_universe_id || "")}
-                      onValueChange={(value) => updateItemData({ audit_universe_id: value })}
-                      options={universeOptions}
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                    />
-                  </div>
+                  <SelectField
+                    id="audit_universe_id"
+                    label="Universe"
+                    required
+                    placeholder="--Select a universe--"
+                    value={String(itemData.audit_universe_id || "")}
+                    onValueChange={(value) => updateItemData({ audit_universe_id: value })}
+                    options={universeOptions}
+                    className="w-full"
+                    classNames={{
+                      wrapper: "w-full"
+                    }}
+                  />
 
                   {/* Department Selection */}
-                  <div className="space-y-2">
-                    <SelectField
-                      id="department_id"
-                      label="Department"
-                      required
-                      placeholder="--Select a department--"
-                      value={itemData.department_id || ""}
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      onValueChange={(value) => updateItemData({ department_id: value })}
-                      options={departmentsOptions}
-                    />
-                  </div>
+                  <SelectField
+                    id="department_id"
+                    label="Department"
+                    required
+                    placeholder="--Select a department--"
+                    value={itemData.department_id || ""}
+                    className="w-full"
+                    classNames={{
+                      wrapper: "w-full"
+                    }}
+                    onValueChange={(value) => updateItemData({ department_id: value })}
+                    options={departmentsOptions}
+                  />
                 </div>
 
                 {/* Process/Activity - Full Width */}
-                <div className="space-y-2">
-                  <Label htmlFor="process_activity" className="text-sm font-medium">
-                    Process/Activity <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="process_activity"
-                    value={itemData.process_activity}
-                    onChange={(e) => updateItemData({ process_activity: e.target.value })}
-                    placeholder="e.g., Information security policy"
-                    required
-                    className="w-full"
-                  />
-                </div>
+                <SearchSelectField
+                  id="process_activity"
+                  label="Process/Activity"
+                  required
+                  className="w-full max-w-none"
+                  classNames={{
+                    wrapper: "w-full max-w-none"
+                  }}
+                  placeholder="Search and select a process/activity..."
+                  options={processActivitiesOptions || []}
+                  value={itemData.process_activity}
+                  onValueChange={(value) => updateItemData({ process_activity: value })}
+                />
               </div>
 
               {/* Audit Configuration */}
@@ -787,11 +776,10 @@ export default function AuditUniverseForm({
           {/* Active Checkbox */}
           <div className="pt-2">
             <div className="bg-muted/30 hover:bg-muted/50 flex items-center space-x-3 rounded-lg border p-4 transition-colors">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="is_active"
                 checked={universeData.is_active}
-                onChange={(e) => updateUniverseData({ is_active: e.target.checked })}
+                onCheckedChange={(checked) => updateUniverseData({ is_active: Boolean(checked) })}
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
               />
               <Label
