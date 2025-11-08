@@ -107,7 +107,7 @@ export type Risk = {
   existing_controls: string;
   control_effectiveness: number;
   treatment_plan: string;
-  risk_response_id: string;
+  risk_response_id?: string;
   risk_owner_id: string;
   risk_appetite_status: "WITHIN" | "ABOVE";
   target_closing_date: string;
