@@ -333,7 +333,7 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
     await updateAuthSession({ user });
     // await createUserSession(user as any);
 
-    console.log("🔧 [System Setup] Completed", user);
+    console.log("🔧 [System Setup] Completed", "user");
     return successResponse(session, response?.data?.message);
   } catch (error: Error | any) {
     console.error("❌ [System Setup] Error:", error?.message);

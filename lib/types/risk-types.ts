@@ -254,6 +254,45 @@ export type RiskScore = {
 export type RiskSeverityLevel = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 
 // ============================================================================
+// ACTION ASSIGNMENT TYPES
+// ============================================================================
+
+export type AssignActionFormErrors = {
+  actionDescription?: string;
+  actionOwnerIds?: string;
+  reviewerIds?: string;
+};
+
+export type AssignActionInput = {
+  risk_id: string;
+  risk_register_id: string;
+  action_description: string;
+  action_owner_ids: string[]; // Users assigned to complete the action
+  reviewer_ids: string[]; // Users who can review the action
+  assigned_by: string; // User creating the assignment
+};
+
+export type RiskAction = {
+  id: string;
+  risk_id: string;
+  risk_register_id: string;
+  action_description: string;
+  action_owner_ids: string[];
+  reviewer_ids: string[];
+  status: "OPEN" | "IN_PROGRESS" | "PENDING_REVIEW" | "COMPLETED";
+  created_by: string;
+  assigned_by: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+export type AssignActionResponse = {
+  success: boolean;
+  message: string;
+  data?: RiskAction;
+};
+
+// ============================================================================
 // MOCK DATA HELPERS (temporary, can be removed later)
 // ============================================================================
 

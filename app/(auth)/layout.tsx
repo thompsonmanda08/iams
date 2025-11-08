@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function AuthLayout({ children }: PropsWithChildren) {
   const { isAuthenticated, session } = await verifySession();
 
-  console.log("[ session ]:", session);
+  // console.log("[ session ]:", session);
 
   // If authenticated, handle routing based on MFA status
   if (isAuthenticated) {

@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Trash2, View, Pencil } from "lucide-react";
+import { Trash2, View, Pencil, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
@@ -26,6 +26,7 @@ import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { AssignActionDialog } from "./assign-action-dialog";
 
 type Risk = {
   id: string;
@@ -145,6 +146,9 @@ export default function RisksTable({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [riskToDelete, setRiskToDelete] = useState<{ id: string; title: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
+  const [riskForAssignment, setRiskForAssignment] = useState<Risk | undefined>();
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -407,17 +411,32 @@ export default function RisksTable({
                         <View className="h-3.5 w-3.5" />
                         View Risk
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          handleEdit(risk);
-                          e.stopPropagation();
-                        }}
-                        className="h-8 gap-1.5">
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </Button>
+                      {risk.status === "DRAFT" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            handleEdit(risk);
+                            e.stopPropagation();
+                          }}
+                          className="h-8 gap-1.5">
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                      ) : risk.status === "OPEN" ? (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={(e) => {
+                            setRiskForAssignment(risk);
+                            setAssignActionDialogOpen(true);
+                            e.stopPropagation();
+                          }}
+                          className="h-8 gap-1.5">
+                          <UserPlus className="h-3.5 w-3.5" />
+                          Assign Action
+                        </Button>
+                      ) : null}
                       <Button
                         size="sm"
                         variant="outline"
@@ -473,6 +492,19 @@ export default function RisksTable({
         isLoading={isDeleting}
         type="delete"
       />
+
+      {riskForAssignment && (
+        <AssignActionDialog
+          open={assignActionDialogOpen}
+          onOpenChange={setAssignActionDialogOpen}
+          risk={riskForAssignment}
+          registerId={registerId}
+          onActionAssigned={() => {
+            // Refresh the page or update state as needed
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

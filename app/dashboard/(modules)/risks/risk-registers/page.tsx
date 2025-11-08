@@ -7,16 +7,16 @@ import RiskRegistersTable from "../_components/risk-registers-table";
 import PageHeader from "@/components/page-header";
 
 type PageProps = {
-  searchParams: {
+  searchParams: Promise<{
     search?: string;
     status?: string;
     page?: string;
-  };
+  }>;
 };
 
 export default async function RiskRegistersPage({ searchParams }: PageProps) {
-  const search = searchParams.search || "";
-  const status = searchParams.status || "";
+  const search = (await searchParams).search || "";
+  const status = (await searchParams).status || "";
   const page = 1;
 
   const response = await getRiskRegisters({
@@ -48,7 +48,7 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
     <div className="bg-background min-h-screen">
       {/* Header */}
       <div className="bg-card border-b">
-        <div className="container mx-auto flex items-center justify-between py-6 px-4">
+        <div className="container mx-auto flex items-center justify-between px-4 py-6">
           <PageHeader
             title="Risk Registers"
             description="Manage and organize your risk assessment registers"
@@ -60,7 +60,7 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
       </div>
 
       {/* Stats */}
-      <div className="container mx-auto grid grid-cols-1 gap-4 py-8 md:grid-cols-4 px-4">
+      <div className="container mx-auto grid grid-cols-1 gap-4 px-4 py-8 md:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -108,7 +108,7 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filters and Table */}
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto px-4 py-8">
         <Suspense fallback={<div>Loading...</div>}>
           <RiskRegistersTable
             registers={registers}

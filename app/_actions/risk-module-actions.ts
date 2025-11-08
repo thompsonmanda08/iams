@@ -14,7 +14,12 @@
 
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
-import authenticatedApiClient, { handleError, successResponse } from "./api-config";
+import authenticatedApiClient, {
+  handleBadRequest,
+  handleError,
+  successResponse
+} from "./api-config";
+import { cache } from "react";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -359,7 +364,8 @@ const mockRisks: Risk[] = [
     id: "1",
     riskId: "RSK-2024-001",
     title: "Cyber Security Breach Risk",
-    description: "Risk of unauthorized access to systems and data theft. Potential for significant system downtime and data loss.",
+    description:
+      "Risk of unauthorized access to systems and data theft. Potential for significant system downtime and data loss.",
     category: "Technology",
     category_id: "cat-tech-1",
     department_id: "dept-it-1",
@@ -383,7 +389,8 @@ const mockRisks: Risk[] = [
     id: "2",
     riskId: "RSK-2024-002",
     title: "Regulatory Compliance Risk",
-    description: "Risk of non-compliance with GDPR and other regulatory requirements. Potential for significant fines and reputational damage.",
+    description:
+      "Risk of non-compliance with GDPR and other regulatory requirements. Potential for significant fines and reputational damage.",
     category: "Compliance",
     category_id: "cat-comp-1",
     department_id: "dept-legal-1",
@@ -407,7 +414,8 @@ const mockRisks: Risk[] = [
     id: "3",
     riskId: "RSK-2024-003",
     title: "Data Privacy Incident Risk",
-    description: "Risk of unauthorized data disclosure and privacy breaches. Impact on customer trust and brand reputation.",
+    description:
+      "Risk of unauthorized data disclosure and privacy breaches. Impact on customer trust and brand reputation.",
     category: "Data Protection",
     category_id: "cat-dp-1",
     department_id: "dept-it-1",
@@ -431,7 +439,8 @@ const mockRisks: Risk[] = [
     id: "4",
     riskId: "RSK-2024-004",
     title: "Business Continuity Risk",
-    description: "Risk of system downtime and inability to continue operations. Could impact service delivery to customers.",
+    description:
+      "Risk of system downtime and inability to continue operations. Could impact service delivery to customers.",
     category: "Operations",
     category_id: "cat-ops-1",
     department_id: "dept-ops-1",
@@ -850,7 +859,7 @@ export async function updateRiskStepThree(
 /**
  * Get risks in a risk register
  */
-export async function getRisksInRegister(
+async function _getRisksInRegister(
   registerId: string,
   params?: {
     search?: string;
@@ -877,13 +886,14 @@ export async function getRisksInRegister(
       url: url,
       method: "GET"
     });
-console.log("RES R:", response);
 
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET RISKS IN REGISTER", `/api/v1/risks/${registerId}`);
   }
 }
+
+export const getRisksInRegister = cache(_getRisksInRegister);
 
 /**
  * Update risk status
@@ -932,7 +942,7 @@ export async function submitDepartmentRisks(
 /**
  * Get all risks with pagination and filters
  */
-export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
+async function _getRisks(params?: RiskQueryParams): Promise<APIResponse> {
   try {
     const queryParams = new URLSearchParams();
 
@@ -942,7 +952,8 @@ export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
     if (params?.page) queryParams.append("page", String(params.page));
     if (params?.limit) queryParams.append("limit", String(params.limit));
     if (params?.risk_owner_id) queryParams.append("risk_owner_id", String(params.risk_owner_id));
-    if (params?.risk_action_owner_id) queryParams.append("risk_action_owner_id", String(params.risk_action_owner_id));
+    if (params?.risk_action_owner_id)
+      queryParams.append("risk_action_owner_id", String(params.risk_action_owner_id));
 
     // Mock implementation - Filter mock data instead of API call
     let results = [...mockRisks];
@@ -987,6 +998,8 @@ export async function getRisks(params?: RiskQueryParams): Promise<APIResponse> {
     return handleError(error, "GET | GET RISKS", "/api/v1/risks");
   }
 }
+
+export const getRisks = cache(_getRisks);
 
 /**
  * Get risk by ID
@@ -1248,7 +1261,7 @@ export async function getKRIs(params?: {
 /**
  * Get KRI by ID
  */
-export async function getKRI(id: string): Promise<APIResponse> {
+async function _getKRI(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/kris/${id}`,
@@ -1259,6 +1272,8 @@ export async function getKRI(id: string): Promise<APIResponse> {
     return handleError(error, "GET | GET KRI", `/api/v1/kris/${id}`);
   }
 }
+
+export const getKRI = cache(_getKRI);
 
 /**
  * Create a new KRI
@@ -1401,9 +1416,7 @@ export async function getKRIStatusSummary(params?: {
  * Submit action findings/evidence for a risk mitigation action
  * Changes status from OPEN to PENDING_REVIEW
  */
-export async function submitActionFindings(
-  input: ActionFindingsInput
-): Promise<APIResponse> {
+export async function submitActionFindings(input: ActionFindingsInput): Promise<APIResponse> {
   try {
     // Mock implementation - Replace with real API call when backend is ready
     const actionFinding: ActionFindings = {
@@ -1450,8 +1463,7 @@ export async function assessActionFindings(
 ): Promise<APIResponse> {
   try {
     // Mock implementation - Replace with real API call when backend is ready
-    const status =
-      input.decision === "APPROVE" ? "COMPLETED" : "NEEDS_REVISION";
+    const status = input.decision === "APPROVE" ? "COMPLETED" : "NEEDS_REVISION";
 
     const assessment = {
       findingsId,
@@ -1471,5 +1483,44 @@ export async function assessActionFindings(
       "PUT | ASSESS ACTION FINDINGS",
       `/api/v1/action-findings/${findingsId}/assess`
     );
+  }
+}
+
+// ============================================================================
+// RISK ACTION MANAGEMENT
+// ============================================================================
+
+/**
+ * Create a risk action - Assign action owners and reviewers to a risk
+ * POST /api/v1/risks/{risk_id}/actions
+ *
+ * API expects:
+ * {
+ *   "risk_id": "string",
+ *   "instructions": "string",
+ *   "executor_ids": ["string[]"],
+ *   "reviewer_id": "string",
+ *   "due_date": "ISO date string"
+ * }
+ */
+export async function createRiskAction(data: {
+  risk_id: string;
+  instructions: string;
+  executer_id: string;
+  reviewer_id: string;
+  due_date?: string;
+}): Promise<APIResponse> {
+  if (!data?.risk_id) {
+    return handleBadRequest("Risk ID is required");
+  }
+  console.log(data);
+
+  const url = `/api/v1/risks/${data.risk_id}/actions`;
+  try {
+    const response = await authenticatedApiClient({ url, data, method: "POST" });
+    revalidatePath("/dashboard/(modules)/risks");
+    return successResponse(response.data.data, "Risk action created successfully");
+  } catch (error) {
+    return handleError(error, "POST | CREATE RISK ACTION", url);
   }
 }

@@ -86,7 +86,12 @@ export const QUERY_KEYS = {
   WORKPAPER_TEMPLATES: "workpaper-templates",
   UNIVERSES: "universes",
   UNIVERSE_ITEMS: "universe-items",
-  BUDGETS: "budgets"
+  BUDGETS: "budgets",
+  RISKS: "risks",
+  RISK_REGISTERS: "risk-registers",
+  KRI: "KRI",
+  KRI_REGISTERS: "kri-registers",
+  RISK_CATEGORIES: "risk-categories"
 };
 
 // ANIMATION_VARIANTS
