@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, Upload } from "lucide-react";
 import {
   Dialog,
@@ -14,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import UploadField, { ACCEPTABLE_FILE_TYPES } from "@/components/ui/file-dropzone";
 import { toast } from "sonner";
 import { submitActionFindings } from "@/app/_actions/risk-module-actions";
 import type { Risk, ActionFindingsInput } from "@/app/_actions/risk-module-actions";
@@ -33,63 +34,62 @@ export function ActionFindingsDialog({
   actionOwnerId
 }: ActionFindingsDialogProps) {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+  const uploadFieldRef = useRef<any>(null);
   const [formData, setFormData] = useState({
     description: "",
-    evidence_notes: "",
-    evidence_file_name: ""
+    evidence_notes: ""
   });
-  const [fileSelected, setFileSelected] = useState(false);
+  const [evidenceFile, setEvidenceFile] = useState<File | undefined>(undefined);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setFileSelected(true);
-      setFormData((prev) => ({
-        ...prev,
-        evidence_file_name: file.name
-      }));
-    }
+  const handleFileChange = (file: File | undefined) => {
+    setEvidenceFile(file);
   };
 
-  const handleSubmit = async () => {
+  // Mutation for submitting action findings
+  const submitFindingsMutation = useMutation({
+    mutationFn: submitActionFindings,
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success("Action findings submitted successfully");
+        setFormData({
+          description: "",
+          evidence_notes: ""
+        });
+        setEvidenceFile(undefined);
+        uploadFieldRef.current?.clear();
+        onOpenChange(false);
+        router.refresh();
+
+        // Invalidate related queries
+        queryClient.invalidateQueries({ queryKey: ["risks"] });
+        queryClient.invalidateQueries({ queryKey: ["actions"] });
+      } else {
+        toast.error(response.message || "Failed to submit action findings");
+      }
+    },
+    onError: (error) => {
+      toast.error("An error occurred while submitting findings");
+      console.error("Error submitting findings:", error);
+    }
+  });
+
+  const handleSubmit = () => {
     // Validation
     if (!formData.description.trim()) {
       toast.error("Please provide an action description");
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const input: ActionFindingsInput = {
-        risk_id: risk.id,
-        action_owner_id: actionOwnerId,
-        description: formData.description,
-        evidence_notes: formData.evidence_notes || undefined,
-        evidence_file_name: fileSelected ? formData.evidence_file_name : undefined
-      };
+    const input: ActionFindingsInput = {
+      risk_id: risk.id,
+      action_owner_id: actionOwnerId,
+      description: formData.description,
+      evidence_notes: formData.evidence_notes || undefined,
+      evidence_file_name: evidenceFile ? evidenceFile.name : undefined
+    };
 
-      const response = await submitActionFindings(input);
-
-      if (response.success) {
-        toast.success(response.message || "Action findings submitted successfully");
-        setFormData({
-          description: "",
-          evidence_notes: "",
-          evidence_file_name: ""
-        });
-        setFileSelected(false);
-        onOpenChange(false);
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to submit action findings");
-      }
-    } catch (error) {
-      toast.error("An error occurred while submitting findings");
-      console.error("Error submitting findings:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    submitFindingsMutation.mutate(input);
   };
 
   return (
@@ -100,116 +100,82 @@ export function ActionFindingsDialog({
             <FileText className="h-5 w-5" />
             Submit Action Findings
           </DialogTitle>
-          <DialogDescription>
-            Document the actions taken to mitigate the risk: {risk.title}
-          </DialogDescription>
+          <DialogDescription>Document the actions taken to mitigate the risk</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="py- space-y-4 pb-4">
           {/* Risk Information - Read Only */}
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="space-y-2">
               <div>
-                <p className="text-sm font-medium text-gray-700">Risk Title</p>
-                <p className="text-sm text-gray-900">{risk.title}</p>
+                <p className="text-sm font-semibold text-gray-700">Risk Title</p>
+                <p className="text-xs text-gray-900">{risk.title}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Risk Description</p>
-                <p className="text-sm text-gray-900">{risk.description}</p>
+                <p className="text-sm font-semibold text-gray-700">Risk Description</p>
+                <p className="text-xs text-gray-900">{risk.description}</p>
               </div>
             </div>
           </div>
 
           {/* Action Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-semibold">
-              Action Taken / Description *
-            </Label>
-            <Textarea
-              id="description"
-              placeholder="Describe the action(s) taken to mitigate this risk. What was done and when?"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={4}
-              className="resize-none"
-            />
-            <p className="text-xs text-gray-500">
-              {formData.description.length}/500 characters
-            </p>
-          </div>
+          <Textarea
+            id="description"
+            label="  Action Taken / Description"
+            placeholder="What was done and when?"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            rows={4}
+            className="resize-none"
+            showLimit={true}
+            maxLength={500}
+            descriptionText="Describe the action(s) taken to mitigate this risk."
+          />
 
           {/* Evidence Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="evidence_notes" className="text-sm font-semibold">
-              Evidence / Supporting Notes
-            </Label>
-            <Textarea
-              id="evidence_notes"
-              placeholder="Add any supporting notes, references, or additional context about the evidence..."
-              value={formData.evidence_notes}
-              onChange={(e) => setFormData({ ...formData, evidence_notes: e.target.value })}
-              rows={3}
-              className="resize-none"
-            />
-          </div>
+          <Textarea
+            id="evidence_notes"
+            label="Evidence / Supporting Notes"
+            placeholder="References, or additional context about the evidence..."
+            value={formData.evidence_notes}
+            onChange={(e) => setFormData({ ...formData, evidence_notes: e.target.value })}
+            rows={3}
+            showLimit={true}
+            maxLength={500}
+            descriptionText="Any supporting notes or references related to the evidence."
+            className="resize-none"
+          />
 
-          {/* File Upload */}
-          <div className="space-y-2">
-            <Label htmlFor="evidence_file" className="text-sm font-semibold">
-              Attach Evidence (Optional)
-            </Label>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <Input
-                  id="evidence_file"
-                  type="file"
-                  onChange={handleFileChange}
-                  accept=".pdf,.doc,.docx,.xlsx,.jpg,.png"
-                  className="cursor-pointer"
-                  disabled={isSubmitting}
-                />
-              </div>
-              {fileSelected && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded bg-green-50 border border-green-200">
-                  <Upload className="h-4 w-4 text-green-600" />
-                  <span className="text-xs text-green-700 font-medium">
-                    {formData.evidence_file_name}
-                  </span>
-                </div>
-              )}
-            </div>
-            <p className="text-xs text-gray-500">
-              Accepted formats: PDF, DOC, DOCX, XLSX, JPG, PNG (Max 5MB)
-            </p>
-          </div>
+          {/* File Upload using UploadField */}
+          <UploadField
+            label="Attach Evidence (Optional)"
+            isLoading={submitFindingsMutation.isPending}
+            required={false}
+            handleFile={handleFileChange}
+            acceptedFiles={{
+              ...ACCEPTABLE_FILE_TYPES.pdf,
+              ...ACCEPTABLE_FILE_TYPES.word,
+              ...ACCEPTABLE_FILE_TYPES.images
+            }}
+          />
         </div>
 
         <DialogFooter>
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+            disabled={submitFindingsMutation.isPending}>
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitting || !formData.description.trim()}
-            className="gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4" />
-                Submit Findings
-              </>
-            )}
+            isLoading={submitFindingsMutation.isPending}
+            disabled={submitFindingsMutation.isPending || !formData.description.trim()}
+            className="gap-2">
+            <Upload className="h-4 w-4" />
+            Submit Findings
           </Button>
         </DialogFooter>
       </DialogContent>

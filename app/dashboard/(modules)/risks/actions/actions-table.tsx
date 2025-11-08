@@ -13,7 +13,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Copy, FileText, FileSpreadsheet, Printer, AlertTriangle, View, Upload } from "lucide-react";
+import {
+  Copy,
+  FileText,
+  FileSpreadsheet,
+  Printer,
+  AlertTriangle,
+  View,
+  Upload,
+  Trash2
+} from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
@@ -330,19 +339,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {risk.status !== "CLOSED" && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => {
-                                setSelectedRiskForFindings(risk);
-                                setFindingsDialogOpen(true);
-                              }}
-                              className="h-8 gap-1.5 bg-blue-600 hover:bg-blue-700">
-                              <Upload className="h-3.5 w-3.5" />
-                              Submit Findings
-                            </Button>
-                          )}
                           <Button
                             size="sm"
                             variant="outline"
@@ -352,6 +348,30 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                             className="h-8 gap-1.5">
                             <View className="h-3.5 w-3.5" />
                             View Risk
+                          </Button>
+                          {risk.status !== "CLOSED" && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => {
+                                setSelectedRiskForFindings(risk);
+                                setFindingsDialogOpen(true);
+                              }}
+                              className="h-8 gap-1.5">
+                              <Upload className="h-3.5 w-3.5" />
+                              Submit Findings
+                            </Button>
+                          )}
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              router.push(`/dashboard/risks/actions/${risk.id}`);
+                            }}
+                            className="h-8 gap-1.5">
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
                           </Button>
                         </div>
                       </TableCell>
