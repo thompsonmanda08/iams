@@ -31,18 +31,22 @@ import {
   ArrowRight,
   Filter,
   Loader2,
-  View
+  View,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
-import { getIncidents } from "@/app/_actions/incident-actions";
+import { deleteIncident, getIncidents } from "@/app/_actions/incident-actions";
 import { toast } from "sonner";
 import { CustomPagination } from "@/components/ui/pagination";
 import { IncidentData } from "@/lib/types/incidents-types";
 import Search from "@/components/ui/search-field";
+import { ConfirmationModal } from "@/components/confirmation-modal";
+import { useRouter } from "next/navigation";
 
 export function MyIncidents() {
+  const router = useRouter();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [incidents, setIncidents] = useState<IncidentData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +60,14 @@ export function MyIncidents() {
     total_pages: 1,
     has_next: false,
     has_prev: false
+  });
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    incidentId: string | null;
+  }>({
+    open: false,
+    incidentId: null
   });
 
   useEffect(() => {
@@ -91,6 +103,31 @@ export function MyIncidents() {
 
   const handleClearDates = () => {
     setDateRange(undefined);
+  };
+
+  const handleDeleteClick = (incident: any) => {
+    setDeleteDialog({
+      open: true,
+      incidentId: incident.incident.id
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.incidentId) return;
+
+    try {
+      const response = await deleteIncident(deleteDialog.incidentId);
+      if (response.success) {
+        toast.success("Risk incident deleted successfully");
+        router.refresh();
+        await fetchIncidents();
+        setDeleteDialog({ open: false, incidentId: null });
+      } else {
+        toast.error(response.message || "Failed to delete incident");
+      }
+    } catch (error) {
+      toast.error("Failed to delete incident");
+    }
   };
 
   const calculateDuration = () => {
@@ -386,14 +423,27 @@ export function MyIncidents() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewDetails(item)}
-                            className="h-8 gap-1.5">
-                            <View className="h-3.5 w-3.5" />
-                            View Incident
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(item)}
+                              className="h-8 gap-1.5">
+                              <View className="h-3.5 w-3.5" />
+                              View Incident
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                handleDeleteClick(item);
+                                e.stopPropagation();
+                              }}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -414,6 +464,14 @@ export function MyIncidents() {
           )}
         </CardContent>
       </Card>
+      <ConfirmationModal
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, incidentId: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Incident"
+        description="Are you sure you want to delete ? This action cannot be undone and will delete all associated risks."
+        type="delete"
+      />
 
       {/* Incident Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>

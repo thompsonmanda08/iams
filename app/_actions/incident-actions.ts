@@ -32,7 +32,6 @@ export async function getIncidents(params?: {
       url,
       method: "GET"
     });
-    revalidatePath("/dashboard/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(error, "GET | GET INCIDENTS", "/api/v1/incidents");
@@ -58,7 +57,6 @@ export async function getDepartmentIncidents(
       url,
       method: "GET"
     });
-    revalidatePath("/dashboard/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -83,8 +81,6 @@ export async function getIncidentStats(params: {
       url: `/api/v1/incidents/stats?${queryParams.toString()}`,
       method: "GET"
     });
-
-    revalidatePath("/dashboard/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(error, "GET | GET INCIDENT STATS", "/api/v1/incidents/stats");
@@ -98,8 +94,6 @@ export async function getIncidentById(incidentId: string): Promise<APIResponse> 
       url: `/api/v1/incidents/${incidentId}`,
       method: "GET"
     });
-
-    revalidatePath("/dashboard/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -119,7 +113,7 @@ export async function createIncident(data: any): Promise<APIResponse> {
       data
     });
 
-    revalidatePath("/dashboard/incidents");
+    revalidatePath("/dashboard/(modules)/risks/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(error, "POST | CREATE INCIDENT", "/api/v1/incidents");
@@ -145,7 +139,7 @@ export async function updateIncident(
       data
     });
 
-    revalidatePath("/dashboard/incidents");
+    revalidatePath("/dashboard/(modules)/risks/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -164,7 +158,7 @@ export async function deleteIncident(incidentId: string): Promise<APIResponse> {
       method: "DELETE"
     });
 
-    revalidatePath("/dashboard/incidents");
+    revalidatePath("/dashboard/(modules)/risks/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
