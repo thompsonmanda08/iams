@@ -144,7 +144,7 @@ export function BusinessProcessList() {
               <Card key={process.id} className="group transition-all">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1 flex gap-4">
+                    <div className="min-w-0 flex-1 flex flex-col gap-4">
                       <CardTitle >{process.name}</CardTitle>
                       {parentName && (
                         <Badge variant="success" className="gap-1 text-xs">
