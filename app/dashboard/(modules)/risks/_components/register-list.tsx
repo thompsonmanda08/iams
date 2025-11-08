@@ -258,7 +258,7 @@ export default function KRIRegistersClient({
               description="Manage your Key Risk Indicator registers and reports"
               Icon={FileText}
             />
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               New Register
             </Button>
