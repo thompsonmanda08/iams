@@ -74,6 +74,16 @@ export async function verifyOTP({
       mfa_verified: true
     });
 
+    // Fetch user data to populate session
+    try {
+      const setupResponse = await initializeSystemSetup();
+      if (setupResponse.success) {
+        console.log("✅ [OTP Verified] User data populated successfully");
+      }
+    } catch (setupError) {
+      console.warn("⚠️  [OTP Verified] Failed to populate user data, but proceeding with authentication");
+    }
+
     return successResponse(response?.data, "OTP verified successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);

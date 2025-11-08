@@ -30,6 +30,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       errorText,
       classNames,
       descriptionText,
+      isInvalid,
       showLimit = false,
       ...props
     },
@@ -40,7 +41,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap", {
-              "text-red-500": onError || props?.isInvalid,
+              "text-red-500": onError || isInvalid,
               "opacity-50": props?.disabled
             })}
             htmlFor={props?.name}>

@@ -25,10 +25,24 @@ const coloredBadgeVariants = cva("", {
     style: {
       solid: "",
       outline: ""
+    },
+    size: {
+      sm: "px-2 py-1 text-xs",
+      md: "px-2.5 py-1.5 text-sm",
+      lg: "px-3 py-2 text-base",
+      xl: "px-4 py-2.5 text-lg"
     }
+  },
+  defaultVariants: {
+    size: "md"
   },
   compoundVariants: [
     // Solid variants
+    {
+      color: "default",
+      style: "solid",
+      className: "bg-primary! text-white "
+    },
     {
       color: "success",
       style: "solid",
@@ -103,23 +117,32 @@ const statusConfig: Record<string, StatusConfig> = {
   REJECTED: { label: "Rejected", color: "danger", style: "solid" },
   PENDING: { label: "Pending", color: "warning", style: "outline" },
   COMPLETED: { label: "Completed", color: "success", style: "solid" },
-  IN_PROGRESS: { label: "In Progress", color: "info", style: "outline" }
+  IN_PROGRESS: { label: "In Progress", color: "info", style: "outline" },
+  DEFAULT: { label: "Default", color: "default", style: "solid" }
 };
 
 export const StatusBadge = ({
   status,
+  size = "sm",
   className
 }: {
   status: keyof typeof statusConfig;
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }) => {
   const config = statusConfig[status];
 
   if (!config) {
-    return <Badge variant="outline">{status}</Badge>;
+    return (
+      <Badge className={cn(coloredBadgeVariants({ size }), className)} variant="outline">
+        {status}
+      </Badge>
+    );
   }
 
   const { label, color, style } = config;
 
-  return <Badge className={cn(coloredBadgeVariants({ color, style }), className)}>{label}</Badge>;
+  return (
+    <Badge className={cn(coloredBadgeVariants({ color, style, size }), className)}>{label}</Badge>
+  );
 };

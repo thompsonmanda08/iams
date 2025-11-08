@@ -91,7 +91,12 @@ export const QUERY_KEYS = {
   RISK_REGISTERS: "risk-registers",
   KRI: "KRI",
   KRI_REGISTERS: "kri-registers",
-  RISK_CATEGORIES: "risk-categories"
+  RISK_CATEGORIES: "risk-categories",
+  ACTIONS: "actions",
+  ACTION_FINDINGS: "action-findings",
+  ACTION_TASKS: "action-tasks",
+  ACTION_EXECUTIONS: "action-executions",
+  ACTION_LOGS: "action-logs"
 };
 
 // ANIMATION_VARIANTS

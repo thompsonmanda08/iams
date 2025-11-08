@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkflowEditor from "./workflow-editor";
 import PageHeader from "@/components/page-header";
-import { useWorkflowMutations } from "@/lib/hooks/use-workflow-mutations";
+import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
 import { useQuery } from "@tanstack/react-query";
 import { listWorkflows } from "@/app/_actions/workflow-actions";
 import { WorkflowListItem } from "@/lib/types/workflow";

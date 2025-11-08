@@ -19,32 +19,80 @@ import UploadField, { ACCEPTABLE_FILE_TYPES } from "@/components/ui/file-dropzon
 import { toast } from "sonner";
 import { submitActionFindings } from "@/app/_actions/risk-module-actions";
 import type { Risk, ActionFindingsInput } from "@/app/_actions/risk-module-actions";
+import { notify } from "@/lib/utils";
+import { uploadFile } from "@/app/_actions/pocketbase-actions";
+import { QUERY_KEYS } from "@/lib/constants";
 
 interface ActionFindingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  risk: Risk;
-  actionOwnerId: string;
+  actionId: string;
+  taskId: string;
+  actionTitle?: string;
+  riskTitle?: string;
 }
 
 export function ActionFindingsDialog({
   open,
   onOpenChange,
-  risk,
-  actionOwnerId
+  actionId,
+  taskId,
+  actionTitle,
+  riskTitle
 }: ActionFindingsDialogProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const uploadFieldRef = useRef<any>(null);
   const [formData, setFormData] = useState({
-    description: "",
-    evidence_notes: ""
+    evidence_description: "",
+    evidence_file_url: null as string | null,
+    evidence_file_name: null as string | null,
+    evidence_file_type: null as string | null
   });
-  const [evidenceFile, setEvidenceFile] = useState<File | undefined>(undefined);
 
-  const handleFileChange = (file: File | undefined) => {
-    setEvidenceFile(file);
-  };
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFileUpload(file: File) {
+    setUploading(true);
+
+    if (!file?.name?.trim() || !file?.type || !file?.size) {
+      notify({
+        type: "error",
+        description: "Please select a valid file type to upload."
+      });
+      setUploading(false);
+      return;
+    }
+
+    try {
+      const response = await uploadFile(file);
+
+      if (response?.success) {
+        notify({
+          type: "success",
+          description: "File uploaded successfully!"
+        });
+        setFormData((prev) => ({
+          ...prev,
+          evidence_file_url: response?.data?.file_url || null,
+          evidence_file_name: response?.data?.file_name || file.name,
+          evidence_file_type: file.type
+        }));
+      } else {
+        notify({
+          type: "error",
+          description: response?.message || "Failed to upload file."
+        });
+      }
+    } catch (error) {
+      notify({
+        type: "error",
+        description: "An error occurred while uploading the file."
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
 
   // Mutation for submitting action findings
   const submitFindingsMutation = useMutation({
@@ -53,40 +101,41 @@ export function ActionFindingsDialog({
       if (response.success) {
         toast.success("Action findings submitted successfully");
         setFormData({
-          description: "",
-          evidence_notes: ""
+          evidence_description: "",
+          evidence_file_url: null,
+          evidence_file_name: null,
+          evidence_file_type: null
         });
-        setEvidenceFile(undefined);
         uploadFieldRef.current?.clear();
         onOpenChange(false);
         router.refresh();
 
         // Invalidate related queries
-        queryClient.invalidateQueries({ queryKey: ["risks"] });
-        queryClient.invalidateQueries({ queryKey: ["actions"] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTIONS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTION_LOGS] });
       } else {
         toast.error(response.message || "Failed to submit action findings");
       }
     },
     onError: (error) => {
       toast.error("An error occurred while submitting findings");
+      toast.error(error.message || "Failed to submit action findings");
       console.error("Error submitting findings:", error);
     }
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validation
-    if (!formData.description.trim()) {
-      toast.error("Please provide an action description");
+    if (!formData.evidence_description.trim()) {
+      toast.error("Please provide evidence description");
       return;
     }
 
+    // Submit action findings with proper API structure
     const input: ActionFindingsInput = {
-      risk_id: risk.id,
-      action_owner_id: actionOwnerId,
-      description: formData.description,
-      evidence_notes: formData.evidence_notes || undefined,
-      evidence_file_name: evidenceFile ? evidenceFile.name : undefined
+      action_id: actionId,
+      task_id: taskId,
+      ...formData
     };
 
     submitFindingsMutation.mutate(input);
@@ -103,55 +152,62 @@ export function ActionFindingsDialog({
           <DialogDescription>Document the actions taken to mitigate the risk</DialogDescription>
         </DialogHeader>
 
-        <div className="py- space-y-4 pb-4">
-          {/* Risk Information - Read Only */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm font-semibold text-gray-700">Risk Title</p>
-                <p className="text-xs text-gray-900">{risk.title}</p>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-700">Risk Description</p>
-                <p className="text-xs text-gray-900">{risk.description}</p>
+        <div className="space-y-2 pb-4">
+          {/* Action Information - Read Only */}
+          {(actionTitle || riskTitle) && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="space-y-2">
+                {riskTitle && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700">
+                      Risk: <span className="text-xs font-normal text-gray-900">{riskTitle}</span>
+                    </p>
+                  </div>
+                )}
+                {actionTitle && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700">
+                      Action:{" "}
+                      <span className="text-xs font-normal text-gray-900">{actionTitle}</span>
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Action Description */}
+          {/* Evidence Description */}
           <Textarea
-            id="description"
-            label="  Action Taken / Description"
-            placeholder="What was done and when?"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={4}
+            id="evidence_description"
+            label="Evidence Description"
+            placeholder="Describe the evidence and how the action was completed..."
+            value={formData.evidence_description}
+            onChange={(e) => setFormData({ ...formData, evidence_description: e.target.value })}
+            rows={5}
             className="resize-none"
             showLimit={true}
             maxLength={500}
-            descriptionText="Describe the action(s) taken to mitigate this risk."
-          />
-
-          {/* Evidence Notes */}
-          <Textarea
-            id="evidence_notes"
-            label="Evidence / Supporting Notes"
-            placeholder="References, or additional context about the evidence..."
-            value={formData.evidence_notes}
-            onChange={(e) => setFormData({ ...formData, evidence_notes: e.target.value })}
-            rows={3}
-            showLimit={true}
-            maxLength={500}
-            descriptionText="Any supporting notes or references related to the evidence."
-            className="resize-none"
+            descriptionText="Provide detailed description of the evidence and mitigation actions taken."
           />
 
           {/* File Upload using UploadField */}
           <UploadField
             label="Attach Evidence (Optional)"
-            isLoading={submitFindingsMutation.isPending}
+            isLoading={uploading}
             required={false}
-            handleFile={handleFileChange}
+            handleFile={async (file) => {
+              if (file) {
+                await handleFileUpload(file as File);
+              } else {
+                // Clear the file when X is clicked
+                setFormData((prev) => ({
+                  ...prev,
+                  evidence_file_url: null,
+                  evidence_file_name: null,
+                  evidence_file_type: null
+                }));
+              }
+            }}
             acceptedFiles={{
               ...ACCEPTABLE_FILE_TYPES.pdf,
               ...ACCEPTABLE_FILE_TYPES.word,
@@ -172,7 +228,7 @@ export function ActionFindingsDialog({
             type="button"
             onClick={handleSubmit}
             isLoading={submitFindingsMutation.isPending}
-            disabled={submitFindingsMutation.isPending || !formData.description.trim()}
+            disabled={submitFindingsMutation.isPending || !formData.evidence_description.trim()}
             className="gap-2">
             <Upload className="h-4 w-4" />
             Submit Findings

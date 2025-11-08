@@ -35,6 +35,7 @@ import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_com
 import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/action-review-dialog";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { Pagination } from "@/lib/types";
+import { StatusBadge } from "@/components/status-badge";
 
 interface ActionsTableProps {
   actions: ActionDefinition[];
@@ -52,8 +53,9 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const [selectedActionForEvidence, setSelectedActionForEvidence] =
     useState<ActionDefinition | null>(null);
   const [evidenceDialogOpen, setEvidenceDialogOpen] = useState(false);
-  const [selectedActionForReview, setSelectedActionForReview] =
-    useState<ActionDefinition | null>(null);
+  const [selectedActionForReview, setSelectedActionForReview] = useState<ActionDefinition | null>(
+    null
+  );
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
@@ -75,22 +77,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
-  };
-
-  // Get action status badge variant and color
-  const getActionStatusVariant = (status: string) => {
-    switch (status.toUpperCase()) {
-      case "COMPLETED":
-        return { variant: "default", color: "bg-green-100 text-green-800" };
-      case "IN_PROGRESS":
-        return { variant: "outline", color: "bg-blue-100 text-blue-800" };
-      case "PENDING":
-        return { variant: "secondary", color: "bg-yellow-100 text-yellow-800" };
-      case "CANCELLED":
-        return { variant: "destructive", color: "bg-red-100 text-red-800" };
-      default:
-        return { variant: "secondary", color: "bg-gray-100 text-gray-800" };
-    }
   };
 
   // Get task status variant
@@ -127,9 +113,16 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               Manage and track risk treatment actions
             </p>
           </div>
+          <Search
+            placeholder="Search risks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e)}
+            className="ml-auto max-w-xs"
+          />
         </div>
       </CardHeader>
       <CardContent>
+        {/* 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => handleExport("copy")}>
@@ -157,21 +150,22 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
             placeholder="Search risks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e)}
-            className="max-w-xs"
-          />
+            className="ml-auto max-w-xs"
+          /> 
         </div>
+          */}
 
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[250px]">Action Details</TableHead>
+                <TableHead className="w-[300px]">Action Details</TableHead>
                 <TableHead>Risk</TableHead>
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Reviewer</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Action Status</TableHead>
-                <TableHead>Task Type</TableHead>
+                {/* <TableHead>Task Type</TableHead> */}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -196,7 +190,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                   const isUserExecutor = task.task_type === "EXECUTION";
                   const isUserReviewer = task.task_type === "REVIEW";
                   const overdue = isOverdue(action.due_date, action.status);
-                  const executionStatus = getExecutionStatusBadge(execution?.status);
 
                   return (
                     <TableRow key={action.id}>
@@ -205,22 +198,15 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                           <div className="text-sm font-semibold">
                             {action.instructions.slice(0, 40)}...
                           </div>
-                          <div className="text-muted-foreground line-clamp-2 text-xs">
-                            {action.instructions.slice(0, 80)}
-                          </div>
-                          {execution && (
-                            <div className="mt-2 flex items-center gap-1">
-                              <Badge className={cn("text-xs", executionStatus.color)}>
-                                {executionStatus.label}
-                              </Badge>
-                            </div>
-                          )}
+                          <span className="text-muted-foreground line-clamp-3 text-xs">
+                            Date created: {format(new Date(action.created_at), "MMM dd, yyyy")}
+                          </span>
                         </div>
                       </TableCell>
 
                       <TableCell>
                         <div className="text-sm">
-                          <div className="font-medium">{action.risk}</div>
+                          <div className="font-medium">{actionDef.risk_name}</div>
                           <div className="text-muted-foreground text-xs">
                             ID: {action.risk_id.slice(0, 8)}...
                           </div>
@@ -272,21 +258,12 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                       </TableCell>
 
                       <TableCell>
-                        <Badge
-                          className={cn("text-xs", getActionStatusVariant(action.status).color)}>
-                          {action.status}
-                        </Badge>
-                      </TableCell>
-
-                      <TableCell>
-                        <Badge variant={getTaskStatusVariant(task.status)}>
-                          {isUserExecutor ? "Executor" : "Reviewer"}
-                        </Badge>
+                        <StatusBadge status={execution?.status || "Awaiting Action"} />
                       </TableCell>
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {isUserExecutor && action.status !== "COMPLETED" && !execution && (
+                          {isUserExecutor && action.status === "PENDING" && !execution && (
                             <Button
                               size="sm"
                               variant="default"
@@ -314,15 +291,14 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                             </Button>
                           )}
 
-                          {isUserReviewer && execution?.status === "SUBMITTED" && (
+                          {isUserReviewer && (
                             <Button
                               size="sm"
-                              variant="outline"
                               onClick={() => {
                                 setSelectedActionForReview(actionDef);
                                 setReviewDialogOpen(true);
                               }}
-                              className="h-8 gap-1.5">
+                              className="gap-1.5">
                               <CheckCircle2 className="h-3.5 w-3.5" />
                               Review
                             </Button>
@@ -352,15 +328,10 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
         <ActionFindingsDialog
           open={findingsDialogOpen}
           onOpenChange={setFindingsDialogOpen}
-          risk={
-            {
-              id: selectedActionForFindings.action.risk_id,
-              title: selectedActionForFindings.action.risk,
-              description: selectedActionForFindings.action.instructions,
-              status: selectedActionForFindings.action.status
-            } as any
-          }
-          actionOwnerId={selectedActionForFindings.action.executer_id}
+          actionId={selectedActionForFindings.action.id}
+          taskId={selectedActionForFindings.task.id}
+          actionTitle={selectedActionForFindings.action.instructions}
+          riskTitle={selectedActionForFindings.risk_name}
         />
       )}
 

@@ -175,12 +175,12 @@ export interface ActionFindings {
 }
 
 export interface ActionFindingsInput {
-  risk_id: string;
-  action_owner_id: string;
-  description: string;
-  evidence_notes?: string;
-  evidence_file_url?: string;
-  evidence_file_name?: string;
+  action_id: string;
+  task_id: string;
+  evidence_description: string;
+  evidence_file_url?: string | null;
+  evidence_file_name?: string | null;
+  evidence_file_type?: string | null;
 }
 
 export interface AssessActionFindingsInput {
@@ -249,6 +249,7 @@ export interface ActionDefinition {
   action: Action;
   task: Task;
   execution: Execution | null;
+  risk_name: string;
   executer_name: string;
   executer_email: string;
   reviewer_name: string | null;
@@ -1490,27 +1491,26 @@ export async function getKRIStatusSummary(params?: {
  * Submit action findings/evidence for a risk mitigation action
  * Changes status from OPEN to PENDING_REVIEW
  */
-export async function submitActionFindings(input: ActionFindingsInput): Promise<APIResponse> {
+export async function submitActionFindings(data: ActionFindingsInput): Promise<APIResponse> {
+  if (!data.action_id) {
+    return handleBadRequest("Action ID is required");
+  }
+
+  if (!data.task_id) {
+    return handleBadRequest("Task ID is required");
+  }
+
+  const url = `/api/v1/risk-actions/${data.action_id}/executions`;
+
   try {
-    // Mock implementation - Replace with real API call when backend is ready
-    const actionFinding: ActionFindings = {
-      id: `AF-${Date.now()}`,
-      risk_id: input.risk_id,
-      action_owner_id: input.action_owner_id,
-      description: input.description,
-      evidence_notes: input.evidence_notes,
-      evidence_file_url: input.evidence_file_url,
-      evidence_file_name: input.evidence_file_name,
-      submission_date: new Date(),
-      status: "PENDING_REVIEW",
-      created_at: new Date(),
-      updated_at: new Date()
-    };
+    // Call the actual API endpoint to submit action findings/executions
+    const response = await authenticatedApiClient({ url, method: "POST", data });
 
     revalidatePath("/dashboard/risks/actions");
-    return successResponse(actionFinding, "Action findings submitted successfully");
-  } catch (error) {
-    return handleError(error, "POST | SUBMIT ACTION FINDINGS", "/api/v1/action-findings");
+    revalidatePath("/dashboard/risks/actions/logs");
+    return successResponse(response?.data, "Action findings submitted successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "POST | SUBMIT ACTION FINDINGS", url);
   }
 }
 
@@ -1560,6 +1560,38 @@ export async function assessActionFindings(
   }
 }
 
+/**
+ * Submit action review as a reviewer
+ * Updates execution status and provides feedback
+ * POST /api/v1/reviews/{review_id}/submit
+ */
+export async function submitActionReview(data: {
+  task_id: string;
+  execution_id: string;
+  approval_status: "COMPLETE";
+  remarks: string;
+}): Promise<APIResponse> {
+  if (!data.task_id) {
+    return handleBadRequest("Task ID is required");
+  }
+
+  if (!data.execution_id) {
+    return handleBadRequest("Execution ID is required");
+  }
+
+  const url = `/api/v1/reviews/${data.execution_id}/submit`;
+
+  try {
+    const response = await authenticatedApiClient({ url, method: "POST", data });
+
+    revalidatePath("/dashboard/risks/actions");
+    revalidatePath("/dashboard/risks/actions/logs");
+    return successResponse(response?.data, "Action review submitted successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "POST | SUBMIT ACTION REVIEW", url);
+  }
+}
+
 // ============================================================================
 // RISK ACTION MANAGEMENT
 // ============================================================================
@@ -1604,24 +1636,21 @@ export async function createRiskAction(data: {
  * GET /api/v1/risks/actions?page=1&page_size=50&status=PENDING&risk_id=""&task_type="EXECUTION|REVIEW"
  */
 export async function getActions(params: ActionQueryParams): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params.page) queryParams.append("page", String(params.page));
+  if (params.page_size) queryParams.append("page_size", String(params.page_size));
+  if (params.status) queryParams.append("status", params.status);
+  if (params.risk_id) queryParams.append("risk_id", params.risk_id);
+  if (params.task_type) queryParams.append("task_type", params.task_type);
+
+  const url = `/api/v1/risk-actions${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
   try {
-    const queryParams = new URLSearchParams();
+    const response = await authenticatedApiClient({ url });
 
-    if (params.page) queryParams.append("page", String(params.page));
-    if (params.page_size) queryParams.append("page_size", String(params.page_size));
-    if (params.status) queryParams.append("status", params.status);
-    if (params.risk_id) queryParams.append("risk_id", params.risk_id);
-    if (params.task_type) queryParams.append("task_type", params.task_type);
-
-    const url = `/api/v1/risks/actions${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-
-    const response = await authenticatedApiClient({
-      url,
-      method: "GET"
-    });
-
-    return successResponse(response.data, "Actions retrieved successfully");
+    return successResponse(response.data?.data, "Actions retrieved successfully");
   } catch (error) {
-    return handleError(error, "GET | GET ACTIONS", "/api/v1/risks/actions");
+    return handleError(error, "GET | GET ACTIONS", url);
   }
 }

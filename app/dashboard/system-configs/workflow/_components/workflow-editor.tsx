@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { WorkflowHeader } from "./workflow-header";
 import { WorkflowCanvas } from "./workflow-canvas";
 import { TransitionPanel } from "./transition-panel";
-import { useWorkflowMutations } from "@/lib/hooks/use-workflow-mutations";
+import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
 import { getWorkflowDetails } from "@/app/_actions/workflow-actions";
 import { toast } from "sonner";
 import { AlertCircle, RefreshCw } from "lucide-react";

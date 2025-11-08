@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import type { Execution } from "@/app/_actions/risk-module-actions";
+import { StatusBadge } from "@/components/status-badge";
 
 interface ActionEvidenceViewerDialogProps {
   open: boolean;
@@ -66,9 +67,7 @@ export function ActionEvidenceViewerDialog({
             <FileText className="h-5 w-5" />
             View Evidence
           </DialogTitle>
-          <DialogDescription>
-            Review the evidence submitted for this action
-          </DialogDescription>
+          <DialogDescription>Review the evidence submitted for this action</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -76,12 +75,8 @@ export function ActionEvidenceViewerDialog({
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-700">
-                  Submission Status
-                </p>
-                <Badge className="bg-green-100 text-green-800">
-                  {execution.status}
-                </Badge>
+                <p className="text-sm font-semibold text-gray-700">Submission Status</p>
+                <StatusBadge status={execution.status} />
               </div>
               {execution.submitted_at && (
                 <div>
@@ -96,11 +91,9 @@ export function ActionEvidenceViewerDialog({
 
           {/* Evidence Description */}
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-700">
-              Action Taken / Description
-            </p>
+            <p className="text-sm font-semibold text-gray-700">Action Taken / Description</p>
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p className="whitespace-pre-wrap text-sm text-gray-900">
+              <p className="text-sm whitespace-pre-wrap text-gray-900">
                 {execution.evidence_description}
               </p>
             </div>
@@ -109,9 +102,7 @@ export function ActionEvidenceViewerDialog({
           {/* Evidence File */}
           {hasFile && (
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700">
-                Evidence File
-              </p>
+              <p className="text-sm font-semibold text-gray-700">Evidence File</p>
               <div className="rounded-lg border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -125,11 +116,7 @@ export function ActionEvidenceViewerDialog({
                       </p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleDownload}
-                    className="gap-2">
+                  <Button size="sm" variant="outline" onClick={handleDownload} className="gap-2">
                     <Download className="h-4 w-4" />
                     Download
                   </Button>
@@ -149,10 +136,7 @@ export function ActionEvidenceViewerDialog({
 
         {/* Footer */}
         <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="destructive" onClick={() => onOpenChange(false)}>
             Close
           </Button>
         </div>

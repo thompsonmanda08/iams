@@ -3,7 +3,7 @@ import { ActionsTable } from "./actions-table";
 import PageHeader from "@/components/page-header";
 import { Pagination } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Download, Logs, LogsIcon } from "lucide-react";
+import { LogsIcon } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +51,7 @@ interface Risk {
 }
 
 export default async function ActionsPage() {
-  const response = await getActions({});
+  const response = await getActions({ page: 1, page_size: 10 });
   const actions = response.success && response.data?.data ? response.data.data : [];
 
   const pagination: Pagination = response.data?.pagination || {
@@ -62,8 +62,11 @@ export default async function ActionsPage() {
     has_next: false,
     has_prev: false
   };
+
+  console.log("[ACTIONS ]", actions);
+
   return (
-    <main className="bg-background min-h-screen">
+    <main className="min-h-screen">
       <div className="bg-card border-b">
         <div className="container mx-auto flex justify-between px-4 py-6">
           <PageHeader

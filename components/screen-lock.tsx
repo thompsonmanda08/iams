@@ -17,7 +17,7 @@ import { lockScreenOnUserIdle } from "@/app/_actions/auth-actions";
 import { AuthSession } from "@/lib/types";
 import { toast } from "sonner";
 
-const DEFAULT_TIMEOUT = 90 * 1000; // SECONDS
+const DEFAULT_TIMEOUT = 90 * 1000; // 90 SECONDS (1.5 MINUTES)
 
 interface ScreenLockProps {
   open: boolean;
@@ -262,7 +262,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   // if (pathname.startsWith("/subscriptions")) return null;
 
   // Render the ScreenLock component when idle
-  if (isIdle && session?.screen_locked) {
+  if (isIdle) {
     return (
       <ScreenLock
         open={isIdle}

@@ -26,7 +26,7 @@ const getSecretKey = () => {
 // 3. Create the key properly - defer until runtime
 const getKey = () => new TextEncoder().encode(getSecretKey());
 
-export async function encrypt(payload: any) {
+export async function encrypt(payload: any, expirationTime: string = "24h") {
   if (!payload || typeof payload !== "object") {
     throw new Error("Payload must be a non-empty object");
   }
@@ -35,7 +35,7 @@ export async function encrypt(payload: any) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("1h")
+    .setExpirationTime(expirationTime)
     .sign(key);
 }
 
@@ -120,7 +120,7 @@ export async function createAuthSession({
   mfa_required?: boolean;
   organization_id?: string;
 }): Promise<void> {
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // AFTER 1 HOUR
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // AFTER 24 HOURS
 
   const newSession: AuthSession = {
     accessToken: accessToken || "",
@@ -133,7 +133,7 @@ export async function createAuthSession({
   };
 
   // Call `encrypt` to generate the session token
-  const token = await encrypt(newSession);
+  const token = await encrypt(newSession, "24h");
 
   // Ensure `session` is successfully created before setting the cookie
   if (token) {
@@ -150,12 +150,12 @@ export async function createAuthSession({
 }
 
 export async function createUserSession(user: User): Promise<void> {
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // AFTER 1 HOUR
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // AFTER 24 HOURS
 
   const newSession = { ...user, expiresAt };
 
   // Call `encrypt` to generate the session token
-  const token = await encrypt(newSession);
+  const token = await encrypt(newSession, "24h");
 
   // Ensure `session` is successfully created before setting the cookie
   if (token) {
@@ -172,12 +172,12 @@ export async function createUserSession(user: User): Promise<void> {
 }
 
 export async function createPermissionsSession(pem: Permission[]): Promise<void> {
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // AFTER 1 HOUR
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // AFTER 24 HOURS
 
   const newSession = { ...pem, expiresAt };
 
   // Call `encrypt` to generate the session token
-  const token = await encrypt(newSession);
+  const token = await encrypt(newSession, "24h");
 
   // Ensure `session` is successfully created before setting the cookie
   if (token) {
@@ -207,18 +207,18 @@ export async function updateAuthSession(fields: any): Promise<AuthSession | unde
       ...fields
     };
 
-    // Determine expiration: use provided expiresAt from fields, keep existing, or create new
+    // Determine expiration: use provided expiresAt from fields, keep existing, or create new (24 hours)
     const expiresAt = fields?.expiresAt
       ? new Date(fields.expiresAt)
       : oldSession?.expiresAt
         ? new Date(oldSession.expiresAt)
-        : new Date(Date.now() + 60 * 60 * 1000);
+        : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     // Ensure expiresAt is included in the session payload
     newSession.expiresAt = expiresAt;
 
     // Call `encrypt` to generate the session token
-    const session = await encrypt(newSession);
+    const session = await encrypt(newSession, "24h");
 
     if (session) {
       (await cookies()).set(AUTH_SESSION, session, {

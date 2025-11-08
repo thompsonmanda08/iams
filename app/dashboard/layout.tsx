@@ -29,10 +29,14 @@ export default async function DashLayout({
   //   user_type,
   //   sessionUserType: session?.user_type,
   //   userObjectUserType: user?.user_type,
+  //   hasAccessToken: !!session?.accessToken,
   //   path: "/dashboard/*"
   // });
 
-  // if (!isAuthenticated) return redirect("/login");
+  if (!isAuthenticated) {
+    console.log("[DASHBOARD LAYOUT] Not authenticated, redirecting to /login");
+    return redirect("/login");
+  }
 
   if (user_type === "BACKOFFICE_ADMIN") {
     console.log("[DASHBOARD LAYOUT] Redirecting to /admin/home - user_type:", user_type);
