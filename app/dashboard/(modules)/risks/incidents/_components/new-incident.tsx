@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,36 +16,157 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { SearchSelectField } from "@/components/ui/search-select-field";
+import { Department, User } from "@/lib/types/risk-type";
+import { getDepartments, getRiskCausesHierarchy } from "@/app/_actions/config-actions";
+import { toast } from "sonner";
+import { getUsers } from "@/app/_actions/user-actions";
+import { createIncident } from "@/app/_actions/incident-actions";
 
 export function NewIncident() {
-  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    department: "",
-    cause1: "",
-    cause2: "",
+    department_id: "",
+    primary_cause_id: "",
+    specific_cause_id: "",
     materiality: "",
-    incidentDate: undefined as Date | undefined,
-    discoveryDate: undefined as Date | undefined,
+    incident_date: undefined as Date | undefined,
+    discovery_date: undefined as Date | undefined,
     location: "",
     details: "",
-    rootCause: "",
-    actionPlan: "",
-    dueDate: undefined as Date | undefined,
-    responsiblePerson: "",
-    financialLoss: "no"
+    root_cause: "",
+    action_plan: "",
+    due_date: undefined as Date | undefined,
+    responsible_person_id: "",
+    financial_loss_implications: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Incident Submitted",
-      description: "Your incident report has been successfully submitted."
-    });
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [causes, setCauses] = useState<any[]>([]);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [loadingCauses, setLoadingCauses] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Load functions
+  const loadDepartments = async () => {
+    setLoadingDepartments(true);
+    try {
+      const response = await getDepartments({ isActive: true });
+      if (response.success && response.data?.data) {
+        setDepartments(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Error loading departments");
+    } finally {
+      setLoadingDepartments(false);
+    }
   };
+
+  const loadUsers = async (departmentId: string) => {
+    setLoadingUsers(true);
+    try {
+      const response = await getUsers({
+        departmentId: departmentId,
+        isActive: true
+      });
+      if (response.success && response.data.data) {
+        setUsers(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Error loading users");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const loadCauses = async () => {
+    setLoadingCauses(true);
+    try {
+      const response = await getRiskCausesHierarchy();
+      console.log("CAUSES:", response);
+
+      if (response.success && response.data) {
+        setCauses(response.data);
+      }
+    } catch (error) {
+      toast.error("Error loading causes");
+    } finally {
+      setLoadingCauses(false);
+    }
+  };
+
+  const materiality = [
+    { name: "LOW", id: "LOW" },
+    { name: "MEDIUM", id: "MEDIUM" },
+    { name: "HIGH", id: "HIGH" },
+    { name: "CRITICAL", id: "CRITICAL" }
+  ];
+  const implications = [
+    { name: "YES", id: "YES" },
+    { name: "NO", id: "NO" }
+  ];
+
+  // Computed values
+  const availableSubCauses = useMemo(() => {
+    if (!formData.primary_cause_id) return [];
+    const selectedCause = causes.find((process) => process.id === formData.primary_cause_id);
+    return selectedCause?.sub_causes || [];
+  }, [formData.primary_cause_id, causes]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const response = await createIncident(formData);
+      if (response.success) {
+        toast.success(response.message || "Risk register created successfully");
+        setFormData({
+          department_id: "",
+          primary_cause_id: "",
+          specific_cause_id: "",
+          materiality: "",
+          incident_date: undefined as Date | undefined,
+          discovery_date: undefined as Date | undefined,
+          location: "",
+          details: "",
+          root_cause: "",
+          action_plan: "",
+          due_date: undefined as Date | undefined,
+          responsible_person_id: "",
+          financial_loss_implications: ""
+        });
+      } else {
+        toast.error(response.message || "Failed to create risk register");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDepartments();
+    loadCauses();
+  }, []);
+
+  useEffect(() => {
+    if (formData.department_id) {
+      loadUsers(formData.department_id);
+    } else {
+      setUsers([]);
+    }
+  }, [formData.department_id]);
+
+  const departmentUser = users.map((user) => ({
+    name: `${user.first_name} ${user.last_name}`,
+    id: user.id
+  }));
 
   return (
     <Card>
@@ -58,51 +178,33 @@ export function NewIncident() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* Department */}
-            <div className="space-y-2">
-              <Label htmlFor="department">
-                Department <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.department}
-                onValueChange={(value) => setFormData({ ...formData, department: value })}>
-                <SelectTrigger id="department" className="w-full">
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="it">Information Technology</SelectItem>
-                  <SelectItem value="hr">Human Resources</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="operations">Operations</SelectItem>
-                  <SelectItem value="sales">Sales</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Materiality */}
-            <div className="space-y-2">
-              <Label htmlFor="materiality">
-                Materiality <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.materiality}
-                onValueChange={(value) => setFormData({ ...formData, materiality: value })}>
-                <SelectTrigger id="materiality" className="w-full">
-                  <SelectValue placeholder="Select materiality" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <SearchSelectField
+              label="Department"
+              required
+              placeholder="Select department "
+              options={departments}
+              value={formData.department_id}
+              onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+              isLoading={loadingDepartments}
+              isDisabled={isLoading || loadingDepartments}
+              classNames={{ wrapper: "max-w-full" }}
+            />
+
+            <SearchSelectField
+              label="Materiality"
+              required
+              placeholder="Select materiality"
+              options={materiality as any}
+              value={formData.materiality}
+              onValueChange={(value) => setFormData({ ...formData, materiality: value })}
+              classNames={{ wrapper: "max-w-full" }}
+              isDisabled={isLoading}
+            />
           </div>
 
-          {/* Cause 1 and Cause 2 */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="cause1">Cause 1</Label>
+            {/* <div className="space-y-2">
+              <Label htmlFor="cause1">Primary Cause</Label>
               <Select
                 value={formData.cause1}
                 onValueChange={(value) => setFormData({ ...formData, cause1: value })}>
@@ -116,10 +218,10 @@ export function NewIncident() {
                   <SelectItem value="external-factor">External Factor</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
-            <div className="space-y-2">
-              <Label htmlFor="cause2">Cause 2</Label>
+            {/* <div className="space-y-2">
+              <Label htmlFor="cause2">Specific Cause</Label>
               <Select
                 value={formData.cause2}
                 onValueChange={(value) => setFormData({ ...formData, cause2: value })}>
@@ -133,10 +235,33 @@ export function NewIncident() {
                   <SelectItem value="resources">Insufficient Resources</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
+            <SearchSelectField
+              label="Primary Cause"
+              required
+              placeholder="Select primary cause"
+              options={causes}
+              value={formData.primary_cause_id}
+              onValueChange={(value) => setFormData({ ...formData, primary_cause_id: value })}
+              isLoading={loadingCauses}
+              isDisabled={isLoading || loadingCauses}
+              classNames={{ wrapper: "max-w-full" }}
+            />
+            <SearchSelectField
+              label="Sub Process"
+              required
+              placeholder={
+                !formData.primary_cause_id ? "Select macro process first" : "Select sub process"
+              }
+              options={availableSubCauses}
+              value={formData.specific_cause_id}
+              onValueChange={(value) => setFormData({ ...formData, specific_cause_id: value })}
+              isLoading={loadingCauses}
+              isDisabled={isLoading || loadingCauses || !formData.primary_cause_id}
+              classNames={{ wrapper: "max-w-full" }}
+            />
           </div>
 
-          {/* Incident Date and Discovery Date */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="incident-date">Incident Date</Label>
@@ -147,11 +272,11 @@ export function NewIncident() {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !formData.incidentDate && "text-muted-foreground"
+                      !formData.incident_date && "text-muted-foreground"
                     )}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.incidentDate ? (
-                      format(formData.incidentDate, "PPP")
+                    {formData.incident_date ? (
+                      format(formData.incident_date, "PPP")
                     ) : (
                       <span>Pick a date</span>
                     )}
@@ -160,9 +285,8 @@ export function NewIncident() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={formData.incidentDate}
-                    onSelect={(date) => setFormData({ ...formData, incidentDate: date })}
-                    initialFocus
+                    selected={formData.incident_date}
+                    onSelect={(date) => setFormData({ ...formData, incident_date: date })}
                   />
                 </PopoverContent>
               </Popover>
@@ -177,11 +301,11 @@ export function NewIncident() {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !formData.discoveryDate && "text-muted-foreground"
+                      !formData.discovery_date && "text-muted-foreground"
                     )}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.discoveryDate ? (
-                      format(formData.discoveryDate, "PPP")
+                    {formData.discovery_date ? (
+                      format(formData.discovery_date, "PPP")
                     ) : (
                       <span>Pick a date</span>
                     )}
@@ -190,16 +314,14 @@ export function NewIncident() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={formData.discoveryDate}
-                    onSelect={(date) => setFormData({ ...formData, discoveryDate: date })}
-                    initialFocus
+                    selected={formData.discovery_date}
+                    onSelect={(date) => setFormData({ ...formData, discovery_date: date })}
                   />
                 </PopoverContent>
               </Popover>
             </div>
           </div>
 
-          {/* Location */}
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
             <Input
@@ -210,7 +332,6 @@ export function NewIncident() {
             />
           </div>
 
-          {/* Incident Details */}
           <div className="space-y-2">
             <Label htmlFor="details">Incident Details</Label>
             <Textarea
@@ -222,15 +343,14 @@ export function NewIncident() {
             />
           </div>
 
-          {/* Root Cause and Action Plan */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="root-cause">Root Cause</Label>
               <Input
                 id="root-cause"
                 placeholder="What caused the incident?"
-                value={formData.rootCause}
-                onChange={(e) => setFormData({ ...formData, rootCause: e.target.value })}
+                value={formData.root_cause}
+                onChange={(e) => setFormData({ ...formData, root_cause: e.target.value })}
               />
             </div>
 
@@ -239,13 +359,12 @@ export function NewIncident() {
               <Input
                 id="action-plan"
                 placeholder="The resolution"
-                value={formData.actionPlan}
-                onChange={(e) => setFormData({ ...formData, actionPlan: e.target.value })}
+                value={formData.action_plan}
+                onChange={(e) => setFormData({ ...formData, action_plan: e.target.value })}
               />
             </div>
           </div>
 
-          {/* Due Date and Responsible Person */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="due-date">Due Date</Label>
@@ -256,62 +375,54 @@ export function NewIncident() {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !formData.dueDate && "text-muted-foreground"
+                      !formData.due_date && "text-muted-foreground"
                     )}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Pick a date</span>}
+                    {formData.due_date ? (
+                      format(formData.due_date, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={formData.dueDate}
-                    onSelect={(date) => setFormData({ ...formData, dueDate: date })}
-                    initialFocus
+                    selected={formData.due_date}
+                    onSelect={(date) => setFormData({ ...formData, due_date: date })}
                     fromDate={new Date()}
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="responsible-person">Responsible Person</Label>
-              <Select
-                value={formData.responsiblePerson}
-                onValueChange={(value) => setFormData({ ...formData, responsiblePerson: value })}>
-                <SelectTrigger id="responsible-person" className="w-full">
-                  <SelectValue placeholder="Select person" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pama">Pama Malembeka</SelectItem>
-                  <SelectItem value="john">John Smith</SelectItem>
-                  <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                  <SelectItem value="michael">Michael Brown</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <SearchSelectField
+              label="Responsible Person"
+              required
+              placeholder="Select responsible person"
+              options={departmentUser}
+              value={formData.responsible_person_id}
+              onValueChange={(value) => setFormData({ ...formData, responsible_person_id: value })}
+              isLoading={loadingUsers}
+              isDisabled={isLoading || loadingUsers}
+              classNames={{ wrapper: "max-w-full" }}
+            />
           </div>
-
-          {/* Financial Loss */}
-          <div className="space-y-2">
-            <Label htmlFor="financial-loss">
-              Does this incident have financial loss implications?
-            </Label>
-            <Select
-              value={formData.financialLoss}
-              onValueChange={(value) => setFormData({ ...formData, financialLoss: value })}>
-              <SelectTrigger id="financial-loss" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no">No</SelectItem>
-                <SelectItem value="yes">Yes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SearchSelectField
+            label="Does this incident have financial loss implications?"
+            required
+            placeholder="Select financial loss implications"
+            options={implications}
+            value={formData.financial_loss_implications}
+            onValueChange={(value) =>
+              setFormData({ ...formData, financial_loss_implications: value })
+            }
+            isDisabled={isLoading}
+            classNames={{ wrapper: "max-w-full" }}
+          />
 
           <Button type="submit" size="lg">
-            Submit Incident
+            {isLoading ? "Creating Incident..." : "Submit Incident"}
           </Button>
         </form>
       </CardContent>
