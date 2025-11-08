@@ -13,11 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Copy, FileText, FileSpreadsheet, Printer, AlertTriangle, View } from "lucide-react";
+import { Copy, FileText, FileSpreadsheet, Printer, AlertTriangle, View, Upload } from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ActionFindingsDialog } from "@/app/dashboard/(modules)/risks/_components/action-findings-dialog";
 
 interface RiskOwner {
   id: string;
@@ -80,6 +81,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const searchParams = useSearchParams();
   const [_, startTransition] = useTransition();
+  const [selectedRiskForFindings, setSelectedRiskForFindings] = useState<Risk | null>(null);
+  const [findingsDialogOpen, setFindingsDialogOpen] = useState(false);
 
   const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
     console.log(`Exporting as ${type}`);
@@ -327,6 +330,19 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {risk.status !== "CLOSED" && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => {
+                                setSelectedRiskForFindings(risk);
+                                setFindingsDialogOpen(true);
+                              }}
+                              className="h-8 gap-1.5 bg-blue-600 hover:bg-blue-700">
+                              <Upload className="h-3.5 w-3.5" />
+                              Submit Findings
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
@@ -356,6 +372,16 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
           )}
         </div>
       </CardContent>
+
+      {/* Action Findings Dialog */}
+      {selectedRiskForFindings && (
+        <ActionFindingsDialog
+          open={findingsDialogOpen}
+          onOpenChange={setFindingsDialogOpen}
+          risk={selectedRiskForFindings}
+          actionOwnerId={selectedRiskForFindings.risk_owner.id}
+        />
+      )}
     </Card>
   );
 }
