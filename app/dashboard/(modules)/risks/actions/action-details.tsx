@@ -201,7 +201,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
               <BackButton title="Back to Actions" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="gap-2">
+                  <Button size="sm" className="gap-2">
                     Change Risk Response
                     <ChevronDown className="h-4 w-4" />
                   </Button>

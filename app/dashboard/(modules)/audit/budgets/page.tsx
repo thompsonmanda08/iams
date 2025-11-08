@@ -35,7 +35,7 @@ const BudgetsPage = async () => {
             />
             <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">
-                <Button className="gap-2">
+                <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
                   New Budget
                 </Button>
