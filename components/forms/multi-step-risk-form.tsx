@@ -27,7 +27,7 @@ import {
   updateRiskStepThree,
   updateRisk
 } from "@/app/_actions/risk-module-actions";
-import { getUsers } from "@/app/_actions/user-actions";
+import { getDepartmentHeads } from "@/app/_actions/user-actions";
 import { getStrategicPillars } from "@/app/_actions/audit-settings-actions";
 
 import {
@@ -229,12 +229,11 @@ export function MultiStepRiskForm({
   const loadUsers = async (departmentId: string) => {
     setLoadingUsers(true);
     try {
-      const response = await getUsers({
-        departmentId: departmentId,
-        isActive: true
+      const response = await getDepartmentHeads({
+        departmentId: departmentId
       });
-      if (response.success && response.data?.data) {
-        setUsers(response.data.data);
+      if (response.success && response.data) {
+        setUsers(response.data);
       }
     } catch (error) {
       toast.error("Error loading users");

@@ -19,7 +19,7 @@ interface Risk {
   department_name: string;
   risk_owner_name: string;
   status: string;
-  risk_response: string;
+  recurrence: string;
   risk_appetite_status: string;
   created_at: string;
   updated_at: string;
@@ -92,14 +92,12 @@ const getRatingBadgeClass = (rating: string): string => {
   return ratingMap[rating] || "bg-gray-100 text-gray-800";
 };
 
-const getResponseColor = (response: string): string => {
-  const responseMap: Record<string, string> = {
-    REDUCE: "bg-blue-100 text-blue-800 border-blue-200",
-    ACCEPT: "bg-green-100 text-green-800 border-green-200",
-    TRANSFER: "bg-purple-100 text-purple-800 border-purple-200",
-    AVOID: "bg-red-100 text-red-800 border-red-200"
+const getRecurrenceColor = (recurrence: string): string => {
+  const recurrenceMap: Record<string, string> = {
+    ONGOING: "bg-blue-100 text-blue-800 border-blue-200",
+    "ONE-TIME": "bg-amber-100 text-amber-800 border-amber-200"
   };
-  return responseMap[response] || "bg-gray-100 text-gray-800";
+  return recurrenceMap[recurrence?.toLowerCase()] || "bg-gray-100 text-gray-800 border-gray-200";
 };
 
 const RiskMatrix = ({
@@ -287,8 +285,8 @@ export function RiskHeatMap({ heatmapData }: { heatmapData: HeatmapData }) {
                                 <div className="flex flex-col gap-2">
                                   <Badge variant="outline">{risk.status}</Badge>
                                   <Badge
-                                    className={cn("border", getResponseColor(risk.risk_response))}>
-                                    {risk.risk_response}
+                                    className={cn("border", getRecurrenceColor(risk.recurrence))}>
+                                    {risk.recurrence}
                                   </Badge>
                                 </div>
                               </div>
