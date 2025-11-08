@@ -260,6 +260,11 @@ export default function RisksTable({
     has_next: meta.page < meta.totalPages
   };
 
+  const getRiskOwnerName = (risk: Risk) => {
+    if (!risk.risk_owner) return "Unassigned";
+    return `${risk.risk_owner.first_name} ${risk.risk_owner.last_name}`.trim();
+  };
+
   return (
     <div className="px-4">
       <Card className="container mx-auto mb-8 px-4 py-8">
@@ -388,10 +393,7 @@ export default function RisksTable({
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">
-                      {`${risk?.risk_owner?.first_name} ${risk?.risk_owner?.last_name}` ||
-                        "Unassinged"}
-                    </span>
+                    <span className="text-sm">{getRiskOwnerName(risk)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
