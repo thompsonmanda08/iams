@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Calendar,
   Users,
   AlertCircle,
@@ -11,7 +10,8 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheckIcon
+  ClipboardCheckIcon,
+  TelescopeIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,19 +21,26 @@ import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import Link from "next/link";
 import { createAuditPlan } from "@/app/_actions/audit-module-actions";
 import { TemplateSelectorSimple } from "@/app/dashboard/(modules)/audit/plans/_components/template-selector-simple";
 import { CategorySelector } from "@/app/dashboard/(modules)/audit/plans/_components/category-selector";
 import { SelectField } from "@/components/ui/select-field";
 import { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
-import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
+import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
 import { notify } from "@/lib/utils";
 import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useDepartments } from "@/hooks/use-query-data";
 import { User } from "@/lib/types/account";
 import { MultiSelectField } from "@/components/ui/multi-select-field";
 import PageHeader from "@/components/page-header";
 import BackButton from "@/components/back-button";
+import {
+  useUniverses,
+  useUniverseItems,
+  useBudgets,
+  useBudgetLines
+} from "@/hooks/use-audit-settings-query-data";
+import { SearchSelectField } from "@/components/ui/search-select-field";
 
 const STEPS = [
   { id: 1, name: "Basic Details", icon: Calendar },
@@ -50,31 +57,97 @@ export default function NewAuditPlanPage() {
   const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
   const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
 
+  const { data: departmentsResponse, isLoading: loadingDepartments } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+  const departmentsData = departmentsResponse?.data?.data || [];
+
   // Form state
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
     title: "",
     description: "",
     ref_no: "",
+    department_id: "",
     audit_area: "",
     audit_scope: "",
     audit_criteria: "",
     audit_objective: "",
-    management_standard: "ISO IEC 27001",
+    management_standard: "ISO",
     audit_team_leader: "",
     audit_team_member: [] as string[],
     client_representative: "",
     audit_language: "English",
     start_date: null as Date | null,
     end_date: null as Date | null,
+    audit_plan_date: null as Date | null,
     opening_meeting_datetime: null as Date | null,
     closing_meeting_datetime: null as Date | null,
     working_paper_template_id: "",
+    selected_audit_universe_id: "" as string,
+    audit_universe_item_ids: [] as string[],
+    budget_id: "" as string,
+    budget_item_ids: [] as string[],
     selectedCategories: [] as string[]
   });
 
+  // Store the complete template object with categories from template selector
+  const [selectedTemplateWithCategories, setSelectedTemplateWithCategories] = useState<WorkpaperTemplateDefinition | null>(null);
+
+  // Fetch universes dynamically for the dropdown
+  const { data: universesResponse, isLoading: loadingUniverses } = useUniverses();
+  const universesData = Array.isArray(universesResponse?.data)
+    ? universesResponse.data
+    : Array.isArray(universesResponse)
+      ? universesResponse
+      : [];
+
+  // Fetch universe items based on selected universe
+  // const { data: universeItemsResponse, isLoading: loadingUniverseItems } = useUniverseItems(
+  //   String(formData.selected_audit_universe_id) || undefined
+  // );
+  // Fetch universe items for the selected universe
+  const universeIdForItems = formData.selected_audit_universe_id
+    ? String(formData.selected_audit_universe_id)
+    : undefined;
+
+  const { data: universeItemsResponse, isLoading: loadingUniverseItems } =
+    useUniverseItems(universeIdForItems);
+  // const universeItemsData = universeIdForItems ? universeItemsResponse?.data : [];
+
+  const universeItemsData = Array.isArray(universeItemsResponse?.data)
+    ? universeItemsResponse.data
+    : Array.isArray(universeItemsResponse)
+      ? universeItemsResponse
+      : [];
+
+  // Fetch budgets
+  const { data: budgetsResponse, isLoading: loadingBudgets } = useBudgets({
+    is_active: true
+    // status: "APPROVED"
+  });
+
+  const budgetsData = Array.isArray(budgetsResponse?.data)
+    ? budgetsResponse.data
+    : Array.isArray(budgetsResponse)
+      ? budgetsResponse
+      : [];
+
+  const { data: budgetLinesResponse, isLoading: loadingBudgetLines } = useBudgetLines(
+    formData.budget_id
+  );
+  const budgetLinesData = Array.isArray(budgetLinesResponse?.data?.data)
+    ? budgetLinesResponse.data.data
+    : Array.isArray(budgetLinesResponse?.data)
+      ? budgetLinesResponse?.data
+      : Array.isArray(budgetLinesResponse)
+        ? budgetLinesResponse
+        : [];
+
   const { data: fullTemplateResponse, isLoading: loadingTemplateDetails } =
-    useWorkpaperTemplatesWithCategories(formData.working_paper_template_id);
+    useWorkpaperTemplateCategories(formData.working_paper_template_id);
 
   const selectedTemplate: WorkpaperTemplateDefinition =
     fullTemplateResponse?.data ?? ({} as WorkpaperTemplateDefinition);
@@ -85,6 +158,7 @@ export default function NewAuditPlanPage() {
       if (
         !formData.title ||
         !formData.ref_no ||
+        !formData.department_id ||
         !formData.audit_scope ||
         !formData.audit_objective ||
         !formData.start_date ||
@@ -120,20 +194,19 @@ export default function NewAuditPlanPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleTemplateChange = useCallback(
-    (templateId: string) => {
-      setFormData((prev) => ({
-        ...prev,
-        working_paper_template_id: templateId,
-        // selectedCategories: [] // Reset categories when template changes
-        selectedCategories:
-          selectedTemplate != null && selectedTemplate.categories
-            ? selectedTemplate.categories?.map((cat) => cat.id as string)
-            : []
-      }));
-    },
-    [selectedTemplate]
-  );
+  const handleTemplateChange = useCallback((template: WorkpaperTemplateDefinition) => {
+    setFormData((prev) => ({
+      ...prev,
+      working_paper_template_id: template.id as string,
+      // selectedCategories: [] // Reset categories when template changes
+      selectedCategories:
+        template != null && template.categories
+          ? template.categories?.map((cat) => cat.id as string)
+          : []
+    }));
+    // Store the complete template object with categories
+    setSelectedTemplateWithCategories(template);
+  }, []);
 
   async function handleSubmit() {
     setValidationError(null);
@@ -163,26 +236,30 @@ export default function NewAuditPlanPage() {
 
     setIsSubmitting(true);
 
-    // Prepare data according to new API structure
+    // Prepare data according to API structure
     const auditData = {
       year: formData.year,
       title: formData.title,
-      description: formData.description || undefined,
-      start_date: formData.start_date?.toISOString().split("T")[0] as string,
-      end_date: formData.end_date?.toISOString().split("T")[0] as string,
+      description: formData.description,
+      start_date: formData.start_date?.toISOString().split('T')[0] as string,
+      end_date: formData.end_date?.toISOString().split('T')[0] as string,
       ref_no: formData.ref_no,
+      audit_plan_date: formData.audit_plan_date?.toISOString() || new Date().toISOString(),
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
       audit_criteria: formData.audit_criteria,
       audit_objective: formData.audit_objective,
       management_standard: formData.management_standard,
       audit_team_leader: formData.audit_team_leader,
-      audit_team_members: formData.audit_team_member || undefined,
-      client_representative: formData.client_representative || undefined,
-      audit_language: formData.audit_language || undefined,
+      audit_team_members: formData.audit_team_member || [],
+      client_representative: formData.client_representative,
+      audit_language: formData.audit_language,
       opening_meeting_datetime: formData.opening_meeting_datetime?.toISOString() || undefined,
       closing_meeting_datetime: formData.closing_meeting_datetime?.toISOString() || undefined,
-      working_paper_template_id: formData.working_paper_template_id || undefined
+      working_paper_template_id: formData.working_paper_template_id,
+      department_id: formData.department_id,
+      audit_universe_item_ids: formData.audit_universe_item_ids || [],
+      budget_item_ids: formData.budget_item_ids || []
     };
 
     try {
@@ -212,6 +289,38 @@ export default function NewAuditPlanPage() {
       setIsSubmitting(false);
     }
   }
+
+  const budgetsOptions = useMemo(() => {
+    return budgetsData.map((budget: any) => ({
+      value: budget.id,
+      label: `${budget.title} - ${budget.currency} ${budget.total_amount.toLocaleString("en-GB")} [${budget.status}]`
+    }));
+  }, [budgetsData]);
+
+  const budgetLinesOptions = useMemo(() => {
+    return budgetLinesData.map((budgetLine: any) => ({
+      value: budgetLine.id,
+      label: `${budgetLine.name} (${budgetLine.currency} ${budgetLine.allocated_amount?.toLocaleString("en-GB")}) - ${budgetLine.category}`
+    }));
+  }, [budgetLinesData]);
+
+  const universesOptions = useMemo(() => {
+    return universesData.map((universe: any) => ({
+      value: universe.id,
+      label: universe.universe_name
+    }));
+  }, [universesData]);
+
+  const universeItemsOptions = useMemo(
+    () =>
+      universeItemsData.map((universeItem: any) => ({
+        value: universeItem.id,
+        label: universeItem.name
+      })),
+    [universeItemsData]
+  );
+
+  // console.log({ universeItemsData });
 
   return (
     <div className="bg-background min-h-screen">
@@ -309,6 +418,18 @@ export default function NewAuditPlanPage() {
                       />
                     </div>
 
+                    <SearchSelectField
+                      id="department_id"
+                      label="Department / Functional Unit"
+                      required
+                      placeholder="--Select a Department / Functional Unit--"
+                      className="w-full max-w-none"
+                      value={formData.department_id}
+                      onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                      options={(departmentsData as any) || []}
+                      isLoading={loadingDepartments}
+                    />
+
                     <Input
                       id="title"
                       label="Audit Plan Title"
@@ -327,29 +448,26 @@ export default function NewAuditPlanPage() {
                       rows={2}
                     />
 
-                    <div className="flex gap-4">
-                      <div className="space-y-2">
-                        <SelectField
-                          id="management_standard"
-                          label="Management Standard"
-                          required
-                          value={formData.management_standard}
-                          onValueChange={(v) =>
-                            setFormData({ ...formData, management_standard: v })
-                          }
-                          options={[{ id: "ISO IEC 27001", name: "ISO IEC 27001" }]}
-                        />
-                      </div>
+                    <Input
+                      id="management_standard"
+                      label="Management Standard"
+                      value={formData.management_standard}
+                      onChange={(e) =>
+                        setFormData({ ...formData, management_standard: e.target.value })
+                      }
+                      placeholder="e.g., ISO IEC 27001"
+                      required
+                    />
 
-                      <Input
-                        id="audit_area"
-                        label="Audit Area"
-                        value={formData.audit_area}
-                        onChange={(e) => setFormData({ ...formData, audit_area: e.target.value })}
-                        placeholder="e.g., ISMS based on ISO 27001:2022"
-                        required
-                      />
-                    </div>
+                    <Textarea
+                      id="audit_area"
+                      label="Audit Area"
+                      rows={2}
+                      value={formData.audit_area}
+                      onChange={(e) => setFormData({ ...formData, audit_area: e.target.value })}
+                      placeholder="e.g., ISMS based on ISO 27001:2022"
+                      required
+                    />
 
                     <Textarea
                       id="audit_scope"
@@ -389,9 +507,16 @@ export default function NewAuditPlanPage() {
                       Schedule & Timelines
                     </h3>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                       <DatePicker
-                        label="Start Date"
+                        label="Audit Plan Date"
+                        value={(formData.audit_plan_date ?? undefined) as any}
+                        onValueChange={(date) =>
+                          setFormData({ ...formData, audit_plan_date: date || null })
+                        }
+                      />
+                      <DatePicker
+                        label="Audit Start Date"
                         required
                         value={(formData.start_date ?? undefined) as any}
                         onValueChange={(date) =>
@@ -400,7 +525,7 @@ export default function NewAuditPlanPage() {
                       />
 
                       <DatePicker
-                        label="End Date"
+                        label="Audit End Date"
                         required
                         value={(formData.end_date ?? undefined) as any}
                         onValueChange={(date) =>
@@ -430,13 +555,94 @@ export default function NewAuditPlanPage() {
 
                   <div className="space-y-4 border-t pt-4">
                     <h3 className="flex items-center gap-2 text-lg font-semibold">
+                      <TelescopeIcon className="h-5 w-5" />
+                      Audit Scope Selection
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-4 space-y-2 md:grid-cols-2">
+                      {universesData.length === 0 && !loadingUniverses && (
+                        <Alert variant="default" className="border-blue-200 bg-blue-50">
+                          <AlertCircle className="h-4 w-4 text-blue-600" />
+                          <AlertDescription className="text-blue-800">
+                            No universes available. Please create a universe first before creating
+                            an audit plan.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      <SearchSelectField
+                        label="Select Universe"
+                        placeholder="-- Choose a universe --"
+                        value={formData.selected_audit_universe_id}
+                        onValueChange={(value) =>
+                          setFormData((prev) => {
+                            return {
+                              ...prev,
+                              selected_audit_universe_id: value,
+                              audit_universe_item_ids: [] // Reset universe items when universe changes
+                            };
+                          })
+                        }
+                        options={universesOptions}
+                        isLoading={loadingUniverses}
+                        isDisabled={universesData.length === 0}
+                      />
+                      <SearchSelectField
+                        label="Budget"
+                        placeholder="Select budget"
+                        value={formData.budget_id}
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, budget_id: value });
+                        }}
+                        options={budgetsOptions}
+                        disabled={loadingBudgets}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 space-y-2 md:grid-cols-2">
+                      <MultiSelectField
+                        label="Universe Items"
+                        placeholder="Select universe items to audit"
+                        value={formData.audit_universe_item_ids}
+                        onValueChange={(values) => {
+                          setFormData({ ...formData, audit_universe_item_ids: values });
+                        }}
+                        options={universeItemsOptions}
+                        disabled={loadingUniverseItems || !formData.selected_audit_universe_id}
+                        isLoading={loadingUniverseItems}
+                      />
+                      <MultiSelectField
+                        label="Budget Lines"
+                        placeholder="-- Select budget lines --"
+                        value={formData.budget_item_ids}
+                        onValueChange={(values) => {
+                          setFormData({ ...formData, budget_item_ids: values });
+                        }}
+                        options={budgetLinesOptions}
+                        disabled={loadingBudgetLines || !formData.budget_id}
+                        isLoading={loadingBudgetLines}
+                      />
+                    </div>
+
+                    {formData.opening_meeting_datetime && formData.closing_meeting_datetime && (
+                      <div className="bg-muted rounded-md p-4">
+                        <Label className="text-base font-medium">Audit Period</Label>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                          {formData.opening_meeting_datetime.toLocaleDateString()} -{" "}
+                          {formData.closing_meeting_datetime.toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold">
                       <Users className="h-5 w-5" />
                       Team & Stakeholders
                     </h3>
 
                     <div className="grid grid-cols-1 gap-4 space-y-2 sm:grid-cols-2">
                       <div>
-                        <SelectField
+                        <SearchSelectField
                           id="audit_team_leader"
                           label="Audit Team Leader"
                           required
@@ -500,7 +706,6 @@ export default function NewAuditPlanPage() {
                 <TemplateSelectorSimple
                   value={formData.working_paper_template_id}
                   onChange={handleTemplateChange}
-                  selectedTemplate={selectedTemplate}
                   loadingTemplateDetails={loadingTemplateDetails}
                 />
               )}
@@ -511,7 +716,7 @@ export default function NewAuditPlanPage() {
                   templateId={formData.working_paper_template_id}
                   selectedCategories={formData.selectedCategories}
                   loadingTemplateDetails={loadingTemplateDetails}
-                  selectedTemplate={selectedTemplate}
+                  selectedTemplate={selectedTemplateWithCategories || selectedTemplate}
                   onCategoriesChange={(categories) =>
                     setFormData({ ...formData, selectedCategories: categories })
                   }
@@ -519,34 +724,34 @@ export default function NewAuditPlanPage() {
               )}
 
               {/* Navigation Buttons */}
-              <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 -mx-6 mt-8 flex flex-col-reverse justify-end gap-3 border-t px-6 pt-6 pb-6 backdrop-blur sm:-mx-8 sm:flex-row sm:px-8 sm:pb-8">
-                <div>
-                  {currentStep > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handlePrevious}
-                      disabled={isSubmitting}>
-                      <ChevronLeft className="mr-2 h-4 w-4" />
-                      Previous
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3">
+              <div className="bg-background/80 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 -mx-6 mt-8 flex flex-col-reverse justify-end gap-3 border-t px-6 pt-6 pb-6 backdrop-blur sm:-mx-8 sm:flex-row sm:px-8 sm:pb-8">
+                {currentStep > 1 && (
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={isSubmitting}>
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Previous
+                  </Button>
+                )}
+
+                <div className="ml-auto flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="destructive"
                     onClick={() => router.back()}
                     disabled={isSubmitting}>
                     Cancel
                   </Button>
 
                   {currentStep < STEPS.length ? (
-                    <Button type="button" onClick={handleNext} disabled={isSubmitting}>
-                      Next
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
+                    <div>
+                      <Button type="button" onClick={handleNext} disabled={isSubmitting}>
+                        Next
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
                   ) : (
                     <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
                       {isSubmitting ? "Creating..." : "Create Audit Plan"}

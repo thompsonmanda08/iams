@@ -13,7 +13,7 @@
 import type { WorkpaperTemplateDefinition, TemplateCategory } from "@/lib/types/audit-types";
 import {
   getWorkingPaperTemplates,
-  getWorkingPaperTemplateWithCategories,
+  getWorkpaperTemplateCategories,
   getTemplateCategories,
   getTemplateCategory
 } from "@/app/_actions/audit-module-actions";
@@ -403,7 +403,7 @@ export async function fetchAvailableTemplates(): Promise<WorkpaperTemplateDefini
 export async function fetchTemplateById(
   templateId: string
 ): Promise<WorkpaperTemplateDefinition | null> {
-  const response = await getWorkingPaperTemplateWithCategories(templateId);
+  const response = await getWorkpaperTemplateCategories(templateId);
   if (response.success && response.data) {
     return response.data.data as WorkpaperTemplateDefinition;
   }

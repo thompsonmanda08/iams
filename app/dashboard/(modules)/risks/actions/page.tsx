@@ -63,8 +63,6 @@ export default async function ActionsPage() {
     has_prev: false
   };
 
-  console.log("[ACTIONS ]", actions);
-
   return (
     <main className="min-h-screen">
       <div className="bg-card border-b">

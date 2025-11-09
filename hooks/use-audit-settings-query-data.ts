@@ -17,7 +17,12 @@ import {
   getProcessActivities,
   getIndicativeTargets
 } from "@/app/_actions/audit-settings-actions";
-import { getUniverses, getUniverseItems, getBudgets } from "@/app/_actions/audit-module-actions";
+import {
+  getUniverses,
+  getUniverseItems,
+  getBudgets,
+  getBudgetLines
+} from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { UserQueryParams } from "@/lib/types/account";
 
@@ -242,16 +247,45 @@ export const useUniverseItems = (
  * Hook to fetch all budgets
  * @returns Query result with budgets data
  */
-export const useBudgets = () => {
+export const useBudgets = (params?: {
+  page?: number;
+  page_size?: number;
+  is_active?: boolean;
+  department_id?: string;
+  status?: string;
+}) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.BUDGETS],
+    queryKey: [QUERY_KEYS.BUDGETS, params],
     queryFn: async () => {
-      const response = await getBudgets();
+      const response = await getBudgets(params);
       if (!response.success) {
         throw new Error(response.message);
       }
       return response.data;
     },
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+};
+export const useBudgetLines = (
+  budgetId: string,
+  params?: {
+    page?: number;
+    page_size?: number;
+    is_active?: boolean;
+    department_id?: string;
+    status?: string;
+  }
+) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.BUDGETS, budgetId, params],
+    queryFn: async () => {
+      const response = await getBudgetLines(budgetId, params);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    enabled: !!budgetId
   });
 };

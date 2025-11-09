@@ -10,14 +10,14 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TemplateService } from "@/lib/services/template-service";
-import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
+import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
 import type { TemplateCategory } from "@/lib/types/audit-types";
 
 interface IsoCategorySelectorProps {
@@ -35,19 +35,20 @@ export function IsoCategorySelector({
   const [expanded, setExpanded] = useState(false);
 
   // Fetch template with categories from database
-  const { data: templateResponse, isLoading, error } = useWorkpaperTemplatesWithCategories(templateId);
+  const { data: templateResponse, isLoading, error } = useWorkpaperTemplateCategories(templateId);
 
   // Extract categories from response with fallback to static data
-  const categories: TemplateCategory[] = templateResponse?.success && templateResponse.data?.data?.categories
-    ? templateResponse.data.data.categories
-    : TemplateService.getTemplateCategories(templateId);
+  const categories: TemplateCategory[] =
+    templateResponse?.success && templateResponse.data?.data?.categories
+      ? templateResponse.data.data.categories
+      : TemplateService.getTemplateCategories(templateId);
 
   // Group categories
-  const mainClauses = categories.filter((cat) => cat.group === 'main-clauses');
-  const annexAControls = categories.filter((cat) => cat.group === 'annex-a-controls');
+  const mainClauses = categories.filter((cat) => cat.group === "main-clauses");
+  const annexAControls = categories.filter((cat) => cat.group === "annex-a-controls");
   const groupedCategories = {
     mainClauses,
-    annexAControls,
+    annexAControls
   };
 
   // Loading state
@@ -55,8 +56,8 @@ export function IsoCategorySelector({
     return (
       <Card className="p-6">
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-muted-foreground">Loading categories...</span>
+          <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+          <span className="text-muted-foreground ml-2">Loading categories...</span>
         </div>
       </Card>
     );
@@ -64,16 +65,14 @@ export function IsoCategorySelector({
 
   // Error state - fall back to static data
   if (error) {
-    console.warn('Failed to load categories from database, using static fallback:', error);
+    console.warn("Failed to load categories from database, using static fallback:", error);
   }
 
   if (categories.length === 0) {
     return (
       <Card className="p-6">
-        <div className="text-center py-8">
-          <p className="text-sm text-muted-foreground">
-            No categories available for this template
-          </p>
+        <div className="py-8 text-center">
+          <p className="text-muted-foreground text-sm">No categories available for this template</p>
         </div>
       </Card>
     );
@@ -90,10 +89,9 @@ export function IsoCategorySelector({
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className="w-full justify-between"
-              >
+                className="w-full justify-between">
                 {selectedCategory
-                  ? (selectedCategory.display_name || selectedCategory.name)
+                  ? selectedCategory.display_name || selectedCategory.name
                   : "Select category..."}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -105,41 +103,40 @@ export function IsoCategorySelector({
                   <CommandEmpty>No category found.</CommandEmpty>
                   {Object.entries(groupedCategories).map(([groupKey, groupCategories]) => {
                     // Map camelCase keys to group enum values
-                    const groupType = groupKey === 'mainClauses' ? 'main-clauses' : 'annex-a-controls';
+                    const groupType =
+                      groupKey === "mainClauses" ? "main-clauses" : "annex-a-controls";
                     return (
                       <CommandGroup
                         key={groupKey}
-                        heading={TemplateService.getGroupDisplayName(groupType)}
-                      >
+                        heading={TemplateService.getGroupDisplayName(groupType)}>
                         {groupCategories.map((category) => (
-                        <CommandItem
-                          key={category.id}
-                          value={`${category.name} ${category.display_name || category.name}`}
-                          onSelect={() => {
-                            onCategorySelect(category);
-                            setOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedCategory?.id === category.id ? "opacity-100" : "opacity-0"
+                          <CommandItem
+                            key={category.id}
+                            value={`${category.name} ${category.display_name || category.name}`}
+                            onSelect={() => {
+                              onCategorySelect(category);
+                              setOpen(false);
+                            }}>
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCategory?.id === category.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-1 flex-col">
+                              <span className="font-medium">
+                                {category.display_name || category.name}
+                              </span>
+                              <span className="text-muted-foreground line-clamp-1 text-xs">
+                                {category.description || category.objectives}
+                              </span>
+                            </div>
+                            {category.is_required && (
+                              <Badge variant="secondary" className="ml-2 text-xs">
+                                Required
+                              </Badge>
                             )}
-                          />
-                          <div className="flex flex-col flex-1">
-                            <span className="font-medium">
-                              {category.display_name || category.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground line-clamp-1">
-                              {category.description || category.objectives}
-                            </span>
-                          </div>
-                          {category.is_required && (
-                            <Badge variant="secondary" className="ml-2 text-xs">
-                              Required
-                            </Badge>
-                          )}
-                        </CommandItem>
+                          </CommandItem>
                         ))}
                       </CommandGroup>
                     );
@@ -152,27 +149,25 @@ export function IsoCategorySelector({
 
         {/* Category preview */}
         {selectedCategory && (
-          <div className="space-y-3 rounded-lg bg-slate-50 p-4 border">
+          <div className="space-y-3 rounded-lg border bg-slate-50 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary">{selectedCategory.group === 'main-clauses' ? 'Main Clause' : 'Annex A Control'}</Badge>
+                <Badge variant="secondary">
+                  {selectedCategory.group === "main-clauses" ? "Main Clause" : "Annex A Control"}
+                </Badge>
                 {selectedCategory.clause_range && (
                   <Badge variant="outline">{selectedCategory.clause_range}</Badge>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setExpanded(!expanded)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
                 {expanded ? (
                   <>
-                    <ChevronUp className="h-4 w-4 mr-1" />
+                    <ChevronUp className="mr-1 h-4 w-4" />
                     Collapse
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-4 w-4 mr-1" />
+                    <ChevronDown className="mr-1 h-4 w-4" />
                     Expand Details
                   </>
                 )}
@@ -181,7 +176,7 @@ export function IsoCategorySelector({
 
             {/* Always show objectives */}
             <div>
-              <p className="text-xs font-medium text-slate-600 mb-1">Objectives</p>
+              <p className="mb-1 text-xs font-medium text-slate-600">Objectives</p>
               <p className="text-sm text-slate-700">{selectedCategory.objectives}</p>
             </div>
 
@@ -190,8 +185,8 @@ export function IsoCategorySelector({
               <>
                 {selectedCategory.scope && (
                   <div>
-                    <p className="text-xs font-medium text-slate-600 mb-1">Scope</p>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                    <p className="mb-1 text-xs font-medium text-slate-600">Scope</p>
+                    <p className="text-sm whitespace-pre-wrap text-slate-700">
                       {selectedCategory.scope}
                     </p>
                   </div>
@@ -199,8 +194,8 @@ export function IsoCategorySelector({
 
                 {selectedCategory.audit_procedure && (
                   <div>
-                    <p className="text-xs font-medium text-slate-600 mb-1">Audit Procedure</p>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                    <p className="mb-1 text-xs font-medium text-slate-600">Audit Procedure</p>
+                    <p className="text-sm whitespace-pre-wrap text-slate-700">
                       {selectedCategory.audit_procedure}
                     </p>
                   </div>
@@ -208,14 +203,14 @@ export function IsoCategorySelector({
 
                 {selectedCategory.description && (
                   <div>
-                    <p className="text-xs font-medium text-slate-600 mb-1">Description</p>
+                    <p className="mb-1 text-xs font-medium text-slate-600">Description</p>
                     <p className="text-sm text-slate-700">{selectedCategory.description}</p>
                   </div>
                 )}
 
                 {selectedCategory.clauses && selectedCategory.clauses.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-slate-600 mb-1">ISO Clauses</p>
+                    <p className="mb-1 text-xs font-medium text-slate-600">ISO Clauses</p>
                     <div className="flex flex-wrap gap-1">
                       {selectedCategory.clauses.map((clause) => (
                         <Badge key={clause} variant="outline" className="text-xs">

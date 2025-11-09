@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { X } from "lucide-react";
+import { X, ChevronsUpDown } from "lucide-react";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 type Option = Record<"value" | "label", string>;
@@ -19,6 +20,7 @@ interface MultiSelectFieldProps {
   required?: boolean;
   disabled?: boolean;
   isInvalid?: boolean;
+  isLoading?: boolean;
   name?: string;
 }
 
@@ -30,6 +32,7 @@ export function MultiSelectField({
   placeholder = "Select items...",
   className,
   required,
+  isLoading = false,
   ...props
 }: MultiSelectFieldProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -85,33 +88,43 @@ export function MultiSelectField({
 
       <Command onKeyDown={handleKeyDown} className="overflow-visible bg-transparent">
         <div className="group border-input ring-offset-background focus-within:ring-ring rounded-md border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-offset-2">
-          <div className="flex flex-wrap gap-1">
-            {selectedOptions.map((option) => (
-              <Badge key={option.value} variant="default">
-                {option.label}
-                <button
-                  type="button"
-                  className="ring-offset-background focus:ring-ring ml-1 h-6 cursor-pointer rounded-full outline-none focus:ring-2 focus:ring-offset-2"
-                  onKeyDown={(e) => e.key === "Enter" && handleUnselect(option.value)}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={() => handleUnselect(option.value)}
-                  aria-label={`Remove ${option.label}`}>
-                  <X className="h-3 w-3 text-white/70 hover:text-red-500" />
-                </button>
-              </Badge>
-            ))}
-            <CommandPrimitive.Input
-              ref={inputRef}
-              value={inputValue}
-              onValueChange={setInputValue}
-              onBlur={() => setOpen(false)}
-              onFocus={() => setOpen(true)}
-              placeholder={placeholder}
-              className="placeholder:text-muted-foreground ml-2 flex-1 bg-transparent outline-none"
-            />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1 flex-1 min-w-0">
+              {selectedOptions.map((option) => (
+                <Badge key={option.value} variant="default">
+                  {option.label}
+                  <button
+                    type="button"
+                    className="ring-offset-background focus:ring-ring ml-1 h-6 cursor-pointer rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+                    onKeyDown={(e) => e.key === "Enter" && handleUnselect(option.value)}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={() => handleUnselect(option.value)}
+                    aria-label={`Remove ${option.label}`}>
+                    <X className="h-3 w-3 text-white/70 hover:text-red-500" />
+                  </button>
+                </Badge>
+              ))}
+              {isLoading ? (
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Spinner className="h-4 w-4" />
+                  <span className="text-sm">Loading...</span>
+                </div>
+              ) : (
+                <CommandPrimitive.Input
+                  ref={inputRef}
+                  value={inputValue}
+                  onValueChange={setInputValue}
+                  onBlur={() => setOpen(false)}
+                  onFocus={() => setOpen(true)}
+                  placeholder={placeholder}
+                  className="placeholder:text-muted-foreground flex-1 bg-transparent outline-none min-w-0"
+                />
+              )}
+            </div>
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </div>
         </div>
 
@@ -120,9 +133,9 @@ export function MultiSelectField({
             <div className="animate-in bg-popover text-popover-foreground absolute top-0 z-10 w-full rounded-md border shadow-md outline-none">
               <CommandList>
                 <CommandGroup className="h-full overflow-auto">
-                  {availableOptions.map((option) => (
+                  {availableOptions.map((option, index) => (
                     <CommandItem
-                      key={option.value}
+                      key={`${option.value}-${index}`}
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();

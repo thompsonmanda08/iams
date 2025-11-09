@@ -13,12 +13,13 @@ import {
   updateWorkpaper,
   getAuditPlans,
   getWorkingPaperTemplates,
-  getWorkingPaperTemplateWithCategories,
+  getWorkpaperTemplateCategories,
   getTemplateCategories,
   getTemplateCategory,
   createTemplateCategory,
   updateTemplateCategory,
-  deleteTemplateCategory
+  deleteTemplateCategory,
+  getWorkingPaperTemplate
 } from "@/app/_actions/audit-module-actions";
 import type { WorkpaperInput, TemplateCategory } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
@@ -163,11 +164,11 @@ export const useAuditPlans = () => {
 /**
  * Hook to fetch workpaper templates
  */
-export const useWorkpaperTemplates = () => {
+export const useWorkpaperTemplates = (params?: { page?: number; page_size?: number }) => {
   return useQuery({
-    queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES],
+    queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES, params],
     queryFn: async () => {
-      const response = await getWorkingPaperTemplates();
+      const response = await getWorkingPaperTemplates(params);
       if (!response.success) {
         throw new Error(response.message);
       }
@@ -177,13 +178,31 @@ export const useWorkpaperTemplates = () => {
   });
 };
 /**
- * Hook to fetch workpaper templates with categories
+ * Hook to fetch workpaper templates categories
  */
-export const useWorkpaperTemplatesWithCategories = (templateId: string) => {
+export const useWorkpaperTemplateCategories = (templateId: string) => {
   return useQuery({
     queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES, templateId],
     queryFn: async () => {
-      const response = await getWorkingPaperTemplateWithCategories(templateId);
+      const response = await getWorkpaperTemplateCategories(templateId);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    enabled: !!templateId
+  });
+};
+
+/**
+ * Hook to fetch workpaper template
+ */
+export const useWorkpaperTemplate = (templateId: string) => {
+  return useQuery({
+    queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES, templateId],
+    queryFn: async () => {
+      const response = await getWorkingPaperTemplate(templateId);
       if (!response.success) {
         throw new Error(response.message);
       }

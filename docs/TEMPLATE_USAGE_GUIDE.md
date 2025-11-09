@@ -15,13 +15,13 @@ The system now supports **database-first** data fetching with static fallbacks. 
 │                                                               │
 │  Client Components (React)                                   │
 │  ├── useWorkpaperTemplates()                                 │
-│  ├── useWorkpaperTemplatesWithCategories(templateId)         │
+│  ├── useWorkpaperTemplateCategories(templateId)         │
 │  ├── useTemplateCategories(templateId)                       │
 │  └── useTemplateCategory(categoryId)                         │
 │                    ↓                                          │
 │  Server Actions                                               │
 │  ├── getWorkingPaperTemplates()                              │
-│  ├── getWorkingPaperTemplateWithCategories(templateId)       │
+│  ├── getWorkpaperTemplateCategories(templateId)       │
 │  ├── getTemplateCategories(templateId)                       │
 │  └── getTemplateCategory(categoryId)                         │
 │                    ↓                                          │
@@ -48,9 +48,7 @@ function TemplateSelector() {
   if (isLoading) return <div>Loading templates...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-  const templates = data?.success
-    ? data.data?.data
-    : [];
+  const templates = data?.success ? data.data?.data : [];
 
   return (
     <div>
@@ -65,10 +63,10 @@ function TemplateSelector() {
 #### Fetch Template with Categories
 
 ```tsx
-import { useWorkpaperTemplatesWithCategories } from "@/hooks/use-audit-query-data";
+import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
 
 function TemplateDetails({ templateId }: { templateId: string }) {
-  const { data, isLoading, error } = useWorkpaperTemplatesWithCategories(templateId);
+  const { data, isLoading, error } = useWorkpaperTemplateCategories(templateId);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -230,7 +228,7 @@ If you need to fetch data in server actions:
 
 import {
   getWorkingPaperTemplates,
-  getTemplateCategories,
+  getTemplateCategories
 } from "@/app/_actions/audit-module-actions";
 
 export async function myServerAction() {
@@ -257,7 +255,7 @@ All hooks are exported from `@/hooks/use-audit-query-data`:
 ### Query Hooks (Read Operations)
 
 - `useWorkpaperTemplates()` - Fetch all templates
-- `useWorkpaperTemplatesWithCategories(templateId)` - Fetch template with categories
+- `useWorkpaperTemplateCategories(templateId)` - Fetch template with categories
 - `useTemplateCategories(templateId)` - Fetch all categories for a template
 - `useTemplateCategory(categoryId)` - Fetch single category by ID
 
@@ -397,11 +395,7 @@ import { fetchTemplateById } from "@/lib/templates/iso27001-2022-template";
 import { TemplateDetailsClient } from "./template-details-client";
 import { notFound } from "next/navigation";
 
-export default async function TemplatePage({
-  params
-}: {
-  params: { id: string }
-}) {
+export default async function TemplatePage({ params }: { params: { id: string } }) {
   const template = await fetchTemplateById(params.id);
 
   if (!template) {
@@ -420,11 +414,7 @@ export default async function TemplatePage({
 import { useTemplateCategories } from "@/hooks/use-audit-query-data";
 import type { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 
-export function TemplateDetailsClient({
-  template
-}: {
-  template: WorkpaperTemplateDefinition
-}) {
+export function TemplateDetailsClient({ template }: { template: WorkpaperTemplateDefinition }) {
   const { data: categories, isLoading } = useTemplateCategories(template.id);
 
   return (
@@ -449,15 +439,19 @@ export function TemplateDetailsClient({
 ## Troubleshooting
 
 ### Issue: "useQuery is not a function"
+
 **Solution**: Make sure you're using the hook in a client component (file should have `"use client"` directive)
 
 ### Issue: "Cannot use hooks in server component"
+
 **Solution**: Use the `fetch*` functions instead of hooks in server components
 
 ### Issue: "Data is undefined"
+
 **Solution**: Check if the API response has `data.data` structure and handle loading/error states
 
 ### Issue: "Template not found"
+
 **Solution**: Verify the template ID exists in the database, fallback to static data will be used if DB fails
 
 ## Additional Resources

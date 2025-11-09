@@ -103,22 +103,26 @@ export async function getAuditPlan(id: string): Promise<APIResponse> {
 export async function createAuditPlan(data: {
   year: number;
   title: string;
-  description?: string;
+  description: string;
   start_date: string;
   end_date: string;
   ref_no: string;
+  audit_plan_date: string;
   audit_area: string;
   audit_scope: string;
   audit_criteria: string;
   audit_objective: string;
   management_standard: string;
   audit_team_leader: string;
-  audit_team_member?: string;
-  client_representative?: string;
-  audit_language?: string;
+  audit_team_members?: string[];
+  client_representative: string;
+  audit_language: string;
   opening_meeting_datetime?: string;
   closing_meeting_datetime?: string;
-  working_paper_template_id?: string;
+  working_paper_template_id: string;
+  department_id: string;
+  audit_universe_item_ids?: string[];
+  budget_item_ids?: string[];
 }): Promise<APIResponse> {
   if (!data.year || !data.title || !data.start_date || !data.end_date || !data.ref_no) {
     return handleBadRequest("Year, title, start date, end date, and reference number are required");
@@ -818,22 +822,24 @@ export async function updateAuditSettings(data: SettingsInput): Promise<APIRespo
 /**
  * Get all working paper templates
  */
-export async function getWorkingPaperTemplates(
-  standard?: string,
-  isActive?: boolean
-): Promise<APIResponse> {
+export async function getWorkingPaperTemplates(params?: {
+  standard?: string;
+  is_active?: boolean;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
   try {
-    const params = new URLSearchParams();
-    if (standard) params.append("standard", standard);
-    if (isActive !== undefined) params.append("is_active", String(isActive));
+    const urlParams = new URLSearchParams();
 
-    const queryString = params.toString();
+    if (params?.standard) urlParams.append("standard", params.standard);
+    if (params?.is_active !== undefined) urlParams.append("is_active", String(params.is_active));
+    if (params?.page) urlParams.append("page", String(params.page));
+    if (params?.page_size) urlParams.append("page_size", String(params.page_size));
+
+    const queryString = urlParams.toString();
     const url = `/api/v1/working-paper-templates${queryString ? `?${queryString}` : ""}`;
 
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url
-    });
+    const response = await authenticatedApiClient({ url });
 
     return successResponse(response.data?.data, "Working paper templates fetched successfully");
   } catch (error: any) {
@@ -866,11 +872,9 @@ export async function getWorkingPaperTemplate(templateId: string): Promise<APIRe
 }
 
 /**
- * Get working paper template with categories
+ * Get working paper template categories
  */
-export async function getWorkingPaperTemplateWithCategories(
-  templateId: string
-): Promise<APIResponse> {
+export async function getWorkpaperTemplateCategories(templateId: string): Promise<APIResponse> {
   if (!templateId) {
     return handleBadRequest("Template ID is required");
   }
@@ -1501,12 +1505,24 @@ export async function createBudgetLine(
 /**
  * Get all budgets
  */
-export async function getBudgets(): Promise<APIResponse> {
+export async function getBudgets(params?: {
+  page?: number;
+  page_size?: number;
+  is_active?: boolean;
+  department_id?: string;
+  status?: string;
+}): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+  if (params?.is_active !== undefined) queryParams.append("is_active", String(params.is_active));
+  if (params?.department_id) queryParams.append("department_id", params.department_id);
+  if (params?.status) queryParams.append("status", params.status);
+
+  const url = `/api/v1/audit/budgets${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: "/api/v1/audit/budgets"
-    });
+    const response = await authenticatedApiClient({ url });
     return successResponse(response.data.data);
   } catch (error: any) {
     return handleError(error, "GET | FETCH BUDGETS", "/api/v1/audit/budgets");
@@ -1532,20 +1548,32 @@ export async function getBudgetById(budgetId: string): Promise<APIResponse> {
 /**
  * Get budget lines for a specific budget
  */
-export async function getBudgetLines(budgetId: string): Promise<APIResponse> {
+export async function getBudgetLines(
+  budgetId: string,
+  params?: {
+    page?: number;
+    page_size?: number;
+    is_active?: boolean;
+    department_id?: string;
+    status?: string;
+  }
+): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+  if (params?.is_active !== undefined) queryParams.append("is_active", String(params.is_active));
+  if (params?.department_id) queryParams.append("department_id", params.department_id);
+  if (params?.status) queryParams.append("status", params.status);
+
+  const url = `/api/v1/audit/budgets/${budgetId}/lines`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/audit/budgets/${budgetId}/lines`
-    });
+    const response = await authenticatedApiClient({ url });
 
     return successResponse(response.data, "Budget lines fetched successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | FETCH BUDGET LINES",
-      `/api/v1/audit/budgets/${budgetId}/lines`
-    );
+    return handleError(error, "GET | FETCH BUDGET LINES", url);
   }
 }
 

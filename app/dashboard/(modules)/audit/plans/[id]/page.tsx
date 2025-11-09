@@ -21,7 +21,7 @@ import {
   getWorkpapers,
   getFindings,
   getAuditLogsByEntity,
-  getWorkingPaperTemplateWithCategories
+  getWorkpaperTemplateCategories
 } from "@/app/_actions/audit-module-actions";
 import { format } from "date-fns";
 import { AuditFindingsTab } from "@/components/audit/audit-findings-tab";
@@ -46,7 +46,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
     notFound();
   }
 
-  const auditPlan = auditResponse.data as AuditPlan;
+  const auditPlan = auditResponse.data?.data as AuditPlan;
 
   // Fetch related data in parallel
   const [workpapersResponse, findingsResponse, auditLogsResponse, templateResponse] =
@@ -54,12 +54,14 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
       getWorkpapers(id),
       getFindings({ audit_plan_id: id as string }),
       getAuditLogsByEntity("audit_plan", id),
-      auditPlan.templateId ? getWorkingPaperTemplateWithCategories(auditPlan.templateId) : null
+      auditPlan.working_paper_template_id
+        ? getWorkpaperTemplateCategories(auditPlan.working_paper_template_id)
+        : null
     ]);
 
   const workpapers = workpapersResponse?.success ? workpapersResponse.data : [];
   const findings = findingsResponse?.success ? findingsResponse.data : [];
-  const auditLogs = auditLogsResponse?.success ? auditLogsResponse.data : [];
+  const auditLogs = auditLogsResponse?.success ? auditLogsResponse.data?.data : [];
   const template =
     templateResponse?.success && templateResponse.data?.data?.data
       ? (templateResponse.data.data.data as WorkpaperTemplateDefinition)
@@ -72,6 +74,15 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
     inProgress: findings.filter((f: any) => f.status === "in-progress").length,
     resolved: findings.filter((f: any) => f.status === "resolved").length
   };
+
+  console.log({
+    auditPlan
+    // workpapers,
+    // findings,
+    // auditLogs,
+    // template,
+    // stats
+  });
 
   return (
     <div className="bg-background min-h-screen">
@@ -87,7 +98,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
               </Button>
               <div>
                 <h1 className="text-3xl font-bold">{auditPlan.title}</h1>
-                <p className="text-muted-foreground mt-1">{auditPlan.standard}</p>
+                <p className="text-muted-foreground mt-1">{auditPlan.management_standard}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -111,8 +122,8 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
                 <div>
                   <p className="text-muted-foreground text-xs">Timeline</p>
                   <p className="text-sm font-semibold">
-                    {format(new Date(auditPlan.startDate), "MMM d")} -{" "}
-                    {format(new Date(auditPlan.endDate), "MMM d, yyyy")}
+                    {/* {format(new Date(auditPlan.start_date), "MMM d")} -{" "}
+                    {format(new Date(auditPlan.end_date), "MMM d, yyyy")} */}
                   </p>
                 </div>
               </div>
@@ -125,7 +136,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Team Leader</p>
-                  <p className="text-sm font-semibold">{auditPlan.teamLeader}</p>
+                  <p className="text-sm font-semibold">{auditPlan.audit_team_leader || "-"}</p>
                 </div>
               </div>
             </Card>
@@ -138,7 +149,9 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
                 <div>
                   <p className="text-muted-foreground text-xs">Conformity Rate</p>
                   <p className="text-sm font-semibold">
-                    {auditPlan.conformityRate ? `${auditPlan.conformityRate}%` : "N/A"}
+                    {(auditPlan as any).conformityRate
+                      ? `${(auditPlan as any).conformityRate}%`
+                      : "N/A"}
                   </p>
                 </div>
               </div>

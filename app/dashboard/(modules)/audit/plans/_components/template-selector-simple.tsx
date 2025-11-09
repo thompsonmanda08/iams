@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { FileText, CheckCircle2, AlertCircle, FileType2, Plus } from "lucide-rea
 import type { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import {
   useWorkpaperTemplates,
-  useWorkpaperTemplatesWithCategories
+  useWorkpaperTemplateCategories
 } from "@/hooks/use-audit-query-data";
 import { getTemplateSummary } from "@/lib/utils/audit-helpers";
 import { Alert, AlertDescription } from "../../../../../../components/ui/alert";
@@ -31,60 +31,97 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle
-} from "../../../../../../components/ui/empty";
+} from "@/components/ui/empty";
 import { Button } from "../../../../../../components/ui/button";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TemplateSelectorSimpleProps {
   value: string;
-  onChange: (templateId: string) => void;
+  onChange: (template: WorkpaperTemplateDefinition) => void;
   disabled?: boolean;
   loadingTemplateDetails?: boolean;
-  selectedTemplate: WorkpaperTemplateDefinition | null;
 }
 
 export function TemplateSelectorSimple({
   value,
   onChange,
   disabled = false,
-  selectedTemplate,
   loadingTemplateDetails
 }: TemplateSelectorSimpleProps) {
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-
   const { data: templateResponse, isLoading: loadingTemplates } = useWorkpaperTemplates();
 
-  const templates = templateResponse?.success
-    ? (templateResponse.data?.data?.data as WorkpaperTemplateDefinition[])
-    : ([] as WorkpaperTemplateDefinition[]);
+  const templates: WorkpaperTemplateDefinition[] = Array.isArray(templateResponse?.data?.data)
+    ? templateResponse?.data?.data
+    : Array.isArray(templateResponse?.data)
+      ? templateResponse?.data
+      : Array.isArray(templateResponse)
+        ? templateResponse
+        : [];
+
+  // Use value prop as the selected template ID (from parent state)
+  const selectedTemplateId = value;
+
+  // Fetch categories for the selected template
+  const { data: categoriesResponse, isLoading: loadingCategories } =
+    useWorkpaperTemplateCategories(selectedTemplateId);
+
+  const templateCategories: WorkpaperTemplateDefinition["categories"] = Array.isArray(
+    categoriesResponse?.data?.data
+  )
+    ? categoriesResponse?.data?.data
+    : Array.isArray(categoriesResponse?.data)
+      ? categoriesResponse?.data
+      : Array.isArray(categoriesResponse)
+        ? categoriesResponse
+        : [];
 
   const summary = useMemo(() => {
-    return selectedTemplateId
-      ? getTemplateSummary(selectedTemplate as WorkpaperTemplateDefinition)
-      : null;
-  }, [selectedTemplateId, selectedTemplate]);
+    // Find the full template object from templates array to ensure we have all template data
+    const fullTemplate = templates.find((t) => t.id === selectedTemplateId);
 
-  useEffect(() => {
-    // Auto-select first template if none selected and templates are loaded
-    if (!value && templateResponse?.success && templates.length > 0) {
-      const firstTemplateId = templates[0].id as string;
-      onChange(firstTemplateId);
-      setSelectedTemplateId(firstTemplateId);
+    // Combine full template data with fetched categories for summary calculation
+    if (fullTemplate && selectedTemplateId && templateCategories.length > 0) {
+      return getTemplateSummary({
+        ...fullTemplate,
+        categories: templateCategories
+      } as WorkpaperTemplateDefinition);
     }
-  }, [value, templates, onChange, templateResponse?.success]);
+    return null;
+  }, [selectedTemplateId, templates, templateCategories]);
+
+  // Auto-select first template if none selected and templates are loaded
+  useEffect(() => {
+    if (!value && templateResponse?.success && templates.length > 0) {
+      const firstTemplate = templates[0];
+      onChange({ ...firstTemplate, categories: [] }); // Pass template with empty categories initially
+    }
+  }, [value, templates, templateResponse?.success, onChange]);
+
+  // Update callback when categories are loaded for the selected template
+  useEffect(() => {
+    if (selectedTemplateId && templates.length > 0 && templateCategories.length > 0) {
+      const fullTemplate = templates.find((t) => t.id === selectedTemplateId);
+      if (fullTemplate) {
+        onChange({ ...fullTemplate, categories: templateCategories });
+      }
+    }
+  }, [selectedTemplateId, templateCategories, templates, onChange]);
 
   if (loadingTemplates) {
     return (
-      <div className="text-muted-foreground h-24 animate-pulse py-8 text-center">
-        <span className="flex gap-2">
-          <Spinner className={cn("dark:text-primary-foreground text-primary size-4")} /> Templates
-          Loading...
-        </span>
+      <div className="text-muted-foreground grid animate-pulse gap-4 py-8 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <Spinner className="size-6" /> Loading templates...
+        </div>
+        <Skeleton className="bg-primary/5 border-input flex h-32 animate-pulse gap-2 rounded-xl border" />
+        <Skeleton className="bg-primary/5 border-input flex h-32 animate-pulse gap-2 rounded-xl border" />
+        <Skeleton className="bg-primary/5 border-input flex h-32 animate-pulse gap-2 rounded-xl border" />
       </div>
     );
   }
 
-  if (templates.length === 0) {
+  if (templates.length == 0) {
     return (
       <div className="text-muted-foreground py-8 text-center">
         <Empty>
@@ -101,7 +138,7 @@ export function TemplateSelectorSimple({
           <EmptyContent>
             <div className="flex gap-2">
               <Button size="sm" asChild>
-                <Link href="/dashboard/audit/workpapers/templates/new">
+                <Link href="/dashboard/system-configs/audit-settings/templates">
                   <Plus className="h-4 w-4" /> Create New Template
                 </Link>
               </Button>
@@ -123,13 +160,15 @@ export function TemplateSelectorSimple({
 
       <RadioGroup
         value={value}
-        onValueChange={(selected) => {
-          setSelectedTemplateId(selected);
-          onChange(selected);
+        onValueChange={(selectedId) => {
+          const selectedTemplate = templates.find((t) => t.id === selectedId);
+          if (selectedTemplate) {
+            onChange({ ...selectedTemplate, categories: templateCategories });
+          }
         }}
         disabled={disabled}
         className="grid gap-4">
-        {templates.map((template, index) => {
+        {templates?.map((template, index) => {
           const isSelected = value === template.id;
 
           return (
@@ -159,14 +198,14 @@ export function TemplateSelectorSimple({
 
                 {
                   <CardContent className="">
-                    {loadingTemplateDetails ? (
+                    {loadingTemplateDetails || loadingCategories ? (
                       <span className="flex gap-2">
                         <Spinner
                           className={cn("dark:text-primary-foreground text-primary size-4")}
                         />{" "}
                         Creating Template Summary...
                       </span>
-                    ) : isSelected && summary && selectedTemplate && selectedTemplateId ? (
+                    ) : isSelected && summary && selectedTemplateId ? (
                       <div className="flex flex-wrap gap-2 text-xs">
                         <Badge variant="secondary">{summary?.totalCategories} categories</Badge>
                         <Badge variant="secondary">{summary?.mainClausesCount} main clauses</Badge>
