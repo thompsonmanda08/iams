@@ -44,7 +44,7 @@ export interface FormData {
   justification: string;
   compensating_controls: string;
   additional_remarks: string;
-  expiration_date: Date | string;
+  risk_acceptance_expiry_date: Date | string;
   risk_coordinator: ApproverData;
   risk_owner: ApproverData;
   reviewed_by: ApproverData;
@@ -97,7 +97,7 @@ export default function RiskAcceptanceForm({
     justification: initialData?.justification || "",
     compensating_controls: initialData?.compensating_controls || "",
     additional_remarks: initialData?.additional_remarks || "",
-    expiration_date: initialData?.expiration_date || "",
+    risk_acceptance_expiry_date: initialData?.risk_acceptance_expiry_date || "",
     risk_coordinator: initialData?.risk_coordinator || {
       name: "",
       designation: "",
@@ -376,12 +376,12 @@ export default function RiskAcceptanceForm({
                     value={formData.risk_rate}
                     onValueChange={(value) => updateField("risk_rate", value as RiskRate)}
                     className="flex gap-4">
-                    {(["High", "Medium"] as const).map((rate) => (
+                    {(["HIGH", "MEDIUM"] as const).map((rate) => (
                       <Label key={rate} className="flex cursor-pointer items-center">
                         <RadioGroupItem value={rate} id={rate} />
                         <span
                           className={`ml-2 rounded-full px-3 py-1 text-sm font-medium ${
-                            rate === "High"
+                            rate === "HIGH"
                               ? "bg-red-100 text-red-700"
                               : "bg-yellow-100 text-yellow-700"
                           }`}>
@@ -456,19 +456,19 @@ export default function RiskAcceptanceForm({
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !formData.expiration_date && "text-muted-foreground"
+                          !formData.risk_acceptance_expiry_date && "text-muted-foreground"
                         )}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.expiration_date
-                          ? format(formData.expiration_date as Date, "PPP")
+                        {formData.risk_acceptance_expiry_date
+                          ? format(formData.risk_acceptance_expiry_date as Date, "PPP")
                           : "Pick a date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={formData.expiration_date as Date}
-                        onSelect={(date) => updateField("expiration_date", date as Date)}
+                        selected={formData.risk_acceptance_expiry_date as Date}
+                        onSelect={(date) => updateField("risk_acceptance_expiry_date", date as Date)}
                       />
                     </PopoverContent>
                   </Popover>

@@ -52,7 +52,7 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
               Complete all sections for risk acceptance approval
             </p>
           </div>
-          <BackButton title="Back to Actions" />
+          <BackButton title="Back to Risk Details" />
         </div>
       </div>
       <div className="container mx-auto px-4 py-8">

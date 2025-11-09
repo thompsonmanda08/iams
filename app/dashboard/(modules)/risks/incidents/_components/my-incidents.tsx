@@ -554,7 +554,7 @@ export function MyIncidents() {
               {/* Details */}
               <div className="space-y-2">
                 <h3 className="border-b pb-2 text-lg font-semibold">Incident Details</h3>
-                <div className="rounded-md bg-gray-50 p-4">
+                <div className="rounded-md bg-gray-50 p-4 border">
                   <p className="text-sm whitespace-pre-wrap">{selectedIncident.incident.details}</p>
                 </div>
               </div>
@@ -562,7 +562,7 @@ export function MyIncidents() {
               {/* Root Cause */}
               <div className="space-y-2">
                 <h3 className="border-b pb-2 text-lg font-semibold">Root Cause</h3>
-                <div className="rounded-md bg-gray-50 p-4">
+                <div className="rounded-md bg-gray-50 p-4 border">
                   <p className="text-sm whitespace-pre-wrap">
                     {selectedIncident.incident.root_cause}
                   </p>
@@ -572,7 +572,7 @@ export function MyIncidents() {
               {/* Action Plan */}
               <div className="space-y-2">
                 <h3 className="border-b pb-2 text-lg font-semibold">Action Plan</h3>
-                <div className="rounded-md bg-gray-50 p-4">
+                <div className="rounded-md bg-gray-50 p-4 border">
                   <p className="text-sm whitespace-pre-wrap">
                     {selectedIncident.incident.action_plan}
                   </p>

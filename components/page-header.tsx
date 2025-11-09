@@ -52,7 +52,7 @@ const iconMap: Record<string, LucideIcon> = {
   AlertTriangle,
   Map,
   ChartNetwork,
-  Globe
+  Globe,
 };
 
 function PageHeader({
