@@ -11,7 +11,9 @@ import { DatePicker } from "@/components/ui/date-picker";
 import {
   createUniverse,
   createUniverseItem,
-  updateUniverse
+  updateUniverse,
+  updateUniverseItem,
+  deleteUniverseItem
 } from "@/app/_actions/audit-module-actions";
 import { CreateUniversePayload, CreateUniverseItemPayload } from "@/lib/types/audit-types";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
@@ -35,9 +37,10 @@ import {
   EmptyContent
 } from "@/components/ui/empty";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Department } from "@/lib/types";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
@@ -127,6 +130,9 @@ export default function AuditUniverseForm({
     };
   });
   const [itemData, setItemData] = useState<UniverseItemFormData>(INIT_ITEM_DATA);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   // Mutation for creating/updating universe
   const universeSubmitMutation = useMutation({
@@ -165,14 +171,20 @@ export default function AuditUniverseForm({
     }
   });
 
-  // Mutation for creating universe item
+  // Mutation for creating/editing universe item
   const itemSubmitMutation = useMutation({
     mutationFn: async (payload: CreateUniverseItemPayload) => {
-      return await createUniverseItem(payload);
+      if (editingItemId) {
+        return await updateUniverseItem(editingItemId, payload);
+      } else {
+        return await createUniverseItem(payload);
+      }
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(response.message || "Universe item created successfully");
+        toast.success(
+          response.message || `Universe item ${editingItemId ? "updated" : "created"} successfully`
+        );
         // Invalidate all relevant query caches
         queryClient.invalidateQueries();
         // Reset form except universe selection
@@ -180,13 +192,37 @@ export default function AuditUniverseForm({
           ...INIT_ITEM_DATA,
           audit_universe_id: itemData.audit_universe_id
         });
+        setEditingItemId(null);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to create universe item");
+        toast.error(response.message || `Failed to ${editingItemId ? "update" : "create"} universe item`);
       }
     },
     onError: (error) => {
-      toast.error("Failed to create universe item. Please try again.");
+      toast.error(`Failed to ${editingItemId ? "update" : "create"} universe item. Please try again.`);
+      console.error("Error:", error);
+    }
+  });
+
+  // Mutation for deleting universe item
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      return await deleteUniverseItem(itemId);
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(response.message || "Universe item deleted successfully");
+        // Invalidate all relevant query caches
+        queryClient.invalidateQueries();
+        setDeleteConfirmOpen(false);
+        setItemToDelete(null);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to delete universe item");
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to delete universe item. Please try again.");
       console.error("Error:", error);
     }
   });
@@ -273,6 +309,45 @@ export default function AuditUniverseForm({
         auditable_area_name: selectedActivity.auditable_area_name || ""
       });
     }
+  };
+
+  const handleEditItem = (item: any) => {
+    setEditingItemId(item.id);
+    setItemData({
+      audit_universe_id: item.audit_universe_id,
+      process_activity_id: item.process_activity_id || "",
+      name: item.name || "",
+      department_id: item.department_id || "",
+      strategic_pillar_id: item.strategic_pillar_id || "",
+      strategic_pillar_name: item.strategic_pillar_name || "",
+      auditable_area_id: item.auditable_area_id || "",
+      auditable_area_name: item.auditable_area_name || "",
+      indicative_target_id: item.indicative_target_id || "",
+      strategic_initiative_id: item.strategic_initiative_id || "",
+      risk_id: item.risk_id || "",
+      audit_frequency: item.audit_frequency || "ANNUALLY",
+      is_active: item.is_active ?? true
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteClick = (itemId: string) => {
+    setItemToDelete(itemId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (itemToDelete) {
+      deleteItemMutation.mutate(itemToDelete);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setItemData({
+      ...INIT_ITEM_DATA,
+      audit_universe_id: itemData.audit_universe_id
+    });
   };
 
   const handleUniverseSubmit = (e: React.FormEvent) => {
@@ -437,10 +512,12 @@ export default function AuditUniverseForm({
             <div className="mb-8">
               <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
                 <span className="bg-primary h-8 w-1 rounded-full"></span>
-                Universe Item Information
+                {editingItemId ? "Edit Universe Item" : "Universe Item Information"}
               </h3>
               <p className="text-muted-foreground mt-2 text-sm">
-                Configure the universe item details and associations
+                {editingItemId
+                  ? "Update the universe item details and associations"
+                  : "Configure the universe item details and associations"}
               </p>
             </div>
 
@@ -638,10 +715,10 @@ export default function AuditUniverseForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push("/dashboard/audit/universe")}
+                onClick={editingItemId ? handleCancelEdit : () => router.push("/dashboard/audit/universe")}
                 disabled={itemSubmitMutation.isPending}
                 className="w-full min-w-[120px] sm:w-auto">
-                Cancel
+                {editingItemId ? "Cancel Edit" : "Cancel"}
               </Button>
               <Button
                 type="submit"
@@ -649,7 +726,13 @@ export default function AuditUniverseForm({
                 isLoading={itemSubmitMutation.isPending}
                 className="w-full min-w-[180px] gap-2 sm:w-auto">
                 <Save className="h-4 w-4" />
-                {itemSubmitMutation.isPending ? "Creating..." : "Create Universe Item"}
+                {itemSubmitMutation.isPending
+                  ? editingItemId
+                    ? "Saving..."
+                    : "Creating..."
+                  : editingItemId
+                    ? "Save Changes"
+                    : "Create Universe Item"}
               </Button>
             </div>
           </form>
@@ -697,10 +780,26 @@ export default function AuditUniverseForm({
                   <div
                     key={item.id || index}
                     className="hover:bg-muted/50 group rounded-lg border p-3 transition-colors">
-                    <div className="mb-1.5 flex items-start justify-between">
-                      <h4 className="text-foreground line-clamp-2 text-sm font-medium">
+                    <div className="mb-1.5 flex items-start justify-between gap-2">
+                      <h4 className="text-foreground line-clamp-2 flex-1 text-sm font-medium">
                         {item.name || "Unnamed Activity"}
                       </h4>
+                      <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          onClick={() => handleEditItem(item)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                          onClick={() => handleDeleteClick(item.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <p className="text-muted-foreground text-xs">
@@ -724,6 +823,23 @@ export default function AuditUniverseForm({
             )}
           </div>
         </Card>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          open={deleteConfirmOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeleteConfirmOpen(false);
+              setItemToDelete(null);
+            }
+          }}
+          onConfirm={handleConfirmDelete}
+          title="Delete Universe Item"
+          description="Are you sure you want to delete this universe item? This action cannot be undone."
+          confirmText="Delete"
+          type="delete"
+          isLoading={deleteItemMutation.isPending}
+        />
       </div>
     );
   }
