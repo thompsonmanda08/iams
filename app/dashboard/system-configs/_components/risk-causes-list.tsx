@@ -140,16 +140,14 @@ export function RiskCausesList() {
             return (
               <Card key={cause.id} className="group transition-all">
                 <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex min-w-0 flex-1 gap-4">
-                      <CardTitle>{cause.name}</CardTitle>
-                      {parentName && (
-                        <Badge variant="success" className="gap-1 text-xs">
-                          <Cable className="h-3 w-3" />
-                          {parentName}
-                        </Badge>
-                      )}
-                    </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-4">
+                    <CardTitle>{cause.name}</CardTitle>
+                    {parentName && (
+                      <Badge variant="success" className="gap-1 text-xs">
+                        <Cable className="h-3 w-3" />
+                        {parentName}
+                      </Badge>
+                    )}
                   </div>
                   <CardDescription className="line-clamp-2">
                     {cause.description || "No description provided"}

@@ -12,8 +12,8 @@ import {
   Download,
   Pen,
   X,
-  CalendarIcon,
-  LucideIcon
+  Calendar as CalendarIcon,
+  Save
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,9 +24,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { downloadPDF } from "./download-acceptance-form";
 
 // Type definitions
 type RiskRate = "High" | "Medium" | "Low" | "";
+type FormMode = "create" | "edit";
 
 interface ApproverData {
   name: string;
@@ -35,29 +37,34 @@ interface ApproverData {
   signature: string;
 }
 
-interface FormData {
-  riskDescription: string;
-  riskRate: RiskRate;
-  deficiencyDescription: string;
+export interface FormData {
+  risk_description: string;
+  risk_rate: RiskRate;
+  deficiency_description: string;
   justification: string;
-  compensatingControls: string;
-  additionalRemarks: string;
-  expirationDate: Date | string;
-  riskCoordinator: ApproverData;
-  riskOwner: ApproverData;
-  reviewedBy: ApproverData;
-  emcApproval: ApproverData;
-  boardApproval: ApproverData;
+  compensating_controls: string;
+  additional_remarks: string;
+  expiration_date: Date | string;
+  risk_coordinator: ApproverData;
+  risk_owner: ApproverData;
+  reviewed_by: ApproverData;
+  emc_approval: ApproverData;
+  board_approval: ApproverData;
 }
 
-type ApproverKey = "riskCoordinator" | "riskOwner" | "reviewedBy" | "emcApproval" | "boardApproval";
-
+type ApproverKey =
+  | "risk_coordinator"
+  | "risk_owner"
+  | "reviewed_by"
+  | "emc_approval"
+  | "board_approval";
 type ApproverField = keyof ApproverData;
 
 interface Step {
   title: string;
-  icon: LucideIcon;
+  icon: any;
   fields: string[];
+  mode?: FormMode[];
 }
 
 interface ApproverConfig {
@@ -65,45 +72,84 @@ interface ApproverConfig {
   title: string;
 }
 
-export default function RiskAcceptanceForm() {
+interface RiskAcceptanceFormProps {
+  mode?: FormMode;
+  initialData?: Partial<FormData>;
+  onSubmit?: (data: FormData) => void | Promise<void>;
+}
+
+export default function RiskAcceptanceForm({
+  mode: initialMode = "create",
+  initialData,
+  onSubmit
+}: RiskAcceptanceFormProps) {
+  const [mode, setMode] = useState<FormMode>(initialMode);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [showSignatureModal, setShowSignatureModal] = useState<boolean>(false);
   const [currentSignatureField, setCurrentSignatureField] = useState<ApproverKey | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
-    riskDescription: "",
-    riskRate: "",
-    deficiencyDescription: "",
-    justification: "",
-    compensatingControls: "",
-    additionalRemarks: "",
-    expirationDate: "",
-    riskCoordinator: { name: "", designation: "", date: "", signature: "" },
-    riskOwner: { name: "", designation: "", date: "", signature: "" },
-    reviewedBy: { name: "", designation: "", date: "", signature: "" },
-    emcApproval: { name: "", designation: "", date: "", signature: "" },
-    boardApproval: { name: "", designation: "", date: "", signature: "" }
+    risk_description: initialData?.risk_description || "",
+    risk_rate: initialData?.risk_rate || "",
+    deficiency_description: initialData?.deficiency_description || "",
+    justification: initialData?.justification || "",
+    compensating_controls: initialData?.compensating_controls || "",
+    additional_remarks: initialData?.additional_remarks || "",
+    expiration_date: initialData?.expiration_date || "",
+    risk_coordinator: initialData?.risk_coordinator || {
+      name: "",
+      designation: "",
+      date: "",
+      signature: ""
+    },
+    risk_owner: initialData?.risk_owner || { name: "", designation: "", date: "", signature: "" },
+    reviewed_by: initialData?.reviewed_by || { name: "", designation: "", date: "", signature: "" },
+    emc_approval: initialData?.emc_approval || {
+      name: "",
+      designation: "",
+      date: "",
+      signature: ""
+    },
+    board_approval: initialData?.board_approval || {
+      name: "",
+      designation: "",
+      date: "",
+      signature: ""
+    }
   });
 
-  const steps: Step[] = [
+  // Define steps based on mode
+  const allSteps: Step[] = [
     {
       title: "Risk Details",
       icon: AlertCircle,
-      fields: ["riskDescription", "riskRate", "deficiencyDescription"]
+      fields: ["riskDescription", "riskRate", "deficiencyDescription"],
+      mode: ["create", "edit"]
     },
-    { title: "Justification", icon: FileText, fields: ["justification"] },
+    {
+      title: "Justification",
+      icon: FileText,
+      fields: ["justification"],
+      mode: ["create", "edit"]
+    },
     {
       title: "Controls",
       icon: Shield,
-      fields: ["compensatingControls", "additionalRemarks", "expirationDate"]
+      fields: ["compensatingControls", "additionalRemarks", "expirationDate"],
+      mode: ["create", "edit"]
     },
     {
       title: "Approvals",
       icon: Users,
-      fields: ["riskCoordinator", "riskOwner", "reviewedBy", "emcApproval", "boardApproval"]
+      fields: ["riskCoordinator", "riskOwner", "reviewedBy", "emcApproval", "boardApproval"],
+      mode: ["edit"]
     }
   ];
+
+  // Filter steps based on current mode
+  const steps = allSteps.filter((step) => !step.mode || step.mode.includes(mode));
 
   const updateField = (field: keyof FormData, value: string | Date | RiskRate): void => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -205,143 +251,30 @@ export default function RiskAcceptanceForm() {
     }
   }, [showSignatureModal]);
 
-  const downloadPDF = (): void => {
-    const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Risk Acceptance Form</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
-    h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
-    h2 { color: #334155; margin-top: 30px; background: #f1f5f9; padding: 10px; }
-    .section { margin: 20px 0; padding: 15px; border: 1px solid #e2e8f0; border-radius: 5px; }
-    .label { font-weight: bold; color: #475569; margin-top: 10px; }
-    .value { margin: 5px 0 15px 0; padding: 10px; background: #f8fafc; border-left: 3px solid #3b82f6; }
-    .risk-rate { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-    .risk-high { background: #fee2e2; color: #991b1b; }
-    .risk-medium { background: #fef3c7; color: #92400e; }
-    .risk-low { background: #d1fae5; color: #065f46; }
-    .approval-section { margin: 20px 0; padding: 15px; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 8px; }
-    .approval-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 10px; }
-    .approval-item { }
-    .approval-item strong { display: block; color: #64748b; font-size: 12px; margin-bottom: 5px; }
-    .signature-box { border: 2px dashed #cbd5e1; padding: 10px; min-height: 60px; text-align: center; margin-top: 10px; }
-    .signature-img { max-width: 200px; max-height: 60px; }
-    .note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
-  </style>
-</head>
-<body>
-  <h1>Risk Acceptance Form</h1>
-  
-  <div class="section">
-    <h2>1. Risk Description</h2>
-    <div class="value">${formData.riskDescription || "Not provided"}</div>
-    
-    <div class="label">Risk Rate:</div>
-    <div class="value">
-      <span class="risk-rate risk-${formData.riskRate?.toLowerCase() || "medium"}">${formData.riskRate || "Not specified"}</span>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>2. Description of Deficiency</h2>
-    <div class="value">${formData.deficiencyDescription || "Not provided"}</div>
-  </div>
-
-  <div class="section">
-    <h2>3. Justification of Risk Acceptance</h2>
-    <div class="value">${formData.justification || "Not provided"}</div>
-  </div>
-
-  <div class="section">
-    <h2>4. Description of Compensating Controls</h2>
-    <div class="value">${formData.compensatingControls || "Not provided"}</div>
-  </div>
-
-  <div class="section">
-    <h2>5. Additional Remarks</h2>
-    <div class="value">${formData.additionalRemarks || "No additional remarks"}</div>
-    
-    <div class="label">Risk Acceptance Expiration Date:</div>
-    <div class="value">${formData.expirationDate || "Not specified"}</div>
-  </div>
-
-  <h2>APPROVAL SIGN OFF</h2>
-
-  ${(
-    ["riskCoordinator", "riskOwner", "reviewedBy", "emcApproval", "boardApproval"] as ApproverKey[]
-  )
-    .map((key) => {
-      const titles: Record<ApproverKey, string> = {
-        riskCoordinator: "Risk Coordinator",
-        riskOwner: "Risk Owner",
-        reviewedBy: "Reviewed By",
-        emcApproval: "EMC Approval (CEO)",
-        boardApproval: "Board Approval - Audit and Risk Chairperson"
-      };
-      const data = formData[key];
-      return `
-    <div class="approval-section">
-      <h3>${titles[key]}</h3>
-      <div class="approval-grid">
-        <div class="approval-item">
-          <strong>NAME</strong>
-          ${data.name || "_________________"}
-        </div>
-        <div class="approval-item">
-          <strong>DESIGNATION</strong>
-          ${data.designation || "_________________"}
-        </div>
-        <div class="approval-item">
-          <strong>DATE</strong>
-          ${data.date || "_________________"}
-        </div>
-      </div>
-      <div class="signature-box">
-        <strong>SIGNATURE</strong><br>
-        ${data.signature ? `<img src="${data.signature}" class="signature-img" alt="Signature">` : "_________________"}
-      </div>
-    </div>`;
-    })
-    .join("")}
-
-  <div class="note">
-    <strong>Note:</strong> Send form to: InternalAuditRisk@infratel.co.zm
-  </div>
-
-  <p style="text-align: center; color: #64748b; margin-top: 40px; font-size: 12px;">
-    Generated on ${new Date().toLocaleString()}
-  </p>
-</body>
-</html>`;
-
-    const blob = new Blob([htmlContent], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Risk_Acceptance_Form_${new Date().toISOString().split("T")[0]}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleSubmit = (): void => {
-    console.log("Form submitted:", formData);
-    alert(
-      "Risk Acceptance Form submitted successfully!\n\nPlease send to: InternalAuditRisk@infratel.co.zm"
-    );
+  const handleSubmit = async (): Promise<void> => {
+    setIsSubmitting(true);
+    try {
+      if (onSubmit) {
+        await onSubmit(formData);
+      } else {
+        console.info("Form submitted:", formData);
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const approverConfigs: ApproverConfig[] = [
-    { key: "riskCoordinator", title: "Risk Coordinator" },
-    { key: "riskOwner", title: "Risk Owner" },
-    { key: "reviewedBy", title: "Reviewed By" },
-    { key: "emcApproval", title: "EMC Approval (CEO)" },
-    { key: "boardApproval", title: "Board Approval - Audit and Risk Chairperson" }
+    { key: "risk_coordinator", title: "Risk Coordinator" },
+    { key: "risk_owner", title: "Risk Owner" },
+    { key: "reviewed_by", title: "Reviewed By" },
+    { key: "emc_approval", title: "EMC Approval (CEO)" },
+    { key: "board_approval", title: "Board Approval - Audit and Risk Chairperson" }
   ];
+
+  const isLastStep = currentStep === steps.length - 1;
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -353,14 +286,21 @@ export default function RiskAcceptanceForm() {
               <div>
                 <div className="mb-2 flex items-center gap-3">
                   <ClipboardCheck className="h-8 w-8" />
-                  <h1 className="text-2xl font-bold">Risk Acceptance Form</h1>
+                  <h1 className="text-2xl font-bold">
+                    Risk Acceptance Form {mode === "edit" && "- Edit Mode"}
+                  </h1>
                 </div>
                 <p className="text-sm text-blue-100">
-                  Complete all sections for risk acceptance approval
+                  {mode === "create"
+                    ? "Complete all sections to create risk acceptance"
+                    : "Add approvals and signatures"}
                 </p>
               </div>
-              <Button onClick={downloadPDF} variant="outline" className="text-primary">
-                <Download className="h-5 w-5" />
+              <Button
+                onClick={() => downloadPDF(formData)}
+                variant="outline"
+                className="text-primary">
+                <Download className="mr-2 h-5 w-5" />
                 Download
               </Button>
             </div>
@@ -423,8 +363,8 @@ export default function RiskAcceptanceForm() {
                 <div>
                   <Label className="mb-2 block">1. Risk Description *</Label>
                   <Textarea
-                    value={formData.riskDescription}
-                    onChange={(e) => updateField("riskDescription", e.target.value)}
+                    value={formData.risk_description}
+                    onChange={(e) => updateField("risk_description", e.target.value)}
                     rows={4}
                     placeholder="Describe the risk in detail..."
                   />
@@ -433,8 +373,8 @@ export default function RiskAcceptanceForm() {
                 <div>
                   <Label className="mb-2 block">Risk Rate *</Label>
                   <RadioGroup
-                    value={formData.riskRate}
-                    onValueChange={(value) => updateField("riskRate", value as RiskRate)}
+                    value={formData.risk_rate}
+                    onValueChange={(value) => updateField("risk_rate", value as RiskRate)}
                     className="flex gap-4">
                     {(["High", "Medium"] as const).map((rate) => (
                       <Label key={rate} className="flex cursor-pointer items-center">
@@ -455,8 +395,8 @@ export default function RiskAcceptanceForm() {
                 <div>
                   <Label className="mb-2 block">2. Description of Deficiency *</Label>
                   <Textarea
-                    value={formData.deficiencyDescription}
-                    onChange={(e) => updateField("deficiencyDescription", e.target.value)}
+                    value={formData.deficiency_description}
+                    onChange={(e) => updateField("deficiency_description", e.target.value)}
                     rows={4}
                     placeholder="Provide a summary of the overall control deficiency..."
                   />
@@ -488,8 +428,8 @@ export default function RiskAcceptanceForm() {
                 <div>
                   <Label className="mb-2 block">4. Description of Compensating Controls *</Label>
                   <Textarea
-                    value={formData.compensatingControls}
-                    onChange={(e) => updateField("compensatingControls", e.target.value)}
+                    value={formData.compensating_controls}
+                    onChange={(e) => updateField("compensating_controls", e.target.value)}
                     rows={6}
                     placeholder="Describe the compensating controls that will be put in place..."
                   />
@@ -501,8 +441,8 @@ export default function RiskAcceptanceForm() {
                 <div>
                   <Label className="mb-2 block">5. Additional Remarks</Label>
                   <Textarea
-                    value={formData.additionalRemarks}
-                    onChange={(e) => updateField("additionalRemarks", e.target.value)}
+                    value={formData.additional_remarks}
+                    onChange={(e) => updateField("additional_remarks", e.target.value)}
                     rows={4}
                     placeholder="Provide any other comments and supporting evidence..."
                   />
@@ -516,28 +456,37 @@ export default function RiskAcceptanceForm() {
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !formData.expirationDate && "text-muted-foreground"
+                          !formData.expiration_date && "text-muted-foreground"
                         )}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.expirationDate
-                          ? format(formData.expirationDate as Date, "PPP")
+                        {formData.expiration_date
+                          ? format(formData.expiration_date as Date, "PPP")
                           : "Pick a date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={formData.expirationDate as Date}
-                        onSelect={(date) => updateField("expirationDate", date as Date)}
+                        selected={formData.expiration_date as Date}
+                        onSelect={(date) => updateField("expiration_date", date as Date)}
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
+
+                {mode === "create" && (
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> After creating the risk acceptance form, you can enter
+                      edit mode to add approvals and signatures.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Step 3: Approvals */}
-            {currentStep === 3 && (
+            {/* Step 3: Approvals (Edit Mode Only) */}
+            {currentStep === 3 && mode === "edit" && (
               <div className="animate-fade-in space-y-8">
                 <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-slate-600">
                   <strong>Approval Sign Off:</strong> Complete your information and add your
@@ -611,7 +560,7 @@ export default function RiskAcceptanceForm() {
                         </div>
                       ) : (
                         <Button onClick={() => openSignatureModal(approver.key)}>
-                          <Pen className="h-5 w-5" />
+                          <Pen className="mr-2 h-5 w-5" />
                           Click to Sign
                         </Button>
                       )}
@@ -633,7 +582,7 @@ export default function RiskAcceptanceForm() {
             {/* Navigation Buttons */}
             <div className="mt-8 flex items-center justify-between border-t pt-6">
               <Button type="button" onClick={prevStep} disabled={currentStep === 0}>
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="mr-2 h-4 w-4" />
                 Previous
               </Button>
 
@@ -641,15 +590,24 @@ export default function RiskAcceptanceForm() {
                 Step {currentStep + 1} of {steps.length}
               </div>
 
-              {currentStep < steps.length - 1 ? (
+              {!isLastStep ? (
                 <Button type="button" onClick={nextStep}>
                   Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="button" onClick={handleSubmit}>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Submit Form
+                <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+                  {mode === "create" ? (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      {isSubmitting ? "Creating..." : "Create Acceptance"}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {isSubmitting ? "Submitting..." : "Submit Approval"}
+                    </>
+                  )}
                 </Button>
               )}
             </div>

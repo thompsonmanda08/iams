@@ -20,6 +20,7 @@ import authenticatedApiClient, {
   successResponse
 } from "./api-config";
 import { cache } from "react";
+import { FormData } from "@/components/forms/risk-acceptance-form";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -1652,5 +1653,34 @@ export async function getActions(params: ActionQueryParams): Promise<APIResponse
     return successResponse(response.data?.data, "Actions retrieved successfully");
   } catch (error) {
     return handleError(error, "GET | GET ACTIONS", url);
+  }
+}
+
+
+export async function createRiskAcceptance(id: string, data:any): Promise<APIResponse> {
+  const url = `/api/v1/risks/${id}/accept`; 
+  try {
+    const response = await authenticatedApiClient({ url, data, method: "POST" });
+    revalidatePath("/dashboard/(modules)/risks");
+    return successResponse(response.data.data, "Acceptance risk created successfully");
+  } catch (error) {
+    return handleError(error, "POST | CREATE RISK ACCEPTANCE", url);
+  }
+}
+
+export async function updateRiskAcceptance(
+  id: string,
+  input: Partial<FormData>
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-acceptances/${id}`,
+      data: input,
+      method: "PUT"
+    });
+    revalidatePath("/dashboard/(modules)/risks/risk-registers");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "PUT | UPDATE RISK ACCEPTANCE", `/api/v1/risk-acceptances/${id}`);
   }
 }
