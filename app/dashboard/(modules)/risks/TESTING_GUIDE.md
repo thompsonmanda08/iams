@@ -18,13 +18,14 @@ The `/dashboard/risks/actions` page now filters risks by **`risk_action_owner_id
 
 ```typescript
 // Before
-const response = await getRisks({ risk_owner_id: user?.id });
+const response = await getAllRisks{ risk_owner_id: user?.id });
 
 // After
-const response = await getRisks({ risk_action_owner_id: user?.id });
+const response = await getAllRisks{ risk_action_owner_id: user?.id });
 ```
 
 This means:
+
 - Users see risks **assigned to them for action submission**
 - Not risks they created or own
 
@@ -33,26 +34,33 @@ This means:
 For testing purposes, we have two action owner IDs:
 
 ### User 1: `user-action-owner-1`
+
 **Assigned Risks**:
+
 - Risk ID 1: Cyber Security Breach Risk
 - Risk ID 3: Data Privacy Incident Risk
 
 **Action Items**:
+
 - Submit findings for cybersecurity controls
 - Submit findings for data protection measures
 
 ### User 2: `user-action-owner-2`
+
 **Assigned Risks**:
+
 - Risk ID 2: Regulatory Compliance Risk
 - Risk ID 4: Business Continuity Risk
 
 **Action Items**:
+
 - Submit findings for GDPR compliance
 - Submit findings for disaster recovery procedures
 
 ## Mock Risks Structure
 
 ### Risk 1: Cyber Security Breach Risk
+
 ```
 ID: 1
 Risk ID: RSK-2024-001
@@ -66,6 +74,7 @@ Control Effectiveness: 3/5
 ```
 
 ### Risk 2: Regulatory Compliance Risk
+
 ```
 ID: 2
 Risk ID: RSK-2024-002
@@ -79,6 +88,7 @@ Control Effectiveness: 2/5
 ```
 
 ### Risk 3: Data Privacy Incident Risk
+
 ```
 ID: 3
 Risk ID: RSK-2024-003
@@ -92,6 +102,7 @@ Control Effectiveness: 2/5
 ```
 
 ### Risk 4: Business Continuity Risk
+
 ```
 ID: 4
 Risk ID: RSK-2024-004
@@ -111,6 +122,7 @@ Control Effectiveness: 2/5
 Navigate to `/dashboard/risks/actions`
 
 **Expected Result:**
+
 - Page shows "My Actions" with risks filtered by current user's `risk_action_owner_id`
 - If logged in as `user-action-owner-1`: See Risks 1 & 3
 - If logged in as `user-action-owner-2`: See Risks 2 & 4
@@ -118,6 +130,7 @@ Navigate to `/dashboard/risks/actions`
 ### Step 2: View Actions Table
 
 The actions table displays:
+
 - ✅ Risk title and description
 - ✅ Category with color indicator
 - ✅ Department
@@ -146,6 +159,7 @@ The actions table displays:
 5. Dialog closes and page refreshes
 
 **Expected Result:**
+
 - Toast notification: "Action findings submitted successfully"
 - Finding status: **PENDING_REVIEW**
 - Finding appears in demo page
@@ -155,6 +169,7 @@ The actions table displays:
 Navigate to `/dashboard/risks/actions-demo`
 
 **Expected Result:**
+
 - Shows all mock action findings with different statuses:
   - **OPEN**: Risks waiting for action submission (Risks 1, 2, 3, 4)
   - **PENDING_REVIEW**: Findings submitted, awaiting reviewer assessment
@@ -166,6 +181,7 @@ Navigate to `/dashboard/risks/actions-demo`
 ### Step 5: Test Status Filtering
 
 In the actions table:
+
 1. Filter by status using search/filter controls
 2. See only relevant actions
 3. Submit findings to change status from OPEN to PENDING_REVIEW
@@ -225,6 +241,7 @@ In the actions table:
 ## Key Testing Scenarios
 
 ### Scenario 1: Multiple Actions by Same Owner
+
 **Objective**: Test filtering for one action owner
 
 1. Log in as `user-action-owner-1`
@@ -233,6 +250,7 @@ In the actions table:
 4. Both should appear in demo page as PENDING_REVIEW
 
 ### Scenario 2: Different Owners, Same Risk
+
 **Objective**: Verify each user sees only their assigned risks
 
 1. Log in as `user-action-owner-1`
@@ -243,6 +261,7 @@ In the actions table:
    - Don't see: Risks 1, 3
 
 ### Scenario 3: Submit and Review Workflow
+
 **Objective**: Complete full workflow
 
 1. Action owner submits findings
@@ -251,6 +270,7 @@ In the actions table:
 4. Status updated accordingly
 
 ### Scenario 4: Search and Filter
+
 **Objective**: Test search functionality
 
 1. Search for "Security" → Should find "Cyber Security Breach Risk"
@@ -277,28 +297,34 @@ In the actions table:
 
 ## Mock Data Summary
 
-| Risk ID | Title | Owner User | Action Owner | Status |
-|---------|-------|-----------|--------------|--------|
-| 1 | Cyber Security Breach | user-sec-mgr-1 | user-action-owner-1 | OPEN |
-| 2 | Regulatory Compliance | user-comp-officer-1 | user-action-owner-2 | OPEN |
-| 3 | Data Privacy Incident | user-dpo-1 | user-action-owner-1 | OPEN |
-| 4 | Business Continuity | user-ops-mgr-1 | user-action-owner-2 | OPEN |
+| Risk ID | Title                 | Owner User          | Action Owner        | Status |
+| ------- | --------------------- | ------------------- | ------------------- | ------ |
+| 1       | Cyber Security Breach | user-sec-mgr-1      | user-action-owner-1 | OPEN   |
+| 2       | Regulatory Compliance | user-comp-officer-1 | user-action-owner-2 | OPEN   |
+| 3       | Data Privacy Incident | user-dpo-1          | user-action-owner-1 | OPEN   |
+| 4       | Business Continuity   | user-ops-mgr-1      | user-action-owner-2 | OPEN   |
 
 ## Common Issues & Solutions
 
 ### Issue: Don't see expected risks on actions page
+
 **Solution**: Check you're logged in with correct action owner ID:
+
 - `user-action-owner-1` → Should see risks 1, 3
 - `user-action-owner-2` → Should see risks 2, 4
 
 ### Issue: "Submit Findings" button not showing
+
 **Solution**:
+
 - Only shows for OPEN risks
 - Risk status must be "OPEN" in mock data
 - Check browser console for errors
 
 ### Issue: Findings not appearing in demo page
+
 **Solution**:
+
 - Refresh page after submission
 - Check mock data in risk-module-actions.ts
 - Verify risk_id matches between risk and findings
@@ -307,7 +333,7 @@ In the actions table:
 
 When connecting to real API:
 
-1. Replace mock data filtering in `getRisks()` with real API calls
+1. Replace mock data filtering in `getAllRisks)` with real API calls
 2. Update `submitActionFindings()` to call `/api/v1/action-findings`
 3. Update `getActionFindings()` to call `/api/v1/risks/{id}/findings`
 4. Update `assessActionFindings()` to call `/api/v1/action-findings/{id}/assess`

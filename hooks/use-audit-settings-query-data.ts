@@ -60,6 +60,7 @@ export const useStrategicPillars = (
     page?: number;
     page_size?: number;
     department_id?: string;
+    is_active?: boolean;
   }
 ) => {
   return useQuery({
@@ -87,7 +88,7 @@ export const useStrategicPillars = (
  */
 export const useStrategicInitiatives = (
   pillarId?: string,
-  params?: { page?: number; page_size?: number }
+  params?: { page?: number; page_size?: number; department_id?: string }
 ) => {
   return useQuery({
     queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES, pillarId, params],
@@ -136,11 +137,15 @@ export const useFindingsCategories = () => {
  * Hook to fetch all process activities
  * @returns Query result with process activities data
  */
-export const useProcessActivities = () => {
+export const useProcessActivities = (params?: {
+  page?: number;
+  page_size?: number;
+  department_id?: string;
+}) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.PROCESS_ACTIVITIES],
+    queryKey: [QUERY_KEYS.PROCESS_ACTIVITIES, params],
     queryFn: async () => {
-      const response = await getProcessActivities();
+      const response = await getProcessActivities(params);
       if (!response.success) {
         throw new Error(response.message);
       }

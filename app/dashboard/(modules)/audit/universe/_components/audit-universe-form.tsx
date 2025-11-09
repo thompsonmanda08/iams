@@ -7,24 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   createUniverse,
   createUniverseItem,
-  updateUniverse
+  updateUniverse,
+  updateUniverseItem,
+  deleteUniverseItem
 } from "@/app/_actions/audit-module-actions";
 import { CreateUniversePayload, CreateUniverseItemPayload } from "@/lib/types/audit-types";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
-  useAuditableAreas,
-  useStrategicPillars,
   useStrategicInitiatives,
   useIndicativeTargets,
   useUniverses,
@@ -44,8 +37,11 @@ import {
   EmptyContent
 } from "@/components/ui/empty";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Department } from "@/lib/types";
+import { ConfirmationModal } from "@/components/confirmation-modal";
+import { Badge } from "@/components/ui/badge";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
@@ -60,14 +56,17 @@ interface UniverseFormData {
 
 interface UniverseItemFormData {
   audit_universe_id: number | string;
+  process_activity_id: string; // Changed: now storing the ID
   name: string;
   department_id: string;
   strategic_pillar_id: string;
+  strategic_pillar_name?: string;
   auditable_area_id: string;
+  auditable_area_name?: string;
   indicative_target_id: string;
   strategic_initiative_id: string;
+  strategic_initiative_name?: string;
   risk_id: string;
-  process_activity: string;
   audit_frequency: string;
   is_active: boolean;
 }
@@ -82,15 +81,15 @@ const INIT_UNIVERSE_DATA: UniverseFormData = {
 };
 
 const INIT_ITEM_DATA: UniverseItemFormData = {
-  name: "",
   audit_universe_id: "",
+  process_activity_id: "",
+  name: "",
   department_id: "",
   strategic_pillar_id: "",
   auditable_area_id: "",
   indicative_target_id: "",
   strategic_initiative_id: "",
   risk_id: "",
-  process_activity: "",
   audit_frequency: "ANNUALLY",
   is_active: true
 };
@@ -100,13 +99,17 @@ export default function AuditUniverseForm({
   universeId,
   mode = "universe",
   universes = [],
-  onSwitchToUniverseTab
+  initialUniverseItems = [],
+  onSwitchToUniverseTab,
+  onSwitchToItemTab
 }: {
   initialData?: any;
   universeId?: string;
   mode?: "universe" | "item";
   universes?: any[];
+  initialUniverseItems?: any[];
   onSwitchToUniverseTab?: () => void;
+  onSwitchToItemTab?: () => void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -129,8 +132,116 @@ export default function AuditUniverseForm({
       is_active: initialData.is_active ?? true
     };
   });
-  const [itemData, setItemData] = useState<UniverseItemFormData>(INIT_ITEM_DATA);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [itemData, setItemData] = useState<UniverseItemFormData>(() => {
+    // If we have initialData with audit_universe_id (edit mode), pre-populate it
+    if (initialData?.audit_universe_id) {
+      return {
+        ...INIT_ITEM_DATA,
+        audit_universe_id: initialData.audit_universe_id
+      };
+    }
+    return INIT_ITEM_DATA;
+  });
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  // Mutation for creating/updating universe
+  const universeSubmitMutation = useMutation({
+    mutationFn: async (payload: CreateUniversePayload) => {
+      if (isEditing && universeId) {
+        return await updateUniverse(universeId, payload);
+      } else {
+        return await createUniverse(payload);
+      }
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(
+          response.message || `Universe ${isEditing ? "updated" : "created"} successfully`
+        );
+
+        // Switch to item tab for both creating and editing to allow item management
+        if (onSwitchToItemTab) {
+          onSwitchToItemTab();
+        }
+
+        // Reset form for next universe creation (only if creating, not editing)
+        if (!isEditing) {
+          setUniverseData(INIT_UNIVERSE_DATA);
+        }
+
+        // Invalidate all relevant query caches
+        queryClient.invalidateQueries();
+      } else {
+        toast.error(response.message || `Failed to ${isEditing ? "update" : "create"} universe`);
+      }
+    },
+    onError: (error) => {
+      toast.error(`Failed to ${isEditing ? "update" : "create"} universe. Please try again.`);
+      console.error("Error:", error);
+    }
+  });
+
+  // Mutation for creating/editing universe item
+  const itemSubmitMutation = useMutation({
+    mutationFn: async (payload: CreateUniverseItemPayload) => {
+      if (editingItemId) {
+        return await updateUniverseItem(editingItemId, payload);
+      } else {
+        return await createUniverseItem(payload);
+      }
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(
+          response.message || `Universe item ${editingItemId ? "updated" : "created"} successfully`
+        );
+        // Invalidate all relevant query caches
+        queryClient.invalidateQueries();
+        // Reset form except universe selection
+        setItemData({
+          ...INIT_ITEM_DATA,
+          audit_universe_id: itemData.audit_universe_id
+        });
+        setEditingItemId(null);
+        router.refresh();
+      } else {
+        toast.error(
+          response.message || `Failed to ${editingItemId ? "update" : "create"} universe item`
+        );
+      }
+    },
+    onError: (error) => {
+      toast.error(
+        `Failed to ${editingItemId ? "update" : "create"} universe item. Please try again.`
+      );
+      console.error("Error:", error);
+    }
+  });
+
+  // Mutation for deleting universe item
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      return await deleteUniverseItem(itemId);
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(response.message || "Universe item deleted successfully");
+        // Invalidate all relevant query caches
+        queryClient.invalidateQueries();
+        setDeleteConfirmOpen(false);
+        setItemToDelete(null);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to delete universe item");
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to delete universe item. Please try again.");
+      console.error("Error:", error);
+    }
+  });
 
   // Fetch dropdown data using reusable hooks
   const { data: departmentsResponse } = useDepartments({
@@ -139,21 +250,32 @@ export default function AuditUniverseForm({
     page: 1
   });
 
-  const departmentsData = departmentsResponse?.data?.data || [];
+  const departments: Department[] = departmentsResponse?.data?.data || [];
 
-  const { data: auditableAreasResponse } = useAuditableAreas({
-    department_id: universeData.department_id
-    // page_size: 100,
-    // page: 1
-  });
-  const auditableAreasData = auditableAreasResponse?.data || [];
+  // const { data: auditableAreasResponse } = useAuditableAreas({
+  //   department_id: itemData.department_id
+  //   // page_size: 100,
+  //   // page: 1
+  // });
+  // const auditableAreasData = auditableAreasResponse?.data || [];
 
-  const { data: strategicPillarsResponse } = useStrategicPillars();
-  const strategicPillarsData = mode === "item" ? strategicPillarsResponse?.data || [] : [];
+  // const { data: strategicPillarsResponse } = useStrategicPillars(undefined, {
+  //   department_id: itemData.department_id
+  //   // page_size: 100,
+  //   // page: 1
+  // });
 
-  const { data: strategicInitiativesResponse } = useStrategicInitiatives(
-    mode === "item" && itemData.strategic_pillar_id ? itemData.strategic_pillar_id : undefined
-  );
+  // const strategicPillarsData = mode === "item" ? strategicPillarsResponse?.data || [] : [];
+  // console.log("strategicPillarsData", strategicPillarsData);
+
+  const selectedPillarId = useMemo(() => {
+    return mode === "item" && itemData.strategic_pillar_id
+      ? itemData.strategic_pillar_id
+      : undefined;
+  }, [itemData.strategic_pillar_id, mode]);
+
+  const { data: strategicInitiativesResponse } = useStrategicInitiatives(selectedPillarId);
+
   const strategicInitiativesData = mode === "item" ? strategicInitiativesResponse?.data || [] : [];
 
   const { data: indicativeTargetsResponse } = useIndicativeTargets();
@@ -162,12 +284,14 @@ export default function AuditUniverseForm({
   const { data: risksResponse } = useRisks();
   const risksData = mode === "item" ? risksResponse?.data || [] : [];
 
-  const { data: processActivitiesResponse } = useProcessActivities();
+  const { data: processActivitiesResponse, isLoading: isLoadingActivities } = useProcessActivities({
+    department_id: itemData.department_id
+  });
+
   const processActivitiesData = mode === "item" ? processActivitiesResponse?.data || [] : [];
 
   // Fetch universes dynamically for the dropdown
   const { data: universesResponse } = useUniverses();
-
   const universesData = mode === "item" ? universesResponse?.data || universes : [];
 
   // Fetch universe items for the selected universe
@@ -177,9 +301,13 @@ export default function AuditUniverseForm({
   const { data: universeItemsResponse, isLoading: isLoadingItems } =
     useUniverseItems(universeIdForItems);
 
-  const universeItemsData = mode === "item" ? universeItemsResponse?.data || [] : [];
-
-  console.log("universeItemsData", universeItemsData);
+  // Use initialUniverseItems if editing a universe, otherwise use fetched data
+  const universeItemsData =
+    mode === "item"
+      ? isEditing && initialUniverseItems.length > 0
+        ? initialUniverseItems
+        : universeItemsResponse?.data || []
+      : [];
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -189,7 +317,62 @@ export default function AuditUniverseForm({
     setItemData((prev) => ({ ...prev, ...fields }));
   };
 
-  const handleUniverseSubmit = async (e: React.FormEvent) => {
+  const handleProcessActivityChange = (activityId: string) => {
+    const selectedActivity = processActivitiesData?.find((a: any) => a.id === activityId);
+
+    console.log("selectedActivity", selectedActivity, activityId);
+
+    if (selectedActivity) {
+      updateItemData({
+        process_activity_id: activityId,
+        strategic_pillar_id: selectedActivity.strategic_pillar_id || "",
+        strategic_pillar_name: selectedActivity.strategic_pillar_name || "",
+        auditable_area_id: selectedActivity.auditable_area_id || "",
+        auditable_area_name: selectedActivity.auditable_area_name || ""
+      });
+    }
+  };
+
+  const handleEditItem = (item: any) => {
+    setEditingItemId(item.id);
+    setItemData({
+      audit_universe_id: item.audit_universe_id,
+      process_activity_id: item.process_activity_id || "",
+      name: item.name || "",
+      department_id: item.department_id || "",
+      strategic_pillar_id: item.strategic_pillar_id || "",
+      strategic_pillar_name: item.strategic_pillar_name || "",
+      auditable_area_id: item.auditable_area_id || "",
+      auditable_area_name: item.auditable_area_name || "",
+      indicative_target_id: item.indicative_target_id || "",
+      strategic_initiative_id: item.strategic_initiative_id || "",
+      risk_id: item.risk_id || "",
+      audit_frequency: item.audit_frequency || "ANNUALLY",
+      is_active: item.is_active ?? true
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteClick = (itemId: string) => {
+    setItemToDelete(itemId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (itemToDelete) {
+      deleteItemMutation.mutate(itemToDelete);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setItemData({
+      ...INIT_ITEM_DATA,
+      audit_universe_id: itemData.audit_universe_id
+    });
+  };
+
+  const handleUniverseSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!universeData.universe_name.trim()) {
@@ -202,42 +385,17 @@ export default function AuditUniverseForm({
       return;
     }
 
-    setIsSubmitting(true);
+    const payload: CreateUniversePayload = {
+      universe_name: universeData.universe_name,
+      start_date: universeData.start_date.toISOString(),
+      end_date: universeData.end_date.toISOString(),
+      is_active: universeData.is_active
+    };
 
-    try {
-      const payload: CreateUniversePayload = {
-        universe_name: universeData.universe_name,
-        start_date: universeData.start_date.toISOString(),
-        end_date: universeData.end_date.toISOString(),
-        is_active: universeData.is_active
-      };
-
-      let response;
-      if (isEditing && universeId) {
-        response = await updateUniverse(universeId, payload);
-      } else {
-        response = await createUniverse(payload);
-      }
-
-      if (response.success) {
-        toast.success(
-          response.message || `Universe ${isEditing ? "updated" : "created"} successfully`
-        );
-        router.push("/dashboard/audit/universe");
-        // Invalidate all relevant query caches
-        queryClient.invalidateQueries({ queryKey: ["universes"] });
-        // router.refresh();
-      } else {
-        toast.error(response.message || `Failed to ${isEditing ? "update" : "create"} universe`);
-      }
-    } catch (error) {
-      toast.error(`Failed to ${isEditing ? "update" : "create"} universe. Please try again.`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    universeSubmitMutation.mutate(payload);
   };
 
-  const handleItemSubmit = async (e: React.FormEvent) => {
+  const handleItemSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!itemData.audit_universe_id) {
@@ -245,59 +403,33 @@ export default function AuditUniverseForm({
       return;
     }
 
-    if (!itemData.department_id) {
-      toast.error("Please select a department");
+    if (!itemData.process_activity_id) {
+      toast.error("Please select a process/activity");
       return;
     }
 
-    if (!itemData.process_activity.trim()) {
-      toast.error("Please enter a process/activity");
-      return;
-    }
+    const selectedActivity = processActivitiesData?.find(
+      (a: any) => a.id === itemData.process_activity_id
+    );
 
-    setIsSubmitting(true);
+    const payload: CreateUniverseItemPayload = {
+      audit_universe_id: Number(itemData.audit_universe_id),
+      name: itemData.name || "",
+      process_activity_id: itemData.process_activity_id,
+      department_id: itemData.department_id || selectedActivity?.department_id || null,
+      strategic_pillar_id:
+        itemData.strategic_pillar_id || selectedActivity?.strategic_pillar_id || null,
+      auditable_area_id: itemData.auditable_area_id || selectedActivity?.auditable_area_id || null,
+      indicative_target_id: itemData.indicative_target_id || null,
+      strategic_initiative_id: itemData.strategic_initiative_id || null,
+      risk_id: itemData.risk_id || null,
+      audit_frequency: itemData.audit_frequency,
+      is_active: itemData.is_active || true
+    };
 
-    try {
-      const payload: CreateUniverseItemPayload = {
-        audit_universe_id: Number(itemData.audit_universe_id),
-        department_id: itemData.department_id,
-        strategic_pillar_id: itemData.strategic_pillar_id || null,
-        auditable_area_id: itemData.auditable_area_id || null,
-        indicative_target_id: itemData.indicative_target_id || null,
-        strategic_initiative_id: itemData.strategic_initiative_id || null,
-        risk_id: itemData.risk_id || null,
-        process_activity: itemData.process_activity,
-        audit_frequency: itemData.audit_frequency,
-        is_active: itemData.is_active
-      };
+    // console.log("payload", payload);
 
-      const response = await createUniverseItem(payload);
-
-      if (response.success) {
-        toast.success(response.message || "Universe item created successfully");
-        // Invalidate all relevant query caches
-        queryClient.invalidateQueries({ queryKey: ["universes"] });
-        queryClient.invalidateQueries({ queryKey: ["universeItems", itemData.audit_universe_id] });
-        queryClient.invalidateQueries({ queryKey: ["departments"] });
-        queryClient.invalidateQueries({ queryKey: ["auditableAreas"] });
-        queryClient.invalidateQueries({ queryKey: ["strategicPillars"] });
-        queryClient.invalidateQueries({ queryKey: ["strategicInitiatives"] });
-        queryClient.invalidateQueries({ queryKey: ["indicativeTargets"] });
-        queryClient.invalidateQueries({ queryKey: ["risks"] });
-        // Reset form except universe selection
-        setItemData({
-          ...INIT_ITEM_DATA,
-          audit_universe_id: itemData.audit_universe_id
-        });
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to create universe item");
-      }
-    } catch (error) {
-      toast.error("Failed to create universe item. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    itemSubmitMutation.mutate(payload);
   };
 
   const universeOptions = useMemo(() => {
@@ -316,26 +448,19 @@ export default function AuditUniverseForm({
     }));
   }, [universesData, universes]);
 
-  const departmentsOptions = useMemo(() => {
-    return departmentsData?.map((department: any) => ({
-      id: department.id,
-      name: department?.name
-    }));
-  }, [departmentsData]);
+  // const auditableAreasOptions = useMemo(() => {
+  //   return auditableAreasData?.map((area: any) => ({
+  //     id: area.id,
+  //     name: area.name || area.title
+  //   }));
+  // }, [auditableAreasData]);
 
-  const auditableAreasOptions = useMemo(() => {
-    return auditableAreasData?.map((area: any) => ({
-      id: area.id,
-      name: area.name || area.title
-    }));
-  }, [auditableAreasData]);
-
-  const strategicPillarsOptions = useMemo(() => {
-    return strategicPillarsData?.map((pillar: any) => ({
-      id: pillar.id,
-      name: pillar.name || pillar.title
-    }));
-  }, [strategicPillarsData]);
+  // const strategicPillarsOptions = useMemo(() => {
+  //   return strategicPillarsData?.map((pillar: any) => ({
+  //     id: pillar.id,
+  //     name: pillar.name || pillar.title
+  //   }));
+  // }, [strategicPillarsData]);
 
   const indicativeTargetsOptions = useMemo(() => {
     return indicativeTargetsData?.map((target: any) => ({
@@ -351,12 +476,12 @@ export default function AuditUniverseForm({
     }));
   }, [risksData]);
 
-  const strategicInitiativesOptions = useMemo(() => {
-    return strategicInitiativesData?.map((initiative: any) => ({
-      id: initiative.id,
-      name: initiative.strategic_initiative_name || initiative.name || initiative.title
-    }));
-  }, [strategicInitiativesData]);
+  // const strategicInitiativesOptions = useMemo(() => {
+  //   return strategicInitiativesData?.map((initiative: any) => ({
+  //     id: initiative.id,
+  //     name: initiative.strategic_initiative_name || initiative.name || initiative.title
+  //   }));
+  // }, [strategicInitiativesData]);
 
   const processActivitiesOptions = useMemo(() => {
     return processActivitiesData?.map((activity: any) => ({
@@ -398,6 +523,8 @@ export default function AuditUniverseForm({
       );
     }
 
+    console.log("universeItemsData", universeItemsData);
+
     return (
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Form Section - 2 columns */}
@@ -407,30 +534,34 @@ export default function AuditUniverseForm({
             <div className="mb-8">
               <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
                 <span className="bg-primary h-8 w-1 rounded-full"></span>
-                Universe Item Information
+                {editingItemId ? "Edit Universe Item" : "Universe Item Information"}
               </h3>
               <p className="text-muted-foreground mt-2 text-sm">
-                Configure the universe item details and associations
+                {editingItemId
+                  ? "Update the universe item details and associations"
+                  : "Configure the universe item details and associations"}
               </p>
             </div>
 
             {/* Form Fields */}
             <div className="space-y-8">
               {/* Primary Information */}
-              <div className="space-y-6">
-                {/* Universe Item Name - Full Width */}
-                <Input
-                  id="name"
-                  label="Name"
-                  value={itemData.name}
-                  onChange={(e) => updateItemData({ name: e.target.value })}
-                  placeholder="Enter name"
-                  required={true}
-                />
-
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  {/* Universe Selection */}
-                  <SelectField
+              <div className="space-y-4">
+                {/* Universe Selection */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <Input
+                    id="name"
+                    label="Universe Entry Name"
+                    value={itemData.name}
+                    onChange={(e) => updateItemData({ name: e.target.value })}
+                    placeholder="Enter name"
+                    required={true}
+                    className="md:col-span-1"
+                    classNames={{
+                      wrapper: "md:col-span-1"
+                    }}
+                  />
+                  <SearchSelectField
                     id="audit_universe_id"
                     label="Universe"
                     required
@@ -438,169 +569,146 @@ export default function AuditUniverseForm({
                     value={String(itemData.audit_universe_id || "")}
                     onValueChange={(value) => updateItemData({ audit_universe_id: value })}
                     options={universeOptions}
-                    className="w-full"
+                    className="w-full md:col-span-2"
                     classNames={{
-                      wrapper: "w-full"
+                      wrapper: "w-full md:col-span-2"
                     }}
-                  />
-
-                  {/* Department Selection */}
-                  <SelectField
-                    id="department_id"
-                    label="Department"
-                    required
-                    placeholder="--Select a department--"
-                    value={itemData.department_id || ""}
-                    className="w-full"
-                    classNames={{
-                      wrapper: "w-full"
-                    }}
-                    onValueChange={(value) => updateItemData({ department_id: value })}
-                    options={departmentsOptions}
                   />
                 </div>
 
-                {/* Process/Activity - Full Width */}
                 <SearchSelectField
-                  id="process_activity"
-                  label="Process/Activity"
+                  id="department_id"
+                  label="Department / Functional Unit"
                   required
+                  placeholder="--Select a Department / Functional Unit--"
                   className="w-full max-w-none"
                   classNames={{
                     wrapper: "w-full max-w-none"
                   }}
-                  placeholder="Search and select a process/activity..."
+                  value={itemData.department_id}
+                  onValueChange={(value) => updateItemData({ department_id: value })}
+                  options={(departments as any) || []}
+                />
+
+                {/* Process/Activity - Full Width */}
+                <SearchSelectField
+                  id="process_activity_id"
+                  label="Process/Activity"
+                  required
+                  className="w-full max-w-none"
+                  classNames={{
+                    wrapper: "w-full max-w-none",
+                    descriptionText: "w-full mt-1 text-sm text-orange-500"
+                  }}
+                  disabled={!itemData.department_id}
+                  isDisabled={!itemData.department_id || isLoadingActivities}
+                  isLoading={isLoadingActivities}
+                  placeholder="--Select a process/activity--"
+                  descriptionText={
+                    !itemData.department_id ? "Please select a department first" : ""
+                  }
                   options={processActivitiesOptions || []}
-                  value={itemData.process_activity}
-                  onValueChange={(value) => updateItemData({ process_activity: value })}
+                  value={itemData.process_activity_id}
+                  onValueChange={handleProcessActivityChange}
                 />
               </div>
 
-              {/* Audit Configuration */}
-              <div className="border-t pt-6">
-                <h4 className="text-foreground mb-4 text-sm font-semibold">Audit Configuration</h4>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <div className="space-y-2">
-                    <SelectField
-                      id="audit_frequency"
-                      label="Audit Frequency"
-                      required
-                      placeholder="--Select an audit frequency--"
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      value={itemData.audit_frequency}
-                      onValueChange={(value) => updateItemData({ audit_frequency: value })}
-                      options={AUDIT_FREQUENCIES.map((freq) => ({
-                        id: freq,
-                        name: freq.replace("_", " ")
-                      }))}
-                    />
+              {/* Auto-Populated Fields (Read-only) */}
+              {itemData.process_activity_id && (
+                <div className="mb-4 border-t pt-6">
+                  <div className="mb-2">
+                    <h4 className="text-foreground text-sm font-semibold">Strategic Alignment</h4>
+                    <span className="text-muted-foreground text-xs">
+                      Auto-Populated from Process/Activity
+                    </span>
                   </div>
-
-                  <div className="space-y-2">
-                    <SelectField
-                      id="auditable_area_id"
-                      label="Auditable Area"
-                      placeholder="Select an area (optional)"
-                      required
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      value={itemData.auditable_area_id}
-                      onValueChange={(value) => updateItemData({ auditable_area_id: value })}
-                      options={auditableAreasOptions}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Strategic Alignment */}
-              <div className="border-t pt-6">
-                <h4 className="text-foreground mb-4 text-sm font-semibold">Strategic Alignment</h4>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <div className="space-y-2">
-                    <SelectField
-                      id="strategic_pillar_id"
-                      label="Strategic Pillar"
-                      placeholder="Select a pillar (optional)"
-                      required
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      value={itemData.strategic_pillar_id}
-                      onValueChange={(value) =>
-                        updateItemData({ strategic_pillar_id: value, strategic_initiative_id: "" })
-                      }
-                      options={strategicPillarsOptions}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <SelectField
-                      id="strategic_initiative_id"
-                      label="Strategic Initiative"
-                      placeholder={
-                        itemData.strategic_pillar_id
-                          ? "Select an initiative (optional)"
-                          : "Select a pillar first"
-                      }
-                      required
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      value={itemData.strategic_initiative_id}
-                      onValueChange={(value) => updateItemData({ strategic_initiative_id: value })}
-                      disabled={!itemData.strategic_pillar_id}
-                      options={strategicInitiativesOptions}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Associations */}
-              <div className="border-t pt-6">
-                <h4 className="text-foreground mb-4 text-sm font-semibold">
-                  Additional Associations
-                </h4>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <div className="space-y-2">
-                    <SelectField
-                      id="indicative_target_id"
-                      label="Indicative Target"
-                      placeholder="Select a target (optional)"
-                      required
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      value={itemData.indicative_target_id}
-                      onValueChange={(value) => updateItemData({ indicative_target_id: value })}
-                      options={indicativeTargetsOptions}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <SelectField
-                      id="risk_id"
-                      label="Associated Risk"
-                      placeholder="Select a risk (optional)"
-                      required
-                      className="w-full"
-                      classNames={{
-                        wrapper: "w-full"
-                      }}
-                      value={itemData.risk_id}
-                      onValueChange={(value) => updateItemData({ risk_id: value })}
-                      options={risksOptions}
-                    />
+                  <div className="space-y-4 rounded-lg border border-blue-100 bg-blue-50/20 p-4">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div className="">
+                        <h4 className="text-muted-foreground mb-0.5 text-sm font-medium">
+                          Auditable Area
+                        </h4>
+                        <p className="text-primary border-primary/10 bg-primary/5 max-w-md rounded-lg border p-2 text-sm font-bold wrap-break-word">
+                          {itemData.auditable_area_name || (
+                            <span className="text-muted-foreground cursor-not-allowed text-sm font-medium uppercase">
+                              Configuration unavailable
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="">
+                        <h4 className="text-muted-foreground mb-0.5 text-sm font-medium">
+                          Strategic Pillar
+                        </h4>
+                        <p className="text-primary border-primary/10 bg-primary/5 max-w-md rounded-lg border p-2 text-sm font-bold wrap-break-word">
+                          {itemData.strategic_pillar_name || (
+                            <span className="text-muted-foreground cursor-not-allowed text-sm font-medium uppercase">
+                              Configuration unavailable
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <SelectField
+                        id="strategic_initiative_id"
+                        label="Strategic Initiative"
+                        required
+                        placeholder="--Select a strategic initiative--"
+                        className="w-full"
+                        classNames={{
+                          wrapper: "w-full"
+                        }}
+                        value={itemData.strategic_initiative_id}
+                        onValueChange={(value) =>
+                          updateItemData({ strategic_initiative_id: value })
+                        }
+                        options={strategicInitiativesData}
+                      />
+                      <SelectField
+                        id="audit_frequency"
+                        label="Audit Frequency"
+                        required
+                        placeholder="--Select an audit frequency--"
+                        className="w-full"
+                        classNames={{
+                          wrapper: "w-full"
+                        }}
+                        value={itemData.audit_frequency}
+                        onValueChange={(value) => updateItemData({ audit_frequency: value })}
+                        options={AUDIT_FREQUENCIES.map((freq) => ({
+                          id: freq,
+                          name: freq.replace("_", " ")
+                        }))}
+                      />
+                      <SelectField
+                        id="indicative_target_id"
+                        label="Indicative Target"
+                        placeholder="Select a target (optional)"
+                        required
+                        className="w-full"
+                        classNames={{
+                          wrapper: "w-full"
+                        }}
+                        value={itemData.indicative_target_id}
+                        onValueChange={(value) => updateItemData({ indicative_target_id: value })}
+                        options={indicativeTargetsOptions}
+                      />{" "}
+                      <SelectField
+                        id="risk_id"
+                        label="Associated Risk"
+                        placeholder="Select a risk (optional)"
+                        required
+                        className="w-full"
+                        classNames={{
+                          wrapper: "w-full"
+                        }}
+                        value={itemData.risk_id}
+                        onValueChange={(value) => updateItemData({ risk_id: value })}
+                        options={risksOptions}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Status */}
               <div className="border-t pt-6">
@@ -629,17 +737,26 @@ export default function AuditUniverseForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push("/dashboard/audit/universe")}
-                disabled={isSubmitting}
+                onClick={
+                  editingItemId ? handleCancelEdit : () => router.push("/dashboard/audit/universe")
+                }
+                disabled={itemSubmitMutation.isPending}
                 className="w-full min-w-[120px] sm:w-auto">
-                Cancel
+                {editingItemId ? "Cancel Edit" : "Cancel"}
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={itemSubmitMutation.isPending}
+                isLoading={itemSubmitMutation.isPending}
                 className="w-full min-w-[180px] gap-2 sm:w-auto">
                 <Save className="h-4 w-4" />
-                {isSubmitting ? "Creating..." : "Create Universe Item"}
+                {itemSubmitMutation.isPending
+                  ? editingItemId
+                    ? "Saving..."
+                    : "Creating..."
+                  : editingItemId
+                    ? "Save Changes"
+                    : "Create Universe Item"}
               </Button>
             </div>
           </form>
@@ -654,9 +771,9 @@ export default function AuditUniverseForm({
                 Universe Entries
               </h3>
               {universeItemsData && universeItemsData.length > 0 && (
-                <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-medium">
+                <Badge variant={"secondary"} className="p-1 px-4 text-sm font-medium">
                   {universeItemsData.length}
-                </span>
+                </Badge>
               )}
             </div>
 
@@ -687,10 +804,26 @@ export default function AuditUniverseForm({
                   <div
                     key={item.id || index}
                     className="hover:bg-muted/50 group rounded-lg border p-3 transition-colors">
-                    <div className="mb-1.5 flex items-start justify-between">
-                      <h4 className="text-foreground line-clamp-2 text-sm font-medium">
-                        {item.process_activity || "Unnamed Activity"}
+                    <div className="mb-1.5 flex items-start justify-between gap-2">
+                      <h4 className="text-foreground line-clamp-2 flex-1 text-sm font-medium">
+                        {item.name || "Unnamed Activity"}
                       </h4>
+                      <div className="flex gap-1 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className=""
+                          onClick={() => handleEditItem(item)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteClick(item.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <p className="text-muted-foreground text-xs">
@@ -714,6 +847,23 @@ export default function AuditUniverseForm({
             )}
           </div>
         </Card>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          open={deleteConfirmOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeleteConfirmOpen(false);
+              setItemToDelete(null);
+            }
+          }}
+          onConfirm={handleConfirmDelete}
+          title="Delete Universe Item"
+          description="Are you sure you want to delete this universe item? This action cannot be undone."
+          confirmText="Delete"
+          type="delete"
+          isLoading={deleteItemMutation.isPending}
+        />
       </div>
     );
   }
@@ -726,10 +876,12 @@ export default function AuditUniverseForm({
         <div className="p-6 pb-0 sm:p-8">
           <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary h-8 w-1 rounded-full"></span>
-            Basic Information
+            {isEditing ? "Edit Universe" : "Create New Universe"}
           </h3>
           <p className="text-muted-foreground mt-2 ml-3 text-sm">
-            Configure the universe details and active period
+            {isEditing
+              ? "Update the universe details and active period"
+              : "Configure the universe details and active period"}
           </p>
         </div>
 
@@ -737,11 +889,9 @@ export default function AuditUniverseForm({
         <div className="space-y-6 p-6 sm:p-8">
           {/* Universe Name - Full Width */}
           <div className="space-y-2">
-            <Label htmlFor="universe_name" className="text-sm font-medium">
-              Universe Name <span className="text-destructive">*</span>
-            </Label>
             <Input
               id="universe_name"
+              label="Universe Name"
               value={universeData.universe_name}
               onChange={(e) => updateUniverseData({ universe_name: e.target.value })}
               placeholder="Enter universe name"
@@ -800,15 +950,15 @@ export default function AuditUniverseForm({
             type="button"
             variant="outline"
             onClick={() => router.push("/dashboard/audit/universe")}
-            disabled={isSubmitting}
+            disabled={universeSubmitMutation.isPending}
             className="w-full min-w-[120px] sm:w-auto">
             Cancel
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={universeSubmitMutation.isPending}
             className="w-full min-w-[160px] gap-2 sm:w-auto"
-            isLoading={isSubmitting}
+            isLoading={universeSubmitMutation.isPending}
             loadingText={isEditing ? "Updating..." : "Creating..."}>
             <Save className="h-4 w-4" />
             {isEditing ? "Update Universe" : "Create Universe"}

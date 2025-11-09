@@ -799,13 +799,14 @@ export interface CreateUniversePayload {
 
 export interface CreateUniverseItemPayload {
   audit_universe_id: number;
+  name: string;
   department_id: string;
   strategic_pillar_id?: string | null;
   auditable_area_id?: string | null;
   indicative_target_id?: string | null;
   strategic_initiative_id?: string | null;
   risk_id?: string | null;
-  process_activity: string;
+  process_activity_id: string;
   audit_frequency: string;
   is_active: boolean;
 }

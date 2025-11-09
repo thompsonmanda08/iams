@@ -9,7 +9,9 @@ This document provides a comprehensive summary of all TypeScript types generated
 ## What's Included
 
 ### 1. **Type Definitions** (`risk-types.ts`)
+
 Complete TypeScript type definitions covering:
+
 - Risk register and category types
 - Risk owner and user types
 - Risk status, response, and magnitude enums
@@ -23,7 +25,9 @@ Complete TypeScript type definitions covering:
 **Lines**: 263 lines of well-organized types
 
 ### 2. **Comprehensive Guide** (`RISK_TYPES_GUIDE.md`)
+
 Detailed documentation including:
+
 - Type definitions with descriptions
 - Field-by-field breakdowns
 - Status flow diagrams
@@ -34,7 +38,9 @@ Detailed documentation including:
 **Location**: `lib/types/RISK_TYPES_GUIDE.md`
 
 ### 3. **Quick Reference** (`RISK_TYPES_QUICK_REFERENCE.md`)
+
 Developer cheat sheet with:
+
 - Import statements
 - Type cheat sheet table
 - Common usage patterns
@@ -50,6 +56,7 @@ Developer cheat sheet with:
 ## Type Categories
 
 ### 📋 Core Domain Types
+
 - `RiskTableRow` - Single risk in list view
 - `ActionFindings` - Complete findings submission
 - `RiskCategory` - Risk categorization
@@ -57,6 +64,7 @@ Developer cheat sheet with:
 - `Department` - Organizational unit
 
 ### 📝 Input Types (for forms & submissions)
+
 - `SubmitActionFindingsInput` - Submit findings form
 - `AssessActionFindingsInput` - Reviewer assessment
 - `RiskActionQueryParams` - List filtering
@@ -65,6 +73,7 @@ Developer cheat sheet with:
 - `AssessmentFormData` - Client form state
 
 ### ✅ Status & Validation Types
+
 - `ActionFindingsStatus` - "OPEN" | "PENDING_REVIEW" | "COMPLETED" | "NEEDS_REVISION"
 - `RiskStatus` - "OPEN" | "CLOSED" | "PENDING_REVIEW" | "MITIGATED"
 - `RiskResponse` - "REDUCE" | "ACCEPT" | "AVOID" | "SHARE"
@@ -72,6 +81,7 @@ Developer cheat sheet with:
 - `AssessmentFormErrors` - Form validation errors
 
 ### 🔄 API Response Types
+
 - `RisksResponse` - List of risks with pagination
 - `ActionFindingsResponse` - List of findings
 - `SubmitActionFindingsResponse` - Submission result
@@ -79,6 +89,7 @@ Developer cheat sheet with:
 - `PaginationMeta` - Pagination metadata
 
 ### 🎯 Supporting Types
+
 - `RiskScore` - Risk scoring
 - `RiskSeverityLevel` - Severity classification
 - `RiskActionOwnerAssignment` - Owner assignment
@@ -89,6 +100,7 @@ Developer cheat sheet with:
 ## Key Relationships
 
 ### Risk → Action Findings Flow
+
 ```
 RiskTableRow
   ├─ risk_id (string)
@@ -101,6 +113,7 @@ RiskTableRow
 ```
 
 ### Status State Machine
+
 ```
 OPEN
   ├─ (User submits via ActionFindingsDialog)
@@ -114,6 +127,7 @@ OPEN
 ```
 
 ### Component → Type Mapping
+
 ```
 ActionsTable
   ├─ Input: RiskTableRow[]
@@ -140,16 +154,18 @@ ActionFindingsDisplay
 ## Usage Patterns
 
 ### Pattern 1: Fetching Risks
+
 ```typescript
 import type { RisksResponse } from "@/lib/types/risk-types";
 
-const response: RisksResponse = await getRisks({
+const response: RisksResponse = await getAllRisks{
   risk_action_owner_id: userId,
   page: 1
 });
 ```
 
 ### Pattern 2: Submitting Findings
+
 ```typescript
 import type { SubmitActionFindingsInput } from "@/lib/types/risk-types";
 
@@ -164,6 +180,7 @@ const result = await submitActionFindings(input);
 ```
 
 ### Pattern 3: Type-Safe Form State
+
 ```typescript
 import type { ActionFindingsFormData } from "@/lib/types/risk-types";
 
@@ -174,6 +191,7 @@ const [data, setData] = useState<ActionFindingsFormData>({
 ```
 
 ### Pattern 4: Validation
+
 ```typescript
 import type { ActionFindingsFormErrors } from "@/lib/types/risk-types";
 
@@ -184,6 +202,7 @@ if (!data.description) {
 ```
 
 ### Pattern 5: Reviewer Assessment
+
 ```typescript
 import type { AssessActionFindingsInput } from "@/lib/types/risk-types";
 
@@ -213,6 +232,7 @@ const result = await assessActionFindings(findingId, assessment);
 ## Migration Path: Mock → Real API
 
 ### Current (Mock Data)
+
 ```typescript
 // app/dashboard/(modules)/risks/actions/page.tsx
 const mockRisks: RiskTableRow[] = [
@@ -221,9 +241,10 @@ const mockRisks: RiskTableRow[] = [
 ```
 
 ### After Real API Connection
+
 ```typescript
 // app/_actions/risk-module-actions.ts
-export async function getRisks(params: RiskActionQueryParams): Promise<RisksResponse> {
+export async function getAllRisksparams: RiskActionQueryParams): Promise<RisksResponse> {
   const response = await fetch('https://api.company.com/risks', {
     body: JSON.stringify(params)
   });
@@ -263,15 +284,15 @@ app/dashboard/(modules)/risks/
 
 ## Type Count & Statistics
 
-| Category | Count |
-|----------|-------|
-| Type Definitions | 25+ |
-| Enum-like Types | 6 |
-| Form-Related Types | 4 |
-| API Response Types | 5 |
-| Input Types | 5 |
-| Supporting Types | 5+ |
-| **Total** | **~50 types** |
+| Category           | Count         |
+| ------------------ | ------------- |
+| Type Definitions   | 25+           |
+| Enum-like Types    | 6             |
+| Form-Related Types | 4             |
+| API Response Types | 5             |
+| Input Types        | 5             |
+| Supporting Types   | 5+            |
+| **Total**          | **~50 types** |
 
 ---
 
@@ -304,16 +325,19 @@ app/dashboard/(modules)/risks/
 ## Next Steps
 
 ### Short-term
+
 1. Review types with team
 2. Use in additional components as needed
 3. Add JSDoc comments to types (optional)
 
 ### Medium-term
+
 1. Connect to real API endpoints
 2. Update response types if API differs
 3. Add runtime validation (zod/joi)
 
 ### Long-term
+
 1. Generate OpenAPI schema from types
 2. Generate API client from types
 3. Share types with backend team
@@ -323,24 +347,27 @@ app/dashboard/(modules)/risks/
 ## Testing & Validation
 
 ### Type Checking
+
 ```bash
 npm run type-check
 # or in VSCode: View → Problems
 ```
 
 ### Build Verification
+
 ```bash
 npm run build
 # ✓ Compiled successfully
 ```
 
 ### Runtime Validation (Optional)
+
 ```typescript
 import { z } from "zod";
 
 const RiskTableRowSchema = z.object({
   id: z.string(),
-  title: z.string(),
+  title: z.string()
   // ... other fields
 });
 
@@ -362,6 +389,7 @@ type RiskTableRow = z.infer<typeof RiskTableRowSchema>;
 ## Support
 
 For questions about types:
+
 1. Check `RISK_TYPES_QUICK_REFERENCE.md` for quick answers
 2. Read `RISK_TYPES_GUIDE.md` for detailed explanations
 3. Review examples in components

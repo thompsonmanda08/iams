@@ -26,6 +26,7 @@ All types are defined in `lib/types/risk-types.ts` and exported for use througho
 ## Risk Register Types
 
 ### `RiskRegisterBranch`
+
 Represents a branch within a risk register.
 
 ```typescript
@@ -37,6 +38,7 @@ export type RiskRegisterBranch = {
 ```
 
 ### `RiskRegister`
+
 Main risk register type containing risk information for a specific branch and time period.
 
 ```typescript
@@ -58,6 +60,7 @@ export type RiskRegister = {
 ```
 
 ### `RiskRegistersResponse`
+
 API response type for risk registers list.
 
 ```typescript
@@ -75,6 +78,7 @@ export type RiskRegistersResponse = {
 ## Risk Category Types
 
 ### `RiskCategory`
+
 Categorizes risks (e.g., "Technology", "Compliance", "Data Protection").
 
 ```typescript
@@ -91,6 +95,7 @@ export type RiskCategory = {
 ## Risk Owner & User Types
 
 ### `RiskOwner`
+
 User who owns/manages the risk.
 
 ```typescript
@@ -103,6 +108,7 @@ export type RiskOwner = {
 ```
 
 ### `Department`
+
 Department responsible for the risk.
 
 ```typescript
@@ -132,6 +138,7 @@ export type DepartmentStatus = "OPEN" | "CLOSED";
 ## Risk Table Types
 
 ### `RiskTableRow`
+
 Represents a single row in the ActionsTable component. This is the data structure displayed in the actions list.
 
 ```typescript
@@ -144,21 +151,22 @@ export type RiskTableRow = {
   risk_owner: RiskOwner;
   status: string;
   department_status: DepartmentStatus;
-  inherent_likelihood: number;      // 1-5
-  inherent_impact: number;          // 1-5
-  residual_likelihood: number;      // 1-5
-  residual_impact: number;          // 1-5
+  inherent_likelihood: number; // 1-5
+  inherent_impact: number; // 1-5
+  residual_likelihood: number; // 1-5
+  residual_impact: number; // 1-5
   risk_response: RiskResponse;
-  target_closing_date: string;      // ISO date format
+  target_closing_date: string; // ISO date format
   treatment_plan: string;
-  control_effectiveness: number;    // 0-10
+  control_effectiveness: number; // 0-10
   mitigation_cost: number;
-  created_at: string;               // ISO timestamp
-  updated_at: string;               // ISO timestamp
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
 };
 ```
 
 **Usage in ActionsTable:**
+
 ```typescript
 import type { RiskTableRow } from "@/lib/types/risk-types";
 
@@ -173,29 +181,31 @@ interface ActionsTableProps {
 ## Action Findings Types
 
 ### `ActionFindings`
+
 Complete action findings submission with all metadata.
 
 ```typescript
 export type ActionFindings = {
-  id: string;                       // Unique identifier (e.g., "AF-2024-001")
-  risk_id: string;                  // Associated risk ID
-  action_owner_id: string;          // User who submitted findings
-  description: string;              // What action was taken
-  evidence_notes?: string;          // Supporting evidence details
-  evidence_file_url?: string;       // Cloud storage URL
-  evidence_file_name?: string;      // Original filename
-  submission_date: Date | string;   // When submitted
-  status: ActionFindingsStatus;     // Current status
-  reviewer_id?: string;             // Who reviewed it
-  reviewer_feedback?: string;       // Detailed feedback
-  assessment_score?: number;        // 0-10 scale
-  assessment_date?: Date | string;  // When assessed
+  id: string; // Unique identifier (e.g., "AF-2024-001")
+  risk_id: string; // Associated risk ID
+  action_owner_id: string; // User who submitted findings
+  description: string; // What action was taken
+  evidence_notes?: string; // Supporting evidence details
+  evidence_file_url?: string; // Cloud storage URL
+  evidence_file_name?: string; // Original filename
+  submission_date: Date | string; // When submitted
+  status: ActionFindingsStatus; // Current status
+  reviewer_id?: string; // Who reviewed it
+  reviewer_feedback?: string; // Detailed feedback
+  assessment_score?: number; // 0-10 scale
+  assessment_date?: Date | string; // When assessed
   created_at: Date | string;
   updated_at: Date | string;
 };
 ```
 
 **Status Flow:**
+
 ```
 OPEN
   ↓ (User submits findings)
@@ -207,27 +217,29 @@ PENDING_REVIEW
 ```
 
 ### `SubmitActionFindingsInput`
+
 Input type for submitting action findings.
 
 ```typescript
 export type SubmitActionFindingsInput = {
   risk_id: string;
   action_owner_id: string;
-  description: string;              // Required, what was done
-  evidence_notes?: string;          // Optional supporting notes
-  evidence_file_url?: string;       // File upload URL
-  evidence_file_name?: string;      // Original filename
+  description: string; // Required, what was done
+  evidence_notes?: string; // Optional supporting notes
+  evidence_file_url?: string; // File upload URL
+  evidence_file_name?: string; // Original filename
 };
 ```
 
 ### `AssessActionFindingsInput`
+
 Input type for reviewer assessment.
 
 ```typescript
 export type AssessActionFindingsInput = {
   reviewer_id: string;
-  assessment_score: number;         // 0-10
-  reviewer_feedback: string;        // Required detailed feedback
+  assessment_score: number; // 0-10
+  reviewer_feedback: string; // Required detailed feedback
   decision: "APPROVE" | "REQUEST_CHANGES";
 };
 ```
@@ -237,17 +249,19 @@ export type AssessActionFindingsInput = {
 ## Form Types
 
 ### `ActionFindingsFormData`
+
 Client-side form state for submission dialog.
 
 ```typescript
 export type ActionFindingsFormData = {
-  description: string;              // User's action description
-  evidence_notes?: string;          // Supporting notes
-  evidence_file?: File;             // File upload
+  description: string; // User's action description
+  evidence_notes?: string; // Supporting notes
+  evidence_file?: File; // File upload
 };
 ```
 
 ### `ActionFindingsFormErrors`
+
 Validation errors for submission form.
 
 ```typescript
@@ -259,17 +273,19 @@ export type ActionFindingsFormErrors = {
 ```
 
 ### `AssessmentFormData`
+
 Client-side form state for reviewer assessment.
 
 ```typescript
 export type AssessmentFormData = {
-  assessment_score: number;         // 0-10 slider
-  reviewer_feedback: string;        // Required feedback
+  assessment_score: number; // 0-10 slider
+  reviewer_feedback: string; // Required feedback
   decision: "APPROVE" | "REQUEST_CHANGES";
 };
 ```
 
 ### `AssessmentFormErrors`
+
 Validation errors for assessment form.
 
 ```typescript
@@ -285,7 +301,8 @@ export type AssessmentFormErrors = {
 ## API Response Types
 
 ### `RisksResponse`
-Response from `getRisks()` server action.
+
+Response from `getAllRisks)` server action.
 
 ```typescript
 export type RisksResponse = {
@@ -295,6 +312,7 @@ export type RisksResponse = {
 ```
 
 ### `ActionFindingsResponse`
+
 Response from `getActionFindings()` server action.
 
 ```typescript
@@ -305,6 +323,7 @@ export type ActionFindingsResponse = {
 ```
 
 ### `SubmitActionFindingsResponse`
+
 Response from `submitActionFindings()` server action.
 
 ```typescript
@@ -316,6 +335,7 @@ export type SubmitActionFindingsResponse = {
 ```
 
 ### `AssessActionFindingsResponse`
+
 Response from `assessActionFindings()` server action.
 
 ```typescript
@@ -327,6 +347,7 @@ export type AssessActionFindingsResponse = {
 ```
 
 ### `PaginationMeta`
+
 Pagination metadata included in list responses.
 
 ```typescript
@@ -345,23 +366,25 @@ export type PaginationMeta = {
 ## Query Parameter Types
 
 ### `RiskActionQueryParams`
+
 Parameters for filtering risks in actions list.
 
 ```typescript
 export type RiskActionQueryParams = {
-  risk_action_owner_id?: string;    // Filter by action owner
-  status?: RiskStatus;              // Filter by status
-  department_id?: string;           // Filter by department
-  category_id?: string;             // Filter by category
-  search?: string;                  // Full-text search
+  risk_action_owner_id?: string; // Filter by action owner
+  status?: RiskStatus; // Filter by status
+  department_id?: string; // Filter by department
+  category_id?: string; // Filter by category
+  search?: string; // Full-text search
   page?: number;
   page_size?: number;
 };
 ```
 
 **Usage:**
+
 ```typescript
-const response = await getRisks({
+const response = await getAllRisks{
   risk_action_owner_id: user.id,
   status: "OPEN",
   page: 1,
@@ -370,6 +393,7 @@ const response = await getRisks({
 ```
 
 ### `ActionFindingsQueryParams`
+
 Parameters for filtering action findings.
 
 ```typescript
@@ -388,18 +412,20 @@ export type ActionFindingsQueryParams = {
 ## Risk Scoring Types
 
 ### `RiskScore`
+
 Risk score calculations.
 
 ```typescript
 export type RiskScore = {
-  inherent_score: number;    // Initial risk score (likelihood × impact)
-  residual_score: number;    // After controls applied
-  likelihood: number;        // 1-5 scale
-  impact: number;           // 1-5 scale
+  inherent_score: number; // Initial risk score (likelihood × impact)
+  residual_score: number; // After controls applied
+  likelihood: number; // 1-5 scale
+  impact: number; // 1-5 scale
 };
 ```
 
 ### `RiskSeverityLevel`
+
 Risk severity classification.
 
 ```typescript
@@ -416,7 +442,7 @@ export type RiskSeverityLevel = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 import type { RiskTableRow, RisksResponse } from "@/lib/types/risk-types";
 import { getRisks } from "@/app/_actions/risk-module-actions";
 
-const response = await getRisks({
+const response = await getAllRisks{
   risk_action_owner_id: user.id,
   page: 1,
   page_size: 10
@@ -430,7 +456,10 @@ const pagination = response.pagination;
 ### Example 2: Submitting Action Findings
 
 ```typescript
-import type { SubmitActionFindingsInput, SubmitActionFindingsResponse } from "@/lib/types/risk-types";
+import type {
+  SubmitActionFindingsInput,
+  SubmitActionFindingsResponse
+} from "@/lib/types/risk-types";
 import { submitActionFindings } from "@/app/_actions/risk-module-actions";
 
 const input: SubmitActionFindingsInput = {
@@ -453,7 +482,7 @@ import { useState } from "react";
 export function ActionFindingsForm() {
   const [formData, setFormData] = useState<ActionFindingsFormData>({
     description: "",
-    evidence_notes: "",
+    evidence_notes: ""
   });
 
   const [errors, setErrors] = useState<ActionFindingsFormErrors>({});
@@ -485,7 +514,8 @@ import { assessActionFindings } from "@/app/_actions/risk-module-actions";
 const assessment: AssessActionFindingsInput = {
   reviewer_id: "reviewer-123",
   assessment_score: 9,
-  reviewer_feedback: "Excellent implementation of controls. Minor recommendations for documentation.",
+  reviewer_feedback:
+    "Excellent implementation of controls. Minor recommendations for documentation.",
   decision: "APPROVE"
 };
 
@@ -510,6 +540,7 @@ const assignment: RiskActionOwnerAssignment = {
 ## Best Practices
 
 1. **Always use imported types** instead of creating inline types
+
    ```typescript
    // ✅ Good
    import type { RiskTableRow } from "@/lib/types/risk-types";
@@ -520,6 +551,7 @@ const assignment: RiskActionOwnerAssignment = {
    ```
 
 2. **Use type annotations for function parameters**
+
    ```typescript
    // ✅ Good
    async function submitFindings(input: SubmitActionFindingsInput) {
@@ -533,6 +565,7 @@ const assignment: RiskActionOwnerAssignment = {
    ```
 
 3. **Leverage union types for status checks**
+
    ```typescript
    // ✅ Good - TypeScript catches invalid statuses
    const isCompleted = status === "COMPLETED";
@@ -542,6 +575,7 @@ const assignment: RiskActionOwnerAssignment = {
    ```
 
 4. **Keep form data separate from API input**
+
    ```typescript
    // Form data (client-side)
    const formData: ActionFindingsFormData = { ... };
@@ -575,7 +609,7 @@ const assignment: RiskActionOwnerAssignment = {
 
 When connecting to real backend:
 
-1. Update `getRisks()` to use real API endpoint
+1. Update `getAllRisks)` to use real API endpoint
 2. Update `submitActionFindings()` to send to real endpoint
 3. Update `assessActionFindings()` to update real database
 4. Ensure API responses match type definitions

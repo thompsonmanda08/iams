@@ -20,6 +20,7 @@ export interface Risk {
 **Purpose**: Identifies which user is responsible for submitting evidence of risk mitigation actions.
 
 **Difference from `risk_owner_id`**:
+
 - `risk_owner_id`: Original risk owner/manager (identifies the risk)
 - `risk_action_owner_id`: Action owner (submits mitigation evidence)
 
@@ -45,6 +46,7 @@ Allows filtering risks by action owner.
 **File**: `app/_actions/risk-module-actions.ts:935-989`
 
 **Key Changes**:
+
 - Now filters by `risk_action_owner_id` when provided
 - Supports mock data filtering for testing
 - Implements pagination with mock data
@@ -52,6 +54,7 @@ Allows filtering risks by action owner.
 - Supports filtering by status
 
 **Mock Filtering Logic**:
+
 ```typescript
 if (params?.risk_action_owner_id) {
   results = results.filter((r) => r.risk_action_owner_id === params.risk_action_owner_id);
@@ -65,12 +68,13 @@ if (params?.risk_action_owner_id) {
 **File**: `app/dashboard/(modules)/risks/actions/page.tsx:16`
 
 **Change**:
+
 ```typescript
 // Before
-const response = await getRisks({ risk_owner_id: user?.id });
+const response = await getAllRisks{ risk_owner_id: user?.id });
 
 // After
-const response = await getRisks({ risk_action_owner_id: user?.id });
+const response = await getAllRisks{ risk_action_owner_id: user?.id });
 ```
 
 **Impact**: Users now see risks **assigned to them for action submission**, not risks they created.
@@ -82,6 +86,7 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 **File**: `app/_actions/risk-module-actions.ts:357-453`
 
 **Added to Each Risk**:
+
 - `risk_action_owner_id`: User ID responsible for submission
 - `category_id`: Category identifier
 - `department_id`: Department identifier
@@ -91,12 +96,14 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 - `control_effectiveness`: Current effectiveness score
 
 **New Risks Added**: 4 comprehensive mock risks
+
 - Cyber Security Breach Risk (Risk 1)
 - Regulatory Compliance Risk (Risk 2)
 - Data Privacy Incident Risk (Risk 3)
 - Business Continuity Risk (Risk 4)
 
 **Action Owner Distribution**:
+
 - `user-action-owner-1`: Risks 1, 3
 - `user-action-owner-2`: Risks 2, 4
 
@@ -105,6 +112,7 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 ## Components Created/Updated
 
 ### New Components
+
 1. **ActionFindingsDialog** - Submission form
 2. **ActionFindingsDisplay** - Evidence viewer
 3. **ActionAssessmentForm** - Reviewer interface
@@ -113,6 +121,7 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 6. **MOCK_DATA_REFERENCE.md** - Data reference
 
 ### Updated Components
+
 1. **ActionsTable** - Added "Submit Findings" button
 2. **ActionsPage** - Changed filter to `risk_action_owner_id`
 3. **RiskQueryParams** - Added `risk_action_owner_id`
@@ -170,27 +179,30 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 ## Mock Data Distribution
 
 ### Risk Assignment
-| Risk | Title | Severity | Action Owner | Status |
-|------|-------|----------|--------------|--------|
-| 1 | Cyber Security Breach | HIGH | user-action-owner-1 | OPEN |
-| 2 | Regulatory Compliance | MEDIUM | user-action-owner-2 | OPEN |
-| 3 | Data Privacy Incident | HIGH | user-action-owner-1 | OPEN |
-| 4 | Business Continuity | MEDIUM | user-action-owner-2 | OPEN |
+
+| Risk | Title                 | Severity | Action Owner        | Status |
+| ---- | --------------------- | -------- | ------------------- | ------ |
+| 1    | Cyber Security Breach | HIGH     | user-action-owner-1 | OPEN   |
+| 2    | Regulatory Compliance | MEDIUM   | user-action-owner-2 | OPEN   |
+| 3    | Data Privacy Incident | HIGH     | user-action-owner-1 | OPEN   |
+| 4    | Business Continuity   | MEDIUM   | user-action-owner-2 | OPEN   |
 
 ### Action Findings Examples
-| ID | Risk | Status | Score | Example |
-|---|----|--------|-------|---------|
-| AF-2024-001 | 1 | COMPLETED | 9/10 | Approved MFA implementation |
-| AF-2024-002 | 1 | PENDING_REVIEW | N/A | Vulnerability assessment awaiting review |
-| AF-2024-003 | 2 | NEEDS_REVISION | 5/10 | GDPR policy needs improvements |
-| AF-2024-004 | 1 | COMPLETED | 10/10 | Perfect security training execution |
-| AF-2024-005 | 2 | OPEN | N/A | Not yet submitted |
+
+| ID          | Risk | Status         | Score | Example                                  |
+| ----------- | ---- | -------------- | ----- | ---------------------------------------- |
+| AF-2024-001 | 1    | COMPLETED      | 9/10  | Approved MFA implementation              |
+| AF-2024-002 | 1    | PENDING_REVIEW | N/A   | Vulnerability assessment awaiting review |
+| AF-2024-003 | 2    | NEEDS_REVISION | 5/10  | GDPR policy needs improvements           |
+| AF-2024-004 | 1    | COMPLETED      | 10/10 | Perfect security training execution      |
+| AF-2024-005 | 2    | OPEN           | N/A   | Not yet submitted                        |
 
 ---
 
 ## Key Features Demonstrated
 
 ### ✅ Submission Workflow
+
 - Action owners view assigned risks
 - Click "Submit Findings" button
 - Fill dialog with action description and evidence
@@ -198,6 +210,7 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 - Status changes to PENDING_REVIEW
 
 ### ✅ Review Workflow
+
 - Reviewer assesses submitted findings
 - Provides score (0-10)
 - Gives detailed feedback
@@ -205,12 +218,14 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 - Status updated accordingly
 
 ### ✅ Status Tracking
+
 - **OPEN**: Awaiting submission
 - **PENDING_REVIEW**: Submitted, awaiting assessment
 - **COMPLETED**: Approved
 - **NEEDS_REVISION**: Requires more action
 
 ### ✅ Demo Showcase
+
 - View all findings at `/dashboard/risks/actions-demo`
 - Filter by status
 - See complete workflow examples
@@ -221,6 +236,7 @@ const response = await getRisks({ risk_action_owner_id: user?.id });
 ## Files Modified/Created
 
 ### Created Files
+
 ```
 app/dashboard/(modules)/risks/_components/action-findings-dialog.tsx
 app/dashboard/(modules)/risks/_components/action-findings-display.tsx
@@ -233,6 +249,7 @@ app/dashboard/(modules)/risks/ACTION_FINDINGS_SUMMARY.md
 ```
 
 ### Modified Files
+
 ```
 app/_actions/risk-module-actions.ts (87 lines, 150 lines, 357-453, 935-989)
 app/dashboard/(modules)/risks/actions/page.tsx (line 16)
@@ -257,12 +274,14 @@ hooks/use-audit-settings-query-data.ts (added useBudgets hook)
 ### Quick Start
 
 1. **View Actions Assigned to You**
+
    ```
    Navigate to: /dashboard/risks/actions
    Filter: By current user's risk_action_owner_id
    ```
 
 2. **Submit Findings**
+
    ```
    1. Click "Submit Findings" on any OPEN risk
    2. Fill ActionFindingsDialog
@@ -286,6 +305,7 @@ hooks/use-audit-settings-query-data.ts (added useBudgets hook)
 ### Mock Credentials
 
 Use these action owner IDs for testing:
+
 - `user-action-owner-1` (2 risks assigned)
 - `user-action-owner-2` (2 risks assigned)
 
@@ -294,6 +314,7 @@ Use these action owner IDs for testing:
 ## Implementation Details
 
 ### Database Relationships (Planned)
+
 ```
 Risk
 ├─ id: string
@@ -314,6 +335,7 @@ ActionFindings
 ```
 
 ### API Endpoints (Mock Implementation)
+
 ```
 GET /api/v1/risks?risk_action_owner_id={userId}
   → Returns risks assigned to action owner
@@ -332,7 +354,7 @@ PUT /api/v1/action-findings/{id}/assess
 
 ## Next Steps (When Connecting to Real API)
 
-1. Replace mock filtering in `getRisks()` with real API calls
+1. Replace mock filtering in `getAllRisks)` with real API calls
 2. Implement real file upload to cloud storage
 3. Add notification system for status changes
 4. Implement user authentication with real IDs

@@ -1,7 +1,5 @@
 import { ActionDetails } from "../action-details";
-import { getRisk, getRisks } from "@/app/_actions/risk-module-actions";
-import { User } from "@/lib/types/account";
-import { verifySession } from "@/lib/session";
+import { getRisk } from "@/app/_actions/risk-module-actions";
 
 export default async function ActionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

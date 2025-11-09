@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { getRisks } from "@/app/_actions/risk-module-actions";
+import { getAllRisks } from "@/app/_actions/risk-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { getRiskMatrices, getEffectivenessLevels } from "@/app/_actions/config-actions";
 import { RiskMatrix, RiskControls } from "@/lib/types/risk-type";
@@ -65,17 +65,17 @@ export function useEffectivenessLevels(enabled: boolean = true) {
  * @returns Query result with risks data
  */
 export const useRisks = (params?: {
-  search?: string;
-  category?: string;
+  branch_id?: string;
   status?: string;
+  name?: string;
   page?: number;
-  limit?: number;
-  risk_owner_id?: string;
+  page_size?: number;
+  department_id?: string;
 }) => {
   return useQuery({
     queryKey: [QUERY_KEYS.RISKS, params],
     queryFn: async () => {
-      const response = await getRisks(params);
+      const response = await getAllRisks(params);
       if (!response.success) {
         throw new Error(response.message);
       }
