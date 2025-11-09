@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "8b30eec9-1deb-4dc5-893f-1163a8af9482",
+		"_postman_id": "fc56a80a-438c-48c5-bbaf-2e95b47193ef",
 		"name": "Risk Audit Management System - Complete API",
 		"description": "Comprehensive API collection for Risk Audit Management System with all endpoints organized intuitively",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -3667,7 +3667,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/performance-history?limit=50&offset=0",
+									"raw": "http://{{host}}/performance-history?page=1&page_size=50",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3677,12 +3677,12 @@
 									],
 									"query": [
 										{
-											"key": "limit",
-											"value": "50"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "offset",
-											"value": "0"
+											"key": "page_size",
+											"value": "50"
 										}
 									]
 								}
@@ -3706,7 +3706,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/performance-history?risk_id={{risk_id}}&limit=50&offset=0",
+									"raw": "http://{{host}}/performance-history?page=1&page_size=50&risk_id={{risk_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3716,16 +3716,16 @@
 									],
 									"query": [
 										{
-											"key": "risk_id",
-											"value": "{{risk_id}}"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "limit",
+											"key": "page_size",
 											"value": "50"
 										},
 										{
-											"key": "offset",
-											"value": "0"
+											"key": "risk_id",
+											"value": "{{risk_id}}"
 										}
 									]
 								}
@@ -3749,7 +3749,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/performance-history?capture_reason=step_two_completed&limit=50&offset=0",
+									"raw": "http://{{host}}/performance-history?page=1&page_size=50&capture_reason=step_two_completed",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3759,16 +3759,16 @@
 									],
 									"query": [
 										{
-											"key": "capture_reason",
-											"value": "step_two_completed"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "limit",
+											"key": "page_size",
 											"value": "50"
 										},
 										{
-											"key": "offset",
-											"value": "0"
+											"key": "capture_reason",
+											"value": "step_two_completed"
 										}
 									]
 								}
@@ -3798,7 +3798,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"risk_id\": \"{{risk_id}}\",\n  \"instructions\": \"Complete the audit checklist and document findings\",\n  \"executer_ids\": [\n    \"{{user_id}}\"\n  ],\n  \"reviewer_id\": \"{{user_id}}\",\n  \"due_date\": \"2025-12-31T23:59:59Z\"\n}",
+									"raw": "{\n  \"risk_id\": \"{{risk_id}}\",\n  \"instructions\": \"Complete the audit checklist and document findings\",\n  \"executer_id\": \"{{user_id}}\",\n  \"reviewer_id\": \"{{user_id}}\",\n  \"due_date\": \"2025-12-31T23:59:59Z\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3806,14 +3806,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/risks/{risk_id}/actions",
+									"raw": "http://{{host}}/risks/{{risk_id}}/actions",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"risks",
-										"{risk_id}",
+										"{{risk_id}}",
 										"actions"
 									]
 								}
@@ -3837,14 +3837,14 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risks/{risk_id}/actions",
+									"raw": "http://{{host}}/risks/{{risk_id}}/actions",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"risks",
-										"{risk_id}",
+										"{{risk_id}}",
 										"actions"
 									]
 								}
@@ -3852,7 +3852,7 @@
 							"response": []
 						},
 						{
-							"name": "List All Risk Actions (Paginated)",
+							"name": "List All Risk Actions (Paginated with User Names)",
 							"request": {
 								"method": "GET",
 								"header": [
@@ -3868,7 +3868,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risk-actions?limit=50&offset=0",
+									"raw": "http://{{host}}/risk-actions?page=1&page_size=50",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3878,12 +3878,12 @@
 									],
 									"query": [
 										{
-											"key": "limit",
-											"value": "50"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "offset",
-											"value": "0"
+											"key": "page_size",
+											"value": "50"
 										}
 									]
 								}
@@ -3907,7 +3907,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risk-actions?status=PENDING&limit=50&offset=0",
+									"raw": "http://{{host}}/risk-actions?page=1&page_size=50&status=PENDING",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3917,16 +3917,16 @@
 									],
 									"query": [
 										{
-											"key": "status",
-											"value": "PENDING"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "limit",
+											"key": "page_size",
 											"value": "50"
 										},
 										{
-											"key": "offset",
-											"value": "0"
+											"key": "status",
+											"value": "PENDING"
 										}
 									]
 								}
@@ -3950,7 +3950,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risk-actions?executer_id={{user_id}}&limit=50&offset=0",
+									"raw": "http://{{host}}/risk-actions?page=1&page_size=50&executer_id={{user_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -3960,16 +3960,59 @@
 									],
 									"query": [
 										{
-											"key": "executer_id",
-											"value": "{{user_id}}"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "limit",
+											"key": "page_size",
 											"value": "50"
 										},
 										{
-											"key": "offset",
-											"value": "0"
+											"key": "executer_id",
+											"value": "{{user_id}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Risk Actions by Reviewer",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/risk-actions?page=1&page_size=50&reviewer_id={{user_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-actions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "50"
+										},
+										{
+											"key": "reviewer_id",
+											"value": "{{user_id}}"
 										}
 									]
 								}
@@ -3993,7 +4036,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risk-actions?risk_id={{risk_id}}&limit=50&offset=0",
+									"raw": "http://{{host}}/risk-actions?page=1&page_size=50&risk_id={{risk_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -4003,16 +4046,16 @@
 									],
 									"query": [
 										{
-											"key": "risk_id",
-											"value": "{{risk_id}}"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "limit",
+											"key": "page_size",
 											"value": "50"
 										},
 										{
-											"key": "offset",
-											"value": "0"
+											"key": "risk_id",
+											"value": "{{risk_id}}"
 										}
 									]
 								}
@@ -4020,7 +4063,7 @@
 							"response": []
 						},
 						{
-							"name": "Get Risk Action Details",
+							"name": "Get Risk Action with Task Details",
 							"request": {
 								"method": "GET",
 								"header": [
@@ -4036,21 +4079,21 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risk-actions/{action_id}",
+									"raw": "http://{{host}}/risk-actions/{{action_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"risk-actions",
-										"{action_id}"
+										"{{action_id}}"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "Update Risk Action Status",
+							"name": "Update Risk Action",
 							"request": {
 								"method": "PUT",
 								"header": [
@@ -4067,7 +4110,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"status\": \"IN_PROGRESS\"\n}",
+									"raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"instructions\": \"Updated instructions\",\n  \"due_date\": \"2026-01-31T23:59:59Z\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -4075,92 +4118,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/risk-actions/{action_id}",
+									"raw": "http://{{host}}/risk-actions/{{action_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"risk-actions",
-										"{action_id}"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Risk Action Executors",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"executer_ids\": [\n    \"{{user_id}}\"\n  ]\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/risk-actions/{action_id}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"risk-actions",
-										"{action_id}"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Complete Risk Action",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"status\": \"COMPLETED\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/risk-actions/{action_id}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"risk-actions",
-										"{action_id}"
+										"{{action_id}}"
 									]
 								}
 							},
@@ -4183,14 +4148,575 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/risk-actions/{action_id}",
+									"raw": "http://{{host}}/risk-actions/{{action_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"risk-actions",
-										"{action_id}"
+										"{{action_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Action Executions",
+					"item": [
+						{
+							"name": "Create Execution",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"task_id\": \"{{task_id}}\",\n  \"evidence_description\": \"Evidence details and how action was completed\",\n  \"evidence_file_url\": null,\n  \"evidence_file_name\": null,\n  \"evidence_file_type\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/risk-actions/{{action_id}}/executions",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-actions",
+										"{{action_id}}",
+										"executions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Execution by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/executions/{{execution_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions",
+										"{{execution_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Execution for Action",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/risk-actions/{{action_id}}/execution",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"risk-actions",
+										"{{action_id}}",
+										"execution"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List All Executions",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/executions?page=1&page_size=50",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "50"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Executions by Status",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/executions?page=1&page_size=50&status=PENDING",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "50"
+										},
+										{
+											"key": "status",
+											"value": "PENDING"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Executions by Action",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/executions?page=1&page_size=50&action_id={{action_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "50"
+										},
+										{
+											"key": "action_id",
+											"value": "{{action_id}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Execution",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"evidence_description\": \"Updated evidence details\",\n  \"evidence_file_url\": \"https://example.com/evidence.pdf\",\n  \"evidence_file_type\": \"application/pdf\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/executions/{{execution_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions",
+										"{{execution_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Execution",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/executions/{{execution_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions",
+										"{{execution_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Action Reviews",
+					"item": [
+						{
+							"name": "Get Review by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/reviews/{{review_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reviews",
+										"{{review_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Review for Execution",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/executions/{{execution_id}}/review",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions",
+										"{{execution_id}}",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List All Reviews",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/reviews?page=1&page_size=50",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reviews"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "50"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Pending Reviews",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/reviews?page=1&page_size=50&approval_status=PENDING",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reviews"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "50"
+										},
+										{
+											"key": "approval_status",
+											"value": "PENDING"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Reviews by Reviewer",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/reviews?page=1&page_size=50&reviewer_id={{user_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reviews"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "50"
+										},
+										{
+											"key": "reviewer_id",
+											"value": "{{user_id}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Submit Review",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"task_id\": \"{{task_id}}\",\n  \"approval_status\": \"COMPLETE\",\n  \"remarks\": \"Evidence is satisfactory. Action complete.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/reviews/{{review_id}}/submit",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reviews",
+										"{{review_id}}",
+										"submit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Review",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/reviews/{{review_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reviews",
+										"{{review_id}}"
 									]
 								}
 							},
@@ -6085,7 +6611,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"audit_universe_id\": \"{{audit_universe_id}}\",\n  \"name\": \"Test Universe Item\",\n  \"department_id\": \"{{dept_id}}\",\n  \"strategic_pillar_id\": null,\n  \"auditable_area_id\": null,\n  \"indicative_target_id\": null,\n  \"strategic_initiative_id\": null,\n  \"risk_id\": null,\n  \"process_activity_id\": \"{{process_activity_id}}\",\n  \"audit_frequency\": \"ANNUALLY\",\n  \"is_active\": true\n}",
+									"raw": "{\n  \"audit_universe_id\": 1,\n  \"name\": \"Test Universe Item\",\n  \"audit_frequency\": \"ANNUALLY\",\n  \"department_id\": \"{{dept_id}}\",\n  \"strategic_pillar_id\": null,\n  \"auditable_area_id\": null,\n  \"indicative_target_id\": null,\n  \"strategic_initiative_id\": null,\n  \"process_activity_id\": \"{{process_activity_id}}\",\n  \"is_active\": true\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6195,7 +6721,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"audit_universe_id\": \"{{audit_universe_id}}\",\n  \"name\": \"Updated Universe Item\",\n  \"department_id\": \"{{dept_id}}\",\n  \"process_activity_id\": \"{{process_activity_id}}\",\n  \"audit_frequency\": \"QUARTERLY\",\n  \"is_active\": false\n}",
+									"raw": "{\n  \"name\": \"Updated Universe Item\",\n  \"audit_frequency\": \"QUARTERLY\",\n  \"is_active\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -7257,7 +7783,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"ref_no\": \"AP-2025-001\",\n  \"audit_plan_date\": \"2024-11-15T00:00:00Z\",\n  \"audit_date\": \"2025-02-01T00:00:00Z\",\n  \"audit_area\": \"Finance & Accounting\",\n  \"audit_scope\": \"Full scope audit\",\n  \"audit_criteria\": \"Internal controls\",\n  \"audit_objective\": \"Verify compliance\",\n  \"management_standard\": \"COSO Framework\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Management Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": \"{{template_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_id\": \"{{audit_universe_id}}\"\n}",
+									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"ref_no\": \"AP-2025-001\",\n  \"audit_plan_date\": \"2024-11-15T00:00:00Z\",\n  \"audit_date\": \"2025-02-01T00:00:00Z\",\n  \"audit_area\": \"Finance & Accounting\",\n  \"audit_scope\": \"Full scope audit\",\n  \"audit_criteria\": \"Internal controls\",\n  \"audit_objective\": \"Verify compliance\",\n  \"management_standard\": \"COSO Framework\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Management Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": \"{{template_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_item_ids\": [],\n  \"budget_item_ids\": []\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -7294,7 +7820,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit-plans?page=1&page_size=10&sort_by=title&sort_order=asc&status=DRAFT",
+									"raw": "http://{{host}}/audit-plans?organization_id={{organization_id}}&year=2025&status=DRAFT",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -7304,20 +7830,12 @@
 									],
 									"query": [
 										{
-											"key": "page",
-											"value": "1"
+											"key": "organization_id",
+											"value": "{{organization_id}}"
 										},
 										{
-											"key": "page_size",
-											"value": "10"
-										},
-										{
-											"key": "sort_by",
-											"value": "title"
-										},
-										{
-											"key": "sort_order",
-											"value": "asc"
+											"key": "year",
+											"value": "2025"
 										},
 										{
 											"key": "status",
@@ -7345,14 +7863,20 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}?organization_id={{organization_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}"
+										"{{audit_plan_id}}"
+									],
+									"query": [
+										{
+											"key": "organization_id",
+											"value": "{{organization_id}}"
+										}
 									]
 								}
 							},
@@ -7376,7 +7900,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Updated Test Plan\",\n  \"description\": \"Updated\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"2025-12-31\"\n}",
+									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Updated Test Plan\",\n  \"description\": \"Updated\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"audit_universe_item_ids\": [],\n  \"budget_item_ids\": []\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -7384,14 +7908,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}"
+										"{{audit_plan_id}}"
 									]
 								}
 							},
@@ -7414,14 +7938,20 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}?organization_id={{organization_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}"
+										"{{audit_plan_id}}"
+									],
+									"query": [
+										{
+											"key": "organization_id",
+											"value": "{{organization_id}}"
+										}
 									]
 								}
 							},
@@ -7458,14 +7988,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}/submit",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/submit",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}",
+										"{{audit_plan_id}}",
 										"submit"
 									]
 								}
@@ -7498,14 +8028,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}/approve/hiar",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/approve/hiar",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}",
+										"{{audit_plan_id}}",
 										"approve",
 										"hiar"
 									]
@@ -7539,14 +8069,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}/approve/ceo",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/approve/ceo",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}",
+										"{{audit_plan_id}}",
 										"approve",
 										"ceo"
 									]
@@ -7580,14 +8110,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}/approve/audit-chair",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/approve/audit-chair",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}",
+										"{{audit_plan_id}}",
 										"approve",
 										"audit-chair"
 									]
@@ -7621,14 +8151,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}/reject",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/reject",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}",
+										"{{audit_plan_id}}",
 										"reject"
 									]
 								}
@@ -7651,15 +8181,24 @@
 										"type": "text"
 									}
 								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}/activate",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/activate",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}",
+										"{{audit_plan_id}}",
 										"activate"
 									]
 								}
@@ -7682,15 +8221,24 @@
 										"type": "text"
 									}
 								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{id}/complete",
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/complete",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{id}",
+										"{{audit_plan_id}}",
 										"complete"
 									]
 								}
@@ -8167,44 +8715,6 @@
 					"name": "Working Papers",
 					"item": [
 						{
-							"name": "Create Working Paper (Manual)",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"audit_plan_id\": \"{{audit_plan_id}}\",\n  \"category\": \"Test Category\",\n  \"description\": \"Manual working paper\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/working-papers",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"working-papers"
-									]
-								}
-							},
-							"response": []
-						},
-						{
 							"name": "List Working Papers",
 							"request": {
 								"method": "GET",
@@ -8274,6 +8784,37 @@
 							"response": []
 						},
 						{
+							"name": "Get Working Paper by Audit Plan",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/working-paper",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"audit-plans",
+										"{{audit_plan_id}}",
+										"working-paper"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Get Working Paper Statistics",
 							"request": {
 								"method": "GET",
@@ -8299,45 +8840,6 @@
 										"working-papers",
 										"{id}",
 										"statistics"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Working Paper",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"description\": \"Updated working paper\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/working-papers/{id}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"working-papers",
-										"{id}"
 									]
 								}
 							},
@@ -8378,36 +8880,6 @@
 										"working-papers",
 										"{id}",
 										"status"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Delete Working Paper",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/working-papers/{id}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"working-papers",
-										"{id}"
 									]
 								}
 							},
@@ -11026,6 +11498,272 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "14. Incident Management",
+			"item": [
+				{
+					"name": "Incidents - CRUD",
+					"item": [
+						{
+							"name": "Create Incident",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"organization_id\": \"{{organization_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"incident_date\": \"2025-01-15T10:30:00Z\",\n  \"discovery_date\": \"2025-01-15T14:00:00Z\",\n  \"location\": \"Finance Department, 3rd Floor\",\n  \"details\": \"Unauthorized access attempt detected on financial system\",\n  \"primary_cause_id\": null,\n  \"specific_cause_id\": null,\n  \"materiality\": \"MEDIUM\",\n  \"root_cause\": \"Weak password policy and insufficient access controls\",\n  \"action_plan\": \"Implement multi-factor authentication\",\n  \"due_date\": \"2025-02-28T23:59:59Z\",\n  \"responsible_person_id\": \"{{user_id}}\",\n  \"financial_loss_implications\": \"NO\",\n  \"status\": \"PENDING\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/incidents",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Incidents",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/incidents?page=1&page_size=10&status=PENDING",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										},
+										{
+											"key": "status",
+											"value": "PENDING"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Incident by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/incidents/{{incident_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents",
+										"{{incident_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Incident",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"details\": \"Updated incident details\",\n  \"status\": \"IN_PROGRESS\",\n  \"action_plan\": \"Updated action plan\",\n  \"due_date\": \"2025-03-31T23:59:59Z\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/incidents/{{incident_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents",
+										"{{incident_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Incident",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/incidents/{{incident_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents",
+										"{{incident_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Incident Analytics",
+					"item": [
+						{
+							"name": "Get Incident Statistics",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/incidents/stats",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents",
+										"stats"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Incidents by Department",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/departments/{{dept_id}}/incidents?page=1&page_size=10",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"departments",
+										"{{dept_id}}",
+										"incidents"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
 		}
 	],
 	"variable": [
@@ -11130,6 +11868,18 @@
 			"value": "",
 			"type": "string",
 			"description": "From create risk action response"
+		},
+		{
+			"key": "execution_id",
+			"value": "",
+			"type": "string",
+			"description": "From create action execution response"
+		},
+		{
+			"key": "review_id",
+			"value": "",
+			"type": "string",
+			"description": "From get action review response"
 		},
 		{
 			"key": "risk_matrix_id",
@@ -11262,6 +12012,12 @@
 			"value": "",
 			"type": "string",
 			"description": "From create indicative target response"
+		},
+		{
+			"key": "incident_id",
+			"value": "",
+			"type": "string",
+			"description": "From create incident response"
 		}
 	]
 }

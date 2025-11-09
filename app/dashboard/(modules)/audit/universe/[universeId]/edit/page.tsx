@@ -1,13 +1,17 @@
 import BackButton from "@/components/back-button";
-import AuditUniverseForm from "../../_components/audit-universe-form";
+import UniverseEditContent from "../../_components/universe-edit-content";
 import PageHeader from "@/components/page-header";
-import { getUniverseById } from "@/app/_actions/audit-module-actions";
+import { getUniverseById, getUniverseItems } from "@/app/_actions/audit-module-actions";
 
 const UniverseEditPage = async ({ params }: { params: Promise<{ universeId: string }> }) => {
   const { universeId } = await params;
 
   const universeResponse = await getUniverseById(universeId);
+  const universeItemsResponse = await getUniverseItems({ audit_universe_id: universeId });
+
   const universe = universeResponse?.data?.data || universeResponse?.data;
+  const universeItems =
+    universeItemsResponse?.data?.data?.data || universeItemsResponse?.data?.data || [];
 
   // Transform API data to form data format
   const initialData = universe
@@ -27,7 +31,7 @@ const UniverseEditPage = async ({ params }: { params: Promise<{ universeId: stri
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
               title="Edit Universe"
-              description="Update universe information"
+              description="Update universe information and manage universe items"
               icon="Globe"
             />
             <BackButton title="Back to Universes" />
@@ -36,8 +40,12 @@ const UniverseEditPage = async ({ params }: { params: Promise<{ universeId: stri
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <AuditUniverseForm initialData={initialData} universeId={universeId} mode="universe" />
+      <div className="container mx-auto space-y-6 px-4 py-8">
+        <UniverseEditContent
+          universeId={universeId}
+          initialData={initialData}
+          initialUniverseItems={universeItems}
+        />
       </div>
     </div>
   );

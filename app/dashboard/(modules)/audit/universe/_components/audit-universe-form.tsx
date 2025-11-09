@@ -41,6 +41,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Department } from "@/lib/types";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { Badge } from "@/components/ui/badge";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
@@ -98,6 +99,7 @@ export default function AuditUniverseForm({
   universeId,
   mode = "universe",
   universes = [],
+  initialUniverseItems = [],
   onSwitchToUniverseTab,
   onSwitchToItemTab
 }: {
@@ -105,6 +107,7 @@ export default function AuditUniverseForm({
   universeId?: string;
   mode?: "universe" | "item";
   universes?: any[];
+  initialUniverseItems?: any[];
   onSwitchToUniverseTab?: () => void;
   onSwitchToItemTab?: () => void;
 }) {
@@ -129,7 +132,16 @@ export default function AuditUniverseForm({
       is_active: initialData.is_active ?? true
     };
   });
-  const [itemData, setItemData] = useState<UniverseItemFormData>(INIT_ITEM_DATA);
+  const [itemData, setItemData] = useState<UniverseItemFormData>(() => {
+    // If we have initialData with audit_universe_id (edit mode), pre-populate it
+    if (initialData?.audit_universe_id) {
+      return {
+        ...INIT_ITEM_DATA,
+        audit_universe_id: initialData.audit_universe_id
+      };
+    }
+    return INIT_ITEM_DATA;
+  });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -149,14 +161,14 @@ export default function AuditUniverseForm({
           response.message || `Universe ${isEditing ? "updated" : "created"} successfully`
         );
 
-        // If creating (not editing), switch to item tab to allow quick item creation
-        if (!isEditing && onSwitchToItemTab) {
+        // Switch to item tab for both creating and editing to allow item management
+        if (onSwitchToItemTab) {
           onSwitchToItemTab();
-          // Reset form for next universe creation
+        }
+
+        // Reset form for next universe creation (only if creating, not editing)
+        if (!isEditing) {
           setUniverseData(INIT_UNIVERSE_DATA);
-        } else {
-          // If editing, go back to list
-          router.push("/dashboard/audit/universe");
         }
 
         // Invalidate all relevant query caches
@@ -195,11 +207,15 @@ export default function AuditUniverseForm({
         setEditingItemId(null);
         router.refresh();
       } else {
-        toast.error(response.message || `Failed to ${editingItemId ? "update" : "create"} universe item`);
+        toast.error(
+          response.message || `Failed to ${editingItemId ? "update" : "create"} universe item`
+        );
       }
     },
     onError: (error) => {
-      toast.error(`Failed to ${editingItemId ? "update" : "create"} universe item. Please try again.`);
+      toast.error(
+        `Failed to ${editingItemId ? "update" : "create"} universe item. Please try again.`
+      );
       console.error("Error:", error);
     }
   });
@@ -285,7 +301,13 @@ export default function AuditUniverseForm({
   const { data: universeItemsResponse, isLoading: isLoadingItems } =
     useUniverseItems(universeIdForItems);
 
-  const universeItemsData = mode === "item" ? universeItemsResponse?.data || [] : [];
+  // Use initialUniverseItems if editing a universe, otherwise use fetched data
+  const universeItemsData =
+    mode === "item"
+      ? isEditing && initialUniverseItems.length > 0
+        ? initialUniverseItems
+        : universeItemsResponse?.data || []
+      : [];
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -715,7 +737,9 @@ export default function AuditUniverseForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={editingItemId ? handleCancelEdit : () => router.push("/dashboard/audit/universe")}
+                onClick={
+                  editingItemId ? handleCancelEdit : () => router.push("/dashboard/audit/universe")
+                }
                 disabled={itemSubmitMutation.isPending}
                 className="w-full min-w-[120px] sm:w-auto">
                 {editingItemId ? "Cancel Edit" : "Cancel"}
@@ -747,9 +771,9 @@ export default function AuditUniverseForm({
                 Universe Entries
               </h3>
               {universeItemsData && universeItemsData.length > 0 && (
-                <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-medium">
+                <Badge variant={"secondary"} className="p-1 px-4 text-sm font-medium">
                   {universeItemsData.length}
-                </span>
+                </Badge>
               )}
             </div>
 
@@ -784,18 +808,18 @@ export default function AuditUniverseForm({
                       <h4 className="text-foreground line-clamp-2 flex-1 text-sm font-medium">
                         {item.name || "Unnamed Activity"}
                       </h4>
-                      <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex gap-1 transition-opacity">
                         <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0"
+                          size="icon"
+                          variant="outline"
+                          className=""
                           onClick={() => handleEditItem(item)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                          size="icon"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => handleDeleteClick(item.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -852,10 +876,12 @@ export default function AuditUniverseForm({
         <div className="p-6 pb-0 sm:p-8">
           <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary h-8 w-1 rounded-full"></span>
-            Basic Information
+            {isEditing ? "Edit Universe" : "Create New Universe"}
           </h3>
           <p className="text-muted-foreground mt-2 ml-3 text-sm">
-            Configure the universe details and active period
+            {isEditing
+              ? "Update the universe details and active period"
+              : "Configure the universe details and active period"}
           </p>
         </div>
 
