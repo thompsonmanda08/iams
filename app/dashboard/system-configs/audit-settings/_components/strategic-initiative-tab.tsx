@@ -134,17 +134,11 @@ export default function StrategicInitiativeTab(
 
   const { data: pillarsResponse, isLoading: loadingPillars } = useStrategicPillars(undefined, {
     page: 1,
-    page_size: 100
+    page_size: 100,
+    is_active: true
   });
 
   const pillars = pillarsResponse?.data || [];
-
-  const pillarOptions = useMemo(() => {
-    return pillars.map((pillar: any) => ({
-      id: pillar.id,
-      name: pillar.title
-    }));
-  }, [pillars]);
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
@@ -177,7 +171,7 @@ export default function StrategicInitiativeTab(
               value={pillarId || ""}
               onValueChange={setPillarId}
               isLoading={loadingPillars}
-              options={pillarOptions}
+              options={pillars}
               className="min-w-60"
               classNames={{
                 wrapper: "min-w-60"
@@ -235,7 +229,7 @@ export default function StrategicInitiativeTab(
                             value={pillarId || ""}
                             onValueChange={setPillarId}
                             isLoading={loadingPillars}
-                            options={pillarOptions}
+                            options={pillars}
                             className="min-w-60"
                             classNames={{
                               wrapper: "min-w-40"
@@ -388,13 +382,6 @@ function CreateOrUpdate({
 
   const pillars = pillarsResponse?.data || [];
 
-  const pillarOptions = useMemo(() => {
-    return pillars.map((pillar: any) => ({
-      id: pillar.id,
-      name: pillar.title
-    }));
-  }, [pillars]);
-
   useEffect(() => {
     if (openModal) {
       if (initialData && selectedId) {
@@ -509,7 +496,7 @@ function CreateOrUpdate({
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, pillar_id: value }));
             }}
-            options={pillarOptions}
+            options={pillars}
           />
           <Input
             label="Strategic Initiative"

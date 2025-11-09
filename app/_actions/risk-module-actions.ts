@@ -744,6 +744,36 @@ export async function getDepartmentRiskCategories(departmentId: string): Promise
 // ============================================================================
 
 /**
+ * Get all risks
+ */
+export async function getAllRisks(
+  params?: RiskRegisterParams & {
+    department_id?: string;
+  }
+): Promise<APIResponse> {
+  try {
+    const queryParams = new URLSearchParams();
+
+    if (params?.branch_id) queryParams.append("branch_id", params.branch_id);
+    if (params?.department_id) queryParams.append("branch_id", params.department_id);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.name) queryParams.append("name", params.name);
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
+    const url = `/api/v1/risks${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedApiClient({
+      url: url,
+      method: "GET"
+    });
+
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "GET | GET RISK REGISTERS", "/api/v1/risk-registers");
+  }
+}
+
+/**
  * Get all risk registers
  */
 export async function getRiskRegisters(params?: RiskRegisterParams): Promise<APIResponse> {
@@ -1013,68 +1043,6 @@ export async function submitDepartmentRisks(
 // ============================================================================
 // RISK MANAGEMENT (STANDARD CRUD)
 // ============================================================================
-
-/**
- * Get all risks with pagination and filters
- */
-async function _getRisks(params?: RiskQueryParams): Promise<APIResponse> {
-  try {
-    const queryParams = new URLSearchParams();
-
-    if (params?.search) queryParams.append("search", params.search);
-    if (params?.category) queryParams.append("category", params.category);
-    if (params?.status) queryParams.append("status", params.status);
-    if (params?.page) queryParams.append("page", String(params.page));
-    if (params?.limit) queryParams.append("limit", String(params.limit));
-    if (params?.risk_owner_id) queryParams.append("risk_owner_id", String(params.risk_owner_id));
-    if (params?.risk_action_owner_id)
-      queryParams.append("risk_action_owner_id", String(params.risk_action_owner_id));
-
-    // Mock implementation - Filter mock data instead of API call
-    let results = [...mockRisks];
-
-    if (params?.risk_action_owner_id) {
-      results = results.filter((r) => r.risk_action_owner_id === params.risk_action_owner_id);
-    }
-    if (params?.risk_owner_id) {
-      results = results.filter((r) => r.risk_owner_id === params.risk_owner_id);
-    }
-    if (params?.status) {
-      results = results.filter((r) => r.status === params.status);
-    }
-    if (params?.search) {
-      const search = params.search.toLowerCase();
-      results = results.filter(
-        (r) =>
-          r.title.toLowerCase().includes(search) ||
-          r.description.toLowerCase().includes(search) ||
-          r.riskId.toLowerCase().includes(search)
-      );
-    }
-
-    // Apply pagination
-    const page = params?.page || 1;
-    const limit = params?.limit || 10;
-    const start = (page - 1) * limit;
-    const paginatedResults = results.slice(start, start + limit);
-
-    return successResponse({
-      data: paginatedResults,
-      pagination: {
-        total: results.length,
-        page,
-        page_size: limit,
-        total_pages: Math.ceil(results.length / limit),
-        has_prev: page > 1,
-        has_next: page < Math.ceil(results.length / limit)
-      }
-    });
-  } catch (error) {
-    return handleError(error, "GET | GET RISKS", "/api/v1/risks");
-  }
-}
-
-export const getRisks = cache(_getRisks);
 
 /**
  * Get risk by ID

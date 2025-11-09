@@ -133,12 +133,14 @@ export async function getStrategicPillars(
     page?: number;
     page_size?: number;
     department_id?: string;
-    [key: string]: string | number | undefined;
+    is_active?: boolean;
+    [key: string]: any;
   }
 ): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
 
   if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
+  if (params?.is_active) queryParams.append("is_active", String(params?.is_active));
   if (params?.page) queryParams.append("page", String(params?.page || 1));
   if (params?.department_id)
     queryParams.append("department_id", String(params?.department_id || ""));
@@ -234,7 +236,7 @@ export async function deleteStrategicPillar(id: string): Promise<APIResponse> {
  */
 export async function getStrategicInitiatives(
   pillarId?: string,
-  params?: { page?: number; page_size?: number }
+  params?: { page?: number; page_size?: number; department_id?: string }
 ): Promise<APIResponse> {
   // If pillarId is provided, get initiatives for specific pillar
   // Otherwise, get all initiatives (we'll need to check if backend supports this)
@@ -242,6 +244,8 @@ export async function getStrategicInitiatives(
 
   if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
   if (params?.page) queryParams.append("page", String(params?.page || 1));
+  if (params?.department_id)
+    queryParams.append("department_id", String(params?.department_id || ""));
 
   if (!pillarId) {
     return handleBadRequest("Pillar ID is required");
@@ -454,12 +458,15 @@ export async function deleteFindingsCategory(id: string): Promise<APIResponse> {
 export async function getProcessActivities(params?: {
   page?: number;
   page_size?: number;
+  department_id?: string;
   [key: string]: string | number | undefined;
 }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
 
   if (params?.page_size) queryParams.append("page_size", String(params?.page_size || 10));
   if (params?.page) queryParams.append("page", String(params?.page || 1));
+  if (params?.department_id)
+    queryParams.append("department_id", String(params?.department_id || ""));
 
   const url = `/api/v1/process-activities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 

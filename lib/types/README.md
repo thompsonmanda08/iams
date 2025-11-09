@@ -9,11 +9,13 @@ This directory contains comprehensive TypeScript type definitions for the Risk M
 ## 🚀 Quick Start
 
 ### For New Developers
+
 1. Start with **[RISK_TYPES_QUICK_REFERENCE.md](./RISK_TYPES_QUICK_REFERENCE.md)** - 5-minute overview
 2. Check the import statement: `import type { RiskTableRow, ActionFindings } from "@/lib/types/risk-types"`
 3. Look at component examples in `app/dashboard/(modules)/risks/_components/`
 
 ### For Detailed Information
+
 1. Read **[RISK_TYPES_GUIDE.md](./RISK_TYPES_GUIDE.md)** - Complete documentation
 2. Review **[TYPES_SUMMARY.md](./TYPES_SUMMARY.md)** - Implementation summary
 3. Study the actual type definitions in `risk-types.ts`
@@ -22,19 +24,20 @@ This directory contains comprehensive TypeScript type definitions for the Risk M
 
 ## 📁 What's in This Directory
 
-| File | Purpose | Audience |
-|------|---------|----------|
-| **risk-types.ts** | Type definitions (263 lines) | All developers |
-| **RISK_TYPES_QUICK_REFERENCE.md** | Cheat sheet & common patterns | All developers |
-| **RISK_TYPES_GUIDE.md** | Comprehensive guide with examples | Learning, reference |
-| **TYPES_SUMMARY.md** | Implementation overview | Architects, team leads |
-| **README.md** | This file | Getting started |
+| File                              | Purpose                           | Audience               |
+| --------------------------------- | --------------------------------- | ---------------------- |
+| **risk-types.ts**                 | Type definitions (263 lines)      | All developers         |
+| **RISK_TYPES_QUICK_REFERENCE.md** | Cheat sheet & common patterns     | All developers         |
+| **RISK_TYPES_GUIDE.md**           | Comprehensive guide with examples | Learning, reference    |
+| **TYPES_SUMMARY.md**              | Implementation overview           | Architects, team leads |
+| **README.md**                     | This file                         | Getting started        |
 
 ---
 
 ## 🎯 Core Types at a Glance
 
 ### Risk Data
+
 ```typescript
 // Single risk in table
 RiskTableRow {
@@ -49,6 +52,7 @@ RiskOwner { id, email, first_name, last_name }
 ```
 
 ### Action Findings Workflow
+
 ```typescript
 // Submission form
 ActionFindingsFormData {
@@ -73,10 +77,11 @@ AssessActionFindingsInput {
 ```
 
 ### Status Enums
+
 ```typescript
-ActionFindingsStatus = "OPEN" | "PENDING_REVIEW" | "COMPLETED" | "NEEDS_REVISION"
-RiskStatus = "OPEN" | "CLOSED" | "PENDING_REVIEW" | "MITIGATED"
-RiskResponse = "REDUCE" | "ACCEPT" | "AVOID" | "SHARE"
+ActionFindingsStatus = "OPEN" | "PENDING_REVIEW" | "COMPLETED" | "NEEDS_REVISION";
+RiskStatus = "OPEN" | "CLOSED" | "PENDING_REVIEW" | "MITIGATED";
+RiskResponse = "REDUCE" | "ACCEPT" | "AVOID" | "SHARE";
 ```
 
 ---
@@ -84,6 +89,7 @@ RiskResponse = "REDUCE" | "ACCEPT" | "AVOID" | "SHARE"
 ## 💡 Common Tasks
 
 ### Task 1: Import Types
+
 ```typescript
 import type {
   RiskTableRow,
@@ -94,6 +100,7 @@ import type {
 ```
 
 ### Task 2: Type a Component Prop
+
 ```typescript
 interface ActionsTableProps {
   actions: RiskTableRow[];
@@ -102,6 +109,7 @@ interface ActionsTableProps {
 ```
 
 ### Task 3: Handle Form Data
+
 ```typescript
 const [formData, setFormData] = useState<ActionFindingsFormData>({
   description: "",
@@ -110,8 +118,9 @@ const [formData, setFormData] = useState<ActionFindingsFormData>({
 ```
 
 ### Task 4: Process API Response
+
 ```typescript
-const response: RisksResponse = await getRisks({
+const response: RisksResponse = await getAllRisks{
   risk_action_owner_id: userId
 });
 
@@ -119,6 +128,7 @@ const risks: RiskTableRow[] = response.data;
 ```
 
 ### Task 5: Submit Findings
+
 ```typescript
 const input: SubmitActionFindingsInput = {
   risk_id: risk.id,
@@ -136,22 +146,26 @@ const result = await submitActionFindings(input);
 ### By Category
 
 **Data Types** (25+)
+
 - Risk registers, categories, owners
 - Table rows, action findings
 - Risk scoring and severity
 
 **Input Types** (5)
+
 - Form data types
 - Submission input
 - Assessment input
 - Query parameters
 
 **Response Types** (5)
+
 - List responses
 - Submission responses
 - Pagination metadata
 
 **Enum Types** (6)
+
 - Status values
 - Response types
 - Magnitude levels
@@ -200,15 +214,18 @@ findings                                      ↓
 ## 🔗 Related Files
 
 ### Type Usage
+
 - `app/dashboard/(modules)/risks/actions/page.tsx` - Mock data (uses `RiskTableRow`)
 - `app/dashboard/(modules)/risks/actions/actions-table.tsx` - Table component
 - `app/dashboard/(modules)/risks/_components/action-findings-dialog.tsx` - Submission form
 - `app/dashboard/(modules)/risks/_components/action-assessment-form.tsx` - Reviewer form
 
 ### Server Actions
+
 - `app/_actions/risk-module-actions.ts` - Implements type definitions
 
 ### Type System
+
 - `lib/types/index.ts` - Re-exports common types
 - `lib/types/account.ts` - User-related types
 - `lib/types/audit-types.ts` - Audit module types
@@ -218,29 +235,31 @@ findings                                      ↓
 ## 🧪 Testing with Types
 
 ### Mock Data Example
+
 ```typescript
 const mockRisk: RiskTableRow = {
   id: "1",
   title: "Test Risk",
-  status: "OPEN",
+  status: "OPEN"
   // ... all required fields
 };
 
 const mockFindings: ActionFindings = {
   id: "AF-001",
   risk_id: "1",
-  status: "PENDING_REVIEW",
+  status: "PENDING_REVIEW"
   // ... all required fields
 };
 ```
 
 ### Type Validation
+
 ```typescript
 // ✅ This compiles
 const findings: ActionFindings = {
   id: "1",
   risk_id: "1",
-  status: "COMPLETED",
+  status: "COMPLETED"
   // ...
 };
 
@@ -248,7 +267,7 @@ const findings: ActionFindings = {
 const findings: ActionFindings = {
   id: "1",
   risk_id: "1",
-  status: "INVALID",  // ERROR!
+  status: "INVALID" // ERROR!
   // ...
 };
 ```
@@ -258,6 +277,7 @@ const findings: ActionFindings = {
 ## 📖 Documentation Files
 
 ### Complete Guides
+
 - **RISK_TYPES_GUIDE.md** (400+ lines)
   - Detailed type definitions
   - Usage examples for all types
@@ -265,6 +285,7 @@ const findings: ActionFindings = {
   - Migration guidelines
 
 ### Quick Reference
+
 - **RISK_TYPES_QUICK_REFERENCE.md** (300+ lines)
   - Type cheat sheet
   - Common patterns
@@ -272,6 +293,7 @@ const findings: ActionFindings = {
   - Common mistakes
 
 ### Summary
+
 - **TYPES_SUMMARY.md** (250+ lines)
   - Implementation overview
   - Type relationships
@@ -295,6 +317,7 @@ The types are designed to work with both mock and real data. When you're ready t
    - No component changes needed!
 
 **Example**:
+
 ```typescript
 // Mock phase
 const mockRisks: RiskTableRow[] = [ ... ];

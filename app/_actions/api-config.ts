@@ -1,7 +1,9 @@
 import { AUTH_SESSION } from "@/lib/constants";
-import { verifySession } from "@/lib/session";
+import { deleteSession, verifySession } from "@/lib/session";
 import { APIResponse } from "@/lib/types";
 import axiosClient, { AxiosRequestConfig, AxiosRequestHeaders } from "axios";
+import { logUserOut } from "./auth-actions";
+import { redirect } from "next/navigation";
 
 export const axios = axiosClient.create({
   baseURL: process.env.BASE_URL || "http://localhost:8080"
@@ -184,6 +186,26 @@ export function handleError(error: any, method: string = "GET", url: string): AP
     message: error?.message,
     data: error?.response?.data || null
   });
+
+  if (
+    error?.message == "token has expired" ||
+    error?.message == "jwt expired" ||
+    error?.message == "jwt malformed" ||
+    error?.message == "invalid signature" ||
+    error?.message == "jwt must be provided" ||
+    error.response?.status == 401 ||
+    error.response?.status == 403
+  ) {
+    // deleteSession();
+    // return unauthorizedResponse();
+    return redirect("/login");
+  }
+
+  if (error?.response?.status == 404) {
+    return notFoundResponse(
+      error?.response?.data?.error || error?.response?.data?.message || error?.message
+    );
+  }
 
   return {
     success: false,

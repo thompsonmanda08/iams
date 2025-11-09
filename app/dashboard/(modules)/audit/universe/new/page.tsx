@@ -50,7 +50,10 @@ const NewAuditUniversePage = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="universe">
-            <AuditUniverseForm mode="universe" />
+            <AuditUniverseForm
+              mode="universe"
+              onSwitchToItemTab={() => setActiveTab("item")}
+            />
           </TabsContent>
           <TabsContent value="item">
             <AuditUniverseForm

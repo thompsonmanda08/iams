@@ -13,7 +13,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Spinner } from "./spinner";
-import { title } from "process";
 
 type SelectInputProps = React.InputHTMLAttributes<HTMLSelectElement> & {
   label?: string;
@@ -91,14 +90,14 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
 
           classNames?.wrapper,
           {
-            "cursor-not-allowed opacity-50": isDisabled
+            "cursor-not-allowed": isDisabled
           }
         )}>
         {label && (
           <label
             className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap text-slate-900/80", {
               "text-red-500": onError || isInvalid,
-              "opacity-50": isDisabled || props?.disabled
+              "opacity-80": isDisabled || props?.disabled
             })}
             htmlFor={name}>
             {label} {props?.required && <span className="font-bold text-red-500"> *</span>}
@@ -115,9 +114,9 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
               className={cn(
                 "justify-between",
                 {
-                  "cursor-not-allowed opacity-50": isDisabled,
+                  "cursor-not-allowed": isDisabled,
                   "border-red-500": onError || isInvalid,
-                  "text-foreground/60": !selected
+                  "text-foreground/70": !selected
                 },
                 classNames?.input
               )}>

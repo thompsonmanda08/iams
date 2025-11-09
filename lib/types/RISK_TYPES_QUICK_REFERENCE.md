@@ -1,6 +1,7 @@
 # Risk Types - Quick Reference Card
 
 ## Import Statement
+
 ```typescript
 import type {
   // Core types
@@ -34,40 +35,45 @@ import type {
 
 ## Type Cheat Sheet
 
-| Type | Purpose | Key Fields |
-|------|---------|-----------|
-| `RiskTableRow` | Single risk in table | id, title, category, status, owner |
-| `ActionFindings` | Submitted finding | id, risk_id, status, reviewer_feedback |
-| `SubmitActionFindingsInput` | Submit form input | risk_id, description, evidence_notes |
-| `AssessActionFindingsInput` | Reviewer input | assessment_score, feedback, decision |
-| `PaginationMeta` | List pagination | page, total, has_next, has_prev |
-| `RiskActionQueryParams` | List filters | risk_action_owner_id, status, search |
+| Type                        | Purpose              | Key Fields                             |
+| --------------------------- | -------------------- | -------------------------------------- |
+| `RiskTableRow`              | Single risk in table | id, title, category, status, owner     |
+| `ActionFindings`            | Submitted finding    | id, risk_id, status, reviewer_feedback |
+| `SubmitActionFindingsInput` | Submit form input    | risk_id, description, evidence_notes   |
+| `AssessActionFindingsInput` | Reviewer input       | assessment_score, feedback, decision   |
+| `PaginationMeta`            | List pagination      | page, total, has_next, has_prev        |
+| `RiskActionQueryParams`     | List filters         | risk_action_owner_id, status, search   |
 
 ---
 
 ## Status Enums
 
 ### Risk Status
+
 ```typescript
 type RiskStatus = "OPEN" | "CLOSED" | "PENDING_REVIEW" | "MITIGATED";
 ```
 
 ### Action Findings Status
+
 ```typescript
 type ActionFindingsStatus = "OPEN" | "PENDING_REVIEW" | "COMPLETED" | "NEEDS_REVISION";
 ```
 
 **Flow:**
+
 ```
 OPEN → PENDING_REVIEW → COMPLETED (or NEEDS_REVISION → PENDING_REVIEW again)
 ```
 
 ### Risk Response
+
 ```typescript
 type RiskResponse = "REDUCE" | "ACCEPT" | "AVOID" | "SHARE";
 ```
 
 ### Risk Magnitude
+
 ```typescript
 type RiskMagnitude = "low" | "medium" | "high" | "critical";
 ```
@@ -77,8 +83,9 @@ type RiskMagnitude = "low" | "medium" | "high" | "critical";
 ## Common Usage Patterns
 
 ### 1️⃣ Fetch Risks for User
+
 ```typescript
-const response = await getRisks({
+const response = await getAllRisks{
   risk_action_owner_id: user.id,
   page: 1,
   page_size: 10
@@ -88,6 +95,7 @@ const risks: RiskTableRow[] = response.data;
 ```
 
 ### 2️⃣ Submit Findings
+
 ```typescript
 const input: SubmitActionFindingsInput = {
   risk_id: risk.id,
@@ -103,6 +111,7 @@ if (response.success) {
 ```
 
 ### 3️⃣ Assess Findings (Reviewer)
+
 ```typescript
 const assessment: AssessActionFindingsInput = {
   reviewer_id: reviewer.id,
@@ -115,6 +124,7 @@ const response = await assessActionFindings(findingId, assessment);
 ```
 
 ### 4️⃣ Type-Safe Form State
+
 ```typescript
 const [formData, setFormData] = useState<ActionFindingsFormData>({
   description: "",
@@ -125,6 +135,7 @@ const [errors, setErrors] = useState<ActionFindingsFormErrors>({});
 ```
 
 ### 5️⃣ Filter Findings
+
 ```typescript
 const params: ActionFindingsQueryParams = {
   risk_id: selectedRisk.id,
@@ -140,6 +151,7 @@ const response = await getActionFindings(params);
 ## Validation Rules
 
 ### ActionFindings Submission
+
 ```typescript
 ✓ description: required, min 10 chars
 ✓ evidence_notes: optional, max 1000 chars
@@ -147,6 +159,7 @@ const response = await getActionFindings(params);
 ```
 
 ### Assessment
+
 ```typescript
 ✓ assessment_score: required, 0-10
 ✓ reviewer_feedback: required, min 20 chars
@@ -158,6 +171,7 @@ const response = await getActionFindings(params);
 ## Database Field Mappings
 
 ### Risk → Table Display
+
 ```
 id                      → id
 title                   → title
@@ -177,6 +191,7 @@ control_effectiveness   → control_effectiveness
 ```
 
 ### ActionFindings Status Transitions
+
 ```
 OPEN
   ↓ (User submits via dialog)
@@ -192,6 +207,7 @@ PENDING_REVIEW
 ## Component Integration
 
 ### ActionsTable Component
+
 ```typescript
 import type { RiskTableRow } from "@/lib/types/risk-types";
 
@@ -202,6 +218,7 @@ interface ActionsTableProps {
 ```
 
 ### ActionFindingsDialog Component
+
 ```typescript
 // Input: RiskTableRow
 // State: ActionFindingsFormData
@@ -210,6 +227,7 @@ interface ActionsTableProps {
 ```
 
 ### ActionAssessmentForm Component
+
 ```typescript
 // Input: ActionFindings
 // State: AssessmentFormData
@@ -218,6 +236,7 @@ interface ActionsTableProps {
 ```
 
 ### ActionFindingsDisplay Component
+
 ```typescript
 // Input: ActionFindings
 // Display: Uses ActionFindingsStatus type for styling
@@ -227,35 +246,38 @@ interface ActionsTableProps {
 
 ## API Endpoints (Mock → Real)
 
-| Operation | Current | Future |
-|-----------|---------|--------|
-| Get Risks | Mock array filter | `GET /api/risks?risk_action_owner_id=...` |
-| Submit Findings | Mock array append | `POST /api/action-findings` |
-| Get Findings | Mock filter | `GET /api/risks/{id}/findings` |
-| Assess Findings | Mock update | `PUT /api/action-findings/{id}/assess` |
+| Operation       | Current           | Future                                    |
+| --------------- | ----------------- | ----------------------------------------- |
+| Get Risks       | Mock array filter | `GET /api/risks?risk_action_owner_id=...` |
+| Submit Findings | Mock array append | `POST /api/action-findings`               |
+| Get Findings    | Mock filter       | `GET /api/risks/{id}/findings`            |
+| Assess Findings | Mock update       | `PUT /api/action-findings/{id}/assess`    |
 
 ---
 
 ## TypeScript Tips
 
 ### Partial Types
+
 ```typescript
 // For optional updates
 type PartialActionFindings = Partial<ActionFindings>;
 ```
 
 ### Readonly Types
+
 ```typescript
 // For immutable data
 type ReadonlyActionFindings = Readonly<ActionFindings>;
 ```
 
 ### Discriminated Unions
+
 ```typescript
 // For handling different statuses
 type FindingsState =
-  | { status: "OPEN"; }
-  | { status: "PENDING_REVIEW"; }
+  | { status: "OPEN" }
+  | { status: "PENDING_REVIEW" }
   | { status: "COMPLETED"; assessment_score: number }
   | { status: "NEEDS_REVISION"; feedback: string };
 ```
@@ -265,6 +287,7 @@ type FindingsState =
 ## Common Mistakes to Avoid
 
 ❌ Don't use `any` type
+
 ```typescript
 // Bad
 const risk: any = data;
@@ -274,6 +297,7 @@ const risk: RiskTableRow = data;
 ```
 
 ❌ Don't forget optional fields
+
 ```typescript
 // Bad
 const assessment: AssessActionFindingsInput = {
@@ -293,6 +317,7 @@ const assessment: AssessActionFindingsInput = {
 ```
 
 ❌ Don't mix form data with API input
+
 ```typescript
 // Bad
 const input: SubmitActionFindingsInput = formData;
@@ -311,6 +336,7 @@ const input: SubmitActionFindingsInput = {
 ## Testing Types
 
 ### Mock Risk Data
+
 ```typescript
 const mockRisk: RiskTableRow = {
   id: "1",
@@ -336,6 +362,7 @@ const mockRisk: RiskTableRow = {
 ```
 
 ### Mock Action Findings
+
 ```typescript
 const mockFindings: ActionFindings = {
   id: "AF-2024-001",

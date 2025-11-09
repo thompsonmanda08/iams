@@ -27,7 +27,7 @@ const AuditUniversePage = async () => {
       })
   );
 
-  console.log("UNIVERSE", universes);
+  // console.log("UNIVERSE", universes);
 
   return (
     <div className="bg-background min-h-screen">
