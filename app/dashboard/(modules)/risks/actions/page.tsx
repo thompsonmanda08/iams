@@ -72,7 +72,7 @@ export default async function ActionsPage() {
             description="View risks assigned to you and submit evidence of mitigation actions taken"
             icon="AlertTriangle"
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2 hidden">
             <Link href="/dashboard/risks/actions/logs">
               <Button variant="outline" className="gap-2">
                 <LogsIcon className="h-4 w-4" />

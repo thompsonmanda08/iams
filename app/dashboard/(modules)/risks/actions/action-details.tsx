@@ -211,7 +211,8 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                     <Shield className="mr-2 h-4 w-4" />
                     Reduce
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleMitigationSelect("Accept")}>
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/dashboard/risks/actions/${action.id}/accept`)}>
                     <Target className="mr-2 h-4 w-4" />
                     Accept
                   </DropdownMenuItem>
@@ -514,7 +515,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                     <p className="text-muted-foreground text-xs">Mitigation Cost</p>
                     <p className="font-semibold">
                       {action?.mitigation_cost
-                        ? `$${action.mitigation_cost.toLocaleString()}`
+                        ? `${action.mitigation_cost.toLocaleString()}`
                         : "Not specified"}
                     </p>
                   </div>
