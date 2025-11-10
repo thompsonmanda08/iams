@@ -13,60 +13,68 @@ export default function Dashboard() {
       <main className="container mx-auto space-y-6 py-8">
         {/* Executive Overview Row */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-muted-foreground text-sm font-medium">
-                Total Risks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-foreground text-3xl font-bold">48</div>
-              <p className="text-muted-foreground mt-1 text-xs">
-                <span className="text-destructive">12 HIGH</span> •{" "}
-                <span className="text-amber-active">22 MEDIUM</span> •{" "}
-                <span className="text-state-node-final">14 LOW</span>
-              </p>
-            </CardContent>
+          <Card className="border-border bg-card p-0">
+            <div className="py-4">
+              <CardHeader>
+                <CardTitle className="text-muted-foreground text-sm font-medium">
+                  Total Risks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-foreground text-3xl font-bold">48</div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  <span className="text-destructive">12 HIGH</span> •{" "}
+                  <span className="text-amber-active">22 MEDIUM</span> •{" "}
+                  <span className="text-state-node-final">14 LOW</span>
+                </p>
+              </CardContent>
+            </div>
           </Card>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-muted-foreground text-sm font-medium">
-                KRI Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-foreground text-3xl font-bold">28</div>
-              <p className="text-muted-foreground mt-1 text-xs">
-                <span className="text-state-node-final">18 Green</span> •{" "}
-                <span className="text-amber-active">7 Amber</span> •{" "}
-                <span className="text-destructive">3 Red</span>
-              </p>
-            </CardContent>
+          <Card className="border-border bg-card p-0">
+            <div className="py-4">
+              <CardHeader>
+                <CardTitle className="text-muted-foreground text-sm font-medium">
+                  KRI Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-foreground text-3xl font-bold">28</div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  <span className="text-state-node-final">18 Green</span> •{" "}
+                  <span className="text-amber-active">7 Amber</span> •{" "}
+                  <span className="text-destructive">3 Red</span>
+                </p>
+              </CardContent>
+            </div>
           </Card>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-muted-foreground text-sm font-medium">
-                Active Audits
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-foreground text-3xl font-bold">5</div>
-              <p className="text-muted-foreground mt-1 text-xs">3 in progress • 2 scheduled</p>
-            </CardContent>
+          <Card className="border-border bg-card p-0">
+            <div className="py-4">
+              <CardHeader>
+                <CardTitle className="text-muted-foreground text-sm font-medium">
+                  Active Audits
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-foreground text-3xl font-bold">5</div>
+                <p className="text-muted-foreground mt-1 text-xs">3 in progress • 2 scheduled</p>
+              </CardContent>
+            </div>
           </Card>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-muted-foreground text-sm font-medium">
-                Open Findings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-foreground text-3xl font-bold">16</div>
-              <p className="text-muted-foreground mt-1 text-xs">4 awaiting response</p>
-            </CardContent>
+          <Card className="border-border bg-card p-0">
+            <div className="py-4">
+              <CardHeader>
+                <CardTitle className="text-muted-foreground text-sm font-medium">
+                  Open Findings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-foreground text-3xl font-bold">16</div>
+                <p className="text-muted-foreground mt-1 text-xs">4 awaiting response</p>
+              </CardContent>
+            </div>
           </Card>
         </div>
 
