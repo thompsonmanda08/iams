@@ -708,6 +708,7 @@ body {
     --accent: var(--base-200);
     --accent-foreground: var(--base-800);
     --destructive: oklch(0.577 0.245 27.325);
+    --amber-active: oklch(75.518% 0.14826 76.566);
     --border: var(--base-200);
     --input: var(--base-300);
     --ring: var(--primary-600);

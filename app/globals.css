@@ -61,6 +61,8 @@
   --state-node-initial: oklch(45% 0.18 265.909);
   --state-node-final: oklch(55% 0.18 145);
 
+  --amber-active: oklch(75.518% 0.14826 76.566);
+
   --display-weight: 700;
 
   --fc-button-bg-color: var(--primary);
@@ -116,6 +118,8 @@
   --state-node-border: var(--base-600);
   --state-node-initial: oklch(75% 0.15 265.909);
   --state-node-final: oklch(70% 0.16 145);
+
+  --amber-active: oklch(75.518% 0.14826 76.566);
 }
 
 @theme inline {
@@ -182,6 +186,8 @@
   --color-state-node-border: var(--state-node-border);
   --color-state-node-initial: var(--state-node-initial);
   --color-state-node-final: var(--state-node-final);
+
+  --color-amber-active: var(--amber-active);
 
   --font-display: var(--display-family);
   --display-weight: var(--display-weight);
