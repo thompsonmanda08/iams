@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { CheckCircle2, XCircle, Clock, AlertCircle, FileText, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, XCircle, Clock, AlertCircle, FileText, Eye, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -24,92 +24,61 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/page-header";
-import { format } from "date-fns";
 import Search from "@/components/ui/search-field";
+import { getRiskAcceptances, updateRiskAcceptance } from "@/app/_actions/risk-module-actions";
+import { toast } from "sonner";
 
-// Mock data - replace with your API data
-const mockAcceptances = [
-  {
-    id: "RAF-2024-001",
-    risk_description: "Cloud infrastructure security gaps in production environment",
-    risk_rate: "HIGH",
-    status: "PENDING",
-    submitted_by: "John Doe",
-    submitted_date: "2024-11-05",
-    deficiency_description: "Missing multi-factor authentication on admin accounts",
-    justification: "Implementing MFA requires vendor approval and testing period",
-    compensating_controls: "Enhanced monitoring and access logging implemented",
-    expiration_date: "2025-02-05"
-  },
-  {
-    id: "RAF-2024-002",
-    risk_description: "Legacy payment system without encryption",
-    risk_rate: "HIGH",
-    status: "APPROVED",
-    submitted_by: "Jane Smith",
-    submitted_date: "2024-11-01",
-    approved_date: "2024-11-03",
-    approved_by: "Risk Manager",
-    remarks: "Approved with condition of quarterly reviews",
-    deficiency_description: "Payment data transmitted without end-to-end encryption",
-    justification: "System upgrade scheduled for Q1 2025",
-    compensating_controls: "Network segmentation and enhanced firewall rules",
-    expiration_date: "2025-03-01"
-  },
-  {
-    id: "RAF-2024-003",
-    risk_description: "Outdated antivirus software on endpoint devices",
-    risk_rate: "MEDIUM",
-    status: "REJECTED",
-    submitted_by: "Mike Johnson",
-    submitted_date: "2024-10-28",
-    rejected_date: "2024-10-30",
-    rejected_by: "Security Officer",
-    remarks: "Insufficient compensating controls. Immediate update required.",
-    deficiency_description: "Antivirus definitions 6 months out of date",
-    justification: "Budget constraints for license renewal",
-    compensating_controls: "Manual scanning protocols",
-    expiration_date: "2024-12-28"
-  },
-  {
-    id: "RAF-2024-004",
-    risk_description: "Database backup frequency below policy standards",
-    risk_rate: "MEDIUM",
-    status: "PENDING",
-    submitted_by: "Sarah Williams",
-    submitted_date: "2024-11-07",
-    deficiency_description: "Backups performed weekly instead of daily",
-    justification: "Storage capacity limitations pending infrastructure upgrade",
-    compensating_controls: "Transaction logging and point-in-time recovery enabled",
-    expiration_date: "2025-01-07"
-  },
-  {
-    id: "RAF-2024-005",
-    risk_description: "Third-party API integration without security audit",
-    risk_rate: "HIGH",
-    status: "APPROVED",
-    submitted_by: "David Brown",
-    submitted_date: "2024-10-25",
-    approved_date: "2024-10-27",
-    approved_by: "CTO",
-    remarks: "Approved pending completion of security audit by December 2024",
-    deficiency_description: "Vendor security assessment not completed",
-    justification: "Critical business functionality required for product launch",
-    compensating_controls: "API gateway with rate limiting and monitoring",
-    expiration_date: "2024-12-31"
+// Simple date formatter
+const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
+  const date = new Date(dateString);
+  if (formatType === "long") {
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
   }
-];
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+};
 
 type Status = "all" | "pending" | "approved" | "rejected";
+
+interface Acceptance {
+  id: string;
+  organization_id: string;
+  risk_id: string;
+  risk_description: string;
+  risk_rate: "HIGH" | "MEDIUM";
+  deficiency_description: string;
+  justification: string;
+  compensating_controls: string;
+  additional_remarks: string;
+  risk_acceptance_expiry_date: string;
+  acceptance_approved_by: string | null;
+  acceptance_approved_date: string | null;
+  acceptance_status: "PENDING" | "APPROVED" | "REJECTED";
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+}
 
 export default function RiskAcceptanceList() {
   const [activeTab, setActiveTab] = useState<Status>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAcceptance, setSelectedAcceptance] = useState<typeof mockAcceptances[0] | null>(null);
+  const [selectedAcceptance, setSelectedAcceptance] = useState<Acceptance | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalStatus, setModalStatus] = useState("");
   const [remarks, setRemarks] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptances, setAcceptances] = useState<Acceptance[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const statusConfig = {
     PENDING: {
@@ -135,69 +104,95 @@ export default function RiskAcceptanceList() {
     }
   };
 
-  // Filter acceptances based on active tab and search
-  const filteredAcceptances = mockAcceptances.filter((acceptance) => {
-    const matchesTab = activeTab === "all" || acceptance.status.toLowerCase() === activeTab;
+  useEffect(() => {
+    fetchAcceptances();
+  }, []);
+
+  const fetchAcceptances = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getRiskAcceptances();
+
+      if (response.status && response.data?.acceptances) {
+        setAcceptances(response.data.acceptances);
+      } else {
+        toast.error("Failed to load risk acceptances");
+      }
+    } catch (err) {
+      console.error("Error fetching acceptances:", err);
+      toast.error("An error occurred while loading data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredAcceptances = acceptances.filter((acceptance) => {
+    const matchesTab =
+      activeTab === "all" || acceptance.acceptance_status.toLowerCase() === activeTab;
     const matchesSearch =
       acceptance.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acceptance.risk_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acceptance.submitted_by.toLowerCase().includes(searchQuery.toLowerCase());
+      acceptance.risk_description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
   // Count by status
   const counts = {
-    all: mockAcceptances.length,
-    pending: mockAcceptances.filter((a) => a.status === "PENDING").length,
-    approved: mockAcceptances.filter((a) => a.status === "APPROVED").length,
-    rejected: mockAcceptances.filter((a) => a.status === "REJECTED").length
+    all: acceptances.length,
+    pending: acceptances.filter((a) => a.acceptance_status === "PENDING").length,
+    approved: acceptances.filter((a) => a.acceptance_status === "APPROVED").length,
+    rejected: acceptances.filter((a) => a.acceptance_status === "REJECTED").length
   };
 
-  const handleAcceptanceClick = (acceptance: any) => {
+  const handleAcceptanceClick = (acceptance: Acceptance) => {
     setSelectedAcceptance(acceptance);
-    setModalStatus(acceptance.status === "PENDING" ? "" : acceptance.status);
-    setRemarks(acceptance.remarks || "");
+    setModalStatus(acceptance.acceptance_status === "PENDING" ? "" : acceptance.acceptance_status);
     setShowModal(true);
   };
 
   const handleStatusUpdate = async () => {
-    if (!modalStatus || !remarks.trim()) {
-      alert("Please select a status and provide remarks");
-      return;
-    }
-
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    console.log("Updating acceptance:", {
-      id: selectedAcceptance?.id,
-      status: modalStatus,
-      remarks: remarks
-    });
-
-    setIsSubmitting(false);
-    setShowModal(false);
-    setSelectedAcceptance(null);
-    setModalStatus("");
-    setRemarks("");
+    try {
+      const updatedData = {
+        ...selectedAcceptance,
+        acceptance_status: modalStatus as "PENDING" | "APPROVED" | "REJECTED",
+        additional_remarks: remarks
+      };
+      const response = await updateRiskAcceptance(
+        selectedAcceptance?.id as string,
+        updatedData as any
+      );
+      if (response.success) {
+        toast.success(response.message || "Successfully updated risk acceptance");
+        await fetchAcceptances();
+        setShowModal(false);
+        setSelectedAcceptance(null);
+      } else {
+        toast.error(response.message || "Failed to update acceptance");
+      }
+    } catch (err) {
+      console.error("Error updating acceptance:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const AcceptanceCard = ({ acceptance }: { acceptance: any }) => {
-    const config = statusConfig[acceptance.status as keyof typeof statusConfig];
+  const AcceptanceCard = ({ acceptance }: { acceptance: Acceptance }) => {
+    const config = statusConfig[acceptance.acceptance_status];
     const Icon = config.icon;
-    const hasRemarks = acceptance.remarks;
+    const hasRemarks = acceptance.additional_remarks;
 
     return (
       <Card
-        className={`border ${config.color} cursor-pointer p-4 transition-all`}
+        className={`${config.color} cursor-pointer p-4 transition-all`}
         onClick={() => handleAcceptanceClick(acceptance)}>
         <div className="mb-3 flex items-start justify-between">
           <div className="flex flex-1 items-start gap-2">
             <Icon className="mt-0.5 h-5 w-5 text-gray-600" />
             <div className="flex-1">
               <h4 className="line-clamp-2 text-sm font-semibold">{acceptance.risk_description}</h4>
-              <p className="mt-1 text-xs text-gray-500">ID: {acceptance.id}</p>
+              <p className="mt-1 text-xs text-gray-500 uppercase">
+                ID: {acceptance.id.slice(0, 4)}...
+              </p>
             </div>
           </div>
           <Badge variant={config.badge as any}>{config.label}</Badge>
@@ -218,23 +213,19 @@ export default function RiskAcceptanceList() {
               </Badge>
             </div>
             <div>
-              <p className="font-medium text-gray-700">Submitted By</p>
-              <p className="truncate text-gray-900">{acceptance.submitted_by}</p>
+              <p className="font-medium text-gray-700">Created By</p>
+              <p className="truncate text-gray-900">{acceptance.created_by.slice(0, 8)}...</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 border-t pt-2">
             <div>
-              <p className="font-medium text-gray-700">Submitted Date</p>
-              <p className="text-gray-900">
-                {format(new Date(acceptance.submitted_date), "MMM dd, yyyy")}
-              </p>
+              <p className="font-medium text-gray-700">Created Date</p>
+              <p className="text-gray-900">{formatDate(acceptance.created_at)}</p>
             </div>
             <div>
               <p className="font-medium text-gray-700">Expiration Date</p>
-              <p className="text-gray-900">
-                {format(new Date(acceptance.expiration_date), "MMM dd, yyyy")}
-              </p>
+              <p className="text-gray-900">{formatDate(acceptance.risk_acceptance_expiry_date)}</p>
             </div>
           </div>
 
@@ -245,14 +236,12 @@ export default function RiskAcceptanceList() {
             </div>
           )}
 
-          {(acceptance.approved_date || acceptance.rejected_date) && (
+          {acceptance.acceptance_approved_date && (
             <div className="flex items-center justify-between pt-2 text-gray-500">
-              {acceptance.approved_date && (
-                <span>Approved: {format(new Date(acceptance.approved_date), "MMM dd, yyyy")}</span>
-              )}
-              {acceptance.rejected_date && (
-                <span>Rejected: {format(new Date(acceptance.rejected_date), "MMM dd, yyyy")}</span>
-              )}
+              <span>
+                {acceptance.acceptance_status === "APPROVED" ? "Approved" : "Updated"}:{" "}
+                {formatDate(acceptance.acceptance_approved_date)}
+              </span>
               {hasRemarks && (
                 <div className="flex items-center gap-1 text-blue-600">
                   <Eye className="h-3 w-3" />
@@ -293,7 +282,7 @@ export default function RiskAcceptanceList() {
             {/* Search Bar */}
             <div className="mb-6">
               <Search
-                placeholder="Search by ID, description, or submitter..."
+                placeholder="Search by ID or description..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e)}
               />
@@ -313,13 +302,7 @@ export default function RiskAcceptanceList() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="all" className="mt-4 space-y-3">
-                {filteredAcceptances.map((acceptance) => (
-                  <AcceptanceCard key={acceptance.id} acceptance={acceptance} />
-                ))}
-              </TabsContent>
-
-              <TabsContent value="pending" className="mt-4 space-y-3">
+              <TabsContent value={activeTab} className="mt-4 space-y-3">
                 {filteredAcceptances.length > 0 ? (
                   filteredAcceptances.map((acceptance) => (
                     <AcceptanceCard key={acceptance.id} acceptance={acceptance} />
@@ -327,33 +310,11 @@ export default function RiskAcceptanceList() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12">
                     <AlertCircle className="text-muted-foreground mb-4 h-12 w-12" />
-                    <p className="text-sm text-gray-500">No pending acceptances</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="approved" className="mt-4 space-y-3">
-                {filteredAcceptances.length > 0 ? (
-                  filteredAcceptances.map((acceptance) => (
-                    <AcceptanceCard key={acceptance.id} acceptance={acceptance} />
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <AlertCircle className="text-muted-foreground mb-4 h-12 w-12" />
-                    <p className="text-sm text-gray-500">No approved acceptances</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="rejected" className="mt-4 space-y-3">
-                {filteredAcceptances.length > 0 ? (
-                  filteredAcceptances.map((acceptance) => (
-                    <AcceptanceCard key={acceptance.id} acceptance={acceptance} />
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <AlertCircle className="text-muted-foreground mb-4 h-12 w-12" />
-                    <p className="text-sm text-gray-500">No rejected acceptances</p>
+                    <p className="text-sm text-gray-500">
+                      {searchQuery
+                        ? "No acceptances match your search"
+                        : `No ${activeTab !== "all" ? activeTab : ""} acceptances found`}
+                    </p>
                   </div>
                 )}
               </TabsContent>
@@ -368,18 +329,16 @@ export default function RiskAcceptanceList() {
           <DialogHeader className="p-6 pb-0">
             <div className="flex items-start justify-between">
               <div>
-                <DialogTitle className="text-2xl">{selectedAcceptance?.id}</DialogTitle>
+                <DialogTitle className="text-2xl">Risk Acceptance Details</DialogTitle>
                 <div className="mt-2 flex items-center gap-2">
                   {selectedAcceptance && (
                     <>
                       <Badge
                         variant="outline"
-                        className={statusConfig[
-                          selectedAcceptance.status as keyof typeof statusConfig
-                        ].color
+                        className={statusConfig[selectedAcceptance.acceptance_status].color
                           .replace("bg-", "bg-")
                           .replace("border-", "border-")}>
-                        {selectedAcceptance.status}
+                        {selectedAcceptance.acceptance_status}
                       </Badge>
                       <Badge
                         variant={
@@ -435,9 +394,22 @@ export default function RiskAcceptanceList() {
                     Compensating Controls
                   </Label>
                   <div className="rounded-md border bg-gray-50 p-4">
-                    <p className="text-sm">{selectedAcceptance?.compensating_controls}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {selectedAcceptance?.compensating_controls}
+                    </p>
                   </div>
                 </div>
+
+                {selectedAcceptance?.additional_remarks && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-base font-semibold">
+                      Additional Remarks
+                    </Label>
+                    <div className="rounded-md border bg-gray-50 p-4">
+                      <p className="text-sm">{selectedAcceptance.additional_remarks}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -450,45 +422,50 @@ export default function RiskAcceptanceList() {
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div>
-                      <Label className="text-muted-foreground text-xs">Submitted By</Label>
-                      <p className="mt-1 font-medium">{selectedAcceptance?.submitted_by}</p>
+                      <Label className="text-muted-foreground text-xs">Created By</Label>
+                      <p className="mt-1 font-medium">{selectedAcceptance?.created_by}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground text-xs">Submitted Date</Label>
+                      <Label className="text-muted-foreground text-xs">Created Date</Label>
                       <p className="mt-1 font-medium">
-                        {selectedAcceptance?.submitted_date &&
-                          format(new Date(selectedAcceptance.submitted_date), "MMM dd, yyyy")}
+                        {selectedAcceptance?.created_at &&
+                          formatDate(selectedAcceptance.created_at, "long")}
                       </p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-xs">Expiration Date</Label>
                       <p className="mt-1 font-medium">
-                        {selectedAcceptance?.expiration_date &&
-                          format(new Date(selectedAcceptance.expiration_date), "MMM dd, yyyy")}
+                        {selectedAcceptance?.risk_acceptance_expiry_date &&
+                          formatDate(selectedAcceptance.risk_acceptance_expiry_date)}
                       </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Existing Remarks */}
-              {selectedAcceptance?.remarks && (
+              {/* Approval Info */}
+              {selectedAcceptance?.acceptance_approved_by && (
                 <Card className="border-primary">
                   <CardHeader>
-                    <CardTitle className="text-base">Previous Remarks</CardTitle>
+                    <CardTitle className="text-base">Approval Information</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm">{selectedAcceptance.remarks}</p>
-                    {selectedAcceptance.approved_by && (
-                      <p className="text-muted-foreground mt-2 text-xs">
-                        By: {selectedAcceptance.approved_by}
-                      </p>
-                    )}
-                    {selectedAcceptance.rejected_by && (
-                      <p className="text-muted-foreground mt-2 text-xs">
-                        By: {selectedAcceptance.rejected_by}
-                      </p>
-                    )}
+                    <div className="space-y-2">
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Approved By</Label>
+                        <p className="mt-1 font-medium">
+                          {selectedAcceptance.acceptance_approved_by}
+                        </p>
+                      </div>
+                      {selectedAcceptance.acceptance_approved_date && (
+                        <div>
+                          <Label className="text-muted-foreground text-xs">Approval Date</Label>
+                          <p className="mt-1 font-medium">
+                            {formatDate(selectedAcceptance.acceptance_approved_date, "long")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )}

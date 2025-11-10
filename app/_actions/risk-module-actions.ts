@@ -1624,6 +1624,24 @@ export async function getActions(params: ActionQueryParams): Promise<APIResponse
   }
 }
 
+// RISK ACCEPTANCES MANAGEMENT
+
+export async function getRiskAcceptances(params?: ActionQueryParams): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", String(params?.page));
+  if (params?.page_size) queryParams.append("page_size", String(params?.page_size));
+
+  const url = `/api/v1/risk-acceptances${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
+  try {
+    const response = await authenticatedApiClient({ url });
+
+    return successResponse(response.data?.data);
+  } catch (error) {
+    return handleError(error, "GET | GET RISK ACCEPTANCES", url);
+  }
+}
+
 
 export async function createRiskAcceptance(id: string, data:any): Promise<APIResponse> {
   const url = `/api/v1/risks/${id}/accept`; 
@@ -1646,6 +1664,8 @@ export async function updateRiskAcceptance(
       data: input,
       method: "PUT"
     });
+    console.log("RES:", response);
+    
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
