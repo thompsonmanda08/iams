@@ -91,7 +91,7 @@ export async function getAuditPlan(id: string): Promise<APIResponse> {
       url: `/api/v1/audit-plans/${id}`
     });
 
-    return successResponse(response.data, "Audit plan fetched successfully");
+    return successResponse(response.data?.data, "Audit plan fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | AUDIT PLAN", `/api/v1/audit-plans/${id}`);
   }
@@ -249,12 +249,30 @@ export async function getWorkpapers(
       url
     });
 
-    return successResponse(response.data, "Workpapers fetched successfully");
+    return successResponse(response.data?.data, "Workpapers fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | WORKPAPERS", "/api/v1/working-papers");
   }
 }
 
+/**
+ * Get single workpaper by audit plan ID
+ */
+export async function getWorkpaperByAuditPlanId(audit_plan_id: string): Promise<APIResponse> {
+  if (!audit_plan_id) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  const url = `/api/v1/audit-plans/${audit_plan_id}/working-paper`;
+
+  try {
+    const response = await authenticatedApiClient({ url });
+
+    return successResponse(response.data?.data, "Workpaper fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | WORKPAPER", url);
+  }
+}
 /**
  * Get single workpaper by ID
  */
@@ -269,7 +287,7 @@ export async function getWorkpaper(id: string): Promise<APIResponse> {
       url: `/api/v1/working-papers/${id}`
     });
 
-    return successResponse(response.data, "Workpaper fetched successfully");
+    return successResponse(response.data?.data, "Workpaper fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | WORKPAPER", `/api/v1/working-papers/${id}`);
   }
@@ -495,7 +513,7 @@ export async function getFindings(filters?: {
       url
     });
 
-    return successResponse(response.data, "Findings fetched successfully");
+    return successResponse(response.data?.data, "Findings fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | FINDINGS", "/api/v1/working-paper-findings");
   }
@@ -549,58 +567,10 @@ export async function getFinding(id: string): Promise<APIResponse> {
 }
 
 /**
- * Create new finding
- */
-export async function createFinding(data: {
-  audit_plan_id: string;
-  working_paper_id: string;
-  category_name: string;
-  finding_number: string;
-  workings_and_test_results?: string;
-  conclusion?: string;
-  report?: boolean;
-  severity?: string;
-  recommendation?: string;
-  management_response?: string;
-  action_plan?: string;
-  responsible_person?: string;
-  due_date?: string;
-  status?: string;
-  evidence_links?: string;
-}): Promise<APIResponse> {
-  if (
-    !data.audit_plan_id ||
-    !data.working_paper_id ||
-    !data.category_name ||
-    !data.finding_number
-  ) {
-    return handleBadRequest(
-      "Audit plan ID, working paper ID, category name, and finding number are required"
-    );
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: "/api/v1/working-paper-findings",
-      data
-    });
-
-    revalidatePath("/dashboard/audit/findings");
-    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
-    revalidatePath("/dashboard/audit/workpapers");
-
-    return successResponse(response.data, "Finding created successfully");
-  } catch (error: any) {
-    return handleError(error, "POST | CREATE FINDING", "/api/v1/working-paper-findings");
-  }
-}
-
-/**
  * Update existing finding
  */
 export async function updateFinding(
-  id: string,
+  finding_id: string,
   data: {
     management_response?: string;
     action_plan?: string;
@@ -612,23 +582,25 @@ export async function updateFinding(
     [key: string]: any;
   }
 ): Promise<APIResponse> {
-  if (!id) {
+  if (!finding_id) {
     return handleBadRequest("Finding ID is required");
   }
 
+  const url = `/api/v1/working-paper-findings/${finding_id}`;
+
+  if (!data) {
+    return handleBadRequest("Data is required");
+  }
+
   try {
-    const response = await authenticatedApiClient({
-      method: "PUT",
-      url: `/api/v1/working-paper-findings/${id}`,
-      data
-    });
+    const response = await authenticatedApiClient({ method: "PUT", url, data });
 
     revalidatePath("/dashboard/audit/findings");
     revalidatePath("/dashboard/audit/workpapers");
 
     return successResponse(response.data, "Finding updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE FINDING", `/api/v1/working-paper-findings/${id}`);
+    return handleError(error, "PUT | UPDATE FINDING", url);
   }
 }
 
@@ -1301,6 +1273,105 @@ export async function rejectAuditPlan(auditPlanId: string, reason: string): Prom
       error,
       "POST | REJECT AUDIT PLAN",
       `/api/v1/audit-plans/${auditPlanId}/reject`
+    );
+  }
+}
+
+/**
+ * Approve audit plan as HIAR
+ */
+export async function approveAuditPlanAsHIAR(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/hiar`,
+      data: {
+        comments
+      }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by HIAR");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | APPROVE AUDIT PLAN AS HIAR",
+      `/api/v1/audit-plans/${auditPlanId}/approve/hiar`
+    );
+  }
+}
+
+/**
+ * Approve audit plan as CEO
+ */
+export async function approveAuditPlanAsCEO(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/ceo`,
+      data: {
+        comments
+      }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by CEO");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | APPROVE AUDIT PLAN AS CEO",
+      `/api/v1/audit-plans/${auditPlanId}/approve/ceo`
+    );
+  }
+}
+
+/**
+ * Approve audit plan as Audit Chair
+ */
+export async function approveAuditPlanAsAuditChair(
+  auditPlanId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`,
+      data: {
+        comments
+      }
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+
+    return successResponse(response.data, "Audit plan approved by Audit Chair");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | APPROVE AUDIT PLAN AS AUDIT CHAIR",
+      `/api/v1/audit-plans/${auditPlanId}/approve/audit-chair`
     );
   }
 }

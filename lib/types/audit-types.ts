@@ -67,6 +67,11 @@ export type TemplateCategoryGroup = "main-clauses" | "annex-a-controls";
  */
 export type WorkpaperStatus = "unlinked" | "linked" | "in-progress" | "completed";
 
+/**
+ * Audit Plan status types representing the lifecycle of an audit plan
+ */
+export type AuditPlanStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "COMPLETED" | "REJECTED";
+
 // ============================================================================
 // TEMPLATE TYPES
 // ============================================================================
@@ -120,10 +125,11 @@ export interface AuditPlan {
   description: string;
   start_date: string; // ISO 8601 datetime string
   end_date: string; // ISO 8601 datetime string
-  status: string; // Consider using: 'Draft' | 'Submitted' | 'Approved' | 'Rejected' etc.
+  status: AuditPlanStatus;
   department_id: string | null;
   audit_universe_id: string | null;
   audit_universe_item_id: string | null;
+  audit_universe_item_ids?: string[]; // Array of universe item IDs
   working_paper_template_id: string;
   working_paper_id: string | null;
   ref_no: string;
@@ -142,23 +148,58 @@ export interface AuditPlan {
   closing_meeting_datetime: string; // ISO 8601 datetime string
   submitted_by: string | null;
   submitted_at: string | null;
-  hiar_approved_by: string | null;
+  hiar_approved_by: User | null;
   hiar_approved_at: string | null;
   hiar_comments: string | null;
-  ceo_approved_by: string | null;
+  ceo_approved_by: User | null;
   ceo_approved_at: string | null;
   ceo_comments: string | null;
-  audit_chair_approved_by: string | null;
+  audit_chair_approved_by: User | null;
   audit_chair_approved_at: string | null;
   audit_chair_comments: string | null;
-  rejected_by: string | null;
+  rejected_by: User | null;
   rejected_at: string | null;
   rejection_reason: string | null;
   created_by: string; // UUID
   updated_by: string; // UUID
   created_at?: string; // ISO 8601 datetime string
   updated_at?: string; // ISO 8601 datetime string
+  // Related data
+  audit_universe_items?: AuditUniverseEntry[];
+  budget_item_ids?: string[];
+  budget_items?: BudgetItem[];
+  working_paper?: Workpaper;
+  audit_team_leader_user?: User;
+  audit_team_members_users?: User[];
+  client_representative_user?: User;
+  submitted_by_user?: User;
+  hiar_approved_by_user?: User;
+  ceo_approved_by_user?: User;
+  audit_chair_approved_by_user?: User;
+  rejected_by_user?: User;
+  created_by_user?: User;
+  updated_by_user?: User;
+  // Team details (enriched from API)
+  team_leader?: {
+    name: string;
+    email: string;
+    role: string;
+  };
+  team_members?: Array<{
+    name: string;
+    email: string;
+    role: string;
+  }>;
 }
+
+type User = {
+  id?: string;
+  name: string;
+  email: string;
+  role: string;
+  department?: string;
+  [key: string]: any;
+};
 
 /**
  * Input type for creating or updating an audit plan

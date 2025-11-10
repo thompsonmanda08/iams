@@ -23,7 +23,8 @@ import {
   AlertTriangle,
   Map,
   ChartNetwork,
-  Globe
+  Globe,
+  Calendar
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
@@ -52,7 +53,8 @@ const iconMap: Record<string, LucideIcon> = {
   AlertTriangle,
   Map,
   ChartNetwork,
-  Globe
+  Globe,
+  Calendar
 };
 
 function PageHeader({

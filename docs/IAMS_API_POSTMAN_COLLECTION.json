@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "fc56a80a-438c-48c5-bbaf-2e95b47193ef",
+		"_postman_id": "ee87c10f-3d38-4548-ad91-8bb4b4bde9d0",
 		"name": "Risk Audit Management System - Complete API",
 		"description": "Comprehensive API collection for Risk Audit Management System with all endpoints organized intuitively",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -1264,6 +1264,117 @@
 										"users",
 										"{id}",
 										"reset-password"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assign Role to User",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"role_id\": \"{{role_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/users/{id}/assign-role",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"users",
+										"{id}",
+										"assign-role"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assign Branch to User",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"branch_id\": \"{{branch_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/users/{id}/assign-branch",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"users",
+										"{id}",
+										"assign-branch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get User Permissions",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/users/{id}/permissions",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"users",
+										"{id}",
+										"permissions"
 									]
 								}
 							},
@@ -3356,7 +3467,7 @@
 						{
 							"name": "Revoke Risk Acceptance",
 							"request": {
-								"method": "POST",
+								"method": "DELETE",
 								"header": [
 									{
 										"key": "Content-Type",
@@ -3369,15 +3480,6 @@
 										"type": "text"
 									}
 								],
-								"body": {
-									"mode": "raw",
-									"raw": "{}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
 								"url": {
 									"raw": "http://{{host}}/risk-acceptances/{acceptance_id}/revoke",
 									"protocol": "http",
@@ -4432,6 +4534,46 @@
 							"response": []
 						},
 						{
+							"name": "Submit Execution",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/executions/{{execution_id}}/submit",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"executions",
+										"{{execution_id}}",
+										"submit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Delete Execution",
 							"request": {
 								"method": "DELETE",
@@ -4466,6 +4608,44 @@
 				{
 					"name": "Action Reviews",
 					"item": [
+						{
+							"name": "Create Review",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"execution_id\": \"{{execution_id}}\",\n  \"reviewer_id\": \"{{user_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/reviews",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reviews"
+									]
+								}
+							},
+							"response": []
+						},
 						{
 							"name": "Get Review by ID",
 							"request": {
@@ -7783,7 +7963,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"ref_no\": \"AP-2025-001\",\n  \"audit_plan_date\": \"2024-11-15T00:00:00Z\",\n  \"audit_date\": \"2025-02-01T00:00:00Z\",\n  \"audit_area\": \"Finance & Accounting\",\n  \"audit_scope\": \"Full scope audit\",\n  \"audit_criteria\": \"Internal controls\",\n  \"audit_objective\": \"Verify compliance\",\n  \"management_standard\": \"COSO Framework\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Management Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": \"{{template_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_item_ids\": [],\n  \"budget_item_ids\": []\n}",
+									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"ref_no\": \"AP-2025-001\",\n  \"audit_plan_date\": \"2024-11-15T00:00:00Z\",\n  \"audit_area\": \"Finance & Accounting\",\n  \"audit_scope\": \"Full scope audit\",\n  \"audit_criteria\": \"Internal controls\",\n  \"audit_objective\": \"Verify compliance\",\n  \"management_standard\": \"COSO Framework\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Management Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": \"{{template_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_item_ids\": [],\n  \"budget_item_ids\": []\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -9291,44 +9471,6 @@
 					"name": "Findings",
 					"item": [
 						{
-							"name": "Create Finding",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"working_paper_id\": \"{{working_paper_id}}\",\n  \"category\": \"Compliance\",\n  \"title\": \"Test Finding\",\n  \"description\": \"Test finding\",\n  \"severity\": \"High\",\n  \"recommendation\": \"Test recommendation\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/working-paper-findings",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"working-paper-findings"
-									]
-								}
-							},
-							"response": []
-						},
-						{
 							"name": "List Findings",
 							"request": {
 								"method": "GET",
@@ -9345,7 +9487,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings?page=1&page_size=10",
+									"raw": "http://{{host}}/working-paper-findings?page=1&page_size=10&working_paper_id={{working_paper_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -9361,6 +9503,10 @@
 										{
 											"key": "page_size",
 											"value": "10"
+										},
+										{
+											"key": "working_paper_id",
+											"value": "{{working_paper_id}}"
 										}
 									]
 								}
@@ -9384,14 +9530,14 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{id}",
+									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{id}"
+										"{{finding_id}}"
 									]
 								}
 							},
@@ -9414,16 +9560,16 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-papers/{id}/categories/{category_name}/findings",
+									"raw": "http://{{host}}/working-papers/{{working_paper_id}}/categories/Context of the Organisation/findings",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-papers",
-										"{id}",
+										"{{working_paper_id}}",
 										"categories",
-										"{category_name}",
+										"Context of the Organisation",
 										"findings"
 									]
 								}
@@ -9431,7 +9577,7 @@
 							"response": []
 						},
 						{
-							"name": "Update Finding",
+							"name": "Update Finding (Phase 2 - Full Content)",
 							"request": {
 								"method": "PUT",
 								"header": [
@@ -9448,7 +9594,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"description\": \"Updated\",\n  \"severity\": \"Medium\"\n}",
+									"raw": "{\n  \"finding_number\": \"F-001\",\n  \"category_name\": \"Context of the Organisation\",\n  \"workings_and_test_results\": \"Test procedures performed...\",\n  \"conclusion\": \"Finding conclusion here\",\n  \"report\": true,\n  \"severity\": \"MEDIUM\",\n  \"recommendation\": \"Recommended action...\",\n  \"management_response\": \"Management response to finding\",\n  \"action_plan\": \"Detailed action plan for remediation\",\n  \"responsible_person\": \"{{user_id}}\",\n  \"due_date\": \"2025-12-31\",\n  \"evidence_links\": \"Link to evidence documents\",\n  \"status\": \"IN_PROGRESS\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -9456,14 +9602,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{id}",
+									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{id}"
+										"{{finding_id}}"
 									]
 								}
 							},
@@ -9495,14 +9641,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{id}/status",
+									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}/status",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{id}",
+										"{{finding_id}}",
 										"status"
 									]
 								}
@@ -9526,199 +9672,14 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{id}",
+									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{id}"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Findings Categories",
-					"item": [
-						{
-							"name": "Create Findings Category",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"name\": \"Compliance Finding\",\n  \"code\": \"FC_001\",\n  \"description\": \"Compliance issues\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/findings-categories",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"findings-categories"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "List Findings Categories",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/findings-categories?page=1&page_size=10&is_active=true",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"findings-categories"
-									],
-									"query": [
-										{
-											"key": "page",
-											"value": "1"
-										},
-										{
-											"key": "page_size",
-											"value": "10"
-										},
-										{
-											"key": "is_active",
-											"value": "true"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Get Findings Category Details",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/findings-categories/{id}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"findings-categories",
-										"{id}"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Findings Category",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"name\": \"Updated Compliance Finding\",\n  \"code\": \"FC_001\",\n  \"description\": \"Updated\",\n  \"is_active\": true\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/findings-categories/{id}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"findings-categories",
-										"{id}"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Delete Findings Category",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/findings-categories/{id}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"findings-categories",
-										"{id}"
+										"{{finding_id}}"
 									]
 								}
 							},
@@ -12018,6 +11979,12 @@
 			"value": "",
 			"type": "string",
 			"description": "From create incident response"
+		},
+		{
+			"key": "finding_id",
+			"value": "",
+			"type": "string",
+			"description": "From list findings response"
 		}
 	]
 }

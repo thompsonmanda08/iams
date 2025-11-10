@@ -96,7 +96,9 @@ export const QUERY_KEYS = {
   ACTION_FINDINGS: "action-findings",
   ACTION_TASKS: "action-tasks",
   ACTION_EXECUTIONS: "action-executions",
-  ACTION_LOGS: "action-logs"
+  ACTION_LOGS: "action-logs",
+  AUDIT_PLANS: "audit-plans",
+  WORKPAPER_FINDINGS: "workpaper-findings"
 };
 
 // ANIMATION_VARIANTS

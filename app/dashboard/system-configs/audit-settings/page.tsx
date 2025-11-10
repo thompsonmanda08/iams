@@ -207,11 +207,11 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
           </TabsContent>
 
           {/* Findings Categories Tab */}
-          <TabsContent value="findings">
+          {/* <TabsContent value="findings">
             <Suspense fallback={<TableLoading />}>
               <FindingsCategoryTab categories={findingsCategories} />
             </Suspense>
-          </TabsContent>
+          </TabsContent> */}
 
           {/* Process Activity Tab */}
           <TabsContent value="process">

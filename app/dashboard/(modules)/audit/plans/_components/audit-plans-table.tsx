@@ -11,7 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { AuditStatusBadge } from "../../../../../../components/audit/audit-status-badge";
+import { AuditPlanStatusBadge } from "../../../../../../components/audit/audit-plan-status-badge";
 import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { format } from "date-fns";
@@ -43,8 +43,8 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteClick = (plan: AuditPlan) => {
-    // Only allow deletion for Draft plans
-    if (plan.status?.toLowerCase() !== "draft") {
+    // Only allow deletion for DRAFT plans
+    if (plan.status !== "DRAFT") {
       toast({
         title: "Cannot Delete",
         description: "Only draft audit plans can be deleted.",
@@ -179,7 +179,7 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <AuditStatusBadge status={plan.status} />
+                <AuditPlanStatusBadge status={plan.status} />
               </TableCell>
               <TableCell>
                 <div className="flex justify-end gap-2">
@@ -189,7 +189,7 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                       View
                     </Link>
                   </Button>
-                  {plan.status?.toLowerCase() === "draft" && (
+                  {plan.status === "DRAFT" && (
                     <>
                       <Button
                         size="sm"
