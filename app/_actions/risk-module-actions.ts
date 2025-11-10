@@ -1663,9 +1663,7 @@ export async function updateRiskAcceptance(
       url: `/api/v1/risk-acceptances/${id}`,
       data: input,
       method: "PUT"
-    });
-    console.log("RES:", response);
-    
+    });    
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
