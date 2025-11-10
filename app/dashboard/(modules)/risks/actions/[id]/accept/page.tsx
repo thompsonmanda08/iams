@@ -4,8 +4,10 @@ import BackButton from "@/components/back-button";
 import RiskAcceptanceForm, { FormData } from "@/components/forms/risk-acceptance-form";
 import { toast } from "sonner";
 import { createRiskAcceptance, updateRiskAcceptance } from "@/app/_actions/risk-module-actions";
+import { useRouter } from "next/navigation";
 
 export default function RiskAcceptancePage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [existingFormData, setExistingFormData] = useState<Partial<FormData> | null>(null);
   const { id } = use(params);
@@ -17,6 +19,7 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
         toast.success(response.message || "Risk Acceptance Form created successfully!");
         setExistingFormData(data);
         setFormMode("edit");
+        router.push("/dashboard/risks/risk-acceptances");
       } else {
         toast.error(response.message || "Failed to create Risk Acceptance Form");
       }
