@@ -9,6 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import {
   Calendar,
   Users,
   FileText,
@@ -21,7 +28,8 @@ import {
   Plus,
   CircleAlertIcon,
   CircleCheckBig,
-  FileArchive
+  FileArchive,
+  Trash2
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { AuditPlanStatusBadge } from "@/components/audit/audit-plan-status-badge";
@@ -31,7 +39,7 @@ import { FindingsList } from "./findings-list";
 import { AuditPlanApprovalsPanel } from "./audit-plan-approvals-panel";
 import { cn, notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
-import { submitAuditPlanForApproval } from "@/app/_actions/audit-module-actions";
+import { submitAuditPlanForApproval, deleteAuditPlan } from "@/app/_actions/audit-module-actions";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -62,6 +70,7 @@ export function AuditPlanWorkpaperView({
   const [findingsRefreshKey, setFindingsRefreshKey] = useState(0);
   const [editingFinding, setEditingFinding] = useState<any>(null);
   const [auditPlanData, setAuditPlanData] = useState(auditPlan);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Submit for approval mutation
   const submitMutation = useMutation({
@@ -85,6 +94,33 @@ export function AuditPlanWorkpaperView({
       notify({
         title: "Error",
         description: error.message || "Failed to submit audit plan for approval",
+        type: "error"
+      });
+    }
+  });
+
+  // Delete audit plan mutation
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const result = await deleteAuditPlan(auditPlan.id);
+      return result;
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+        notify({
+          title: "Success",
+          description: "Audit plan deleted successfully",
+          type: "success"
+        });
+        setDeleteDialogOpen(false);
+        // Optionally navigate away or trigger parent callback
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to delete audit plan",
         type: "error"
       });
     }
@@ -225,21 +261,34 @@ export function AuditPlanWorkpaperView({
             </div>
             <div className="flex flex-col items-end gap-4">
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
-                {auditPlanData.status.toUpperCase() === "DRAFT" && (
-                  <Button
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => submitMutation.mutate()}
-                    disabled={submitMutation.isPending}
-                    isLoading={submitMutation.isPending}
-                    loadingText="Submitting...">
-                    <Send className="h-4 w-4" />
-                    Submit for Approval
+                {auditPlanData.status.toUpperCase() === "COMPLETED" && (
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export
                   </Button>
+                )}
+                {auditPlanData.status.toUpperCase() === "DRAFT" && (
+                  <>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setDeleteDialogOpen(true)}
+                      disabled={deleteMutation.isPending}>
+                      <Trash2 className="h-4 w-4" />
+                      Delete Plan
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => submitMutation.mutate()}
+                      disabled={submitMutation.isPending}
+                      isLoading={submitMutation.isPending}
+                      loadingText="Submitting...">
+                      <Send className="h-4 w-4" />
+                      Submit for Approval
+                    </Button>
+                  </>
                 )}
               </div>
 
@@ -718,6 +767,35 @@ export function AuditPlanWorkpaperView({
           />
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50">
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </div>
+              <DialogTitle className="tracking-tight">Delete Audit Plan</DialogTitle>
+            </div>
+            <DialogDescription className="text-muted-foreground text-xs font-medium sm:text-sm">
+              Are you sure you want to delete this audit plan? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="flex-1">
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
