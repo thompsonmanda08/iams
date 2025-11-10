@@ -1,6 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, Clock, AlertCircle, FileText, Eye, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
+  FileText,
+  Eye,
+  Loader2,
+  View
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -27,6 +36,8 @@ import PageHeader from "@/components/page-header";
 import Search from "@/components/ui/search-field";
 import { getRiskAcceptances, updateRiskAcceptance } from "@/app/_actions/risk-module-actions";
 import { toast } from "sonner";
+import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
+import { useRouter } from "next/navigation";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -65,11 +76,12 @@ interface Acceptance {
   acceptance_status: "PENDING" | "APPROVED" | "REJECTED";
   created_at: string;
   updated_at: string;
-  created_by: string;
-  updated_by: string;
+  created_by_name: string;
+  updated_by_name: string;
 }
 
 export default function RiskAcceptanceList() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Status>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAcceptance, setSelectedAcceptance] = useState<Acceptance | null>(null);
@@ -112,6 +124,7 @@ export default function RiskAcceptanceList() {
     try {
       setIsLoading(true);
       const response = await getRiskAcceptances();
+      console.log("RES:", response);
 
       if (response.status && response.data?.acceptances) {
         setAcceptances(response.data.acceptances);
@@ -145,7 +158,7 @@ export default function RiskAcceptanceList() {
 
   const handleAcceptanceClick = (acceptance: Acceptance) => {
     setSelectedAcceptance(acceptance);
-    setModalStatus(acceptance.acceptance_status === "PENDING" ? "" : acceptance.acceptance_status);
+    setModalStatus(acceptance.acceptance_status === "PENDING" ? "PENDING" : acceptance.acceptance_status);
     setShowModal(true);
   };
 
@@ -176,15 +189,17 @@ export default function RiskAcceptanceList() {
     }
   };
 
+  if (isLoading) {
+    return <RiskAcceptanceListSkeleton />;
+  }
+
   const AcceptanceCard = ({ acceptance }: { acceptance: Acceptance }) => {
     const config = statusConfig[acceptance.acceptance_status];
     const Icon = config.icon;
     const hasRemarks = acceptance.additional_remarks;
 
     return (
-      <Card
-        className={`${config.color} cursor-pointer p-4 transition-all`}
-        onClick={() => handleAcceptanceClick(acceptance)}>
+      <Card className={`${config.color} p-4 transition-all`}>
         <div className="mb-3 flex items-start justify-between">
           <div className="flex flex-1 items-start gap-2">
             <Icon className="mt-0.5 h-5 w-5 text-gray-600" />
@@ -214,7 +229,7 @@ export default function RiskAcceptanceList() {
             </div>
             <div>
               <p className="font-medium text-gray-700">Created By</p>
-              <p className="truncate text-gray-900">{acceptance.created_by.slice(0, 8)}...</p>
+              <p className="truncate text-gray-900">{acceptance.created_by_name}</p>
             </div>
           </div>
 
@@ -230,9 +245,30 @@ export default function RiskAcceptanceList() {
           </div>
 
           {acceptance.deficiency_description && (
-            <div className="border-t pt-2">
-              <p className="mb-1 font-medium text-gray-700">Deficiency:</p>
-              <p className="line-clamp-2 text-gray-600">{acceptance.deficiency_description}</p>
+            <div className="flex justify-between border-t pt-2">
+              <div>
+                <p className="mb-1 font-medium text-gray-700">Deficiency:</p>
+                <p className="line-clamp-2 text-gray-600">{acceptance.deficiency_description}</p>
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => handleAcceptanceClick(acceptance)}
+                  className="h-8 gap-1.5">
+                  Acceptance Details
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    router.push(`/dashboard/risks/actions/${acceptance.risk_id}`);
+                  }}
+                  className="h-8 gap-1.5">
+                  <View className="h-3.5 w-3.5" />
+                  View Associated Risk
+                </Button>
+              </div>
             </div>
           )}
 
@@ -423,7 +459,7 @@ export default function RiskAcceptanceList() {
                   <div className="grid gap-4 md:grid-cols-3">
                     <div>
                       <Label className="text-muted-foreground text-xs">Created By</Label>
-                      <p className="mt-1 font-medium">{selectedAcceptance?.created_by}</p>
+                      <p className="mt-1 font-medium">{selectedAcceptance?.created_by_name}</p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-xs">Created Date</Label>
