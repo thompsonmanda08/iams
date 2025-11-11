@@ -248,6 +248,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
                     <TableHead className="text-foreground font-bold">Budget Title</TableHead>
+                    <TableHead className="text-foreground font-bold">Department</TableHead>
                     <TableHead className="text-foreground font-bold">Amount</TableHead>
                     <TableHead className="text-foreground font-bold">Budget Lines</TableHead>
                     <TableHead className="text-foreground font-bold">Status</TableHead>
@@ -267,6 +268,13 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                         <span className="text-primary hover:text-primary/80 flex items-center gap-2 font-semibold transition-colors">
                           {budget.title}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {budget.department_id ? (
+                          <span className="text-xs font-medium">{budget.department_id.slice(0, 8)}...</span>
+                        ) : (
+                          <span className="text-xs italic opacity-50">No Department</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-lg font-bold">
                         {formatCurrency(budget.total_amount, budget.currency)}

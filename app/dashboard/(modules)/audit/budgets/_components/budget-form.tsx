@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,8 @@ import { CURRENCIES } from "@/lib/constants";
 import { createBudget, createBudgetLine } from "@/app/_actions/audit-module-actions";
 import { useDepartments } from "@/hooks/use-query-data";
 import { useBudgets } from "@/hooks/use-audit-settings-query-data";
+import { useQueryClient } from "@tanstack/react-query";
+import { Budget } from "@/lib/types/audit-types";
 
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
@@ -72,12 +75,17 @@ const INIT_LINE_DATA: BudgetLineFormData = {
 const BudgetForm = ({
   budgetId,
   departmentId,
-  mode = "budget"
+  mode = "budget",
+  onBudgetCreated
 }: {
   budgetId?: string;
   departmentId?: string;
   mode?: "budget" | "line";
+  onBudgetCreated?: (budgetId: string) => void;
 }) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const [budgetData, setBudgetData] = useState<BudgetFormData>({
     ...INIT_BUDGET_DATA,
     department_id: departmentId || ""
@@ -108,6 +116,32 @@ const BudgetForm = ({
   };
 
   const createBudgetHandler = async () => {
+    // Validate date range
+    const startDate = new Date(budgetData.start_date);
+    const endDate = new Date(budgetData.end_date);
+
+    if (endDate <= startDate) {
+      toast.error("End date must be after start date");
+      return;
+    }
+
+    // Validate total amount
+    if (budgetData.total_amount <= 0) {
+      toast.error("Total amount must be greater than 0");
+      return;
+    }
+
+    // Validate required fields
+    if (!budgetData.department_id) {
+      toast.error("Please select a department");
+      return;
+    }
+
+    if (!budgetData.title.trim()) {
+      toast.error("Please enter a budget title");
+      return;
+    }
+
     setIsCreating(true);
     try {
       const budgetPayload = {
@@ -125,13 +159,25 @@ const BudgetForm = ({
 
       if (response.success) {
         toast.success(response.message || "Budget created successfully");
+        // Extract the created budget ID from response
+        const createdBudgetId = response.data?.id;
+
+        // Reset form
+        setBudgetData(INIT_BUDGET_DATA);
+
+        // Invalidate budgets query to reflect new budget
+        queryClient.invalidateQueries({ queryKey: ["budgets"] });
+
+        // Call optional callback for parent component
+        if (onBudgetCreated && createdBudgetId) {
+          onBudgetCreated(createdBudgetId);
+        }
       } else {
         toast.error(response.message || "Failed to create budget");
         throw new Error(response.message);
       }
     } catch (error) {
       toast.error("Failed to create budget. Please try again");
-      throw error;
     } finally {
       setIsCreating(false);
     }
@@ -186,10 +232,10 @@ const BudgetForm = ({
   };
 
   const isEditMode = !!budgetId && mode === "budget";
-  const selectedBudget = budgetsData?.find((b) => b.id === lineData.budget_id);
+  const selectedBudget: Budget | undefined = budgetsData?.find((b) => b.id === lineData.budget_id);
 
   return (
-    <div className="from-background via-background to-muted/30 bg-gradient-to-br">
+    <div className="from-background via-background to-muted/30 bg-linear-to-br">
       <form id="budget-form" onSubmit={handleSubmit} className="space-y-6">
         {mode === "budget" ? (
           <Card className="animate-fade-in p-8">
@@ -219,18 +265,16 @@ const BudgetForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="year" className="flex items-center gap-2 text-sm font-semibold">
-                    <Calendar className="text-muted-foreground h-4 w-4" />
-                    Year *
-                  </Label>
                   <Input
                     id="year"
+                    name="year"
                     type="number"
                     min="2020"
                     max="2100"
                     value={budgetData.year}
                     onChange={(e) => updateBudgetData({ year: Number(e.target.value) })}
                     placeholder="2025"
+                    label="Year"
                     required
                   />
                 </div>
@@ -238,34 +282,28 @@ const BudgetForm = ({
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="flex items-center gap-2 text-sm font-semibold">
-                    <FileText className="text-muted-foreground h-4 w-4" />
-                    Budget Title *
-                  </Label>
                   <Input
                     id="title"
+                    name="title"
                     value={budgetData.title}
                     onChange={(e) => updateBudgetData({ title: e.target.value })}
                     placeholder="e.g., Q4 2025 Departmental Budget"
+                    label="Budget Title"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="totalAmount"
-                    className="flex items-center gap-2 text-sm font-semibold">
-                    <DollarSign className="text-muted-foreground h-4 w-4" />
-                    Total Amount *
-                  </Label>
                   <Input
                     id="totalAmount"
+                    name="totalAmount"
                     type="number"
                     step="0.01"
                     min="0"
                     value={budgetData.total_amount || ""}
                     onChange={(e) => updateBudgetData({ total_amount: Number(e.target.value) })}
                     placeholder="0.00"
+                    label="Total Amount"
                     required
                   />
                 </div>
@@ -403,10 +441,11 @@ const BudgetForm = ({
                 <div className="space-y-2">
                   <Input
                     id="lineName"
-                    label="Line Name"
+                    name="lineName"
                     value={lineData.name}
                     onChange={(e) => updateLineData({ name: e.target.value })}
                     placeholder="e.g., Personnel Costs"
+                    label="Line Name"
                     required
                   />
                 </div>
@@ -436,13 +475,14 @@ const BudgetForm = ({
                 <div className="space-y-2">
                   <Input
                     id="lineAllocated"
-                    label="Allocated Amount"
+                    name="lineAllocated"
                     type="number"
                     step="0.01"
                     min="0"
                     value={lineData.allocated_amount || ""}
                     onChange={(e) => updateLineData({ allocated_amount: Number(e.target.value) })}
                     placeholder="0.00"
+                    label="Allocated Amount"
                     required
                   />
                 </div>
@@ -450,13 +490,14 @@ const BudgetForm = ({
                 <div className="space-y-2">
                   <Input
                     id="lineSpent"
-                    label="Spent Amount"
+                    name="lineSpent"
                     type="number"
                     step="0.01"
                     min="0"
                     value={lineData.spent_amount || ""}
                     onChange={(e) => updateLineData({ spent_amount: Number(e.target.value) })}
                     placeholder="0.00"
+                    label="Spent Amount"
                   />
                 </div>
 
@@ -467,7 +508,7 @@ const BudgetForm = ({
                   <Select
                     value={lineData.currency}
                     onValueChange={(value) => updateLineData({ currency: value })}>
-                    <SelectTrigger id="lineCurrency" className="w-full">
+                    <SelectTrigger id="lineCurrency" name="lineCurrency" className="w-full">
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">

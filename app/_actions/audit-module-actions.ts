@@ -1539,6 +1539,7 @@ export async function createBudget(payload: CreateBudgetPayload): Promise<APIRes
       data: payload
     });
 
+    revalidatePath("/dashboard/audit/budgets");
     revalidatePath("/dashboard/audit/budgets/new");
     return successResponse(response.data.data);
   } catch (error: any) {

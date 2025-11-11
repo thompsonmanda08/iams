@@ -934,21 +934,29 @@ export type BudgetStatus = "BUDGET_CREATION" | "UNDER_REVIEW" | "APPROVED" | "DR
 export interface BudgetLine {
   id?: string;
   name?: string;
-  amount?: number;
   description?: string;
+  allocated_amount?: number;
+  spent_amount?: number;
+  currency?: string;
+  category?: string;
   start_date?: string | null;
   end_date?: string | null;
 }
 
 export interface Budget {
   id: string;
-  name: string;
-  amount: number;
+  title: string;
+  total_amount: number;
+  currency: string;
   description: string;
+  year: number;
+  department_id?: string | null;
   status: BudgetStatus;
   start_date: string | null;
   end_date: string | null;
-  budget_lines: BudgetLine[];
+  budget_lines?: BudgetLine[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BudgetItem {
