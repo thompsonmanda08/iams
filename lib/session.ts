@@ -5,9 +5,10 @@ import { cookies } from "next/headers";
 
 import { AuthSession, Permission } from "@/lib/types";
 
-import { AUTH_SESSION, USER_SESSION, PERMISSIONS_SESSION } from "./constants";
+import { AUTH_SESSION, USER_SESSION, PERMISSIONS_SESSION, SCREEN_LOCK_SESSION } from "./constants";
 import { User, UserType } from "./types/account";
 import { cache } from "react";
+import { SESSION_CONFIG } from "./session-config";
 
 // 1. Get secret from environment variables (MUST be set) - SERVER SIDE ONLY
 // Note: Validation is deferred to runtime to avoid build-time issues
@@ -120,7 +121,8 @@ export async function createAuthSession({
   mfa_required?: boolean;
   organization_id?: string;
 }): Promise<void> {
-  const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // AFTER 1 HOURS
+  // Use centralized session config for 30-minute session
+  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
 
   const newSession: AuthSession = {
     accessToken: accessToken || "",
@@ -132,8 +134,8 @@ export async function createAuthSession({
     expiresAt
   };
 
-  // Call `encrypt` to generate the session token
-  const token = await encrypt(newSession, "1h");
+  // Call `encrypt` to generate the session token (30 minutes)
+  const token = await encrypt(newSession, "30m");
 
   // Ensure `session` is successfully created before setting the cookie
   if (token) {
@@ -388,4 +390,76 @@ export async function verifySessions(
   const isAuthenticated = !!consolidatedSession?.accessToken;
 
   return { isAuthenticated, session: consolidatedSession };
+}
+
+/**
+ * Set screen lock state cookie
+ * Persists across page reloads so user needs to confirm they're still active
+ */
+export async function setScreenLockCookie(isLocked: boolean): Promise<void> {
+  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+
+  const lockState = {
+    locked: isLocked,
+    timestamp: new Date().toISOString()
+  };
+
+  const token = await encrypt(lockState, "30m");
+
+  if (token) {
+    (await cookies()).set(SCREEN_LOCK_SESSION, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: expiresAt,
+      sameSite: "strict",
+      path: "/"
+    });
+  }
+}
+
+/**
+ * Get screen lock state from cookie
+ * Returns true if screen is locked
+ */
+export async function getScreenLockState(): Promise<boolean> {
+  const cookie = (await cookies()).get(SCREEN_LOCK_SESSION)?.value;
+  if (!cookie) return false;
+
+  const lockState = await decrypt(cookie);
+  return (lockState as any)?.locked === true;
+}
+
+/**
+ * Clear screen lock cookie
+ */
+export async function clearScreenLockCookie(): Promise<void> {
+  (await cookies()).delete(SCREEN_LOCK_SESSION);
+}
+
+/**
+ * Verify that a session field was updated to the expected value
+ * Useful for confirming session updates in lockScreenOnUserIdle()
+ */
+export async function verifySessionUpdate(field: string, expectedValue: any): Promise<boolean> {
+  try {
+    const { session } = await verifySessions();
+
+    if (!session) {
+      console.warn(`❌ Cannot verify session update: no active session`);
+      return false;
+    }
+
+    const actualValue = (session as any)[field];
+
+    if (actualValue === expectedValue) {
+      console.log(`✅ Session field '${field}' verified: ${expectedValue}`);
+      return true;
+    } else {
+      console.warn(`❌ Session field '${field}' mismatch. Expected: ${expectedValue}, Got: ${actualValue}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`❌ Failed to verify session update for field '${field}':`, error);
+    return false;
+  }
 }

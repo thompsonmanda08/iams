@@ -2,6 +2,7 @@ import { UserQueryParams } from "@/lib/types/account";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRefreshToken, initializeSystemSetup } from "@/app/_actions/auth-actions";
 import { getUsers, createNewUser, updateUser } from "@/app/_actions/user-actions";
+import { SESSION_CONFIG } from "@/lib/session-config";
 
 // Query Keys
 export const USERS_QUERY_KEYS = {
@@ -22,19 +23,26 @@ export const useTeamMembers = (params: UserQueryParams | undefined) => {
 };
 
 /**
- * Hook to manually refresh authentication token
- * IMPORTANT: Auto-refetch disabled to prevent screen flickering
- * Only refetch manually when user takes action (e.g., unlock screen)
+ * Hook to refresh authentication token
+ * Configuration:
+ * - When enabled=true: Automatically refreshes token every 25 minutes
+ * - When enabled=false: No automatic refresh
+ *
+ * This prevents token expiry at 30 minutes by refreshing at 25 minutes
+ * User must be active (not idle) for auto-refresh to happen
  */
+const REFRESH_INTERVAL = SESSION_CONFIG.TOKEN_REFRESH_INTERVAL; // Refresh at 25 minutes (before 30-min expiry)
+
 export const useRefreshToken = (enabled: boolean = false) =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN, enabled],
     queryFn: getRefreshToken,
-    retry: 1, // Reduced retries
+    retry: 1,
     retryDelay: 1000,
     refetchOnMount: false,
-    refetchInterval: false, // ✅ DISABLED: Prevents automatic refetch every 3 minutes
-    staleTime: Infinity, // ✅ Never auto-refetch, only manual
+    // ✅ Auto-refresh every 50 minutes when enabled
+    refetchInterval: enabled ? REFRESH_INTERVAL : false,
+    staleTime: 0, // Always consider stale to enable refetch
     enabled
   });
 

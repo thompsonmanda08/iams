@@ -12,12 +12,15 @@ import {
   createUserSession,
   deleteSession,
   updateAuthSession,
-  verifySession
+  verifySession,
+  setScreenLockCookie,
+  clearScreenLockCookie
 } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
 import { UserType } from "@/lib/types/account";
 import { cache } from "react";
+import { logger } from "@/lib/logger";
 
 export async function loginUser({
   username,
@@ -81,7 +84,9 @@ export async function verifyOTP({
         console.log("✅ [OTP Verified] User data populated successfully");
       }
     } catch (setupError) {
-      console.warn("⚠️  [OTP Verified] Failed to populate user data, but proceeding with authentication");
+      console.warn(
+        "⚠️  [OTP Verified] Failed to populate user data, but proceeding with authentication"
+      );
     }
 
     return successResponse(response?.data, "OTP verified successfully");
@@ -357,7 +362,7 @@ export const initializeSystemSetup = cache(_initializeSystemSetup);
  * Refresh user Token
  */
 export async function getRefreshToken(): Promise<APIResponse> {
-  const url = `api/v1/auth/refresh-token`;
+  const url = `/api/v1/auth/refresh-token`;
 
   const { isAuthenticated } = await verifySession();
 
@@ -368,12 +373,22 @@ export async function getRefreshToken(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({ url });
 
-    const access_token = response.data?.data?.access_token;
+    const access_token = response.data?.access_token;
 
     await updateAuthSession({ access_token });
 
+    // ✅ Log success without exposing token value
+    logger.info("Token refreshed successfully", {
+      function: "getRefreshToken",
+      endpoint: url
+    });
+
     return successResponse({ access_token }, response.data?.message);
   } catch (error: Error | any) {
+    logger.error("Token refresh failed", error, {
+      function: "getRefreshToken",
+      endpoint: url
+    });
     return handleError(error, "GET | REFRESH TOKEN", url);
   }
 }
@@ -387,19 +402,78 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
       try {
         const refreshResponse = await getRefreshToken();
         if (refreshResponse.success) {
-          await updateAuthSession({ screen_locked: state });
+          // ✅ Validate that session update succeeds
+          const updateResult = await updateAuthSession({ screen_locked: state });
 
+          if (!updateResult) {
+            logger.error("Failed to update session lock state during unlock", undefined, {
+              function: "lockScreenOnUserIdle",
+              state
+            });
+            return false;
+          }
+
+          // ✅ Clear screen lock cookie on successful unlock
+          await clearScreenLockCookie();
+          logger.info("Screen unlocked successfully, token refreshed", {
+            function: "lockScreenOnUserIdle",
+            state
+          });
           return true;
         }
       } catch (error) {
-        console.error("Failed to refresh token on unlock:", error);
+        logger.error("Failed to refresh token on unlock", error, {
+          function: "lockScreenOnUserIdle",
+          state
+        });
         // Continue with updating screen lock state even if refresh fails
       }
     }
 
-    await updateAuthSession({ screen_locked: state });
+    // ✅ Validate session update result
+    const updateResult = await updateAuthSession({ screen_locked: state });
+
+    if (!updateResult) {
+      logger.error("Failed to update session lock state", undefined, {
+        function: "lockScreenOnUserIdle",
+        state
+      });
+      return false;
+    }
+
+    // ✅ Persist screen lock state to cookie (survives page reload)
+    await setScreenLockCookie(state);
+
+    const lockState = state ? "locked" : "unlocked";
+    logger.info(`Screen ${lockState}`, {
+      function: "lockScreenOnUserIdle",
+      state
+    });
+
     return isAuthenticated;
   }
 
   return isAuthenticated;
+}
+
+/**
+ * ✅ Server action wrapper for checking screen lock state from client
+ * Called on component mount to restore lock state after page reload
+ */
+export async function checkScreenLockState(): Promise<boolean> {
+  try {
+    const isLocked = await getScreenLockState();
+    if (isLocked) {
+      logger.info("Screen lock state detected from persistent cookie", {
+        function: "checkScreenLockState",
+        isLocked
+      });
+    }
+    return isLocked;
+  } catch (error) {
+    logger.error("Error checking screen lock state", error, {
+      function: "checkScreenLockState"
+    });
+    return false;
+  }
 }

@@ -6,6 +6,7 @@ export const POCKET_BASE_URL =
 export const AUTH_SESSION = "__com.bgs.IAMS-infratel-portal.com__";
 export const USER_SESSION = "__com.bgs.IAMS-infratel-user__";
 export const PERMISSIONS_SESSION = "__com.bgs.IAMS-infratel-pem__";
+export const SCREEN_LOCK_SESSION = "__com.bgs.IAMS-infratel-screen-lock__"; // Persists screen lock state across reloads
 
 export const placeHolderImage = "/images/placeholder-image.webp";
 export const DefaultCover = "/images/profile-cover.jpg";
