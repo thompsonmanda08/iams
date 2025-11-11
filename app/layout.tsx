@@ -14,6 +14,7 @@ import Providers from "./providers";
 import { Metadata } from "next";
 import localFont from "next/font/local";
 import { verifySession } from "@/lib/session";
+import { defaultMetadata } from "./metadata";
 
 const inter = localFont({
   src: [
@@ -69,10 +70,7 @@ const inter = localFont({
   fallback: ["inter", "system-ui", "arial"]
 });
 
-export const metadata: Metadata = {
-  title: "Infratel IAMS",
-  description: "Infratel IAMS Admin Dashboard"
-};
+export const metadata: Metadata = defaultMetadata;
 
 export default async function RootLayout({
   children
