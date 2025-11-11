@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Filter, FileText, TrendingUp, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import PageHeader from "@/components/page-header";
 
+
 const AcceptanceCardSkeleton = () => {
   return (
     <Card className="p-4 transition-all">
@@ -363,3 +364,8 @@ export function EffectsReportSkeleton() {
     </div>
   );
 }
+
+
+
+
+
