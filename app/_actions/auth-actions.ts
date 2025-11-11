@@ -14,7 +14,8 @@ import {
   updateAuthSession,
   verifySession,
   setScreenLockCookie,
-  clearScreenLockCookie
+  clearScreenLockCookie,
+  getScreenLockState
 } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
