@@ -33,7 +33,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   // Extract findings from workpaper response (they're already included)
   const allFindings = workpaper?.findings || [];
 
-  console.log("Audit Plan:", auditPlan);
+  // console.log("Audit Plan:", auditPlan);
   // console.log("Workpaper:", workpaper);
   // console.log("Findings:", allFindings);
 

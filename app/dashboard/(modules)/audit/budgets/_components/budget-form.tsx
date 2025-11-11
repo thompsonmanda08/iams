@@ -3,17 +3,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Save, FileText, DollarSign, Calendar } from "lucide-react";
+import { SelectField } from "@/components/ui/select-field";
+import { Save, FileText, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { SearchSelectField } from "@/components/ui/search-select-field";
@@ -105,7 +98,7 @@ const BudgetForm = ({
   const departments = departmentsResponse?.data?.data || [];
 
   const { data: budgetsResponse, isLoading: loadingBudgets } = useBudgets();
-  const budgetsData = budgetsResponse?.data?.data || [];
+  const budgetsData = budgetsResponse?.data || [];
 
   const updateBudgetData = (fields: Partial<BudgetFormData>) => {
     setBudgetData((prev) => ({ ...prev, ...fields }));
@@ -256,6 +249,10 @@ const BudgetForm = ({
                     id="department"
                     label="Department"
                     required
+                    className="w-full max-w-none"
+                    classNames={{
+                      wrapper: "max-w-none"
+                    }}
                     placeholder="Search and select a department..."
                     options={departments}
                     value={budgetData.department_id}
@@ -311,34 +308,28 @@ const BudgetForm = ({
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="currency"
-                    className="flex items-center gap-2 text-sm font-semibold">
-                    <DollarSign className="text-muted-foreground h-4 w-4" />
-                    Currency *
-                  </Label>
-                  <Select
+                  <SearchSelectField
+                    id="currency"
+                    name="currency"
+                    label="Currency"
+                    className="w-full max-w-none"
+                    required
                     value={budgetData.currency}
-                    onValueChange={(value) => updateBudgetData({ currency: value })}>
-                    <SelectTrigger id="currency" className="w-full">
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {CURRENCIES.map((curr) => (
-                        <SelectItem key={curr.currency} value={curr.currency}>
-                          {curr.currency} - {curr.country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value) => updateBudgetData({ currency: value })}
+                    placeholder="Select currency"
+                    options={CURRENCIES.map((curr) => ({
+                      id: curr.currency,
+                      name: `${curr.currency} - ${curr.country}`,
+                      value: curr.currency
+                    }))}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-sm font-semibold">
-                    <Calendar className="text-muted-foreground h-4 w-4" />
-                    Start Date *
-                  </Label>
                   <DatePicker
+                    label="Start Date"
+                    name="start_date"
+                    required
                     value={
                       budgetData?.start_date
                         ? (new Date(budgetData.start_date) as unknown as any)
@@ -351,11 +342,10 @@ const BudgetForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-sm font-semibold">
-                    <Calendar className="text-muted-foreground h-4 w-4" />
-                    End Date *
-                  </Label>
                   <DatePicker
+                    label="End Date"
+                    name="end_date"
+                    required
                     value={
                       budgetData.end_date
                         ? (new Date(budgetData.end_date) as unknown as any)
@@ -369,11 +359,10 @@ const BudgetForm = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-semibold">
-                  Description
-                </Label>
                 <Textarea
                   id="description"
+                  name="description"
+                  label="Description"
                   value={budgetData.description}
                   onChange={(e) => updateBudgetData({ description: e.target.value })}
                   rows={4}
@@ -451,23 +440,20 @@ const BudgetForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lineCategory" className="text-sm font-semibold">
-                    Category *
-                  </Label>
-                  <Select
+                  <SelectField
+                    id="lineCategory"
+                    name="lineCategory"
+                    label="Category"
+                    required
                     value={lineData.category}
-                    onValueChange={(value) => updateLineData({ category: value })}>
-                    <SelectTrigger id="lineCategory" className="w-full">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {BUDGET_CATEGORIES.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value) => updateLineData({ category: value })}
+                    placeholder="Select category"
+                    options={BUDGET_CATEGORIES.map((cat) => ({
+                      id: cat,
+                      name: cat,
+                      value: cat
+                    }))}
+                  />
                 </div>
               </div>
 
@@ -501,34 +487,32 @@ const BudgetForm = ({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="lineCurrency" className="text-sm font-semibold">
-                    Currency *
-                  </Label>
-                  <Select
-                    value={lineData.currency}
-                    onValueChange={(value) => updateLineData({ currency: value })}>
-                    <SelectTrigger id="lineCurrency" name="lineCurrency" className="w-full">
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {CURRENCIES.map((curr) => (
-                        <SelectItem key={curr.currency} value={curr.currency}>
-                          {curr.currency} - {curr.country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SearchSelectField
+                  id="lineCurrency"
+                  name="lineCurrency"
+                  label="Currency"
+                  required
+                  className="w-full max-w-none"
+                  classNames={{
+                    wrapper: "w-full max-w-none"
+                  }}
+                  value={lineData.currency}
+                  onValueChange={(value) => updateLineData({ currency: value })}
+                  placeholder="Select currency"
+                  options={CURRENCIES.map((curr) => ({
+                    id: curr.currency,
+                    name: `${curr.currency} - ${curr.country}`,
+                    value: curr.currency
+                  }))}
+                />
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-sm font-semibold">
-                    <Calendar className="text-muted-foreground h-4 w-4" />
-                    Start Date *
-                  </Label>
                   <DatePicker
+                    label="Start Date"
+                    name="lineStartDate"
+                    required
                     value={
                       lineData.start_date
                         ? (new Date(lineData.start_date) as unknown as any)
@@ -541,11 +525,10 @@ const BudgetForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-sm font-semibold">
-                    <Calendar className="text-muted-foreground h-4 w-4" />
-                    End Date *
-                  </Label>
                   <DatePicker
+                    label="End Date"
+                    name="lineEndDate"
+                    required
                     value={
                       lineData.end_date
                         ? (new Date(lineData.end_date) as unknown as any)
@@ -559,11 +542,10 @@ const BudgetForm = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lineDescription" className="text-sm font-semibold">
-                  Description
-                </Label>
                 <Textarea
                   id="lineDescription"
+                  name="lineDescription"
+                  label="Description"
                   value={lineData.description}
                   onChange={(e) => updateLineData({ description: e.target.value })}
                   rows={3}
