@@ -1,315 +1,165 @@
 # INFRATEL IAMS Documentation
 
-**Last Updated:** November 3, 2025
+**Last Updated:** November 11, 2025
+**Status:** ✅ Reorganized & Consolidated
 
-Welcome to the INFRATEL IAMS (Integrated Audit and Risk Management System) documentation.
-
----
-
-## Quick Navigation
-
-### 🚀 For New Developers
-
-**Start here:**
-1. [Getting Started](GETTING_STARTED.md) - Setup and quick start guide
-2. [Architecture](ARCHITECTURE.md) - Understand the system architecture
-3. [Authentication](AUTHENTICATION.md) - Learn about authentication & sessions
-
-### 📚 Core Documentation
-
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| [Getting Started](GETTING_STARTED.md) | Setup, quick start, common tasks | All developers |
-| [Architecture](ARCHITECTURE.md) | System architecture, tech stack, patterns | All developers |
-| [Authentication](AUTHENTICATION.md) | Auth flow, session management, security | Backend & frontend |
-| [Features](FEATURES.md) | Feature documentation, usage examples | All developers, QA |
-| [API Guide](API_GUIDE.md) | API endpoints, integration patterns | Frontend developers |
-| [Deployment](DEPLOYMENT.md) | Deployment guide, configuration | DevOps, backend |
+Welcome to the INFRATEL IAMS (Integrated Audit and Risk Management System) documentation. This folder contains organized, consolidated documentation by topic and feature.
 
 ---
 
-## Documentation Structure
+## 📍 START HERE
+
+**For all developers, read these first:**
+
+1. ⭐ **[CURRENT_IMPLEMENTATION.md](CURRENT_IMPLEMENTATION.md)** - Audit of what's actually implemented
+2. 📋 **[RECOMMENDATIONS_FOR_FUTURE.md](RECOMMENDATIONS_FOR_FUTURE.md)** - Future roadmap with effort estimates
+
+---
+
+## 📂 Documentation by Category
+
+### 🏗️ Architecture & Setup - [architecture/](architecture/)
+
+- [ARCHITECTURE.md](architecture/ARCHITECTURE.md) - System architecture, tech stack, folder structure
+- [AUTHENTICATION.md](architecture/AUTHENTICATION.md) - Auth flows, session management, security
+- [MFA_OTP_IMPLEMENTATION.md](architecture/MFA_OTP_IMPLEMENTATION.md) - Multi-factor authentication details
+
+### 🚀 Getting Started - [development/](development/)
+
+- [GETTING_STARTED.md](development/GETTING_STARTED.md) - Quick start, setup, environment config
+- [TEMPLATE_USAGE_GUIDE.md](development/TEMPLATE_USAGE_GUIDE.md) - Using template system
+- [MIGRATION_SUMMARY.md](development/MIGRATION_SUMMARY.md) - Migration guides
+
+### 🔌 API Integration - [api/](api/)
+
+- **[INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md)** - Consolidated API reference (159+ endpoints, all modules)
+
+### 🎯 Feature Guides - [features/](features/)
+
+- **[Audit Plans](features/audit-plans/)** - 🟠 85% Complete
+- **[Budgets](features/budgets/)** - ✅ 100% Complete
+- **[Risk Management](features/risk-management/)** - ✅ 100% Complete
+- **[Workflows](features/workflows/)** - ⚠️ 50% Complete
+- **[Admin](features/admin/)** - ✅ 95% Complete
+- [FEATURES_OVERVIEW.md](features/FEATURES_OVERVIEW.md) - High-level feature matrix
+
+### 🔒 Security - [security/](security/)
+
+- [SESSION_MANAGEMENT.md](security/SESSION_MANAGEMENT.md) - Session handling, screen lock, multi-tab sync
+
+### 📦 Deployment - [deployment/](deployment/)
+
+- [DEPLOYMENT.md](deployment/DEPLOYMENT.md) - Deployment options, configuration, production setup
+
+---
+
+## 📊 Status Overview
+
+| Component | Status | Documentation |
+|-----------|--------|---|
+| Authentication | ✅ Complete | [architecture/AUTHENTICATION.md](architecture/AUTHENTICATION.md) |
+| Session Management | ✅ Complete | [security/SESSION_MANAGEMENT.md](security/SESSION_MANAGEMENT.md) |
+| Audit Plans | 🟠 85% | [features/audit-plans/](features/audit-plans/) |
+| Risk Management | ✅ 100% | [features/risk-management/](features/risk-management/) |
+| Budgets | ✅ 100% | [features/budgets/](features/budgets/) |
+| Admin/Config | ✅ 95% | [features/admin/](features/admin/) |
+| Workflows | ⚠️ 50% | [features/workflows/](features/workflows/) |
+| API Integration | ✅ 113% | [api/INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md) |
+| Testing | ❌ None | [RECOMMENDATIONS_FOR_FUTURE.md](RECOMMENDATIONS_FOR_FUTURE.md) |
+
+---
+
+## 🎯 Quick Start by Role
+
+### New Developer
+1. Read [CURRENT_IMPLEMENTATION.md](CURRENT_IMPLEMENTATION.md)
+2. Review [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)
+3. Follow [development/GETTING_STARTED.md](development/GETTING_STARTED.md)
+
+### Feature Developer
+1. Check feature README in [features/](features/)
+2. Review [api/INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md)
+3. Reference [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)
+
+### API Integration
+1. Start with [api/INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md)
+2. Browse examples for your module
+3. Check `app/_actions/` for patterns
+
+### DevOps/Deployment
+1. Read [deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md)
+2. Configure environment
+3. Follow deployment steps
+
+---
+
+## 🏗️ Folder Structure
 
 ```
 docs/
-├── README.md                    # This file - Documentation index
-├── GETTING_STARTED.md           # ⭐ Start here for new developers
-├── ARCHITECTURE.md              # System architecture overview
-├── AUTHENTICATION.md            # Authentication & session management
-├── FEATURES.md                  # Features documentation
-├── API_GUIDE.md                 # API integration guide
-├── DEPLOYMENT.md                # Deployment guide
-│
-├── WORKFLOW_*.md               # Workflow system documentation
-├── MIGRATION_SUMMARY.md        # Migration guides
-├── TEMPLATE_USAGE_GUIDE.md     # Template system guide
-├── MFA_OTP_IMPLEMENTATION.md   # MFA implementation details
-├── SESSION_MANAGEMENT_AUDIT.md # Session management details
-├── FRONTEND_API_GUIDE.md       # Extended API guide
-│
-└── archive/                    # 📦 Historical documents
-    ├── SESSION_SUMMARY.md
-    ├── IMPLEMENTATION_REPORT.md
-    ├── *_AUDIT_*.md
-    ├── *_FIXES_*.md
-    └── ... (old implementation docs)
+├── README.md
+├── CURRENT_IMPLEMENTATION.md       # 📍 What exists
+├── RECOMMENDATIONS_FOR_FUTURE.md   # 📋 Future improvements
+├── architecture/                   # 🏗️ System design
+├── development/                    # 🚀 Setup & development
+├── api/                           # 🔌 API reference
+├── features/                      # 🎯 Feature guides
+├── security/                      # 🔒 Security docs
+└── deployment/                    # 📦 Deployment guides
 ```
 
 ---
 
-## Quick Reference
+## 💡 Technology Stack
 
-### Common Tasks
-
-| Task | Documentation |
-|------|---------------|
-| Setting up development environment | [Getting Started](GETTING_STARTED.md#quick-start-5-minutes) |
-| Understanding authentication flow | [Authentication](AUTHENTICATION.md#authentication-flow) |
-| Integrating an API endpoint | [API Guide](API_GUIDE.md#server-actions-pattern) |
-| Deploying to production | [Deployment](DEPLOYMENT.md#deployment-options) |
-| Adding a new feature | [Getting Started](GETTING_STARTED.md#creating-a-new-feature) |
-| Configuring permissions | [Features](FEATURES.md#role-based-access-control-rbac) |
-| Setting up workflows | [Features](FEATURES.md#workflow-administration) |
-
-### Technology Stack
-
-- **Framework:** Next.js 16.0 with App Router
+- **Framework:** Next.js 16.0 (App Router)
 - **UI:** React 19, TypeScript 5.8, Tailwind CSS 4.1
-- **State:** TanStack React Query, Zustand
+- **State:** TanStack React Query v5, Zustand
 - **Auth:** JWT with encrypted session cookies
 - **API:** Next.js Server Actions, Axios
 
-See [Architecture](ARCHITECTURE.md#technology-stack) for complete stack.
+See [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) for details.
 
 ---
 
-## Feature Documentation
+## 🚀 Common Tasks
 
-### Risk Management
-- [Risk Registers](FEATURES.md#risk-registers)
-- [Risk Assessment](FEATURES.md#risk-assessment)
-- [KRI Management](FEATURES.md#key-risk-indicators-kri)
-- [Risk Actions](FEATURES.md#risk-mitigation-actions)
-- [Heat Maps](FEATURES.md#risk-heat-map)
-
-### Audit Management
-- [Audit Planning](FEATURES.md#audit-planning)
-- [Audit Execution](FEATURES.md#audit-execution)
-- [Findings Management](FEATURES.md#audit-execution)
-- [Reports](FEATURES.md#audit-reporting)
-
-### System Configuration
-- [Organization Structure](FEATURES.md#organization-structure)
-- [RBAC](FEATURES.md#role-based-access-control-rbac)
-- [Workflow Engine](FEATURES.md#workflow-administration)
+| Task | Link |
+|------|------|
+| Environment Setup | [development/GETTING_STARTED.md](development/GETTING_STARTED.md) |
+| Authentication Flow | [architecture/AUTHENTICATION.md](architecture/AUTHENTICATION.md) |
+| API Integration | [api/INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md) |
+| Deployment | [deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md) |
+| Risk Management | [features/risk-management/README.md](features/risk-management/README.md) |
+| Audit Plans | [features/audit-plans/README.md](features/audit-plans/README.md) |
+| Budgets | [features/budgets/README.md](features/budgets/README.md) |
+| Admin Config | [features/admin/README.md](features/admin/README.md) |
 
 ---
 
-## API Integration
-
-### Quick Start
-
-```typescript
-// 1. Create Server Action
-export async function getResources(): Promise<APIResponse> {
-  const url = `/api/v1/resources`;
-  try {
-    const response = await authenticatedApiClient({ url });
-    return successResponse(response.data, "Success");
-  } catch (error) {
-    return handleError(error, "GET", url);
-  }
-}
-
-// 2. Use in Component
-const { data } = useQuery({
-  queryKey: ['resources'],
-  queryFn: getResources
-});
-```
-
-See [API Guide](API_GUIDE.md) for complete reference.
-
----
-
-## Authentication
-
-### Login Flow
-
-```
-Login → [MFA?] → OTP Verification → Initialize Setup → Dashboard
-```
-
-**Quick Links:**
-- [Authentication Flow](AUTHENTICATION.md#authentication-flow)
-- [Session Management](AUTHENTICATION.md#session-management)
-- [MFA Implementation](AUTHENTICATION.md#multi-factor-authentication-mfa)
-- [Security](AUTHENTICATION.md#security-best-practices)
-
----
-
-## Deployment
-
-### Quick Deploy
+## ⚡ Quick Commands
 
 ```bash
-# Build
-npm run build
-
-# Start
-npm run start
+npm run dev              # Development
+npm run build            # Build
+npm run type-check       # Type checking
+npm run lint             # Linting
+npm start                # Production
 ```
 
-**Deployment Options:**
-- [Vercel](DEPLOYMENT.md#option-1-vercel-recommended)
-- [Docker](DEPLOYMENT.md#option-2-docker)
-- [VPS/Server](DEPLOYMENT.md#option-3-traditional-vpsserver)
-
-See [Deployment Guide](DEPLOYMENT.md) for details.
-
 ---
 
-## Development Guidelines
-
-### Code Style
-
-- **Components:** PascalCase (`UserProfile.tsx`)
-- **Files:** kebab-case (`api-client.ts`)
-- **Server Actions:** camelCase functions
-- **Types:** Interfaces over types
-
-### Best Practices
-
-1. **Always use Server Actions** for API calls
-2. **Type everything** with TypeScript
-3. **Handle errors** gracefully
-4. **Show loading states** during async operations
-5. **Invalidate cache** after mutations
-6. **Follow existing patterns** in the codebase
-
-See [Getting Started](GETTING_STARTED.md#code-style-guide) for complete guidelines.
-
----
-
-## Testing
-
-### Running Tests
-
-```bash
-npm run test           # Run all tests
-npm run test:watch     # Watch mode
-npm run type-check     # TypeScript check
-npm run lint           # Lint code
-```
-
-### Manual Testing
-
-- **Login Flow:** Test with/without MFA
-- **CRUD Operations:** Create, read, update, delete
-- **Permissions:** Test role-based access
-- **Workflows:** Test state transitions
-- **Error Handling:** Test error scenarios
-
----
-
-## Troubleshooting
-
-### Common Issues
+## 🆘 Help
 
 | Issue | Solution |
 |-------|----------|
-| Port already in use | `npx kill-port 3000` |
+| Port in use | `npx kill-port 3000` |
 | Module not found | `rm -rf .next node_modules && npm install` |
-| API connection failed | Check `BASE_URL` in `.env.local` |
-| Auth errors | Clear cookies, check `AUTH_SECRET` |
+| API fails | Check `BASE_URL` in `.env.local` |
 | Build errors | Run `npm run type-check` |
-
-See [Getting Started](GETTING_STARTED.md#common-issues) for more.
-
----
-
-## Getting Help
-
-### Resources
-
-- **Documentation:** This folder
-- **Code Examples:** Browse `app/` directory
-- **Slack:** #infratel-iams channel
-- **Email:** dev-team@infratel.co.zm
-
-### External Resources
-
-- [Next.js Docs](https://nextjs.org/docs)
-- [React Docs](https://react.dev)
-- [TanStack Query](https://tanstack.com/query)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-
----
-
-## Contributing
-
-### Before You Start
-
-1. Read [Getting Started](GETTING_STARTED.md)
-2. Understand [Architecture](ARCHITECTURE.md)
-3. Follow code style guidelines
-4. Test your changes
-
-### Submitting Changes
-
-1. Create feature branch
-2. Make changes
-3. Run tests: `npm test`
-4. Run linting: `npm run lint`
-5. Submit pull request
-
----
-
-## Archive
-
-Historical documentation has been moved to `archive/` folder:
-
-- Session summaries
-- Implementation reports
-- Audit reports
-- Progress tracking docs
-- Old fix plans
-
-These are kept for reference but superseded by current documentation.
-
----
-
-## Document Maintenance
-
-### When to Update
-
-- **Getting Started:** When setup process changes
-- **Architecture:** When tech stack or patterns change
-- **Authentication:** When auth flow changes
-- **Features:** When features are added/changed
-- **API Guide:** When endpoints change
-- **Deployment:** When deployment process changes
-
-### Last Updated
-
-- Getting Started: November 3, 2025
-- Architecture: November 3, 2025
-- Authentication: November 3, 2025
-- Features: November 3, 2025
-- API Guide: November 3, 2025
-- Deployment: November 3, 2025
-
----
-
-## Feedback
-
-Have suggestions for improving documentation?
-
-- Open GitHub issue
-- Message on Slack
-- Email dev-team@infratel.co.zm
+| Auth errors | Clear cookies, verify `AUTH_SECRET` |
 
 ---
 
 **Maintained by:** Development Team
-**Last Updated:** November 3, 2025
+**Status:** ✅ Consolidated & Organized
