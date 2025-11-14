@@ -1,3 +1,17 @@
+/**
+ * Incident Status - Uses standardized status values from lib/statuses.ts
+ *
+ * Allowed statuses:
+ * - PENDING: Incident pending review
+ * - IN_REVIEW: Incident under review
+ * - OPEN: Incident is active
+ * - COMPLETED: Incident resolution complete
+ * - CLOSED: Incident closed
+ *
+ * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
+ */
+export type IncidentStatus = "PENDING" | "IN_REVIEW" | "OPEN" | "COMPLETED" | "CLOSED" | "IN_PROGRESS" | "RESOLVED";
+
 export type Incident = {
   id: string;
   organization_id: string;
@@ -14,7 +28,7 @@ export type Incident = {
   due_date: string;
   responsible_person_id: string;
   financial_loss_implications: "YES" | "NO";
-  status: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+  status: IncidentStatus;
   created_by: string;
   created_at: string;
   updated_by: string;

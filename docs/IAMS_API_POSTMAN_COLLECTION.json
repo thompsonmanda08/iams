@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ee87c10f-3d38-4548-ad91-8bb4b4bde9d0",
+		"_postman_id": "24f33f21-4136-4c39-a863-a4e52cda20c0",
 		"name": "Risk Audit Management System - Complete API",
 		"description": "Comprehensive API collection for Risk Audit Management System with all endpoints organized intuitively",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -1264,117 +1264,6 @@
 										"users",
 										"{id}",
 										"reset-password"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Assign Role to User",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"role_id\": \"{{role_id}}\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/users/{id}/assign-role",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"users",
-										"{id}",
-										"assign-role"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Assign Branch to User",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"branch_id\": \"{{branch_id}}\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/users/{id}/assign-branch",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"users",
-										"{id}",
-										"assign-branch"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Get User Permissions",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/users/{id}/permissions",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"users",
-										"{id}",
-										"permissions"
 									]
 								}
 							},
@@ -3467,7 +3356,7 @@
 						{
 							"name": "Revoke Risk Acceptance",
 							"request": {
-								"method": "DELETE",
+								"method": "POST",
 								"header": [
 									{
 										"key": "Content-Type",
@@ -3480,6 +3369,15 @@
 										"type": "text"
 									}
 								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
 								"url": {
 									"raw": "http://{{host}}/risk-acceptances/{acceptance_id}/revoke",
 									"protocol": "http",
@@ -4534,46 +4432,6 @@
 							"response": []
 						},
 						{
-							"name": "Submit Execution",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/executions/{{execution_id}}/submit",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"executions",
-										"{{execution_id}}",
-										"submit"
-									]
-								}
-							},
-							"response": []
-						},
-						{
 							"name": "Delete Execution",
 							"request": {
 								"method": "DELETE",
@@ -4608,44 +4466,6 @@
 				{
 					"name": "Action Reviews",
 					"item": [
-						{
-							"name": "Create Review",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"execution_id\": \"{{execution_id}}\",\n  \"reviewer_id\": \"{{user_id}}\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/reviews",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"reviews"
-									]
-								}
-							},
-							"response": []
-						},
 						{
 							"name": "Get Review by ID",
 							"request": {
@@ -6738,6 +6558,47 @@
 							"response": []
 						},
 						{
+							"name": "Submit Universe for Approval",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"comment\": \"Ready for approval review\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/audit/universes/{id}/submit-for-approval",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"audit",
+										"universes",
+										"{id}",
+										"submit-for-approval"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Delete Audit Universe",
 							"request": {
 								"method": "DELETE",
@@ -6791,7 +6652,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"audit_universe_id\": 1,\n  \"name\": \"Test Universe Item\",\n  \"audit_frequency\": \"ANNUALLY\",\n  \"department_id\": \"{{dept_id}}\",\n  \"strategic_pillar_id\": null,\n  \"auditable_area_id\": null,\n  \"indicative_target_id\": null,\n  \"strategic_initiative_id\": null,\n  \"process_activity_id\": \"{{process_activity_id}}\",\n  \"is_active\": true\n}",
+									"raw": "{\n  \"audit_universe_id\": \"{{audit_universe_id}}\",\n  \"name\": \"Test Universe Item\",\n  \"department_id\": \"{{dept_id}}\",\n  \"strategic_pillar_id\": null,\n  \"auditable_area_id\": null,\n  \"indicative_target_id\": null,\n  \"strategic_initiative_id\": null,\n  \"risk_id\": null,\n  \"process_activity_id\": \"{{process_activity_id}}\",\n  \"audit_frequency\": \"ANNUALLY\",\n  \"is_active\": true\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6901,7 +6762,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"Updated Universe Item\",\n  \"audit_frequency\": \"QUARTERLY\",\n  \"is_active\": false\n}",
+									"raw": "{\n  \"audit_universe_id\": \"{{audit_universe_id}}\",\n  \"name\": \"Updated Universe Item\",\n  \"department_id\": \"{{dept_id}}\",\n  \"process_activity_id\": \"{{process_activity_id}}\",\n  \"audit_frequency\": \"QUARTERLY\",\n  \"is_active\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -7963,7 +7824,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"ref_no\": \"AP-2025-001\",\n  \"audit_plan_date\": \"2024-11-15T00:00:00Z\",\n  \"audit_area\": \"Finance & Accounting\",\n  \"audit_scope\": \"Full scope audit\",\n  \"audit_criteria\": \"Internal controls\",\n  \"audit_objective\": \"Verify compliance\",\n  \"management_standard\": \"COSO Framework\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Management Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": \"{{template_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_item_ids\": [],\n  \"budget_item_ids\": []\n}",
+									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Test Audit Plan\",\n  \"description\": \"Test audit plan\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"2025-12-31\",\n  \"ref_no\": \"AP-2025-001\",\n  \"audit_plan_date\": \"2024-11-15\",\n  \"audit_date\": \"2025-02-01\",\n  \"audit_area\": \"Finance & Accounting\",\n  \"audit_scope\": \"Full scope audit\",\n  \"audit_criteria\": \"Internal controls\",\n  \"audit_objective\": \"Verify compliance\",\n  \"management_standard\": \"COSO Framework\",\n  \"audit_team_leader\": \"{{user_id}}\",\n  \"audit_team_members\": [],\n  \"client_representative\": \"Management Rep\",\n  \"audit_language\": \"English\",\n  \"opening_meeting_datetime\": \"2025-02-01T09:00:00Z\",\n  \"closing_meeting_datetime\": \"2025-02-15T16:00:00Z\",\n  \"working_paper_template_id\": \"{{template_id}}\",\n  \"department_id\": \"{{dept_id}}\",\n  \"audit_universe_id\": \"{{audit_universe_id}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -8000,7 +7861,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit-plans?organization_id={{organization_id}}&year=2025&status=DRAFT",
+									"raw": "http://{{host}}/audit-plans?page=1&page_size=10&sort_by=title&sort_order=asc&status=DRAFT",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -8010,12 +7871,20 @@
 									],
 									"query": [
 										{
-											"key": "organization_id",
-											"value": "{{organization_id}}"
+											"key": "page",
+											"value": "1"
 										},
 										{
-											"key": "year",
-											"value": "2025"
+											"key": "page_size",
+											"value": "10"
+										},
+										{
+											"key": "sort_by",
+											"value": "title"
+										},
+										{
+											"key": "sort_order",
+											"value": "asc"
 										},
 										{
 											"key": "status",
@@ -8043,20 +7912,14 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}?organization_id={{organization_id}}",
+									"raw": "http://{{host}}/audit-plans/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}"
-									],
-									"query": [
-										{
-											"key": "organization_id",
-											"value": "{{organization_id}}"
-										}
+										"{id}"
 									]
 								}
 							},
@@ -8080,7 +7943,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Updated Test Plan\",\n  \"description\": \"Updated\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"audit_universe_item_ids\": [],\n  \"budget_item_ids\": []\n}",
+									"raw": "{\n  \"year\": 2025,\n  \"title\": \"Updated Test Plan\",\n  \"description\": \"Updated\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"2025-12-31\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -8088,14 +7951,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}",
+									"raw": "http://{{host}}/audit-plans/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}"
+										"{id}"
 									]
 								}
 							},
@@ -8118,20 +7981,14 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}?organization_id={{organization_id}}",
+									"raw": "http://{{host}}/audit-plans/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}"
-									],
-									"query": [
-										{
-											"key": "organization_id",
-											"value": "{{organization_id}}"
-										}
+										"{id}"
 									]
 								}
 							},
@@ -8143,7 +8000,7 @@
 					"name": "Audit Plan Workflow",
 					"item": [
 						{
-							"name": "Submit Audit Plan",
+							"name": "Submit Audit Plan for Approval",
 							"request": {
 								"method": "POST",
 								"header": [
@@ -8160,7 +8017,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}",
+									"raw": "{\n  \"comment\": \"Ready for approval review\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -8168,15 +8025,15 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/submit",
+									"raw": "http://{{host}}/audit-plans/{id}/submit-for-approval",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}",
-										"submit"
+										"{id}",
+										"submit-for-approval"
 									]
 								}
 							},
@@ -8208,14 +8065,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/approve/hiar",
+									"raw": "http://{{host}}/audit-plans/{id}/approve/hiar",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}",
+										"{id}",
 										"approve",
 										"hiar"
 									]
@@ -8249,14 +8106,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/approve/ceo",
+									"raw": "http://{{host}}/audit-plans/{id}/approve/ceo",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}",
+										"{id}",
 										"approve",
 										"ceo"
 									]
@@ -8290,14 +8147,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/approve/audit-chair",
+									"raw": "http://{{host}}/audit-plans/{id}/approve/audit-chair",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}",
+										"{id}",
 										"approve",
 										"audit-chair"
 									]
@@ -8331,14 +8188,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/reject",
+									"raw": "http://{{host}}/audit-plans/{id}/reject",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}",
+										"{id}",
 										"reject"
 									]
 								}
@@ -8361,24 +8218,15 @@
 										"type": "text"
 									}
 								],
-								"body": {
-									"mode": "raw",
-									"raw": "{}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/activate",
+									"raw": "http://{{host}}/audit-plans/{id}/activate",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}",
+										"{id}",
 										"activate"
 									]
 								}
@@ -8401,24 +8249,15 @@
 										"type": "text"
 									}
 								],
-								"body": {
-									"mode": "raw",
-									"raw": "{}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
 								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/complete",
+									"raw": "http://{{host}}/audit-plans/{id}/complete",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"audit-plans",
-										"{{audit_plan_id}}",
+										"{id}",
 										"complete"
 									]
 								}
@@ -8448,7 +8287,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"department_id\": \"{{dept_id}}\",\n  \"year\": {{audit_budget_year}},\n  \"title\": \"Test Audit Budget\",\n  \"total_amount\": 50000,\n  \"currency\": \"USD\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"description\": \"Test budget\",\n  \"status\": \"DRAFT\",\n  \"approved_by\": null,\n  \"is_active\": true\n}",
+									"raw": "{\n  \"department_id\": \"{{dept_id}}\",\n  \"year\": {{audit_budget_year}},\n  \"title\": \"Test Audit Budget\",\n  \"total_amount\": 50000,\n  \"currency\": \"USD\",\n  \"start_date\": \"2025-01-01T00:00:00Z\",\n  \"end_date\": \"2025-12-31T00:00:00Z\",\n  \"description\": \"Test budget\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -8575,6 +8414,47 @@
 										"audit",
 										"budgets",
 										"{budgetId}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Submit Budget for Approval",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"comment\": \"Ready for approval review\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/audit/budgets/{budgetId}/submit-for-approval",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"audit",
+										"budgets",
+										"{budgetId}",
+										"submit-for-approval"
 									]
 								}
 							},
@@ -8757,7 +8637,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/audit/budget-lines/{budgetId}/{lineId}",
+									"raw": "http://{{host}}/audit/budget-lines/{lineId}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -8765,7 +8645,6 @@
 									"path": [
 										"audit",
 										"budget-lines",
-										"{budgetId}",
 										"{lineId}"
 									]
 								}
@@ -8895,6 +8774,44 @@
 					"name": "Working Papers",
 					"item": [
 						{
+							"name": "Create Working Paper (Manual)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"audit_plan_id\": \"{{audit_plan_id}}\",\n  \"category\": \"Test Category\",\n  \"description\": \"Manual working paper\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/working-papers",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"working-papers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "List Working Papers",
 							"request": {
 								"method": "GET",
@@ -8964,37 +8881,6 @@
 							"response": []
 						},
 						{
-							"name": "Get Working Paper by Audit Plan",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/audit-plans/{{audit_plan_id}}/working-paper",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"audit-plans",
-										"{{audit_plan_id}}",
-										"working-paper"
-									]
-								}
-							},
-							"response": []
-						},
-						{
 							"name": "Get Working Paper Statistics",
 							"request": {
 								"method": "GET",
@@ -9020,6 +8906,45 @@
 										"working-papers",
 										"{id}",
 										"statistics"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Working Paper",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"description\": \"Updated working paper\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/working-papers/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"working-papers",
+										"{id}"
 									]
 								}
 							},
@@ -9060,6 +8985,36 @@
 										"working-papers",
 										"{id}",
 										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Working Paper",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/working-papers/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"working-papers",
+										"{id}"
 									]
 								}
 							},
@@ -9471,6 +9426,44 @@
 					"name": "Findings",
 					"item": [
 						{
+							"name": "Create Finding",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"working_paper_id\": \"{{working_paper_id}}\",\n  \"category\": \"Compliance\",\n  \"title\": \"Test Finding\",\n  \"description\": \"Test finding\",\n  \"severity\": \"High\",\n  \"recommendation\": \"Test recommendation\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/working-paper-findings",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"working-paper-findings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "List Findings",
 							"request": {
 								"method": "GET",
@@ -9487,7 +9480,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings?page=1&page_size=10&working_paper_id={{working_paper_id}}",
+									"raw": "http://{{host}}/working-paper-findings?page=1&page_size=10",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -9503,10 +9496,6 @@
 										{
 											"key": "page_size",
 											"value": "10"
-										},
-										{
-											"key": "working_paper_id",
-											"value": "{{working_paper_id}}"
 										}
 									]
 								}
@@ -9530,14 +9519,14 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}",
+									"raw": "http://{{host}}/working-paper-findings/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{{finding_id}}"
+										"{id}"
 									]
 								}
 							},
@@ -9560,16 +9549,16 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-papers/{{working_paper_id}}/categories/Context of the Organisation/findings",
+									"raw": "http://{{host}}/working-papers/{id}/categories/{category_name}/findings",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-papers",
-										"{{working_paper_id}}",
+										"{id}",
 										"categories",
-										"Context of the Organisation",
+										"{category_name}",
 										"findings"
 									]
 								}
@@ -9577,7 +9566,7 @@
 							"response": []
 						},
 						{
-							"name": "Update Finding (Phase 2 - Full Content)",
+							"name": "Update Finding",
 							"request": {
 								"method": "PUT",
 								"header": [
@@ -9594,7 +9583,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"finding_number\": \"F-001\",\n  \"category_name\": \"Context of the Organisation\",\n  \"workings_and_test_results\": \"Test procedures performed...\",\n  \"conclusion\": \"Finding conclusion here\",\n  \"report\": true,\n  \"severity\": \"MEDIUM\",\n  \"recommendation\": \"Recommended action...\",\n  \"management_response\": \"Management response to finding\",\n  \"action_plan\": \"Detailed action plan for remediation\",\n  \"responsible_person\": \"{{user_id}}\",\n  \"due_date\": \"2025-12-31\",\n  \"evidence_links\": \"Link to evidence documents\",\n  \"status\": \"IN_PROGRESS\"\n}",
+									"raw": "{\n  \"description\": \"Updated\",\n  \"severity\": \"Medium\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -9602,14 +9591,54 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}",
+									"raw": "http://{{host}}/working-paper-findings/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{{finding_id}}"
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Submit Finding for Approval",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"comment\": \"Ready for approval review\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/working-paper-findings/{id}/submit-for-approval",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"working-paper-findings",
+										"{id}",
+										"submit-for-approval"
 									]
 								}
 							},
@@ -9641,14 +9670,14 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}/status",
+									"raw": "http://{{host}}/working-paper-findings/{id}/status",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{{finding_id}}",
+										"{id}",
 										"status"
 									]
 								}
@@ -9672,14 +9701,199 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/working-paper-findings/{{finding_id}}",
+									"raw": "http://{{host}}/working-paper-findings/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"working-paper-findings",
-										"{{finding_id}}"
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Findings Categories",
+					"item": [
+						{
+							"name": "Create Findings Category",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Compliance Finding\",\n  \"code\": \"FC_001\",\n  \"description\": \"Compliance issues\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/findings-categories",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"findings-categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Findings Categories",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/findings-categories?page=1&page_size=10&is_active=true",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"findings-categories"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										},
+										{
+											"key": "is_active",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Findings Category Details",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/findings-categories/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"findings-categories",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Findings Category",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated Compliance Finding\",\n  \"code\": \"FC_001\",\n  \"description\": \"Updated\",\n  \"is_active\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/findings-categories/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"findings-categories",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Findings Category",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/findings-categories/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"findings-categories",
+										"{id}"
 									]
 								}
 							},
@@ -9922,10 +10136,10 @@
 			"name": "11. Workflow Engine",
 			"item": [
 				{
-					"name": "Workflows",
+					"name": "Simple Workflows",
 					"item": [
 						{
-							"name": "Create Workflow",
+							"name": "Create Simple Workflow",
 							"request": {
 								"method": "POST",
 								"header": [
@@ -9942,7 +10156,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"Audit Plan Workflow\",\n  \"entity_type\": \"audit_plan\",\n  \"description\": \"Approval process\"\n}",
+									"raw": "{\n  \"name\": \"Audit Plan Approval Workflow\",\n  \"trigger_type\": \"manual\",\n  \"description\": \"Simple workflow for audit plan approvals\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -9950,20 +10164,20 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/workflows",
+									"raw": "http://{{host}}/simple-workflows",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"workflows"
+										"simple-workflows"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "List Workflows",
+							"name": "List Simple Workflows",
 							"request": {
 								"method": "GET",
 								"header": [
@@ -9979,13 +10193,308 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/workflows?page=1&page_size=10",
+									"raw": "http://{{host}}/simple-workflows",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"workflows"
+										"simple-workflows"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Simple Workflow",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Workflow States",
+					"item": [
+						{
+							"name": "Create Workflow State",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"state_name\": \"Draft\",\n  \"description\": \"Initial draft state\",\n  \"is_initial\": true,\n  \"is_final\": false,\n  \"display_order\": 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/states",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"states"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Workflow States",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/states?workflow_id={{workflow_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"states"
+									],
+									"query": [
+										{
+											"key": "workflow_id",
+											"value": "{{workflow_id}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Workflow State",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"description\": \"State after review\",\n  \"is_initial\": false,\n  \"is_final\": false,\n  \"display_order\": 2\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/states/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"states",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Workflow State",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/states/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"states",
+										"{id}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Workflow Instances",
+					"item": [
+						{
+							"name": "Start Workflow Instance",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/instances",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"instances"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Start Workflow with Entity",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"entity_type\": \"audit_plan\",\n  \"entity_id\": \"{{audit_plan_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/instances/with-entity",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"instances",
+										"with-entity"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Workflow Instances",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/instances?page=1&page_size=20&workflow_id={{workflow_id}}&entity_id={{entity_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"instances"
 									],
 									"query": [
 										{
@@ -9994,453 +10503,96 @@
 										},
 										{
 											"key": "page_size",
-											"value": "10"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Get Workflow Details",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/details?workflow_id={{workflow_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"details"
-									],
-									"query": [
-										{
-											"key": "workflow_id",
-											"value": "{{workflow_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Workflow",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Updated Workflow\",\n  \"description\": \"Updated\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/update",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"update"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "States",
-					"item": [
-						{
-							"name": "Create State",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Draft\",\n  \"description\": \"Initial state\",\n  \"is_initial\": true,\n  \"is_final\": false\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/states",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"states"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "List States",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/states?workflow_id={{workflow_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"states"
-									],
-									"query": [
-										{
-											"key": "workflow_id",
-											"value": "{{workflow_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update State",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"state_id\": \"{{state_id}}\",\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Updated State\",\n  \"description\": \"Updated\",\n  \"is_initial\": false,\n  \"is_final\": false\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/states/update",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"states",
-										"update"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Transitions",
-					"item": [
-						{
-							"name": "Create Transition",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"from_state_id\": \"{{from_state_id}}\",\n  \"to_state_id\": \"{{to_state_id}}\",\n  \"name\": \"Submit for Review\",\n  \"action_name\": \"SUBMIT\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "List Transitions",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions?workflow_id={{workflow_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions"
-									],
-									"query": [
-										{
-											"key": "workflow_id",
-											"value": "{{workflow_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Transition",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"transition_id\": \"{{transition_id}}\",\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"name\": \"Updated Transition\",\n  \"action_name\": \"SUBMIT\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions/update",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions",
-										"update"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Transition Roles",
-					"item": [
-						{
-							"name": "Assign Role to Transition",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"role_id\": \"{{role_id}}\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions/roles?transition_id={{transition_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions",
-										"roles"
-									],
-									"query": [
-										{
-											"key": "transition_id",
-											"value": "{{transition_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "List Transition Roles",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions/roles?transition_id={{transition_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions",
-										"roles"
-									],
-									"query": [
-										{
-											"key": "transition_id",
-											"value": "{{transition_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Remove Role from Transition",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions/roles/remove?transition_id={{transition_id}}&role_id={{role_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions",
-										"roles",
-										"remove"
-									],
-									"query": [
-										{
-											"key": "transition_id",
-											"value": "{{transition_id}}"
+											"value": "20"
 										},
 										{
-											"key": "role_id",
-											"value": "{{role_id}}"
+											"key": "workflow_id",
+											"value": "{{workflow_id}}"
+										},
+										{
+											"key": "entity_id",
+											"value": "{{entity_id}}"
 										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Instances with Details",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/instances/with-details?page=1&page_size=20&workflow_id={{workflow_id}}&entity_id={{entity_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"instances",
+										"with-details"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "20"
+										},
+										{
+											"key": "workflow_id",
+											"value": "{{workflow_id}}"
+										},
+										{
+											"key": "entity_id",
+											"value": "{{entity_id}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Workflow Instance",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/simple-workflows/instances/{id}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflows",
+										"instances",
+										"{id}"
 									]
 								}
 							},
@@ -10449,10 +10601,10 @@
 					]
 				},
 				{
-					"name": "Transition Triggers",
+					"name": "Workflow Approvals",
 					"item": [
 						{
-							"name": "Create Transition Trigger",
+							"name": "Approve Workflow",
 							"request": {
 								"method": "POST",
 								"header": [
@@ -10469,7 +10621,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"trigger_name\": \"Manual Approval\",\n  \"trigger_type\": \"MANUAL\",\n  \"delay_duration\": null,\n  \"schedule_field\": null,\n  \"watch_field\": null,\n  \"trigger_value\": null,\n  \"event_type\": \"approval_submitted\",\n  \"event_params\": {},\n  \"is_active\": true,\n  \"priority\": 1,\n  \"max_retries\": 3,\n  \"retry_delay\": \"5m\",\n  \"description\": \"Manual trigger\"\n}",
+									"raw": "{\n  \"remarks\": \"Approved as requested\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -10477,149 +10629,23 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/workflows/transitions/triggers?transition_id={{transition_id}}",
+									"raw": "http://{{host}}/simple-workflows/instances/{id}/approve",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"workflows",
-										"transitions",
-										"triggers"
-									],
-									"query": [
-										{
-											"key": "transition_id",
-											"value": "{{transition_id}}"
-										}
+										"simple-workflows",
+										"instances",
+										"{id}",
+										"approve"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "List Transition Triggers",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions/triggers?transition_id={{transition_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions",
-										"triggers"
-									],
-									"query": [
-										{
-											"key": "transition_id",
-											"value": "{{transition_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Transition Trigger",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"trigger_id\": \"{{trigger_id}}\",\n  \"trigger_name\": \"Updated Trigger\",\n  \"trigger_type\": \"MANUAL\",\n  \"is_active\": true,\n  \"priority\": 1,\n  \"max_retries\": 3,\n  \"retry_delay\": \"5m\",\n  \"description\": \"Updated\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions/triggers/update",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions",
-										"triggers",
-										"update"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Delete Transition Trigger",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/transitions/triggers/delete?id={{trigger_id}}",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"transitions",
-										"triggers",
-										"delete"
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "{{trigger_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Entry Triggers",
-					"item": [
-						{
-							"name": "Create Entry Trigger",
+							"name": "Reject Workflow",
 							"request": {
 								"method": "POST",
 								"header": [
@@ -10636,7 +10662,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"trigger_name\": \"On Plan Creation\",\n  \"trigger_type\": \"AUTOMATIC\",\n  \"entity_type\": \"audit_plan\",\n  \"entity_filter\": {},\n  \"event_type\": \"audit_plan_created\",\n  \"event_params\": {},\n  \"is_active\": true,\n  \"priority\": 1,\n  \"auto_submit\": false,\n  \"description\": \"Trigger on creation\"\n}",
+									"raw": "{\n  \"remarks\": \"Requires revisions\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -10644,21 +10670,23 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/workflows/entry-triggers",
+									"raw": "http://{{host}}/simple-workflows/instances/{id}/reject",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"workflows",
-										"entry-triggers"
+										"simple-workflows",
+										"instances",
+										"{id}",
+										"reject"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "List Entry Triggers",
+							"name": "Get Workflow Approvals",
 							"request": {
 								"method": "GET",
 								"header": [
@@ -10674,14 +10702,88 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/workflows/entry-triggers?workflow_id={{workflow_id}}",
+									"raw": "http://{{host}}/simple-workflows/instances/{id}/approvals",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"workflows",
-										"entry-triggers"
+										"simple-workflows",
+										"instances",
+										"{id}",
+										"approvals"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Workflow Transitions",
+					"item": [
+						{
+							"name": "Create Workflow Transition",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"from_status\": \"DRAFT\",\n  \"to_status\": \"IN_REVIEW\",\n  \"required_role_id\": \"{{role_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}/simple-workflow-transitions",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflow-transitions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Workflow Transitions",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://{{host}}/simple-workflow-transitions?workflow_id={{workflow_id}}",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"simple-workflow-transitions"
 									],
 									"query": [
 										{
@@ -10694,7 +10796,7 @@
 							"response": []
 						},
 						{
-							"name": "Update Entry Trigger",
+							"name": "Update Workflow Transition",
 							"request": {
 								"method": "PUT",
 								"header": [
@@ -10711,7 +10813,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"entry_trigger_id\": \"{{entry_trigger_id}}\",\n  \"trigger_name\": \"On Plan Creation\",\n  \"trigger_type\": \"AUTOMATIC\",\n  \"is_active\": true,\n  \"priority\": 1,\n  \"auto_submit\": false,\n  \"description\": \"Updated\"\n}",
+									"raw": "{\n  \"from_status\": \"IN_REVIEW\",\n  \"to_status\": \"APPROVED\",\n  \"required_role_id\": \"{{role_id}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -10719,22 +10821,21 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/workflows/entry-triggers/update",
+									"raw": "http://{{host}}/simple-workflow-transitions/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"workflows",
-										"entry-triggers",
-										"update"
+										"simple-workflow-transitions",
+										"{id}"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "Delete Entry Trigger",
+							"name": "Delete Workflow Transition",
 							"request": {
 								"method": "DELETE",
 								"header": [
@@ -10750,97 +10851,14 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/workflows/entry-triggers/delete?id={{entry_trigger_id}}",
+									"raw": "http://{{host}}/simple-workflow-transitions/{id}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"workflows",
-										"entry-triggers",
-										"delete"
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "{{entry_trigger_id}}"
-										}
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Worker",
-					"item": [
-						{
-							"name": "Get Worker Status",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://{{host}}/workflows/worker/status",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"worker",
-										"status"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Trigger Worker Process",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"force_process\": false\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://{{host}}/workflows/worker/process",
-									"protocol": "http",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"workflows",
-										"worker",
-										"process"
+										"simple-workflow-transitions",
+										"{id}"
 									]
 								}
 							},
@@ -11979,12 +11997,6 @@
 			"value": "",
 			"type": "string",
 			"description": "From create incident response"
-		},
-		{
-			"key": "finding_id",
-			"value": "",
-			"type": "string",
-			"description": "From list findings response"
 		}
 	]
 }

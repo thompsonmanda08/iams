@@ -64,7 +64,24 @@ export type Department = {
 // RISK STATUS & RESPONSE TYPES
 // ============================================================================
 
-export type RiskStatus = "OPEN" | "CLOSED" | "PENDING_REVIEW" | "MITIGATED";
+/**
+ * Risk Status - Uses standardized status values from lib/statuses.ts
+ *
+ * Allowed statuses for risk entities:
+ * - DRAFT: Risk being prepared
+ * - PENDING: Awaiting action or approval
+ * - OPEN: Risk is active and open
+ * - IN_REVIEW: Risk is under review
+ * - APPROVED: Risk has been approved
+ * - ON_HOLD: Risk is paused
+ * - CLOSED: Risk is closed and no longer active
+ * - PENDING_REVIEW: Legacy - use IN_REVIEW
+ * - MITIGATED: Legacy - use CLOSED
+ *
+ * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
+ */
+export type RiskStatus = "DRAFT" | "PENDING" | "OPEN" | "IN_REVIEW" | "APPROVED" | "ON_HOLD" | "CLOSED" | "PENDING_REVIEW" | "MITIGATED";
+
 export type RiskResponse = "REDUCE" | "ACCEPT" | "AVOID" | "SHARE";
 export type RiskMagnitude = "low" | "medium" | "high" | "critical";
 export type DepartmentStatus = "OPEN" | "CLOSED";
@@ -99,7 +116,21 @@ export type RiskTableRow = {
 // ACTION FINDINGS SUBMISSION TYPES
 // ============================================================================
 
-export type ActionFindingsStatus = "OPEN" | "PENDING_REVIEW" | "COMPLETED" | "NEEDS_REVISION";
+/**
+ * Action Findings Status - Uses standardized status values from lib/statuses.ts
+ *
+ * Allowed statuses for action findings:
+ * - OPEN: Finding is open and requires action
+ * - PENDING: Finding is pending review
+ * - IN_REVIEW: Finding is under review
+ * - COMPLETED: Finding has been completed
+ * - CLOSED: Finding is closed
+ * - PENDING_REVIEW: Legacy - use IN_REVIEW
+ * - NEEDS_REVISION: Legacy - use OPEN
+ *
+ * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
+ */
+export type ActionFindingsStatus = "OPEN" | "PENDING" | "IN_REVIEW" | "COMPLETED" | "CLOSED" | "PENDING_REVIEW" | "NEEDS_REVISION";
 
 export type ActionFindings = {
   id: string;

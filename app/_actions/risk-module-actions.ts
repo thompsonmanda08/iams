@@ -26,7 +26,9 @@ import { FormData } from "@/components/forms/risk-acceptance-form";
 // TYPE DEFINITIONS
 // ============================================================================
 
-export type RiskStatus = "DRAFT" | "OPEN" | "CLOSED";
+// NOTE: RiskStatus is now imported from lib/types/risk-types.ts to maintain single source of truth
+// import type { RiskStatus } from "@/lib/types/risk-types";
+
 export type RiskResponse = "REDUCE" | "ACCEPT" | "TRANSFER" | "AVOID" | "OPTIMIZE";
 export type RiskRating = "LOW" | "MEDIUM" | "HIGH";
 export type RegisterStatus = "OPEN" | "CLOSED";
@@ -193,7 +195,7 @@ export interface AssessActionFindingsInput {
 
 // Action Task Type
 export type TaskType = "EXECUTION" | "REVIEW";
-export type TaskStatus = "PENDING" | "COMPLETED";
+export type ActionTaskStatus = "PENDING" | "COMPLETED";
 
 // Action Task
 export interface Task {
@@ -202,7 +204,7 @@ export interface Task {
   action_id: string;
   assigned_to: string;
   task_type: TaskType;
-  status: TaskStatus;
+  status: ActionTaskStatus;
   due_date: string;
   created_at: string;
   updated_at: string;
