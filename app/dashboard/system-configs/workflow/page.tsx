@@ -12,9 +12,7 @@ export default async function WorkflowConfigPage({ searchParams }: PageProps) {
 
   // Fetch workflows from the API
   const workflowsResponse = await listWorkflows();
-  const workflows = workflowsResponse.success ? workflowsResponse.data : [];
-
-  console.log("WOKRFLOWS", workflows);
+  const workflows = workflowsResponse.data || [];
 
   return (
     <div>

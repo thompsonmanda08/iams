@@ -62,6 +62,15 @@ export const rowsPerPageOptions = [
   }
 ];
 
+// WORKFLOW TRIGGER TYPES
+export const WORKFLOW_TRIGGER_TYPES = [
+  "BUDGET_CREATION",
+  "UNIVERSE_CREATION",
+  "AUDIT_PLAN",
+  "FINDINGS",
+  "RISK_ACCEPTANCE"
+] as const;
+
 // QUERY KEYS
 export const QUERY_KEYS = {
   USER_DATA: "user",
@@ -99,7 +108,11 @@ export const QUERY_KEYS = {
   ACTION_EXECUTIONS: "action-executions",
   ACTION_LOGS: "action-logs",
   AUDIT_PLANS: "audit-plans",
-  WORKPAPER_FINDINGS: "workpaper-findings"
+  WORKPAPER_FINDINGS: "workpaper-findings",
+  WORKFLOWS: "workflows",
+  WORKFLOW_INSTANCES: "workflow-instances",
+  WORKFLOW_APPROVALS: "workflow-approvals",
+  WORKFLOW_HISTORY: "workflow-history"
 };
 
 // ANIMATION_VARIANTS

@@ -37,10 +37,15 @@ export default async function WorkflowAdminPage({ searchParams }: PageProps) {
     );
   }
 
-  // Fetch workflow details and roles in parallel
-  const [workflowResponse, rolesResponse] = await Promise.all([
+  // Fetch workflow details, roles, and instances in parallel
+  const [
+    workflowResponse,
+    rolesResponse
+    //  instancesResponse
+  ] = await Promise.all([
     getWorkflowDetails(workflowId),
     getRoles({ isActive: true, limit: 1000 })
+    // listWorkflowInstances({ workflow_id: workflowId, page_size: 100 })
   ]);
 
   if (!workflowResponse.success || !workflowResponse.data) {
@@ -66,6 +71,8 @@ export default async function WorkflowAdminPage({ searchParams }: PageProps) {
 
   const workflow = workflowResponse.data?.data;
   const roles = rolesResponse?.data?.data || [];
+  // const instances = instancesResponse?.data?.data || [];
+  const instances = [];
 
   // Format roles for the workflow administration component
   const availableRoles =
@@ -75,9 +82,6 @@ export default async function WorkflowAdminPage({ searchParams }: PageProps) {
           name: role.name
         }))
       : [];
-
-  // console.log("ROLES:", rolesResponse?.data?.data);
-  // console.log("WF:", workflow);
 
   return (
     <div className="container mx-auto space-y-6 p-6">
@@ -92,7 +96,11 @@ export default async function WorkflowAdminPage({ searchParams }: PageProps) {
       </div>
 
       {/* Administration Panel */}
-      <WorkflowAdministration workflow={workflow} availableRoles={availableRoles} />
+      <WorkflowAdministration
+        workflow={workflow}
+        availableRoles={availableRoles}
+        instances={instances}
+      />
 
       {/* Warning if no roles available */}
       {availableRoles.length === 0 && (

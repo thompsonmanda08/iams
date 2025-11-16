@@ -10,13 +10,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
-import {
-  getTransitionRoles,
-  assignRoleToTransition,
-  removeRoleFromTransition,
-} from "@/app/_actions/workflow-actions";
 import { toast } from "sonner";
 
 interface TransitionRolesManagerProps {
@@ -28,7 +23,7 @@ interface TransitionRolesManagerProps {
 export const TransitionRolesManager = ({
   transitionId,
   transitionName,
-  availableRoles,
+  availableRoles
 }: TransitionRolesManagerProps) => {
   const [assignedRoles, setAssignedRoles] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
@@ -125,7 +120,7 @@ export const TransitionRolesManager = ({
               </SelectTrigger>
               <SelectContent>
                 {unassignedRoles.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground p-2 text-sm">
                     All roles are already assigned
                   </div>
                 ) : (
@@ -140,8 +135,7 @@ export const TransitionRolesManager = ({
             <Button
               onClick={handleAssignRole}
               disabled={!selectedRoleId || isLoading}
-              className="gap-2"
-            >
+              className="gap-2">
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -157,15 +151,15 @@ export const TransitionRolesManager = ({
           <Label>Assigned Roles ({assignedRoles.length})</Label>
           {isFetching ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
             </div>
           ) : assignedRoles.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
-              <Shield className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">
+              <Shield className="text-muted-foreground mx-auto h-8 w-8" />
+              <p className="text-muted-foreground mt-2 text-sm">
                 No roles assigned to this transition
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Assign roles to control who can execute this transition
               </p>
             </div>
@@ -174,19 +168,17 @@ export const TransitionRolesManager = ({
               {assignedRoles.map((role) => (
                 <div
                   key={role.id}
-                  className="flex items-center justify-between rounded-lg border bg-card p-3"
-                >
+                  className="bg-card flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
+                    <Shield className="text-primary h-4 w-4" />
                     <Badge variant="secondary">{role.name}</Badge>
                   </div>
                   <Button
                     size="icon"
                     variant="ghost"
                     onClick={() => handleRemoveRole(role.id)}
-                    disabled={isLoading}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    disabled={isLoading}>
+                    <Trash2 className="text-destructive h-4 w-4" />
                   </Button>
                 </div>
               ))}

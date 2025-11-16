@@ -53,8 +53,11 @@ export const WorkflowCanvas = ({
           style={{ zIndex: 1 }}>
           <g style={{ pointerEvents: "auto" }}>
             {transitions.map((transition) => {
-              const fromState = states.find((s) => s.id === transition.from_state_id);
-              const toState = states.find((s) => s.id === transition.to_state_id);
+              // Skip deleted transitions
+              if (transition._changeType === "deleted") return null;
+
+              const fromState = states.find((s) => s.id === transition.from_state_id && s._changeType !== "deleted");
+              const toState = states.find((s) => s.id === transition.to_state_id && s._changeType !== "deleted");
               if (!fromState || !toState) return null;
 
               return (
@@ -62,7 +65,7 @@ export const WorkflowCanvas = ({
                   key={transition.id}
                   from={fromState.position}
                   to={toState.position}
-                  label={transition.action_name}
+                  label={transition.transition_name}
                   onClick={() => onTransitionClick(transition)}
                 />
               );

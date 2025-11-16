@@ -2,11 +2,20 @@
 // ENUMS & TYPES
 // ============================================================================
 
+import { StandardStatus } from "../statuses";
+
 export type EntityType = "RISK" | "AUDIT_PLAN" | "FINDING" | "RECOMMENDATION";
 
 export type OperatorType = "=" | "!=" | ">" | "<" | ">=" | "<=" | "is" | "contains";
 
 export type ActionType = "send_email" | "create_log" | "update_field" | "trigger_webhook";
+
+export type WorkflowTriggerType =
+  | "BUDGET_CREATION"
+  | "UNIVERSE_CREATION"
+  | "AUDIT_PLAN"
+  | "FINDINGS"
+  | "RISK_ACCEPTANCE";
 
 /**
  * Workflow Status - Uses standardized status values from lib/statuses.ts
@@ -21,7 +30,17 @@ export type ActionType = "send_email" | "create_log" | "update_field" | "trigger
  *
  * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
-export type WorkflowStatus = "DRAFT" | "PENDING" | "OPEN" | "COMPLETED" | "CLOSED" | "ARCHIVED" | "draft" | "active" | "inactive" | "archived";
+export type WorkflowStatus =
+  | "DRAFT"
+  | "PENDING"
+  | "OPEN"
+  | "COMPLETED"
+  | "CLOSED"
+  | "ARCHIVED"
+  | "draft"
+  | "active"
+  | "inactive"
+  | "archived";
 
 // ============================================================================
 // CONDITION INTERFACES
@@ -76,7 +95,8 @@ export interface UpdateFieldActionConfig {
 
 export interface Permission {
   id: string;
-  role: string;
+  role: string;  // Role name for display
+  role_id?: string;  // Role ID for API requests
 }
 
 export interface TransitionRole {
@@ -127,6 +147,11 @@ export interface State {
   position: { x: number; y: number };
   description?: string;
   color?: string;
+  status?: "from_status" | "to_status"; // Consistent with API
+  display_order?: number;
+  // Tracking metadata (not persisted to API)
+  _changeType?: "created" | "modified" | "deleted" | "synced";
+  _serverId?: string; // Original server ID if modified
 }
 
 export interface WorkflowState extends Omit<State, "position"> {
@@ -144,11 +169,14 @@ export interface Transition {
   id: string;
   from_state_id: string;
   to_state_id: string;
-  action_name: string;
+  transition_name: string;
   permissions: Permission[];
   conditions: Condition[];
   actions: Action[];
   description?: string;
+  // Tracking metadata (not persisted to API)
+  _changeType?: "created" | "modified" | "deleted" | "synced";
+  _serverId?: string; // Original server ID if modified
 }
 
 export interface WorkflowTransition {
@@ -156,11 +184,11 @@ export interface WorkflowTransition {
   workflow_id: string;
   from_state_id: string;
   to_state_id: string;
-  action_name: string;
+  transition_name: string;
   name?: string;
   description?: string;
   from_state?: State;
-  to_state?: State; 
+  to_state?: State;
   permissions?: TransitionRole[];
   conditions?: Condition[];
   actions?: Action[];
@@ -176,12 +204,12 @@ export interface WorkflowTransition {
 export interface Workflow {
   id: string;
   name: string;
-  entity_type: EntityType;
-  states: State[];
-  transitions: Transition[];
-  entry_conditions: Condition[];
   description?: string;
-  status?: WorkflowStatus;
+  trigger_type: WorkflowTriggerType;
+  states?: State[];
+  transitions?: Transition[];
+  entry_conditions?: Condition[];
+  status?: StandardStatus;
 }
 
 export interface WorkflowDetails {
@@ -189,7 +217,7 @@ export interface WorkflowDetails {
   name: string;
   entity_type: EntityType;
   description?: string;
-  status?: WorkflowStatus;
+  status?: StandardStatus;
   states: WorkflowState[];
   transitions: WorkflowTransition[];
   entry_conditions?: EntryCondition[];
@@ -205,7 +233,7 @@ export interface WorkflowListItem {
   name: string;
   entity_type: EntityType;
   description?: string;
-  status?: WorkflowStatus;
+  status?: StandardStatus;
   states_count?: number;
   transitions_count?: number;
   is_active?: boolean;
@@ -266,13 +294,13 @@ export interface CreateTransitionRequest {
   workflow_id: string;
   from_state_id: string;
   to_state_id: string;
-  action_name: string;
+  transition_name: string;
   name?: string;
   description?: string;
 }
 
 export interface UpdateTransitionRequest {
-  action_name?: string;
+  transition_name?: string;
   name?: string;
   description?: string;
 }

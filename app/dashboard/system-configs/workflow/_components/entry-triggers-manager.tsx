@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Dialog,
@@ -19,14 +19,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
-import {
-  getWorkflowEntryTriggers,
-  createEntryTrigger,
-  updateEntryTrigger,
-  deleteEntryTrigger,
-} from "@/app/_actions/workflow-actions";
 import { toast } from "sonner";
 
 interface EntryTrigger {
@@ -45,13 +39,10 @@ const ENTRY_TRIGGER_TYPES = [
   { value: "ON_UPDATE", label: "On Update" },
   { value: "ON_DELETE", label: "On Delete" },
   { value: "MANUAL", label: "Manual" },
-  { value: "SCHEDULED", label: "Scheduled" },
+  { value: "SCHEDULED", label: "Scheduled" }
 ];
 
-export const EntryTriggersManager = ({
-  workflowId,
-  workflowName,
-}: EntryTriggersManagerProps) => {
+export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggersManagerProps) => {
   const [triggers, setTriggers] = useState<EntryTrigger[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState<EntryTrigger | null>(null);
@@ -113,7 +104,7 @@ export const EntryTriggersManager = ({
       if (editingTrigger) {
         // Update existing trigger
         const response = await updateEntryTrigger(editingTrigger.id, {
-          trigger_name: triggerName,
+          trigger_name: triggerName
         });
         if (response.success) {
           toast.success("Entry trigger updated successfully");
@@ -126,7 +117,7 @@ export const EntryTriggersManager = ({
         // Create new trigger
         const response = await createEntryTrigger(workflowId, {
           trigger_name: triggerName,
-          trigger_type: triggerType,
+          trigger_type: triggerType
         });
         if (response.success) {
           toast.success("Entry trigger created successfully");
@@ -185,15 +176,15 @@ export const EntryTriggersManager = ({
           {/* Triggers List */}
           {isFetching ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
             </div>
           ) : triggers.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
-              <Zap className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">
+              <Zap className="text-muted-foreground mx-auto h-8 w-8" />
+              <p className="text-muted-foreground mt-2 text-sm">
                 No entry triggers configured for this workflow
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Add entry triggers to automatically start workflows when entities are created
               </p>
             </div>
@@ -202,8 +193,7 @@ export const EntryTriggersManager = ({
               {triggers.map((trigger) => (
                 <div
                   key={trigger.id}
-                  className="flex items-center justify-between rounded-lg border bg-card p-4"
-                >
+                  className="bg-card flex items-center justify-between rounded-lg border p-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-amber-500" />
@@ -216,17 +206,15 @@ export const EntryTriggersManager = ({
                       size="icon"
                       variant="ghost"
                       onClick={() => handleOpenDialog(trigger)}
-                      disabled={isLoading}
-                    >
+                      disabled={isLoading}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => handleDeleteTrigger(trigger.id)}
-                      disabled={isLoading}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      disabled={isLoading}>
+                      <Trash2 className="text-destructive h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -268,8 +256,7 @@ export const EntryTriggersManager = ({
               <Select
                 value={triggerType}
                 onValueChange={setTriggerType}
-                disabled={!!editingTrigger}
-              >
+                disabled={!!editingTrigger}>
                 <SelectTrigger id="trigger-type">
                   <SelectValue placeholder="Select trigger type" />
                 </SelectTrigger>
@@ -282,17 +269,17 @@ export const EntryTriggersManager = ({
                 </SelectContent>
               </Select>
               {editingTrigger && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Trigger type cannot be changed after creation
                 </p>
               )}
             </div>
 
-            <div className="rounded-lg bg-muted p-3">
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-muted rounded-lg p-3">
+              <p className="text-muted-foreground text-sm">
                 <strong>Note:</strong> Entry triggers determine when a workflow instance is
-                automatically created for an entity. For example, "On Create" will start a
-                workflow whenever a new entity is created.
+                automatically created for an entity. For example, "On Create" will start a workflow
+                whenever a new entity is created.
               </p>
             </div>
           </div>

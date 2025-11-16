@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { GripVertical, Trash2, Edit2, Check, X, Link as LinkIcon } from "lucide-react";
+import { GripVertical, Trash2, Edit2, Check, X, Link as LinkIcon, Flag, FlagOff } from "lucide-react";
 import { State } from "@/lib/types/workflow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +31,6 @@ export const StateNode = ({
   onConnectEnd,
   onConnectCancel
 }: StateNodeProps) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(state.name);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -87,15 +85,10 @@ export const StateNode = ({
     };
   }, [isDragging, dragOffset, state, onUpdate]);
 
-  const handleSave = () => {
-    onUpdate({ ...state, name });
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setName(state.name);
-    setIsEditing(false);
-  };
+  // Don't render deleted states
+  if (state._changeType === "deleted") {
+    return null;
+  }
 
   return (
     <div
@@ -135,83 +128,57 @@ export const StateNode = ({
           <div className="mb-2 flex items-start justify-between gap-2">
             <GripVertical className="text-muted-foreground mt-1 h-4 w-4 shrink-0" />
             <div className="flex-1">
-              {isEditing ? (
-                <div className="flex items-center gap-1">
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="h-7 text-sm"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSave();
-                      if (e.key === "Escape") handleCancel();
-                    }}
-                  />
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSave}>
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleCancel}>
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
+              <div className="flex items-center gap-2">
                 <h3 className="text-foreground text-sm font-semibold">{state.name}</h3>
-              )}
-            </div>
-            {!isEditing && (
-              <div className="flex gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsEditing(true);
-                  }}>
-                  <Edit2 className="h-3 w-3" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive h-7 w-7"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                  }}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                <span className="text-muted-foreground text-xs">(locked)</span>
               </div>
-            )}
+            </div>
+            <div className="flex gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-destructive hover:text-destructive h-7 w-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </>
       )}
 
       {!isConnecting && !isConnectTarget && (
         <>
-          <div className="mb-2 flex flex-wrap gap-1">
-            {state.isInitial && (
-              <Badge
-                variant="outline"
-                className="text-xs"
-                style={{
-                  borderColor: "var(--state-node-initial)",
-                  color: "var(--state-node-initial)"
-                }}>
+          {/* State Flags - Initial/Final */}
+          <div className="mb-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={state.isInitial ? "default" : "outline"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdate({ ...state, isInitial: !state.isInitial });
+                }}
+                className="flex-1 text-xs">
+                <Flag className="mr-1 h-3 w-3" />
                 Initial
-              </Badge>
-            )}
-            {state.isFinal && (
-              <Badge
-                variant="success"
-                className="text-xs"
-                // style={{
-                //   borderColor: "var(--state-node-final)",
-                //   color: "var(--state-node-final)"
-                // }}
-              >
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={state.isFinal ? "default" : "outline"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdate({ ...state, isFinal: !state.isFinal });
+                }}
+                className="flex-1 text-xs">
+                <FlagOff className="mr-1 h-3 w-3" />
                 Final
-              </Badge>
-            )}
+              </Button>
+            </div>
           </div>
 
           <Button

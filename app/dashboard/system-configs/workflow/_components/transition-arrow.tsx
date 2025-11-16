@@ -1,4 +1,6 @@
 "use client";
+import { useRef, useState, useEffect } from "react";
+
 interface TransitionArrowProps {
   from: { x: number; y: number };
   to: { x: number; y: number };
@@ -26,6 +28,18 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
   // Unique marker ID for this arrow
   const markerId = `arrowhead-${from.x}-${from.y}-${to.x}-${to.y}`;
   const arrowSize = 10;
+
+  // Track calculated text width for responsive label box
+  const textRef = useRef<SVGTextElement>(null);
+  const [textWidth, setTextWidth] = useState(100); // Default fallback width
+
+  useEffect(() => {
+    if (textRef.current) {
+      const bbox = textRef.current.getBBox();
+      // Add padding of 16px (8px on each side) to the calculated text width
+      setTextWidth(bbox.width + 16);
+    }
+  }, [label]);
 
   return (
     <g className="transition-opacity" style={{ pointerEvents: "auto" }}>
@@ -70,9 +84,9 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
       {/* Label background - clickable */}
       <g onClick={onClick} className="cursor-pointer transition-opacity hover:opacity-90">
         <rect
-          x={controlX - 50}
+          x={controlX - textWidth / 2}
           y={controlY - 14}
-          width="100"
+          width={textWidth}
           height="28"
           fill="var(--card)"
           stroke="var(--primary)"
@@ -83,6 +97,7 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
 
         {/* Label text */}
         <text
+          ref={textRef}
           x={controlX}
           y={controlY}
           textAnchor="middle"

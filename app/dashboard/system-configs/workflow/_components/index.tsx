@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkflowEditor from "./workflow-editor";
+import { CreateWorkflowDialog } from "./create-workflow-dialog";
 import PageHeader from "@/components/page-header";
 import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
 import { useQuery } from "@tanstack/react-query";
@@ -30,12 +31,14 @@ import { listWorkflows } from "@/app/_actions/workflow-actions";
 import { WorkflowListItem } from "@/lib/types/workflow";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Link from "next/link";
+import { useWorkflows } from "@/hooks/use-workflow-query-data";
 
 interface WorkflowClientProps {
   initialWorkflows: WorkflowListItem[];
 }
 
 const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -43,26 +46,8 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
 
   // Use TanStack Query to manage workflow list with initial data
-  const { data: workflowsData, refetch } = useQuery({
-    queryKey: ["workflows"],
-    queryFn: async () => {
-      console.log("=== FETCHING WORKFLOWS LIST ===");
-      const response = await listWorkflows();
-      console.log("List response:", response);
-      console.log("Response data:", response.data);
-      const workflows = response.success ? response.data : [];
-      console.log("Extracted workflows:", workflows);
-      console.log("Workflows count:", workflows?.length);
-      console.log("===============================");
-      return workflows;
-    },
-    initialData: initialWorkflows,
-    staleTime: 1000 * 60 * 5 // 5 minutes
-  });
-
+  const { data: workflowsData, refetch } = useWorkflows(initialWorkflows);
   const workflows: WorkflowListItem[] = (workflowsData as WorkflowListItem[]) || [];
-
-  console.log("Current workflows in state:", workflows?.length);
 
   const handleEdit = (workflowId: string) => {
     setEditingWorkflowId(workflowId);
@@ -70,8 +55,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   };
 
   const handleNew = () => {
-    setEditingWorkflowId(null);
-    setIsEditing(true);
+    setIsCreateDialogOpen(true);
   };
 
   const handleBack = () => {
@@ -89,7 +73,12 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
       await deleteWorkflowMutation(workflowToDelete);
       setIsDeleteDialogOpen(false);
       setWorkflowToDelete(null);
+      refetch();
     }
+  };
+
+  const handleCreateSuccess = () => {
+    refetch();
   };
 
   return isEditing ? (
@@ -117,7 +106,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
 
       <div className="container mx-auto space-y-6 p-6">
         {/* Saved Workflows */}
-        {!workflows || workflows.length < 0 ? (
+        {!workflows || workflows.length <= 0 ? (
           <>
             <EmptyWorkflowList onCreateWorkflow={handleNew} />
           </>
@@ -166,6 +155,13 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Create Workflow Dialog */}
+        <CreateWorkflowDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          onSuccess={handleCreateSuccess}
+        />
       </div>
     </div>
   );

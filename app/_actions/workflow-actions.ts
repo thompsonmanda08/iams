@@ -11,26 +11,28 @@
 
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
+import type { WorkflowTriggerType } from "@/lib/types/workflow";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
 
 // ============================================================================
-// WORKFLOW CRUD OPERATIONS
+// WORKFLOWS
 // ============================================================================
 
 /**
  * List all workflows in the system
  */
 export async function listWorkflows(): Promise<APIResponse> {
+  const url = `/api/v1/simple-workflows`;
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: "/api/v1/workflows"
-    });
+    const response = await authenticatedApiClient({ url });
 
-    return successResponse(response.data?.data || [], "Workflows fetched successfully");
+    return successResponse(
+      response.data?.data || response.data || [],
+      "Workflows fetched successfully"
+    );
   } catch (error: any) {
-    return handleError(error, "GET | WORKFLOWS", "/api/v1/workflows");
+    return handleError(error, "GET | WORKFLOWS", url);
   }
 }
 
@@ -39,48 +41,53 @@ export async function listWorkflows(): Promise<APIResponse> {
  */
 export async function createWorkflow(data: {
   name: string;
-  entity_type: "RISK" | "AUDIT_PLAN" | "FINDING" | "RECOMMENDATION";
+  // entity_type: "RISK" | "AUDIT_PLAN" | "FINDING" | "RECOMMENDATION";
+  trigger_type?: WorkflowTriggerType;
   description?: string;
 }): Promise<APIResponse> {
-  console.log("=== SERVER ACTION: CREATE WORKFLOW ===");
-  console.log("Received data:", JSON.stringify(data, null, 2));
-  console.log("data.name:", data.name);
-  console.log("data.entity_type:", data.entity_type);
-  console.log("data.description:", data.description);
-  console.log("======================================");
+  if (!data.name) {
+    return handleBadRequest("Workflow name is required");
+  }
+
+  const url = `/api/v1/simple-workflows`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "POST", url, data });
+
+    revalidatePath("/dashboard/system-configs/workflow", "page");
+
+    return successResponse(response.data, "Workflow created successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE WORKFLOW", "/api/v1/workflows");
+  }
+}
+
+/**
+ * Update an existing workflow
+ * NOTE: This is a mock implementation. Real API endpoint TBD.
+ */
+export async function updateWorkflow(
+  workflowId: string,
+  data: {
+    name: string;
+    trigger_type?: WorkflowTriggerType;
+    description?: string;
+  }
+): Promise<APIResponse> {
+  if (!workflowId) {
+    return handleBadRequest("Workflow ID is required");
+  }
 
   if (!data.name) {
     return handleBadRequest("Workflow name is required");
   }
 
-  if (!data.entity_type) {
-    console.log("ERROR: entity_type is missing or undefined!");
-    return handleBadRequest("Entity type is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: "/api/v1/workflows",
-      data
-    });
-
-    console.log("=== WORKFLOW CREATED ===");
-    console.log("API Response:", response.data);
-    console.log("Revalidating paths...");
-
-    revalidatePath("/dashboard/system-configs/workflow", "page");
-
-    console.log("Path revalidated: /dashboard/system-configs/workflow");
-    console.log("========================");
-
-    return successResponse(response.data, "Workflow created successfully");
-  } catch (error: any) {
-    console.log("=== CREATE WORKFLOW ERROR ===");
-    console.log("Error:", error);
-    console.log("=============================");
-    return handleError(error, "POST | CREATE WORKFLOW", "/api/v1/workflows");
-  }
+  // Mock implementation - returns success
+  // TODO: Replace with actual API call when endpoint is available
+  return successResponse(
+    { id: workflowId, ...data },
+    "Workflow updated successfully"
+  );
 }
 
 /**
@@ -91,76 +98,20 @@ export async function getWorkflowDetails(workflowId: string): Promise<APIRespons
     return handleBadRequest("Workflow ID is required");
   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/workflows/details?workflow_id=${workflowId}`
-    });
+  const url = `/api/v1/simple-workflows/${workflowId}`;
 
-    return successResponse(response.data, "Workflow details fetched successfully");
+  try {
+    const response = await authenticatedApiClient({ url });
+
+    return successResponse(
+      response.data?.data || response.data || {},
+      "Workflow details fetched successfully"
+    );
   } catch (error: any) {
     return handleError(
       error,
       "GET | WORKFLOW DETAILS",
       `/api/v1/workflows/details?workflow_id=${workflowId}`
-    );
-  }
-}
-
-/**
- * Update an existing workflow
- */
-export async function updateWorkflow(
-  workflowId: string,
-  data: {
-    name?: string;
-    description?: string;
-    is_active?: boolean;
-  }
-): Promise<APIResponse> {
-  if (!workflowId) {
-    return handleBadRequest("Workflow ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "PUT",
-      url: `/api/v1/workflows/update?workflow_id=${workflowId}`,
-      data
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Workflow updated successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE WORKFLOW",
-      `/api/v1/workflows/update?workflow_id=${workflowId}`
-    );
-  }
-}
-
-/**
- * Delete a workflow
- */
-export async function deleteWorkflow(workflowId: string): Promise<APIResponse> {
-  if (!workflowId) {
-    return handleBadRequest("Workflow ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "DELETE",
-      url: `/api/v1/workflows/delete?workflow_id=${workflowId}`
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Workflow deleted successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | DELETE WORKFLOW",
-      `/api/v1/workflows/delete?workflow_id=${workflowId}`
     );
   }
 }
@@ -177,11 +128,10 @@ export async function getWorkflowStates(workflowId: string): Promise<APIResponse
     return handleBadRequest("Workflow ID is required");
   }
 
+  const url = `/api/v1/simple-workflows/states?workflow_id=${workflowId}`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/workflows/states?workflow_id=${workflowId}`
-    });
+    const response = await authenticatedApiClient({ url });
 
     return successResponse(response.data?.data || [], "Workflow states fetched successfully");
   } catch (error: any) {
@@ -199,34 +149,36 @@ export async function getWorkflowStates(workflowId: string): Promise<APIResponse
 export async function createWorkflowState(
   workflowId: string,
   data: {
-    name: string;
-    description?: string;
-    is_initial?: boolean;
-    is_final?: boolean;
+    workflow_id: string;
+    state_name: string;
+    description: string;
+    display_order: number;
+    is_initial: boolean;
+    is_final: boolean;
   }
 ): Promise<APIResponse> {
   if (!workflowId) {
     return handleBadRequest("Workflow ID is required");
   }
 
-  if (!data.name) {
+  if (!data.state_name) {
     return handleBadRequest("State name is required");
   }
 
   try {
     const response = await authenticatedApiClient({
       method: "POST",
-      url: `/api/v1/workflows/states?workflow_id=${workflowId}`,
+      url: `/api/v1/simple-workflows/states?workflow_id=${workflowId}`,
       data
     });
 
-    revalidatePath("/dashboard/admin/workflows");
+    revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow state created successfully");
   } catch (error: any) {
     return handleError(
       error,
       "POST | CREATE WORKFLOW STATE",
-      `/api/v1/workflows/states?workflow_id=${workflowId}`
+      `/api/v1/simple-workflows/states?workflow_id=${workflowId}`
     );
   }
 }
@@ -250,17 +202,17 @@ export async function updateWorkflowState(
   try {
     const response = await authenticatedApiClient({
       method: "PUT",
-      url: `/api/v1/workflows/states/update?state_id=${stateId}`,
+      url: `/api/v1/simple-workflows/states/${stateId}`,
       data
     });
 
-    revalidatePath("/dashboard/admin/workflows");
+    revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow state updated successfully");
   } catch (error: any) {
     return handleError(
       error,
       "PUT | UPDATE WORKFLOW STATE",
-      `/api/v1/workflows/states/update?state_id=${stateId}`
+      `/api/v1/simple-workflows/states/${stateId}`
     );
   }
 }
@@ -276,16 +228,16 @@ export async function deleteWorkflowState(stateId: string): Promise<APIResponse>
   try {
     const response = await authenticatedApiClient({
       method: "DELETE",
-      url: `/api/v1/workflows/states/delete?state_id=${stateId}`
+      url: `/api/v1/simple-workflows/states/${stateId}`
     });
 
-    revalidatePath("/dashboard/admin/workflows");
+    revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow state deleted successfully");
   } catch (error: any) {
     return handleError(
       error,
       "DELETE | DELETE WORKFLOW STATE",
-      `/api/v1/workflows/states/delete?state_id=${stateId}`
+      `/api/v1/simple-workflows/states/${stateId}`
     );
   }
 }
@@ -302,11 +254,10 @@ export async function getWorkflowTransitions(workflowId: string): Promise<APIRes
     return handleBadRequest("Workflow ID is required");
   }
 
+  const url = `/api/v1/simple-workflow-transitions?workflow_id=${workflowId}`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/workflows/transitions?workflow_id=${workflowId}`
-    });
+    const response = await authenticatedApiClient({ url });
 
     return successResponse(response.data?.data || [], "Workflow transitions fetched successfully");
   } catch (error: any) {
@@ -321,39 +272,42 @@ export async function getWorkflowTransitions(workflowId: string): Promise<APIRes
 /**
  * Create a new workflow transition
  */
-export async function createWorkflowTransition(
-  workflowId: string,
-  data: {
-    name: string;
-    from_state_id: string;
-    to_state_id: string;
-    action_name: string;
-    description?: string;
-  }
-): Promise<APIResponse> {
-  if (!workflowId) {
+export async function createWorkflowTransition(data: {
+  workflow_id: string;
+  from_status: string;
+  to_status: string;
+  required_role_id: string;
+}): Promise<APIResponse> {
+  if (!data?.workflow_id) {
     return handleBadRequest("Workflow ID is required");
   }
 
-  if (!data.name || !data.from_state_id || !data.to_state_id || !data.action_name) {
-    return handleBadRequest("Name, from_state_id, to_state_id, and action_name are required");
+  if (!data.from_status || !data.to_status) {
+    return handleBadRequest("From Status, and To Status are required");
   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/workflows/transitions?workflow_id=${workflowId}`,
-      data
-    });
+  const url = `/api/v1/simple-workflow-transitions`;
 
-    revalidatePath("/dashboard/admin/workflows");
+  try {
+    console.log("=== CREATE WORKFLOW TRANSITION ===");
+    console.log("URL:", url);
+    console.log("Payload:", data);
+
+    const response = await authenticatedApiClient({ method: "POST", url, data });
+
+    console.log("Response:", response.data);
+    console.log("==================================");
+
+    revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow transition created successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "POST | CREATE WORKFLOW TRANSITION",
-      `/api/v1/workflows/transitions?workflow_id=${workflowId}`
-    );
+    console.error("=== ERROR CREATE WORKFLOW TRANSITION ===");
+    console.error("URL:", url);
+    console.error("Payload:", data);
+    console.error("Error:", error);
+    console.error("========================================");
+
+    return handleError(error, "POST | CREATE WORKFLOW TRANSITION", url);
   }
 }
 
@@ -363,30 +317,24 @@ export async function createWorkflowTransition(
 export async function updateWorkflowTransition(
   transitionId: string,
   data: {
-    name?: string;
-    action_name?: string;
-    description?: string;
+    from_status?: string;
+    to_status?: string;
+    required_role_id?: string;
   }
 ): Promise<APIResponse> {
   if (!transitionId) {
     return handleBadRequest("Transition ID is required");
   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "PUT",
-      url: `/api/v1/workflows/transitions/update?transition_id=${transitionId}`,
-      data
-    });
+  const url = `/api/v1/simple-workflow-transitions/${transitionId}`;
 
-    revalidatePath("/dashboard/admin/workflows");
+  try {
+    const response = await authenticatedApiClient({ method: "PUT", url, data });
+
+    revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow transition updated successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE WORKFLOW TRANSITION",
-      `/api/v1/workflows/transitions/update?transition_id=${transitionId}`
-    );
+    return handleError(error, "PUT | UPDATE WORKFLOW TRANSITION", url);
   }
 }
 
@@ -398,428 +346,129 @@ export async function deleteWorkflowTransition(transitionId: string): Promise<AP
     return handleBadRequest("Transition ID is required");
   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "DELETE",
-      url: `/api/v1/workflows/transitions/delete?transition_id=${transitionId}`
-    });
+  const url = `/api/v1/simple-workflow-transitions/${transitionId}`;
 
-    revalidatePath("/dashboard/admin/workflows");
+  try {
+    const response = await authenticatedApiClient({ method: "DELETE", url });
+
+    revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow transition deleted successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | DELETE WORKFLOW TRANSITION",
-      `/api/v1/workflows/transitions/delete?transition_id=${transitionId}`
-    );
+    return handleError(error, "DELETE | DELETE WORKFLOW TRANSITION", url);
   }
 }
 
 // ============================================================================
-// TRANSITION TRIGGERS
+// WORKFLOW APPROVALS
 // ============================================================================
 
 /**
- * Get all triggers for a transition
+ * Approve a workflow transition
+ * POST /api/v1/simple-workflows/instances/{id}/approve
  */
-export async function getTransitionTriggers(transitionId: string): Promise<APIResponse> {
-  if (!transitionId) {
-    return handleBadRequest("Transition ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`
-    });
-
-    return successResponse(response.data?.data || [], "Transition triggers fetched successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "GET | TRANSITION TRIGGERS",
-      `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`
-    );
-  }
-}
-
-/**
- * Create a new transition trigger
- */
-export async function createTransitionTrigger(
-  transitionId: string,
-  data: {
-    trigger_name: string;
-    trigger_type: string;
-    delay_duration?: string;
-  }
+export async function approveWorkflowTransition(
+  instanceId: string,
+  approvedBy: string,
+  comments?: string
 ): Promise<APIResponse> {
-  if (!transitionId) {
-    return handleBadRequest("Transition ID is required");
+  if (!instanceId) {
+    return handleBadRequest("Instance ID is required");
   }
 
-  if (!data.trigger_name || !data.trigger_type) {
-    return handleBadRequest("Trigger name and type are required");
+  if (!approvedBy) {
+    return handleBadRequest("Approved by user ID is required");
   }
 
   try {
     const response = await authenticatedApiClient({
       method: "POST",
-      url: `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`,
-      data
+      url: `/api/v1/simple-workflows/instances/${instanceId}/approve`,
+      data: {
+        approved_by: approvedBy,
+        comments
+      }
     });
 
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Transition trigger created successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "POST | CREATE TRANSITION TRIGGER",
-      `/api/v1/workflows/transitions/triggers?transition_id=${transitionId}`
-    );
-  }
-}
-
-/**
- * Update a transition trigger
- */
-export async function updateTransitionTrigger(
-  triggerId: string,
-  data: {
-    trigger_name?: string;
-    delay_duration?: string;
-  }
-): Promise<APIResponse> {
-  if (!triggerId) {
-    return handleBadRequest("Trigger ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "PUT",
-      url: `/api/v1/workflows/transitions/triggers/update?trigger_id=${triggerId}`,
-      data
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Transition trigger updated successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE TRANSITION TRIGGER",
-      `/api/v1/workflows/transitions/triggers/update?trigger_id=${triggerId}`
-    );
-  }
-}
-
-/**
- * Delete a transition trigger
- */
-export async function deleteTransitionTrigger(triggerId: string): Promise<APIResponse> {
-  if (!triggerId) {
-    return handleBadRequest("Trigger ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "DELETE",
-      url: `/api/v1/workflows/transitions/triggers/delete?trigger_id=${triggerId}`
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Transition trigger deleted successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | DELETE TRANSITION TRIGGER",
-      `/api/v1/workflows/transitions/triggers/delete?trigger_id=${triggerId}`
-    );
-  }
-}
-
-// ============================================================================
-// WORKFLOW ENTRY TRIGGERS
-// ============================================================================
-
-/**
- * Get all entry triggers for a workflow
- */
-export async function getWorkflowEntryTriggers(workflowId: string): Promise<APIResponse> {
-  if (!workflowId) {
-    return handleBadRequest("Workflow ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`
-    });
-
+    revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(
-      response.data?.data || [],
-      "Workflow entry triggers fetched successfully"
+      response.data?.data || response.data,
+      "Workflow instance approved successfully"
     );
   } catch (error: any) {
     return handleError(
       error,
-      "GET | WORKFLOW ENTRY TRIGGERS",
-      `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`
+      "POST | APPROVE INSTANCE",
+      `/api/v1/simple-workflows/instances/${instanceId}/approve`
     );
   }
 }
 
 /**
- * Create a new entry trigger for a workflow
+ * Reject a workflow transition
+ * POST /api/v1/simple-workflows/instances/{id}/reject
  */
-export async function createEntryTrigger(
-  workflowId: string,
-  data: {
-    trigger_name: string;
-    trigger_type: string;
-  }
+export async function rejectWorkflowTransition(
+  instanceId: string,
+  rejectedBy: string,
+  reason: string
 ): Promise<APIResponse> {
-  if (!workflowId) {
-    return handleBadRequest("Workflow ID is required");
+  if (!instanceId) {
+    return handleBadRequest("Instance ID is required");
   }
 
-  if (!data.trigger_name || !data.trigger_type) {
-    return handleBadRequest("Trigger name and type are required");
+  if (!rejectedBy) {
+    return handleBadRequest("Rejected by user ID is required");
+  }
+
+  if (!reason) {
+    return handleBadRequest("Rejection reason is required");
   }
 
   try {
     const response = await authenticatedApiClient({
       method: "POST",
-      url: `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`,
-      data
+      url: `/api/v1/simple-workflows/instances/${instanceId}/reject`,
+      data: {
+        rejected_by: rejectedBy,
+        reason
+      }
     });
 
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Entry trigger created successfully");
+    revalidatePath("/dashboard/system-configs/workflow");
+    return successResponse(
+      response.data?.data || response.data,
+      "Workflow instance rejected successfully"
+    );
   } catch (error: any) {
     return handleError(
       error,
-      "POST | CREATE ENTRY TRIGGER",
-      `/api/v1/workflows/entry-triggers?workflow_id=${workflowId}`
+      "POST | REJECT INSTANCE",
+      `/api/v1/simple-workflows/instances/${instanceId}/reject`
     );
   }
 }
 
 /**
- * Update an entry trigger
+ * Get pending approvals for an instance
+ * GET /api/v1/simple-workflows/instances/{id}/approvals
  */
-export async function updateEntryTrigger(
-  triggerId: string,
-  data: {
-    trigger_name?: string;
-  }
-): Promise<APIResponse> {
-  if (!triggerId) {
-    return handleBadRequest("Trigger ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "PUT",
-      url: `/api/v1/workflows/entry-triggers/update?trigger_id=${triggerId}`,
-      data
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Entry trigger updated successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE ENTRY TRIGGER",
-      `/api/v1/workflows/entry-triggers/update?trigger_id=${triggerId}`
-    );
-  }
-}
-
-/**
- * Delete an entry trigger
- */
-export async function deleteEntryTrigger(triggerId: string): Promise<APIResponse> {
-  if (!triggerId) {
-    return handleBadRequest("Trigger ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "DELETE",
-      url: `/api/v1/workflows/entry-triggers/delete?trigger_id=${triggerId}`
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Entry trigger deleted successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | DELETE ENTRY TRIGGER",
-      `/api/v1/workflows/entry-triggers/delete?trigger_id=${triggerId}`
-    );
-  }
-}
-
-// ============================================================================
-// TRANSITION ROLES
-// ============================================================================
-
-/**
- * Get all roles for a transition
- */
-export async function getTransitionRoles(transitionId: string): Promise<APIResponse> {
-  if (!transitionId) {
-    return handleBadRequest("Transition ID is required");
+export async function getWorkflowApprovals(instanceId: string): Promise<APIResponse> {
+  if (!instanceId) {
+    return handleBadRequest("Instance ID is required");
   }
 
   try {
     const response = await authenticatedApiClient({
       method: "GET",
-      url: `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`
+      url: `/api/v1/simple-workflows/instances/${instanceId}/approvals`
     });
 
-    return successResponse(response.data?.data || [], "Transition roles fetched successfully");
+    return successResponse(response.data?.data || [], "Workflow approvals fetched successfully");
   } catch (error: any) {
     return handleError(
       error,
-      "GET | TRANSITION ROLES",
-      `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`
-    );
-  }
-}
-
-/**
- * Get a specific transition role
- */
-export async function getTransitionRole(
-  transitionId: string,
-  roleId: string
-): Promise<APIResponse> {
-  if (!transitionId) {
-    return handleBadRequest("Transition ID is required");
-  }
-
-  if (!roleId) {
-    return handleBadRequest("Role ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/workflows/transitions/roles/details?transition_id=${transitionId}&role_id=${roleId}`
-    });
-
-    return successResponse(response.data, "Transition role fetched successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "GET | TRANSITION ROLE",
-      `/api/v1/workflows/transitions/roles/details?transition_id=${transitionId}&role_id=${roleId}`
-    );
-  }
-}
-
-/**
- * Assign a role to a transition
- */
-export async function assignRoleToTransition(
-  transitionId: string,
-  roleId: string
-): Promise<APIResponse> {
-  if (!transitionId) {
-    return handleBadRequest("Transition ID is required");
-  }
-
-  if (!roleId) {
-    return handleBadRequest("Role ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`,
-      data: { role_id: roleId }
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Role assigned to transition successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "POST | ASSIGN ROLE TO TRANSITION",
-      `/api/v1/workflows/transitions/roles?transition_id=${transitionId}`
-    );
-  }
-}
-
-/**
- * Remove a role from a transition
- */
-export async function removeRoleFromTransition(
-  transitionId: string,
-  roleId: string
-): Promise<APIResponse> {
-  if (!transitionId) {
-    return handleBadRequest("Transition ID is required");
-  }
-
-  if (!roleId) {
-    return handleBadRequest("Role ID is required");
-  }
-
-  try {
-    const response = await authenticatedApiClient({
-      method: "DELETE",
-      url: `/api/v1/workflows/transitions/roles/remove?transition_id=${transitionId}&role_id=${roleId}`
-    });
-
-    revalidatePath("/dashboard/admin/workflows");
-    return successResponse(response.data, "Role removed from transition successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | REMOVE ROLE FROM TRANSITION",
-      `/api/v1/workflows/transitions/roles/remove?transition_id=${transitionId}&role_id=${roleId}`
-    );
-  }
-}
-
-// ============================================================================
-// BACKGROUND WORKER
-// ============================================================================
-
-/**
- * Get the background worker status
- */
-export async function getBackgroundWorkerStatus(): Promise<APIResponse> {
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: "/api/v1/workflows/worker/status"
-    });
-
-    return successResponse(response.data, "Background worker status fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | BACKGROUND WORKER STATUS", "/api/v1/workflows/worker/status");
-  }
-}
-
-/**
- * Manually trigger the background worker to process pending triggers
- */
-export async function triggerBackgroundWorker(): Promise<APIResponse> {
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: "/api/v1/workflows/worker/process"
-    });
-
-    return successResponse(response.data, "Background worker triggered successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "POST | TRIGGER BACKGROUND WORKER",
-      "/api/v1/workflows/worker/process"
+      "GET | WORKFLOW APPROVALS",
+      `/api/v1/simple-workflows/instances/${instanceId}/approvals`
     );
   }
 }
