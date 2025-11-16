@@ -118,7 +118,7 @@ const transformWorkflowData = (apiWorkflow: any): Workflow => {
   return {
     id: apiWorkflow.id,
     name: apiWorkflow.name,
-    entity_type: apiWorkflow.entity_type,
+    trigger_type: apiWorkflow.trigger_type || apiWorkflow.entity_type || "AUDIT_PLAN",  // ✅ FIXED: Use trigger_type
     states: mappedStates,
     transitions: mappedTransitions,
     entry_conditions: [...],
@@ -137,7 +137,7 @@ When creating a new workflow (no `workflowId`), the editor uses a default templa
 const createDefaultWorkflow = (): Workflow => ({
   id: `wf-${Date.now()}`,
   name: "New Workflow",
-  entity_type: "AUDIT_PLAN",
+  trigger_type: "AUDIT_PLAN",  // ✅ FIXED: Use trigger_type instead of entity_type
   states: [
     {
       id: "state-1",
@@ -520,7 +520,7 @@ const createTransitions = async (
       const toStatus = parts[1];
 
       // For now, use first role if available, else use a default
-      const roleId = transition.permissions[0]?.role || "SYSTEM";
+      const roleId = transition.permissions[0]?.role_id || "SYSTEM";  // ✅ FIXED: Use role_id instead of role
 
       const response = await createWorkflowTransition({
         workflow_id: workflowId,
@@ -576,7 +576,7 @@ const updateTransitions = async (
       const fromStatus = parts[0];
       const toStatus = parts[1];
 
-      const roleId = transition.permissions[0]?.role || "SYSTEM";
+      const roleId = transition.permissions[0]?.role_id || "SYSTEM";  // ✅ FIXED: Use role_id instead of role
 
       const response = await updateWorkflowTransition(transition._serverId, {
         from_status: fromStatus,      // ✅ StandardStatus value
