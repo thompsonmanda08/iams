@@ -164,7 +164,7 @@ export function useWorkflowMutations() {
       for (let i = 0; i < states.length; i++) {
         const state = states[i];
 
-        const response = await createWorkflowState(workflowId, {
+        const response = await createWorkflowState({
           workflow_id: workflowId,
           state_name: state.name,
           description: state.description || "",
@@ -198,7 +198,10 @@ export function useWorkflowMutations() {
    * Update workflow states
    * Handles bulk updates of states
    */
-  const updateStates = async (_workflowId: string, states: State[]): Promise<SaveWorkflowResult> => {
+  const updateStates = async (
+    _workflowId: string,
+    states: State[]
+  ): Promise<SaveWorkflowResult> => {
     try {
       const updatedStates: State[] = [];
 
@@ -319,9 +322,7 @@ export function useWorkflowMutations() {
   /**
    * Update workflow transitions
    */
-  const updateTransitions = async (
-    transitions: Transition[]
-  ): Promise<SaveWorkflowResult> => {
+  const updateTransitions = async (transitions: Transition[]): Promise<SaveWorkflowResult> => {
     try {
       const updatedTransitions: Transition[] = [];
 

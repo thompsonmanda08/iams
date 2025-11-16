@@ -84,10 +84,7 @@ export async function updateWorkflow(
 
   // Mock implementation - returns success
   // TODO: Replace with actual API call when endpoint is available
-  return successResponse(
-    { id: workflowId, ...data },
-    "Workflow updated successfully"
-  );
+  return successResponse({ id: workflowId, ...data }, "Workflow updated successfully");
 }
 
 /**
@@ -146,18 +143,15 @@ export async function getWorkflowStates(workflowId: string): Promise<APIResponse
 /**
  * Create a new workflow state
  */
-export async function createWorkflowState(
-  workflowId: string,
-  data: {
-    workflow_id: string;
-    state_name: string;
-    description: string;
-    display_order: number;
-    is_initial: boolean;
-    is_final: boolean;
-  }
-): Promise<APIResponse> {
-  if (!workflowId) {
+export async function createWorkflowState(data: {
+  workflow_id: string;
+  state_name: string;
+  description: string;
+  display_order: number;
+  is_initial: boolean;
+  is_final: boolean;
+}): Promise<APIResponse> {
+  if (!data?.workflow_id) {
     return handleBadRequest("Workflow ID is required");
   }
 
@@ -165,21 +159,15 @@ export async function createWorkflowState(
     return handleBadRequest("State name is required");
   }
 
+  const url = `/api/v1/simple-workflows/states`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/simple-workflows/states?workflow_id=${workflowId}`,
-      data
-    });
+    const response = await authenticatedApiClient({ method: "POST", url, data });
 
     revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow state created successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "POST | CREATE WORKFLOW STATE",
-      `/api/v1/simple-workflows/states?workflow_id=${workflowId}`
-    );
+    return handleError(error, "POST | CREATE WORKFLOW STATE", url);
   }
 }
 
@@ -225,20 +213,15 @@ export async function deleteWorkflowState(stateId: string): Promise<APIResponse>
     return handleBadRequest("State ID is required");
   }
 
+  const url = `/api/v1/simple-workflows/states/${stateId}`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "DELETE",
-      url: `/api/v1/simple-workflows/states/${stateId}`
-    });
+    const response = await authenticatedApiClient({ method: "DELETE", url });
 
     revalidatePath("/dashboard/system-configs/workflow");
     return successResponse(response.data, "Workflow state deleted successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | DELETE WORKFLOW STATE",
-      `/api/v1/simple-workflows/states/${stateId}`
-    );
+    return handleError(error, "DELETE | DELETE WORKFLOW STATE", url);
   }
 }
 
@@ -261,11 +244,7 @@ export async function getWorkflowTransitions(workflowId: string): Promise<APIRes
 
     return successResponse(response.data?.data || [], "Workflow transitions fetched successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | WORKFLOW TRANSITIONS",
-      `/api/v1/workflows/transitions?workflow_id=${workflowId}`
-    );
+    return handleError(error, "GET | WORKFLOW TRANSITIONS", url);
   }
 }
 

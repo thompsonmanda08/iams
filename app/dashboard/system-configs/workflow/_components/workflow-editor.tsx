@@ -178,11 +178,14 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         throw new Error(details.message || "Failed to load workflow");
       }
 
-      return transformWorkflowData({
+      const fullWorkflowObject = {
         ...details.data,
         states: states?.data || [],
         transitions: transitions?.data || []
-      });
+      };
+
+      console.log("===> WORKFLOW DETAILS", fullWorkflowObject);
+      return transformWorkflowData(fullWorkflowObject);
     },
     enabled: !!workflowId, // Only fetch if workflowId exists
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
@@ -223,16 +226,19 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   const handleStateAdd = () => {
     const newState: State = {
       id: `state-${Date.now()}`,
-      name: `State ${workflow.states.length + 1}`,
+      name: `State ${(workflow?.states?.length || 0) + 1}`,
       isInitial: false,
       isFinal: false,
-      position: { x: 100 + workflow.states.length * 50, y: 100 + workflow.states.length * 50 },
+      position: {
+        x: 100 + (workflow?.states?.length || 0) * 50,
+        y: 100 + (workflow?.states?.length || 0) * 50
+      },
       _changeType: "created"
     };
 
     setWorkflow({
       ...workflow,
-      states: [...workflow.states, newState]
+      states: [...(workflow?.states || []), newState]
     });
 
     toast.success("State added");
