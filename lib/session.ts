@@ -316,6 +316,7 @@ export async function deleteSession() {
     cookieStore.delete(AUTH_SESSION);
     cookieStore.delete(USER_SESSION); // Also delete user backup
     cookieStore.delete(PERMISSIONS_SESSION);
+    cookieStore.delete(SCREEN_LOCK_SESSION); // Clear screen lock state on logout
 
     return { success: true, message: "Logout Success" };
   } catch (error: any) {
