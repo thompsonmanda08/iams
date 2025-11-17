@@ -35,11 +35,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/page-header";
 import Search from "@/components/ui/search-field";
-import { getRiskAcceptances, updateRiskAcceptance, submitRiskAcceptanceForApproval } from "@/app/_actions/risk-module-actions";
+import {
+  getRiskAcceptances,
+  updateRiskAcceptance,
+  submitRiskAcceptanceForApproval
+} from "@/app/_actions/risk-module-actions";
 import { toast } from "sonner";
 import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
 import { useRouter } from "next/navigation";
-import ConfirmationModal from "@/components/confirmation-modal";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -162,7 +166,9 @@ export default function RiskAcceptanceList() {
 
   const handleAcceptanceClick = (acceptance: Acceptance) => {
     setSelectedAcceptance(acceptance);
-    setModalStatus(acceptance.acceptance_status === "PENDING" ? "PENDING" : acceptance.acceptance_status);
+    setModalStatus(
+      acceptance.acceptance_status === "PENDING" ? "PENDING" : acceptance.acceptance_status
+    );
     setShowModal(true);
   };
 
@@ -575,7 +581,10 @@ export default function RiskAcceptanceList() {
           </ScrollArea>
 
           <DialogFooter className="p-6 pt-0">
-            <Button variant="outline" onClick={() => setShowModal(false)} disabled={isSubmitting || isSubmittingForApproval}>
+            <Button
+              variant="outline"
+              onClick={() => setShowModal(false)}
+              disabled={isSubmitting || isSubmittingForApproval}>
               Cancel
             </Button>
             {selectedAcceptance?.acceptance_status === "PENDING" && (
@@ -583,8 +592,7 @@ export default function RiskAcceptanceList() {
                 onClick={() => setSubmitConfirmationOpen(true)}
                 className="gap-2"
                 size="sm"
-                disabled={isSubmitting || isSubmittingForApproval}
-              >
+                disabled={isSubmitting || isSubmittingForApproval}>
                 <Send className="h-4 w-4" />
                 Submit for Approval
               </Button>
