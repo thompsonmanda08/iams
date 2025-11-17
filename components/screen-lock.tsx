@@ -13,10 +13,19 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRefreshToken } from "@/hooks/use-users-query-data";
-import { lockScreenOnUserIdle, logUserOut, getRefreshToken, checkScreenLockState } from "@/app/_actions/auth-actions";
+import {
+  lockScreenOnUserIdle,
+  logUserOut,
+  getRefreshToken,
+  checkScreenLockState
+} from "@/app/_actions/auth-actions";
 import { AuthSession } from "@/lib/types";
 import { toast } from "sonner";
-import { SESSION_CONFIG, SCREEN_LOCK_COUNTDOWN_SECONDS, PROGRESS_CIRCLE_TOTAL } from "@/lib/session-config";
+import {
+  SESSION_CONFIG,
+  SCREEN_LOCK_COUNTDOWN_SECONDS,
+  PROGRESS_CIRCLE_TOTAL
+} from "@/lib/session-config";
 import { logger } from "@/lib/logger";
 
 const DEFAULT_TIMEOUT = SESSION_CONFIG.SCREEN_LOCK_COUNTDOWN;
@@ -72,7 +81,6 @@ function ScreenLock({
 
   useEffect(() => {
     if (!open) {
-      // Clear any existing interval when dialog closes
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -80,7 +88,6 @@ function ScreenLock({
       return;
     }
 
-    // Clear any existing interval before starting a new one
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -89,15 +96,15 @@ function ScreenLock({
       setSeconds((prevSeconds) => {
         const newSeconds = prevSeconds - 1;
 
-        console.log("Remaining seconds:", newSeconds);
-
-        // Trigger logout when reaching 0
         if (newSeconds <= 0) {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          handleUserLogOut();
+          // ✅ Use a flag to prevent calling after unmount
+          if (!hasLoggedOutRef.current) {
+            handleUserLogOut();
+          }
           return 0;
         }
 
@@ -105,13 +112,14 @@ function ScreenLock({
       });
     }, 1000);
 
+    // ✅ Ensure cleanup on unmount
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [open, handleUserLogOut]);
+  }, [open, handleUserLogOut, hasLoggedOutRef]);
 
   return (
     <Dialog open={open}>
@@ -310,6 +318,8 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     hasLoggedOutRef.current = true;
 
     setIsLoading(true);
+    setState("Active");
+    setCount(0);
 
     try {
       // Use server action for proper session cleanup (deletes cookies & JWT)
@@ -328,47 +338,34 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
   // Callback to handle "I'm still here" button click
   const handleStillHere = useCallback(async () => {
-    // First reset local idle state to close the dialog immediately
-    setState("Active");
-
+    setIsLoading(true);
     try {
-      // Try to unlock (refresh token server-side)
       const success = await lockScreenOnUserIdle(false);
 
       if (success) {
-        // Unlock succeeded, reset idle timer
+        setState("Active");
         idleTimer.reset();
         toast.success("Session extended. Welcome back!");
         return;
       }
 
-      // Unlock failed - try manual fallback refresh as backup
-      console.warn("Initial unlock failed, attempting fallback token refresh...");
+      const refreshResponse = await getRefreshToken();
 
-      try {
-        // Attempt fallback: manually call getRefreshToken
-        const refreshResponse = await getRefreshToken();
-
-        if (refreshResponse.success) {
-          // Fallback refresh succeeded
-          idleTimer.reset();
-          toast.success("Session restored. You're all set!");
-          return;
-        }
-
-        // Both unlock and refresh failed - user must logout
-        console.error("Both unlock and refresh failed:", refreshResponse.message);
-        toast.error("Session expired. Please log in again.");
-        handleUserLogOut();
-      } catch (fallbackError) {
-        console.error("Fallback refresh error:", fallbackError);
-        toast.error("Unable to restore session. Logging out...");
-        handleUserLogOut();
+      if (refreshResponse.success) {
+        setState("Active");
+        idleTimer.reset();
+        toast.success("Session restored. You're all set!");
+        return;
       }
+
+      toast.error("Session expired. Please log in again.");
+      await handleUserLogOut();
     } catch (error) {
-      console.error("Critical error in handleStillHere:", error);
+      console.error("Critical error:", error);
       toast.error("An unexpected error occurred. Logging out...");
-      handleUserLogOut();
+      await handleUserLogOut();
+    } finally {
+      setIsLoading(false);
     }
   }, [idleTimer, handleUserLogOut]);
 

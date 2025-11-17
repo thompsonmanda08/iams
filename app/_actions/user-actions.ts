@@ -173,6 +173,28 @@ export async function toggleUserStatus(id: string, isActive: boolean): Promise<A
   }
 }
 
+export async function deactivateUser(id: string): Promise<APIResponse> {
+  const url = `/api/v1/users/${id}/deactivate`;
+  try {
+    const response = await authenticatedApiClient({ url: url, method: "PATCH" });
+    revalidatePath("/dashboard/system-configs/users");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "PATCH", url);
+  }
+}
+
+export async function activateUser(id: string): Promise<APIResponse> {
+  const url = `/api/v1/users/${id}/activate`;
+  try {
+    const response = await authenticatedApiClient({ url: url, method: "PATCH" });
+    revalidatePath("/dashboard/system-configs/users");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "PATCH", url);
+  }
+}
+
 /**
  * Toggle user MFA
  */
