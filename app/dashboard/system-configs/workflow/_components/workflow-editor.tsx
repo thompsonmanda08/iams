@@ -1,5 +1,11 @@
 "use client";
-import { EntityType, State, Transition, Workflow, WorkflowTriggerType } from "@/lib/types/workflow";
+import {
+  EntityType,
+  State,
+  Transition,
+  WorkflowItem,
+  WorkflowTriggerType
+} from "@/lib/types/workflow";
 import { useState, useMemo } from "react";
 import { WorkflowHeader } from "./workflow-header";
 import { WorkflowCanvas } from "./workflow-canvas";
@@ -17,7 +23,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { QUERY_KEYS } from "@/lib/constants";
-import { STANDARD_STATUSES } from "@/lib/statuses";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,48 +40,120 @@ interface WorkflowEditorProps {
 }
 
 // Helper function to transform API response to editor format
-const transformWorkflowData = (apiWorkflow: any): Workflow => {
+const transformWorkflowData = (apiWorkflow: any): WorkflowItem => {
   // Map states from API format (snake_case)
-  const mappedStates: State[] = (apiWorkflow?.states || []).map((state: any) => ({
-    id: state.id,
-    name: state.name,
-    isInitial: state.is_initial ?? false,
-    isFinal: state.is_final ?? false,
-    position: state.position || { x: 100, y: 100 },
-    description: state.description,
-    color: state.color,
-    display_order: state.display_order ?? 0,
-    _changeType: "synced" as const,
-    _serverId: state.id
-  }));
+  const statesPerRow = 3; // Number of states before wrapping to next row
+  const horizontalSpacing = 520; // Space between states horizontally
+  const verticalSpacing = 350; // Space between rows vertically
+
+  // Sort states by display_order before mapping
+  const sortedStates = [...(apiWorkflow?.states || [])].sort(
+    (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
+  );
+
+  const mappedStates: State[] = sortedStates.map((state: any, index: number) => {
+    const row = Math.floor(index / statesPerRow);
+    const col = index % statesPerRow;
+
+    return {
+      id: state.id,
+      name: state.state_name || state.name,
+      isInitial: state.is_initial ?? false,
+      isFinal: state.is_final ?? false,
+      position: state.position || {
+        x: 150 + col * horizontalSpacing, // Horizontal position based on column
+        y: 150 + row * verticalSpacing // Vertical position based on row
+      },
+      description: state.description,
+      color: state.color,
+      display_order: state.display_order ?? 0,
+      _changeType: "synced" as const,
+      _serverId: state.id
+    };
+  });
 
   // Map transitions from API format
-  const mappedTransitions: Transition[] = (apiWorkflow?.transitions || []).map((trans: any) => ({
-    id: trans.id,
-    from_state_id: trans.from_state_id,
-    to_state_id: trans.to_state_id,
-    transition_name: trans.transition_name || trans.action_name || trans.name,
-    permissions: (trans.permissions || []).map((perm: any) => ({
-      id: perm.id || `perm-${Date.now()}`,
-      role: perm.role?.name || perm.role_name || ""
-    })),
-    conditions: (trans.conditions || []).map((cond: any) => ({
-      id: cond.id || `cond-${Date.now()}`,
-      field: cond.field,
-      operator: cond.operator,
-      value: cond.value,
-      description: cond.description
-    })),
-    actions: (trans.actions || []).map((action: any) => ({
-      id: action.id || `action-${Date.now()}`,
-      type: action.type,
-      config: action.config || {},
-      description: action.description
-    })),
-    description: trans.description,
-    _changeType: "synced" as const,
-    _serverId: trans.id
-  }));
+  const mappedTransitions: Transition[] = (apiWorkflow?.transitions || []).map((trans: any) => {
+    // Handle both state ID-based (from_state_id/to_state_id) and status-based (from_status/to_status) transitions
+    let fromStateId = trans.from_state_id;
+    let toStateId = trans.to_state_id;
+    let transitionName = trans.transition_name || trans.action_name || trans.name || "";
+
+    // If using status-based transitions, find the matching state IDs and construct transition name
+    if ((trans.from_status || trans.to_status) && !transitionName) {
+      const fromStatus = trans.from_status;
+      const toStatus = trans.to_status;
+
+      // Normalize status values: convert to uppercase and replace spaces with underscores
+      const normalizeStatus = (status: string) => status?.toUpperCase().replace(/\s+/g, "_") || "";
+      const normalizedFromStatus = normalizeStatus(fromStatus);
+      const normalizedToStatus = normalizeStatus(toStatus);
+
+      // Try to find state IDs by matching state names with statuses
+      if (fromStatus && !fromStateId) {
+        const fromState = apiWorkflow.states?.find((s: any) => {
+          const stateName = s.state_name?.toUpperCase().replace(/\s+/g, "_") || "";
+          return stateName === normalizedFromStatus;
+        });
+        if (fromState) {
+          fromStateId = fromState.id;
+        }
+      }
+
+      if (toStatus && !toStateId) {
+        const toState = apiWorkflow.states?.find((s: any) => {
+          const stateName = s.state_name?.toUpperCase().replace(/\s+/g, "_") || "";
+          return stateName === normalizedToStatus;
+        });
+        if (toState) {
+          toStateId = toState.id;
+        }
+      }
+
+      // Construct transition name from status values
+      if (fromStatus && toStatus) {
+        transitionName = `${normalizedFromStatus}_TO_${normalizedToStatus}`;
+      }
+    } else if (!transitionName && (fromStateId || toStateId)) {
+      // Fallback: construct from state names if IDs are available
+      const fromState = apiWorkflow.states?.find((s: any) => s.id === fromStateId);
+      const toState = apiWorkflow.states?.find((s: any) => s.id === toStateId);
+      const fromStateName = fromState?.state_name || fromState?.name || "";
+      const toStateName = toState?.state_name || toState?.name || "";
+      if (fromStateName && toStateName) {
+        transitionName = `${fromStateName}_TO_${toStateName}`;
+      }
+    }
+
+    // Default fallback if no name could be determined
+    if (!transitionName) {
+      transitionName = `Transition ${trans.id?.slice(0, 4)}`;
+    }
+
+    return {
+      id: trans.id,
+      from_state_id: fromStateId,
+      to_state_id: toStateId,
+      transition_name: transitionName,
+      required_role_id: trans.required_role_id || "",
+      conditions: (trans.conditions || []).map((cond: any) => ({
+        id: cond.id || `cond-${Date.now()}`,
+        field: cond.field,
+        operator: cond.operator,
+        value: cond.value,
+        description: cond.description
+      })),
+      actions: (trans.actions || []).map((action: any) => ({
+        id: action.id || `action-${Date.now()}`,
+        type: action.type,
+        config: action.config || {},
+        description: action.description
+      })),
+      description: trans.description,
+      _changeType: "synced" as const,
+      _serverId: trans.id
+    };
+  });
 
   return {
     id: apiWorkflow.id,
@@ -101,9 +178,9 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   const queryClient = useQueryClient();
 
   // Create default workflow template
-  const createDefaultWorkflow = (): Workflow => ({
+  const createDefaultWorkflow = (): WorkflowItem => ({
     id: `wf-${Date.now()}`,
-    name: "New Workflow",
+    name: "New WorkflowItem",
     trigger_type: "AUDIT_PLAN",
     states: [
       {
@@ -111,7 +188,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         name: "Draft",
         isInitial: true,
         isFinal: false,
-        position: { x: 100, y: 100 },
+        position: { x: 150, y: 150 },
         _changeType: "created"
       },
       {
@@ -119,7 +196,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         name: "Submitted",
         isInitial: false,
         isFinal: false,
-        position: { x: 400, y: 100 },
+        position: { x: 450, y: 150 },
         _changeType: "created"
       },
       {
@@ -127,7 +204,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         name: "Approved",
         isInitial: false,
         isFinal: true,
-        position: { x: 700, y: 100 },
+        position: { x: 750, y: 150 },
         _changeType: "created"
       }
     ],
@@ -185,7 +262,10 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
       };
 
       console.log("===> WORKFLOW DETAILS", fullWorkflowObject);
-      return transformWorkflowData(fullWorkflowObject);
+      console.log("===> TRANSITIONS RAW DATA", transitions?.data);
+      const transformed = transformWorkflowData(fullWorkflowObject);
+      console.log("===> TRANSFORMED TRANSITIONS", transformed.transitions);
+      return transformed;
     },
     enabled: !!workflowId, // Only fetch if workflowId exists
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
@@ -201,9 +281,10 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   }, [workflowId, fetchedWorkflow]);
 
   // Local state for editing
-  const [workflow, setWorkflow] = useState<Workflow>(initialWorkflow);
+  const [workflow, setWorkflow] = useState<WorkflowItem>(initialWorkflow);
   const [selectedTransition, setSelectedTransition] = useState<Transition | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isSavingLocal, setIsSavingLocal] = useState(false);
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
     isOpen: boolean;
     stateId: string | null;
@@ -224,40 +305,44 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   }, [initialWorkflow]);
 
   const handleStateAdd = () => {
+    const currentStates = (workflow?.states || []) as State[];
+    // Calculate the next display_order based on the maximum existing order
+    const maxDisplayOrder = Math.max(0, ...currentStates.map((s) => s.display_order ?? 0));
+
     const newState: State = {
       id: `state-${Date.now()}`,
-      name: `State ${(workflow?.states?.length || 0) + 1}`,
+      name: `State ${currentStates.length + 1}`,
       isInitial: false,
       isFinal: false,
       position: {
-        x: 100 + (workflow?.states?.length || 0) * 50,
-        y: 100 + (workflow?.states?.length || 0) * 50
+        x: 100 + currentStates.length * 50,
+        y: 100 + currentStates.length * 50
       },
+      display_order: maxDisplayOrder + 1,
       _changeType: "created"
     };
 
     setWorkflow({
       ...workflow,
-      states: [...(workflow?.states || []), newState]
+      states: [...currentStates, newState]
     });
 
     toast.success("State added");
   };
 
   const handleStateUpdate = (updatedState: State) => {
-    const states = workflow.states || [];
+    const states = (workflow.states || []) as State[];
 
-    // Enforce: only one initial state
-    if (updatedState.isInitial && states.some((s) => s.id !== updatedState.id && s.isInitial)) {
+    // Enforce: only one initial state (excluding deleted states)
+    if (
+      updatedState.isInitial &&
+      states.some((s) => s.id !== updatedState.id && s.isInitial && s._changeType !== "deleted")
+    ) {
       toast.error("Only one initial state is allowed");
       return;
     }
 
-    // Enforce: only one final state
-    if (updatedState.isFinal && states.some((s) => s.id !== updatedState.id && s.isFinal)) {
-      toast.error("Only one final state is allowed");
-      return;
-    }
+    // Allow multiple final states - no restriction needed
 
     // Mark as modified if it was synced
     const stateToUpdate = {
@@ -272,7 +357,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
       if (s.id === updatedState.id) {
         return stateToUpdate;
       }
-      // If setting this state as initial/final, unset other states
+      // If setting this state as initial, unset other initial states
       if (updatedState.isInitial && s.isInitial && s.id !== updatedState.id) {
         return {
           ...s,
@@ -280,13 +365,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
           _changeType: (s._changeType === "synced" ? "modified" : s._changeType) as any
         };
       }
-      if (updatedState.isFinal && s.isFinal && s.id !== updatedState.id) {
-        return {
-          ...s,
-          isFinal: false,
-          _changeType: (s._changeType === "synced" ? "modified" : s._changeType) as any
-        };
-      }
+      // Don't unset final states - allow multiple final states
       return s;
     });
 
@@ -298,7 +377,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
 
   const handleStateDelete = (stateId: string) => {
     // Find the state and related transitions
-    const stateToDelete = (workflow.states || []).find((s) => s.id === stateId);
+    const stateToDelete = ((workflow.states || []) as State[]).find((s) => s.id === stateId);
     const relatedTransitions = (workflow.transitions || []).filter(
       (t) =>
         (t.from_state_id === stateId || t.to_state_id === stateId) && t._changeType !== "deleted"
@@ -358,18 +437,12 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     };
 
     // Update workflow with the new transition
-    let updatedWorkflow = {
+    const updatedWorkflow = {
       ...workflow,
       transitions: (workflow.transitions || []).map((t) =>
         t.id === updatedTransition.id ? transitionToUpdate : t
       )
     };
-
-    // Rename states to match the transition's status labels immediately
-    updatedWorkflow = applyStateRenaming({
-      ...updatedWorkflow,
-      transitions: updatedWorkflow.transitions || []
-    });
 
     setWorkflow(updatedWorkflow);
 
@@ -381,25 +454,15 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
 
   const handleTransitionAdd = (from_state_id: string, to_state_id: string) => {
     const transitions = workflow.transitions || [];
-    const exists = transitions.some(
-      (t) =>
-        t.from_state_id === from_state_id &&
-        t.to_state_id === to_state_id &&
-        t._changeType !== "deleted"
-    );
 
-    if (exists) {
-      toast.error("Transition already exists between these states");
-      return;
-    }
-
+    // Allow multiple transitions between the same states (for different roles, conditions, etc.)
     // Generate transition_name from status values (will be set in transition panel)
     const newTransition: Transition = {
       id: `trans-${Date.now()}`,
       from_state_id,
       to_state_id,
       transition_name: "DRAFT_TO_SUBMITTED", // Default transition name format
-      permissions: [],
+      required_role_id: "",
       conditions: [],
       actions: [],
       _changeType: "created"
@@ -415,131 +478,9 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     toast.success("Transition added - configure it now");
   };
 
-  /**
-   * Apply state renaming based on transitions' status labels
-   * Used when a transition is saved to immediately update state names
-   * without waiting for workflow save
-   */
-  const applyStateRenaming = (workflowToUpdate: Workflow): Workflow => {
-    let states = [...(workflowToUpdate.states || [])];
-    let transitions = [...(workflowToUpdate.transitions || [])];
-
-    // Map status labels to state IDs for updating transitions
-    const statusLabelToStateId = new Map<string, string>();
-
-    // Track which state IDs have already been assigned to a status to prevent duplicates
-    const usedStateIds = new Set<string>();
-
-    // Extract all status names from transitions
-    const statusesFromTransitions = new Set<string>();
-    transitions.forEach((trans) => {
-      const parts = trans.transition_name.split("_TO_");
-      if (parts.length === 2) {
-        const fromStatus = parts[0];
-        const toStatus = parts[1];
-
-        // Only add if it's a valid status
-        if (fromStatus in STANDARD_STATUSES) statusesFromTransitions.add(fromStatus);
-        if (toStatus in STANDARD_STATUSES) statusesFromTransitions.add(toStatus);
-      }
-    });
-
-    // Update existing states to match status labels
-    statusesFromTransitions.forEach((statusId) => {
-      const statusConfig = STANDARD_STATUSES[statusId as keyof typeof STANDARD_STATUSES];
-      if (statusConfig) {
-        const label = statusConfig.label;
-
-        // Check if a state with this label already exists
-        const existingStateWithLabel = states.find(
-          (s) => s._changeType !== "deleted" && s.name === label
-        );
-
-        if (existingStateWithLabel) {
-          // State with this label already exists, just map it
-          statusLabelToStateId.set(label, existingStateWithLabel.id);
-          usedStateIds.add(existingStateWithLabel.id);
-        } else {
-          // Check if there's an unnamed or generic state that we can rename
-          const genericState = states.find(
-            (s) =>
-              s._changeType !== "deleted" &&
-              !usedStateIds.has(s.id) &&
-              (s.name.startsWith("State ") ||
-                !Object.values(STANDARD_STATUSES).some((config) => config.label === s.name))
-          );
-
-          if (genericState) {
-            // Rename existing generic state to match status label
-            const newChangeType = (
-              genericState._changeType === "synced" ? "modified" : genericState._changeType
-            ) as "created" | "modified" | "deleted" | "synced" | undefined;
-            const renamedState = {
-              ...genericState,
-              name: label,
-              _changeType: newChangeType
-            };
-            states = states.map((s) => (s.id === genericState.id ? renamedState : s));
-            statusLabelToStateId.set(label, genericState.id);
-            usedStateIds.add(genericState.id);
-          } else {
-            // Create a new state with the status label as name
-            const newStateId = `state-${statusId}-${Date.now()}`;
-            const newState: State = {
-              id: newStateId,
-              name: label,
-              isInitial: false,
-              isFinal: false,
-              position: { x: 100 + states.length * 50, y: 100 },
-              _changeType: "created"
-            };
-            states.push(newState);
-            statusLabelToStateId.set(label, newStateId);
-            usedStateIds.add(newStateId);
-          }
-        }
-      }
-    });
-
-    // Update transition state IDs to point to the created/renamed states
-    transitions = transitions.map((trans) => {
-      const parts = trans.transition_name.split("_TO_");
-      if (parts.length === 2) {
-        const fromStatusId = parts[0];
-        const toStatusId = parts[1];
-
-        const fromStatusConfig = STANDARD_STATUSES[fromStatusId as keyof typeof STANDARD_STATUSES];
-        const toStatusConfig = STANDARD_STATUSES[toStatusId as keyof typeof STANDARD_STATUSES];
-
-        let updatedTrans = { ...trans };
-
-        // Update from_state_id if we have a matching state
-        if (fromStatusConfig) {
-          const stateId = statusLabelToStateId.get(fromStatusConfig.label);
-          if (stateId) {
-            updatedTrans.from_state_id = stateId;
-          }
-        }
-
-        // Update to_state_id if we have a matching state
-        if (toStatusConfig) {
-          const stateId = statusLabelToStateId.get(toStatusConfig.label);
-          if (stateId) {
-            updatedTrans.to_state_id = stateId;
-          }
-        }
-
-        return updatedTrans;
-      }
-      return trans;
-    });
-
-    return { ...workflowToUpdate, states, transitions };
-  };
-
   const handleSave = async () => {
     if (!workflow.name.trim()) {
-      toast.error("Workflow name is required");
+      toast.error("WorkflowItem name is required");
       return;
     }
 
@@ -549,34 +490,37 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     const activeStates = (workflowToSave.states || []).filter((s) => s._changeType !== "deleted");
 
     if (activeStates.length === 0) {
-      toast.error("Workflow must have at least one state");
+      toast.error("WorkflowItem must have at least one state");
       return;
     }
 
     const hasInitialState = activeStates.some((s) => s.isInitial);
     if (!hasInitialState) {
-      toast.error("Workflow must have exactly one initial state");
+      toast.error("WorkflowItem must have exactly one initial state");
       return;
     }
 
     const initialStateCount = activeStates.filter((s) => s.isInitial).length;
     if (initialStateCount > 1) {
-      toast.error("Workflow can only have one initial state");
+      toast.error("WorkflowItem can only have one initial state");
       return;
     }
 
-    const finalStateCount = activeStates.filter((s) => s.isFinal).length;
-    if (finalStateCount > 1) {
-      toast.error("Workflow can only have one final state");
+    const hasFinalState = activeStates.some((s) => s.isFinal);
+    if (!hasFinalState) {
+      toast.error("WorkflowItem must have at least one final state");
       return;
     }
 
     const isExisting = !!workflowId;
 
+    setIsSavingLocal(true);
     const result = await saveOrUpdateWorkflow(workflowToSave, isExisting);
 
     if (result.success) {
-      toast.success(isExisting ? "Workflow updated successfully" : "Workflow created successfully");
+      toast.success(
+        isExisting ? "WorkflowItem updated successfully" : "WorkflowItem created successfully"
+      );
 
       // Invalidate workflow queries to trigger refetch
       await queryClient.invalidateQueries({ queryKey: ["workflows"] });
@@ -585,6 +529,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
       onBack();
     } else {
       toast.error(result.error || "Failed to save workflow");
+      setIsSavingLocal(false);
     }
   };
 
@@ -633,7 +578,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         }
         onSave={handleSave}
         onBack={onBack}
-        isLoading={isSaving}
+        isLoading={isSaving || isSavingLocal}
         onStateAdd={handleStateAdd}
       />
 

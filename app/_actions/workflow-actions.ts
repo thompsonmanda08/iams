@@ -155,10 +155,6 @@ export async function createWorkflowState(data: {
     return handleBadRequest("Workflow ID is required");
   }
 
-  if (!data.state_name) {
-    return handleBadRequest("State name is required");
-  }
-
   const url = `/api/v1/simple-workflows/states`;
 
   try {
@@ -177,8 +173,9 @@ export async function createWorkflowState(data: {
 export async function updateWorkflowState(
   stateId: string,
   data: {
-    name?: string;
+    state_name?: string;
     description?: string;
+    display_order?: number;
     is_initial?: boolean;
     is_final?: boolean;
   }

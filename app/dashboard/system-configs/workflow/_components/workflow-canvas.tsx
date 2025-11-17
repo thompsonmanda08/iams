@@ -52,13 +52,29 @@ export const WorkflowCanvas = ({
           className="pointer-events-none absolute top-8 right-8 bottom-8 left-8 overflow-visible"
           style={{ zIndex: 1 }}>
           <g style={{ pointerEvents: "auto" }}>
-            {transitions.map((transition) => {
+            {transitions.map((transition, index) => {
               // Skip deleted transitions
               if (transition._changeType === "deleted") return null;
 
               const fromState = states.find((s) => s.id === transition.from_state_id && s._changeType !== "deleted");
               const toState = states.find((s) => s.id === transition.to_state_id && s._changeType !== "deleted");
               if (!fromState || !toState) return null;
+
+              // Calculate curve offset for multiple transitions between same states
+              // Find all transitions between these two states (in the same direction)
+              const transitionsBetweenSameStates = transitions.filter(
+                (t) =>
+                  t._changeType !== "deleted" &&
+                  t.from_state_id === transition.from_state_id &&
+                  t.to_state_id === transition.to_state_id
+              );
+
+              // Get the index of this transition among others between the same states
+              const indexAmongSimilar = transitionsBetweenSameStates.findIndex((t) => t.id === transition.id);
+
+              // Calculate offset: center around 0 (-1, 0, 1 for 3 transitions, etc.)
+              const count = transitionsBetweenSameStates.length;
+              const curveOffset = count > 1 ? indexAmongSimilar - (count - 1) / 2 : 0;
 
               return (
                 <TransitionArrow
@@ -67,6 +83,7 @@ export const WorkflowCanvas = ({
                   to={toState.position}
                   label={transition.transition_name}
                   onClick={() => onTransitionClick(transition)}
+                  curveOffset={curveOffset}
                 />
               );
             })}

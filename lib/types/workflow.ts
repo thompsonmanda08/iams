@@ -95,8 +95,8 @@ export interface UpdateFieldActionConfig {
 
 export interface Permission {
   id: string;
-  role: string;  // Role name for display
-  role_id?: string;  // Role ID for API requests
+  role: string; // Role name for display
+  role_id?: string; // Role ID for API requests
 }
 
 export interface TransitionRole {
@@ -156,6 +156,8 @@ export interface State {
 
 export interface WorkflowState extends Omit<State, "position"> {
   workflow_id: string;
+  state_name: string;
+  description?: string;
   position?: { x: number; y: number };
   created_at?: string;
   updated_at?: string;
@@ -170,7 +172,7 @@ export interface Transition {
   from_state_id: string;
   to_state_id: string;
   transition_name: string;
-  permissions: Permission[];
+  required_role_id: string;
   conditions: Condition[];
   actions: Action[];
   description?: string;
@@ -201,17 +203,6 @@ export interface WorkflowTransition {
 // WORKFLOW INTERFACES
 // ============================================================================
 
-export interface Workflow {
-  id: string;
-  name: string;
-  description?: string;
-  trigger_type: WorkflowTriggerType;
-  states?: State[];
-  transitions?: Transition[];
-  entry_conditions?: Condition[];
-  status?: StandardStatus;
-}
-
 export interface WorkflowDetails {
   id: string;
   name: string;
@@ -228,44 +219,18 @@ export interface WorkflowDetails {
   updated_by?: string;
 }
 
-export interface WorkflowListItem {
+export type WorkflowItem = {
   id: string;
   name: string;
-  entity_type: EntityType;
+  trigger_type: WorkflowTriggerType;
   description?: string;
-  status?: StandardStatus;
-  states_count?: number;
+  state_count?: number;
   transitions_count?: number;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
   [key: string]: any;
-}
-
-// ============================================================================
-// WORKER INTERFACES
-// ============================================================================
-
-export interface WorkflowWorkerStatus {
-  status: "active" | "idle" | "error" | "stopped";
-  is_running: boolean;
-  last_run?: string;
-  next_run?: string;
-  pending_triggers?: number;
-  processed_Today?: number;
-  errors?: number;
-  error_details?: string[];
-}
-
-// ============================================================================
-// API REQUEST/RESPONSE INTERFACES
-// ============================================================================
-
-export interface CreateWorkflowRequest {
-  name: string;
-  entity_type: EntityType;
-  description?: string;
-}
+};
 
 export interface UpdateWorkflowRequest {
   name?: string;
@@ -351,7 +316,7 @@ export const workflowKeys = {
 // UTILITY TYPES
 // ============================================================================
 
-export type WorkflowFormData = Omit<Workflow, "id" | "states" | "transitions" | "entryConditions">;
+export type WorkflowFormData = Omit<WorkflowItem, "id" | "states" | "transitions">;
 
 export type StateFormData = Omit<State, "id">;
 

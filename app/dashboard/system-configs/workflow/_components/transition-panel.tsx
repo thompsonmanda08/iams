@@ -7,7 +7,6 @@ import PageHeader from "@/components/page-header";
 import { SelectField } from "@/components/ui/select-field";
 import { MultiSelectField } from "@/components/ui/multi-select-field";
 import { useState, useEffect, useMemo } from "react";
-import { STANDARD_STATUSES } from "@/lib/statuses";
 import { useRoles } from "@/hooks/use-query-data";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -34,11 +33,8 @@ const ACTION_TYPES = [
   { value: "trigger_webhook", label: "Trigger Webhook" }
 ];
 
-// Convert StandardStatus values to SelectField options
-const STATUS_OPTIONS = Object.values(STANDARD_STATUSES).map((config) => ({
-  id: config.id,
-  name: config.label
-}));
+// Status options will be generated from workflow states, not STANDARD_STATUSES
+// This allows dynamic workflow states instead of hardcoded statuses
 
 export const TransitionPanel = ({
   transition,
@@ -50,7 +46,7 @@ export const TransitionPanel = ({
   const [localTransition, setLocalTransition] = useState<Transition | null>(transition);
   const [selectedFromStatus, setSelectedFromStatus] = useState("");
   const [selectedToStatus, setSelectedToStatus] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
 
   // Fetch available roles from API
   const { data: rolesResponse, isLoading: rolesLoading } = useRoles({ is_Active: true });
@@ -67,88 +63,52 @@ export const TransitionPanel = ({
     [rolesResponse]
   );
 
-  // Create a mapping of status name to state (for finding state IDs by status)
-  const statusToStateMap = useMemo(() => {
-    const map = new Map<string, (typeof states)[0]>();
-    states
-      .filter((s) => s._changeType !== "deleted")
-      .forEach((state) => {
-        if (state.name) {
-          map.set(state.name, state);
-        }
-      });
-    return map;
-  }, [states]);
+  // Generate status options from workflow states
+  // Each state name becomes an option that users can select for from_status and to_status
+  const stateStatusOptions = useMemo(
+    () =>
+      (states || [])
+        .filter((state) => state._changeType !== "deleted")
+        .map((state) => ({
+          id: state.name, // Use state name as the ID (this will be from_status/to_status value)
+          name: state.name // Display the state name
+        })),
+    [states]
+  );
 
-  // Get all statuses that are already used by states
-  const usedStatuses = useMemo(() => {
-    return Array.from(statusToStateMap.keys());
-  }, [statusToStateMap]);
+  // Filter options to prevent selecting the same state twice
+  const fromStatusOptions = stateStatusOptions.filter(
+    (option) => option.id !== selectedToStatus || !selectedToStatus
+  );
 
-  // Filter available statuses - only show statuses not already used, but always include currently selected ones
-  const availableStatusOptions = useMemo(() => {
-    const currentlySelected = new Set<string>();
-    if (selectedFromStatus) currentlySelected.add(selectedFromStatus);
-    if (selectedToStatus) currentlySelected.add(selectedToStatus);
-
-    return STATUS_OPTIONS.filter((s) =>
-      !usedStatuses.includes(s.name) || currentlySelected.has(s.id)
-    );
-  }, [usedStatuses, selectedFromStatus, selectedToStatus]);
-
-  // Filter out selected status from the other dropdown to prevent selecting same status twice
-  const fromStatusOptions = availableStatusOptions.filter((s) => s.id !== selectedToStatus);
-  const toStatusOptions = availableStatusOptions.filter((s) => s.id !== selectedFromStatus);
+  const toStatusOptions = stateStatusOptions.filter(
+    (option) => option.id !== selectedFromStatus || !selectedFromStatus
+  );
 
   // Sync local state with prop changes and set defaults for new transitions
   // Note: Added isOpen to dependency array to ensure initialization runs when panel reopens
   useEffect(() => {
     setLocalTransition(transition);
     if (transition && isOpen) {
-      let fromStatusId = "";
-      let toStatusId = "";
+      let fromStatusValue = "";
+      let toStatusValue = "";
 
-      // Method 1: Try to get status from state objects (by state ID)
+      // Get from_state_id and to_state_id and find their corresponding state names
       if (transition.from_state_id && transition.to_state_id) {
-        const fromStateObj = states.find((s) => s.id === transition.from_state_id);
-        const toStateObj = states.find((s) => s.id === transition.to_state_id);
+        const fromState = states?.find((s) => s.id === transition.from_state_id);
+        const toState = states?.find((s) => s.id === transition.to_state_id);
 
-        if (fromStateObj?.name) {
-          const matchingStatus = Object.entries(STANDARD_STATUSES).find(
-            ([, config]) => config.label === fromStateObj.name
-          );
-          fromStatusId = matchingStatus?.[0] || "";
+        if (fromState) {
+          fromStatusValue = fromState.name; // State name is the from_status value
         }
-
-        if (toStateObj?.name) {
-          const matchingStatus = Object.entries(STANDARD_STATUSES).find(
-            ([, config]) => config.label === toStateObj.name
-          );
-          toStatusId = matchingStatus?.[0] || "";
+        if (toState) {
+          toStatusValue = toState.name; // State name is the to_status value
         }
       }
 
-      // Method 2: Extract from transition_name (reliable fallback)
-      // transition_name format: "FROM_STATUS_TO_TO_STATUS" (e.g., "DRAFT_TO_SUBMITTED")
-      // This is the primary method for determining statuses since transition_name is always present
-      const parts = transition.transition_name.split("_TO_");
-
-      if (parts.length === 2) {
-        const extractedFromStatus = parts[0];
-        const extractedToStatus = parts[1];
-
-        // Use extracted values if Method 1 didn't find them
-        if (!fromStatusId && extractedFromStatus in STANDARD_STATUSES) {
-          fromStatusId = extractedFromStatus;
-        }
-        if (!toStatusId && extractedToStatus in STANDARD_STATUSES) {
-          toStatusId = extractedToStatus;
-        }
-      }
-
-      setSelectedFromStatus(fromStatusId);
-      setSelectedToStatus(toStatusId);
-      setSelectedRole(transition.permissions[0]?.role || "");
+      setSelectedFromStatus(fromStatusValue);
+      setSelectedToStatus(toStatusValue);
+      setSelectedRoleId(transition.required_role_id || "");
     }
   }, [transition, states, isOpen]);
 
@@ -163,25 +123,33 @@ export const TransitionPanel = ({
   // Save all changes and close panel
   const handleSave = () => {
     if (!localTransition) return;
+
+    // Validation: Prevent saving if from_status and to_status are the same
+    if (selectedFromStatus && selectedToStatus && selectedFromStatus === selectedToStatus) {
+      toast.error("From State and To State cannot be the same");
+      return;
+    }
+
+    // Validation: Both states must be selected
+    if (!selectedFromStatus || !selectedToStatus) {
+      toast.error("Both From State and To State must be selected");
+      return;
+    }
+
+    // Validation: Role must be selected
+    if (!selectedRoleId) {
+      toast.error("A role must be selected for this transition");
+      return;
+    }
+
     onUpdate(localTransition);
     onClose();
   };
 
   const handleRoleChange = (roleId: string) => {
-    setSelectedRole(roleId);
-
-    // Find the role object to get its name
-    const selectedRoleObj = roleOptions.find((r) => r.id === roleId);
-    const roleName = selectedRoleObj?.name || "";
-
-    // Update transition with role ID and role name
-    const permission: Permission = {
-      id: localTransition.permissions[0]?.id || `perm-${Date.now()}`,
-      role: roleName,  // Role name for display
-      role_id: roleId   // Role ID for API requests
-    };
+    setSelectedRoleId(roleId);
     updateLocalTransition({
-      permissions: roleId ? [permission] : []
+      required_role_id: roleId
     });
   };
 
@@ -245,19 +213,19 @@ export const TransitionPanel = ({
                 setSelectedFromStatus(value);
                 if (!localTransition) return;
 
-                // value is the StandardStatus id (e.g., "DRAFT")
-                // Get the label (e.g., "Draft") and find the state with that name
-                const statusLabel =
-                  STANDARD_STATUSES[value as keyof typeof STANDARD_STATUSES]?.label;
+                // value is the state name (e.g., "Staff Submit")
+                // Find the state with that name
                 const matchingState = states.find(
-                  (s) => s._changeType !== "deleted" && s.name === statusLabel
+                  (s) => s._changeType !== "deleted" && s.name === value
                 );
                 const fromStateId = matchingState?.id;
 
                 // Update transition_name based on selected statuses
-                // This should work regardless of whether matching states exist
-                const newTransitionName = selectedToStatus
-                  ? `${value}_TO_${selectedToStatus}`
+                // Format: "State Name_TO_Other State Name"
+                // Use the new value for fromStatus since we just updated it
+                const toStatus = selectedToStatus || "";
+                const newTransitionName = toStatus
+                  ? `${value}_TO_${toStatus}`
                   : `${value}_TO_`;
 
                 const updatedTransition = {
@@ -280,6 +248,21 @@ export const TransitionPanel = ({
             </p>
           </div>
 
+          {/* Status Change Indicator */}
+          {selectedFromStatus && selectedToStatus && (
+            <div className="rounded-lg border border-dashed p-3">
+              {selectedFromStatus === selectedToStatus ? (
+                <p className="text-sm font-medium text-amber-600">
+                  ⚠️ No Status Change - This transition stays in the same state
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Transition: {selectedFromStatus} → {selectedToStatus}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* To Status */}
           <div className="space-y-2">
             <Label htmlFor="to-status">To Status</Label>
@@ -291,19 +274,19 @@ export const TransitionPanel = ({
                 setSelectedToStatus(value);
                 if (!localTransition) return;
 
-                // value is the StandardStatus id (e.g., "DRAFT")
-                // Get the label (e.g., "Draft") and find the state with that name
-                const statusLabel =
-                  STANDARD_STATUSES[value as keyof typeof STANDARD_STATUSES]?.label;
+                // value is the state name (e.g., "Supervisor Review")
+                // Find the state with that name
                 const matchingState = states.find(
-                  (s) => s._changeType !== "deleted" && s.name === statusLabel
+                  (s) => s._changeType !== "deleted" && s.name === value
                 );
                 const toStateId = matchingState?.id;
 
                 // Update transition_name based on selected statuses
-                // This should work regardless of whether matching states exist
-                const newTransitionName = selectedFromStatus
-                  ? `${selectedFromStatus}_TO_${value}`
+                // Format: "State Name_TO_Other State Name"
+                // Use the new value for toStatus since we just updated it
+                const fromStatus = selectedFromStatus || "";
+                const newTransitionName = fromStatus
+                  ? `${fromStatus}_TO_${value}`
                   : `_TO_${value}`;
 
                 const updatedTransition = {
@@ -330,7 +313,7 @@ export const TransitionPanel = ({
             <SelectField
               id="required-role"
               options={roleOptions}
-              value={selectedRole}
+              value={selectedRoleId}
               onValueChange={handleRoleChange}
               placeholder={rolesLoading ? "Loading roles..." : "Select role..."}
               listItemName="name"
@@ -377,7 +360,10 @@ export const TransitionPanel = ({
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
-            <Button onClick={handleSave} className="flex-1">
+            <Button
+              onClick={handleSave}
+              className="flex-1"
+              disabled={!selectedFromStatus || !selectedToStatus || selectedFromStatus === selectedToStatus}>
               Save Transition
             </Button>
           </div>

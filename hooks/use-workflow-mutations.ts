@@ -167,7 +167,7 @@ export function useWorkflowMutations() {
         const response = await createWorkflowState({
           workflow_id: workflowId,
           state_name: state.name,
-          description: state.description || "",
+          description: state.description || `Workflow state: ${state.name}`,
           display_order: i, // Auto-increment based on order
           is_initial: state.isInitial,
           is_final: state.isFinal
@@ -209,8 +209,9 @@ export function useWorkflowMutations() {
         if (!state._serverId) continue; // Skip if no server ID
 
         const response = await updateWorkflowState(state._serverId, {
-          name: state.name,
-          description: state.description,
+          state_name: state.name,
+          description: state.description || `Workflow state: ${state.name}`,
+          display_order: state.display_order ?? 0,
           is_initial: state.isInitial,
           is_final: state.isFinal
         });
@@ -270,30 +271,53 @@ export function useWorkflowMutations() {
    */
   const createTransitions = async (
     workflowId: string,
-    transitions: Transition[]
+    transitions: Transition[],
+    states?: State[]
   ): Promise<SaveWorkflowResult> => {
     try {
       const createdTransitions: Transition[] = [];
 
       for (const transition of transitions) {
-        // Extract StandardStatus values from transition_name
-        // Format: "FROM_STATUS_TO_TO_STATUS" (e.g., "DRAFT_TO_PENDING")
-        const parts = transition.transition_name.split("_TO_");
-        if (parts.length !== 2) {
-          throw new Error(`Invalid transition name format: "${transition.transition_name}"`);
+        // Extract status values from state IDs or transition name
+        let fromStatus = "";
+        let toStatus = "";
+
+        // Try to get status from state names if states are provided
+        if (states) {
+          const fromState = states.find((s) => s.id === transition.from_state_id);
+          const toState = states.find((s) => s.id === transition.to_state_id);
+
+          if (fromState) {
+            fromStatus = fromState.name.toUpperCase().replace(/\s+/g, "_");
+          }
+          if (toState) {
+            toStatus = toState.name.toUpperCase().replace(/\s+/g, "_");
+          }
         }
 
-        const fromStatus = parts[0];
-        const toStatus = parts[1];
+        // Fallback: Extract from transition_name and normalize to uppercase with underscores
+        // Format: "State Name_TO_Other State Name" -> "STATE_NAME_TO_OTHER_STATE_NAME"
+        if (!fromStatus || !toStatus) {
+          const parts = transition.transition_name.split("_TO_");
+          if (parts.length === 2) {
+            if (!fromStatus) fromStatus = parts[0].toUpperCase().replace(/\s+/g, "_");
+            if (!toStatus) toStatus = parts[1].toUpperCase().replace(/\s+/g, "_");
+          }
+        }
 
-        // For now, use first role if available, else use a default
-        const roleId = transition.permissions[0]?.role_id || "SYSTEM";
+        if (!fromStatus || !toStatus) {
+          throw new Error(`Cannot determine status values for transition "${transition.transition_name}"`);
+        }
+
+        if (!transition.required_role_id) {
+          throw new Error(`Transition "${transition.transition_name}" must have a role assigned`);
+        }
 
         const response = await createWorkflowTransition({
           workflow_id: workflowId,
           from_status: fromStatus,
           to_status: toStatus,
-          required_role_id: roleId
+          required_role_id: transition.required_role_id
         });
 
         if (!response.success) {
@@ -322,29 +346,52 @@ export function useWorkflowMutations() {
   /**
    * Update workflow transitions
    */
-  const updateTransitions = async (transitions: Transition[]): Promise<SaveWorkflowResult> => {
+  const updateTransitions = async (transitions: Transition[], states?: State[]): Promise<SaveWorkflowResult> => {
     try {
       const updatedTransitions: Transition[] = [];
 
       for (const transition of transitions) {
         if (!transition._serverId) continue; // Skip if no server ID
 
-        // Extract StandardStatus values from transition_name
-        // Format: "FROM_STATUS_TO_TO_STATUS" (e.g., "PENDING_TO_APPROVED")
-        const parts = transition.transition_name.split("_TO_");
-        if (parts.length !== 2) {
-          throw new Error(`Invalid transition name format: "${transition.transition_name}"`);
+        // Extract status values from state IDs or transition name
+        let fromStatus = "";
+        let toStatus = "";
+
+        // Try to get status from state names if states are provided
+        if (states) {
+          const fromState = states.find((s) => s.id === transition.from_state_id);
+          const toState = states.find((s) => s.id === transition.to_state_id);
+
+          if (fromState) {
+            fromStatus = fromState.name.toUpperCase().replace(/\s+/g, "_");
+          }
+          if (toState) {
+            toStatus = toState.name.toUpperCase().replace(/\s+/g, "_");
+          }
         }
 
-        const fromStatus = parts[0];
-        const toStatus = parts[1];
+        // Fallback: Extract from transition_name and normalize to uppercase with underscores
+        // Format: "State Name_TO_Other State Name" -> "STATE_NAME_TO_OTHER_STATE_NAME"
+        if (!fromStatus || !toStatus) {
+          const parts = transition.transition_name.split("_TO_");
+          if (parts.length === 2) {
+            if (!fromStatus) fromStatus = parts[0].toUpperCase().replace(/\s+/g, "_");
+            if (!toStatus) toStatus = parts[1].toUpperCase().replace(/\s+/g, "_");
+          }
+        }
 
-        const roleId = transition.permissions[0]?.role_id || "SYSTEM";
+        if (!fromStatus || !toStatus) {
+          throw new Error(`Cannot determine status values for transition "${transition.transition_name}"`);
+        }
+
+        if (!transition.required_role_id) {
+          throw new Error(`Transition "${transition.transition_name}" must have a role assigned`);
+        }
 
         const response = await updateWorkflowTransition(transition._serverId, {
           from_status: fromStatus,
           to_status: toStatus,
-          required_role_id: roleId
+          required_role_id: transition.required_role_id
         });
 
         if (!response.success) {
@@ -436,7 +483,7 @@ export function useWorkflowMutations() {
         (t) => t._changeType === "created"
       );
       const transitionsToUpdate = (workflow.transitions || []).filter(
-        (t) => t._changeType === "modified"
+        (t) => t._changeType === "modified" || t._changeType === "synced"
       );
       const transitionsToDelete = (workflow.transitions || []).filter(
         (t) => t._changeType === "deleted"
@@ -473,14 +520,14 @@ export function useWorkflowMutations() {
       }
 
       if (transitionsToUpdate.length > 0) {
-        const updateResult = await updateTransitions(transitionsToUpdate);
+        const updateResult = await updateTransitions(transitionsToUpdate, workflow.states);
         if (!updateResult.success) {
           throw new Error(updateResult.error || "Failed to update transitions");
         }
       }
 
       if (transitionsToCreate.length > 0) {
-        const createResult = await createTransitions(workflowId, transitionsToCreate);
+        const createResult = await createTransitions(workflowId, transitionsToCreate, workflow.states);
         if (!createResult.success) {
           throw new Error(createResult.error || "Failed to create transitions");
         }

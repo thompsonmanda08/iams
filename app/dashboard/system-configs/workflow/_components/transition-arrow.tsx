@@ -6,9 +6,10 @@ interface TransitionArrowProps {
   to: { x: number; y: number };
   label: string;
   onClick: () => void;
+  curveOffset?: number; // Offset for multiple transitions between same states
 }
 
-export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowProps) => {
+export const TransitionArrow = ({ from, to, label, onClick, curveOffset = 0 }: TransitionArrowProps) => {
   // Node dimensions (240px width, ~120px height based on StateNode)
   const NODE_WIDTH = 240;
   const NODE_HEIGHT = 120;
@@ -22,8 +23,20 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
   // Calculate control points for curved line
   const dx = toX - fromX;
   const dy = toY - fromY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Base control point
   const controlX = fromX + dx / 2;
   const controlY = fromY + dy / 2 - Math.abs(dx) * 0.15;
+
+  // Apply offset for multiple transitions between same states
+  // Perpendicular offset to spread curves away from center line
+  const perpX = dy / distance;
+  const perpY = -dx / distance;
+  const offsetDistance = curveOffset * 40; // 40px spacing between curves
+
+  const finalControlX = controlX + perpX * offsetDistance;
+  const finalControlY = controlY + perpY * offsetDistance;
 
   // Unique marker ID for this arrow
   const markerId = `arrowhead-${from.x}-${from.y}-${to.x}-${to.y}`;
@@ -62,7 +75,7 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
 
       {/* Invisible wider hit area for easier clicking */}
       <path
-        d={`M ${fromX} ${fromY} Q ${controlX} ${controlY} ${toX} ${toY}`}
+        d={`M ${fromX} ${fromY} Q ${finalControlX} ${finalControlY} ${toX} ${toY}`}
         stroke="transparent"
         strokeWidth="20"
         fill="none"
@@ -72,7 +85,7 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
 
       {/* Curved path */}
       <path
-        d={`M ${fromX} ${fromY} Q ${controlX} ${controlY} ${toX} ${toY}`}
+        d={`M ${fromX} ${fromY} Q ${finalControlX} ${finalControlY} ${toX} ${toY}`}
         stroke="var(--primary)"
         strokeWidth="2.5"
         fill="none"
@@ -84,8 +97,8 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
       {/* Label background - clickable */}
       <g onClick={onClick} className="cursor-pointer transition-opacity hover:opacity-90">
         <rect
-          x={controlX - textWidth / 2}
-          y={controlY - 14}
+          x={finalControlX - textWidth / 2}
+          y={finalControlY - 14}
           width={textWidth}
           height="28"
           fill="var(--card)"
@@ -98,8 +111,8 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
         {/* Label text */}
         <text
           ref={textRef}
-          x={controlX}
-          y={controlY}
+          x={finalControlX}
+          y={finalControlY}
           textAnchor="middle"
           dominantBaseline="middle"
           className="pointer-events-none text-xs font-semibold select-none"
