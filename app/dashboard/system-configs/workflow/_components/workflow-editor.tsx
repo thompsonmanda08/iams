@@ -37,6 +37,7 @@ import {
 interface WorkflowEditorProps {
   onBack: () => void;
   workflowId?: string | null;
+  allWorkflows?: WorkflowItem[];
 }
 
 // Helper function to transform API response to editor format
@@ -173,7 +174,7 @@ const transformWorkflowData = (apiWorkflow: any): WorkflowItem => {
   };
 };
 
-export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
+export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEditorProps) => {
   const { saveOrUpdateWorkflow, isLoading: isSaving } = useWorkflowMutations();
   const queryClient = useQueryClient();
 
@@ -402,12 +403,12 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   const performStateDelete = (stateId: string) => {
     // Mark the state as deleted instead of removing it
     // This allows proper cleanup on save
-    const updatedStates = (workflow.states || []).map((s) =>
+    const updatedStates = ((workflow.states || []) as State[]).map((s) =>
       s.id === stateId ? { ...s, _changeType: "deleted" as const } : s
     );
 
     // Also mark related transitions as deleted
-    const updatedTransitions = (workflow.transitions || []).map((t) =>
+    const updatedTransitions = ((workflow.transitions || []) as Transition[]).map((t) =>
       t.from_state_id === stateId || t.to_state_id === stateId
         ? { ...t, _changeType: "deleted" as const }
         : t
@@ -439,7 +440,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     // Update workflow with the new transition
     const updatedWorkflow = {
       ...workflow,
-      transitions: (workflow.transitions || []).map((t) =>
+      transitions: ((workflow.transitions || []) as Transition[]).map((t) =>
         t.id === updatedTransition.id ? transitionToUpdate : t
       )
     };
@@ -531,6 +532,20 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     }
 
     const isExisting = !!workflowId;
+
+    // Check for duplicate trigger type when creating a new workflow (not editing)
+    if (!isExisting) {
+      const existingWorkflowWithTrigger = allWorkflows?.find(
+        (w: any) => w.trigger_type === workflowToSave.trigger_type
+      );
+
+      if (existingWorkflowWithTrigger) {
+        toast.error(
+          `A workflow for "${workflowToSave.trigger_type.replace(/_/g, " ")}" already exists. Only one workflow per trigger type is allowed.`
+        );
+        return;
+      }
+    }
 
     setIsSavingLocal(true);
     const result = await saveOrUpdateWorkflow(workflowToSave, isExisting);

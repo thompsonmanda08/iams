@@ -94,7 +94,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   };
 
   return isEditing ? (
-    <WorkflowEditor onBack={handleBack} workflowId={editingWorkflowId} />
+    <WorkflowEditor onBack={handleBack} workflowId={editingWorkflowId} allWorkflows={workflows} />
   ) : (
     <div className="">
       {/* Header */}
@@ -179,6 +179,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
           open={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
           onSuccess={handleCreateSuccess}
+          existingWorkflows={workflows}
         />
       </div>
     </div>

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectField } from "@/components/ui/select-field";
 import { createWorkflow } from "@/app/_actions/workflow-actions";
-import { WorkflowTriggerType } from "@/lib/types/workflow";
+import { WorkflowTriggerType, WorkflowItem } from "@/lib/types/workflow";
 import { WORKFLOW_TRIGGER_TYPES } from "@/lib/constants";
 import { notify } from "@/lib/utils";
 
@@ -24,9 +24,15 @@ interface CreateWorkflowDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  existingWorkflows?: WorkflowItem[];
 }
 
-export function CreateWorkflowDialog({ open, onOpenChange, onSuccess }: CreateWorkflowDialogProps) {
+export function CreateWorkflowDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+  existingWorkflows = []
+}: CreateWorkflowDialogProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
@@ -56,6 +62,21 @@ export function CreateWorkflowDialog({ open, onOpenChange, onSuccess }: CreateWo
         const msg = "Entity Trigger Type is required";
         notify({
           title: "Validation Error",
+          description: msg,
+          type: "error"
+        });
+        throw new Error(msg);
+      }
+
+      // Check if a workflow with the same trigger type already exists
+      const existingWorkflowWithTrigger = existingWorkflows.find(
+        (w) => w.trigger_type === data.trigger_type
+      );
+
+      if (existingWorkflowWithTrigger) {
+        const msg = `A workflow for "${data.trigger_type.replace(/_/g, " ")}" already exists. Only one workflow per trigger type is allowed.`;
+        notify({
+          title: "Workflow Already Exists",
           description: msg,
           type: "error"
         });
