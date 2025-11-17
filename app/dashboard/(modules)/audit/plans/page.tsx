@@ -10,7 +10,7 @@ export default async function AuditPlansPage() {
   const plansResponse = await getAuditPlans();
   const plans = plansResponse.success ? plansResponse.data : [];
 
-  // console.log({ plans });
+  console.log({ plans });
 
   return (
     <div className="bg-background min-h-screen">

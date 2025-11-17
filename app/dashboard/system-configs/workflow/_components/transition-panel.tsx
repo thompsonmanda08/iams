@@ -221,12 +221,12 @@ export const TransitionPanel = ({
                 const fromStateId = matchingState?.id;
 
                 // Update transition_name based on selected statuses
-                // Format: "State Name_TO_Other State Name"
+                // Format: "State Name-|-Other State Name"
                 // Use the new value for fromStatus since we just updated it
                 const toStatus = selectedToStatus || "";
                 const newTransitionName = toStatus
-                  ? `${value}_TO_${toStatus}`
-                  : `${value}_TO_`;
+                  ? `${value}-|-${toStatus}`
+                  : `${value}-|-`;
 
                 const updatedTransition = {
                   ...localTransition,
@@ -282,12 +282,12 @@ export const TransitionPanel = ({
                 const toStateId = matchingState?.id;
 
                 // Update transition_name based on selected statuses
-                // Format: "State Name_TO_Other State Name"
+                // Format: "State Name-|-Other State Name"
                 // Use the new value for toStatus since we just updated it
                 const fromStatus = selectedFromStatus || "";
                 const newTransitionName = fromStatus
-                  ? `${fromStatus}_TO_${value}`
-                  : `_TO_${value}`;
+                  ? `${fromStatus}-|-${value}`
+                  : `-|-${value}`;
 
                 const updatedTransition = {
                   ...localTransition,

@@ -97,6 +97,7 @@ export const WorkflowCanvas = ({
             isSelected={selectedStateId === state.id}
             isConnecting={connectingFromId === state.id}
             isConnectTarget={connectingFromId !== null && connectingFromId !== state.id}
+            totalStates={states.filter((s) => s._changeType !== "deleted").length}
             onSelect={() => setSelectedStateId(state.id)}
             onUpdate={onStateUpdate}
             onDelete={() => onStateDelete(state.id)}

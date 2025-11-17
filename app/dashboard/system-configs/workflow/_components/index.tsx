@@ -5,8 +5,6 @@ import {
   Trash2,
   WorkflowIcon,
   Edit2,
-  CheckCircle2,
-  Settings,
   GitBranch,
   MessageCircleQuestionMark
 } from "lucide-react";
@@ -25,12 +23,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import WorkflowEditor from "./workflow-editor";
 import { CreateWorkflowDialog } from "./create-workflow-dialog";
 import PageHeader from "@/components/page-header";
-import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Link from "next/link";
 import { useWorkflows } from "@/hooks/use-workflow-query-data";
 import { WorkflowItem } from "@/lib/types/workflow";
 import { Badge } from "@/components/ui/badge";
+import { notify } from "@/lib/utils";
 
 interface WorkflowClientProps {
   initialWorkflows: WorkflowItem[];
@@ -43,7 +40,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [workflowToDelete, setWorkflowToDelete] = useState<string | null>(null);
   const [isDeletingLoading, setIsDeletingLoading] = useState(false);
-  const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
+  // const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
 
   // Use TanStack Query to manage workflow list with initial data
   const { data: workflowsData, refetch } = useWorkflows(initialWorkflows);
@@ -71,17 +68,24 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   const workflowBeingDeleted = workflows.find((w) => w.id === workflowToDelete);
 
   const handleConfirmDelete = async () => {
-    if (workflowToDelete) {
-      setIsDeletingLoading(true);
-      try {
-        await deleteWorkflowMutation(workflowToDelete);
-        setIsDeleteDialogOpen(false);
-        setWorkflowToDelete(null);
-        refetch();
-      } finally {
-        setIsDeletingLoading(false);
-      }
+    if (true) {
+      return notify({
+        title: "Maintenance Mode",
+        description: "This action is not allowed at the moment.",
+        type: "warning"
+      });
     }
+    // if (workflowToDelete) {
+    //   setIsDeletingLoading(true);
+    //   try {
+    //     await deleteWorkflowMutation(workflowToDelete);
+    //     setIsDeleteDialogOpen(false);
+    //     setWorkflowToDelete(null);
+    //     refetch();
+    //   } finally {
+    //     setIsDeletingLoading(false);
+    //   }
+    // }
   };
 
   const handleCreateSuccess = () => {
@@ -266,7 +270,7 @@ function WorkflowCard({
               <WorkflowIcon className="text-primary-foreground dark:text-foreground/50 h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-foreground mb-1 line-clamp-2 truncate font-semibold">
+              <h3 className="text-foreground mb-1 line-clamp-2 max-w-xs leading-5 font-semibold">
                 {workflow.name}
               </h3>
               <div className="flex gap-2">

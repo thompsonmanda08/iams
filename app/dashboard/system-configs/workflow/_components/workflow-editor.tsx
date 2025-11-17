@@ -112,7 +112,7 @@ const transformWorkflowData = (apiWorkflow: any): WorkflowItem => {
 
       // Construct transition name from status values
       if (fromStatus && toStatus) {
-        transitionName = `${normalizedFromStatus}_TO_${normalizedToStatus}`;
+        transitionName = `${normalizedFromStatus}-|-${normalizedToStatus}`;
       }
     } else if (!transitionName && (fromStateId || toStateId)) {
       // Fallback: construct from state names if IDs are available
@@ -121,7 +121,7 @@ const transformWorkflowData = (apiWorkflow: any): WorkflowItem => {
       const fromStateName = fromState?.state_name || fromState?.name || "";
       const toStateName = toState?.state_name || toState?.name || "";
       if (fromStateName && toStateName) {
-        transitionName = `${fromStateName}_TO_${toStateName}`;
+        transitionName = `${fromStateName}-|-${toStateName}`;
       }
     }
 
@@ -378,7 +378,7 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   const handleStateDelete = (stateId: string) => {
     // Find the state and related transitions
     const stateToDelete = ((workflow.states || []) as State[]).find((s) => s.id === stateId);
-    const relatedTransitions = (workflow.transitions || []).filter(
+    const relatedTransitions = ((workflow.transitions || []) as Transition[]).filter(
       (t) =>
         (t.from_state_id === stateId || t.to_state_id === stateId) && t._changeType !== "deleted"
     );
@@ -454,14 +454,22 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
 
   const handleTransitionAdd = (from_state_id: string, to_state_id: string) => {
     const transitions = workflow.transitions || [];
+    const states = (workflow.states || []) as State[];
+
+    // Find the actual state names for the transition
+    const fromState = states.find((s) => s.id === from_state_id);
+    const toState = states.find((s) => s.id === to_state_id);
+
+    // Generate transition_name from actual state names
+    const generatedTransitionName =
+      fromState && toState ? `${fromState.name}-|-${toState.name}` : "TRANSITION";
 
     // Allow multiple transitions between the same states (for different roles, conditions, etc.)
-    // Generate transition_name from status values (will be set in transition panel)
     const newTransition: Transition = {
       id: `trans-${Date.now()}`,
       from_state_id,
       to_state_id,
-      transition_name: "DRAFT_TO_SUBMITTED", // Default transition name format
+      transition_name: generatedTransitionName,
       required_role_id: "",
       conditions: [],
       actions: [],
@@ -480,35 +488,45 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
 
   const handleSave = async () => {
     if (!workflow.name.trim()) {
-      toast.error("WorkflowItem name is required");
+      toast.error("Workflow name is required");
       return;
     }
 
     // States are already renamed when transitions are saved, so no need to call autoCreateMissingStates
     const workflowToSave = workflow;
 
-    const activeStates = (workflowToSave.states || []).filter((s) => s._changeType !== "deleted");
+    const activeStates: State[] = ((workflowToSave.states || []) as State[]).filter(
+      (s) => s._changeType !== "deleted"
+    );
 
     if (activeStates.length === 0) {
-      toast.error("WorkflowItem must have at least one state");
+      toast.error("Workflow must have at least one state");
+      return;
+    }
+
+    // Validate unique display_order
+    const displayOrders = activeStates.map((s: State) => s.display_order ?? 0);
+    const uniqueDisplayOrders = new Set(displayOrders);
+    if (uniqueDisplayOrders.size !== activeStates.length) {
+      toast.error("Each state must have a unique display order");
       return;
     }
 
     const hasInitialState = activeStates.some((s) => s.isInitial);
     if (!hasInitialState) {
-      toast.error("WorkflowItem must have exactly one initial state");
+      toast.error("Workflow must have exactly one initial state");
       return;
     }
 
     const initialStateCount = activeStates.filter((s) => s.isInitial).length;
     if (initialStateCount > 1) {
-      toast.error("WorkflowItem can only have one initial state");
+      toast.error("Workflow can only have one initial state");
       return;
     }
 
     const hasFinalState = activeStates.some((s) => s.isFinal);
     if (!hasFinalState) {
-      toast.error("WorkflowItem must have at least one final state");
+      toast.error("Workflow must have at least one final state");
       return;
     }
 
@@ -519,11 +537,11 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
 
     if (result.success) {
       toast.success(
-        isExisting ? "WorkflowItem updated successfully" : "WorkflowItem created successfully"
+        isExisting ? "Workflow updated successfully" : "WorkflowItem created successfully"
       );
 
       // Invalidate workflow queries to trigger refetch
-      await queryClient.invalidateQueries({ queryKey: ["workflows"] });
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKFLOWS] });
 
       // Close the editor
       onBack();

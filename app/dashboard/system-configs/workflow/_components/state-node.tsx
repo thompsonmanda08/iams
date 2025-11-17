@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   GripVertical,
   Trash2,
@@ -14,12 +14,14 @@ import { State } from "@/lib/types/workflow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { SelectField } from "@/components/ui/select-field";
 
 interface StateNodeProps {
   state: State;
   isSelected: boolean;
   isConnecting?: boolean;
   isConnectTarget?: boolean;
+  totalStates?: number;
   onSelect: () => void;
   onUpdate: (state: State) => void;
   onDelete: () => void;
@@ -33,6 +35,7 @@ export const StateNode = ({
   isSelected,
   isConnecting = false,
   isConnectTarget = false,
+  totalStates = 1,
   onSelect,
   onUpdate,
   onDelete,
@@ -46,6 +49,16 @@ export const StateNode = ({
   const [editedName, setEditedName] = useState(state.name);
   const nodeRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Generate display order options (1 to totalStates)
+  const displayOrderOptions = useMemo(
+    () =>
+      Array.from({ length: totalStates }, (_, i) => ({
+        id: String(i),
+        name: String(i + 1)
+      })),
+    [totalStates]
+  );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, input")) return;
@@ -270,17 +283,37 @@ export const StateNode = ({
             </Badge>
           </div>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              onConnectStart();
-            }}
-            className="w-full text-xs">
-            <LinkIcon className="mr-1 h-3 w-3" />
-            Add Transition
-          </Button>
+          {/* Display Order */}
+          <div className="flex items-end gap-2">
+            <SelectField
+              label="Display Order"
+              options={displayOrderOptions}
+              value={String(state.display_order ?? 0)}
+              onValueChange={(value) => {
+                onUpdate({
+                  ...state,
+                  display_order: parseInt(value, 10)
+                });
+              }}
+              placeholder="Select order..."
+              listItemName="name"
+              className="text-xs"
+              classNames={{
+                label: "text-muted-foreground mb-1 block text-xs"
+              }}
+            />
+            <Button
+              size="sm"
+              // variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onConnectStart();
+              }}
+              className="text-xs">
+              <LinkIcon className="mr-1 h-3 w-3" />
+              Add Transition
+            </Button>
+          </div>
         </>
       )}
     </div>

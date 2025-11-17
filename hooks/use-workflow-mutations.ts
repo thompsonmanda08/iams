@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import type { Workflow, State, Transition } from "@/lib/types/workflow";
+import type { WorkflowItem, State, Transition } from "@/lib/types/workflow";
 import {
   createWorkflow,
   updateWorkflow,
@@ -16,7 +16,7 @@ import {
 } from "@/app/_actions/workflow-actions";
 
 /**
- * Workflow Mutations Hook
+ * WorkflowItem Mutations Hook
  *
  * This hook provides mutation functions for workflow CRUD operations.
  * Uses real API calls via server actions.
@@ -34,7 +34,7 @@ interface MutationState {
 
 interface SaveWorkflowResult {
   success: boolean;
-  data?: Workflow;
+  data?: WorkflowItem;
   error?: string;
 }
 
@@ -49,14 +49,14 @@ export function useWorkflowMutations() {
    * Save a new workflow
    * POST /api/v1/workflows
    */
-  const saveWorkflow = async (workflow: Workflow): Promise<SaveWorkflowResult> => {
+  const saveWorkflow = async (workflow: WorkflowItem): Promise<SaveWorkflowResult> => {
     setState({ isLoading: true, error: null });
 
     try {
       const response = await createWorkflow({
         name: workflow.name,
         trigger_type: workflow.trigger_type,
-        description: workflow.description || `Workflow for ${workflow.trigger_type}`
+        description: workflow.description || `WorkflowItem for ${workflow.trigger_type}`
       });
 
       if (!response.success) {
@@ -87,7 +87,7 @@ export function useWorkflowMutations() {
    */
   const updateWorkflowData = async (
     workflowId: string,
-    workflow: Workflow
+    workflow: WorkflowItem
   ): Promise<SaveWorkflowResult> => {
     setState({ isLoading: true, error: null });
 
@@ -95,7 +95,7 @@ export function useWorkflowMutations() {
       const response = await updateWorkflow(workflowId, {
         name: workflow.name,
         trigger_type: workflow.trigger_type,
-        description: workflow.description || `Workflow for ${workflow.trigger_type}`
+        description: workflow.description || `WorkflowItem for ${workflow.trigger_type}`
       });
 
       if (!response.success) {
@@ -124,34 +124,34 @@ export function useWorkflowMutations() {
    * Delete a workflow
    * DELETE /api/v1/workflows/delete
    */
-  const deleteWorkflow = async (workflowId: string): Promise<SaveWorkflowResult> => {
-    setState({ isLoading: true, error: null });
+  // const deleteWorkflow = async (workflowId: string): Promise<SaveWorkflowResult> => {
+  //   setState({ isLoading: true, error: null });
 
-    try {
-      const response = await deleteWorkflowAction(workflowId);
+  //   try {
+  //     const response = await deleteWorkflowAction(workflowId);
 
-      if (!response.success) {
-        throw new Error(response.message || "Failed to delete workflow");
-      }
+  //     if (!response.success) {
+  //       throw new Error(response.message || "Failed to delete workflow");
+  //     }
 
-      setState({ isLoading: false, error: null });
-      toast.success("Workflow deleted successfully!");
-      router.refresh();
+  //     setState({ isLoading: false, error: null });
+  //     toast.success("WorkflowItem deleted successfully!");
+  //     router.refresh();
 
-      return {
-        success: true
-      };
-    } catch (error: any) {
-      const errorMessage = error?.message || "Failed to delete workflow";
-      setState({ isLoading: false, error: errorMessage });
-      toast.error(errorMessage);
+  //     return {
+  //       success: true
+  //     };
+  //   } catch (error: any) {
+  //     const errorMessage = error?.message || "Failed to delete workflow";
+  //     setState({ isLoading: false, error: errorMessage });
+  //     toast.error(errorMessage);
 
-      return {
-        success: false,
-        error: errorMessage
-      };
-    }
-  };
+  //     return {
+  //       success: false,
+  //       error: errorMessage
+  //     };
+  //   }
+  // };
 
   /**
    * Create workflow states
@@ -167,8 +167,8 @@ export function useWorkflowMutations() {
         const response = await createWorkflowState({
           workflow_id: workflowId,
           state_name: state.name,
-          description: state.description || `Workflow state: ${state.name}`,
-          display_order: i, // Auto-increment based on order
+          description: state.description || `WorkflowItem state: ${state.name}`,
+          display_order: state?.display_order ?? i, // Auto-increment based on order
           is_initial: state.isInitial,
           is_final: state.isFinal
         });
@@ -210,7 +210,7 @@ export function useWorkflowMutations() {
 
         const response = await updateWorkflowState(state._serverId, {
           state_name: state.name,
-          description: state.description || `Workflow state: ${state.name}`,
+          description: state.description || `WorkflowItem state: ${state.name}`,
           display_order: state.display_order ?? 0,
           is_initial: state.isInitial,
           is_final: state.isFinal
@@ -288,25 +288,27 @@ export function useWorkflowMutations() {
           const toState = states.find((s) => s.id === transition.to_state_id);
 
           if (fromState) {
-            fromStatus = fromState.name.toUpperCase().replace(/\s+/g, "_");
+            fromStatus = fromState.name;
           }
           if (toState) {
-            toStatus = toState.name.toUpperCase().replace(/\s+/g, "_");
+            toStatus = toState.name;
           }
         }
 
-        // Fallback: Extract from transition_name and normalize to uppercase with underscores
-        // Format: "State Name_TO_Other State Name" -> "STATE_NAME_TO_OTHER_STATE_NAME"
+        // Fallback: Extract from transition_name and preserve original casing
+        // Format: "State Name-|-Other State Name" -> "State Name" and "Other State Name"
         if (!fromStatus || !toStatus) {
-          const parts = transition.transition_name.split("_TO_");
+          const parts = transition.transition_name.split("-|-");
           if (parts.length === 2) {
-            if (!fromStatus) fromStatus = parts[0].toUpperCase().replace(/\s+/g, "_");
-            if (!toStatus) toStatus = parts[1].toUpperCase().replace(/\s+/g, "_");
+            if (!fromStatus) fromStatus = parts[0];
+            if (!toStatus) toStatus = parts[1];
           }
         }
 
         if (!fromStatus || !toStatus) {
-          throw new Error(`Cannot determine status values for transition "${transition.transition_name}"`);
+          throw new Error(
+            `Cannot determine status values for transition "${transition.transition_name}"`
+          );
         }
 
         if (!transition.required_role_id) {
@@ -346,7 +348,10 @@ export function useWorkflowMutations() {
   /**
    * Update workflow transitions
    */
-  const updateTransitions = async (transitions: Transition[], states?: State[]): Promise<SaveWorkflowResult> => {
+  const updateTransitions = async (
+    transitions: Transition[],
+    states?: State[]
+  ): Promise<SaveWorkflowResult> => {
     try {
       const updatedTransitions: Transition[] = [];
 
@@ -363,25 +368,27 @@ export function useWorkflowMutations() {
           const toState = states.find((s) => s.id === transition.to_state_id);
 
           if (fromState) {
-            fromStatus = fromState.name.toUpperCase().replace(/\s+/g, "_");
+            fromStatus = fromState.name;
           }
           if (toState) {
-            toStatus = toState.name.toUpperCase().replace(/\s+/g, "_");
+            toStatus = toState.name;
           }
         }
 
-        // Fallback: Extract from transition_name and normalize to uppercase with underscores
-        // Format: "State Name_TO_Other State Name" -> "STATE_NAME_TO_OTHER_STATE_NAME"
+        // Fallback: Extract from transition_name and preserve original casing
+        // Format: "State Name-|-Other State Name" -> "State Name" and "Other State Name"
         if (!fromStatus || !toStatus) {
-          const parts = transition.transition_name.split("_TO_");
+          const parts = transition.transition_name.split("-|-");
           if (parts.length === 2) {
-            if (!fromStatus) fromStatus = parts[0].toUpperCase().replace(/\s+/g, "_");
-            if (!toStatus) toStatus = parts[1].toUpperCase().replace(/\s+/g, "_");
+            if (!fromStatus) fromStatus = parts[0];
+            if (!toStatus) toStatus = parts[1];
           }
         }
 
         if (!fromStatus || !toStatus) {
-          throw new Error(`Cannot determine status values for transition "${transition.transition_name}"`);
+          throw new Error(
+            `Cannot determine status values for transition "${transition.transition_name}"`
+          );
         }
 
         if (!transition.required_role_id) {
@@ -452,7 +459,7 @@ export function useWorkflowMutations() {
    * Comprehensive save that handles the complete workflow structure
    */
   const saveOrUpdateWorkflow = async (
-    workflow: Workflow,
+    workflow: WorkflowItem,
     isExisting: boolean
   ): Promise<SaveWorkflowResult> => {
     setState({ isLoading: true, error: null });
@@ -474,18 +481,24 @@ export function useWorkflowMutations() {
       const workflowId = workflowResult.data?.id || workflow.id;
 
       // Step 2: Categorize states by change type
-      const statesToCreate = (workflow.states || []).filter((s) => s._changeType === "created");
-      const statesToUpdate = (workflow.states || []).filter((s) => s._changeType === "modified");
-      const statesToDelete = (workflow.states || []).filter((s) => s._changeType === "deleted");
+      const statesToCreate = ((workflow.states || []) as State[]).filter(
+        (s) => s._changeType === "created"
+      );
+      const statesToUpdate = ((workflow.states || []) as State[]).filter(
+        (s) => s._changeType === "modified"
+      );
+      const statesToDelete = ((workflow.states || []) as State[]).filter(
+        (s) => s._changeType === "deleted"
+      );
 
       // Step 3: Categorize transitions by change type
-      const transitionsToCreate = (workflow.transitions || []).filter(
+      const transitionsToCreate = ((workflow.transitions || []) as Transition[]).filter(
         (t) => t._changeType === "created"
       );
-      const transitionsToUpdate = (workflow.transitions || []).filter(
+      const transitionsToUpdate = ((workflow.transitions || []) as Transition[]).filter(
         (t) => t._changeType === "modified" || t._changeType === "synced"
       );
-      const transitionsToDelete = (workflow.transitions || []).filter(
+      const transitionsToDelete = ((workflow.transitions || []) as Transition[]).filter(
         (t) => t._changeType === "deleted"
       );
 
@@ -527,7 +540,11 @@ export function useWorkflowMutations() {
       }
 
       if (transitionsToCreate.length > 0) {
-        const createResult = await createTransitions(workflowId, transitionsToCreate, workflow.states);
+        const createResult = await createTransitions(
+          workflowId,
+          transitionsToCreate,
+          workflow.states
+        );
         if (!createResult.success) {
           throw new Error(createResult.error || "Failed to create transitions");
         }
@@ -554,7 +571,7 @@ export function useWorkflowMutations() {
   return {
     saveWorkflow,
     updateWorkflowData,
-    deleteWorkflow,
+    // deleteWorkflow,
     saveOrUpdateWorkflow,
     createStates,
     updateStates,
