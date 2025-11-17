@@ -28,7 +28,8 @@ import {
   DollarSign,
   Calendar,
   Package,
-  Save
+  Save,
+  Send
 } from "lucide-react";
 import { toast } from "sonner";
 import { BudgetStatusBadge } from "./budget-status-badge";
@@ -40,7 +41,8 @@ import { CURRENCIES } from "@/lib/constants";
 import {
   createBudgetLine,
   updateBudgetLine,
-  deleteBudgetLine
+  deleteBudgetLine,
+  submitBudgetForApproval
 } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CustomPagination } from "@/components/ui/pagination";
@@ -116,6 +118,8 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [lineToDelete, setLineToDelete] = useState<BudgetLine | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Pagination state
   const [pagination, setPagination] = useState<Pagination>({
@@ -293,6 +297,24 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
     resetForm();
   };
 
+  const handleSubmitBudget = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await submitBudgetForApproval(budget.id);
+      if (response.success) {
+        toast.success(response.message || "Budget submitted for approval successfully");
+        setSubmitConfirmationOpen(false);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to submit budget for approval");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while submitting budget");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <div className="animate-slide-up mb-8 flex items-center justify-between">
@@ -303,10 +325,21 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
           </Button>
         </Link>
         {!showLineForm && (
-          <Button onClick={() => setShowLineForm(true)} className="gap-2" size="sm">
-            <Plus className="h-5 w-5" />
-            Budget Line
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setSubmitConfirmationOpen(true)}
+              className="gap-2"
+              size="sm"
+              disabled={budget.status !== "DRAFT"}
+            >
+              <Send className="h-4 w-4" />
+              Submit for Approval
+            </Button>
+            <Button onClick={() => setShowLineForm(true)} className="gap-2" size="sm">
+              <Plus className="h-5 w-5" />
+              Budget Line
+            </Button>
+          </div>
         )}
       </div>
 
@@ -678,6 +711,16 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
         description={`Are you sure you want to delete "${lineToDelete?.name}"? This action cannot be undone.`}
         type="delete"
         isLoading={isDeleting}
+      />
+
+      <ConfirmationModal
+        open={submitConfirmationOpen}
+        onOpenChange={setSubmitConfirmationOpen}
+        onConfirm={handleSubmitBudget}
+        title="Submit Budget for Approval?"
+        description="You are about to submit this budget for approval. Once submitted, it will be reviewed by the approval committee."
+        confirmText="Submit"
+        isLoading={isSubmitting}
       />
     </>
   );

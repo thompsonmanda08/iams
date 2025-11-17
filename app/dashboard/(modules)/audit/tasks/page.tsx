@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Download, Filter } from "lucide-react";
-import { TasksTableClient } from "./_components/tasks-table-client";
 import { TaskStats } from "./_components/task-stats";
 import PageHeader from "@/components/page-header";
 import { getTasks, getTaskStats } from "@/app/_actions/task-actions";
+import { TasksTable } from "./_components/tasks-table";
 
 export default async function TasksPage() {
   // Fetch tasks and stats from the API
@@ -52,29 +52,18 @@ export default async function TasksPage() {
           <TaskStats initialStats={stats} />
 
           {/* Table */}
-          <TasksTableClient initialTasks={tasks} />
+          <>
+            {tasks.length > 0 && (
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-muted-foreground text-sm">
+                  Showing {tasks.length} task{tasks.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            )}
+            <TasksTable tasks={tasks} />
+          </>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatsLoading() {
-  return (
-    <div className="grid gap-4 md:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-muted h-24 animate-pulse rounded-lg" />
-      ))}
-    </div>
-  );
-}
-
-function TableLoading() {
-  return (
-    <div className="space-y-3">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
-      ))}
     </div>
   );
 }

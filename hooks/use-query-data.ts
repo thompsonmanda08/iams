@@ -31,11 +31,11 @@ export const useBranches = (
 export const useRoles = (
   params?: Partial<Pagination> & {
     departmentId?: string;
-    isActive?: boolean;
+    is_Active?: boolean;
   }
 ) =>
   useQuery({
     queryKey: [QUERY_KEYS.ROLES, params],
     queryFn: () => getRoles(params as any),
-    staleTime: Infinity
+    staleTime: 5 * 60 * 1000
   });

@@ -2,26 +2,25 @@
 // ENUMS & TYPES
 // ============================================================================
 
-export type EntityType = "RISK" | "AUDIT_PLAN" | "FINDING" | "RECOMMENDATION";
+import { StandardStatus } from "../statuses";
+
+export type EntityType =
+  | "RISK_ACCEPTANCE"
+  | "AUDIT_PLAN"
+  | "BUDGET"
+  | "AUDIT_UNIVERSE"
+  | "FINDINGS";
 
 export type OperatorType = "=" | "!=" | ">" | "<" | ">=" | "<=" | "is" | "contains";
 
 export type ActionType = "send_email" | "create_log" | "update_field" | "trigger_webhook";
 
-/**
- * Workflow Status - Uses standardized status values from lib/statuses.ts
- *
- * Allowed statuses:
- * - DRAFT: Workflow is being prepared
- * - PENDING: Workflow pending activation
- * - OPEN: Workflow is active and running
- * - COMPLETED: Workflow execution complete
- * - CLOSED: Workflow is closed
- * - ARCHIVED: Workflow archived
- *
- * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
- */
-export type WorkflowStatus = "DRAFT" | "PENDING" | "OPEN" | "COMPLETED" | "CLOSED" | "ARCHIVED" | "draft" | "active" | "inactive" | "archived";
+export type WorkflowTriggerType =
+  | "BUDGET_CREATION"
+  | "UNIVERSE_CREATION"
+  | "AUDIT_PLAN"
+  | "FINDINGS"
+  | "RISK_ACCEPTANCE";
 
 // ============================================================================
 // CONDITION INTERFACES
@@ -76,7 +75,8 @@ export interface UpdateFieldActionConfig {
 
 export interface Permission {
   id: string;
-  role: string;
+  role: string; // Role name for display
+  role_id?: string; // Role ID for API requests
 }
 
 export interface TransitionRole {
@@ -127,10 +127,17 @@ export interface State {
   position: { x: number; y: number };
   description?: string;
   color?: string;
+  status?: "from_status" | "to_status"; // Consistent with API
+  display_order?: number;
+  // Tracking metadata (not persisted to API)
+  _changeType?: "created" | "modified" | "deleted" | "synced";
+  _serverId?: string; // Original server ID if modified
 }
 
 export interface WorkflowState extends Omit<State, "position"> {
   workflow_id: string;
+  state_name: string;
+  description?: string;
   position?: { x: number; y: number };
   created_at?: string;
   updated_at?: string;
@@ -144,11 +151,14 @@ export interface Transition {
   id: string;
   from_state_id: string;
   to_state_id: string;
-  action_name: string;
-  permissions: Permission[];
+  transition_name: string;
+  required_role_id: string;
   conditions: Condition[];
   actions: Action[];
   description?: string;
+  // Tracking metadata (not persisted to API)
+  _changeType?: "created" | "modified" | "deleted" | "synced";
+  _serverId?: string; // Original server ID if modified
 }
 
 export interface WorkflowTransition {
@@ -156,11 +166,11 @@ export interface WorkflowTransition {
   workflow_id: string;
   from_state_id: string;
   to_state_id: string;
-  action_name: string;
+  transition_name: string;
   name?: string;
   description?: string;
   from_state?: State;
-  to_state?: State; 
+  to_state?: State;
   permissions?: TransitionRole[];
   conditions?: Condition[];
   actions?: Action[];
@@ -173,23 +183,12 @@ export interface WorkflowTransition {
 // WORKFLOW INTERFACES
 // ============================================================================
 
-export interface Workflow {
-  id: string;
-  name: string;
-  entity_type: EntityType;
-  states: State[];
-  transitions: Transition[];
-  entry_conditions: Condition[];
-  description?: string;
-  status?: WorkflowStatus;
-}
-
 export interface WorkflowDetails {
   id: string;
   name: string;
   entity_type: EntityType;
   description?: string;
-  status?: WorkflowStatus;
+  status?: StandardStatus;
   states: WorkflowState[];
   transitions: WorkflowTransition[];
   entry_conditions?: EntryCondition[];
@@ -200,49 +199,23 @@ export interface WorkflowDetails {
   updated_by?: string;
 }
 
-export interface WorkflowListItem {
+export type WorkflowItem = {
   id: string;
   name: string;
-  entity_type: EntityType;
+  trigger_type: WorkflowTriggerType;
   description?: string;
-  status?: WorkflowStatus;
-  states_count?: number;
+  state_count?: number;
   transitions_count?: number;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
   [key: string]: any;
-}
-
-// ============================================================================
-// WORKER INTERFACES
-// ============================================================================
-
-export interface WorkflowWorkerStatus {
-  status: "active" | "idle" | "error" | "stopped";
-  is_running: boolean;
-  last_run?: string;
-  next_run?: string;
-  pending_triggers?: number;
-  processed_Today?: number;
-  errors?: number;
-  error_details?: string[];
-}
-
-// ============================================================================
-// API REQUEST/RESPONSE INTERFACES
-// ============================================================================
-
-export interface CreateWorkflowRequest {
-  name: string;
-  entity_type: EntityType;
-  description?: string;
-}
+};
 
 export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
-  status?: WorkflowStatus;
+  status?: StandardStatus;
 }
 
 export interface CreateStateRequest {
@@ -266,13 +239,13 @@ export interface CreateTransitionRequest {
   workflow_id: string;
   from_state_id: string;
   to_state_id: string;
-  action_name: string;
+  transition_name: string;
   name?: string;
   description?: string;
 }
 
 export interface UpdateTransitionRequest {
-  action_name?: string;
+  transition_name?: string;
   name?: string;
   description?: string;
 }
@@ -323,7 +296,7 @@ export const workflowKeys = {
 // UTILITY TYPES
 // ============================================================================
 
-export type WorkflowFormData = Omit<Workflow, "id" | "states" | "transitions" | "entryConditions">;
+export type WorkflowFormData = Omit<WorkflowItem, "id" | "states" | "transitions">;
 
 export type StateFormData = Omit<State, "id">;
 

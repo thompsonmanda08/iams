@@ -292,8 +292,20 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   }, [isRefreshing]);
 
   const onIdle = async () => {
-    setState("Idle");
-    await lockScreenOnUserIdle(true);
+    try {
+      // Set screen lock cookie before showing the dialog
+      await lockScreenOnUserIdle(true);
+      logger.info("Screen lock activated", {
+        component: "IdleTimerContainer.onIdle"
+      });
+      setState("Idle");
+    } catch (error) {
+      logger.error("Failed to activate screen lock", error, {
+        component: "IdleTimerContainer.onIdle"
+      });
+      // Still mark as idle even if cookie setting fails
+      setState("Idle");
+    }
   };
 
   const onActive = () => {
@@ -322,6 +334,16 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     setCount(0);
 
     try {
+      // Verify screen lock cookie exists before proceeding with logout
+      const screenLockExists = await checkScreenLockState();
+      if (!screenLockExists) {
+        logger.warn("Screen lock cookie missing during logout attempt", {
+          component: "IdleTimerContainer.handleUserLogOut",
+          screenLockExists
+        });
+        // Still proceed with logout to ensure proper cleanup
+      }
+
       // Use server action for proper session cleanup (deletes cookies & JWT)
       const response = await logUserOut("User session timed out.");
 

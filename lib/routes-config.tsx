@@ -107,8 +107,8 @@ export const navItems: NavGroup[] = [
           { title: "Overview", href: "/dashboard/audit" },
           { title: "Audit Universes", href: "/dashboard/audit/universe" },
           { title: "Budgets", href: "/dashboard/audit/budgets" },
-          { title: "Plans & Executions", href: "/dashboard/audit/plans" }
-          // { title: "Tasks", href: "/dashboard/audit/tasks" }, // WORKFLOW
+          { title: "Plans & Executions", href: "/dashboard/audit/plans" },
+          { title: "Tasks & Actions", href: "/dashboard/audit/tasks" } // WORKFLOW
           // { title: "Workpapers", href: "/dashboard/audit/workpapers" }
           // { title: "Findings", href: "/dashboard/audit/findings" },
           // { title: "Reports", href: "/dashboard/audit/reports" }

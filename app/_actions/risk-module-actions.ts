@@ -1665,10 +1665,36 @@ export async function updateRiskAcceptance(
       url: `/api/v1/risk-acceptances/${id}`,
       data: input,
       method: "PUT"
-    });    
+    });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "PUT | UPDATE RISK ACCEPTANCE", `/api/v1/risk-acceptances/${id}`);
+  }
+}
+
+/**
+ * Submit risk acceptance for approval
+ */
+export async function submitRiskAcceptanceForApproval(acceptanceId: string): Promise<APIResponse> {
+  if (!acceptanceId) {
+    return handleBadRequest("Risk acceptance ID is required");
+  }
+
+  const url = `/api/v1/risk-acceptances/${acceptanceId}/submit-for-approval`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "POST", url });
+
+    revalidatePath("/dashboard/risks/risk-acceptances");
+    revalidatePath(`/dashboard/risks/risk-acceptances/${acceptanceId}`);
+
+    return successResponse(response.data, "Risk acceptance submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SUBMIT RISK ACCEPTANCE",
+      url
+    );
   }
 }

@@ -41,11 +41,13 @@ interface WorkflowAdministrationProps {
     }>;
   };
   availableRoles: Array<{ id: string; name: string }>;
+  instances?: Array<any>;
 }
 
 export const WorkflowAdministration = ({
   workflow,
-  availableRoles
+  availableRoles,
+  instances = []
 }: WorkflowAdministrationProps) => {
   const [selectedTransitionId, setSelectedTransitionId] = useState<string>(
     workflow.transitions?.[0]?.id || ""
@@ -96,8 +98,12 @@ export const WorkflowAdministration = ({
       </Card>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="worker" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="instances" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="instances" className="gap-2">
+            <GitPullRequestCreateArrow className="h-4 w-4" />
+            Instances
+          </TabsTrigger>
           <TabsTrigger value="worker" className="gap-2">
             <Activity className="h-4 w-4" />
             Worker
@@ -115,6 +121,74 @@ export const WorkflowAdministration = ({
             Roles
           </TabsTrigger>
         </TabsList>
+
+        {/* Instances Tab */}
+        <TabsContent value="instances" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Workflow Instances</CardTitle>
+              <CardDescription>
+                Active and completed workflow instances for this workflow
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {instances && instances.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="relative overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50 border-b">
+                        <tr>
+                          <th className="text-left px-4 py-2 font-medium">Instance ID</th>
+                          <th className="text-left px-4 py-2 font-medium">Entity</th>
+                          <th className="text-left px-4 py-2 font-medium">Current State</th>
+                          <th className="text-left px-4 py-2 font-medium">Status</th>
+                          <th className="text-left px-4 py-2 font-medium">Started</th>
+                          <th className="text-left px-4 py-2 font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {instances.map((instance: any) => (
+                          <tr key={instance.id} className="hover:bg-muted/50">
+                            <td className="px-4 py-2 font-mono text-xs">{instance.id?.slice(0, 8)}</td>
+                            <td className="px-4 py-2">{instance.entity_id}</td>
+                            <td className="px-4 py-2">
+                              <Badge variant="outline">{instance.current_state}</Badge>
+                            </td>
+                            <td className="px-4 py-2">
+                              <Badge variant={instance.workflow_status === 'COMPLETED' ? 'secondary' : 'default'}>
+                                {instance.workflow_status}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-2 text-xs text-muted-foreground">
+                              {new Date(instance.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-2">
+                              <Button variant="ghost" size="sm">
+                                View
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <Empty className="border border-dashed">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <GitPullRequestCreateArrow />
+                    </EmptyMedia>
+                    <EmptyTitle>No workflow instances</EmptyTitle>
+                    <EmptyDescription>
+                      Workflow instances will appear here once entities are created and workflows are started.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Background Worker Tab */}
         <TabsContent value="worker" className="space-y-4">

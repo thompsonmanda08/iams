@@ -1,66 +1,165 @@
 "use client";
-import { EntityType, State, Transition, Workflow } from "@/lib/types/workflow";
+import {
+  EntityType,
+  State,
+  Transition,
+  WorkflowItem,
+  WorkflowTriggerType
+} from "@/lib/types/workflow";
 import { useState, useMemo } from "react";
 import { WorkflowHeader } from "./workflow-header";
 import { WorkflowCanvas } from "./workflow-canvas";
 import { TransitionPanel } from "./transition-panel";
 import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
-import { getWorkflowDetails } from "@/app/_actions/workflow-actions";
+import {
+  getWorkflowDetails,
+  getWorkflowStates,
+  getWorkflowTransitions
+} from "@/app/_actions/workflow-actions";
 import { toast } from "sonner";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { QUERY_KEYS } from "@/lib/constants";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 interface WorkflowEditorProps {
   onBack: () => void;
   workflowId?: string | null;
+  allWorkflows?: WorkflowItem[];
 }
 
 // Helper function to transform API response to editor format
-const transformWorkflowData = (apiWorkflow: any): Workflow => {
+const transformWorkflowData = (apiWorkflow: any): WorkflowItem => {
   // Map states from API format (snake_case)
-  const mappedStates: State[] = (apiWorkflow.states || []).map((state: any) => ({
-    id: state.id,
-    name: state.name,
-    isInitial: state.is_initial ?? false,
-    isFinal: state.is_final ?? false,
-    position: state.position || { x: 100, y: 100 },
-    description: state.description,
-    color: state.color
-  }));
+  const statesPerRow = 3; // Number of states before wrapping to next row
+  const horizontalSpacing = 520; // Space between states horizontally
+  const verticalSpacing = 350; // Space between rows vertically
+
+  // Sort states by display_order before mapping
+  const sortedStates = [...(apiWorkflow?.states || [])].sort(
+    (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
+  );
+
+  const mappedStates: State[] = sortedStates.map((state: any, index: number) => {
+    const row = Math.floor(index / statesPerRow);
+    const col = index % statesPerRow;
+
+    return {
+      id: state.id,
+      name: state.state_name || state.name,
+      isInitial: state.is_initial ?? false,
+      isFinal: state.is_final ?? false,
+      position: state.position || {
+        x: 150 + col * horizontalSpacing, // Horizontal position based on column
+        y: 150 + row * verticalSpacing // Vertical position based on row
+      },
+      description: state.description,
+      color: state.color,
+      display_order: state.display_order ?? 0,
+      _changeType: "synced" as const,
+      _serverId: state.id
+    };
+  });
 
   // Map transitions from API format
-  const mappedTransitions: Transition[] = (apiWorkflow.transitions || []).map((trans: any) => ({
-    id: trans.id,
-    from_state_id: trans.from_state_id,
-    to_state_id: trans.to_state_id,
-    action_name: trans.action_name || trans.name,
-    permissions: (trans.permissions || []).map((perm: any) => ({
-      id: perm.id || `perm-${Date.now()}`,
-      role: perm.role?.name || perm.role_name || ""
-    })),
-    conditions: (trans.conditions || []).map((cond: any) => ({
-      id: cond.id || `cond-${Date.now()}`,
-      field: cond.field,
-      operator: cond.operator,
-      value: cond.value,
-      description: cond.description
-    })),
-    actions: (trans.actions || []).map((action: any) => ({
-      id: action.id || `action-${Date.now()}`,
-      type: action.type,
-      config: action.config || {},
-      description: action.description
-    })),
-    description: trans.description
-  }));
+  const mappedTransitions: Transition[] = (apiWorkflow?.transitions || []).map((trans: any) => {
+    // Handle both state ID-based (from_state_id/to_state_id) and status-based (from_status/to_status) transitions
+    let fromStateId = trans.from_state_id;
+    let toStateId = trans.to_state_id;
+    let transitionName = trans.transition_name || trans.action_name || trans.name || "";
+
+    // If using status-based transitions, find the matching state IDs and construct transition name
+    if ((trans.from_status || trans.to_status) && !transitionName) {
+      const fromStatus = trans.from_status;
+      const toStatus = trans.to_status;
+
+      // Normalize status values: convert to uppercase and replace spaces with underscores
+      const normalizeStatus = (status: string) => status?.toUpperCase().replace(/\s+/g, "_") || "";
+      const normalizedFromStatus = normalizeStatus(fromStatus);
+      const normalizedToStatus = normalizeStatus(toStatus);
+
+      // Try to find state IDs by matching state names with statuses
+      if (fromStatus && !fromStateId) {
+        const fromState = apiWorkflow.states?.find((s: any) => {
+          const stateName = s.state_name?.toUpperCase().replace(/\s+/g, "_") || "";
+          return stateName === normalizedFromStatus;
+        });
+        if (fromState) {
+          fromStateId = fromState.id;
+        }
+      }
+
+      if (toStatus && !toStateId) {
+        const toState = apiWorkflow.states?.find((s: any) => {
+          const stateName = s.state_name?.toUpperCase().replace(/\s+/g, "_") || "";
+          return stateName === normalizedToStatus;
+        });
+        if (toState) {
+          toStateId = toState.id;
+        }
+      }
+
+      // Construct transition name from status values
+      if (fromStatus && toStatus) {
+        transitionName = `${normalizedFromStatus}-|-${normalizedToStatus}`;
+      }
+    } else if (!transitionName && (fromStateId || toStateId)) {
+      // Fallback: construct from state names if IDs are available
+      const fromState = apiWorkflow.states?.find((s: any) => s.id === fromStateId);
+      const toState = apiWorkflow.states?.find((s: any) => s.id === toStateId);
+      const fromStateName = fromState?.state_name || fromState?.name || "";
+      const toStateName = toState?.state_name || toState?.name || "";
+      if (fromStateName && toStateName) {
+        transitionName = `${fromStateName}-|-${toStateName}`;
+      }
+    }
+
+    // Default fallback if no name could be determined
+    if (!transitionName) {
+      transitionName = `Transition ${trans.id?.slice(0, 4)}`;
+    }
+
+    return {
+      id: trans.id,
+      from_state_id: fromStateId,
+      to_state_id: toStateId,
+      transition_name: transitionName,
+      required_role_id: trans.required_role_id || "",
+      conditions: (trans.conditions || []).map((cond: any) => ({
+        id: cond.id || `cond-${Date.now()}`,
+        field: cond.field,
+        operator: cond.operator,
+        value: cond.value,
+        description: cond.description
+      })),
+      actions: (trans.actions || []).map((action: any) => ({
+        id: action.id || `action-${Date.now()}`,
+        type: action.type,
+        config: action.config || {},
+        description: action.description
+      })),
+      description: trans.description,
+      _changeType: "synced" as const,
+      _serverId: trans.id
+    };
+  });
 
   return {
     id: apiWorkflow.id,
     name: apiWorkflow.name,
-    entity_type: apiWorkflow.entity_type,
+    trigger_type: apiWorkflow.trigger_type || apiWorkflow.entity_type || "AUDIT_PLAN",
     states: mappedStates,
     transitions: mappedTransitions,
     entry_conditions: (apiWorkflow.entry_conditions || []).map((cond: any) => ({
@@ -75,36 +174,39 @@ const transformWorkflowData = (apiWorkflow: any): Workflow => {
   };
 };
 
-export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
+export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEditorProps) => {
   const { saveOrUpdateWorkflow, isLoading: isSaving } = useWorkflowMutations();
   const queryClient = useQueryClient();
 
   // Create default workflow template
-  const createDefaultWorkflow = (): Workflow => ({
+  const createDefaultWorkflow = (): WorkflowItem => ({
     id: `wf-${Date.now()}`,
-    name: "New Workflow",
-    entity_type: "AUDIT_PLAN",
+    name: "New WorkflowItem",
+    trigger_type: "AUDIT_PLAN",
     states: [
       {
         id: "state-1",
         name: "Draft",
         isInitial: true,
         isFinal: false,
-        position: { x: 100, y: 100 }
+        position: { x: 150, y: 150 },
+        _changeType: "created"
       },
       {
         id: "state-2",
         name: "Submitted",
         isInitial: false,
         isFinal: false,
-        position: { x: 400, y: 100 }
+        position: { x: 450, y: 150 },
+        _changeType: "created"
       },
       {
         id: "state-3",
         name: "Approved",
         isInitial: false,
         isFinal: true,
-        position: { x: 700, y: 100 }
+        position: { x: 750, y: 150 },
+        _changeType: "created"
       }
     ],
     transitions: [
@@ -112,19 +214,21 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
         id: "trans-1",
         from_state_id: "state-1",
         to_state_id: "state-2",
-        action_name: "SUBMIT",
+        transition_name: "SUBMIT",
         permissions: [{ id: "p1", role: "AUDITOR" }],
         conditions: [],
-        actions: []
+        actions: [],
+        _changeType: "created"
       },
       {
         id: "trans-2",
         from_state_id: "state-2",
         to_state_id: "state-3",
-        action_name: "APPROVE_HIAR",
+        transition_name: "APPROVE_HIAR",
         permissions: [{ id: "p2", role: "HIAR" }],
         conditions: [{ id: "c1", field: "budget", operator: "<", value: "10000" }],
-        actions: [{ id: "a1", type: "send_email", config: { recipient: "auditor" } }]
+        actions: [{ id: "a1", type: "send_email", config: { recipient: "auditor" } }],
+        _changeType: "created"
       }
     ],
     entry_conditions: []
@@ -138,16 +242,31 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     error,
     refetch
   } = useQuery({
-    queryKey: ["workflow", workflowId],
+    queryKey: [QUERY_KEYS.WORKFLOWS, workflowId],
     queryFn: async () => {
       if (!workflowId) return null;
 
-      const response = await getWorkflowDetails(workflowId);
-      if (!response.success || !response.data) {
-        throw new Error(response.message || "Failed to load workflow");
+      const [details, states, transitions] = await Promise.all([
+        getWorkflowDetails(workflowId),
+        getWorkflowStates(workflowId),
+        getWorkflowTransitions(workflowId)
+      ]);
+
+      if (!details.success || !states.success || !transitions.success) {
+        throw new Error(details.message || "Failed to load workflow");
       }
 
-      return transformWorkflowData(response.data?.data);
+      const fullWorkflowObject = {
+        ...details.data,
+        states: states?.data || [],
+        transitions: transitions?.data || []
+      };
+
+      console.log("===> WORKFLOW DETAILS", fullWorkflowObject);
+      console.log("===> TRANSITIONS RAW DATA", transitions?.data);
+      const transformed = transformWorkflowData(fullWorkflowObject);
+      console.log("===> TRANSFORMED TRANSITIONS", transformed.transitions);
+      return transformed;
     },
     enabled: !!workflowId, // Only fetch if workflowId exists
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
@@ -163,9 +282,21 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   }, [workflowId, fetchedWorkflow]);
 
   // Local state for editing
-  const [workflow, setWorkflow] = useState<Workflow>(initialWorkflow);
+  const [workflow, setWorkflow] = useState<WorkflowItem>(initialWorkflow);
   const [selectedTransition, setSelectedTransition] = useState<Transition | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isSavingLocal, setIsSavingLocal] = useState(false);
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
+    isOpen: boolean;
+    stateId: string | null;
+    stateName: string;
+    relatedTransitionCount: number;
+  }>({
+    isOpen: false,
+    stateId: null,
+    stateName: "",
+    relatedTransitionCount: 0
+  });
 
   // Update local state when fetched data changes
   useMemo(() => {
@@ -175,38 +306,121 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   }, [initialWorkflow]);
 
   const handleStateAdd = () => {
+    const currentStates = (workflow?.states || []) as State[];
+    // Calculate the next display_order based on the maximum existing order
+    const maxDisplayOrder = Math.max(0, ...currentStates.map((s) => s.display_order ?? 0));
+
     const newState: State = {
       id: `state-${Date.now()}`,
-      name: `State ${workflow.states.length + 1}`,
+      name: `State ${currentStates.length + 1}`,
       isInitial: false,
       isFinal: false,
-      position: { x: 100 + workflow.states.length * 50, y: 100 + workflow.states.length * 50 }
+      position: {
+        x: 100 + currentStates.length * 50,
+        y: 100 + currentStates.length * 50
+      },
+      display_order: maxDisplayOrder + 1,
+      _changeType: "created"
     };
 
     setWorkflow({
       ...workflow,
-      states: [...workflow.states, newState]
+      states: [...currentStates, newState]
     });
 
     toast.success("State added");
   };
 
   const handleStateUpdate = (updatedState: State) => {
+    const states = (workflow.states || []) as State[];
+
+    // Enforce: only one initial state (excluding deleted states)
+    if (
+      updatedState.isInitial &&
+      states.some((s) => s.id !== updatedState.id && s.isInitial && s._changeType !== "deleted")
+    ) {
+      toast.error("Only one initial state is allowed");
+      return;
+    }
+
+    // Allow multiple final states - no restriction needed
+
+    // Mark as modified if it was synced
+    const stateToUpdate = {
+      ...updatedState,
+      _changeType: (updatedState._changeType === "synced"
+        ? "modified"
+        : updatedState._changeType) as any
+    };
+
+    // Update the state
+    const newStates = states.map((s) => {
+      if (s.id === updatedState.id) {
+        return stateToUpdate;
+      }
+      // If setting this state as initial, unset other initial states
+      if (updatedState.isInitial && s.isInitial && s.id !== updatedState.id) {
+        return {
+          ...s,
+          isInitial: false,
+          _changeType: (s._changeType === "synced" ? "modified" : s._changeType) as any
+        };
+      }
+      // Don't unset final states - allow multiple final states
+      return s;
+    });
+
     setWorkflow({
       ...workflow,
-      states: workflow.states.map((s) => (s.id === updatedState.id ? updatedState : s))
+      states: newStates
     });
   };
 
   const handleStateDelete = (stateId: string) => {
+    // Find the state and related transitions
+    const stateToDelete = ((workflow.states || []) as State[]).find((s) => s.id === stateId);
+    const relatedTransitions = ((workflow.transitions || []) as Transition[]).filter(
+      (t) =>
+        (t.from_state_id === stateId || t.to_state_id === stateId) && t._changeType !== "deleted"
+    );
+
+    if (!stateToDelete) return;
+
+    // Show confirmation dialog if there are related transitions
+    if (relatedTransitions.length > 0) {
+      setDeleteConfirmDialog({
+        isOpen: true,
+        stateId,
+        stateName: stateToDelete.name,
+        relatedTransitionCount: relatedTransitions.length
+      });
+    } else {
+      // No transitions, delete immediately
+      performStateDelete(stateId);
+    }
+  };
+
+  const performStateDelete = (stateId: string) => {
+    // Mark the state as deleted instead of removing it
+    // This allows proper cleanup on save
+    const updatedStates = ((workflow.states || []) as State[]).map((s) =>
+      s.id === stateId ? { ...s, _changeType: "deleted" as const } : s
+    );
+
+    // Also mark related transitions as deleted
+    const updatedTransitions = ((workflow.transitions || []) as Transition[]).map((t) =>
+      t.from_state_id === stateId || t.to_state_id === stateId
+        ? { ...t, _changeType: "deleted" as const }
+        : t
+    );
+
     setWorkflow({
       ...workflow,
-      states: workflow.states.filter((s) => s.id !== stateId),
-      transitions: workflow.transitions.filter(
-        (t) => t.from_state_id !== stateId && t.to_state_id !== stateId
-      )
+      states: updatedStates,
+      transitions: updatedTransitions
     });
-    toast.success("State deleted");
+
+    toast.success("State marked for deletion");
   };
 
   const handleTransitionClick = (transition: Transition) => {
@@ -215,38 +429,57 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
   };
 
   const handleTransitionUpdate = (updatedTransition: Transition) => {
-    setWorkflow({
+    // Mark as modified if it was synced
+    const transitionToUpdate = {
+      ...updatedTransition,
+      _changeType: (updatedTransition._changeType === "synced"
+        ? "modified"
+        : updatedTransition._changeType) as any
+    };
+
+    // Update workflow with the new transition
+    const updatedWorkflow = {
       ...workflow,
-      transitions: workflow.transitions.map((t) =>
-        t.id === updatedTransition.id ? updatedTransition : t
+      transitions: ((workflow.transitions || []) as Transition[]).map((t) =>
+        t.id === updatedTransition.id ? transitionToUpdate : t
       )
-    });
+    };
+
+    setWorkflow(updatedWorkflow);
+
+    // Update selectedTransition to keep the panel in sync
+    setSelectedTransition(transitionToUpdate);
+
     toast.success("Transition updated");
   };
 
   const handleTransitionAdd = (from_state_id: string, to_state_id: string) => {
-    const exists = workflow.transitions.some(
-      (t) => t.from_state_id === from_state_id && t.to_state_id === to_state_id
-    );
+    const transitions = workflow.transitions || [];
+    const states = (workflow.states || []) as State[];
 
-    if (exists) {
-      toast.error("Transition already exists between these states");
-      return;
-    }
+    // Find the actual state names for the transition
+    const fromState = states.find((s) => s.id === from_state_id);
+    const toState = states.find((s) => s.id === to_state_id);
 
+    // Generate transition_name from actual state names
+    const generatedTransitionName =
+      fromState && toState ? `${fromState.name}-|-${toState.name}` : "TRANSITION";
+
+    // Allow multiple transitions between the same states (for different roles, conditions, etc.)
     const newTransition: Transition = {
       id: `trans-${Date.now()}`,
       from_state_id,
       to_state_id,
-      action_name: "NEW_ACTION",
-      permissions: [],
+      transition_name: generatedTransitionName,
+      required_role_id: "",
       conditions: [],
-      actions: []
+      actions: [],
+      _changeType: "created"
     };
 
     setWorkflow({
       ...workflow,
-      transitions: [...workflow.transitions, newTransition]
+      transitions: [...transitions, newTransition]
     });
 
     setSelectedTransition(newTransition);
@@ -260,45 +493,76 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
       return;
     }
 
-    if (workflow.states.length === 0) {
+    // States are already renamed when transitions are saved, so no need to call autoCreateMissingStates
+    const workflowToSave = workflow;
+
+    const activeStates: State[] = ((workflowToSave.states || []) as State[]).filter(
+      (s) => s._changeType !== "deleted"
+    );
+
+    if (activeStates.length === 0) {
       toast.error("Workflow must have at least one state");
       return;
     }
 
-    const hasInitialState = workflow.states.some((s) => s.isInitial);
+    // Validate unique display_order
+    const displayOrders = activeStates.map((s: State) => s.display_order ?? 0);
+    const uniqueDisplayOrders = new Set(displayOrders);
+    if (uniqueDisplayOrders.size !== activeStates.length) {
+      toast.error("Each state must have a unique display order");
+      return;
+    }
+
+    const hasInitialState = activeStates.some((s) => s.isInitial);
     if (!hasInitialState) {
-      toast.error("Workflow must have an initial state");
+      toast.error("Workflow must have exactly one initial state");
+      return;
+    }
+
+    const initialStateCount = activeStates.filter((s) => s.isInitial).length;
+    if (initialStateCount > 1) {
+      toast.error("Workflow can only have one initial state");
+      return;
+    }
+
+    const hasFinalState = activeStates.some((s) => s.isFinal);
+    if (!hasFinalState) {
+      toast.error("Workflow must have at least one final state");
       return;
     }
 
     const isExisting = !!workflowId;
 
-    const result = await saveOrUpdateWorkflow(workflow, isExisting);
+    // Check for duplicate trigger type when creating a new workflow (not editing)
+    if (!isExisting) {
+      const existingWorkflowWithTrigger = allWorkflows?.find(
+        (w: any) => w.trigger_type === workflowToSave.trigger_type
+      );
 
-    console.log("=== SAVE RESULT ===");
-    console.log("Success:", result.success);
-    console.log("Result:", result);
-    console.log("===================");
+      if (existingWorkflowWithTrigger) {
+        toast.error(
+          `A workflow for "${workflowToSave.trigger_type.replace(/_/g, " ")}" already exists. Only one workflow per trigger type is allowed.`
+        );
+        return;
+      }
+    }
+
+    setIsSavingLocal(true);
+    const result = await saveOrUpdateWorkflow(workflowToSave, isExisting);
 
     if (result.success) {
-      toast.success(isExisting ? "Workflow updated successfully" : "Workflow created successfully");
-
-      console.log("=== INVALIDATING QUERIES ===");
-      console.log("Invalidating query key: ['workflows']");
+      toast.success(
+        isExisting ? "Workflow updated successfully" : "WorkflowItem created successfully"
+      );
 
       // Invalidate workflow queries to trigger refetch
-      await queryClient.invalidateQueries({ queryKey: ["workflows"] });
-
-      console.log("Query invalidated, should refetch now");
-      console.log("============================");
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKFLOWS] });
 
       // Close the editor
       onBack();
     } else {
-      console.log("=== SAVE FAILED ===");
-      console.log("Error:", result.error);
       toast.error(result.error || "Failed to save workflow");
-      console.log("===================");
+      setIsSavingLocal(false);
     }
   };
 
@@ -340,12 +604,14 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
     <div className="flex h-[92svh] flex-col">
       <WorkflowHeader
         workflowName={workflow.name}
-        entityType={workflow.entity_type}
+        triggerType={workflow.trigger_type}
         onWorkflowNameChange={(name) => setWorkflow({ ...workflow, name })}
-        onEntityTypeChange={(entity_type: EntityType) => setWorkflow({ ...workflow, entity_type })}
+        onTriggerTypeChange={(trigger_type: WorkflowTriggerType) =>
+          setWorkflow({ ...workflow, trigger_type })
+        }
         onSave={handleSave}
         onBack={onBack}
-        isLoading={isSaving}
+        isLoading={isSaving || isSavingLocal}
         onStateAdd={handleStateAdd}
       />
 
@@ -367,7 +633,58 @@ export const WorkflowEditor = ({ onBack, workflowId }: WorkflowEditorProps) => {
           setSelectedTransition(null);
         }}
         onUpdate={handleTransitionUpdate}
+        states={workflow.states}
+        workflowId={workflow.id}
       />
+
+      <AlertDialog
+        open={deleteConfirmDialog.isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmDialog({ ...deleteConfirmDialog, isOpen: false });
+          }
+        }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete State "{deleteConfirmDialog.stateName}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-2">
+                <p>
+                  This state has <strong>{deleteConfirmDialog.relatedTransitionCount}</strong>{" "}
+                  transition
+                  {deleteConfirmDialog.relatedTransitionCount !== 1 ? "s" : ""} attached to it.
+                </p>
+                <p>
+                  When you delete this state, all related transitions will also be removed. The
+                  incomplete transitions will show partial state names.
+                </p>
+                <p className="text-muted-foreground pt-2 text-sm">
+                  To complete the workflow, you'll need to add new states and connect them to form
+                  valid transitions.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setDeleteConfirmDialog({ ...deleteConfirmDialog, isOpen: false });
+              }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirmDialog.stateId) {
+                  performStateDelete(deleteConfirmDialog.stateId);
+                  setDeleteConfirmDialog({ ...deleteConfirmDialog, isOpen: false });
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-white">
+              Delete State
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

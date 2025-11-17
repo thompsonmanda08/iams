@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 import {
   Dialog,
@@ -19,14 +19,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
-import {
-  getTransitionTriggers,
-  createTransitionTrigger,
-  updateTransitionTrigger,
-  deleteTransitionTrigger,
-} from "@/app/_actions/workflow-actions";
 import { toast } from "sonner";
 
 interface TransitionTrigger {
@@ -45,12 +39,12 @@ const TRIGGER_TYPES = [
   { value: "IMMEDIATE", label: "Immediate" },
   { value: "DELAYED", label: "Delayed" },
   { value: "SCHEDULED", label: "Scheduled" },
-  { value: "CONDITIONAL", label: "Conditional" },
+  { value: "CONDITIONAL", label: "Conditional" }
 ];
 
 export const TransitionTriggersManager = ({
   transitionId,
-  transitionName,
+  transitionName
 }: TransitionTriggersManagerProps) => {
   const [triggers, setTriggers] = useState<TransitionTrigger[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -118,7 +112,7 @@ export const TransitionTriggersManager = ({
         // Update existing trigger
         const response = await updateTransitionTrigger(editingTrigger.id, {
           trigger_name: triggerName,
-          delay_duration: delayDuration || undefined,
+          delay_duration: delayDuration || undefined
         });
         if (response.success) {
           toast.success("Trigger updated successfully");
@@ -132,7 +126,7 @@ export const TransitionTriggersManager = ({
         const response = await createTransitionTrigger(transitionId, {
           trigger_name: triggerName,
           trigger_type: triggerType,
-          delay_duration: delayDuration || undefined,
+          delay_duration: delayDuration || undefined
         });
         if (response.success) {
           toast.success("Trigger created successfully");
@@ -191,15 +185,15 @@ export const TransitionTriggersManager = ({
           {/* Triggers List */}
           {isFetching ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
             </div>
           ) : triggers.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
-              <Clock className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">
+              <Clock className="text-muted-foreground mx-auto h-8 w-8" />
+              <p className="text-muted-foreground mt-2 text-sm">
                 No triggers configured for this transition
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Add triggers to automate transition execution
               </p>
             </div>
@@ -208,15 +202,14 @@ export const TransitionTriggersManager = ({
               {triggers.map((trigger) => (
                 <div
                   key={trigger.id}
-                  className="flex items-center justify-between rounded-lg border bg-card p-4"
-                >
+                  className="bg-card flex items-center justify-between rounded-lg border p-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h4 className="font-semibold">{trigger.trigger_name}</h4>
                       <Badge variant="outline">{trigger.trigger_type}</Badge>
                     </div>
                     {trigger.delay_duration && (
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="text-muted-foreground mt-1 text-sm">
                         Delay: {trigger.delay_duration}
                       </p>
                     )}
@@ -226,17 +219,15 @@ export const TransitionTriggersManager = ({
                       size="icon"
                       variant="ghost"
                       onClick={() => handleOpenDialog(trigger)}
-                      disabled={isLoading}
-                    >
+                      disabled={isLoading}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => handleDeleteTrigger(trigger.id)}
-                      disabled={isLoading}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      disabled={isLoading}>
+                      <Trash2 className="text-destructive h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -250,12 +241,8 @@ export const TransitionTriggersManager = ({
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingTrigger ? "Edit Trigger" : "Create New Trigger"}
-            </DialogTitle>
-            <DialogDescription>
-              Configure an automated trigger for the transition
-            </DialogDescription>
+            <DialogTitle>{editingTrigger ? "Edit Trigger" : "Create New Trigger"}</DialogTitle>
+            <DialogDescription>Configure an automated trigger for the transition</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -278,8 +265,7 @@ export const TransitionTriggersManager = ({
               <Select
                 value={triggerType}
                 onValueChange={setTriggerType}
-                disabled={!!editingTrigger}
-              >
+                disabled={!!editingTrigger}>
                 <SelectTrigger id="trigger-type">
                   <SelectValue placeholder="Select trigger type" />
                 </SelectTrigger>
@@ -292,7 +278,7 @@ export const TransitionTriggersManager = ({
                 </SelectContent>
               </Select>
               {editingTrigger && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Trigger type cannot be changed after creation
                 </p>
               )}
@@ -307,7 +293,7 @@ export const TransitionTriggersManager = ({
                   onChange={(e) => setDelayDuration(e.target.value)}
                   placeholder="e.g., 2 days, 5 hours, 30 minutes"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Specify the delay duration (e.g., "2 days", "5 hours")
                 </p>
               </div>

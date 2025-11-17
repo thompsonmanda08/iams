@@ -2,14 +2,16 @@
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EntityType } from "@/lib/types/workflow";
+import { EntityType, WorkflowTriggerType } from "@/lib/types/workflow";
 import { SelectField } from "@/components/ui/select-field";
+import { WORKFLOW_TRIGGER_TYPES } from "@/lib/constants";
+import { useMemo } from "react";
 
 interface WorkflowHeaderProps {
   workflowName: string;
-  entityType: EntityType;
+  triggerType: WorkflowTriggerType;
   onWorkflowNameChange: (name: string) => void;
-  onEntityTypeChange: (type: EntityType) => void;
+  onTriggerTypeChange: (type: WorkflowTriggerType) => void;
   onSave: () => void;
   onBack: () => void;
   onStateAdd: () => void;
@@ -18,14 +20,23 @@ interface WorkflowHeaderProps {
 
 export const WorkflowHeader = ({
   workflowName,
-  entityType,
+  triggerType,
   onStateAdd,
   onWorkflowNameChange,
-  onEntityTypeChange,
+  onTriggerTypeChange,
   onSave,
   onBack,
   isLoading = false
 }: WorkflowHeaderProps) => {
+  const triggerOptions = useMemo(
+    () =>
+      WORKFLOW_TRIGGER_TYPES.map((trigger) => ({
+        id: trigger,
+        name: trigger.replace(/_/g, " "),
+        value: trigger
+      })),
+    []
+  );
   return (
     <div className="bg-card border-b">
       <div className="flex items-center justify-between px-6 py-4">
@@ -43,14 +54,9 @@ export const WorkflowHeader = ({
             />
 
             <SelectField
-              value={entityType}
-              onValueChange={(value) => onEntityTypeChange(value as EntityType)}
-              options={[
-                { id: "RISK", name: "Risk" },
-                { id: "AUDIT_PLAN", name: "Audit Plan" },
-                { id: "FINDING", name: "Finding" },
-                { id: "RECOMMENDATION", name: "Recommendation" }
-              ]}
+              value={triggerType}
+              onValueChange={(value) => onTriggerTypeChange(value as WorkflowTriggerType)}
+              options={triggerOptions}
             />
           </div>
         </div>
