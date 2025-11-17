@@ -48,7 +48,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { generateAvatarFallback, generateRandomString, getAvatarSrc } from "@/lib/utils";
 import { toast } from "sonner";
 import { User } from "@/lib/types/account";
-import { deleteUser, resetUserPassword, toggleUserStatus } from "@/app/_actions/user-actions";
+import {
+  activateUser,
+  deactivateUser,
+  deleteUser,
+  resetUserPassword
+} from "@/app/_actions/user-actions";
 import { CustomPagination } from "@/components/ui/pagination";
 import SearchField from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -299,28 +304,35 @@ export default function UsersDataTable({
   };
 
   const handleToggleStatusConfirm = async () => {
-    if (toggleStatusDialog.userId === null || toggleStatusDialog.activate === null) return;
+    if (toggleStatusDialog.userId === null || toggleStatusDialog.activate === null) {
+      return;
+    }
 
     try {
-      const response = await toggleUserStatus(
-        toggleStatusDialog.userId,
-        toggleStatusDialog.activate
-      );
+      const action = toggleStatusDialog.activate ? activateUser : deactivateUser;
+      const response = await action(toggleStatusDialog.userId);
+
       if (response.success) {
-        toast.success(
-          `User ${toggleStatusDialog.activate ? "activated" : "deactivated"} successfully`
-        );
+        const statusText = toggleStatusDialog.activate ? "activated" : "deactivated";
+        toast.success(`User ${statusText} successfully`);
+
         router.refresh();
-        // Close dialog first, then reset state after animation
+
         setToggleStatusDialog((prev) => ({ ...prev, open: false }));
+
         setTimeout(() => {
-          setToggleStatusDialog({ open: false, userId: null, userName: null, activate: null });
+          setToggleStatusDialog({
+            open: false,
+            userId: null,
+            userName: null,
+            activate: null
+          });
         }, 300);
       } else {
         toast.error(response.message || "Failed to update user status");
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      console.error("Error toggling user status:", error);
     }
   };
 
