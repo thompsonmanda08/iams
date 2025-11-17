@@ -73,7 +73,7 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
     setIsSubmitting(true);
 
     try {
-      const response = await reassignTask(task.id, selectedUserId, comment);
+      const response = await reassignTask(task.instance.id, selectedUserId, comment);
 
       if (response.success) {
         toast.success(response.message || "Task reassigned successfully");
@@ -109,20 +109,20 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
           <div className="bg-muted rounded-lg p-4 space-y-2">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-muted-foreground">Workflow:</span>
-                <p className="font-medium">{task.workflowName}</p>
+                <span className="text-muted-foreground">Entity:</span>
+                <p className="font-medium">{task.entity_name}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Action:</span>
-                <p className="font-medium">{task.actionName.replace(/_/g, " ")}</p>
+                <span className="text-muted-foreground">Status:</span>
+                <p className="font-medium">{task.instance.status}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Current Assignee:</span>
-                <p className="font-medium">{task.assignedUserName}</p>
+                <span className="text-muted-foreground">Workflow ID:</span>
+                <p className="font-medium">{task.instance.workflow_id}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Required Role:</span>
-                <p className="font-medium">{task.requiredRole}</p>
+                <span className="text-muted-foreground">Entity Type:</span>
+                <p className="font-medium">{task.instance.entity_type.replace(/_/g, " ")}</p>
               </div>
             </div>
           </div>
@@ -131,7 +131,7 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Only users with the <strong>{task.requiredRole}</strong> role are shown below.
+              Select a user to reassign this task to.
             </AlertDescription>
           </Alert>
 

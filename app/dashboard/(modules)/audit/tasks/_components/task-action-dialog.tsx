@@ -43,9 +43,9 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
       let response;
 
       if (action === "APPROVE") {
-        response = await approveTask(task.id, comment);
+        response = await approveTask(task.instance.id, comment);
       } else if (action === "REJECT") {
-        response = await rejectTask(task.id, comment);
+        response = await rejectTask(task.instance.id, comment);
       }
 
       if (response?.success) {
@@ -101,20 +101,20 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
           <div className="bg-muted rounded-lg p-4 space-y-2">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-muted-foreground">Workflow:</span>
-                <p className="font-medium">{task.workflowName}</p>
+                <span className="text-muted-foreground">Workflow ID:</span>
+                <p className="font-medium">{task.instance.workflow_id}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Action:</span>
-                <p className="font-medium">{task.actionName.replace(/_/g, " ")}</p>
+                <span className="text-muted-foreground">Status:</span>
+                <p className="font-medium">{task.instance.status}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Entity:</span>
-                <p className="font-medium">{task.entityName}</p>
+                <p className="font-medium">{task.entity_name}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Type:</span>
-                <p className="font-medium">{task.entityType.replace(/_/g, " ")}</p>
+                <p className="font-medium">{task.instance.entity_type.replace(/_/g, " ")}</p>
               </div>
             </div>
           </div>

@@ -1977,3 +1977,55 @@ export async function deleteUniverseItem(
     );
   }
 }
+
+/**
+ * Submit budget for approval
+ */
+export async function submitBudgetForApproval(budgetId: string): Promise<APIResponse> {
+  if (!budgetId) {
+    return handleBadRequest("Budget ID is required");
+  }
+
+  const url = `/api/v1/audit/budgets/${budgetId}/submit-for-approval`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "POST", url });
+
+    revalidatePath("/dashboard/audit/budgets");
+    revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
+
+    return successResponse(response.data, "Budget submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SUBMIT BUDGET",
+      url
+    );
+  }
+}
+
+/**
+ * Submit universe for approval
+ */
+export async function submitUniverseForApproval(universeId: string): Promise<APIResponse> {
+  if (!universeId) {
+    return handleBadRequest("Universe ID is required");
+  }
+
+  const url = `/api/v1/audit/universes/${universeId}/submit-for-approval`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "POST", url });
+
+    revalidatePath("/dashboard/audit/universe");
+    revalidatePath(`/dashboard/audit/universe/${universeId}`);
+
+    return successResponse(response.data, "Universe submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SUBMIT UNIVERSE",
+      url
+    );
+  }
+}

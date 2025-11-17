@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Download, Filter } from "lucide-react";
-import { TasksTableClient } from "./_components/tasks-table-client";
 import { TaskStats } from "./_components/task-stats";
 import PageHeader from "@/components/page-header";
 import { getTasks, getTaskStats } from "@/app/_actions/task-actions";

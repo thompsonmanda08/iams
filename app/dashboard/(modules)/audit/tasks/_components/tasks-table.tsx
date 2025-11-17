@@ -22,6 +22,7 @@ import type { Task } from "@/lib/types/task";
 import { TaskActionDialog } from "./task-action-dialog";
 import { TaskReassignDialog } from "./task-reassign-dialog";
 import { formatDistanceToNow } from "date-fns";
+import { getStatusLabel } from "@/lib/statuses";
 
 interface TasksTableProps {
   tasks: Task[];
@@ -44,21 +45,29 @@ export function TasksTable({ tasks }: TasksTableProps) {
     setReassignDialogOpen(true);
   };
 
-  const getStatusBadge = (status: Task["status"]) => {
-    const statusConfig = {
-      PENDING: { label: "Pending", variant: "outline" as const },
-      IN_PROGRESS: { label: "In Progress", variant: "default" as const },
-      COMPLETED: { label: "Completed", variant: "default" as const },
-      REJECTED: { label: "Rejected", variant: "destructive" as const },
-      REASSIGNED: { label: "Reassigned", variant: "secondary" as const }
+  const getStatusBadge = (status: string) => {
+    const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      DRAFT: "outline",
+      PENDING: "outline",
+      IN_REVIEW: "default",
+      REVIEW: "default",
+      APPROVED: "default",
+      REJECTED: "destructive",
+      COMPLETED: "default",
+      ON_HOLD: "secondary",
+      OPEN: "default",
+      CLOSED: "destructive",
+      ARCHIVED: "outline"
     };
 
-    const config = statusConfig[status] || statusConfig.PENDING;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    const label = getStatusLabel(status);
+    const variant = statusVariants[status] || "outline";
+
+    return <Badge variant={variant}>{label}</Badge>;
   };
 
-  const getEntityTypeBadge = (entityType: Task["entityType"]) => {
-    const typeConfig = {
+  const getEntityTypeBadge = (entityType: string) => {
+    const typeConfig: Record<string, { label: string; className: string }> = {
       RISK: {
         label: "Risk",
         className: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
@@ -74,10 +83,18 @@ export function TasksTable({ tasks }: TasksTableProps) {
       RECOMMENDATION: {
         label: "Recommendation",
         className: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+      },
+      BUDGET: {
+        label: "Budget",
+        className: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+      },
+      CONTRACT: {
+        label: "Contract",
+        className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400"
       }
     };
 
-    const config = typeConfig[entityType];
+    const config = typeConfig[entityType] || { label: entityType, className: "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400" };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
@@ -112,38 +129,38 @@ export function TasksTable({ tasks }: TasksTableProps) {
           </TableHeader>
           <TableBody>
             {tasks.map((task) => (
-              <TableRow key={task.id}>
+              <TableRow key={task.instance.id}>
                 <TableCell>
                   <div className="flex flex-col">
-                    <span className="font-medium">{task.actionName.replace(/_/g, " ")}</span>
-                    <span className="text-muted-foreground text-xs">{task.workflowName}</span>
+                    <span className="font-medium">{task.entity_name}</span>
+                    <span className="text-muted-foreground text-xs">{task.instance.workflow_id}</span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col">
-                    <span className="font-medium">{task.entityName}</span>
-                    <span className="text-muted-foreground text-xs">ID: {task.entityId}</span>
+                    <span className="font-medium">{task.entity_name}</span>
+                    <span className="text-muted-foreground text-xs">ID: {task.instance.entity_id}</span>
                   </div>
                 </TableCell>
-                <TableCell>{getEntityTypeBadge(task.entityType)}</TableCell>
+                <TableCell>{getEntityTypeBadge(task.instance.entity_type)}</TableCell>
                 <TableCell>
                   <div className="flex flex-col">
-                    <span className="font-medium">{task.assignedUserName}</span>
-                    <span className="text-muted-foreground text-xs">{task.assignedUserEmail}</span>
+                    <span className="font-medium">{task.entity.title || task.entity.name || "N/A"}</span>
+                    <span className="text-muted-foreground text-xs">{task.entity.id || "N/A"}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{task.requiredRole}</Badge>
+                  <Badge variant="outline">{task.instance.organization_id}</Badge>
                 </TableCell>
-                <TableCell>{getStatusBadge(task.status)}</TableCell>
+                <TableCell>{getStatusBadge(task.instance.status)}</TableCell>
                 <TableCell>
                   <span className="text-muted-foreground text-sm">
-                    {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(task.instance.created_at), { addSuffix: true })}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    {task.status === "PENDING" && (
+                    {(task.instance.status === "REVIEW" || task.instance.status === "PENDING") && (
                       <>
                         <Button
                           size="sm"
@@ -176,12 +193,12 @@ export function TasksTable({ tasks }: TasksTableProps) {
                         </DropdownMenu>
                       </>
                     )}
-                    {task.status === "COMPLETED" && (
+                    {(task.instance.status === "COMPLETED" || task.instance.status === "APPROVED") && (
                       <span className="text-muted-foreground text-sm">
-                        Completed by {task.completedByUserName}
+                        Completed by {task.instance.created_by || "System"}
                       </span>
                     )}
-                    {task.status === "REJECTED" && (
+                    {(task.instance.status === "REJECTED" || task.instance.status === "DRAFT") && (
                       <span className="text-muted-foreground text-sm">No actions available</span>
                     )}
                   </div>

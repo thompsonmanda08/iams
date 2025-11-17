@@ -4,7 +4,12 @@
 
 import { StandardStatus } from "../statuses";
 
-export type EntityType = "RISK" | "AUDIT_PLAN" | "FINDING" | "RECOMMENDATION";
+export type EntityType =
+  | "RISK_ACCEPTANCE"
+  | "AUDIT_PLAN"
+  | "BUDGET"
+  | "AUDIT_UNIVERSE"
+  | "FINDINGS";
 
 export type OperatorType = "=" | "!=" | ">" | "<" | ">=" | "<=" | "is" | "contains";
 
@@ -16,31 +21,6 @@ export type WorkflowTriggerType =
   | "AUDIT_PLAN"
   | "FINDINGS"
   | "RISK_ACCEPTANCE";
-
-/**
- * Workflow Status - Uses standardized status values from lib/statuses.ts
- *
- * Allowed statuses:
- * - DRAFT: Workflow is being prepared
- * - PENDING: Workflow pending activation
- * - OPEN: Workflow is active and running
- * - COMPLETED: Workflow execution complete
- * - CLOSED: Workflow is closed
- * - ARCHIVED: Workflow archived
- *
- * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
- */
-export type WorkflowStatus =
-  | "DRAFT"
-  | "PENDING"
-  | "OPEN"
-  | "COMPLETED"
-  | "CLOSED"
-  | "ARCHIVED"
-  | "draft"
-  | "active"
-  | "inactive"
-  | "archived";
 
 // ============================================================================
 // CONDITION INTERFACES
@@ -235,7 +215,7 @@ export type WorkflowItem = {
 export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
-  status?: WorkflowStatus;
+  status?: StandardStatus;
 }
 
 export interface CreateStateRequest {
