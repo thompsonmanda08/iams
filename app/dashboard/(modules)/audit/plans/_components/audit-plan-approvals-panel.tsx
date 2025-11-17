@@ -43,6 +43,7 @@ export function AuditPlanApprovalsPanel({
 }: AuditPlanApprovalsPanelProps) {
   const queryClient = useQueryClient();
   const [submittingForApproval, setSubmittingForApproval] = useState(false);
+  const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -314,7 +315,7 @@ export function AuditPlanApprovalsPanel({
       {canSubmitForApproval && (
         <div className="flex gap-2">
           <Button
-            onClick={() => submitMutation.mutate()}
+            onClick={() => setSubmitConfirmationOpen(true)}
             disabled={submitMutation.isPending}
             isLoading={submitMutation.isPending}
             loadingText="Submitting..."
@@ -720,6 +721,21 @@ export function AuditPlanApprovalsPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Submit for Approval Confirmation Modal */}
+      <ConfirmationModal
+        open={submitConfirmationOpen}
+        onOpenChange={setSubmitConfirmationOpen}
+        onConfirm={() => {
+          submitMutation.mutate();
+          setSubmitConfirmationOpen(false);
+        }}
+        title="Submit for Approval?"
+        description="Are you sure you want to submit this audit plan for approval? This will send it to HIAR for review."
+        confirmText="Submit"
+        type="default"
+        isLoading={submitMutation.isPending}
+      />
     </div>
   );
 }
