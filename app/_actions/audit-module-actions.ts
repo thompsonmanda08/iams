@@ -1134,11 +1134,10 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
     return handleBadRequest("Audit plan ID is required");
   }
 
+  const url = `/api/v1/audit-plans/${auditPlanId}/submit-for-approval`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/audit-plans/${auditPlanId}/submit`
-    });
+    const response = await authenticatedApiClient({ url });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);

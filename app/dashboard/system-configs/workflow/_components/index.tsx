@@ -6,7 +6,8 @@ import {
   WorkflowIcon,
   Edit2,
   GitBranch,
-  MessageCircleQuestionMark
+  MessageCircleQuestionMark,
+  Settings
 } from "lucide-react";
 import {
   AlertDialog,
@@ -309,8 +310,8 @@ function WorkflowCard({
               size={"sm"}
               className="border-primary/20 bg-primary/5 text-primary flex-1 border"
               onClick={() => onEdit(workflow.id)}>
-              <Edit2 className="h-4 w-4" />
-              Edit
+              <Settings className="h-4 w-4" />
+              Update
             </Button>
             <Button
               variant={"outline"}
