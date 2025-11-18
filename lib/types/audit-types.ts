@@ -13,13 +13,31 @@
 
 /**
  * Audit status types representing the lifecycle of an audit
+ * Uses standardized status values from lib/statuses.ts
+ *
+ * Allowed statuses:
+ * - DRAFT: Audit being prepared
+ * - SUBMITTED: Audit submitted for review
+ * - IN_REVIEW: Audit under review
+ * - APPROVED: Audit approved
+ * - COMPLETED: Audit execution complete
+ * - REJECTED: Audit rejected
+ * - ARCHIVED: Audit archived
+ *
+ * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
 export type AuditStatus =
-  | "draft"
+  | "DRAFT"
+  | "SUBMITTED"
+  | "IN_REVIEW"
+  | "APPROVED"
+  | "COMPLETED"
+  | "REJECTED"
+  | "ARCHIVED"
+  | "draft" // Legacy kebab-case support
   | "under-review"
   | "planned"
   | "in-progress"
-  | "completed"
   | "cancelled";
 
 /**
@@ -34,8 +52,18 @@ export type FindingSeverity = "critical" | "high" | "medium" | "low";
 
 /**
  * Finding status types representing the lifecycle of a finding
+ * Uses standardized status values from lib/statuses.ts
+ *
+ * Allowed statuses:
+ * - OPEN: Finding is open
+ * - PENDING: Finding is pending
+ * - IN_REVIEW: Finding under review
+ * - COMPLETED: Finding completed
+ * - CLOSED: Finding closed
+ *
+ * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
-export type FindingStatus = "open" | "in-progress" | "resolved" | "closed";
+export type FindingStatus = "OPEN" | "PENDING" | "IN_REVIEW" | "COMPLETED" | "CLOSED" | "open" | "in-progress" | "resolved" | "closed";
 
 /**
  * Report types available for generation
@@ -64,13 +92,28 @@ export type TemplateCategoryGroup = "main-clauses" | "annex-a-controls";
 
 /**
  * Workpaper status types
+ * Uses standardized status values from lib/statuses.ts
+ *
+ * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
-export type WorkpaperStatus = "unlinked" | "linked" | "in-progress" | "completed";
+export type WorkpaperStatus = "PENDING" | "IN_REVIEW" | "COMPLETED" | "unlinked" | "linked" | "in-progress";
 
 /**
  * Audit Plan status types representing the lifecycle of an audit plan
+ * Uses standardized status values from lib/statuses.ts
+ *
+ * Allowed statuses:
+ * - DRAFT: Audit plan being prepared
+ * - SUBMITTED: Audit plan submitted for approval
+ * - IN_REVIEW: Audit plan under review
+ * - APPROVED: Audit plan approved
+ * - COMPLETED: Audit plan execution complete
+ * - REJECTED: Audit plan rejected
+ * - ARCHIVED: Audit plan archived
+ *
+ * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
-export type AuditPlanStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "COMPLETED" | "REJECTED";
+export type AuditPlanStatus = "DRAFT" | "SUBMITTED" | "IN_REVIEW" | "APPROVED" | "COMPLETED" | "REJECTED" | "ARCHIVED";
 
 // ============================================================================
 // TEMPLATE TYPES

@@ -1,12 +1,15 @@
 "use client";
+import { useRef, useState, useEffect } from "react";
+
 interface TransitionArrowProps {
   from: { x: number; y: number };
   to: { x: number; y: number };
   label: string;
   onClick: () => void;
+  curveOffset?: number; // Offset for multiple transitions between same states
 }
 
-export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowProps) => {
+export const TransitionArrow = ({ from, to, label, onClick, curveOffset = 0 }: TransitionArrowProps) => {
   // Node dimensions (240px width, ~120px height based on StateNode)
   const NODE_WIDTH = 240;
   const NODE_HEIGHT = 120;
@@ -20,12 +23,36 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
   // Calculate control points for curved line
   const dx = toX - fromX;
   const dy = toY - fromY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Base control point
   const controlX = fromX + dx / 2;
   const controlY = fromY + dy / 2 - Math.abs(dx) * 0.15;
+
+  // Apply offset for multiple transitions between same states
+  // Perpendicular offset to spread curves away from center line
+  const perpX = dy / distance;
+  const perpY = -dx / distance;
+  const offsetDistance = curveOffset * 40; // 40px spacing between curves
+
+  const finalControlX = controlX + perpX * offsetDistance;
+  const finalControlY = controlY + perpY * offsetDistance;
 
   // Unique marker ID for this arrow
   const markerId = `arrowhead-${from.x}-${from.y}-${to.x}-${to.y}`;
   const arrowSize = 10;
+
+  // Track calculated text width for responsive label box
+  const textRef = useRef<SVGTextElement>(null);
+  const [textWidth, setTextWidth] = useState(100); // Default fallback width
+
+  useEffect(() => {
+    if (textRef.current) {
+      const bbox = textRef.current.getBBox();
+      // Add padding of 16px (8px on each side) to the calculated text width
+      setTextWidth(bbox.width + 16);
+    }
+  }, [label]);
 
   return (
     <g className="transition-opacity" style={{ pointerEvents: "auto" }}>
@@ -48,7 +75,7 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
 
       {/* Invisible wider hit area for easier clicking */}
       <path
-        d={`M ${fromX} ${fromY} Q ${controlX} ${controlY} ${toX} ${toY}`}
+        d={`M ${fromX} ${fromY} Q ${finalControlX} ${finalControlY} ${toX} ${toY}`}
         stroke="transparent"
         strokeWidth="20"
         fill="none"
@@ -58,7 +85,7 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
 
       {/* Curved path */}
       <path
-        d={`M ${fromX} ${fromY} Q ${controlX} ${controlY} ${toX} ${toY}`}
+        d={`M ${fromX} ${fromY} Q ${finalControlX} ${finalControlY} ${toX} ${toY}`}
         stroke="var(--primary)"
         strokeWidth="2.5"
         fill="none"
@@ -70,9 +97,9 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
       {/* Label background - clickable */}
       <g onClick={onClick} className="cursor-pointer transition-opacity hover:opacity-90">
         <rect
-          x={controlX - 50}
-          y={controlY - 14}
-          width="100"
+          x={finalControlX - textWidth / 2}
+          y={finalControlY - 14}
+          width={textWidth}
           height="28"
           fill="var(--card)"
           stroke="var(--primary)"
@@ -83,8 +110,9 @@ export const TransitionArrow = ({ from, to, label, onClick }: TransitionArrowPro
 
         {/* Label text */}
         <text
-          x={controlX}
-          y={controlY}
+          ref={textRef}
+          x={finalControlX}
+          y={finalControlY}
           textAnchor="middle"
           dominantBaseline="middle"
           className="pointer-events-none text-xs font-semibold select-none"

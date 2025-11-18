@@ -19,13 +19,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Save, Globe } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, Globe, Send } from "lucide-react";
 import { toast } from "sonner";
 import { StatusBadge } from "@/components/status-badge";
 import {
   createUniverseItem,
   updateUniverseItem,
-  deleteUniverseItem
+  deleteUniverseItem,
+  submitUniverseForApproval
 } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
@@ -121,6 +122,8 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<UniverseItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const safeUniverseItems = Array.isArray(universeItems) ? universeItems : [];
 
@@ -346,15 +349,44 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
     resetForm();
   };
 
+  const handleSubmitUniverse = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await submitUniverseForApproval(universe.id);
+      if (response.success) {
+        toast.success(response.message || "Universe submitted for approval successfully");
+        setSubmitConfirmationOpen(false);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to submit universe for approval");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while submitting universe");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-background space-y-8">
       {/* Universe Overview */}
       <Card className="p-8">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-foreground text-2xl font-bold">{universe.universe_name}</h2>
-          <div className="flex gap-2">
-            <StatusBadge status={universe.status || "UNIVERSE_CREATION"} />
-            <StatusBadge status={universe.is_active ? "ACTIVE" : "INACTIVE"} />
+          <div className="flex items-center gap-2">
+            <div className="flex gap-2">
+              <StatusBadge status={universe.status || "UNIVERSE_CREATION"} />
+              <StatusBadge
+                variant={universe.is_active ? "success" : "default"}
+                status={universe.is_active ? "ACTIVE" : "INACTIVE"}
+              />
+            </div>
+            {universe.status == "DRAFT" && (
+              <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2" size="sm">
+                <Send className="h-4 w-4" />
+                Submit for Approval
+              </Button>
+            )}
           </div>
         </div>
 
@@ -616,6 +648,17 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
         confirmText="Delete"
         type="delete"
         isLoading={isDeleting}
+      />
+
+      {/* Submit for Approval Confirmation Modal */}
+      <ConfirmationModal
+        open={submitConfirmationOpen}
+        onOpenChange={setSubmitConfirmationOpen}
+        onConfirm={handleSubmitUniverse}
+        title="Submit Universe for Approval?"
+        description="You are about to submit this universe for approval. Once submitted, it will be reviewed by the approval committee."
+        confirmText="Submit"
+        isLoading={isSubmitting}
       />
     </div>
   );

@@ -26,7 +26,9 @@ import { FormData } from "@/components/forms/risk-acceptance-form";
 // TYPE DEFINITIONS
 // ============================================================================
 
-export type RiskStatus = "DRAFT" | "OPEN" | "CLOSED";
+// NOTE: RiskStatus is now imported from lib/types/risk-types.ts to maintain single source of truth
+// import type { RiskStatus } from "@/lib/types/risk-types";
+
 export type RiskResponse = "REDUCE" | "ACCEPT" | "TRANSFER" | "AVOID" | "OPTIMIZE";
 export type RiskRating = "LOW" | "MEDIUM" | "HIGH";
 export type RegisterStatus = "OPEN" | "CLOSED";
@@ -193,7 +195,7 @@ export interface AssessActionFindingsInput {
 
 // Action Task Type
 export type TaskType = "EXECUTION" | "REVIEW";
-export type TaskStatus = "PENDING" | "COMPLETED";
+export type ActionTaskStatus = "PENDING" | "COMPLETED";
 
 // Action Task
 export interface Task {
@@ -202,7 +204,7 @@ export interface Task {
   action_id: string;
   assigned_to: string;
   task_type: TaskType;
-  status: TaskStatus;
+  status: ActionTaskStatus;
   due_date: string;
   created_at: string;
   updated_at: string;
@@ -1663,10 +1665,36 @@ export async function updateRiskAcceptance(
       url: `/api/v1/risk-acceptances/${id}`,
       data: input,
       method: "PUT"
-    });    
+    });
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "PUT | UPDATE RISK ACCEPTANCE", `/api/v1/risk-acceptances/${id}`);
+  }
+}
+
+/**
+ * Submit risk acceptance for approval
+ */
+export async function submitRiskAcceptanceForApproval(acceptanceId: string): Promise<APIResponse> {
+  if (!acceptanceId) {
+    return handleBadRequest("Risk acceptance ID is required");
+  }
+
+  const url = `/api/v1/risk-acceptances/${acceptanceId}/submit-for-approval`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    revalidatePath("/dashboard/risks/risk-acceptances");
+    revalidatePath(`/dashboard/risks/risk-acceptances/${acceptanceId}`);
+
+    return successResponse(response.data, "Risk acceptance submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | SUBMIT RISK ACCEPTANCE",
+      url
+    );
   }
 }

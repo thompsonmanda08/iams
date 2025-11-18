@@ -49,6 +49,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { useRoles } from "@/hooks/use-query-data";
 
 interface RolesPermissionsProps {
   departmentId: string;
@@ -121,12 +122,19 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
   const [pendingRoleId, setPendingRoleId] = useState<string | null>(null);
 
   // Fetch roles for this department
-  const { data: rolesResponse, isLoading: rolesLoading } = useQuery({
-    queryKey: [QUERY_KEYS.ROLES, departmentId],
-    queryFn: () => getRoles({ departmentId }),
-    enabled: !!departmentId,
-    staleTime: 5 * 60 * 1000
-  });
+  // const { data: rolesResponse, isLoading: rolesLoading } = useQuery({
+  //   queryKey: [QUERY_KEYS.ROLES, departmentId],
+  //   queryFn: () => getRoles({ departmentId }),
+  //   enabled: !!departmentId,
+  //   staleTime: 5 * 60 * 1000
+  // });
+
+  const { data: rolesResponse, isLoading: rolesLoading } = useRoles({ departmentId, is_Active: true });
+
+  const roles: Role[] = useMemo(
+    () => (rolesResponse?.success && rolesResponse?.data?.data ? rolesResponse.data.data : []),
+    [rolesResponse]
+  );
 
   // Fetch modules assigned to this department
   const { data: modulesResponse, isLoading: modulesLoading } = useQuery({
@@ -136,10 +144,6 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     staleTime: 5 * 60 * 1000
   });
 
-  const roles: Role[] = useMemo(
-    () => (rolesResponse?.success && rolesResponse?.data?.data ? rolesResponse.data.data : []),
-    [rolesResponse]
-  );
 
   const modules: Module[] = useMemo(() => {
     if (!modulesResponse?.success || !modulesResponse?.data) return [];

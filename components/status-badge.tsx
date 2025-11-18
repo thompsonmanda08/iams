@@ -1,16 +1,11 @@
-import { Badge, badgeVariants } from "./ui/badge";
+import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
+import { getStatusConfig, type StandardStatus, getStatusLabel } from "@/lib/statuses";
 
 type BadgeColor = "success" | "warning" | "danger" | "info" | "default";
 type BadgeStyle = "solid" | "outline";
-
-type StatusConfig = {
-  label: string;
-  color: BadgeColor;
-  style: BadgeStyle;
-};
 
 /* Custom badge variants for solid/outline with colors */
 const coloredBadgeVariants = cva("", {
@@ -107,42 +102,70 @@ const coloredBadgeVariants = cva("", {
   ]
 });
 
-/* ADD STATUS VALUES HERE */
-const statusConfig: Record<string, StatusConfig> = {
-  UNDER_REVIEW: { label: "Under Review", color: "warning", style: "outline" },
-  UNIVERSE_CREATION: { label: "Universe Creation", color: "info", style: "outline" },
-  APPROVED: { label: "Approved", color: "success", style: "solid" },
-  ACTIVE: { label: "Active", color: "success", style: "outline" },
-  INACTIVE: { label: "Inactive", color: "default", style: "outline" },
-  REJECTED: { label: "Rejected", color: "danger", style: "solid" },
-  PENDING: { label: "Pending", color: "warning", style: "outline" },
-  COMPLETED: { label: "Completed", color: "success", style: "solid" },
-  IN_PROGRESS: { label: "In Progress", color: "info", style: "outline" },
-  DEFAULT: { label: "Default", color: "default", style: "solid" }
-};
+export interface StatusBadgeProps {
+  status: StandardStatus | string;
+  size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
+  showTooltip?: boolean;
+  variant?: VariantProps<typeof Badge>["variant"];
+}
 
+/**
+ * Universal status badge component
+ *
+ * Displays a formatted status badge with consistent colors and styles across the platform.
+ * Uses centralized status configuration from lib/statuses.ts
+ *
+ * @param status - The status value (e.g., 'DRAFT', 'APPROVED', 'IN_REVIEW')
+ * @param size - Badge size ('sm' | 'md' | 'lg' | 'xl'). Default: 'sm'
+ * @param className - Additional CSS classes
+ * @param showTooltip - Show description as tooltip (future enhancement)
+ *
+ * @example
+ * <StatusBadge status="APPROVED" />
+ * <StatusBadge status="IN_REVIEW" size="lg" />
+ * <StatusBadge status="DRAFT" className="mr-2" />
+ */
 export const StatusBadge = ({
   status,
   size = "sm",
-  className
-}: {
-  status: keyof typeof statusConfig;
-  size?: "sm" | "md" | "lg" | "xl";
-  className?: string;
-}) => {
-  const config = statusConfig[status];
+  className,
+  showTooltip,
+  variant = "default"
+}: StatusBadgeProps) => {
+  // Get configuration from centralized status config
+  const config = getStatusConfig(status);
 
   if (!config) {
+    // Fallback for unknown status - log warning in dev
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        `StatusBadge: Unknown status "${status}". Consider adding it to lib/statuses.ts`
+      );
+    }
+
     return (
-      <Badge className={cn(coloredBadgeVariants({ size }), className)} variant="outline">
+      <Badge
+        className={cn(
+          coloredBadgeVariants({ size, color: "default", style: "outline" }),
+          className
+        )}
+        variant="outline"
+        title={`Unknown status: ${status}`}>
         {status}
       </Badge>
     );
   }
 
-  const { label, color, style } = config;
+  const { color, style, description } = config;
+  const label = getStatusLabel(status);
 
   return (
-    <Badge className={cn(coloredBadgeVariants({ color, style, size }), className)}>{label}</Badge>
+    <Badge
+      variant={variant}
+      className={cn(coloredBadgeVariants({ color, style, size }), className)}
+      title={showTooltip ? description : undefined}>
+      {label}
+    </Badge>
   );
 };

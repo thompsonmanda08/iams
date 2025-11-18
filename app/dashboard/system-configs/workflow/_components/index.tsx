@@ -1,14 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Plus,
   Trash2,
-  Workflow,
+  WorkflowIcon,
   Edit2,
-  CheckCircle2,
-  Settings,
   GitBranch,
-  MessageCircleQuestionMark
+  MessageCircleQuestionMark,
+  Settings
 } from "lucide-react";
 import {
   AlertDialog,
@@ -23,46 +22,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkflowEditor from "./workflow-editor";
+import { CreateWorkflowDialog } from "./create-workflow-dialog";
 import PageHeader from "@/components/page-header";
-import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
-import { useQuery } from "@tanstack/react-query";
-import { listWorkflows } from "@/app/_actions/workflow-actions";
-import { WorkflowListItem } from "@/lib/types/workflow";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Link from "next/link";
+import { useWorkflows } from "@/hooks/use-workflow-query-data";
+import { WorkflowItem } from "@/lib/types/workflow";
+import { Badge } from "@/components/ui/badge";
+import { notify } from "@/lib/utils";
 
 interface WorkflowClientProps {
-  initialWorkflows: WorkflowListItem[];
+  initialWorkflows: WorkflowItem[];
 }
 
 const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [workflowToDelete, setWorkflowToDelete] = useState<string | null>(null);
-  const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
+  const [isDeletingLoading, setIsDeletingLoading] = useState(false);
+  // const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
 
   // Use TanStack Query to manage workflow list with initial data
-  const { data: workflowsData, refetch } = useQuery({
-    queryKey: ["workflows"],
-    queryFn: async () => {
-      console.log("=== FETCHING WORKFLOWS LIST ===");
-      const response = await listWorkflows();
-      console.log("List response:", response);
-      console.log("Response data:", response.data);
-      const workflows = response.success ? response.data : [];
-      console.log("Extracted workflows:", workflows);
-      console.log("Workflows count:", workflows?.length);
-      console.log("===============================");
-      return workflows;
-    },
-    initialData: initialWorkflows,
-    staleTime: 1000 * 60 * 5 // 5 minutes
-  });
-
-  const workflows: WorkflowListItem[] = (workflowsData as WorkflowListItem[]) || [];
-
-  console.log("Current workflows in state:", workflows?.length);
+  const { data: workflowsData, refetch } = useWorkflows(initialWorkflows);
+  const workflows: WorkflowItem[] = (workflowsData as WorkflowItem[]) || [];
 
   const handleEdit = (workflowId: string) => {
     setEditingWorkflowId(workflowId);
@@ -70,8 +53,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   };
 
   const handleNew = () => {
-    setEditingWorkflowId(null);
-    setIsEditing(true);
+    setIsCreateDialogOpen(true);
   };
 
   const handleBack = () => {
@@ -84,16 +66,40 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
     setIsDeleteDialogOpen(true);
   };
 
+  console.log("workflows", workflows);
+
+  const workflowBeingDeleted = useMemo(
+    () => workflows?.find((w) => w.id === workflowToDelete),
+    [workflowToDelete, workflows]
+  );
+
   const handleConfirmDelete = async () => {
-    if (workflowToDelete) {
-      await deleteWorkflowMutation(workflowToDelete);
-      setIsDeleteDialogOpen(false);
-      setWorkflowToDelete(null);
+    if (true) {
+      return notify({
+        title: "Maintenance Mode",
+        description: "This action is not allowed at the moment.",
+        type: "warning"
+      });
     }
+    // if (workflowToDelete) {
+    //   setIsDeletingLoading(true);
+    //   try {
+    //     await deleteWorkflowMutation(workflowToDelete);
+    //     setIsDeleteDialogOpen(false);
+    //     setWorkflowToDelete(null);
+    //     refetch();
+    //   } finally {
+    //     setIsDeletingLoading(false);
+    //   }
+    // }
+  };
+
+  const handleCreateSuccess = () => {
+    refetch();
   };
 
   return isEditing ? (
-    <WorkflowEditor onBack={handleBack} workflowId={editingWorkflowId} />
+    <WorkflowEditor onBack={handleBack} workflowId={editingWorkflowId} allWorkflows={workflows} />
   ) : (
     <div className="">
       {/* Header */}
@@ -103,7 +109,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
             <PageHeader
               title="Workflow Setup"
               description="Configure and manage your workflow processes"
-              Icon={Workflow}
+              Icon={WorkflowIcon}
             />
             <div className="flex gap-2">
               <Button onClick={handleNew} className="gap-2">
@@ -117,13 +123,13 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
 
       <div className="container mx-auto space-y-6 p-6">
         {/* Saved Workflows */}
-        {!workflows || workflows.length < 0 ? (
+        {!workflows || workflows.length <= 0 ? (
           <>
             <EmptyWorkflowList onCreateWorkflow={handleNew} />
           </>
         ) : (
           <div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fit,minmax(320px,1fr))]">
               {workflows.map((workflow) => (
                 <WorkflowCard
                   key={workflow.id}
@@ -152,20 +158,34 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle>Delete Workflow?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the workflow and all its
-                associated data.
+                {workflowBeingDeleted
+                  ? `You are about to permanently delete the workflow "${workflowBeingDeleted.name}". All states, transitions, and configuration data will be lost. This action cannot be undone.`
+                  : "This action cannot be undone. This will permanently delete the workflow and all its associated data."}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setWorkflowToDelete(null)}>
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmDelete}>Continue</AlertDialogAction>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                disabled={isDeletingLoading}
+                className="bg-destructive hover:bg-destructive/90 text-white">
+                Delete Workflow
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Create Workflow Dialog */}
+        <CreateWorkflowDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          onSuccess={handleCreateSuccess}
+          existingWorkflows={workflows}
+        />
       </div>
     </div>
   );
@@ -238,7 +258,7 @@ function WorkflowCard({
   onEdit,
   onDelete
 }: {
-  workflow: WorkflowListItem;
+  workflow: WorkflowItem;
   onEdit: (workflowId: string) => void;
   onDelete: (workflowId: string) => void;
 }) {
@@ -254,78 +274,60 @@ function WorkflowCard({
         <div className="mb-5 flex items-start justify-between">
           <div className="flex flex-1 items-start gap-3">
             <div className="bg-primary dark:bg-accent flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors">
-              <Workflow className="text-primary-foreground dark:text-foreground/50 h-6 w-6" />
+              <WorkflowIcon className="text-primary-foreground dark:text-foreground/50 h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-foreground truncate text-lg font-semibold">{workflow.name}</h3>
-              <p className="dark:text-foreground/60 text-xs font-medium tracking-wider text-slate-500 uppercase">
-                {workflow.entity_type}
-              </p>
+              <h3 className="text-foreground mb-1 line-clamp-2 max-w-xs leading-5 font-semibold">
+                {workflow.name}
+              </h3>
+              <div className="flex gap-2">
+                <Badge
+                  variant={"outline"}
+                  className="dark:text-foreground/60 text-xs font-medium tracking-wider text-slate-500 uppercase">
+                  {workflow.trigger_type}
+                </Badge>{" "}
+                <Badge variant={"success"} className=" ">
+                  {workflow?.is_active || true ? "Active" : "Inactive"}
+                </Badge>
+              </div>
             </div>
           </div>
-          {
-            // (workflow.status || workflow?.isActive || true) &&
-            <CheckCircle2 className="ml-2 h-6 w-6 shrink-0 text-emerald-500" />
-          }
         </div>
 
         {/* Divider */}
         <div className="mb-5 h-px bg-linear-to-r from-slate-200 to-slate-100"></div>
 
         {/* Stats grid */}
-        <div className="mb-5 grid grid-cols-3 gap-3">
-          <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50 dark:bg-blue-50/10">
-            <p className="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">States</p>
-            <p className="dark:text-primary text-2xl font-bold text-slate-900">
-              {workflow?.states_count || "N/A"}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3 text-center transition-colors hover:bg-blue-50 dark:bg-blue-50/5">
-            <p className="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
-              Transitions
-            </p>
-            <p className="dark:text-primary text-2xl font-bold text-slate-900">
-              {workflow?.transitions_count || "N/A"}
-            </p>
-          </div>
-          <div className="rounded-lg bg-emerald-50 p-3 text-center transition-colors hover:bg-emerald-100 dark:bg-green-300/5">
-            <p className="mb-1.5 text-xs font-medium text-emerald-600 dark:text-green-400">
-              Status
-            </p>
-            <p className="text-sm font-bold text-emerald-700 dark:text-green-400">
-              {workflow?.is_active || true ? "Active" : "Inactive"}
-            </p>
-          </div>
-        </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="grid gap-2">
+            <Badge variant={"info"} className="px-2 py-1 text-base">
+              {workflow?.state_count || "0"} State{Number(workflow?.state_count) > 1 ? "s" : ""}
+            </Badge>
+            <Badge variant={"warning"} className="px-2 py-1 text-base">
+              {workflow?.transitions_count || "0"} Transition
+              {Number(workflow?.transitions_count) > 1 ? "s" : ""}
+            </Badge>
+          </div>
+          <div className="grid gap-2">
             <Button
               variant={"outline"}
+              size={"sm"}
               className="border-primary/20 bg-primary/5 text-primary flex-1 border"
               onClick={() => onEdit(workflow.id)}>
-              <Edit2 className="h-4 w-4" />
-              Edit
+              <Settings className="h-4 w-4" />
+              Update
             </Button>
-            <Link
-              href={`/dashboard/system-configs/workflow/admin?workflow_id=${workflow.id}`}
-              className="flex-1">
-              <Button
-                variant={"outline"}
-                className="w-full border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100">
-                <Settings className="h-4 w-4" />
-                Admin
-              </Button>
-            </Link>
+            <Button
+              variant={"outline"}
+              size={"sm"}
+              onClick={() => onDelete(workflow.id)}
+              className="flex-1 border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600">
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
           </div>
-          <Button
-            variant={"outline"}
-            onClick={() => onDelete(workflow.id)}
-            className="w-full border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600">
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </Button>
         </div>
       </div>
     </Card>

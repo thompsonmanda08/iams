@@ -23,30 +23,29 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ArrowLeft,
   Wallet,
   DollarSign,
   Calendar,
   Package,
-  Save
+  Save,
+  Send
 } from "lucide-react";
 import { toast } from "sonner";
-import { BudgetStatusBadge } from "./budget-status-badge";
 import { DatePicker } from "@/components/ui/date-picker";
-import Link from "next/link";
-import { BudgetStatus } from "@/lib/types/audit-types";
 import { Textarea } from "@/components/ui/textarea";
 import { CURRENCIES } from "@/lib/constants";
 import {
   createBudgetLine,
   updateBudgetLine,
-  deleteBudgetLine
+  deleteBudgetLine,
+  submitBudgetForApproval
 } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import BackButton from "@/components/back-button";
+import { StatusBadge } from "@/components/status-badge";
 
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
@@ -116,6 +115,8 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [lineToDelete, setLineToDelete] = useState<BudgetLine | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Pagination state
   const [pagination, setPagination] = useState<Pagination>({
@@ -165,7 +166,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
           <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
           <h2 className="mb-4 text-2xl font-bold">Budget Not Found</h2>
           <p className="text-muted-foreground mb-6">The budget you're looking for doesn't exist.</p>
-          <BackButton title="Back to Budgets"/>
+          <BackButton title="Back to Budgets" />
         </Card>
       </div>
     );
@@ -293,20 +294,46 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
     resetForm();
   };
 
+  const handleSubmitBudget = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await submitBudgetForApproval(budget.id);
+      if (response.success) {
+        toast.success(response.message || "Budget submitted for approval successfully");
+        setSubmitConfirmationOpen(false);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to submit budget for approval");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while submitting budget");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <div className="animate-slide-up mb-8 flex items-center justify-between">
-        <Link href="/dashboard/audit/budgets">
+        {/* <Link href="/dashboard/audit/budgets">
           <Button variant="outline" className="gap-2" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back to Budgets
           </Button>
-        </Link>
+        </Link> */}
         {!showLineForm && (
-          <Button onClick={() => setShowLineForm(true)} className="gap-2" size="sm">
-            <Plus className="h-5 w-5" />
-            Budget Line
-          </Button>
+          <div className="ml-auto flex gap-2">
+            {budget.status == "DRAFT" && (
+              <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2" size="sm">
+                <Send className="h-4 w-4" />
+                Submit for Approval
+              </Button>
+            )}
+            <Button onClick={() => setShowLineForm(true)} className="gap-2" size="sm">
+              <Plus className="h-5 w-5" />
+              Budget Line
+            </Button>
+          </div>
         )}
       </div>
 
@@ -331,7 +358,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Status</p>
-              <BudgetStatusBadge status={budget.status as BudgetStatus} />
+              <StatusBadge status={budget.status} />
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Year</p>
@@ -678,6 +705,16 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
         description={`Are you sure you want to delete "${lineToDelete?.name}"? This action cannot be undone.`}
         type="delete"
         isLoading={isDeleting}
+      />
+
+      <ConfirmationModal
+        open={submitConfirmationOpen}
+        onOpenChange={setSubmitConfirmationOpen}
+        onConfirm={handleSubmitBudget}
+        title="Submit Budget for Approval?"
+        description="You are about to submit this budget for approval. Once submitted, it will be reviewed by the approval committee."
+        confirmText="Submit"
+        isLoading={isSubmitting}
       />
     </>
   );

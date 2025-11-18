@@ -1,39 +1,43 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/status-badge";
 import type { AuditStatus } from "@/lib/types/audit-types";
-import { cn } from "@/lib/utils";
+import { normalizeStatus } from "@/lib/statuses";
 
 interface AuditStatusBadgeProps {
   status: AuditStatus;
   className?: string;
+  size?: "sm" | "md" | "lg" | "xl";
+  showTooltip?: boolean;
 }
 
-export function AuditStatusBadge({ status, className }: AuditStatusBadgeProps) {
-  const config = {
-    planned: {
-      label: "Planned",
-      className: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-    },
-    "in-progress": {
-      label: "In Progress",
-      className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-    },
-    completed: {
-      label: "Completed",
-      className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
-    },
-    cancelled: {
-      label: "Cancelled",
-      className: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-    },
-  };
-
-  const { label, className: statusClassName } = config[status] || config.planned;
+/**
+ * Audit Status Badge Component
+ *
+ * Wrapper around StatusBadge for audit statuses.
+ * Normalizes legacy kebab-case statuses to standardized UPPER_SNAKE_CASE.
+ *
+ * @deprecated Use StatusBadge directly. This component is provided for backward compatibility.
+ *
+ * @example
+ * <AuditStatusBadge status="DRAFT" />
+ * <AuditStatusBadge status="in-progress" /> // Legacy format - still supported
+ */
+export function AuditStatusBadge({
+  status,
+  className,
+  size = "sm",
+  showTooltip
+}: AuditStatusBadgeProps) {
+  // Normalize legacy kebab-case statuses to UPPER_SNAKE_CASE
+  const normalizedStatus = normalizeStatus(status) || status.toUpperCase();
 
   return (
-    <Badge variant="outline" className={cn(statusClassName, className)}>
-      {label}
-    </Badge>
+    <StatusBadge
+      status={normalizedStatus}
+      size={size}
+      className={className}
+      showTooltip={showTooltip}
+    />
   );
 }

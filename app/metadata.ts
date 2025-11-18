@@ -8,11 +8,7 @@ export const defaultMetadata: Metadata = {
   authors: [{ name: "Infratel" }],
   generator: "Next.js",
   icons: {
-    icon: [
-    { rel: "icon", url: "/favicon.svg", type: "image/svg+xml" },
-    { rel: "icon", url: "/favicon.png", type: "image/png" },
-  ],
-    apple: "/apple-icon.png"
+    icon: "/favicon.ico"
   },
   openGraph: {
     title: "Infratel IAMS - Audit & Risk Management System",

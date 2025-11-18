@@ -1,34 +1,30 @@
 "use client";
-import { Plus, Trash2, GitBranchPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { GitBranchPlus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Transition, Condition, Permission, Action } from "@/lib/types/workflow";
-import { RuleBuilder } from "./rule-builder";
+import { Transition, Permission, Action, State, Condition } from "@/lib/types/workflow";
 import PageHeader from "@/components/page-header";
-import CustomAlert from "@/components/ui/custom-alert";
 import { SelectField } from "@/components/ui/select-field";
 import { MultiSelectField } from "@/components/ui/multi-select-field";
-import { useState, useEffect } from "react";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useState, useEffect, useMemo } from "react";
+import { useRoles } from "@/hooks/use-query-data";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
+import {
+  createWorkflowTransition,
+  updateWorkflowTransition
+} from "@/app/_actions/workflow-actions";
+import type { Role } from "@/lib/types/account";
 
 interface TransitionPanelProps {
   transition: Transition | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (transition: Transition) => void;
+  states?: State[];
+  workflowId?: string;
 }
-
-// Available roles - TODO: fetch from API
-const AVAILABLE_ROLES = [
-  { id: "ADMIN", name: "ADMIN" },
-  { id: "AUDITOR", name: "AUDITOR" },
-  { id: "HIAR", name: "HIAR" },
-  { id: "CEO", name: "CEO" },
-  { id: "MANAGER", name: "MANAGER" },
-  { id: "VIEWER", name: "VIEWER" }
-];
 
 const ACTION_TYPES = [
   { value: "send_email", label: "Send Email" },
@@ -37,73 +33,138 @@ const ACTION_TYPES = [
   { value: "trigger_webhook", label: "Trigger Webhook" }
 ];
 
+// Status options will be generated from workflow states, not STANDARD_STATUSES
+// This allows dynamic workflow states instead of hardcoded statuses
+
 export const TransitionPanel = ({
   transition,
   isOpen,
   onClose,
-  onUpdate
+  onUpdate,
+  states = []
 }: TransitionPanelProps) => {
   const [localTransition, setLocalTransition] = useState<Transition | null>(transition);
-  const [actionNameInput, setActionNameInput] = useState("");
+  const [selectedFromStatus, setSelectedFromStatus] = useState("");
+  const [selectedToStatus, setSelectedToStatus] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
 
-  // Debounce action name to avoid excessive updates
-  const debouncedActionName = useDebounce(actionNameInput, 5000);
+  // Fetch available roles from API
+  const { data: rolesResponse, isLoading: rolesLoading } = useRoles({ is_Active: true });
 
-  // Sync local state with prop changes
+  // Convert fetched roles to SelectField options
+  const roleOptions: Array<{ id: string; name: string }> = useMemo(
+    () =>
+      rolesResponse?.success && rolesResponse?.data?.data
+        ? rolesResponse.data.data.map((role: Role) => ({
+            id: role.id, // ✅ Use role ID, not name
+            name: role.name
+          }))
+        : [],
+    [rolesResponse]
+  );
+
+  // Generate status options from workflow states
+  // Each state name becomes an option that users can select for from_status and to_status
+  const stateStatusOptions = useMemo(
+    () =>
+      (states || [])
+        .filter((state) => state._changeType !== "deleted")
+        .map((state) => ({
+          id: state.name, // Use state name as the ID (this will be from_status/to_status value)
+          name: state.name // Display the state name
+        })),
+    [states]
+  );
+
+  // Filter options to prevent selecting the same state twice
+  const fromStatusOptions = stateStatusOptions.filter(
+    (option) => option.id !== selectedToStatus || !selectedToStatus
+  );
+
+  const toStatusOptions = stateStatusOptions.filter(
+    (option) => option.id !== selectedFromStatus || !selectedFromStatus
+  );
+
+  // Sync local state with prop changes and set defaults for new transitions
+  // Note: Added isOpen to dependency array to ensure initialization runs when panel reopens
   useEffect(() => {
     setLocalTransition(transition);
-    if (transition) {
-      setActionNameInput(transition.action_name);
-    }
-  }, [transition]);
+    if (transition && isOpen) {
+      let fromStatusValue = "";
+      let toStatusValue = "";
 
-  // Update parent when debounced value changes
-  useEffect(() => {
-    if (localTransition && debouncedActionName !== localTransition.action_name) {
-      handleUpdate({ action_name: debouncedActionName });
+      // Get from_state_id and to_state_id and find their corresponding state names
+      if (transition.from_state_id && transition.to_state_id) {
+        const fromState = states?.find((s) => s.id === transition.from_state_id);
+        const toState = states?.find((s) => s.id === transition.to_state_id);
+
+        if (fromState) {
+          fromStatusValue = fromState.name; // State name is the from_status value
+        }
+        if (toState) {
+          toStatusValue = toState.name; // State name is the to_status value
+        }
+      }
+
+      setSelectedFromStatus(fromStatusValue);
+      setSelectedToStatus(toStatusValue);
+      setSelectedRoleId(transition.required_role_id || "");
     }
-  }, [debouncedActionName]);
+  }, [transition, states, isOpen]);
 
   if (!localTransition) return null;
 
-  const handleUpdate = (updates: Partial<Transition>) => {
+  // Update local state without immediately calling parent
+  const updateLocalTransition = (updates: Partial<Transition>) => {
     const updated = { ...localTransition, ...updates };
     setLocalTransition(updated);
-    onUpdate(updated);
   };
 
-  const addPermission = () => {
-    const newPermission: Permission = {
-      id: `perm-${Date.now()}`,
-      role: ""
-    };
-    handleUpdate({ permissions: [...localTransition.permissions, newPermission] });
+  // Save all changes and close panel
+  const handleSave = () => {
+    if (!localTransition) return;
+
+    // Validation: Prevent saving if from_status and to_status are the same
+    if (selectedFromStatus && selectedToStatus && selectedFromStatus === selectedToStatus) {
+      toast.error("From State and To State cannot be the same");
+      return;
+    }
+
+    // Validation: Both states must be selected
+    if (!selectedFromStatus || !selectedToStatus) {
+      toast.error("Both From State and To State must be selected");
+      return;
+    }
+
+    // Validation: Role must be selected
+    if (!selectedRoleId) {
+      toast.error("A role must be selected for this transition");
+      return;
+    }
+
+    onUpdate(localTransition);
+    onClose();
   };
 
-  const updatePermission = (id: string, role: string) => {
-    handleUpdate({
-      permissions: localTransition.permissions.map((p) => (p.id === id ? { ...p, role } : p))
-    });
-  };
-
-  const deletePermission = (id: string) => {
-    handleUpdate({
-      permissions: localTransition.permissions.filter((p) => p.id !== id)
+  const handleRoleChange = (roleId: string) => {
+    setSelectedRoleId(roleId);
+    updateLocalTransition({
+      required_role_id: roleId
     });
   };
 
   const addCondition = (condition: Condition) => {
-    handleUpdate({ conditions: [...localTransition.conditions, condition] });
+    updateLocalTransition({ conditions: [...localTransition.conditions, condition] });
   };
 
   const updateCondition = (id: string, updates: Partial<Condition>) => {
-    handleUpdate({
+    updateLocalTransition({
       conditions: localTransition.conditions.map((c) => (c.id === id ? { ...c, ...updates } : c))
     });
   };
 
   const deleteCondition = (id: string) => {
-    handleUpdate({
+    updateLocalTransition({
       conditions: localTransition.conditions.filter((c) => c.id !== id)
     });
   };
@@ -124,12 +185,12 @@ export const TransitionPanel = ({
         }
       );
     });
-    handleUpdate({ actions: newActions });
+    updateLocalTransition({ actions: newActions });
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full overflow-y-auto p-0 pt-4 sm:max-w-xl">
+      <SheetContent className="w-full overflow-y-auto p-0 pt-4 sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>
             <PageHeader
@@ -141,60 +202,129 @@ export const TransitionPanel = ({
         </SheetHeader>
 
         <div className="space-y-6 px-6">
-          {/* Action Name */}
+          {/* From Status */}
           <div className="space-y-2">
-            <Input
-              label="Action Name"
-              id="action-name"
-              value={actionNameInput}
-              onChange={(e) => setActionNameInput(e.target.value)}
-              placeholder="e.g., APPROVE_HIAR"
-              descriptionText="The action trigger name for this transition"
+            <SelectField
+              id="from-state"
+              label="From State"
+              options={fromStatusOptions}
+              value={selectedFromStatus}
+              onValueChange={(value) => {
+                setSelectedFromStatus(value);
+                if (!localTransition) return;
+
+                // value is the state name (e.g., "Staff Submit")
+                // Find the state with that name
+                const matchingState = states.find(
+                  (s) => s._changeType !== "deleted" && s.name === value
+                );
+                const fromStateId = matchingState?.id;
+
+                // Update transition_name based on selected statuses
+                // Format: "State Name-|-Other State Name"
+                // Use the new value for fromStatus since we just updated it
+                const toStatus = selectedToStatus || "";
+                const newTransitionName = toStatus ? `${value}-|-${toStatus}` : `${value}-|-`;
+
+                const updatedTransition = {
+                  ...localTransition,
+                  ...(fromStateId && { from_state_id: fromStateId }), // Only update state ID if found
+                  transition_name: newTransitionName,
+                  _changeType: (localTransition._changeType === "synced"
+                    ? "modified"
+                    : localTransition._changeType) as any
+                };
+
+                setLocalTransition(updatedTransition);
+              }}
+              placeholder="Select initial state..."
+              listItemName="name"
+              className="w-full"
               required
             />
-          </div>
-
-          {/* Permissions / Required Roles */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Required Roles</Label>
-              <Button size="sm" variant="outline" type="button" onClick={addPermission}>
-                <Plus className="mr-1 h-3 w-3" />
-                Add Role
-              </Button>
-            </div>
-
-            {localTransition.permissions.length === 0 ? (
-              <CustomAlert type="info" message="No role requirements" />
-            ) : (
-              <div className="space-y-2">
-                {localTransition.permissions.map((permission) => (
-                  <div key={permission.id} className="flex items-center gap-2">
-                    <SelectField
-                      options={AVAILABLE_ROLES}
-                      value={permission.role}
-                      onValueChange={(value) => updatePermission(permission.id, value)}
-                      placeholder="Select role..."
-                      className="w-full flex-1"
-                      listItemName="name"
-                    />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      type="button"
-                      onClick={() => deletePermission(permission.id)}>
-                      <Trash2 className="text-destructive h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
             <p className="text-muted-foreground text-xs">
-              Specify which roles can execute this transition
+              The state this transition originates from
             </p>
           </div>
 
-          {/* Conditions */}
+          {/* To Status */}
+          <div className="space-y-2">
+            <SelectField
+              id="to-state"
+              label="To State"
+              placeholder="-- Select Destination State --"
+              className="w-full"
+              options={toStatusOptions}
+              value={selectedToStatus}
+              onValueChange={(value) => {
+                setSelectedToStatus(value);
+                if (!localTransition) return;
+
+                // value is the state name (e.g., "Supervisor Review")
+                // Find the state with that name
+                const matchingState = states.find(
+                  (s) => s._changeType !== "deleted" && s.name === value
+                );
+                const toStateId = matchingState?.id;
+
+                // Update transition_name based on selected statuses
+                // Format: "State Name-|-Other State Name"
+                // Use the new value for toStatus since we just updated it
+                const fromStatus = selectedFromStatus || "";
+                const newTransitionName = fromStatus ? `${fromStatus}-|-${value}` : `-|-${value}`;
+
+                const updatedTransition = {
+                  ...localTransition,
+                  ...(toStateId && { to_state_id: toStateId }), // Only update state ID if found
+                  transition_name: newTransitionName,
+                  _changeType: (localTransition._changeType === "synced"
+                    ? "modified"
+                    : localTransition._changeType) as any
+                };
+
+                setLocalTransition(updatedTransition);
+              }}
+              listItemName="name"
+              required
+            />
+            <p className="text-muted-foreground text-xs">The state this transition moves to</p>
+          </div>
+
+          {/* Status Change Indicator */}
+          {selectedFromStatus && selectedToStatus && (
+            <div className="rounded-lg border border-dashed p-3">
+              {selectedFromStatus === selectedToStatus ? (
+                <p className="text-sm font-medium text-amber-600">
+                  ⚠️ No Status Change - This transition stays in the same state
+                </p>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Transition: {selectedFromStatus} → {selectedToStatus}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Required Role */}
+          <div className="space-y-2">
+            <SelectField
+              id="required-role"
+              label="Required User Role"
+              options={roleOptions}
+              value={selectedRoleId}
+              onValueChange={handleRoleChange}
+              placeholder={rolesLoading ? "Loading roles..." : "Select role..."}
+              listItemName="name"
+              disabled={rolesLoading}
+              className="w-full"
+            />
+            <p className="text-muted-foreground text-xs">
+              The role that can execute this transition
+            </p>
+          </div>
+
+          {/* Conditions - Commented Out */}
+          {/*
           <div className="space-y-3">
             <Label>Conditions</Label>
             <RuleBuilder
@@ -207,9 +337,10 @@ export const TransitionPanel = ({
               Define rules that must be met for this transition to execute
             </p>
           </div>
+          */}
 
           {/* Post-Transition Actions */}
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <Label>Post-Transition Actions</Label>
             <MultiSelectField
               options={ACTION_TYPES}
@@ -221,6 +352,21 @@ export const TransitionPanel = ({
             <p className="text-muted-foreground text-xs">
               Actions that will be executed after this transition completes
             </p>
+          </div> */}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-6">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="flex-1"
+              disabled={
+                !selectedFromStatus || !selectedToStatus || selectedFromStatus === selectedToStatus
+              }>
+              Save Transition
+            </Button>
           </div>
         </div>
       </SheetContent>

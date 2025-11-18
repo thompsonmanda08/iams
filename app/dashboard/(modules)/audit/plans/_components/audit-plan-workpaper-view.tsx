@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 import {
   Calendar,
   Users,
@@ -40,6 +41,7 @@ import { AuditPlanApprovalsPanel } from "./audit-plan-approvals-panel";
 import { cn, notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
 import { submitAuditPlanForApproval, deleteAuditPlan } from "@/app/_actions/audit-module-actions";
+import { StatusBadge } from "@/components/status-badge";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -71,6 +73,7 @@ export function AuditPlanWorkpaperView({
   const [editingFinding, setEditingFinding] = useState<any>(null);
   const [auditPlanData, setAuditPlanData] = useState(auditPlan);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
 
   // Submit for approval mutation
   const submitMutation = useMutation({
@@ -88,6 +91,12 @@ export function AuditPlanWorkpaperView({
         });
         // Update local state - set status to SUBMITTED
         setAuditPlanData((prev) => ({ ...prev, status: "SUBMITTED" }));
+      } else {
+        notify({
+          title: "Error",
+          description: response.message || "Failed to submit audit plan for approval",
+          type: "error"
+        });
       }
     },
     onError: (error: any) => {
@@ -254,7 +263,7 @@ export function AuditPlanWorkpaperView({
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="text-foreground text-3xl font-bold">{auditPlan?.ref_no}</div>
-                <AuditPlanStatusBadge status={auditPlan.status} />
+                <StatusBadge status={auditPlan.status} />
               </div>
               <h1 className="text-foreground text-2xl font-bold">{auditPlan.title}</h1>
               <p className="text-muted-foreground">{auditPlan.description}</p>
@@ -281,7 +290,7 @@ export function AuditPlanWorkpaperView({
                     <Button
                       size="sm"
                       className="gap-2"
-                      onClick={() => submitMutation.mutate()}
+                      onClick={() => setSubmitConfirmationOpen(true)}
                       disabled={submitMutation.isPending}
                       isLoading={submitMutation.isPending}
                       loadingText="Submitting...">
@@ -796,6 +805,21 @@ export function AuditPlanWorkpaperView({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Submit for Approval Confirmation Modal */}
+      <ConfirmationModal
+        open={submitConfirmationOpen}
+        onOpenChange={setSubmitConfirmationOpen}
+        onConfirm={() => {
+          submitMutation.mutate();
+          setSubmitConfirmationOpen(false);
+        }}
+        title="Submit for Approval?"
+        description="Are you sure you want to submit this audit plan for approval? This will send it to HIAR for review."
+        confirmText="Submit"
+        type="default"
+        isLoading={submitMutation.isPending}
+      />
     </div>
   );
 }

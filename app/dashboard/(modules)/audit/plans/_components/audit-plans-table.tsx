@@ -148,9 +148,9 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
               </TableCell>
               <TableCell>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">{plan.audit_team_leader}</p>
+                  <p className="text-sm font-medium">{plan.team_leader?.name}</p>
                   <p className="text-muted-foreground text-xs">
-                    {plan.audit_team_members?.length || 0} member
+                    {plan.audit_team_members?.length || 0} Team member
                     {plan.audit_team_members?.length !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -166,9 +166,7 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
               <TableCell>
                 <div className="w-32 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {(plan as any).progress || 0}%
-                    </span>
+                    <span className="text-muted-foreground">{(plan as any).progress || 0}%</span>
                     {(plan as any).conformityRate && (
                       <span className="text-green-600">
                         {(plan as any).conformityRate}% conform

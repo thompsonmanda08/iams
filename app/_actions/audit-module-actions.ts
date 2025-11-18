@@ -1134,11 +1134,10 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
     return handleBadRequest("Audit plan ID is required");
   }
 
+  const url = `/api/v1/audit-plans/${auditPlanId}/submit-for-approval`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/audit-plans/${auditPlanId}/submit`
-    });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
@@ -1147,8 +1146,8 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
   } catch (error: any) {
     return handleError(
       error,
-      "POST | SUBMIT AUDIT PLAN",
-      `/api/v1/audit-plans/${auditPlanId}/submit`
+      "GET | SUBMIT AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/submit-for-approval`
     );
   }
 }
@@ -1975,6 +1974,58 @@ export async function deleteUniverseItem(
       error,
       "DELETE | DELETE UNIVERSE ITEM",
       `/api/v1/audit/universe-items/${itemId}`
+    );
+  }
+}
+
+/**
+ * Submit budget for approval
+ */
+export async function submitBudgetForApproval(budgetId: string): Promise<APIResponse> {
+  if (!budgetId) {
+    return handleBadRequest("Budget ID is required");
+  }
+
+  const url = `/api/v1/audit/budgets/${budgetId}/submit-for-approval`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    revalidatePath("/dashboard/audit/budgets");
+    revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
+
+    return successResponse(response.data, "Budget submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | SUBMIT BUDGET",
+      url
+    );
+  }
+}
+
+/**
+ * Submit universe for approval
+ */
+export async function submitUniverseForApproval(universeId: string): Promise<APIResponse> {
+  if (!universeId) {
+    return handleBadRequest("Universe ID is required");
+  }
+
+  const url = `/api/v1/audit/universes/${universeId}/submit-for-approval`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    revalidatePath("/dashboard/audit/universe");
+    revalidatePath(`/dashboard/audit/universe/${universeId}`);
+
+    return successResponse(response.data, "Universe submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | SUBMIT UNIVERSE",
+      url
     );
   }
 }

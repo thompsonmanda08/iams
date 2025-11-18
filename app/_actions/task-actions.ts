@@ -11,7 +11,6 @@
 
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
-import type { Task, TaskActionRequest, TaskFilters } from "@/lib/types/task";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
 
@@ -22,21 +21,23 @@ import authenticatedApiClient from "./api-config";
 /**
  * Get all tasks with optional filters
  */
-export async function getTasks(filters?: TaskFilters): Promise<APIResponse> {
+export async function getTasks(filters?: {
+  page: string;
+  page_size: string;
+  workflow_id: string;
+  entity_id: string;
+}): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.entityType) params.append("entity_type", filters.entityType);
-    if (filters?.assignedUserId) params.append("assigned_user_id", filters.assignedUserId);
-    if (filters?.requiredRole) params.append("required_role", filters.requiredRole);
+    if (filters?.page) params.append("page", filters.page);
+    if (filters?.page_size) params.append("page_size", filters.page_size);
+    if (filters?.workflow_id) params.append("workflow_id", filters.workflow_id);
+    if (filters?.entity_id) params.append("entity_id", filters.entity_id);
 
     const queryString = params.toString();
-    const url = `/api/v1/workflow/tasks${queryString ? `?${queryString}` : ""}`;
+    const url = `/api/v1/simple-workflows/instances${queryString ? `?${queryString}` : ""}`;
 
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url
-    });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     return successResponse(response.data?.data || [], "Tasks fetched successfully");
   } catch (error: any) {
@@ -52,11 +53,10 @@ export async function getTask(id: string): Promise<APIResponse> {
     return handleBadRequest("Task ID is required");
   }
 
+  const url = `/api/v1/simple-workflows/instances/${id}`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/workflow/tasks/${id}`
-    });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     return successResponse(response.data, "Task fetched successfully");
   } catch (error: any) {
@@ -65,70 +65,42 @@ export async function getTask(id: string): Promise<APIResponse> {
 }
 
 /**
- * Get tasks assigned to current user
- */
-export async function getMyTasks(filters?: Omit<TaskFilters, "assignedUserId">): Promise<APIResponse> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.entityType) params.append("entity_type", filters.entityType);
-    if (filters?.requiredRole) params.append("required_role", filters.requiredRole);
-
-    const queryString = params.toString();
-    const url = `/api/v1/workflow/tasks/my-tasks${queryString ? `?${queryString}` : ""}`;
-
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url
-    });
-
-    return successResponse(response.data?.data || [], "My tasks fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | MY TASKS", "/api/v1/workflow/tasks/my-tasks");
-  }
-}
-
-/**
  * Approve a task
  */
-export async function approveTask(taskId: string, comment?: string): Promise<APIResponse> {
-  if (!taskId) {
+export async function approveTask(instance_id: string, remarks?: string): Promise<APIResponse> {
+  if (!instance_id) {
     return handleBadRequest("Task ID is required");
   }
 
+  const url = `/api/v1/simple-workflows/instances/${instance_id}/approve`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/workflow/tasks/${taskId}/approve`,
-      data: { comment }
-    });
+    const response = await authenticatedApiClient({ method: "POST", url, data: { remarks } });
 
     revalidatePath("/dashboard/audit/tasks");
     return successResponse(response.data, "Task approved successfully");
   } catch (error: any) {
-    return handleError(error, "POST | APPROVE TASK", `/api/v1/workflow/tasks/${taskId}/approve`);
+    return handleError(error, "POST | APPROVE TASK", url);
   }
 }
 
 /**
  * Reject a task
  */
-export async function rejectTask(taskId: string, comment?: string): Promise<APIResponse> {
-  if (!taskId) {
+export async function rejectTask(instance_id: string, remarks?: string): Promise<APIResponse> {
+  if (!instance_id) {
     return handleBadRequest("Task ID is required");
   }
 
+  const url = `/api/v1/simple-workflows/instances/${instance_id}/reject`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/workflow/tasks/${taskId}/reject`,
-      data: { comment }
-    });
+    const response = await authenticatedApiClient({ method: "POST", url, data: { remarks } });
 
     revalidatePath("/dashboard/audit/tasks");
     return successResponse(response.data, "Task rejected successfully");
   } catch (error: any) {
-    return handleError(error, "POST | REJECT TASK", `/api/v1/workflow/tasks/${taskId}/reject`);
+    return handleError(error, "POST | REJECT TASK", url);
   }
 }
 
@@ -136,24 +108,24 @@ export async function rejectTask(taskId: string, comment?: string): Promise<APIR
  * Reassign a task to another user
  */
 export async function reassignTask(
-  taskId: string,
-  reassignToUserId: string,
+  instance_id: string,
+  require_role_id: string,
   comment?: string
 ): Promise<APIResponse> {
-  if (!taskId) {
+  if (!instance_id) {
     return handleBadRequest("Task ID is required");
   }
 
-  if (!reassignToUserId) {
+  if (!require_role_id) {
     return handleBadRequest("User ID to reassign to is required");
   }
 
   try {
     const response = await authenticatedApiClient({
       method: "POST",
-      url: `/api/v1/workflow/tasks/${taskId}/reassign`,
+      url: `/api/v1/workflow/tasks/${instance_id}/reassign`,
       data: {
-        reassign_to_user_id: reassignToUserId,
+        reassign_to_user_id: require_role_id,
         comment
       }
     });
@@ -161,17 +133,26 @@ export async function reassignTask(
     revalidatePath("/dashboard/audit/tasks");
     return successResponse(response.data, "Task reassigned successfully");
   } catch (error: any) {
-    return handleError(error, "POST | REASSIGN TASK", `/api/v1/workflow/tasks/${taskId}/reassign`);
+    return handleError(
+      error,
+      "POST | REASSIGN TASK",
+      `/api/v1/workflow/tasks/${instance_id}/reassign`
+    );
   }
 }
 
 /**
  * Execute task action (approve, reject, or reassign)
  */
-export async function executeTaskAction(request: TaskActionRequest): Promise<APIResponse> {
-  const { taskId, action, comment, reassignToUserId } = request;
+export async function executeTaskAction(request: {
+  instance_id: string;
+  action: string;
+  require_role_id: string;
+  comment?: string;
+}): Promise<APIResponse> {
+  const { instance_id, action, comment, require_role_id } = request;
 
-  if (!taskId) {
+  if (!instance_id) {
     return handleBadRequest("Task ID is required");
   }
 
@@ -181,16 +162,16 @@ export async function executeTaskAction(request: TaskActionRequest): Promise<API
 
   switch (action) {
     case "APPROVE":
-      return approveTask(taskId, comment);
+      return approveTask(instance_id, comment);
 
     case "REJECT":
-      return rejectTask(taskId, comment);
+      return rejectTask(instance_id, comment);
 
     case "REASSIGN":
-      if (!reassignToUserId) {
+      if (!require_role_id) {
         return handleBadRequest("User ID to reassign to is required for REASSIGN action");
       }
-      return reassignTask(taskId, reassignToUserId, comment);
+      return reassignTask(instance_id, require_role_id, comment);
 
     default:
       return handleBadRequest(`Invalid action: ${action}`);
@@ -198,16 +179,16 @@ export async function executeTaskAction(request: TaskActionRequest): Promise<API
 }
 
 /**
- * Get task statistics for current user
+ * Get task statistics for current user (MOCK)
  */
 export async function getTaskStats(): Promise<APIResponse> {
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: "/api/v1/workflow/tasks/stats"
-    });
+    // const response = await authenticatedApiClient({
+    //   method: "GET",
+    //   url: "/api/v1/workflow/tasks/stats"
+    // });
 
-    return successResponse(response.data, "Task statistics fetched successfully");
+    return successResponse([], "Task statistics fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | TASK STATS", "/api/v1/workflow/tasks/stats");
   }

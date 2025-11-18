@@ -1,46 +1,52 @@
-import { EntityType } from "./workflow";
+/**
+ * Task Management Types
+ *
+ * These types represent workflow task instances and their related entities.
+ * Tasks are generated when a workflow requires user action (approve/reject transitions).
+ *
+ * @module task-types
+ */
 
-export type TaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
+import { StandardStatus } from "../statuses";
+import { EntityType, WorkflowTriggerType } from "./workflow";
 
-export type TaskAction = "APPROVE" | "REJECT" | "REASSIGN";
-
-export interface Task {
+/**
+ * Workflow instance - represents a specific instance of a workflow execution
+ */
+export interface WorkflowInstance {
   id: string;
-  workflowId: string;
-  workflowName: string;
-  transitionId: string;
-  actionName: string;
-  entityType: EntityType;
-  entityId: string;
-  entityName: string;
-  assignedUserId: string;
-  assignedUserName: string;
-  assignedUserEmail: string;
-  requiredRole: string;
-  status: TaskStatus;
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-  completedByUserId?: string;
-  completedByUserName?: string;
-  metadata?: {
-    currentState?: string;
-    targetState?: string;
-    conditions?: Record<string, any>;
-    [key: string]: any;
-  };
+  workflow_id: string;
+  organization_id: string;
+  entity_type: WorkflowTriggerType;
+  entity_id: string;
+  status: StandardStatus;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  [x: string]: any;
 }
 
-export interface TaskActionRequest {
-  taskId: string;
-  action: TaskAction;
-  comment?: string;
-  reassignToUserId?: string;
+/**
+ * Entity - represents the entity being processed in the workflow
+ */
+export interface Entity {
+  id: string;
+  status?: StandardStatus;
+  title?: string;
+  name?: string | EntityType;
+  total_amount?: string;
+  year?: number;
+  [x: string]: any;
 }
 
-export interface TaskFilters {
-  status?: TaskStatus;
-  entityType?: EntityType;
-  assignedUserId?: string;
-  requiredRole?: string;
+/**
+ * Task - represents a workflow task with instance and entity information
+ * This is the main type used in the tasks page and components
+ */
+export interface Task {
+  instance: WorkflowInstance;
+  entity: Entity;
+  entity_type: EntityType;
+  status: StandardStatus;
+  entity_name: string;
 }

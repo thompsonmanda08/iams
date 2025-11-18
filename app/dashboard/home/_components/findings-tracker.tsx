@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Finding {
@@ -91,10 +92,7 @@ export default function FindingsTracker({ findings }: FindingsTrackerProps) {
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span
-                      className={`rounded px-2 py-1 text-xs font-semibold ${getStatusColor(finding.status)}`}>
-                      {finding.status}
-                    </span>
+                    <StatusBadge status={finding.status} />
                     {daysOverdue < 0 && (
                       <span className="text-destructive text-xs font-medium">
                         {Math.abs(daysOverdue)} days overdue

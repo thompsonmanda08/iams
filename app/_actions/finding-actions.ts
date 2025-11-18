@@ -1,5 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import type { APIResponse } from "@/lib/types";
+import { handleBadRequest, handleError, successResponse } from "./api-config";
+import authenticatedApiClient from "./api-config";
 import {
   updateFinding,
   updateFindingStatus,
@@ -207,5 +211,31 @@ export async function handleGetFindingsByCategory(
     return response.data;
   } catch (error: any) {
     throw new Error(error.message || "Error fetching category findings");
+  }
+}
+
+/**
+ * Submit working paper findings for approval
+ */
+export async function submitWorkingPaperFindingsForApproval(workingPaperId: string): Promise<APIResponse> {
+  if (!workingPaperId) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
+  const url = `/api/v1/working-paper-findings/${workingPaperId}/submit-for-approval`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    revalidatePath("/dashboard/audit/workpapers");
+    revalidatePath(`/dashboard/audit/workpapers/${workingPaperId}`);
+
+    return successResponse(response.data, "Working paper findings submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | SUBMIT WORKING PAPER FINDINGS",
+      url
+    );
   }
 }

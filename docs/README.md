@@ -39,7 +39,11 @@ Welcome to the INFRATEL IAMS (Integrated Audit and Risk Management System) docum
 - **[Audit Plans](features/audit-plans/)** - 🟠 85% Complete
 - **[Budgets](features/budgets/)** - ✅ 100% Complete
 - **[Risk Management](features/risk-management/)** - ✅ 100% Complete
-- **[Workflows](features/workflows/)** - ⚠️ 50% Complete
+- **[Workflows](features/workflows/)**
+  - 📊 [WORKFLOW_README.md](features/workflows/WORKFLOW_README.md) - Navigation hub for workflow docs
+  - 📈 [WORKFLOW_STATUS.md](features/workflows/WORKFLOW_STATUS.md) - Implementation status (67% complete)
+  - 🛠️ [WORKFLOW_IMPLEMENTATION_GUIDE.md](features/workflows/WORKFLOW_IMPLEMENTATION_GUIDE.md) - Step-by-step UI guide
+  - 🔍 [WORKFLOW_EDITOR_AUDIT.md](features/workflows/WORKFLOW_EDITOR_AUDIT.md) - Complete data flow reference
 - **[Admin](features/admin/)** - ✅ 95% Complete
 - [FEATURES_OVERVIEW.md](features/FEATURES_OVERVIEW.md) - High-level feature matrix
 
@@ -63,7 +67,8 @@ Welcome to the INFRATEL IAMS (Integrated Audit and Risk Management System) docum
 | Risk Management | ✅ 100% | [features/risk-management/](features/risk-management/) |
 | Budgets | ✅ 100% | [features/budgets/](features/budgets/) |
 | Admin/Config | ✅ 95% | [features/admin/](features/admin/) |
-| Workflows | ⚠️ 50% | [features/workflows/](features/workflows/) |
+| Workflows - Backend | ✅ 100% | [features/workflows/WORKFLOW_STATUS.md](features/workflows/WORKFLOW_STATUS.md) |
+| Workflows - UI | 🟡 50% | [features/workflows/WORKFLOW_IMPLEMENTATION_GUIDE.md](features/workflows/WORKFLOW_IMPLEMENTATION_GUIDE.md) |
 | API Integration | ✅ 113% | [api/INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md) |
 | Testing | ❌ None | [RECOMMENDATIONS_FOR_FUTURE.md](RECOMMENDATIONS_FOR_FUTURE.md) |
 
@@ -76,7 +81,13 @@ Welcome to the INFRATEL IAMS (Integrated Audit and Risk Management System) docum
 2. Review [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)
 3. Follow [development/GETTING_STARTED.md](development/GETTING_STARTED.md)
 
-### Feature Developer
+### Workflow Developer
+1. Start with [features/workflows/WORKFLOW_README.md](features/workflows/WORKFLOW_README.md)
+2. Check [features/workflows/WORKFLOW_STATUS.md](features/workflows/WORKFLOW_STATUS.md) for what's implemented
+3. Follow [features/workflows/WORKFLOW_IMPLEMENTATION_GUIDE.md](features/workflows/WORKFLOW_IMPLEMENTATION_GUIDE.md)
+4. Reference [features/workflows/WORKFLOW_EDITOR_AUDIT.md](features/workflows/WORKFLOW_EDITOR_AUDIT.md) for data flow details
+
+### Other Feature Developer
 1. Check feature README in [features/](features/)
 2. Review [api/INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md)
 3. Reference [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)
@@ -130,6 +141,7 @@ See [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) for details.
 | Authentication Flow | [architecture/AUTHENTICATION.md](architecture/AUTHENTICATION.md) |
 | API Integration | [api/INTEGRATION_GUIDE.md](api/INTEGRATION_GUIDE.md) |
 | Deployment | [deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md) |
+| Workflow Implementation | [features/workflows/WORKFLOW_README.md](features/workflows/WORKFLOW_README.md) |
 | Risk Management | [features/risk-management/README.md](features/risk-management/README.md) |
 | Audit Plans | [features/audit-plans/README.md](features/audit-plans/README.md) |
 | Budgets | [features/budgets/README.md](features/budgets/README.md) |

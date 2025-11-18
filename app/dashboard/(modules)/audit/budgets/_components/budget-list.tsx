@@ -12,16 +12,15 @@ import {
 import { Card } from "@/components/ui/card";
 import { Pencil, Trash2, Wallet, TrendingUp, DollarSign, View } from "lucide-react";
 import { BudgetLinesList } from "./budget-line-list";
-import { BudgetStatusBadge } from "./budget-status-badge";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
-import { BudgetStatus } from "@/lib/types/audit-types";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { deleteBudget } from "@/app/_actions/audit-module-actions";
 import { BudgetEditModal } from "./budget-edit-modal";
+import { StatusBadge } from "@/components/status-badge";
 
 interface BudgetLine {
   id: string;
@@ -270,11 +269,16 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                         </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {budget.department_id ? (
-                          <span className="text-xs font-medium">{budget.department_id.slice(0, 8)}...</span>
-                        ) : (
-                          <span className="text-xs italic opacity-50">No Department</span>
-                        )}
+                        <div>
+                          <p>{budget?.department_name || ""}</p>
+                          {budget.department_id ? (
+                            <span className="text-xs font-medium">
+                              {budget.department_id.slice(0, 8)}...
+                            </span>
+                          ) : (
+                            <span className="text-xs italic opacity-50">No Department</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-lg font-bold">
                         {formatCurrency(budget.total_amount, budget.currency)}
@@ -283,7 +287,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                         <BudgetLinesList budgetLines={budget?.budget_lines || []} />
                       </TableCell>
                       <TableCell>
-                        <BudgetStatusBadge status={budget?.status as BudgetStatus} />
+                        <StatusBadge status={budget?.status} />
                       </TableCell>
                       <TableCell className="text-muted-foreground">{budget.year}</TableCell>
                       <TableCell className="text-muted-foreground">

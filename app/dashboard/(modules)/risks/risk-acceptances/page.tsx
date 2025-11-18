@@ -8,7 +8,8 @@ import {
   FileText,
   Eye,
   Loader2,
-  View
+  View,
+  Send
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,10 +35,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/page-header";
 import Search from "@/components/ui/search-field";
-import { getRiskAcceptances, updateRiskAcceptance } from "@/app/_actions/risk-module-actions";
+import {
+  getRiskAcceptances,
+  updateRiskAcceptance,
+  submitRiskAcceptanceForApproval
+} from "@/app/_actions/risk-module-actions";
 import { toast } from "sonner";
 import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
 import { useRouter } from "next/navigation";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -91,6 +97,8 @@ export default function RiskAcceptanceList() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptances, setAcceptances] = useState<Acceptance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
+  const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
 
   const statusConfig = {
     PENDING: {
@@ -158,7 +166,9 @@ export default function RiskAcceptanceList() {
 
   const handleAcceptanceClick = (acceptance: Acceptance) => {
     setSelectedAcceptance(acceptance);
-    setModalStatus(acceptance.acceptance_status === "PENDING" ? "PENDING" : acceptance.acceptance_status);
+    setModalStatus(
+      acceptance.acceptance_status === "PENDING" ? "PENDING" : acceptance.acceptance_status
+    );
     setShowModal(true);
   };
 
@@ -186,6 +196,28 @@ export default function RiskAcceptanceList() {
       console.error("Error updating acceptance:", err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitAcceptance = async () => {
+    if (!selectedAcceptance) return;
+
+    setIsSubmittingForApproval(true);
+    try {
+      const response = await submitRiskAcceptanceForApproval(selectedAcceptance.id);
+      if (response.success) {
+        toast.success(response.message || "Risk acceptance submitted for approval successfully");
+        setSubmitConfirmationOpen(false);
+        setShowModal(false);
+        setSelectedAcceptance(null);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to submit risk acceptance for approval");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while submitting risk acceptance");
+    } finally {
+      setIsSubmittingForApproval(false);
     }
   };
 
@@ -549,17 +581,43 @@ export default function RiskAcceptanceList() {
           </ScrollArea>
 
           <DialogFooter className="p-6 pt-0">
-            <Button variant="outline" onClick={() => setShowModal(false)} disabled={isSubmitting}>
+            <Button
+              variant="outline"
+              onClick={() => setShowModal(false)}
+              size="sm"
+              disabled={isSubmitting || isSubmittingForApproval}>
               Cancel
             </Button>
+            {selectedAcceptance?.acceptance_status === "PENDING" && (
+              <Button
+                onClick={() => setSubmitConfirmationOpen(true)}
+                className="gap-2"
+                size="sm"
+                disabled={isSubmitting || isSubmittingForApproval}>
+                <Send className="h-4 w-4" />
+                Submit for Approval
+              </Button>
+            )}
             <Button
               onClick={handleStatusUpdate}
-              disabled={isSubmitting || !modalStatus || !remarks.trim()}>
+              size="sm"
+              disabled={isSubmitting || isSubmittingForApproval || !modalStatus || !remarks.trim()}>
               {isSubmitting ? "Updating..." : "Update Status"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Submit for Approval Confirmation Modal */}
+      <ConfirmationModal
+        open={submitConfirmationOpen}
+        onOpenChange={setSubmitConfirmationOpen}
+        onConfirm={handleSubmitAcceptance}
+        title="Submit Risk Acceptance for Approval?"
+        description="You are about to submit this risk acceptance for approval. Once submitted, it will be reviewed by the approval committee."
+        confirmText="Submit"
+        isLoading={isSubmittingForApproval}
+      />
     </div>
   );
 }
