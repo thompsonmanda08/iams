@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { getAuditPlan, getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
+import { getTasks } from "@/app/_actions/task-actions";
 import { AuditPlan } from "@/lib/types/audit-types";
 import { AuditPlanWorkpaperView } from "../_components/audit-plan-workpaper-view";
 import PageHeader from "@/components/page-header";
@@ -33,6 +31,13 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   // Extract findings from workpaper response (they're already included)
   const allFindings = workpaper?.findings || [];
 
+  // Fetch tasks for this audit plan
+  const tasksResponse = await getTasks({
+    entity_id: auditPlanId
+  });
+
+  const tasks = tasksResponse.success ? tasksResponse.data : [];
+
   // console.log("Audit Plan:", auditPlan);
   // console.log("Workpaper:", workpaper);
   // console.log("Findings:", allFindings);
@@ -56,6 +61,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
           auditPlan={auditPlan}
           workpaperCategories={workpaper?.categories}
           findings={allFindings}
+          tasks={tasks}
         />
       </div>
     </div>

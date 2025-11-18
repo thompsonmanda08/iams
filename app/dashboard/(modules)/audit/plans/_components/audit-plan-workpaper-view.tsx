@@ -22,18 +22,15 @@ import {
   FileText,
   CheckCircle2,
   AlertCircle,
-  ChevronRight,
   Download,
   Send,
-  Save,
-  Plus,
   CircleAlertIcon,
   CircleCheckBig,
   FileArchive,
   Trash2
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
-import { AuditPlanStatusBadge } from "@/components/audit/audit-plan-status-badge";
+import type { Task } from "@/lib/types/task";
 import { WorkpaperCategoryPanel } from "./workpaper-category-panel";
 import { FindingForm } from "./finding-form";
 import { FindingsList } from "./findings-list";
@@ -47,6 +44,7 @@ interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
   workpaperCategories: any[];
   findings: any[];
+  tasks?: Task[];
   isLoading?: boolean;
 }
 
@@ -64,7 +62,8 @@ const isCompletedFinding = (finding: any): boolean => {
 export function AuditPlanWorkpaperView({
   auditPlan,
   workpaperCategories,
-  findings
+  findings,
+  tasks = []
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -407,12 +406,12 @@ export function AuditPlanWorkpaperView({
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="findings">
-            <CircleAlertIcon className="mr-2 h-5 w-5" />
-            Findings
+            <CircleAlertIcon className="mr-2 h-5 w-5 text-orange-400" />
+            Audit Execution
           </TabsTrigger>
           <TabsTrigger value="approvals">
-            <CircleCheckBig className="mr-2 h-5 w-5" />
-            Approvals
+            <CircleCheckBig className="mr-2 h-5 w-5 text-green-500" />
+            Audit Approvals
           </TabsTrigger>
         </TabsList>
 
@@ -769,6 +768,7 @@ export function AuditPlanWorkpaperView({
         <TabsContent value="approvals" className="space-y-4">
           <AuditPlanApprovalsPanel
             auditPlan={auditPlanData}
+            tasks={tasks}
             onStatusChange={() => {
               queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
               setAuditPlanData((prev) => ({ ...prev }));

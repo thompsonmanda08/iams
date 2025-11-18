@@ -22,10 +22,10 @@ import authenticatedApiClient from "./api-config";
  * Get all tasks with optional filters
  */
 export async function getTasks(filters?: {
-  page: string;
-  page_size: string;
-  workflow_id: string;
-  entity_id: string;
+  page?: string;
+  page_size?: string;
+  workflow_id?: string;
+  entity_id?: string;
 }): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
@@ -175,6 +175,36 @@ export async function executeTaskAction(request: {
 
     default:
       return handleBadRequest(`Invalid action: ${action}`);
+  }
+}
+
+/**
+ * Get approvals log for a workflow instance
+ */
+export async function getApprovalsLog(
+  instanceId: string,
+  filters?: {
+    page?: string;
+    page_size?: string;
+  }
+): Promise<APIResponse> {
+  if (!instanceId) {
+    return handleBadRequest("Instance ID is required");
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append("page", filters.page);
+    if (filters?.page_size) params.append("page_size", filters.page_size);
+
+    const queryString = params.toString();
+    const url = `/api/v1/simple-workflows/instances/${instanceId}/approvals${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    return successResponse(response.data, "Approvals log fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | APPROVALS LOG", `/api/v1/simple-workflows/instances/${instanceId}/approvals`);
   }
 }
 
