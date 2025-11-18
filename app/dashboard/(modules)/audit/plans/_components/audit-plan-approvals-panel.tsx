@@ -126,19 +126,19 @@ export function AuditPlanApprovalsPanel({
   };
 
   return (
-    <Tabs defaultValue="tasks" className="mt-8 w-full">
+    <Tabs defaultValue="tasks" className="mt-4 w-full">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="tasks">Tasks</TabsTrigger>
         <TabsTrigger value="workflow">Approval Workflow</TabsTrigger>
       </TabsList>
 
       {/* Tasks Tab */}
-      <TabsContent value="tasks" className="mt-8">
+      <TabsContent value="tasks" className="mt-6">
         <AuditPlanTasksPanel auditPlanId={auditPlan.id} tasks={tasks} />
       </TabsContent>
 
       {/* Workflow Approvals Tab */}
-      <TabsContent value="workflow" className="mt-8 space-y-4">
+      <TabsContent value="workflow" className="mt-6 space-y-4">
         {/* Status Alert - Ready for Approval or Awaiting Approval during submission */}
         {canSubmitForApproval && !submittingForApproval && (
           <>
