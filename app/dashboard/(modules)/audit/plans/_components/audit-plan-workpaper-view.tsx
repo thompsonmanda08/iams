@@ -122,6 +122,7 @@ export function AuditPlanWorkpaperView({
           type: "success"
         });
         setDeleteDialogOpen(false);
+        window.location.href = "/dashboard/audit/plans";
         // Optionally navigate away or trigger parent callback
       }
     },

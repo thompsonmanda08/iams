@@ -49,7 +49,7 @@ export function AuditPlanApprovalsPanel({
   const [submittingForApproval, setSubmittingForApproval] = useState(false);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeApprovalRole, setActiveApprovalRole] = useState<ApprovalRole | null>(null); 
+  const [activeApprovalRole, setActiveApprovalRole] = useState<ApprovalRole | null>(null);
 
   const canSubmitForApproval = auditPlan.status?.toUpperCase() === "DRAFT";
   const isInReview = auditPlan.status?.toUpperCase() === "IN_REVIEW";
@@ -99,6 +99,8 @@ export function AuditPlanApprovalsPanel({
       });
       setDeleteDialogOpen(false);
       onStatusChange?.();
+
+      window.location.href = "/dashboard/audit/plans";
     },
     onError: (error: any) => {
       notify({
