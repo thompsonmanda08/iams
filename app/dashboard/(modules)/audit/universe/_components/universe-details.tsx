@@ -72,6 +72,7 @@ interface UniverseItem {
   process_activity: string;
   audit_frequency: string;
   is_active: boolean;
+  name: string;
 }
 
 interface UniverseDetailsProps {
@@ -90,6 +91,7 @@ interface UniverseItemFormData {
   process_activity: string;
   audit_frequency: string;
   is_active: boolean;
+  name: string;
 }
 
 const INIT_ITEM_DATA: UniverseItemFormData = {
@@ -101,6 +103,7 @@ const INIT_ITEM_DATA: UniverseItemFormData = {
   strategic_initiative_id: "",
   risk_id: "",
   process_activity: "",
+  name: "",
   audit_frequency: "ANNUALLY",
   is_active: true
 };
@@ -251,14 +254,15 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
         risk_id: itemData.risk_id || null,
         process_activity: itemData.process_activity,
         audit_frequency: itemData.audit_frequency,
-        is_active: itemData.is_active
+        is_active: itemData.is_active,
+        name: itemData.name
       };
 
       let response;
       if (editingItem) {
-        response = await updateUniverseItem(editingItem.id, itemPayload, universe.id);
+        response = await updateUniverseItem(editingItem.id, itemPayload as any, universe.id);
       } else {
-        response = await createUniverseItem(itemPayload);
+        response = await createUniverseItem(itemPayload as any);
       }
 
       if (response.success) {
@@ -302,7 +306,8 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
       risk_id: item.risk_id || "",
       process_activity: item.process_activity,
       audit_frequency: item.audit_frequency,
-      is_active: item.is_active
+      is_active: item.is_active,
+      name: item.name
     });
     setShowItemForm(true);
   };
@@ -409,13 +414,13 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="process_activity">
+                  <Label htmlFor="name">
                     Process/Activity <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="process_activity"
-                    value={itemData.process_activity}
-                    onChange={(e) => updateItemData({ process_activity: e.target.value })}
+                    value={itemData.name}
+                    onChange={(e) => updateItemData({ name: e.target.value })}
                     placeholder="e.g., Information security policy"
                     required
                   />
@@ -545,7 +550,7 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30">
-                  <TableHead className="font-semibold">Process/Activity</TableHead>
+                  <TableHead className="font-semibold">Universe Item</TableHead>
                   <TableHead className="font-semibold">Department</TableHead>
                   <TableHead className="font-semibold">Audit Frequency</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
@@ -555,7 +560,7 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
               <TableBody>
                 {safeUniverseItems.map((item) => (
                   <TableRow key={item.id} className="hover:bg-muted/20">
-                    <TableCell className="font-medium">{item.process_activity}</TableCell>
+                    <TableCell className="font-medium">{item.name || "unknown"}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {getDepartmentName(item.department_id)}
                     </TableCell>

@@ -1,4 +1,3 @@
-"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RiskOverview from "./risk-overview";
@@ -6,8 +5,35 @@ import KriMonitoring from "./kri-monitoring";
 import AuditStatus from "./audit-status";
 import FindingsTracker from "./findings-tracker";
 import SystemHealth from "./system-health";
+import { getDashboardStats } from "@/app/_actions/reports-actions";
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const data = await getDashboardStats();
+
+  console.log("LOG:", data);
+
+  // Calculate stats
+  const totalRisks = data.data.overview.total_risks || 0;
+  const highRisks = data.data.risk_summary.risks_by_rating.High || 0;
+  const mediumRisks = data.data.risk_summary.risks_by_rating.Normal || 0;
+  const lowRisks = data.data.risk_summary.risks_by_rating.Low || 0;
+
+  const totalKris = data.data.overview.total_kris;
+  const greenKris = data.data.kri_summary.kris_by_status.Green || 0;
+  const amberKris = 0; // Add to API response
+  const redKris = data.data.kri_summary.kris_in_breach;
+
+  const activeAudits = data.data.audit_summary.active_audit_plans;
+  const scheduledAudits =
+    data.data.audit_summary.total_audit_plans -
+    data.data.audit_summary.active_audit_plans -
+    data.data.audit_summary.completed_audit_plans;
+
+  const openFindings = data.data.audit_findings.filter((f:any) => f.status === "OPEN").length;
+  const awaitingResponse = data.data.audit_findings.filter(
+    (f:any) => f.status === "OPEN" && !f.severity
+  ).length;
+
   return (
     <div className="bg-background min-h-screen">
       <main className="container mx-auto space-y-6 py-8">
@@ -21,11 +47,11 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-foreground text-3xl font-bold">48</div>
+                <div className="text-foreground text-3xl font-bold">{totalRisks}</div>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  <span className="text-destructive">12 HIGH</span> •{" "}
-                  <span className="text-amber-active">22 MEDIUM</span> •{" "}
-                  <span className="text-state-node-final">14 LOW</span>
+                  <span className="text-destructive">{highRisks} HIGH</span> •{" "}
+                  <span className="text-amber-active">{mediumRisks} MEDIUM</span> •{" "}
+                  <span className="text-state-node-final">{lowRisks} LOW</span>
                 </p>
               </CardContent>
             </div>
@@ -39,11 +65,11 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-foreground text-3xl font-bold">28</div>
+                <div className="text-foreground text-3xl font-bold">{totalKris}</div>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  <span className="text-state-node-final">18 Green</span> •{" "}
-                  <span className="text-amber-active">7 Amber</span> •{" "}
-                  <span className="text-destructive">3 Red</span>
+                  <span className="text-state-node-final">{greenKris} Green</span> •{" "}
+                  <span className="text-amber-active">{amberKris} Amber</span> •{" "}
+                  <span className="text-destructive">{redKris} Red</span>
                 </p>
               </CardContent>
             </div>
@@ -57,8 +83,10 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-foreground text-3xl font-bold">5</div>
-                <p className="text-muted-foreground mt-1 text-xs">3 in progress • 2 scheduled</p>
+                <div className="text-foreground text-3xl font-bold">{activeAudits}</div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {activeAudits} in progress • {scheduledAudits} scheduled
+                </p>
               </CardContent>
             </div>
           </Card>
@@ -71,8 +99,10 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-foreground text-3xl font-bold">16</div>
-                <p className="text-muted-foreground mt-1 text-xs">4 awaiting response</p>
+                <div className="text-foreground text-3xl font-bold">{openFindings}</div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {awaitingResponse} awaiting response
+                </p>
               </CardContent>
             </div>
           </Card>
@@ -91,36 +121,36 @@ export default function Dashboard() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="mt-6 space-y-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <RiskOverview />
-              <KriMonitoring />
+              <RiskOverview riskSummary={data.data.risk_summary} />
+              <KriMonitoring kriSummary={data.data.kri_summary} />
             </div>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <AuditStatus />
-              <FindingsTracker />
+              <AuditStatus auditSummary={data.data.audit_summary} />
+              <FindingsTracker findings={data.data.audit_findings} />
             </div>
           </TabsContent>
 
           {/* Risk Management Tab */}
           <TabsContent value="risks" className="mt-6 space-y-6">
-            <RiskOverview />
+            <RiskOverview riskSummary={data.data.risk_summary} />
           </TabsContent>
 
           {/* KRI Monitoring Tab */}
           <TabsContent value="kri" className="mt-6 space-y-6">
-            <KriMonitoring />
+            <KriMonitoring kriSummary={data.data.kri_summary} />
           </TabsContent>
 
           {/* Audit & Findings Tab */}
           <TabsContent value="audit" className="mt-6 space-y-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <AuditStatus />
-              <FindingsTracker />
+              <AuditStatus auditSummary={data.data.audit_summary} />
+              <FindingsTracker findings={data.data.audit_findings} />
             </div>
           </TabsContent>
 
           {/* System Health Tab */}
           <TabsContent value="system" className="mt-6 space-y-6">
-            <SystemHealth />
+            <SystemHealth systemHealth={data.data.system_health} />
           </TabsContent>
         </Tabs>
       </main>
