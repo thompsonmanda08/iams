@@ -182,6 +182,9 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   const [count, setCount] = useState(0);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
 
+  // Separate state for dialog rendering - ensures dialog opens immediately
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const loggedIn = session?.accessToken || false;
   const isIdle = state === "Idle";
 
@@ -191,14 +194,16 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
       try {
         const isLocked = await checkScreenLockState();
         if (isLocked && loggedIn) {
-          logger.info("Screen lock state detected from cookie, restoring lock", {
+          logger.info("🔒 Screen lock state detected from cookie, restoring lock", {
             component: "IdleTimerContainer",
             isLocked
           });
           setState("Idle");
+          // Immediately open dialog instead of waiting for state sync
+          setIsDialogOpen(true);
         }
       } catch (error) {
-        logger.error("Error checking persisted lock state", error, {
+        logger.error("❌ Error checking persisted lock state", error, {
           component: "IdleTimerContainer"
         });
       }
@@ -221,11 +226,12 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
       const handleMessage = (event: MessageEvent) => {
         if (event.data.type === "SCREEN_LOCK_CHANGED") {
           const { isLocked } = event.data;
-          logger.info("Screen lock state changed in another tab, syncing", {
+          logger.info("🔄 Screen lock state changed in another tab, syncing", {
             component: "IdleTimerContainer",
             isLocked
           });
           setState(isLocked ? "Idle" : "Active");
+          setIsDialogOpen(isLocked);
         }
       };
 
@@ -293,18 +299,36 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
   const onIdle = async () => {
     try {
+      logger.debug("🔒 Idle timeout detected, attempting to lock screen", {
+        component: "IdleTimerContainer.onIdle"
+      });
+
       // Set screen lock cookie before showing the dialog
-      await lockScreenOnUserIdle(true);
-      logger.info("Screen lock activated", {
-        component: "IdleTimerContainer.onIdle"
+      const lockSuccess = await lockScreenOnUserIdle(true);
+
+      if (!lockSuccess) {
+        logger.error("Failed to activate screen lock - server action returned false", {
+          component: "IdleTimerContainer.onIdle",
+          lockSuccess
+        });
+        toast.error("Failed to lock screen. Please try again.");
+        return;
+      }
+
+      logger.info("✅ Screen lock activated successfully", {
+        component: "IdleTimerContainer.onIdle",
+        lockSuccess
       });
+
       setState("Idle");
+      // Immediately open dialog to ensure it displays without race conditions
+      setIsDialogOpen(true);
     } catch (error) {
-      logger.error("Failed to activate screen lock", error, {
+      logger.error("❌ Exception while activating screen lock", error, {
         component: "IdleTimerContainer.onIdle"
       });
-      // Still mark as idle even if cookie setting fails
-      setState("Idle");
+      toast.error("Error locking screen. Please log out and log back in.");
+      // Do NOT mark as idle on error - let user continue
     }
   };
 
@@ -331,26 +355,44 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
     setIsLoading(true);
     setState("Active");
+    setIsDialogOpen(false);
     setCount(0);
 
     try {
       // Verify screen lock cookie exists before proceeding with logout
       const screenLockExists = await checkScreenLockState();
       if (!screenLockExists) {
-        logger.warn("Screen lock cookie missing during logout attempt", {
+        logger.warn("⚠️ Screen lock cookie missing during logout attempt", {
           component: "IdleTimerContainer.handleUserLogOut",
           screenLockExists
         });
         // Still proceed with logout to ensure proper cleanup
       }
 
+      logger.info("🚪 Logging user out - session timed out", {
+        component: "IdleTimerContainer.handleUserLogOut"
+      });
+
       // Use server action for proper session cleanup (deletes cookies & JWT)
       const response = await logUserOut("User session timed out.");
+
+      if (response.success) {
+        logger.info("✅ Logout successful", {
+          component: "IdleTimerContainer.handleUserLogOut"
+        });
+      } else {
+        logger.warn("⚠️ Logout response indicated failure, but proceeding with redirect", {
+          component: "IdleTimerContainer.handleUserLogOut",
+          response
+        });
+      }
 
       // Redirect to login regardless of response (session is already deleted)
       window.location.replace("/login");
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("❌ Logout error", error, {
+        component: "IdleTimerContainer.handleUserLogOut"
+      });
       // Force redirect even on error
       window.location.replace("/login");
     } finally {
@@ -362,28 +404,55 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   const handleStillHere = useCallback(async () => {
     setIsLoading(true);
     try {
+      logger.debug("🔓 User clicked 'I'm still here' - attempting to unlock screen", {
+        component: "IdleTimerContainer.handleStillHere"
+      });
+
       const success = await lockScreenOnUserIdle(false);
 
       if (success) {
+        logger.info("✅ Screen unlocked and session refreshed", {
+          component: "IdleTimerContainer.handleStillHere",
+          success
+        });
         setState("Active");
+        setIsDialogOpen(false);
         idleTimer.reset();
         toast.success("Session extended. Welcome back!");
         return;
       }
 
+      logger.warn("Screen unlock returned false, attempting fallback token refresh", {
+        component: "IdleTimerContainer.handleStillHere",
+        success
+      });
+
       const refreshResponse = await getRefreshToken();
 
       if (refreshResponse.success) {
+        logger.info("✅ Fallback: Token refreshed successfully", {
+          component: "IdleTimerContainer.handleStillHere",
+          refreshSuccess: refreshResponse.success
+        });
         setState("Active");
+        setIsDialogOpen(false);
         idleTimer.reset();
         toast.success("Session restored. You're all set!");
         return;
       }
 
+      logger.error("Both unlock and refresh failed", {
+        component: "IdleTimerContainer.handleStillHere",
+        unlockSuccess: success,
+        refreshSuccess: refreshResponse.success
+      });
+
       toast.error("Session expired. Please log in again.");
       await handleUserLogOut();
     } catch (error) {
-      console.error("Critical error:", error);
+      logger.error("❌ Critical error in handleStillHere", error, {
+        component: "IdleTimerContainer.handleStillHere"
+      });
       toast.error("An unexpected error occurred. Logging out...");
       await handleUserLogOut();
     } finally {
@@ -396,11 +465,21 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   // if (pathname.startsWith("/invoice")) return null;
   // if (pathname.startsWith("/subscriptions")) return null;
 
-  // Render the ScreenLock component when idle
-  if (isIdle) {
+  // Debug logging for state changes
+  useEffect(() => {
+    logger.debug("🔍 Screen lock state changed", {
+      component: "IdleTimerContainer.render",
+      isIdle,
+      isDialogOpen,
+      loggedIn
+    });
+  }, [isIdle, isDialogOpen, loggedIn]);
+
+  // Render the ScreenLock component when dialog should be open
+  if (isDialogOpen) {
     return (
       <ScreenLock
-        open={isIdle}
+        open={isDialogOpen}
         onStillHere={handleStillHere}
         isLoading={isLoading}
         setIsLoading={setIsLoading}

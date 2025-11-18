@@ -46,5 +46,7 @@ export interface Entity {
 export interface Task {
   instance: WorkflowInstance;
   entity: Entity;
+  entity_type: EntityType;
+  status: StandardStatus;
   entity_name: string;
 }

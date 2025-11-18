@@ -23,6 +23,7 @@ import { TaskActionDialog } from "./task-action-dialog";
 import { TaskReassignDialog } from "./task-reassign-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
+import { StatusBadge } from "@/components/status-badge";
 
 interface TasksTableProps {
   tasks: Task[];
@@ -94,7 +95,10 @@ export function TasksTable({ tasks }: TasksTableProps) {
       }
     };
 
-    const config = typeConfig[entityType] || { label: entityType, className: "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400" };
+    const config = typeConfig[entityType] || {
+      label: entityType,
+      className: "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400"
+    };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
@@ -117,12 +121,10 @@ export function TasksTable({ tasks }: TasksTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Task</TableHead>
-              <TableHead>Entity</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Entity Name/Title</TableHead>
+              <TableHead>Entity Type</TableHead>
+              <TableHead>Workflow State</TableHead>
+              <TableHead>Task Status</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -130,37 +132,33 @@ export function TasksTable({ tasks }: TasksTableProps) {
           <TableBody>
             {tasks.map((task) => (
               <TableRow key={task.instance.id}>
+                {/* NAME */}
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium">{task.entity_name}</span>
-                    <span className="text-muted-foreground text-xs">{task.instance.workflow_id}</span>
+                    <span className="text-muted-foreground text-xs">
+                      ID: {task.instance.entity_id}
+                    </span>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{task.entity_name}</span>
-                    <span className="text-muted-foreground text-xs">ID: {task.instance.entity_id}</span>
-                  </div>
-                </TableCell>
+                {/* TYPE */}
                 <TableCell>{getEntityTypeBadge(task.instance.entity_type)}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{task.entity.title || task.entity.name || "N/A"}</span>
-                    <span className="text-muted-foreground text-xs">{task.entity.id || "N/A"}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{task.instance.organization_id}</Badge>
-                </TableCell>
+
+                {/* STATE/STAGE */}
                 <TableCell>{getStatusBadge(task.instance.status)}</TableCell>
+                <TableCell>
+                  <StatusBadge status={String(task.entity.status)} />
+                </TableCell>
                 <TableCell>
                   <span className="text-muted-foreground text-sm">
                     {formatDistanceToNow(new Date(task.instance.created_at), { addSuffix: true })}
                   </span>
                 </TableCell>
+
+                {/* ACTION BUTTONS */}
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    {(task.instance.status === "REVIEW" || task.instance.status === "PENDING") && (
+                    {task.entity.status === "IN_REVIEW" && !task.instance.is_finialized && (
                       <>
                         <Button
                           size="sm"
@@ -178,7 +176,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
                           <XCircle className="h-4 w-4" />
                           Reject
                         </Button>
-                        <DropdownMenu>
+                        {/* <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
                               <MoreVertical className="h-4 w-4" />
@@ -190,15 +188,17 @@ export function TasksTable({ tasks }: TasksTableProps) {
                               Reassign Task
                             </DropdownMenuItem>
                           </DropdownMenuContent>
-                        </DropdownMenu>
+                        </DropdownMenu> */}
                       </>
                     )}
-                    {(task.instance.status === "COMPLETED" || task.instance.status === "APPROVED") && (
+
+                    {(task.entity.status === "COMPLETED" || task.entity.status === "APPROVED") && (
                       <span className="text-muted-foreground text-sm">
-                        Completed by {task.instance.created_by || "System"}
+                        Completed by {task.instance.created_by_user?.name || "System"}
                       </span>
                     )}
-                    {(task.instance.status === "REJECTED" || task.instance.status === "DRAFT") && (
+
+                    {(task.entity.status === "REJECTED" || task.entity.status === "DRAFT") && (
                       <span className="text-muted-foreground text-sm">No actions available</span>
                     )}
                   </div>
