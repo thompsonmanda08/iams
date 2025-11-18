@@ -125,7 +125,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
               <TableHead>Entity Type</TableHead>
               <TableHead>Workflow State</TableHead>
               <TableHead>Task Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead>Date Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -136,7 +136,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium">{task.entity_name}</span>
-                    <span className="text-muted-foreground text-xs">
+                    <span className="text-muted-foreground text-[9px]">
                       ID: {task.instance.entity_id}
                     </span>
                   </div>
@@ -147,7 +147,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
                 {/* STATE/STAGE */}
                 <TableCell>{getStatusBadge(task.instance.status)}</TableCell>
                 <TableCell>
-                  <StatusBadge status={String(task.entity.status)} />
+                  <StatusBadge status={String(task.entity?.status || "IN_REVIEW")} />
                 </TableCell>
                 <TableCell>
                   <span className="text-muted-foreground text-sm">
@@ -158,7 +158,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
                 {/* ACTION BUTTONS */}
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    {task.entity.status === "IN_REVIEW" && !task.instance.is_finialized && (
+                    {task.entity?.status === "IN_REVIEW" && !task.instance.is_finialized && (
                       <>
                         <Button
                           size="sm"
@@ -192,13 +192,14 @@ export function TasksTable({ tasks }: TasksTableProps) {
                       </>
                     )}
 
-                    {(task.entity.status === "COMPLETED" || task.entity.status === "APPROVED") && (
+                    {(task.entity?.status === "COMPLETED" ||
+                      task.entity?.status === "APPROVED") && (
                       <span className="text-muted-foreground text-sm">
                         Completed by {task.instance.created_by_user?.name || "System"}
                       </span>
                     )}
 
-                    {(task.entity.status === "REJECTED" || task.entity.status === "DRAFT") && (
+                    {(task.entity?.status === "REJECTED" || task.entity?.status === "DRAFT") && (
                       <span className="text-muted-foreground text-sm">No actions available</span>
                     )}
                   </div>

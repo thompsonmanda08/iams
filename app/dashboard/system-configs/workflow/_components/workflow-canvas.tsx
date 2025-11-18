@@ -61,15 +61,31 @@ export const WorkflowCanvas = ({
               if (!fromState || !toState) return null;
 
               // Calculate curve offset for multiple transitions between same states
-              // Find all transitions between these two states (in the same direction)
-              const transitionsBetweenSameStates = transitions.filter(
-                (t) =>
-                  t._changeType !== "deleted" &&
-                  t.from_state_id === transition.from_state_id &&
-                  t.to_state_id === transition.to_state_id
-              );
+              // Only group transitions that go in the SAME direction
+              const isSelfLoop = transition.from_state_id === transition.to_state_id;
 
-              // Get the index of this transition among others between the same states
+              let transitionsBetweenSameStates: typeof transitions;
+
+              if (isSelfLoop) {
+                // For self-loops, find all self-loops on the same state
+                transitionsBetweenSameStates = transitions.filter(
+                  (t) =>
+                    t._changeType !== "deleted" &&
+                    t.from_state_id === transition.from_state_id &&
+                    t.to_state_id === transition.from_state_id
+                );
+              } else {
+                // For regular transitions, ONLY include same-direction transitions
+                // Do NOT group bidirectional transitions together
+                transitionsBetweenSameStates = transitions.filter(
+                  (t) =>
+                    t._changeType !== "deleted" &&
+                    t.from_state_id === transition.from_state_id &&
+                    t.to_state_id === transition.to_state_id
+                );
+              }
+
+              // Get the index of this transition among others in the same direction
               const indexAmongSimilar = transitionsBetweenSameStates.findIndex((t) => t.id === transition.id);
 
               // Calculate offset: center around 0 (-1, 0, 1 for 3 transitions, etc.)

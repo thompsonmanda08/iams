@@ -30,16 +30,50 @@ export const TransitionArrow = ({ from, to, label, onClick, curveOffset = 0 }: T
   const controlY = fromY + dy / 2 - Math.abs(dx) * 0.15;
 
   // Apply offset for multiple transitions between same states
-  // Perpendicular offset to spread curves away from center line
-  const perpX = dy / distance;
-  const perpY = -dx / distance;
-  const offsetDistance = curveOffset * 40; // 40px spacing between curves
+  // Use perpendicular offset with mirroring for alternating curves
+  let finalControlX = controlX;
+  let finalControlY = controlY;
+  let labelOffsetX = 0;
+  let labelOffsetY = 0;
 
-  const finalControlX = controlX + perpX * offsetDistance;
-  const finalControlY = controlY + perpY * offsetDistance;
+  // Check if this is a self-loop or very close nodes
+  const isSelfLoop = Math.abs(dx) < 1 && Math.abs(dy) < 1;
 
-  // Unique marker ID for this arrow
-  const markerId = `arrowhead-${from.x}-${from.y}-${to.x}-${to.y}`;
+  if (isSelfLoop) {
+    // For self-loops, create larger arc above the node
+    const arcRadius = 80 + Math.abs(curveOffset) * 30;
+    finalControlX = fromX + arcRadius;
+    finalControlY = fromY - arcRadius;
+
+    // Offset self-loops vertically to avoid overlap
+    finalControlY -= curveOffset * 60;
+
+    // Label offset for self-loops
+    labelOffsetY = curveOffset * 40;
+  } else if (distance > 0) {
+    // For regular transitions, use perpendicular offset with mirroring
+    const perpX = dy / distance;
+    const perpY = -dx / distance;
+
+    // For even curveOffsets (0, 2, 4...), curve one way
+    // For odd curveOffsets (1, 3, 5...), curve the opposite way
+    // This creates a nice mirror effect
+    const isMirroredCurve = Math.abs(curveOffset) % 2 !== 0;
+    const mirrorFactor = isMirroredCurve ? -1 : 1;
+
+    // Increase curve depth for better separation
+    const offsetDistance = Math.ceil(Math.abs(curveOffset) / 2) * 100 * mirrorFactor;
+
+    finalControlX = controlX + perpX * offsetDistance;
+    finalControlY = controlY + perpY * offsetDistance;
+
+    // Additional label offset perpendicular to the curve direction
+    labelOffsetX = perpX * (Math.ceil(Math.abs(curveOffset) / 2) * 60 * mirrorFactor);
+    labelOffsetY = perpY * (Math.ceil(Math.abs(curveOffset) / 2) * 60 * mirrorFactor);
+  }
+
+  // Unique marker ID for this arrow - include curve offset to differentiate between multiple transitions
+  const markerId = `arrowhead-${from.x}-${from.y}-${to.x}-${to.y}-${curveOffset}`;
   const arrowSize = 10;
 
   // Track calculated text width for responsive label box
@@ -97,8 +131,8 @@ export const TransitionArrow = ({ from, to, label, onClick, curveOffset = 0 }: T
       {/* Label background - clickable */}
       <g onClick={onClick} className="cursor-pointer transition-opacity hover:opacity-90">
         <rect
-          x={finalControlX - textWidth / 2}
-          y={finalControlY - 14}
+          x={finalControlX + labelOffsetX - textWidth / 2}
+          y={finalControlY + labelOffsetY - 14}
           width={textWidth}
           height="28"
           fill="var(--card)"
@@ -106,17 +140,24 @@ export const TransitionArrow = ({ from, to, label, onClick, curveOffset = 0 }: T
           strokeWidth="1.5"
           rx="6"
           className="shadow-sm"
+          style={{
+            filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15))"
+          }}
         />
 
         {/* Label text */}
         <text
           ref={textRef}
-          x={finalControlX}
-          y={finalControlY}
+          x={finalControlX + labelOffsetX}
+          y={finalControlY + labelOffsetY}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="pointer-events-none text-xs font-semibold select-none"
-          fill="var(--primary)">
+          className="pointer-events-none font-semibold select-none"
+          style={{
+            fontSize: "12px",
+            fill: "var(--primary)",
+            fontWeight: 600
+          }}>
           {label}
         </text>
       </g>
