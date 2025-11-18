@@ -11,6 +11,16 @@ import {
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 
+interface SystemHealthProps {
+  systemHealth: {
+    total_users: number;
+    active_users: number;
+    inactive_users: number;
+    locked_users: number;
+    recent_logins: any[];
+  };
+}
+
 const systemLogs = [
   { time: "00:00", logins: 145, updates: 23, deletions: 5 },
   { time: "04:00", logins: 98, updates: 12, deletions: 2 },
@@ -19,12 +29,6 @@ const systemLogs = [
   { time: "16:00", logins: 421, updates: 89, deletions: 12 },
   { time: "20:00", logins: 287, updates: 45, deletions: 7 },
   { time: "23:59", logins: 156, updates: 18, deletions: 3 }
-];
-
-const users = [
-  { name: "Total Active Users", count: 234 },
-  { name: "Locked Accounts", count: 12 },
-  { name: "Inactive (>30 days)", count: 45 }
 ];
 
 const activityChartConfig = {
@@ -42,7 +46,13 @@ const activityChartConfig = {
   }
 } satisfies ChartConfig;
 
-export default function SystemHealth() {
+export default function SystemHealth({ systemHealth }: SystemHealthProps) {
+  const users = [
+    { name: "Total Users", count: systemHealth.total_users },
+    { name: "Active Users", count: systemHealth.active_users },
+    { name: "Locked Accounts", count: systemHealth.locked_users }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -101,39 +111,30 @@ export default function SystemHealth() {
           </CardContent>
         </Card>
 
-        {/* Permission Matrix */}
+        {/* User Status Overview */}
         <Card>
           <CardHeader>
-            <CardTitle>Permission Matrix</CardTitle>
-            <CardDescription>Role-based access control overview</CardDescription>
+            <CardTitle>User Status Overview</CardTitle>
+            <CardDescription>Current user account status distribution</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-semibold">Role</th>
-                    <th className="px-3 py-2 text-left font-semibold">Dashboard</th>
-                    <th className="px-3 py-2 text-left font-semibold">Risk Management</th>
-                    <th className="px-3 py-2 text-left font-semibold">Audit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { role: "Admin", dashboard: "✓", risk: "✓", audit: "✓" },
-                    { role: "Risk Manager", dashboard: "✓", risk: "✓", audit: "○" },
-                    { role: "Auditor", dashboard: "○", risk: "✓", audit: "✓" },
-                    { role: "Department Lead", dashboard: "○", risk: "✓", audit: "○" }
-                  ].map((row) => (
-                    <tr key={row.role} className="border-b last:border-0">
-                      <td className="px-3 py-2 font-medium">{row.role}</td>
-                      <td className="text-muted-foreground px-3 py-2">{row.dashboard}</td>
-                      <td className="text-muted-foreground px-3 py-2">{row.risk}</td>
-                      <td className="text-muted-foreground px-3 py-2">{row.audit}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Active Users</span>
+                <span className="text-state-node-final font-semibold">
+                  {systemHealth.active_users}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Inactive Users</span>
+                <span className="text-amber-active font-semibold">
+                  {systemHealth.inactive_users}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Locked Users</span>
+                <span className="text-destructive font-semibold">{systemHealth.locked_users}</span>
+              </div>
             </div>
           </CardContent>
         </Card>

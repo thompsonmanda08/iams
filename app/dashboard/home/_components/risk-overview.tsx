@@ -1,4 +1,5 @@
 "use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
@@ -8,21 +9,30 @@ import {
   ChartLegend,
   ChartLegendContent
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
-const riskData = [
-  { name: "High", value: 12, fill: "var(--color-destructive)" },
-  { name: "Medium", value: 22, fill: "var(--color-amber-active)" },
-  { name: "Low", value: 14, fill: "var(--color-state-node-final)" }
-];
+interface RiskSummary {
+  total_risks: number;
+  risks_by_rating: {
+    High: number;
+    Low: number;
+    Normal: number;
+  };
+  risks_by_status: {
+    DRAFT: number;
+    OPEN: number;
+  };
+  risks_by_department: Array<{
+    department_id: string;
+    department_name: string;
+    risk_count: number;
+    open_risk_count: number;
+  }>;
+}
 
-const departmentRisks = [
-  { department: "Finance", risks: 8, open: 3 },
-  { department: "Operations", risks: 12, open: 4 },
-  { department: "HR", risks: 5, open: 1 },
-  { department: "IT", risks: 15, open: 5 },
-  { department: "Marketing", risks: 8, open: 2 }
-];
+interface RiskOverviewProps {
+  riskSummary: RiskSummary;
+}
 
 const riskChartConfig = {
   value: {
@@ -42,7 +52,25 @@ const riskChartConfig = {
   }
 } satisfies ChartConfig;
 
-export default function RiskOverview() {
+export default function RiskOverview({ riskSummary }: RiskOverviewProps) {
+  const riskData = [
+    {
+      name: "High",
+      value: riskSummary.risks_by_rating.High || 0,
+      fill: "var(--color-destructive)"
+    },
+    {
+      name: "Medium",
+      value: riskSummary.risks_by_rating.Normal || 0,
+      fill: "var(--color-amber-active)"
+    },
+    {
+      name: "Low",
+      value: riskSummary.risks_by_rating.Low || 0,
+      fill: "var(--color-state-node-final)"
+    }
+  ];
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <Card className="flex flex-col">
@@ -71,19 +99,27 @@ export default function RiskOverview() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {departmentRisks.map((dept) => (
-              <div
-                key={dept.department}
-                className="flex items-center justify-between border-b pb-2 last:border-0">
-                <div>
-                  <p className="text-sm font-medium">{dept.department}</p>
-                  <p className="text-muted-foreground text-xs">{dept.risks} total risks</p>
+            {riskSummary.risks_by_department.length > 0 ? (
+              riskSummary.risks_by_department.map((dept) => (
+                <div
+                  key={dept.department_id}
+                  className="flex items-center justify-between border-b pb-2 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium">{dept.department_name}</p>
+                    <p className="text-muted-foreground text-xs">{dept.risk_count} total risks</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-destructive/70 text-sm font-semibold">
+                      {dept.open_risk_count} open
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-destructive/70 text-sm font-semibold">{dept.open} open</p>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-muted-foreground py-8 text-center text-sm">
+                No department risks available
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
