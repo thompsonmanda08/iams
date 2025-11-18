@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Plus,
   Trash2,
@@ -66,7 +66,12 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
     setIsDeleteDialogOpen(true);
   };
 
-  const workflowBeingDeleted = workflows.find((w) => w.id === workflowToDelete);
+  console.log("workflows", workflows);
+
+  const workflowBeingDeleted = useMemo(
+    () => workflows?.find((w) => w.id === workflowToDelete),
+    [workflowToDelete, workflows]
+  );
 
   const handleConfirmDelete = async () => {
     if (true) {

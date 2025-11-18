@@ -27,10 +27,7 @@ export async function listWorkflows(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({ url });
 
-    return successResponse(
-      response.data?.data || response.data || [],
-      "Workflows fetched successfully"
-    );
+    return successResponse(response.data?.data || [], "Workflows fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | WORKFLOWS", url);
   }

@@ -27,7 +27,7 @@ export default function Error({
         <div className="grid gap-1">
           <h2 className="text-2xl font-bold">Oops! Keep calm</h2>
           <p className="text-muted-foreground mb-2">
-            The universe you're looking for doesn't exist.
+            It seems something went wrong while loading this page.
           </p>
         </div>
         <div className="flex items-center justify-center gap-2">
@@ -38,13 +38,13 @@ export default function Error({
         </div>
       </Card>
 
-      {process.env.NODE_ENV === "development" && (
+      {
         <CustomAlert
           type="error"
           className="border-destructive max-w-xl items-center space-y-4 rounded-2xl border border-dashed p-5 text-red-600">
           <p>{String(error)}</p>
         </CustomAlert>
-      )}
+      }
     </div>
   );
 }
