@@ -431,24 +431,46 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
         }
 
         // Update session even if refresh failed
-        const updateResult = await updateAuthSession({ screen_locked: state });
+        try {
+          const updateResult = await updateAuthSession({ screen_locked: state });
 
-        if (!updateResult) {
-          logger.error("Failed to update session lock state during unlock", undefined, {
+          if (!updateResult) {
+            logger.error("Failed to update session lock state during unlock", undefined, {
+              function: "lockScreenOnUserIdle",
+              state
+            });
+            // Continue anyway - try to clear lock cookie
+          } else {
+            logger.debug("✅ Session updated successfully during unlock", {
+              function: "lockScreenOnUserIdle",
+              state
+            });
+          }
+        } catch (sessionUpdateError) {
+          logger.error("Exception while updating session during unlock", sessionUpdateError, {
             function: "lockScreenOnUserIdle",
             state
           });
-          return false;
+          // Continue anyway - try to clear lock cookie
         }
 
         // Clear screen lock cookie on unlock (success or partial success)
-        await clearScreenLockCookie();
-        logger.info("✅ Screen unlocked successfully", {
-          function: "lockScreenOnUserIdle",
-          state,
-          refreshedToken: refreshResponse.success
-        });
-        return true;
+        try {
+          await clearScreenLockCookie();
+          logger.info("✅ Screen unlocked successfully", {
+            function: "lockScreenOnUserIdle",
+            state,
+            refreshedToken: refreshResponse.success
+          });
+          return true;
+        } catch (cookieError) {
+          logger.error("Failed to clear screen lock cookie during unlock", cookieError, {
+            function: "lockScreenOnUserIdle",
+            state
+          });
+          // Still return true because unlock was processed
+          return true;
+        }
       } catch (error) {
         logger.error("Exception while unlocking screen", error, {
           function: "lockScreenOnUserIdle",
@@ -464,25 +486,45 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
       state
     });
 
-    const updateResult = await updateAuthSession({ screen_locked: state });
+    try {
+      const updateResult = await updateAuthSession({ screen_locked: state });
 
-    if (!updateResult) {
-      logger.error("Failed to update session lock state", undefined, {
+      if (!updateResult) {
+        logger.error("Failed to update session lock state - updateAuthSession returned falsy", undefined, {
+          function: "lockScreenOnUserIdle",
+          state,
+          updateResult
+        });
+        // Don't return false - still try to set the lock cookie
+      } else {
+        logger.debug("✅ Session updated successfully for lock", {
+          function: "lockScreenOnUserIdle",
+          state
+        });
+      }
+    } catch (sessionUpdateError) {
+      logger.error("Exception while updating session for lock", sessionUpdateError, {
+        function: "lockScreenOnUserIdle",
+        state
+      });
+      // Continue anyway - try to set lock cookie
+    }
+
+    // Persist screen lock state to cookie (survives page reload)
+    try {
+      await setScreenLockCookie(state);
+      logger.info("✅ Screen locked successfully", {
+        function: "lockScreenOnUserIdle",
+        state
+      });
+      return true;
+    } catch (cookieError) {
+      logger.error("Failed to set screen lock cookie", cookieError, {
         function: "lockScreenOnUserIdle",
         state
       });
       return false;
     }
-
-    // Persist screen lock state to cookie (survives page reload)
-    await setScreenLockCookie(state);
-
-    logger.info("✅ Screen locked successfully", {
-      function: "lockScreenOnUserIdle",
-      state
-    });
-
-    return true;
   } catch (error) {
     logger.error("❌ Exception in lockScreenOnUserIdle", error, {
       function: "lockScreenOnUserIdle",
