@@ -35,6 +35,7 @@ import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import PageHeader from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 
 type KRIRegister = {
   id: string;
@@ -360,13 +361,10 @@ export default function KRIRegistersClient({
                       )}
                     </TableCell>
                     <TableCell>
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-1 text-xs font-medium capitalize",
-                          getStatusColor(register.is_active)
-                        )}>
-                        {register.is_active ? "Active" : "Inactive"}
-                      </span>
+                      <StatusBadge
+                        className={`${register.is_active ? "border-none bg-[#28A745] text-white hover:bg-[#28A745]" : ""}`}
+                        status={register.is_active ? "Active" : "Inactive"}
+                      />
                     </TableCell>
                     <TableCell>
                       <span className="text-muted-foreground text-sm">

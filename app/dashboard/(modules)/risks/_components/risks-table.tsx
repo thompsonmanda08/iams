@@ -27,6 +27,7 @@ import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { AssignActionDialog } from "./assign-action-dialog";
+import { StatusBadge } from "@/components/status-badge";
 
 type Risk = {
   id: string;
@@ -388,13 +389,7 @@ export default function RisksTable({
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium capitalize",
-                        getStatusColor(risk.status)
-                      )}>
-                      {risk.status}
-                    </span>
+                    <StatusBadge status={risk.status} />
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">{getRiskOwnerName(risk)}</span>

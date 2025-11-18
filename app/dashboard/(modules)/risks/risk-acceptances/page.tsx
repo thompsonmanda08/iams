@@ -584,6 +584,7 @@ export default function RiskAcceptanceList() {
             <Button
               variant="outline"
               onClick={() => setShowModal(false)}
+              size="sm"
               disabled={isSubmitting || isSubmittingForApproval}>
               Cancel
             </Button>
@@ -599,6 +600,7 @@ export default function RiskAcceptanceList() {
             )}
             <Button
               onClick={handleStatusUpdate}
+              size="sm"
               disabled={isSubmitting || isSubmittingForApproval || !modalStatus || !remarks.trim()}>
               {isSubmitting ? "Updating..." : "Update Status"}
             </Button>

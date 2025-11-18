@@ -29,6 +29,7 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { toast } from "sonner";
 import { deleteRiskRegister } from "@/app/_actions/risk-module-actions";
 import EditRiskRegisterDialog from "@/components/forms/edit-risk-register-dialog";
+import { StatusBadge } from "@/components/status-badge";
 
 type RiskRegistersTableProps = {
   registers: RiskRegister[];
@@ -247,13 +248,7 @@ export default function RiskRegistersTable({
                     <span className="text-sm">{formatDate(register.due_date)}</span>
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium capitalize",
-                        getStatusColor(register.status)
-                      )}>
-                      {register.status.toLowerCase()}
-                    </span>
+                    <StatusBadge status={register.status} />
                   </TableCell>
                   <TableCell>
                     <span
