@@ -56,7 +56,7 @@ export const TransitionPanel = ({
     () =>
       rolesResponse?.success && rolesResponse?.data?.data
         ? rolesResponse.data.data.map((role: Role) => ({
-            id: role.id,  // ✅ Use role ID, not name
+            id: role.id, // ✅ Use role ID, not name
             name: role.name
           }))
         : [],
@@ -204,9 +204,9 @@ export const TransitionPanel = ({
         <div className="space-y-6 px-6">
           {/* From Status */}
           <div className="space-y-2">
-            <Label htmlFor="from-status">From Status</Label>
             <SelectField
-              id="from-status"
+              id="from-state"
+              label="From State"
               options={fromStatusOptions}
               value={selectedFromStatus}
               onValueChange={(value) => {
@@ -224,9 +224,7 @@ export const TransitionPanel = ({
                 // Format: "State Name-|-Other State Name"
                 // Use the new value for fromStatus since we just updated it
                 const toStatus = selectedToStatus || "";
-                const newTransitionName = toStatus
-                  ? `${value}-|-${toStatus}`
-                  : `${value}-|-`;
+                const newTransitionName = toStatus ? `${value}-|-${toStatus}` : `${value}-|-`;
 
                 const updatedTransition = {
                   ...localTransition,
@@ -241,6 +239,7 @@ export const TransitionPanel = ({
               }}
               placeholder="Select initial state..."
               listItemName="name"
+              className="w-full"
               required
             />
             <p className="text-muted-foreground text-xs">
@@ -248,26 +247,13 @@ export const TransitionPanel = ({
             </p>
           </div>
 
-          {/* Status Change Indicator */}
-          {selectedFromStatus && selectedToStatus && (
-            <div className="rounded-lg border border-dashed p-3">
-              {selectedFromStatus === selectedToStatus ? (
-                <p className="text-sm font-medium text-amber-600">
-                  ⚠️ No Status Change - This transition stays in the same state
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Transition: {selectedFromStatus} → {selectedToStatus}
-                </p>
-              )}
-            </div>
-          )}
-
           {/* To Status */}
           <div className="space-y-2">
-            <Label htmlFor="to-status">To Status</Label>
             <SelectField
-              id="to-status"
+              id="to-state"
+              label="To State"
+              placeholder="-- Select Destination State --"
+              className="w-full"
               options={toStatusOptions}
               value={selectedToStatus}
               onValueChange={(value) => {
@@ -285,9 +271,7 @@ export const TransitionPanel = ({
                 // Format: "State Name-|-Other State Name"
                 // Use the new value for toStatus since we just updated it
                 const fromStatus = selectedFromStatus || "";
-                const newTransitionName = fromStatus
-                  ? `${fromStatus}-|-${value}`
-                  : `-|-${value}`;
+                const newTransitionName = fromStatus ? `${fromStatus}-|-${value}` : `-|-${value}`;
 
                 const updatedTransition = {
                   ...localTransition,
@@ -300,24 +284,39 @@ export const TransitionPanel = ({
 
                 setLocalTransition(updatedTransition);
               }}
-              placeholder="Select destination state..."
               listItemName="name"
               required
             />
             <p className="text-muted-foreground text-xs">The state this transition moves to</p>
           </div>
 
+          {/* Status Change Indicator */}
+          {selectedFromStatus && selectedToStatus && (
+            <div className="rounded-lg border border-dashed p-3">
+              {selectedFromStatus === selectedToStatus ? (
+                <p className="text-sm font-medium text-amber-600">
+                  ⚠️ No Status Change - This transition stays in the same state
+                </p>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Transition: {selectedFromStatus} → {selectedToStatus}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Required Role */}
           <div className="space-y-2">
-            <Label htmlFor="required-role">Required Role</Label>
             <SelectField
               id="required-role"
+              label="Required User Role"
               options={roleOptions}
               value={selectedRoleId}
               onValueChange={handleRoleChange}
               placeholder={rolesLoading ? "Loading roles..." : "Select role..."}
               listItemName="name"
               disabled={rolesLoading}
+              className="w-full"
             />
             <p className="text-muted-foreground text-xs">
               The role that can execute this transition
@@ -341,7 +340,7 @@ export const TransitionPanel = ({
           */}
 
           {/* Post-Transition Actions */}
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <Label>Post-Transition Actions</Label>
             <MultiSelectField
               options={ACTION_TYPES}
@@ -353,7 +352,7 @@ export const TransitionPanel = ({
             <p className="text-muted-foreground text-xs">
               Actions that will be executed after this transition completes
             </p>
-          </div>
+          </div> */}
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-6">
@@ -363,7 +362,9 @@ export const TransitionPanel = ({
             <Button
               onClick={handleSave}
               className="flex-1"
-              disabled={!selectedFromStatus || !selectedToStatus || selectedFromStatus === selectedToStatus}>
+              disabled={
+                !selectedFromStatus || !selectedToStatus || selectedFromStatus === selectedToStatus
+              }>
               Save Transition
             </Button>
           </div>
