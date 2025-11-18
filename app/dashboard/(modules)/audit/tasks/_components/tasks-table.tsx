@@ -27,21 +27,24 @@ import { StatusBadge } from "@/components/status-badge";
 
 interface TasksTableProps {
   tasks: Task[];
+  onTaskSelect?: (task: Task) => void;
 }
 
-export function TasksTable({ tasks }: TasksTableProps) {
+export function TasksTable({ tasks, onTaskSelect }: TasksTableProps) {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<"APPROVE" | "REJECT" | null>(null);
 
-  const handleAction = (task: Task, action: "APPROVE" | "REJECT") => {
+  const handleAction = (task: Task, action: "APPROVE" | "REJECT", e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setSelectedTask(task);
     setSelectedAction(action);
     setActionDialogOpen(true);
   };
 
-  const handleReassign = (task: Task) => {
+  const handleReassign = (task: Task, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setSelectedTask(task);
     setReassignDialogOpen(true);
   };
@@ -131,7 +134,11 @@ export function TasksTable({ tasks }: TasksTableProps) {
           </TableHeader>
           <TableBody>
             {tasks.map((task) => (
-              <TableRow key={task.instance.id}>
+              <TableRow
+                key={task.instance.id}
+                onClick={() => onTaskSelect?.(task)}
+                className="cursor-pointer hover:bg-muted/50 transition-colors"
+              >
                 {/* NAME */}
                 <TableCell>
                   <div className="flex flex-col">
@@ -156,7 +163,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
                 </TableCell>
 
                 {/* ACTION BUTTONS */}
-                <TableCell className="text-right">
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
                     {task.entity?.status === "IN_REVIEW" && !task.instance.is_finialized && (
                       <>
@@ -164,7 +171,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
                           size="sm"
                           variant="outline"
                           className="gap-1 border-green-100 bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600"
-                          onClick={() => handleAction(task, "APPROVE")}>
+                          onClick={(e) => handleAction(task, "APPROVE", e)}>
                           <CheckCircle className="h-4 w-4" />
                           Approve
                         </Button>
@@ -172,7 +179,7 @@ export function TasksTable({ tasks }: TasksTableProps) {
                           size="sm"
                           variant="outline"
                           className="gap-1 border-red-100 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600"
-                          onClick={() => handleAction(task, "REJECT")}>
+                          onClick={(e) => handleAction(task, "REJECT", e)}>
                           <XCircle className="h-4 w-4" />
                           Reject
                         </Button>

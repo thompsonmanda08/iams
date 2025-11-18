@@ -270,13 +270,13 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         <div>
-                          <p>{budget?.department_name || ""}</p>
+                          <p>{budget?.department_name || "No Department"}</p>
                           {budget.department_id ? (
-                            <span className="text-xs font-medium">
+                            <span className="text-[9px] font-medium">
                               {budget.department_id.slice(0, 8)}...
                             </span>
                           ) : (
-                            <span className="text-xs italic opacity-50">No Department</span>
+                            <span className="text-xs italic opacity-50">N/A</span>
                           )}
                         </div>
                       </TableCell>

@@ -1,27 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Download, Filter, Workflow } from "lucide-react";
-import { TaskStats } from "./_components/task-stats";
+import { Workflow } from "lucide-react";
 import PageHeader from "@/components/page-header";
-import { getTasks, getTaskStats } from "@/app/_actions/task-actions";
-import { TasksTable } from "./_components/tasks-table";
+import { getTasks } from "@/app/_actions/task-actions";
+import { TasksPageClient } from "./_components/tasks-page-client";
 import Link from "next/link";
 
 export default async function TasksPage() {
-  // Fetch tasks and stats from the API
+  // Fetch tasks
   const tasksResponse = await getTasks();
-  // const statsResponse = await getTaskStats();
-
   const tasks = tasksResponse.success ? tasksResponse.data : [];
-  // const stats = statsResponse.success
-  //   ? statsResponse.data
-  //   : {
-  //       pending: 0,
-  //       in_progress: 0,
-  //       completed: 0,
-  //       rejected: 0
-  //     };
-
-  // console.log("TasksPage rendered with tasks:", tasks);
 
   return (
     <div className="bg-background min-h-screen">
@@ -31,7 +18,7 @@ export default async function TasksPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
               title="Workflow Tasks"
-              description="  Manage and execute workflow tasks assigned to users (Simulation Mode)"
+              description="Manage and execute workflow tasks assigned to users (Simulation Mode)"
               icon="Workflow"
             />
             <div className="flex gap-2">
@@ -50,20 +37,8 @@ export default async function TasksPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
-          {/* Task Statistics */}
-          {/* <TaskStats initialStats={stats} /> */}
-
-          {/* Table */}
-          <>
-            {tasks.length > 0 && (
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-muted-foreground text-sm">
-                  Showing {tasks.length} task{tasks.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-            )}
-            <TasksTable tasks={tasks} />
-          </>
+          {/* Tasks Table with Approval History Drawer */}
+          <TasksPageClient tasks={tasks} />
         </div>
       </div>
     </div>
