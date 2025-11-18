@@ -52,17 +52,16 @@ const kriChartConfig = {
 export default function KriMonitoring({ kriSummary }: KriMonitoringProps) {
   // Transform API data to chart format
   const greenCount = kriSummary.kris_by_status.Green || 0;
-  const redCount = kriSummary.kris_in_breach || 0;
-  // Calculate amber as the remaining KRIs
-  const amberCount = Math.max(0, kriSummary.total_kris - greenCount - redCount);
+  const redCount = kriSummary.kris_by_status.Red || 0;
+  const amberCount = kriSummary.kris_by_status.Amber || 0;
 
   const kriStatus = [
     { name: "green", value: greenCount, fill: "var(--color-state-node-final)" },
     { name: "amber", value: amberCount, fill: "var(--color-amber-active)" },
     { name: "red", value: redCount, fill: "var(--color-destructive)" }
-  ].filter((item) => item.value > 0);
+  ];
 
-  const totalKris = kriStatus.reduce((acc, curr) => acc + curr.value, 0);
+  const totalKris = kriSummary.total_kris || 0;
 
   const getStatusColor = (status: string) => {
     const normalizedStatus = status.toLowerCase();
