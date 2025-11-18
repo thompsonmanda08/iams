@@ -23,7 +23,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ArrowLeft,
   Wallet,
   DollarSign,
   Calendar,
@@ -32,10 +31,7 @@ import {
   Send
 } from "lucide-react";
 import { toast } from "sonner";
-import { BudgetStatusBadge } from "./budget-status-badge";
 import { DatePicker } from "@/components/ui/date-picker";
-import Link from "next/link";
-import { BudgetStatus } from "@/lib/types/audit-types";
 import { Textarea } from "@/components/ui/textarea";
 import { CURRENCIES } from "@/lib/constants";
 import {
@@ -49,6 +45,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import BackButton from "@/components/back-button";
+import { StatusBadge } from "@/components/status-badge";
 
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
@@ -169,7 +166,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
           <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
           <h2 className="mb-4 text-2xl font-bold">Budget Not Found</h2>
           <p className="text-muted-foreground mb-6">The budget you're looking for doesn't exist.</p>
-          <BackButton title="Back to Budgets"/>
+          <BackButton title="Back to Budgets" />
         </Card>
       </div>
     );
@@ -318,23 +315,20 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   return (
     <>
       <div className="animate-slide-up mb-8 flex items-center justify-between">
-        <Link href="/dashboard/audit/budgets">
+        {/* <Link href="/dashboard/audit/budgets">
           <Button variant="outline" className="gap-2" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back to Budgets
           </Button>
-        </Link>
+        </Link> */}
         {!showLineForm && (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setSubmitConfirmationOpen(true)}
-              className="gap-2"
-              size="sm"
-              disabled={budget.status !== "DRAFT"}
-            >
-              <Send className="h-4 w-4" />
-              Submit for Approval
-            </Button>
+          <div className="ml-auto flex gap-2">
+            {budget.status == "DRAFT" && (
+              <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2" size="sm">
+                <Send className="h-4 w-4" />
+                Submit for Approval
+              </Button>
+            )}
             <Button onClick={() => setShowLineForm(true)} className="gap-2" size="sm">
               <Plus className="h-5 w-5" />
               Budget Line
@@ -364,7 +358,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Status</p>
-              <BudgetStatusBadge status={budget.status as BudgetStatus} />
+              <StatusBadge status={budget.status} />
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Year</p>

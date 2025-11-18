@@ -225,7 +225,7 @@ export async function submitWorkingPaperFindingsForApproval(workingPaperId: stri
   const url = `/api/v1/working-paper-findings/${workingPaperId}/submit-for-approval`;
 
   try {
-    const response = await authenticatedApiClient({ method: "POST", url });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     revalidatePath("/dashboard/audit/workpapers");
     revalidatePath(`/dashboard/audit/workpapers/${workingPaperId}`);
@@ -234,7 +234,7 @@ export async function submitWorkingPaperFindingsForApproval(workingPaperId: stri
   } catch (error: any) {
     return handleError(
       error,
-      "POST | SUBMIT WORKING PAPER FINDINGS",
+      "GET | SUBMIT WORKING PAPER FINDINGS",
       url
     );
   }

@@ -1,6 +1,7 @@
 import PageHeader from "@/components/page-header";
 import { getBudgetById, getBudgetLines } from "@/app/_actions/audit-module-actions";
 import BudgetDetails from "../_components/budget-details";
+import BackButton from "@/components/back-button";
 
 const BudgetsPage = async ({ params }: { params: Promise<{ budgetId: string }> }) => {
   const { budgetId } = await params;
@@ -21,6 +22,8 @@ const BudgetsPage = async ({ params }: { params: Promise<{ budgetId: string }> }
               description="Manage budget items and track allocations"
               icon="ListCheck"
             />
+
+            <BackButton title="Go Back" />
           </div>
         </div>
       </div>

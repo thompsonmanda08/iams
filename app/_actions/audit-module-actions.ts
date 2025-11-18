@@ -1137,7 +1137,7 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
   const url = `/api/v1/audit-plans/${auditPlanId}/submit-for-approval`;
 
   try {
-    const response = await authenticatedApiClient({ url });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
@@ -1146,8 +1146,8 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
   } catch (error: any) {
     return handleError(
       error,
-      "POST | SUBMIT AUDIT PLAN",
-      `/api/v1/audit-plans/${auditPlanId}/submit`
+      "GET | SUBMIT AUDIT PLAN",
+      `/api/v1/audit-plans/${auditPlanId}/submit-for-approval`
     );
   }
 }
@@ -1989,7 +1989,7 @@ export async function submitBudgetForApproval(budgetId: string): Promise<APIResp
   const url = `/api/v1/audit/budgets/${budgetId}/submit-for-approval`;
 
   try {
-    const response = await authenticatedApiClient({ method: "POST", url });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     revalidatePath("/dashboard/audit/budgets");
     revalidatePath(`/dashboard/audit/budgets/${budgetId}`);
@@ -1998,7 +1998,7 @@ export async function submitBudgetForApproval(budgetId: string): Promise<APIResp
   } catch (error: any) {
     return handleError(
       error,
-      "POST | SUBMIT BUDGET",
+      "GET | SUBMIT BUDGET",
       url
     );
   }
@@ -2015,7 +2015,7 @@ export async function submitUniverseForApproval(universeId: string): Promise<API
   const url = `/api/v1/audit/universes/${universeId}/submit-for-approval`;
 
   try {
-    const response = await authenticatedApiClient({ method: "POST", url });
+    const response = await authenticatedApiClient({ method: "GET", url });
 
     revalidatePath("/dashboard/audit/universe");
     revalidatePath(`/dashboard/audit/universe/${universeId}`);
@@ -2024,7 +2024,7 @@ export async function submitUniverseForApproval(universeId: string): Promise<API
   } catch (error: any) {
     return handleError(
       error,
-      "POST | SUBMIT UNIVERSE",
+      "GET | SUBMIT UNIVERSE",
       url
     );
   }

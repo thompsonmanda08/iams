@@ -107,6 +107,7 @@ export interface StatusBadgeProps {
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   showTooltip?: boolean;
+  variant?: VariantProps<typeof Badge>["variant"];
 }
 
 /**
@@ -129,7 +130,8 @@ export const StatusBadge = ({
   status,
   size = "sm",
   className,
-  showTooltip
+  showTooltip,
+  variant = "default"
 }: StatusBadgeProps) => {
   // Get configuration from centralized status config
   const config = getStatusConfig(status);
@@ -137,15 +139,19 @@ export const StatusBadge = ({
   if (!config) {
     // Fallback for unknown status - log warning in dev
     if (process.env.NODE_ENV === "development") {
-      console.warn(`StatusBadge: Unknown status "${status}". Consider adding it to lib/statuses.ts`);
+      console.warn(
+        `StatusBadge: Unknown status "${status}". Consider adding it to lib/statuses.ts`
+      );
     }
 
     return (
       <Badge
-        className={cn(coloredBadgeVariants({ size, color: "default", style: "outline" }), className)}
+        className={cn(
+          coloredBadgeVariants({ size, color: "default", style: "outline" }),
+          className
+        )}
         variant="outline"
-        title={`Unknown status: ${status}`}
-      >
+        title={`Unknown status: ${status}`}>
         {status}
       </Badge>
     );
@@ -156,9 +162,9 @@ export const StatusBadge = ({
 
   return (
     <Badge
+      variant={variant}
       className={cn(coloredBadgeVariants({ color, style, size }), className)}
-      title={showTooltip ? description : undefined}
-    >
+      title={showTooltip ? description : undefined}>
       {label}
     </Badge>
   );

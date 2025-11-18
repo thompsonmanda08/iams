@@ -368,20 +368,20 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
       <Card className="p-8">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-foreground text-2xl font-bold">{universe.universe_name}</h2>
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <div className="flex gap-2">
               <StatusBadge status={universe.status || "UNIVERSE_CREATION"} />
-              <StatusBadge status={universe.is_active ? "ACTIVE" : "INACTIVE"} />
+              <StatusBadge
+                variant={universe.is_active ? "success" : "default"}
+                status={universe.is_active ? "ACTIVE" : "INACTIVE"}
+              />
             </div>
-            <Button
-              onClick={() => setSubmitConfirmationOpen(true)}
-              className="gap-2"
-              size="sm"
-              disabled={universe.status !== "DRAFT" && universe.status !== "UNIVERSE_CREATION"}
-            >
-              <Send className="h-4 w-4" />
-              Submit for Approval
-            </Button>
+            {universe.status == "DRAFT" && (
+              <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2" size="sm">
+                <Send className="h-4 w-4" />
+                Submit for Approval
+              </Button>
+            )}
           </div>
         </div>
 
