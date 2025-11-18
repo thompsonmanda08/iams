@@ -8,8 +8,9 @@ import {
 } from "@/lib/types/workflow";
 import { useState, useMemo } from "react";
 import { WorkflowHeader } from "./workflow-header";
-import { WorkflowCanvas } from "./workflow-canvas";
+import { WorkflowFlow } from "./workflow-flow";
 import { TransitionPanel } from "./transition-panel";
+import { StateEditDialog } from "./state-edit-dialog";
 import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
 import {
   getWorkflowDetails,
@@ -298,6 +299,9 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     relatedTransitionCount: 0
   });
 
+  const [selectedStateForEdit, setSelectedStateForEdit] = useState<State | null>(null);
+  const [isStateEditDialogOpen, setIsStateEditDialogOpen] = useState(false);
+
   // Update local state when fetched data changes
   useMemo(() => {
     if (initialWorkflow) {
@@ -332,6 +336,12 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
   };
 
   const handleStateUpdate = (updatedState: State) => {
+    // Open the edit dialog for the state
+    setSelectedStateForEdit(updatedState);
+    setIsStateEditDialogOpen(true);
+  };
+
+  const handleStateEditSave = (updatedState: State) => {
     const states = (workflow.states || []) as State[];
 
     // Enforce: only one initial state (excluding deleted states)
@@ -369,6 +379,28 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       // Don't unset final states - allow multiple final states
       return s;
     });
+
+    setWorkflow({
+      ...workflow,
+      states: newStates
+    });
+
+    toast.success("State updated");
+  };
+
+  const handleStatePositionChange = (stateId: string, position: { x: number; y: number }) => {
+    const states = (workflow.states || []) as State[];
+    const state = states.find((s) => s.id === stateId);
+
+    if (!state) return;
+
+    const updatedState = {
+      ...state,
+      position,
+      _changeType: (state._changeType === "synced" ? "modified" : state._changeType) as any
+    };
+
+    const newStates = states.map((s) => (s.id === stateId ? updatedState : s));
 
     setWorkflow({
       ...workflow,
@@ -454,6 +486,12 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
   };
 
   const handleTransitionAdd = (from_state_id: string, to_state_id: string) => {
+    // Don't allow self-loops through the UI
+    if (from_state_id === to_state_id) {
+      toast.error("Cannot create self-loop transitions via connection. Use the right-click menu instead.");
+      return;
+    }
+
     const transitions = workflow.transitions || [];
     const states = (workflow.states || []) as State[];
 
@@ -485,6 +523,19 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     setSelectedTransition(newTransition);
     setIsPanelOpen(true);
     toast.success("Transition added - configure it now");
+  };
+
+  const handleTransitionDelete = (transitionId: string) => {
+    const updatedTransitions = ((workflow.transitions || []) as Transition[]).map((t) =>
+      t.id === transitionId ? { ...t, _changeType: "deleted" as const } : t
+    );
+
+    setWorkflow({
+      ...workflow,
+      transitions: updatedTransitions
+    });
+
+    toast.success("Transition marked for deletion");
   };
 
   const handleSave = async () => {
@@ -615,14 +666,16 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
         onStateAdd={handleStateAdd}
       />
 
-      <WorkflowCanvas
+      <WorkflowFlow
         states={workflow.states}
         transitions={workflow.transitions}
         onStateAdd={handleStateAdd}
         onStateUpdate={handleStateUpdate}
+        onStatePositionChange={handleStatePositionChange}
         onStateDelete={handleStateDelete}
         onTransitionClick={handleTransitionClick}
         onTransitionAdd={handleTransitionAdd}
+        onTransitionDelete={handleTransitionDelete}
       />
 
       <TransitionPanel
@@ -685,6 +738,13 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <StateEditDialog
+        state={selectedStateForEdit}
+        isOpen={isStateEditDialogOpen}
+        onClose={() => setIsStateEditDialogOpen(false)}
+        onSave={handleStateEditSave}
+      />
     </div>
   );
 };
