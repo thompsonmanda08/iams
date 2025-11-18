@@ -25,6 +25,7 @@ interface StateEditDialogProps {
 
 export const StateEditDialog = ({ state, isOpen, onClose, onSave }: StateEditDialogProps) => {
   const [formData, setFormData] = useState<State | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (state) {
@@ -34,14 +35,38 @@ export const StateEditDialog = ({ state, isOpen, onClose, onSave }: StateEditDia
 
   if (!formData) return null;
 
-  const handleSave = () => {
-    onSave(formData);
-    onClose();
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Call the parent's onSave - if it throws, the dialog won't close
+      onSave(formData);
+      // Only close if save was successful
+      onClose();
+    } catch (error) {
+      // Error handling is done by parent component (it will show a toast)
+      // Dialog stays open so user can fix the issue
+      console.error("Error saving state:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Prevent closing dialog by clicking outside or pressing Escape
+  const handleOpenChange = (open: boolean) => {
+    if (open === false && !isSaving) {
+      // Allow closing only via Cancel button
+      onClose();
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]" onPointerDownOutside={(e) => {
+        // Prevent closing dialog by clicking outside
+        if (isSaving) {
+          e.preventDefault();
+        }
+      }}>
         <DialogHeader>
           <DialogTitle>Edit State</DialogTitle>
           <DialogDescription>
@@ -139,11 +164,11 @@ export const StateEditDialog = ({ state, isOpen, onClose, onSave }: StateEditDia
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!formData.name.trim()}>
-            Save Changes
+          <Button onClick={handleSave} disabled={!formData.name.trim() || isSaving}>
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
