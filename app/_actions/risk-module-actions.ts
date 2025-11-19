@@ -1280,35 +1280,7 @@ export async function getKRIs(params?: {
       params,
       method: "GET"
     });
-    const transformedData = response.data.data.data.map((kri: any) => {
-      const targetValue = parseFloat(kri.target_value);
-      const triggerValue = parseFloat(kri.trigger_value);
-      const limitValue = parseFloat(kri.limit_value);
-      const currentValue = kri.last_measured_value || targetValue;
-
-      let status: "normal" | "warning" | "critical" = "normal";
-      if (currentValue <= limitValue) {
-        status = "critical";
-      } else if (currentValue <= triggerValue) {
-        status = "warning";
-      }
-
-      const trend = currentValue >= targetValue ? "up" : "down";
-
-      return {
-        ...kri,
-        currentValue,
-        targetValue,
-        threshold: limitValue,
-        triggerValue,
-        status,
-        trend,
-        unit: "%",
-        lastUpdated: kri.updated_at || kri.created_at
-      };
-    });
-
-    return successResponse(transformedData);
+     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRIs", "/api/v1/kris");
   }

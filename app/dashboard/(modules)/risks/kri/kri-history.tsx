@@ -28,6 +28,10 @@ interface KRI {
   currentValue: number;
   targetValue: number;
   threshold: number;
+  target_value: number | string;
+  limit_value: number | string;
+  measurement_type?: string;
+  currency_code?: string;
   unit: string;
   status: string;
   trend: string;
@@ -39,21 +43,73 @@ interface KRIHistoryProps {
   onClose: () => void;
 }
 
+function formatValue(value: number, measurementType?: string, currencyCode?: string): string {
+  if (!measurementType) {
+    return value.toString();
+  }
+
+  switch (measurementType) {
+    case "PERCENT":
+      return `${value.toFixed(2)}%`;
+    case "CURRENCY":
+      return `${currencyCode || "USD"} ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    case "COUNT":
+      return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    case "NUMERIC":
+      return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    default:
+      return value.toString();
+  }
+}
+
+function getUnit(measurementType?: string, currencyCode?: string): string {
+  switch (measurementType) {
+    case "PERCENT":
+      return "%";
+    case "CURRENCY":
+      return currencyCode || "USD";
+    case "COUNT":
+      return "";
+    case "NUMERIC":
+      return "";
+    default:
+      return "";
+  }
+}
+
 function generateHistoricalData(kri: KRI) {
   const history = [];
   const today = new Date();
+  const targetValue =
+    typeof kri.target_value === "string"
+      ? parseFloat(kri.target_value)
+      : kri.targetValue || kri.target_value;
+  const limitValue =
+    typeof kri.limit_value === "string"
+      ? parseFloat(kri.limit_value)
+      : kri.threshold || kri.limit_value;
+
   for (let i = 6; i >= 0; i--) {
     const date = subDays(today, i);
     const dateStr = format(date, "MMM dd");
 
-    const variance = (Math.random() - 0.5) * 0.5; 
-    const trend = (kri.currentValue - kri.targetValue) / 7;
-    const value = Number((kri.targetValue + trend * (7 - i) + variance).toFixed(2));
+    // Create variance based on measurement type
+    let variance = 0;
+    if (kri.measurement_type === "CURRENCY") {
+      variance = (Math.random() - 0.5) * (targetValue as any * 0.1); // 10% variance
+    } else if (kri.measurement_type === "PERCENT") {
+      variance = (Math.random() - 0.5) * 5; // 5% variance
+    } else {
+      variance = (Math.random() - 0.5) * (targetValue * 0.2); // 20% variance
+    }
+
+    const trend = (kri.currentValue - targetValue) / 7;
+    const value = Number((targetValue as any + trend * (7 - i) + variance).toFixed(2));
 
     history.push({
       date: dateStr,
       value: value,
-      status: value >= kri.threshold ? "critical" : value > kri.targetValue ? "warning" : "normal"
+      status: value <= limitValue ? "critical" : value < targetValue ? "warning" : "normal"
     });
   }
 
@@ -65,11 +121,20 @@ function generateHistoricalData(kri: KRI) {
 function generateEvents(kri: KRI) {
   const events = [];
   const today = new Date();
+  const unit = getUnit(kri.measurement_type, kri.currency_code);
+  const targetValue =
+    typeof kri.target_value === "string"
+      ? parseFloat(kri.target_value)
+      : kri.targetValue || kri.target_value;
+  const limitValue =
+    typeof kri.limit_value === "string"
+      ? parseFloat(kri.limit_value)
+      : kri.threshold || kri.limit_value;
 
   // Current status event
   events.push({
     date: format(today, "MMM dd, yyyy HH:mm"),
-    event: `Value updated to ${kri.currentValue}${kri.unit}`,
+    event: `Value updated to ${formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)}`,
     type: "update"
   });
 
@@ -77,13 +142,13 @@ function generateEvents(kri: KRI) {
   if (kri.status === "critical") {
     events.push({
       date: format(subDays(today, 1), "MMM dd, yyyy HH:mm"),
-      event: `Threshold breach: Value exceeded ${kri.threshold}${kri.unit}`,
+      event: `Critical threshold breach: Value is below ${formatValue(limitValue as any, kri.measurement_type, kri.currency_code)}`,
       type: "warning"
     });
   } else if (kri.status === "warning") {
     events.push({
       date: format(subDays(today, 1), "MMM dd, yyyy HH:mm"),
-      event: `Approaching threshold (${kri.currentValue}${kri.unit})`,
+      event: `Warning: Value is below target (${formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)})`,
       type: "warning"
     });
   } else {
@@ -98,13 +163,22 @@ function generateEvents(kri: KRI) {
   if (kri.trend === "up") {
     events.push({
       date: format(subDays(today, 2), "MMM dd, yyyy HH:mm"),
-      event: "Upward trend detected",
-      type: "warning"
+      event: "Upward trend detected - Improving performance",
+      type: "info"
     });
   } else if (kri.trend === "down") {
     events.push({
       date: format(subDays(today, 2), "MMM dd, yyyy HH:mm"),
-      event: "Value showing improvement",
+      event: "Downward trend detected - Requires attention",
+      type: "warning"
+    });
+  }
+
+  // Measurement type specific events
+  if (kri.measurement_type === "CURRENCY") {
+    events.push({
+      date: format(subDays(today, 3), "MMM dd, yyyy HH:mm"),
+      event: `Financial metric tracking in ${kri.currency_code}`,
       type: "info"
     });
   }
@@ -132,12 +206,29 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
 
   if (!kri) return null;
 
+  const targetValue =
+    typeof kri.target_value === "string"
+      ? parseFloat(kri.target_value)
+      : kri.targetValue || kri.target_value;
+  const limitValue =
+    typeof kri.limit_value === "string"
+      ? parseFloat(kri.limit_value)
+      : kri.threshold || kri.limit_value;
+  const unit = getUnit(kri.measurement_type, kri.currency_code);
+
   return (
     <Sheet open={!!kri} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full overflow-y-auto px-4 sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle className="text-xl">{kri.name} - History</SheetTitle>
-          <SheetDescription>View historical trends and events for this KRI</SheetDescription>
+          <SheetDescription>
+            View historical trends and events for this KRI
+            {kri.measurement_type && (
+              <span className="bg-muted ml-2 rounded px-2 py-0.5 text-xs">
+                Type: {kri.measurement_type}
+              </span>
+            )}
+          </SheetDescription>
         </SheetHeader>
 
         <Tabs defaultValue="chart" className="mt-6">
@@ -162,8 +253,16 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    tickFormatter={(value) => {
+                      if (kri.measurement_type === "CURRENCY") {
+                        return `${kri.currency_code} ${value.toLocaleString()}`;
+                      } else if (kri.measurement_type === "PERCENT") {
+                        return `${value}%`;
+                      }
+                      return value.toString();
+                    }}
                     label={{
-                      value: kri.unit,
+                      value: unit,
                       angle: -90,
                       position: "insideLeft",
                       style: { fill: "hsl(var(--muted-foreground))" }
@@ -176,10 +275,13 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
                       borderRadius: "0.5rem",
                       color: "hsl(var(--popover-foreground))"
                     }}
-                    formatter={(value: any) => [`${value}${kri.unit}`, "Value"]}
+                    formatter={(value: any) => [
+                      formatValue(value, kri.measurement_type, kri.currency_code),
+                      "Value"
+                    ]}
                   />
                   <ReferenceLine
-                    y={kri.targetValue}
+                    y={targetValue}
                     stroke="#22c55e"
                     strokeDasharray="3 3"
                     label={{
@@ -189,11 +291,11 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
                     }}
                   />
                   <ReferenceLine
-                    y={kri.threshold}
+                    y={limitValue}
                     stroke="#ef4444"
                     strokeDasharray="3 3"
                     label={{
-                      value: "Threshold",
+                      value: "Limit",
                       position: "right",
                       fill: "#ef4444"
                     }}
@@ -213,23 +315,20 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
             <div className="grid grid-cols-3 gap-4">
               <div className="border-border bg-card rounded-lg border p-4">
                 <p className="text-muted-foreground text-xs">Current</p>
-                <p className="text-foreground mt-1 text-2xl font-semibold">
-                  {kri.currentValue}
-                  {kri.unit}
+                <p className="text-foreground mt-1 text-xl font-semibold">
+                  {formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)}
                 </p>
               </div>
               <div className="border-border bg-card rounded-lg border p-4">
                 <p className="text-muted-foreground text-xs">Target</p>
-                <p className="mt-1 text-2xl font-semibold text-green-600">
-                  {kri.targetValue}
-                  {kri.unit}
+                <p className="mt-1 text-xl font-semibold text-green-600">
+                  {formatValue(targetValue, kri.measurement_type, kri.currency_code)}
                 </p>
               </div>
               <div className="border-border bg-card rounded-lg border p-4">
-                <p className="text-muted-foreground text-xs">Threshold</p>
-                <p className="mt-1 text-2xl font-semibold text-red-600">
-                  {kri.threshold}
-                  {kri.unit}
+                <p className="text-muted-foreground text-xs">Limit</p>
+                <p className="mt-1 text-xl font-semibold text-red-600">
+                  {formatValue(limitValue, kri.measurement_type, kri.currency_code)}
                 </p>
               </div>
             </div>
