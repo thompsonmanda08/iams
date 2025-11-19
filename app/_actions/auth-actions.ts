@@ -365,13 +365,29 @@ export const initializeSystemSetup = cache(_initializeSystemSetup);
 export async function getRefreshToken(): Promise<APIResponse> {
   const url = `/api/v1/auth/refresh-token`;
 
-  const { isAuthenticated } = await verifySession();
+  const { isAuthenticated, session } = await verifySession();
 
   if (!isAuthenticated) {
+    logger.warn("Cannot refresh token - user not authenticated", {
+      function: "getRefreshToken",
+      isAuthenticated
+    });
     return unauthorizedResponse("UNAUTHORIZED");
   }
 
   try {
+    // ✅ Log expiry time before attempting refresh
+    const expiryTime = session?.expiresAt ? new Date(session.expiresAt) : null;
+    const timeUntilExpiry = expiryTime ? expiryTime.getTime() - Date.now() : null;
+
+    logger.debug("Attempting to refresh token", {
+      function: "getRefreshToken",
+      endpoint: url,
+      expiresAt: expiryTime?.toISOString(),
+      timeUntilExpiryMs: timeUntilExpiry,
+      timeUntilExpiryMins: timeUntilExpiry ? Math.round(timeUntilExpiry / 60000) : null
+    });
+
     const response = await authenticatedApiClient({ url });
 
     const access_token = response.data?.access_token;
@@ -379,16 +395,20 @@ export async function getRefreshToken(): Promise<APIResponse> {
     await updateAuthSession({ access_token });
 
     // ✅ Log success without exposing token value
-    logger.info("Token refreshed successfully", {
+    logger.info("✅ Token refreshed successfully", {
       function: "getRefreshToken",
-      endpoint: url
+      endpoint: url,
+      previousExpiryMs: timeUntilExpiry
     });
 
     return successResponse({ access_token }, response.data?.message);
   } catch (error: Error | any) {
-    logger.error("Token refresh failed", error, {
+    logger.error("❌ Token refresh failed - user will experience auth failure on next request", error, {
       function: "getRefreshToken",
-      endpoint: url
+      endpoint: url,
+      errorCode: (error as any)?.code,
+      errorMessage: (error as Error)?.message,
+      status: (error as any)?.response?.status
     });
     return handleError(error, "GET | REFRESH TOKEN", url);
   }

@@ -37,10 +37,16 @@ export const useRefreshToken = (enabled: boolean = false) =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN, enabled],
     queryFn: getRefreshToken,
-    retry: 1,
-    retryDelay: 1000,
+    // ✅ CRITICAL FIX: Increase retries to prevent silent token expiry
+    // With only 1 retry, temporary network issues cause permanent failure
+    retry: 3,
+    retryDelay: (attemptIndex) => {
+      // Exponential backoff: 1s, 2s, 4s
+      return Math.min(1000 * Math.pow(2, attemptIndex), 8000);
+    },
     refetchOnMount: false,
-    // ✅ Auto-refresh every 50 minutes when enabled
+    // ✅ Auto-refresh every 25 minutes when enabled
+    // This is BEFORE the 30-minute session expiry
     refetchInterval: enabled ? REFRESH_INTERVAL : false,
     staleTime: 0, // Always consider stale to enable refetch
     enabled

@@ -66,7 +66,6 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
     setIsDeleteDialogOpen(true);
   };
 
-  console.log("workflows", workflows);
 
   const workflowBeingDeleted = useMemo(
     () => workflows?.find((w) => w.id === workflowToDelete),

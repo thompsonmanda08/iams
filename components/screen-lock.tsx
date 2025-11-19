@@ -214,9 +214,11 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     }
   }, [loggedIn]);
 
-  // ✅ Setup BroadcastChannel for multi-tab synchronization
+  // ✅ Setup BroadcastChannel for multi-tab synchronization with localStorage fallback
   useEffect(() => {
     if (!loggedIn || typeof window === "undefined") return;
+
+    let storageListenerCleanup: (() => void) | null = null;
 
     try {
       // Create BroadcastChannel for cross-tab communication
@@ -228,7 +230,8 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
           const { isLocked } = event.data;
           logger.info("🔄 Screen lock state changed in another tab, syncing", {
             component: "IdleTimerContainer",
-            isLocked
+            isLocked,
+            method: "BroadcastChannel"
           });
           setState(isLocked ? "Idle" : "Active");
           setIsDialogOpen(isLocked);
@@ -237,32 +240,124 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
 
       broadcastChannelRef.current.addEventListener("message", handleMessage);
 
+      // ✅ CRITICAL FIX: Add localStorage fallback for browsers that don't support BroadcastChannel
+      // Browsers like Firefox private mode don't support BroadcastChannel
+      // localStorage.setItem triggers 'storage' event in other tabs
+      const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === "__SCREEN_LOCK_STATE__") {
+          try {
+            const data = event.newValue ? JSON.parse(event.newValue) : null;
+            if (data?.type === "SCREEN_LOCK_CHANGED") {
+              const { isLocked } = data;
+              logger.info("🔄 Screen lock state changed in another tab (localStorage), syncing", {
+                component: "IdleTimerContainer",
+                isLocked,
+                method: "localStorage"
+              });
+              setState(isLocked ? "Idle" : "Active");
+              setIsDialogOpen(isLocked);
+            }
+          } catch (error) {
+            logger.debug("Failed to parse storage event data", {
+              component: "IdleTimerContainer"
+            });
+          }
+        }
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+      storageListenerCleanup = () => window.removeEventListener("storage", handleStorageChange);
+
       return () => {
         if (broadcastChannelRef.current) {
           broadcastChannelRef.current.removeEventListener("message", handleMessage);
           broadcastChannelRef.current.close();
           broadcastChannelRef.current = null;
         }
+        if (storageListenerCleanup) {
+          storageListenerCleanup();
+        }
       };
     } catch (error) {
-      logger.warn("BroadcastChannel not supported, multi-tab sync disabled", {
+      logger.warn("BroadcastChannel not supported, using localStorage fallback for multi-tab sync", {
         component: "IdleTimerContainer",
         error: (error as Error)?.message
       });
+
+      // Fallback: Use localStorage for cross-tab communication
+      const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === "__SCREEN_LOCK_STATE__") {
+          try {
+            const data = event.newValue ? JSON.parse(event.newValue) : null;
+            if (data?.type === "SCREEN_LOCK_CHANGED") {
+              const { isLocked } = data;
+              logger.info("🔄 Screen lock state changed in another tab (localStorage), syncing", {
+                component: "IdleTimerContainer",
+                isLocked,
+                method: "localStorage"
+              });
+              setState(isLocked ? "Idle" : "Active");
+              setIsDialogOpen(isLocked);
+            }
+          } catch (error) {
+            logger.debug("Failed to parse storage event data", {
+              component: "IdleTimerContainer"
+            });
+          }
+        }
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+      storageListenerCleanup = () => window.removeEventListener("storage", handleStorageChange);
+
+      return () => {
+        if (storageListenerCleanup) {
+          storageListenerCleanup();
+        }
+      };
     }
   }, [loggedIn]);
 
-  // ✅ Broadcast state changes to other tabs
+  // ✅ Broadcast state changes to other tabs (BroadcastChannel + localStorage fallback)
   useEffect(() => {
-    if (!broadcastChannelRef.current || !loggedIn) return;
+    if (!loggedIn) return;
 
+    const message = {
+      type: "SCREEN_LOCK_CHANGED",
+      isLocked: isIdle
+    };
+
+    // Try BroadcastChannel first
+    if (broadcastChannelRef.current) {
+      try {
+        broadcastChannelRef.current.postMessage(message);
+        logger.debug("📢 Broadcasted screen lock state change to other tabs", {
+          component: "IdleTimerContainer",
+          isLocked: isIdle,
+          method: "BroadcastChannel"
+        });
+        return;
+      } catch (error) {
+        logger.debug("Failed to broadcast via BroadcastChannel, falling back to localStorage", {
+          component: "IdleTimerContainer",
+          error: (error as Error)?.message
+        });
+      }
+    }
+
+    // Fallback: Use localStorage for browsers without BroadcastChannel
     try {
-      broadcastChannelRef.current.postMessage({
-        type: "SCREEN_LOCK_CHANGED",
-        isLocked: isIdle
+      window.localStorage.setItem(
+        "__SCREEN_LOCK_STATE__",
+        JSON.stringify({ ...message, timestamp: Date.now() })
+      );
+      logger.debug("📢 Broadcasted screen lock state change via localStorage", {
+        component: "IdleTimerContainer",
+        isLocked: isIdle,
+        method: "localStorage"
       });
     } catch (error) {
-      logger.debug("Failed to broadcast screen lock state change", {
+      logger.debug("Failed to broadcast via localStorage", {
         component: "IdleTimerContainer",
         error: (error as Error)?.message
       });
@@ -276,15 +371,22 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     isLoading: isRefreshing
   } = useRefreshToken(Boolean(loggedIn && !isIdle));
 
-  // ✅ Handle refresh errors
+  // ✅ Handle refresh errors - CRITICAL FIX: Prevent silent auth failure
   useEffect(() => {
     if (refreshError) {
-      logger.error("Background token refresh failed", refreshError, {
-        component: "IdleTimerContainer"
+      logger.error("🔄 Background token refresh failed - session may be expiring", refreshError, {
+        component: "IdleTimerContainer",
+        refreshError: (refreshError as any)?.message
       });
 
-      // Optional: Show warning to user if refresh fails repeatedly
-      // toast.warning("Your session may be expiring. Please save your work.");
+      // Show user warning if token refresh consistently fails
+      // This prevents the silent expiry issue where user works but token dies
+      toast.warning(
+        "⚠️ Your session may be expiring. Please save your work and log back in if needed.",
+        {
+          duration: 10000 // Show for 10 seconds
+        }
+      );
     }
   }, [refreshError]);
 
@@ -320,9 +422,12 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         lockSuccess
       });
 
-      setState("Idle");
-      // Immediately open dialog to ensure it displays without race conditions
+      // ✅ CRITICAL FIX: Open dialog BEFORE state change to prevent race condition
+      // Setting state and dialog in separate calls can cause the component to render
+      // with only one state update applied, causing the dialog to be missed
+      // By opening dialog first, we ensure it's visible even if state updates are batched
       setIsDialogOpen(true);
+      setState("Idle");
     } catch (error) {
       logger.error("❌ Exception while activating screen lock", error, {
         component: "IdleTimerContainer.onIdle"
@@ -336,6 +441,9 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     if (state === "Idle") return;
     // Reset local idle state if not idle
     setState("Active");
+    // ✅ CRITICAL FIX: Reset the actual idle timer countdown
+    // Without this, the timer continues counting even when user is active
+    idleTimer.reset();
   };
 
   const onAction = async () => setCount(count + 1);
