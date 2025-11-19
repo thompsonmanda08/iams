@@ -5,11 +5,9 @@ import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent
+  ChartTooltipContent
 } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
 
 interface SystemHealthProps {
   systemHealth: {
@@ -36,6 +34,12 @@ const activityChartConfig = {
   }
 } satisfies ChartConfig;
 
+const COLORS = {
+  active: "var(--state-node-final)",
+  inactive: "var(--amber-active)",
+  locked: "var(--destructive)"
+};
+
 export default function SystemHealth({ systemHealth }: SystemHealthProps) {
   const users = [
     { name: "Total Users", count: systemHealth.total_users },
@@ -44,12 +48,21 @@ export default function SystemHealth({ systemHealth }: SystemHealthProps) {
     { name: "Locked Accounts", count: systemHealth.locked_users }
   ];
 
-  const userStatusData = [
+  const pieData = [
     {
-      category: "Users",
-      active: systemHealth.active_users,
-      inactive: systemHealth.inactive_users,
-      locked: systemHealth.locked_users
+      name: "Active",
+      value: systemHealth.active_users,
+      color: COLORS.active
+    },
+    {
+      name: "Inactive",
+      value: systemHealth.inactive_users,
+      color: COLORS.inactive
+    },
+    {
+      name: "Locked",
+      value: systemHealth.locked_users,
+      color: COLORS.locked
     }
   ];
 
@@ -73,39 +86,27 @@ export default function SystemHealth({ systemHealth }: SystemHealthProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>User Status Overview</CardTitle>
-            <CardDescription>Current user account status values</CardDescription>
+            <CardTitle>User Status Distribution</CardTitle>
+            <CardDescription>Visual breakdown of user account statuses</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={activityChartConfig} className="h-[300px] w-full">
-              <LineChart data={userStatusData}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="category" tickLine={false} tickMargin={10} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value">
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Line
-                  type="monotone"
-                  dataKey="active"
-                  stroke="var(--state-node-final)"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="inactive"
-                  stroke="var(--amber-active)"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="locked"
-                  stroke="var(--destructive)"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
+              </PieChart>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -120,28 +121,36 @@ export default function SystemHealth({ systemHealth }: SystemHealthProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-state-node-final h-3 w-3 rounded-full"></div>
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: COLORS.active }}></div>
                   <span className="text-sm">Active Users</span>
                 </div>
-                <span className="text-state-node-final font-semibold">
+                <span className="font-semibold" style={{ color: COLORS.active }}>
                   {systemHealth.active_users}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-amber-active h-3 w-3 rounded-full"></div>
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: COLORS.inactive }}></div>
                   <span className="text-sm">Inactive Users</span>
                 </div>
-                <span className="text-amber-active font-semibold">
+                <span className="font-semibold" style={{ color: COLORS.inactive }}>
                   {systemHealth.inactive_users}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-destructive h-3 w-3 rounded-full"></div>
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: COLORS.locked }}></div>
                   <span className="text-sm">Locked Users</span>
                 </div>
-                <span className="text-destructive font-semibold">{systemHealth.locked_users}</span>
+                <span className="font-semibold" style={{ color: COLORS.locked }}>
+                  {systemHealth.locked_users}
+                </span>
               </div>
 
               {/* Visual distribution bar */}
@@ -149,23 +158,26 @@ export default function SystemHealth({ systemHealth }: SystemHealthProps) {
                 <div className="text-muted-foreground mb-2 text-xs font-medium">Distribution</div>
                 <div className="bg-muted flex h-4 w-full overflow-hidden rounded-full">
                   <div
-                    className="bg-state-node-final h-full transition-all"
+                    className="h-full transition-all"
                     style={{
-                      width: `${(systemHealth.active_users / systemHealth.total_users) * 100}%`
+                      width: `${(systemHealth.active_users / systemHealth.total_users) * 100}%`,
+                      backgroundColor: COLORS.active
                     }}
                     title={`Active: ${systemHealth.active_users} users`}
                   />
                   <div
-                    className="bg-amber-active h-full transition-all"
+                    className="h-full transition-all"
                     style={{
-                      width: `${(systemHealth.inactive_users / systemHealth.total_users) * 100}%`
+                      width: `${(systemHealth.inactive_users / systemHealth.total_users) * 100}%`,
+                      backgroundColor: COLORS.inactive
                     }}
                     title={`Inactive: ${systemHealth.inactive_users} users`}
                   />
                   <div
-                    className="bg-destructive h-full transition-all"
+                    className="h-full transition-all"
                     style={{
-                      width: `${(systemHealth.locked_users / systemHealth.total_users) * 100}%`
+                      width: `${(systemHealth.locked_users / systemHealth.total_users) * 100}%`,
+                      backgroundColor: COLORS.locked
                     }}
                     title={`Locked: ${systemHealth.locked_users} users`}
                   />

@@ -37,7 +37,8 @@ import {
   useAuditableAreas,
   useStrategicPillars,
   useStrategicInitiatives,
-  useIndicativeTargets
+  useIndicativeTargets,
+  useProcessActivities
 } from "@/hooks/use-audit-settings-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
 import { useRisks } from "@/hooks/use-risk-query-data";
@@ -70,7 +71,7 @@ interface UniverseItem {
   indicative_target_id?: string | null;
   strategic_initiative_id?: string | null;
   risk_id?: string | null;
-  process_activity: string;
+  process_activity_id: string;
   audit_frequency: string;
   is_active: boolean;
   name: string;
@@ -89,7 +90,7 @@ interface UniverseItemFormData {
   indicative_target_id?: string;
   strategic_initiative_id?: string;
   risk_id?: string;
-  process_activity: string;
+  process_activity_id: string;
   audit_frequency: string;
   is_active: boolean;
   name: string;
@@ -103,7 +104,7 @@ const INIT_ITEM_DATA: UniverseItemFormData = {
   indicative_target_id: "",
   strategic_initiative_id: "",
   risk_id: "",
-  process_activity: "",
+  process_activity_id: "",
   name: "",
   audit_frequency: "ANNUALLY",
   is_active: true
@@ -148,6 +149,12 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
 
   const { data: indicativeTargetsResponse } = useIndicativeTargets();
   const indicativeTargetsData = indicativeTargetsResponse?.data || [];
+
+  const { data: processActivitiesResponse } = useProcessActivities({
+    department_id: itemData.department_id
+  });
+
+  const processActivitiesData = processActivitiesResponse?.data || [];
 
   const { data: risksResponse } = useRisks();
   const risksData = risksResponse?.data || [];
@@ -194,6 +201,13 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
       name: initiative.strategic_initiative_name || initiative.name || initiative.title
     }));
   }, [strategicInitiativesData]);
+
+  const processActivitiesOptions = useMemo(() => {
+    return processActivitiesData?.map((process: any) => ({
+      id: process.id,
+      name: process.name || process.title
+    }));
+  }, [processActivitiesData]);
 
   // Helper function to get department name by ID
   const getDepartmentName = (departmentId: string) => {
@@ -255,7 +269,7 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
         indicative_target_id: itemData.indicative_target_id || null,
         strategic_initiative_id: itemData.strategic_initiative_id || null,
         risk_id: itemData.risk_id || null,
-        process_activity: itemData.process_activity,
+        process_activity_id: itemData.process_activity_id || null,
         audit_frequency: itemData.audit_frequency,
         is_active: itemData.is_active,
         name: itemData.name
@@ -307,7 +321,7 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
       indicative_target_id: item.indicative_target_id || "",
       strategic_initiative_id: item.strategic_initiative_id || "",
       risk_id: item.risk_id || "",
-      process_activity: item.process_activity,
+      process_activity_id: item.process_activity_id,
       audit_frequency: item.audit_frequency,
       is_active: item.is_active,
       name: item.name
@@ -446,11 +460,10 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">
-                    Process/Activity <span className="text-destructive">*</span>
-                  </Label>
                   <Input
-                    id="process_activity"
+                    className="flex w-full max-w-lg"
+                    label="Universe Item Name"
+                    id="name"
                     value={itemData.name}
                     onChange={(e) => updateItemData({ name: e.target.value })}
                     placeholder="e.g., Information security policy"
@@ -540,6 +553,19 @@ const UniverseDetails = ({ universe, universeItems }: UniverseDetailsProps) => {
                     className="w-full"
                   />
                 </div>
+
+                <SelectField
+                  id="process_activity_id"
+                  label="Process/Activity"
+                  required
+                  placeholder="--Select a process/activity--"
+                  value={itemData.process_activity_id || ""}
+                  onValueChange={(value) => updateItemData({ process_activity_id: value })}
+                  options={processActivitiesOptions}
+                  isDisabled={!itemData.department_id}
+                  className="w-full"
+                  descriptionText="Select department to show process/activity"
+                />
               </div>
 
               <div className="flex justify-end gap-3">
