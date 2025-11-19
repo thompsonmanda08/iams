@@ -49,7 +49,8 @@ Welcome to the INFRATEL IAMS (Integrated Audit and Risk Management System) docum
 
 ### 🔒 Security - [security/](security/)
 
-- [SESSION_MANAGEMENT.md](security/SESSION_MANAGEMENT.md) - Session handling, screen lock, multi-tab sync
+- [SESSION_MANAGEMENT.md](security/SESSION_MANAGEMENT.md) - Session handling, token refresh, cookie security
+- [SCREEN_LOCK.md](security/SCREEN_LOCK.md) - Idle detection, screen locking, multi-tab sync
 
 ### 📦 Deployment - [deployment/](deployment/)
 
