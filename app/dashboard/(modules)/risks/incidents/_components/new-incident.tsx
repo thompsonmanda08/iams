@@ -7,13 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -25,12 +18,14 @@ import { getDepartments, getRiskCausesHierarchy } from "@/app/_actions/config-ac
 import { toast } from "sonner";
 import { getUsers } from "@/app/_actions/user-actions";
 import { createIncident } from "@/app/_actions/incident-actions";
+import { getKRIs } from "@/app/_actions/risk-module-actions";
 
 export function NewIncident() {
   const [formData, setFormData] = useState({
     department_id: "",
     primary_cause_id: "",
     specific_cause_id: "",
+    kri_id: "",
     materiality: "",
     incident_date: undefined as Date | undefined,
     discovery_date: undefined as Date | undefined,
@@ -40,17 +35,20 @@ export function NewIncident() {
     action_plan: "",
     due_date: undefined as Date | undefined,
     responsible_person_id: "",
-    financial_loss_implications: ""
+    financial_loss_implications: "",
+    measured_value: 0
   });
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [causes, setCauses] = useState<any[]>([]);
+  const [kris, setKris] = useState<any[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
   const [loadingCauses, setLoadingCauses] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingKRIs, setLoadingKRIs] = useState(false);
 
   // Load functions
   const loadDepartments = async () => {
@@ -88,7 +86,6 @@ export function NewIncident() {
     setLoadingCauses(true);
     try {
       const response = await getRiskCausesHierarchy();
-      console.log("CAUSES:", response);
 
       if (response.success && response.data) {
         setCauses(response.data);
@@ -97,6 +94,26 @@ export function NewIncident() {
       toast.error("Error loading causes");
     } finally {
       setLoadingCauses(false);
+    }
+  };
+
+  const loadKRIs = async (departmentId: string) => {
+    setLoadingKRIs(true);
+    try {
+      const response = await getKRIs({
+        department_id: departmentId
+      });
+
+      if (response.success && response.data?.data) {
+        setKris(response.data.data);
+      } else {
+        setKris([]);
+      }
+    } catch (error) {
+      toast.error("Error loading KRIs");
+      setKris([]);
+    } finally {
+      setLoadingKRIs(false);
     }
   };
 
@@ -124,11 +141,12 @@ export function NewIncident() {
     try {
       const response = await createIncident(formData);
       if (response.success) {
-        toast.success(response.message || "Risk register created successfully");
+        toast.success(response.message || "Incident created successfully");
         setFormData({
           department_id: "",
           primary_cause_id: "",
           specific_cause_id: "",
+          kri_id: "",
           materiality: "",
           incident_date: undefined as Date | undefined,
           discovery_date: undefined as Date | undefined,
@@ -138,10 +156,11 @@ export function NewIncident() {
           action_plan: "",
           due_date: undefined as Date | undefined,
           responsible_person_id: "",
-          financial_loss_implications: ""
+          financial_loss_implications: "",
+          measured_value: 0
         });
       } else {
-        toast.error(response.message || "Failed to create risk register");
+        toast.error(response.message || "Failed to create incident");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -158,8 +177,11 @@ export function NewIncident() {
   useEffect(() => {
     if (formData.department_id) {
       loadUsers(formData.department_id);
+      loadKRIs(formData.department_id);
     } else {
       setUsers([]);
+      setKris([]);
+      setFormData((prev) => ({ ...prev, kri_id: "" }));
     }
   }, [formData.department_id]);
 
@@ -181,7 +203,7 @@ export function NewIncident() {
             <SearchSelectField
               label="Department"
               required
-              placeholder="Select department "
+              placeholder="Select department"
               options={departments}
               value={formData.department_id}
               onValueChange={(value) => setFormData({ ...formData, department_id: value })}
@@ -203,39 +225,38 @@ export function NewIncident() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* <div className="space-y-2">
-              <Label htmlFor="cause1">Primary Cause</Label>
-              <Select
-                value={formData.cause1}
-                onValueChange={(value) => setFormData({ ...formData, cause1: value })}>
-                <SelectTrigger id="cause1" className="w-full">
-                  <SelectValue placeholder="Select cause 1" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="human-error">Human Error</SelectItem>
-                  <SelectItem value="system-failure">System Failure</SelectItem>
-                  <SelectItem value="process-gap">Process Gap</SelectItem>
-                  <SelectItem value="external-factor">External Factor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div> */}
+            <SearchSelectField
+              label="Key Risk Indicator (KRI)"
+              required
+              placeholder={
+                !formData.department_id
+                  ? "Select department first"
+                  : loadingKRIs
+                    ? "Loading KRIs..."
+                    : kris.length === 0
+                      ? "No KRIs available"
+                      : "Select KRI"
+              }
+              options={kris}
+              value={formData.kri_id}
+              onValueChange={(value) => setFormData({ ...formData, kri_id: value })}
+              isLoading={loadingKRIs}
+              isDisabled={isLoading || loadingKRIs || !formData.department_id}
+              classNames={{ wrapper: "max-w-full" }}
+            />
 
-            {/* <div className="space-y-2">
-              <Label htmlFor="cause2">Specific Cause</Label>
-              <Select
-                value={formData.cause2}
-                onValueChange={(value) => setFormData({ ...formData, cause2: value })}>
-                <SelectTrigger id="cause2" className="w-full">
-                  <SelectValue placeholder="Select cause 2" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="training">Lack of Training</SelectItem>
-                  <SelectItem value="documentation">Poor Documentation</SelectItem>
-                  <SelectItem value="communication">Communication Breakdown</SelectItem>
-                  <SelectItem value="resources">Insufficient Resources</SelectItem>
-                </SelectContent>
-              </Select>
-            </div> */}
+            <Input
+              id="measured_value"
+              label="Measured Value"
+              required
+              type="number"
+              placeholder="eg, 20.01"
+              value={formData.measured_value}
+              onChange={(e) => setFormData({ ...formData, measured_value: e.target.valueAsNumber })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SearchSelectField
               label="Primary Cause"
               required
@@ -399,12 +420,14 @@ export function NewIncident() {
             <SearchSelectField
               label="Responsible Person"
               required
-              placeholder="Select responsible person"
+              placeholder={
+                !formData.department_id ? "Select department first" : "Select responsible person"
+              }
               options={departmentUser}
               value={formData.responsible_person_id}
               onValueChange={(value) => setFormData({ ...formData, responsible_person_id: value })}
               isLoading={loadingUsers}
-              isDisabled={isLoading || loadingUsers}
+              isDisabled={isLoading || loadingUsers || !formData.department_id}
               classNames={{ wrapper: "max-w-full" }}
             />
           </div>
@@ -421,7 +444,7 @@ export function NewIncident() {
             classNames={{ wrapper: "max-w-full" }}
           />
 
-          <Button type="submit" size="lg">
+          <Button type="submit" size="lg" disabled={isLoading}>
             {isLoading ? "Creating Incident..." : "Submit Incident"}
           </Button>
         </form>

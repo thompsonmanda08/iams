@@ -10,8 +10,6 @@ import { getDashboardStats } from "@/app/_actions/reports-actions";
 export default async function Dashboard() {
   const data = await getDashboardStats();
 
-  console.log("LOG:", data);
-
   // Calculate stats
   const totalRisks = data.data.overview.total_risks || 0;
   const highRisks = data.data.risk_summary.risks_by_rating.High || 0;

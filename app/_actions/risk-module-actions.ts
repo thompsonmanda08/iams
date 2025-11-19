@@ -384,12 +384,22 @@ export interface KRIInput {
   category_id: string;
   department_id: string;
   target_value: string;
-  trigger_value: string;
+  from_trigger_value: string;
+  from_trigger_condition: string;
+  to_trigger_value: string;
+  to_trigger_condition: string;
   limit_value: string;
-  monitoring_frequency: KRIFrequency;
+  measurement_type: string;
+  currency_code: string;
+  monitoring_frequency: KRIFrequency | "";
   owner_id: string;
-  commentary?: string;
-  mitigant_plan?: string;
+  status_evaluation_method: string;
+  use_moving_average: boolean;
+  moving_average_days: number;
+  invert_direction: boolean;
+  auto_generate_risks: boolean;
+  commentary: string;
+  mitigant_plan: string;
 }
 
 export interface KRIMeasurement {
@@ -1006,7 +1016,7 @@ export const getRisksInRegister = cache(_getRisksInRegister);
 /**
  * Update risk status
  */
-export async function updateRiskStatus(id: string, status: RiskStatus): Promise<APIResponse> {
+export async function updateRiskStatus(id: string, status: any): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risks/${id}/status`,

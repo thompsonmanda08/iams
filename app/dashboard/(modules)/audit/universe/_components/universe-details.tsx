@@ -12,13 +12,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+
 import { Plus, Pencil, Trash2, Save, Globe, Send } from "lucide-react";
 import { toast } from "sonner";
 import { StatusBadge } from "@/components/status-badge";
