@@ -2,16 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
-import authenticatedApiClient, {
-  handleError,
-  successResponse
-} from "./api-config";
+import authenticatedApiClient, { handleError, successResponse } from "./api-config";
 
 // CREATE SMTP CONFIG
 export async function createSmtpConfig(data: any): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/organizations/smtp-configs",
+      url: "/api/v1/smtp-configs",
       method: "POST",
       data
     });
@@ -19,11 +16,7 @@ export async function createSmtpConfig(data: any): Promise<APIResponse> {
     revalidatePath("/dashboard/system-configs/mail-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
-    return handleError(
-      error,
-      "POST | CREATE SMTP CONFIG",
-      "/api/v1/organizations/smtp-configs"
-    );
+    return handleError(error, "POST | CREATE SMTP CONFIG", "/api/v1/organizations/smtp-configs");
   }
 }
 
@@ -31,25 +24,20 @@ export async function createSmtpConfig(data: any): Promise<APIResponse> {
 export async function getSmtpConfig(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/organizations/smtp-configs",
-      method: "GET",
+      url: "/api/v1/smtp-configs",
+      method: "GET"
     });
     return successResponse(response?.data.data);
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | GET SMTP CONFIG",
-      "/api/v1/organizations/smtp-configs"
-    );
+    return handleError(error, "GET | GET SMTP CONFIG", "/api/v1/organizations/smtp-configs");
   }
 }
-
 
 // UPDATE SMTP CONFIG
 export async function updateSmtpConfig(id: string, data: any): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/organizations/smtp-configs/${id}`,
+      url: `/api/v1/smtp-configs`,
       method: "PUT",
       data
     });
@@ -69,18 +57,13 @@ export async function updateSmtpConfig(id: string, data: any): Promise<APIRespon
 export async function deleteSmtpConfig(id: string): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/organizations/smtp-configs/${id}`,
-      method: "DELETE",
+      url: `/api/v1/smtp-configs/${id}`,
+      method: "DELETE"
     });
 
     revalidatePath("/dashboard/system-configs/mail-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
-    return handleError(
-      error,
-      "DELETE | REMOVE SMTP CONFIG",
-      `/api/v1/organizations/smtp-configs/${id}`
-    );
+    return handleError(error, "DELETE | REMOVE SMTP CONFIG", `/api/v1/smtp-configs/${id}`);
   }
 }
-
