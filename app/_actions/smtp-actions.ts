@@ -27,6 +27,23 @@ export async function createSmtpConfig(data: any): Promise<APIResponse> {
   }
 }
 
+// GET SMTP CONFIG
+export async function getSmtpConfig(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/organizations/smtp-configs",
+      method: "GET",
+    });
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET SMTP CONFIG",
+      "/api/v1/organizations/smtp-configs"
+    );
+  }
+}
+
 
 // UPDATE SMTP CONFIG
 export async function updateSmtpConfig(id: string, data: any): Promise<APIResponse> {
