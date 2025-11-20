@@ -354,9 +354,28 @@ export function MultiStepCompanyForm({
     setIsLoading(true);
     try {
       const payload: any = {
-        ...stepOneData,
-        ...stepTwoData,
-        ...stepThreeData
+        // ...stepOneData,
+        name: stepOneData.name,
+        code: stepOneData.code,
+        address: stepOneData.address,
+        description: stepOneData.description,
+        contact_email: stepOneData.contact_email,
+        contact_phone: stepOneData.contact_phone,
+        logo_url: stepOneData.logo_url,
+
+        /* ...stepTwoData */
+        country_id: stepTwoData.country_id,
+        province_id: stepTwoData.province_id,
+        town_id: stepTwoData.town_id,
+
+        /* ...stepThreeData */
+        subscription_tier: stepThreeData.subscription_tier,
+        max_users: stepThreeData.max_users,
+        admin_username: stepThreeData.admin_username,
+        admin_email: stepThreeData.admin_email,
+        admin_first_name: stepThreeData.admin_first_name,
+        admin_last_name: stepThreeData.admin_last_name,
+        admin_password: stepThreeData.admin_password
       };
 
       // If in edit mode, include company ID
