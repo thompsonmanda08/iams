@@ -122,10 +122,19 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
   const response = await getKRIs({ kri_register_id: id });
   const kris: any[] = response.success && response.data?.data ? response.data.data : [];
 
+  // Normalize status values
+  const normalizeStatus = (status: string): string => {
+    const normalized = status?.toLowerCase();
+    if (normalized === "green") return "normal";
+    if (normalized === "amber") return "warning";
+    if (normalized === "critical" || normalized === "red") return "critical";
+    return normalized || "normal";
+  };
+
   // Calculate status for each KRI
   const enrichedKRIs = kris.map((kri) => {
     const currentValue = kri.last_measured_value || 0;
-    const status =
+    const calculatedStatus =
       kri.last_status ||
       calculateStatus(
         currentValue,
@@ -135,6 +144,8 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
         kri.to_trigger_condition,
         kri.limit_value
       );
+
+    const status = normalizeStatus(calculatedStatus);
 
     return {
       ...kri,

@@ -674,7 +674,7 @@ export async function getRiskCategories(params?: {
     });
     return successResponse(response.data?.data);
   } catch (error) {
-    console.log("ERROR:", error);
+   
 
     return handleError(error, "GET | GET RISK CATEGORIES", "/api/v1/risk-categories");
   }
@@ -839,7 +839,7 @@ export async function createRiskRegister(input: RiskRegisterInput): Promise<APIR
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
-    console.log("ERROR", error);
+   
 
     return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/risk-registers");
   }
@@ -1208,6 +1208,23 @@ export async function getKRIRegister(id: string): Promise<APIResponse> {
 }
 
 /**
+ * Get KRI stats
+ */
+
+export async function getKRIStats(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/kris/stats",
+      method: "GET"
+    });
+    
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "GET | GET KRI STATS", "/api/v1/kris/stats");
+  }
+}
+
+/**
  * Create a new KRI register
  */
 export async function createKRIRegister(input: KRIRegisterInput): Promise<APIResponse> {
@@ -1572,7 +1589,7 @@ export async function createRiskAction(data: {
   if (!data?.risk_id) {
     return handleBadRequest("Risk ID is required");
   }
-  console.log(data);
+ 
 
   const url = `/api/v1/risks/${data.risk_id}/actions`;
   try {
