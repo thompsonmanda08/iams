@@ -396,16 +396,17 @@ export async function verifySessions(
 /**
  * Set screen lock state cookie
  * Persists across page reloads so user needs to confirm they're still active
+ * Cookie expires in 90 seconds (matches SCREEN_LOCK_COUNTDOWN)
  */
 export async function setScreenLockCookie(isLocked: boolean): Promise<void> {
-  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SCREEN_LOCK_COUNTDOWN);
 
   const lockState = {
     locked: isLocked,
     timestamp: new Date().toISOString()
   };
 
-  const token = await encrypt(lockState, "30m");
+  const token = await encrypt(lockState, "90s");
 
   if (token) {
     (await cookies()).set(SCREEN_LOCK_SESSION, token, {
