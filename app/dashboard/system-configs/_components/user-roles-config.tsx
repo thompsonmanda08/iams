@@ -132,7 +132,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
   const { data: rolesResponse, isLoading: rolesLoading } = useRoles({ departmentId });
 
   const roles: Role[] = useMemo(
-    () => (rolesResponse?.success ? rolesResponse.data.data : []),
+    () => (rolesResponse?.success && rolesResponse.data.data ? rolesResponse.data.data : []),
     [rolesResponse]
   );
 
@@ -464,7 +464,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     );
   }
 
-  if (roles.length === 0) {
+  if (!roles?.length || roles?.length === 0) {
     return (
       <>
         <div className="col-span-full rounded-lg border border-dashed">
