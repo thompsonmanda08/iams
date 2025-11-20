@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Input as UInput } from "@/components/ui/input";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
