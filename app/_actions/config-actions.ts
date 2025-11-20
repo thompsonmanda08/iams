@@ -77,15 +77,15 @@ export async function createBranch({
   code,
   townId,
   provinceId,
-  address,
-  isActive = true
+  address
+  // isActive = true
 }: {
   name: string;
   code: string;
   townId: string;
   provinceId: string;
   address?: string;
-  isActive?: boolean;
+  // isActive?: boolean;
 }): Promise<APIResponse> {
   const url = `/api/v1/branches`;
 
@@ -102,8 +102,8 @@ export async function createBranch({
         code,
         town_id: townId,
         province_id: provinceId,
-        address,
-        is_active: isActive
+        address
+        // is_active: isActive
       }
     });
     revalidatePath("/dashboard/system-configs/locations");
@@ -124,8 +124,8 @@ export async function updateBranch({
   code,
   townId,
   provinceId,
-  address,
-  isActive
+  address
+  // isActive
 }: {
   id: string;
   name: string;
@@ -133,7 +133,7 @@ export async function updateBranch({
   townId: string;
   provinceId: string;
   address?: string;
-  isActive?: boolean;
+  // isActive?: boolean;
 }): Promise<APIResponse> {
   const url = `/api/v1/branches/${id}`;
 
@@ -151,7 +151,7 @@ export async function updateBranch({
         town_id: townId,
         province_id: provinceId,
         address,
-        is_active: isActive,
+        // is_active: isActive,
         manager_id: null // Optional field from API docs
       }
     });
@@ -1269,7 +1269,6 @@ export async function getMatrixRatingsById(matrixId: string): Promise<APIRespons
       url: `/api/v1/risk-configs/rating-levels?matrix_id=${matrixId}`,
       method: "GET"
     });
-   
 
     return successResponse(response.data?.data);
   } catch (error: any) {
@@ -1504,7 +1503,7 @@ export async function getRiskAppetiteStatuses(): Promise<APIResponse> {
       url: "/api/v1/risk-configs/risk-appetite-statuses",
       method: "GET"
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1520,7 +1519,7 @@ export async function createRiskAppetiteStatus(data: {
   name: string;
   description: string;
   value: number;
-  condition:string;
+  condition: string;
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
@@ -1528,7 +1527,7 @@ export async function createRiskAppetiteStatus(data: {
       method: "POST",
       data
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1546,7 +1545,7 @@ export async function updateRiskAppetiteStatus(
     name: string;
     description: string;
     value: number;
-    condition:string;
+    condition: string;
   }
 ): Promise<APIResponse> {
   try {
@@ -1555,7 +1554,7 @@ export async function updateRiskAppetiteStatus(
       method: "PUT",
       data
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1573,7 +1572,7 @@ export async function deleteRiskAppetiteStatus(id: string): Promise<APIResponse>
       url: `/api/v1/risk-configs/risk-appetite-statuses/${id}`,
       method: "DELETE"
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1585,7 +1584,6 @@ export async function deleteRiskAppetiteStatus(id: string): Promise<APIResponse>
   }
 }
 
-
 // Control Effectiveness Levels Actions
 export async function getEffectivenessLevels(): Promise<APIResponse> {
   try {
@@ -1593,7 +1591,7 @@ export async function getEffectivenessLevels(): Promise<APIResponse> {
       url: "/api/v1/risk-configs/effectiveness-levels",
       method: "GET"
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1616,7 +1614,7 @@ export async function createEffectivenessLevel(data: {
       method: "POST",
       data
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1642,7 +1640,7 @@ export async function updateEffectivenessLevel(
       method: "PUT",
       data
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1660,7 +1658,7 @@ export async function deleteEffectivenessLevel(id: string): Promise<APIResponse>
       url: `/api/v1/risk-configs/effectiveness-levels/${id}`,
       method: "DELETE"
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1679,7 +1677,7 @@ export async function getResidualRiskRatings(): Promise<APIResponse> {
       url: "/api/v1/risk-configs/residual-risk-ratings",
       method: "GET"
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1703,7 +1701,7 @@ export async function createResidualRiskRating(data: {
       method: "POST",
       data
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1730,7 +1728,7 @@ export async function updateResidualRiskRating(
       method: "PUT",
       data
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
@@ -1748,7 +1746,7 @@ export async function deleteResidualRiskRating(id: string): Promise<APIResponse>
       url: `/api/v1/risk-configs/residual-risk-ratings/${id}`,
       method: "DELETE"
     });
-    
+
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
