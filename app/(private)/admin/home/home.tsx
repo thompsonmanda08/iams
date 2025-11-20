@@ -3,7 +3,6 @@ import { Building2, Users, MapPin, Globe, LayoutDashboard } from "lucide-react";
 import { getBackofficeStats } from "@/app/_actions/backoffice-actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-
 export default async function AdminDashboardHome() {
   // Fetch stats from backend
   // const statsResponse = await getBackofficeStats();
@@ -14,10 +13,9 @@ export default async function AdminDashboardHome() {
   const stats = { companies: 0, users: 0, countries: 0, locations: 0 };
 
   const statCards = [
-    { label: "Total Companies", value: stats.companies, icon: Building2, color: "bg-blue-500" },
-    { label: "Total Users", value: stats.users, icon: Users, color: "bg-green-500" },
     { label: "Countries", value: stats.countries, icon: Globe, color: "bg-purple-500" },
-    { label: "Company Locations", value: stats.locations, icon: MapPin, color: "bg-orange-500" }
+    { label: "Companies", value: stats.companies, icon: Building2, color: "bg-blue-500" },
+    { label: "Users", value: stats.users, icon: Users, color: "bg-green-500" }
   ];
 
   return (
