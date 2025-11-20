@@ -9,6 +9,7 @@ import authenticatedApiClient, {
 } from "./api-config";
 import { revalidatePath } from "next/cache";
 import { RiskCategoryInput } from "./risk-module-actions";
+import { is } from "date-fns/locale";
 
 // ============================================================================
 // BRANCH MANAGEMENT
@@ -681,7 +682,8 @@ export async function updateRole(role: {
       url,
       method: "PUT",
       data: {
-        ...role
+        ...role,
+        is_active: undefined // TODO: Remove when backend is fixed to accept is_active on update
       }
     });
     revalidatePath("/dashboard/system-configs/departments");
