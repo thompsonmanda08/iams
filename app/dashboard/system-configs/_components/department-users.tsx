@@ -441,9 +441,17 @@ export function CreateOrUpdateDepartment({
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: (data: Department) => {
+      // Remove is_active to prevent accidental changes
+      const payload: Department = {
+        id: data.id || undefined,
+        name: data.name,
+        code: data.code,
+        description: data.description,
+        parent_id: data.parent_id
+      };
       return initialData && departmentId
-        ? updateDepartment({ ...data, id: String(departmentId) })
-        : createDepartment(data);
+        ? updateDepartment({ ...payload, id: String(departmentId) })
+        : createDepartment(payload);
     },
     onSuccess: (response) => {
       if (response.success) {
@@ -545,7 +553,7 @@ export function CreateOrUpdateDepartment({
             }}
           />
 
-          <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
+          {/* <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
             <Checkbox
               id="is_active"
               checked={formData?.is_active}
@@ -563,7 +571,7 @@ export function CreateOrUpdateDepartment({
                 Set the active status of this department.
               </span>
             </Label>
-          </div>
+          </div> */}
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
 
           <div className="flex justify-end gap-3 pt-2">
