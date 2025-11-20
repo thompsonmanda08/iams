@@ -364,6 +364,8 @@ export function MultiStepCompanyForm({
         payload.id = company.id;
       }
 
+      delete payload.logo_url_id;
+
       const response = isEditMode
         ? await updateOrganization(payload)
         : await createOrganization(payload);
