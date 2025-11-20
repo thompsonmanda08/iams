@@ -3,6 +3,8 @@ import { getUniverseById, getUniverseItems } from "@/app/_actions/audit-module-a
 import UniverseDetails from "../_components/universe-details";
 import BackButton from "@/components/back-button";
 
+const dynamic = "force-dynamic";
+
 const UniversePage = async ({ params }: { params: Promise<{ universeId: string }> }) => {
   const { universeId } = await params;
 

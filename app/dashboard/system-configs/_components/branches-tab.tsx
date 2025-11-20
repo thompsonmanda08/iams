@@ -64,7 +64,7 @@ interface Branch {
   town_id: string;
   province_id: string;
   address?: string;
-  is_active: boolean;
+  is_active?: boolean;
 }
 
 interface Pagination {
@@ -314,8 +314,8 @@ const BRANCH_INITIAL_STATE = {
   code: "",
   province_id: "",
   town_id: "",
-  address: "",
-  is_active: true
+  address: ""
+  // is_active: true
 };
 
 interface CreateOrUpdateBranchDialogProps {
@@ -357,8 +357,8 @@ function CreateOrUpdateBranchDialog({
         code: initialData.code || "",
         province_id: initialData.province_id || "",
         town_id: initialData.town_id || "",
-        address: initialData.address || "",
-        is_active: initialData.is_active ?? true
+        address: initialData.address || ""
+        // is_active: initialData.is_active ?? true
       });
     } else {
       setFormData(BRANCH_INITIAL_STATE);
@@ -400,16 +400,16 @@ function CreateOrUpdateBranchDialog({
             code: data.code,
             townId: data.town_id,
             provinceId: data.province_id,
-            address: data.address,
-            isActive: data.is_active
+            address: data.address
+            // isActive: data.is_active
           })
         : await createBranch({
             name: data.name,
             code: data.code,
             townId: data.town_id,
             provinceId: data.province_id,
-            address: data.address,
-            isActive: data.is_active
+            address: data.address
+            // isActive: data.is_active
           });
 
       if (!response.success) {
