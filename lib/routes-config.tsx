@@ -144,6 +144,11 @@ export const navItems: NavGroup[] = [
             title: "Users",
             href: "/dashboard/system-configs/users",
             icon: Users
+          },
+          {
+            title: "Mail Settings",
+            href: "/dashboard/system-configs/mail-settings",
+            icon: Users
           }
         ]
       },
