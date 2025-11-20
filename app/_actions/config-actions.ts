@@ -645,7 +645,7 @@ export async function createRole(role: {
       method: "POST",
       data: {
         ...role,
-        is_active: true
+        is_active: undefined // TODO: Remove when backend is fixed to accept is_active on create
       }
     });
     revalidatePath("/dashboard/system-configs/departments");
