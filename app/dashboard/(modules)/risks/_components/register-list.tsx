@@ -36,6 +36,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import PageHeader from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
+import { KRIStatsSection } from "./kri-stats-section";
 
 type KRIRegister = {
   id: string;
@@ -64,12 +65,14 @@ type Props = {
   initialRegisters: KRIRegister[];
   initialPagination: Pagination;
   currentSearch: string;
+  stats: any;
 };
 
 export default function KRIRegistersClient({
   initialRegisters,
   initialPagination,
-  currentSearch
+  currentSearch,
+  stats
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -302,6 +305,7 @@ export default function KRIRegistersClient({
           </div>
         </Card>
       </div>
+      <KRIStatsSection stats={stats} />
 
       <div className="container mx-auto px-4 pt-6">
         <Card className="p-4">

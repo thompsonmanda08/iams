@@ -384,12 +384,22 @@ export interface KRIInput {
   category_id: string;
   department_id: string;
   target_value: string;
-  trigger_value: string;
+  from_trigger_value: string;
+  from_trigger_condition: string;
+  to_trigger_value: string;
+  to_trigger_condition: string;
   limit_value: string;
-  monitoring_frequency: KRIFrequency;
+  measurement_type: string;
+  currency_code: string;
+  monitoring_frequency: KRIFrequency | "";
   owner_id: string;
-  commentary?: string;
-  mitigant_plan?: string;
+  status_evaluation_method: string;
+  use_moving_average: boolean;
+  moving_average_days: number;
+  invert_direction: boolean;
+  auto_generate_risks: boolean;
+  commentary: string;
+  mitigant_plan: string;
 }
 
 export interface KRIMeasurement {
@@ -664,7 +674,7 @@ export async function getRiskCategories(params?: {
     });
     return successResponse(response.data?.data);
   } catch (error) {
-    console.log("ERROR:", error);
+   
 
     return handleError(error, "GET | GET RISK CATEGORIES", "/api/v1/risk-categories");
   }
@@ -829,7 +839,7 @@ export async function createRiskRegister(input: RiskRegisterInput): Promise<APIR
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
-    console.log("ERROR", error);
+   
 
     return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/risk-registers");
   }
@@ -1006,7 +1016,7 @@ export const getRisksInRegister = cache(_getRisksInRegister);
 /**
  * Update risk status
  */
-export async function updateRiskStatus(id: string, status: RiskStatus): Promise<APIResponse> {
+export async function updateRiskStatus(id: string, status: any): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risks/${id}/status`,
@@ -1198,6 +1208,23 @@ export async function getKRIRegister(id: string): Promise<APIResponse> {
 }
 
 /**
+ * Get KRI stats
+ */
+
+export async function getKRIStats(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/kris/stats",
+      method: "GET"
+    });
+    
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "GET | GET KRI STATS", "/api/v1/kris/stats");
+  }
+}
+
+/**
  * Create a new KRI register
  */
 export async function createKRIRegister(input: KRIRegisterInput): Promise<APIResponse> {
@@ -1270,35 +1297,7 @@ export async function getKRIs(params?: {
       params,
       method: "GET"
     });
-    const transformedData = response.data.data.data.map((kri: any) => {
-      const targetValue = parseFloat(kri.target_value);
-      const triggerValue = parseFloat(kri.trigger_value);
-      const limitValue = parseFloat(kri.limit_value);
-      const currentValue = kri.last_measured_value || targetValue;
-
-      let status: "normal" | "warning" | "critical" = "normal";
-      if (currentValue <= limitValue) {
-        status = "critical";
-      } else if (currentValue <= triggerValue) {
-        status = "warning";
-      }
-
-      const trend = currentValue >= targetValue ? "up" : "down";
-
-      return {
-        ...kri,
-        currentValue,
-        targetValue,
-        threshold: limitValue,
-        triggerValue,
-        status,
-        trend,
-        unit: "%",
-        lastUpdated: kri.updated_at || kri.created_at
-      };
-    });
-
-    return successResponse(transformedData);
+     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRIs", "/api/v1/kris");
   }
@@ -1590,7 +1589,7 @@ export async function createRiskAction(data: {
   if (!data?.risk_id) {
     return handleBadRequest("Risk ID is required");
   }
-  console.log(data);
+ 
 
   const url = `/api/v1/risks/${data.risk_id}/actions`;
   try {

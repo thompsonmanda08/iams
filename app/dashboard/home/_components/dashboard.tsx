@@ -10,8 +10,6 @@ import { getDashboardStats } from "@/app/_actions/reports-actions";
 export default async function Dashboard() {
   const data = await getDashboardStats();
 
-  console.log("LOG:", data);
-
   // Calculate stats
   const totalRisks = data.data.overview.total_risks || 0;
   const highRisks = data.data.risk_summary.risks_by_rating.High || 0;
@@ -20,8 +18,8 @@ export default async function Dashboard() {
 
   const totalKris = data.data.overview.total_kris;
   const greenKris = data.data.kri_summary.kris_by_status.Green || 0;
-  const amberKris = 0; // Add to API response
-  const redKris = data.data.kri_summary.kris_in_breach;
+  const amberKris = data.data.kri_summary.kris_by_status.Amber || 0;
+  const redKris = data.data.kri_summary.kris_by_status.Red || 0; 
 
   const activeAudits = data.data.audit_summary.active_audit_plans;
   const scheduledAudits =
@@ -29,9 +27,9 @@ export default async function Dashboard() {
     data.data.audit_summary.active_audit_plans -
     data.data.audit_summary.completed_audit_plans;
 
-  const openFindings = data.data.audit_findings.filter((f:any) => f.status === "OPEN").length;
+  const openFindings = data.data.audit_findings.filter((f: any) => f.status === "OPEN").length;
   const awaitingResponse = data.data.audit_findings.filter(
-    (f:any) => f.status === "OPEN" && !f.severity
+    (f: any) => f.status === "OPEN" && !f.severity
   ).length;
 
   return (

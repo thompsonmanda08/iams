@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronLeft, ChevronRight, Check, User } from "lucide-react";
@@ -14,17 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+import { SelectField } from "@/components/ui/select-field";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { getDepartments } from "@/app/_actions/config-actions";
 import { getRiskCategories, KRIFrequency } from "@/app/_actions/risk-module-actions";
 import { getUsers } from "@/app/_actions/user-actions";
+import { CURRENCIES } from "@/lib/constants";
 
 interface KRIConfigureProps {
   open: boolean;
@@ -58,10 +53,20 @@ type KRIFormData = {
   category_id: string;
   department_id: string;
   target_value: string;
-  trigger_value: string;
+  from_trigger_value: string;
+  from_trigger_condition: string;
+  to_trigger_value: string;
+  to_trigger_condition: string;
   limit_value: string;
+  measurement_type: string;
+  currency_code: string;
   monitoring_frequency: KRIFrequency | "";
   owner_id: string;
+  status_evaluation_method: string;
+  use_moving_average: boolean;
+  moving_average_days: number;
+  invert_direction: boolean;
+  auto_generate_risks: boolean;
   commentary: string;
   mitigant_plan: string;
 };
@@ -80,16 +85,12 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-
   const [categories, setCategories] = useState<RiskCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-
   const [formData, setFormData] = useState<KRIFormData>({
     name: "",
     description: "",
@@ -97,15 +98,25 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
     category_id: "",
     department_id: "",
     target_value: "",
-    trigger_value: "",
+    from_trigger_value: "",
+    from_trigger_condition: "",
+    to_trigger_value: "",
+    to_trigger_condition: "",
     limit_value: "",
+    measurement_type: "",
+    currency_code: "",
     monitoring_frequency: "",
     owner_id: "",
+    status_evaluation_method: "",
+    use_moving_average: false,
+    moving_average_days: 30,
+    invert_direction: false,
+    auto_generate_risks: true,
     commentary: "",
     mitigant_plan: ""
   });
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   useEffect(() => {
     if (open) {
@@ -200,10 +211,20 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
       category_id: "",
       department_id: "",
       target_value: "",
-      trigger_value: "",
+      from_trigger_value: "",
+      from_trigger_condition: "",
+      to_trigger_value: "",
+      to_trigger_condition: "",
       limit_value: "",
+      measurement_type: "",
+      currency_code: "",
       monitoring_frequency: "",
       owner_id: "",
+      status_evaluation_method: "",
+      use_moving_average: false,
+      moving_average_days: 30,
+      invert_direction: false,
+      auto_generate_risks: true,
       commentary: "",
       mitigant_plan: ""
     });
@@ -236,7 +257,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
     }
   };
 
-  const updateFormData = (field: keyof KRIFormData, value: string) => {
+  const updateFormData = (field: keyof KRIFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -247,16 +268,74 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
       );
     }
     if (step === 2) {
-      return formData.target_value && formData.trigger_value && formData.limit_value;
+      return formData.target_value && formData.from_trigger_value && formData.limit_value;
     }
     if (step === 3) {
       return formData.monitoring_frequency;
     }
     if (step === 4) {
+      return formData.status_evaluation_method;
+    }
+    if (step === 5) {
       return formData.owner_id;
     }
     return false;
   };
+
+  const departmentOptions = departments.map((dept) => ({
+    value: dept.id,
+    label: dept.name,
+    icon: <Building2 className="h-4 w-4" />,
+    description: dept.code
+  }));
+
+  const categoryOptions = categories.map((category) => ({
+    value: category.id,
+    label: category.name,
+    icon: <div className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />,
+    description: category.code
+  }));
+
+  const frequencyOptions = [
+    { value: "DAILY", label: "Daily" },
+    { value: "WEEKLY", label: "Weekly" },
+    { value: "MONTHLY", label: "Monthly" },
+    { value: "QUARTERLY", label: "Quarterly" },
+    { value: "ANNUALLY", label: "Annually" }
+  ];
+
+  const options = [
+    { name: "Greater Than (>)", value: ">" },
+    { name: "Less Than (<)", value: "<" },
+    { name: "Greater Than OR Equal To (>=)", value: ">=" },
+    { name: "Less Than OR Equal To (<=)", value: "<=" },
+    { name: "Equals (=)", value: "=" }
+  ];
+
+  const measures = [
+    { name: "PERCENT", value: "PERCENT" },
+    { name: "COUNT", value: "COUNT" },
+    { name: "NUMERIC", value: "NUMERIC" },
+    { name: "CURRENCY", value: "CURRENCY" }
+  ];
+
+  const currencyOptions = CURRENCIES.map((currency) => ({
+    value: currency.currency,
+    name: `${currency.currency} - ${currency.country}`
+  }));
+
+  const userOptions = users.map((user) => ({
+    value: user.id,
+    label: getUserDisplayName(user),
+    icon: <User className="h-4 w-4" />,
+    description: user.email
+  }));
+
+  const evaluationMethodOptions = [
+    { name: "STATIC THRESHOLDS", value: "STATIC_THRESHOLDS" },
+    { name: "MOVING AVERAGE", value: "MOVING_AVERAGE" },
+    { name: "TREND BASED", value: "TREND_BASED" }
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -268,7 +347,6 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress Bar */}
         <div className="mb-6">
           <div className="flex gap-2">
             {Array.from({ length: totalSteps }).map((_, index) => (
@@ -280,107 +358,56 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
           </div>
         </div>
 
-        {/* Step Content */}
         <div className="min-h-[300px] space-y-4">
           {step === 1 && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="name">KRI Name *</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g., Customer Retention Rate"
-                  value={formData.name}
-                  onChange={(e) => updateFormData("name", e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
+              <Input
+                id="name"
+                label="KRI Name"
+                required
+                placeholder="e.g., Customer Retention Rate"
+                value={formData.name}
+                onChange={(e) => updateFormData("name", e.target.value)}
+                disabled={isLoading}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  placeholder="e.g., Percentage of customers retained annually"
-                  value={formData.description}
-                  onChange={(e) => updateFormData("description", e.target.value)}
-                  rows={3}
-                  disabled={isLoading}
-                />
-              </div>
+              <Textarea
+                id="description"
+                label="Description"
+                required
+                placeholder="e.g., Percentage of customers retained annually"
+                value={formData.description}
+                onChange={(e) => updateFormData("description", e.target.value)}
+                rows={3}
+                disabled={isLoading}
+              />
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department *</Label>
-                  <Select
-                    value={formData.department_id}
-                    onValueChange={(value) => updateFormData("department_id", value)}
-                    disabled={isLoading || loadingDepartments}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select department">
-                        {loadingDepartments
-                          ? "Loading..."
-                          : formData.department_id
-                            ? departments.find((d) => d.id === formData.department_id)?.name ||
-                              "Select department"
-                            : "Select department"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments?.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4" />
-                            <span>{dept.name}</span>
-                            <span className="text-muted-foreground text-xs">({dept.code})</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Department"
+                  required
+                  value={formData.department_id}
+                  onValueChange={(value) => updateFormData("department_id", value)}
+                  placeholder={loadingDepartments ? "Loading..." : "Select department"}
+                  options={departmentOptions as any}
+                  className="w-full"
+                  disabled={isLoading || loadingDepartments}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="category">Risk Category *</Label>
-                  <Select
-                    value={formData.category_id}
-                    onValueChange={(value) => updateFormData("category_id", value)}
-                    disabled={isLoading || loadingCategories}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select category">
-                        {loadingCategories
-                          ? "Loading..."
-                          : formData.category_id
-                            ? categories.find((c) => c.id === formData.category_id)?.name ||
-                              "Select category"
-                            : "Select category"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.length === 0 ? (
-                        <div className="text-muted-foreground p-2 text-sm">
-                          No categories available
-                        </div>
-                      ) : (
-                        categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="h-3 w-3 rounded-full"
-                                style={{ backgroundColor: category.color }}
-                              />
-                              <span>{category.name}</span>
-                              <span className="text-muted-foreground text-xs">
-                                ({category.code})
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Risk Category"
+                  required
+                  value={formData.category_id}
+                  onValueChange={(value) => updateFormData("category_id", value)}
+                  placeholder={loadingCategories ? "Loading..." : "Select category"}
+                  options={categoryOptions as any}
+                  className="w-full"
+                  disabled={isLoading || loadingCategories}
+                />
               </div>
             </>
           )}
+
           {step === 2 && (
             <>
               <div className="border-border bg-muted/50 rounded-lg border p-4">
@@ -388,10 +415,11 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                   Define target, trigger, and limit values for monitoring this KRI.
                 </p>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="target_value">Target Value *</Label>
                 <Input
+                  required
+                  label="Target Value"
+                  type="number"
                   id="target_value"
                   placeholder="e.g., 10% or 95%"
                   value={formData.target_value}
@@ -400,26 +428,79 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                 />
                 <p className="text-muted-foreground text-xs">Optimal/desired value</p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="trigger_value">Trigger Value *</Label>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Input
-                  id="trigger_value"
-                  placeholder="e.g., 9.5% ≥ but > 9%"
-                  value={formData.trigger_value}
-                  onChange={(e) => updateFormData("trigger_value", e.target.value)}
+                  required
+                  label="From Trigger Value"
+                  type="number"
+                  id="from_trigger_value"
+                  placeholder="e.g., 3"
+                  value={formData.from_trigger_value}
+                  onChange={(e) => updateFormData("from_trigger_value", e.target.value)}
                   disabled={isLoading}
                 />
-                <p className="text-muted-foreground text-xs">
-                  Warning threshold - triggers review when crossed
-                </p>
+                <SelectField
+                  required
+                  label="From Condition"
+                  value={formData.from_trigger_condition}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, from_trigger_condition: value })
+                  }
+                  placeholder="Select condition"
+                  options={options as any}
+                  className="w-full"
+                />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="limit_value">Limit Value *</Label>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Input
+                  required
+                  label="To Trigger Value"
+                  type="number"
+                  id="to_trigger_value"
+                  placeholder="e.g., 6"
+                  value={formData.to_trigger_value}
+                  onChange={(e) => updateFormData("to_trigger_value", e.target.value)}
+                  disabled={isLoading}
+                />
+                <SelectField
+                  required
+                  label="To Condition"
+                  value={formData.to_trigger_condition}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, to_trigger_condition: value })
+                  }
+                  placeholder="Select condition"
+                  options={options as any}
+                  className="w-full"
+                />
+              </div>
+              <SelectField
+                required
+                label="Measurement Type"
+                value={formData.measurement_type}
+                onValueChange={(value) => setFormData({ ...formData, measurement_type: value })}
+                placeholder="Select measurement"
+                options={measures as any}
+                className="w-full"
+              />
+              {formData.measurement_type === "CURRENCY" && (
+                <SelectField
+                  required
+                  label="Currency"
+                  value={formData.currency_code}
+                  onValueChange={(value) => setFormData({ ...formData, currency_code: value })}
+                  placeholder="Select Currency"
+                  options={currencyOptions as any}
+                  className="w-full"
+                />
+              )}
+              <div className="space-y-2">
+                <Input
+                  required
+                  label="Limit Value"
+                  type="number"
                   id="limit_value"
-                  placeholder="e.g., 8.8%"
+                  placeholder="e.g., 8.0"
                   value={formData.limit_value}
                   onChange={(e) => updateFormData("limit_value", e.target.value)}
                   disabled={isLoading}
@@ -430,6 +511,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
               </div>
             </>
           )}
+
           {step === 3 && (
             <>
               <div className="border-border bg-muted/50 rounded-lg border p-4">
@@ -438,25 +520,41 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="monitoring_frequency">Monitoring Frequency *</Label>
-                <Select
-                  value={formData.monitoring_frequency}
-                  onValueChange={(value) => updateFormData("monitoring_frequency", value)}
-                  disabled={isLoading}>
-                  <SelectTrigger id="monitoring_frequency" className="w-full">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DAILY">Daily</SelectItem>
-                    <SelectItem value="WEEKLY">Weekly</SelectItem>
-                    <SelectItem value="MONTHLY">Monthly</SelectItem>
-                    <SelectItem value="QUARTERLY">Quarterly</SelectItem>
-                    <SelectItem value="ANNUALLY">Annually</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <SelectField
+                required
+                label="Monitoring Frequency"
+                value={formData.monitoring_frequency}
+                onValueChange={(value) => updateFormData("monitoring_frequency", value)}
+                placeholder="Select frequency"
+                options={frequencyOptions as any}
+                className="w-full"
+                disabled={isLoading}
+              />
 
+              <div className="border-border bg-muted/30 flex items-start space-x-3 rounded-md border p-4">
+                <Checkbox
+                  id="invert_direction"
+                  checked={formData.invert_direction}
+                  onCheckedChange={(checked) =>
+                    updateFormData("invert_direction", checked === true)
+                  }
+                />
+                <div className="space-y-1 leading-none">
+                  <Label htmlFor="invert_direction" className="cursor-pointer font-medium">
+                    Invert Direction (Lower is Better)
+                  </Label>
+                  <p className="text-muted-foreground text-xs">
+                    Enable if lower/smaller values are better. Disable if higher/larger values are
+                    better.
+                  </p>
+                  {formData.invert_direction && (
+                    <div className="mt-2 rounded-md bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                      ⚠️ Warning: With "Higher is Better", target should typically be ≥ Limit.
+                      Consider enabling "Invert Direction"?
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="commentary">Commentary</Label>
                 <Textarea
@@ -468,7 +566,6 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                   disabled={isLoading}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="mitigant_plan">Mitigant Plan</Label>
                 <Textarea
@@ -485,51 +582,119 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
 
           {step === 4 && (
             <>
+              <div className="border-border rounded-lg border bg-blue-50 p-4 dark:bg-blue-950/30">
+                <p className="text-sm text-blue-900 dark:text-blue-100">
+                  <strong>Advanced Evaluation Settings</strong>
+                  <br />
+                  These settings control how KRI status is evaluated. Most users should use the
+                  defaults.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <SelectField
+                  label="Status Evaluation Method "
+                  required
+                  value={formData.status_evaluation_method}
+                  onValueChange={(value) => updateFormData("status_evaluation_method", value)}
+                  placeholder="Select method"
+                  options={evaluationMethodOptions as any}
+                  className="w-full"
+                  disabled={isLoading}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Determines how measured values are compared against thresholds
+                </p>
+              </div>
+
+              <div className="border-border bg-muted/30 space-y-4 rounded-lg border p-4">
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="use_moving_average"
+                    checked={formData.use_moving_average}
+                    onCheckedChange={(checked) =>
+                      updateFormData("use_moving_average", checked === true)
+                    }
+                  />
+                  <div className="flex-1 space-y-1 leading-none">
+                    <Label htmlFor="use_moving_average" className="cursor-pointer font-medium">
+                      Use Moving Average Smoothing
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      Averages measurements over specified days to reduce noise
+                    </p>
+                  </div>
+                </div>
+
+                {formData.use_moving_average && (
+                  <div className="ml-7 space-y-2">
+                    <Input
+                      label="Moving Average Period (Days)"
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={formData.moving_average_days}
+                      onChange={(e) =>
+                        updateFormData("moving_average_days", parseInt(e.target.value) || 30)
+                      }
+                      disabled={isLoading}
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Number of days to include in the moving average calculation
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-border bg-muted/30 flex items-start space-x-3 rounded-md border p-4">
+                <Checkbox
+                  id="auto_generate_risks"
+                  checked={formData.auto_generate_risks}
+                  onCheckedChange={(checked) =>
+                    updateFormData("auto_generate_risks", checked === true)
+                  }
+                />
+                <div className="space-y-1 leading-none">
+                  <Label htmlFor="auto_generate_risks" className="cursor-pointer font-medium">
+                    Auto-Generate Risks on Breach
+                  </Label>
+                  <p className="text-muted-foreground text-xs">
+                    Automatically create risk records when KRI reaches RED status
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {step === 5 && (
+            <>
               <div className="border-border bg-muted/50 rounded-lg border p-4">
                 <p className="text-muted-foreground text-sm">
                   Assign ownership and review the complete KRI configuration.
                 </p>
               </div>
-
               <div className="grid gap-2">
-                <Label htmlFor="owner_id">KRI Owner *</Label>
-                <Select
+                <SelectField
+                  label="KRI Owner "
+                  required
                   value={formData.owner_id}
                   onValueChange={(value) => setFormData({ ...formData, owner_id: value })}
-                  disabled={isLoading || loadingUsers || !formData.department_id}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select KRI owner">
-                      {loadingUsers
-                        ? "Loading users..."
-                        : !formData.department_id
-                          ? "Select department first"
-                          : formData.owner_id
-                            ? users.find((u) => u.id === formData.owner_id)
-                              ? getUserDisplayName(users.find((u) => u.id === formData.owner_id)!)
-                              : "Select KRI owner"
-                            : "Select KRI owner"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="max-h-100">
-                    {users.length === 0 ? (
-                      <div className="text-muted-foreground p-2 text-sm">
-                        {formData.department_id
-                          ? "No users found in this department"
-                          : "Please select a department first"}
-                      </div>
-                    ) : (
-                      users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span>{getUserDisplayName(user)}</span>
-                            <span className="text-muted-foreground text-xs">({user.email})</span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  placeholder={
+                    loadingUsers
+                      ? "Loading users..."
+                      : !formData.department_id
+                        ? "Select department first"
+                        : "Select KRI owner"
+                  }
+                  options={userOptions as any}
+                  className="w-full"
+                  disabled={isLoading || loadingUsers || !formData.department_id}
+                  descriptionText={
+                    formData.department_id
+                      ? "No users found in this department"
+                      : "Please select a department first"
+                  }
+                />
                 {!formData.department_id && (
                   <p className="text-muted-foreground text-xs">
                     Please select a department in Step 1 to load users
@@ -537,7 +702,6 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                 )}
               </div>
 
-              {/* Summary */}
               <div className="border-border bg-card mt-6 rounded-lg border p-4">
                 <h4 className="text-foreground mb-3 font-medium">Configuration Summary</h4>
                 <dl className="space-y-2 text-sm">
@@ -570,9 +734,11 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-muted-foreground">Trigger:</dt>
+                    <dt className="text-muted-foreground">Trigger Range:</dt>
                     <dd className="text-foreground text-right font-medium">
-                      {formData.trigger_value || "Not set"}
+                      {formData.from_trigger_value && formData.to_trigger_value
+                        ? `${formData.from_trigger_value} to ${formData.to_trigger_value}`
+                        : "Not set"}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
@@ -585,6 +751,34 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                     <dt className="text-muted-foreground">Frequency:</dt>
                     <dd className="text-foreground text-right font-medium">
                       {formData.monitoring_frequency || "Not set"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Evaluation Method:</dt>
+                    <dd className="text-foreground text-right font-medium">
+                      {formData.status_evaluation_method === "STATIC_THRESHOLD"
+                        ? "Static Thresholds"
+                        : "Not set"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Moving Average:</dt>
+                    <dd className="text-foreground text-right font-medium">
+                      {formData.use_moving_average
+                        ? `${formData.moving_average_days} days`
+                        : "Disabled"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Direction:</dt>
+                    <dd className="text-foreground text-right font-medium">
+                      {formData.invert_direction ? "Lower is Better" : "Higher is Better"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Auto-Generate Risks:</dt>
+                    <dd className="text-foreground text-right font-medium">
+                      {formData.auto_generate_risks ? "Yes" : "No"}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
@@ -601,7 +795,6 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
           )}
         </div>
 
-        {/* Navigation */}
         <div className="border-border flex justify-between gap-2 border-t pt-4">
           <Button variant="outline" onClick={handleBack} disabled={step === 1 || isLoading}>
             <ChevronLeft className="mr-2 h-4 w-4" />
@@ -639,6 +832,8 @@ function getStepTitle(step: number): string {
     case 3:
       return "Monitoring & Mitigation";
     case 4:
+      return "Advanced Settings";
+    case 5:
       return "Ownership & Review";
     default:
       return "";

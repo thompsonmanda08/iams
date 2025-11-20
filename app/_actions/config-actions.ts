@@ -1044,7 +1044,6 @@ export async function getRiskMatrices(): Promise<APIResponse> {
       url: "/api/v1/risk-configs/matrix-configs",
       method: "GET"
     });
-    console.log("RES:", response);
 
     revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
@@ -1270,7 +1269,7 @@ export async function getMatrixRatingsById(matrixId: string): Promise<APIRespons
       url: `/api/v1/risk-configs/rating-levels?matrix_id=${matrixId}`,
       method: "GET"
     });
-    console.log("RES:", response);
+   
 
     return successResponse(response.data?.data);
   } catch (error: any) {

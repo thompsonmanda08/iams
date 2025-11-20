@@ -1,6 +1,5 @@
-import { getKRIRegisters } from "@/app/_actions/risk-module-actions";
+import { getKRIRegisters, getKRIStats } from "@/app/_actions/risk-module-actions";
 import KRIRegistersClient from "../_components/register-list";
-
 
 type PageProps = {
   searchParams: Promise<{
@@ -12,6 +11,7 @@ type PageProps = {
 
 export default async function KRIRegistersPage({ searchParams }: PageProps) {
   const { search = "", page = "1", page_size = "10" } = await searchParams;
+  const kriStats = await getKRIStats();
 
   const response = await getKRIRegisters({
     search: search || undefined,
@@ -35,6 +35,7 @@ export default async function KRIRegistersPage({ searchParams }: PageProps) {
       initialRegisters={registers}
       initialPagination={pagination}
       currentSearch={search}
+      stats={kriStats.data}
     />
   );
 }
