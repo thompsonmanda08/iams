@@ -101,7 +101,8 @@ export default function AuditUniverseForm({
   universes = [],
   initialUniverseItems = [],
   onSwitchToUniverseTab,
-  onSwitchToItemTab
+  onSwitchToItemTab,
+  onCancel = undefined
 }: {
   initialData?: any;
   universeId?: string;
@@ -110,6 +111,7 @@ export default function AuditUniverseForm({
   initialUniverseItems?: any[];
   onSwitchToUniverseTab?: () => void;
   onSwitchToItemTab?: () => void;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -736,7 +738,15 @@ export default function AuditUniverseForm({
                 type="button"
                 variant="outline"
                 onClick={
-                  editingItemId ? handleCancelEdit : () => router.push("/dashboard/audit/universe")
+                  editingItemId
+                    ? handleCancelEdit
+                    : () => {
+                        if (onCancel != undefined) {
+                          onCancel();
+                        } else {
+                          router.push("/dashboard/audit/universe");
+                        }
+                      }
                 }
                 disabled={itemSubmitMutation.isPending}
                 className="w-full min-w-[120px] sm:w-auto">
@@ -947,7 +957,13 @@ export default function AuditUniverseForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/dashboard/audit/universe")}
+            onClick={() => {
+              if (onCancel != undefined) {
+                onCancel();
+              } else {
+                router.push("/dashboard/audit/universe");
+              }
+            }}
             disabled={universeSubmitMutation.isPending}
             className="w-full min-w-[120px] sm:w-auto">
             Cancel
