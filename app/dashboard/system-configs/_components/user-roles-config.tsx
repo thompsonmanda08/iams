@@ -129,10 +129,10 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
   //   staleTime: 5 * 60 * 1000
   // });
 
-  const { data: rolesResponse, isLoading: rolesLoading } = useRoles({ departmentId, is_Active: true });
+  const { data: rolesResponse, isLoading: rolesLoading } = useRoles({ departmentId });
 
   const roles: Role[] = useMemo(
-    () => (rolesResponse?.success && rolesResponse?.data?.data ? rolesResponse.data.data : []),
+    () => (rolesResponse?.success ? rolesResponse.data.data : []),
     [rolesResponse]
   );
 
@@ -143,7 +143,6 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     enabled: !!departmentId,
     staleTime: 5 * 60 * 1000
   });
-
 
   const modules: Module[] = useMemo(() => {
     if (!modulesResponse?.success || !modulesResponse?.data) return [];
@@ -771,7 +770,10 @@ function CreateOrUpdateRoleDialog({
     onSuccess: (response) => {
       if (response.success) {
         toast.success(`Role ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLES, departmentId] });
+        // Invalidate roles query with matching params object
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.ROLES, { departmentId }]
+        });
         setOpenModal(false);
       } else {
         toast.error(response.message);

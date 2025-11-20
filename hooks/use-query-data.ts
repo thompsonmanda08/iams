@@ -37,5 +37,5 @@ export const useRoles = (
   useQuery({
     queryKey: [QUERY_KEYS.ROLES, params],
     queryFn: () => getRoles(params as any),
-    staleTime: 5 * 60 * 1000
+    staleTime: 0
   });

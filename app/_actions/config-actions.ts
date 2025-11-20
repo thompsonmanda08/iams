@@ -682,8 +682,9 @@ export async function updateRole(role: {
       url,
       method: "PUT",
       data: {
-        ...role,
-        is_active: undefined // TODO: Remove when backend is fixed to accept is_active on update
+        name: role.name,
+        code: role.code,
+        description: role.description
       }
     });
     revalidatePath("/dashboard/system-configs/departments");
