@@ -60,7 +60,7 @@ export default async function CategoryDetailsPage({ params }: CategoryDetailsPag
   }
 
   return (
-    <div className="container mx-auto space-y-6 py-6">
+    <div className="container mx-auto px-4 space-y-6 py-6">
       <CategoryDetailsClient category={category} templateId={templateId} />
     </div>
   );

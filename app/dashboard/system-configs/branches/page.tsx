@@ -47,7 +47,7 @@ export default async function BranchesConfigPage({ searchParams }: PageProps) {
           </div>
         </div>
       </div>
-      <div className="container mx-auto space-y-6 p-6">
+      <div className="container mx-auto space-y-6 p-6 px-4">
         <BranchesTab
           initialBranches={branches}
           provinces={provinces}

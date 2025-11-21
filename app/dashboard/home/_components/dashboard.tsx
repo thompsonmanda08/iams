@@ -19,7 +19,7 @@ export default async function Dashboard() {
   const totalKris = data.data.overview.total_kris;
   const greenKris = data.data.kri_summary.kris_by_status.Green || 0;
   const amberKris = data.data.kri_summary.kris_by_status.Amber || 0;
-  const redKris = data.data.kri_summary.kris_by_status.Red || 0; 
+  const redKris = data.data.kri_summary.kris_by_status.Red || 0;
 
   const activeAudits = data.data.audit_summary.active_audit_plans;
   const scheduledAudits =
@@ -34,7 +34,7 @@ export default async function Dashboard() {
 
   return (
     <div className="bg-background min-h-screen">
-      <main className="container mx-auto space-y-6 py-8">
+      <main className="container mx-auto space-y-6 px-r py-8">
         {/* Executive Overview Row */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="border-border bg-card p-0">

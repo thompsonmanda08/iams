@@ -65,7 +65,7 @@ export default function NewWorkpaperPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-6 p-6">
+    <div className="container mx-auto px-4 space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">

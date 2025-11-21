@@ -23,7 +23,7 @@ type TableSkeletonProps = {
 
 export default function PageSkeleton() {
   return (
-    <div className="container mx-auto p-8">
+    <div className="container mx-auto p-8 px-4">
       <TableSkeleton
         columns={8}
         rows={5}

@@ -313,7 +313,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
   ];
 
   const measures = [
-    { name: "PERCENT", value: "PERCENT" },
+    { name: "PERCENT", value: "PERCENTAGE" },
     { name: "COUNT", value: "COUNT" },
     { name: "NUMERIC", value: "NUMERIC" },
     { name: "CURRENCY", value: "CURRENCY" }
