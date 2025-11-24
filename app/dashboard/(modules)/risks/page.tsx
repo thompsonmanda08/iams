@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FileText, TrendingUp, AlertTriangle, Activity, ArrowRight} from "lucide-react";
+import { FileText, TrendingUp, AlertTriangle, Activity, ArrowRight } from "lucide-react";
 import PageHeader from "@/components/page-header";
 
 export default function RisksDashboardPage() {
@@ -127,7 +127,7 @@ export default function RisksDashboardPage() {
                       <ArrowRight className="text-muted-foreground h-5 w-5" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="mb-2 text-lg font-semibold">KRI Dashboard</h3>
+                      <h3 className="mb-2 text-lg font-semibold">KRI Registers</h3>
                       <p className="text-muted-foreground text-sm">
                         Key Risk Indicators monitoring and tracking
                       </p>
