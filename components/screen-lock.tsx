@@ -193,6 +193,12 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     const checkPersistedLockState = async () => {
       try {
         const isLocked = await checkScreenLockState();
+        logger.debug("🔍 Checking persisted lock state on mount", {
+          component: "IdleTimerContainer",
+          isLocked,
+          loggedIn
+        });
+
         if (isLocked && loggedIn) {
           logger.info("🔒 Screen lock state detected from cookie, restoring lock", {
             component: "IdleTimerContainer",
@@ -201,6 +207,10 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
           setState("Idle");
           // Immediately open dialog instead of waiting for state sync
           setIsDialogOpen(true);
+        } else if (!isLocked) {
+          logger.debug("✅ No persisted lock state, starting fresh", {
+            component: "IdleTimerContainer"
+          });
         }
       } catch (error) {
         logger.error("❌ Error checking persisted lock state", error, {

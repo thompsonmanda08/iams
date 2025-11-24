@@ -421,14 +421,50 @@ export async function setScreenLockCookie(isLocked: boolean): Promise<void> {
 
 /**
  * Get screen lock state from cookie
- * Returns true if screen is locked
+ * Returns true if screen is locked and cookie hasn't expired
+ * Returns false if cookie is missing, expired, or invalid
+ *
+ * Also checks timestamp to ensure lock is recent (within last 95 seconds)
+ * to prevent showing stale lock state from old cookies
  */
 export async function getScreenLockState(): Promise<boolean> {
   const cookie = (await cookies()).get(SCREEN_LOCK_SESSION)?.value;
   if (!cookie) return false;
 
   const lockState = await decrypt(cookie);
-  return (lockState as any)?.locked === true;
+
+  // Check if decryption failed (expired, invalid, etc.)
+  if (!lockState || (lockState as any)?.success === false) {
+    return false;
+  }
+
+  // Verify lock state is actually locked
+  if ((lockState as any)?.locked !== true) {
+    return false;
+  }
+
+  // Additional validation: Check if the lock timestamp is recent (within 95 seconds)
+  // This prevents showing stale lock state from old cookies
+  // The SCREEN_LOCK_SESSION cookie expires in 90 seconds, but we use 95s as a buffer
+  // to account for network delays and server/client time differences
+  const timestamp = (lockState as any)?.timestamp;
+  if (timestamp) {
+    try {
+      const lockTime = new Date(timestamp).getTime();
+      const nowTime = Date.now();
+      const ageMs = nowTime - lockTime;
+
+      // If lock is older than 95 seconds, consider it stale and ignore it
+      if (ageMs > 95000) {
+        return false;
+      }
+    } catch (error) {
+      // If timestamp parsing fails, still return true if locked flag is set
+      // This is safer than silently ignoring an active lock
+    }
+  }
+
+  return true;
 }
 
 /**
