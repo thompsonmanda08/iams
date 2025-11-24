@@ -34,7 +34,7 @@ export default async function Dashboard() {
 
   return (
     <div className="bg-background min-h-screen">
-      <main className="container mx-auto space-y-6 py-8">
+      <main className="container mx-auto space-y-6 py-8 px-4">
         {/* Executive Overview Row */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="border-border bg-card p-0">
