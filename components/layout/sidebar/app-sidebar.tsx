@@ -62,63 +62,7 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="hover:text-foreground h-10 items-center overflow-visible group-data-[collapsible=icon]:px-0! hover:bg-(--primary)/5">
-                  <Logo />
-                  <span className="mt-1 text-lg font-bold group-data-[collapsible=icon]:hidden">
-                    IAMS
-                  </span>
-                  <ChevronsUpDown className="ml-auto group-data-[collapsible=icon]:hidden" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="mt-4 w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                side={isMobile ? "bottom" : "right"}
-                align="end"
-                sideOffset={4}>
-                <DropdownMenuLabel>All Dashboards</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link href={"/dashboard/home"} className="flex items-center gap-3">
-                    <UserCircle2Icon className="text-muted-foreground size-4" />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">Personal Risk Profile</span>
-                      {/* <span className="text-muted-foreground text-xs">Active</span> */}
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link href={"/dashboard/home/operations"} className="flex items-center gap-3">
-                    <ShoppingBagIcon className="text-muted-foreground size-4" />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">Operational Risk</span>
-                      {/* <span className="text-muted-foreground text-xs">Inactive</span> */}
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link href={"/dashboard/home/audit"} className="flex items-center gap-3">
-                    <HistoryIcon className="text-muted-foreground size-4" />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">Audit & Assurance</span>
-                      {/* <span className="text-muted-foreground text-xs">Inactive</span> */}
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-
-                {/*   <DropdownMenuSeparator /> <DropdownMenuItem asChild>
-                  <Button className="w-full" variant="secondary">
-                    <PlusIcon />
-                    Add New Project
-                  </Button>
-                </DropdownMenuItem> */}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Logo />
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full">

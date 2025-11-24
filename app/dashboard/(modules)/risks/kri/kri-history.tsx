@@ -49,7 +49,7 @@ function formatValue(value: number, measurementType?: string, currencyCode?: str
   }
 
   switch (measurementType) {
-    case "PERCENT":
+    case "PERCENTAGE":
       return `${value.toFixed(2)}%`;
     case "CURRENCY":
       return `${currencyCode || "USD"} ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -64,7 +64,7 @@ function formatValue(value: number, measurementType?: string, currencyCode?: str
 
 function getUnit(measurementType?: string, currencyCode?: string): string {
   switch (measurementType) {
-    case "PERCENT":
+    case "PERCENTAGE":
       return "%";
     case "CURRENCY":
       return currencyCode || "USD";
@@ -96,15 +96,15 @@ function generateHistoricalData(kri: KRI) {
     // Create variance based on measurement type
     let variance = 0;
     if (kri.measurement_type === "CURRENCY") {
-      variance = (Math.random() - 0.5) * (targetValue as any * 0.1); // 10% variance
-    } else if (kri.measurement_type === "PERCENT") {
+      variance = (Math.random() - 0.5) * ((targetValue as any) * 0.1); // 10% variance
+    } else if (kri.measurement_type === "PERCENTAGE") {
       variance = (Math.random() - 0.5) * 5; // 5% variance
     } else {
       variance = (Math.random() - 0.5) * (targetValue * 0.2); // 20% variance
     }
 
     const trend = (kri.currentValue - targetValue) / 7;
-    const value = Number((targetValue as any + trend * (7 - i) + variance).toFixed(2));
+    const value = Number(((targetValue as any) + trend * (7 - i) + variance).toFixed(2));
 
     history.push({
       date: dateStr,
@@ -256,7 +256,7 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
                     tickFormatter={(value) => {
                       if (kri.measurement_type === "CURRENCY") {
                         return `${kri.currency_code} ${value.toLocaleString()}`;
-                      } else if (kri.measurement_type === "PERCENT") {
+                      } else if (kri.measurement_type === "PERCENTAGE") {
                         return `${value}%`;
                       }
                       return value.toString();
