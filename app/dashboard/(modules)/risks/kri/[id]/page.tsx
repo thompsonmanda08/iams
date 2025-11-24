@@ -30,7 +30,7 @@ function formatValue(
   const numValue = typeof value === "string" ? parseFloat(value) : value;
 
   switch (measurementType) {
-    case "PERCENT":
+    case "PERCENTAGE":
       return `${numValue.toFixed(2)}%`;
     case "CURRENCY":
       return `${currencyCode || "USD"} ${numValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -350,7 +350,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                       unit:
                         kri.measurement_type === "CURRENCY"
                           ? kri.currency_code
-                          : kri.measurement_type === "PERCENT"
+                          : kri.measurement_type === "PERCENTAGE"
                             ? "%"
                             : ""
                     }}
