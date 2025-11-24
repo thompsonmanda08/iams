@@ -22,6 +22,7 @@ import { ChangePassword } from "@/lib/types/stores";
 import { UserType } from "@/lib/types/account";
 import { cache } from "react";
 import { logger } from "@/lib/logger";
+import { SESSION_CONFIG } from "@/lib/session-config";
 
 export async function loginUser({
   username,
@@ -392,13 +393,22 @@ export async function getRefreshToken(): Promise<APIResponse> {
 
     const access_token = response.data?.access_token;
 
-    await updateAuthSession({ access_token });
+    // ✅ CRITICAL FIX: Reset session expiration to 30 minutes from now
+    // When refreshing token, we must extend the session TTL
+    // Otherwise cookie expiration stays at old value and user gets logged out prematurely
+    const newExpiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+
+    await updateAuthSession({
+      access_token,
+      expiresAt: newExpiresAt
+    });
 
     // ✅ Log success without exposing token value
     logger.info("✅ Token refreshed successfully", {
       function: "getRefreshToken",
       endpoint: url,
-      previousExpiryMs: timeUntilExpiry
+      previousExpiryMs: timeUntilExpiry,
+      newExpiresAt: newExpiresAt.toISOString()
     });
 
     return successResponse({ access_token }, response.data?.message);

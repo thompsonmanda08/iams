@@ -188,6 +188,16 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   const loggedIn = session?.accessToken || false;
   const isIdle = state === "Idle";
 
+  // ✅ Debug: Log when loggedIn status changes
+  useEffect(() => {
+    logger.debug("📋 IdleTimerContainer logged-in status", {
+      component: "IdleTimerContainer",
+      loggedIn,
+      hasAccessToken: !!session?.accessToken,
+      session: session ? { user_id: (session as any)?.user_id, user_type: (session as any)?.user_type } : null
+    });
+  }, [loggedIn, session]);
+
   // ✅ Check for persisted lock state on mount (survives page reload)
   useEffect(() => {
     const checkPersistedLockState = async () => {
@@ -415,35 +425,55 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         component: "IdleTimerContainer.onIdle"
       });
 
-      // Set screen lock cookie before showing the dialog
-      const lockSuccess = await lockScreenOnUserIdle(true);
+      // ✅ CRITICAL FIX: Show modal REGARDLESS of cookie success
+      // User's explicit requirement: "open the modal regardless of what is on the screen"
+      // We must show the modal when user is idle, even if cookie operation fails
+      // This ensures the countdown timer always appears to protect the session
+
+      // Try to set screen lock cookie, but don't block modal from showing
+      let lockSuccess = false;
+      try {
+        lockSuccess = await lockScreenOnUserIdle(true);
+      } catch (lockError) {
+        logger.error("Exception while setting screen lock cookie - will show modal anyway", lockError, {
+          component: "IdleTimerContainer.onIdle"
+        });
+        // Continue - we'll show modal even if cookie fails
+      }
 
       if (!lockSuccess) {
-        logger.error("Failed to activate screen lock - server action returned false", {
+        logger.warn("Screen lock cookie not set, but showing modal anyway (user requirement)", {
           component: "IdleTimerContainer.onIdle",
           lockSuccess
         });
-        toast.error("Failed to lock screen. Please try again.");
-        return;
+        // Don't toast error - user already knows they're idle, modal is sufficient
+        // toast.error("Failed to lock screen. Please try again.");
+        // CONTINUE TO SHOW MODAL
+      } else {
+        logger.info("✅ Screen lock activated successfully", {
+          component: "IdleTimerContainer.onIdle",
+          lockSuccess
+        });
       }
-
-      logger.info("✅ Screen lock activated successfully", {
-        component: "IdleTimerContainer.onIdle",
-        lockSuccess
-      });
 
       // ✅ CRITICAL FIX: Open dialog BEFORE state change to prevent race condition
       // Setting state and dialog in separate calls can cause the component to render
       // with only one state update applied, causing the dialog to be missed
       // By opening dialog first, we ensure it's visible even if state updates are batched
+      // MORE IMPORTANT: Show modal REGARDLESS of whether cookie was set
       setIsDialogOpen(true);
       setState("Idle");
     } catch (error) {
       logger.error("❌ Exception while activating screen lock", error, {
         component: "IdleTimerContainer.onIdle"
       });
-      toast.error("Error locking screen. Please log out and log back in.");
-      // Do NOT mark as idle on error - let user continue
+      // ✅ CRITICAL FIX: Still show modal even on exception (user requirement)
+      // "open the modal regardless of what is on the screen"
+      logger.info("Showing modal despite error (user idle requirement)", {
+        component: "IdleTimerContainer.onIdle"
+      });
+      setIsDialogOpen(true);
+      setState("Idle");
     }
   };
 
