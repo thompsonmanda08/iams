@@ -83,6 +83,16 @@ export const adminNavItems: NavGroup[] = [
 
 export const navItems: NavGroup[] = [
   {
+    title: "Home",
+    items: [
+      {
+        title: "Overview",
+        href: "/dashboard/home",
+        icon: LayoutDashboard
+      }
+    ]
+  },
+  {
     title: "Modules",
     items: [
       {
