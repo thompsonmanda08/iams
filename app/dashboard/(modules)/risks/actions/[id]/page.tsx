@@ -5,7 +5,7 @@ export default async function ActionDetailPage({ params }: { params: Promise<{ i
   const { id } = await params;
 
   const response = await getRisk(id);
-  const data = response.success && response.data ? response.data : null;
+  const data = response.success && response.data.data ? response.data.data : null;
   const actions = data || [];
 
   return (
