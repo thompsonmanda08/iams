@@ -338,7 +338,7 @@ export function RiskHeatMap({ heatmapData }: { heatmapData: HeatmapData }) {
                                   <Badge
                                     variant="outline"
                                     className={
-                                      risk.risk_appetite_status === "WITHIN"
+                                      risk.risk_appetite_status === "Below"
                                         ? "border-green-200 text-green-700"
                                         : "border-red-200 text-red-700"
                                     }>
