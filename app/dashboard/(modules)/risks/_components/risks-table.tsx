@@ -239,16 +239,6 @@ export default function RisksTable({
     return colors[magnitude as keyof typeof colors] || "bg-gray-100 text-gray-700";
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      open: "bg-blue-100 text-blue-700",
-      monitoring: "bg-purple-100 text-purple-700",
-      closed: "bg-gray-100 text-gray-700",
-      draft: "bg-slate-100 text-slate-700"
-    };
-    return colors[status.toLowerCase() as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  };
-
   const getRiskScoreColor = (score: number) => {
     if (score >= 15) return "text-red-600 font-bold";
     if (score >= 10) return "text-orange-600 font-semibold";
@@ -318,8 +308,11 @@ export default function RisksTable({
               <TableHead>Title</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Inherent Score</TableHead>
+              <TableHead>Inherent Rating</TableHead>
               <TableHead>Residual Score</TableHead>
+              <TableHead>Residual Rating</TableHead>
               <TableHead>Magnitude</TableHead>
+              <TableHead>Risk Appetite Status</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead className="text-right">Options</TableHead>
@@ -341,13 +334,10 @@ export default function RisksTable({
                   <TableCell>
                     <div>
                       <p className="text-foreground font-medium">{risk.title}</p>
-                      <p className="text-muted-foreground max-w-xs truncate text-sm">
-                        {risk.description}
-                      </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="block max-w-[200px] text-sm break-all whitespace-normal">
+                    <span className="break block max-w-[200px] text-sm whitespace-normal">
                       {risk.category.name}
                     </span>
                   </TableCell>
@@ -366,6 +356,9 @@ export default function RisksTable({
                     </div>
                   </TableCell>
                   <TableCell>
+                    <StatusBadge status={risk?.inherent_rating || "-"} />
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <span
                         className={cn(
@@ -380,6 +373,9 @@ export default function RisksTable({
                     </div>
                   </TableCell>
                   <TableCell>
+                    <StatusBadge status={risk?.residual_rating || "-"} />
+                  </TableCell>
+                  <TableCell>
                     <span
                       className={cn(
                         "rounded-full px-2 py-1 text-xs font-medium capitalize",
@@ -389,7 +385,10 @@ export default function RisksTable({
                     </span>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={risk.status} />
+                    <StatusBadge status={risk?.risk_appetite_status || "-"} />
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={risk?.status || "-"} />
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">{getRiskOwnerName(risk)}</span>

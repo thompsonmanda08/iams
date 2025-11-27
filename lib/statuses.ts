@@ -26,7 +26,12 @@ export const STATUS_VALUES = {
   OPEN: 'OPEN',
   COMPLETED: 'COMPLETED',
   CLOSED: 'CLOSED',
-  ARCHIVED: 'ARCHIVED'
+  ARCHIVED: 'ARCHIVED',
+  HIGH:'HIGH',
+  MEDIUM : 'MEDIUM',
+  LOW: 'LOW',
+  ABOVE: 'ABOVE',
+  BELOW: 'BELOW'
 } as const;
 
 export type StandardStatus = typeof STATUS_VALUES[keyof typeof STATUS_VALUES];
@@ -148,7 +153,53 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     style: 'outline',
     hexColor: '#495057',
     sortOrder: 11
-  }
+  },
+  HIGH: {
+    id: 'HIGH',
+    label: 'High',
+    description: 'Rating High and is read-only',
+    color: 'danger',
+    style: 'solid',
+    hexColor: '#DC3545',
+    sortOrder: 12
+  },
+  MEDIUM: {
+    id: 'MEDIUM',
+    label: 'Medium',
+    description: 'Rating Medium and is read-only',
+    color: 'warning',
+    style: 'solid',
+    hexColor: '#FFC107',
+    sortOrder: 13
+  },
+  LOW: {
+    id: 'LOW',
+    label: 'Low',
+    description: 'Rating Low and is read-only',
+    color: 'success',
+    style: 'solid',
+    hexColor: '#28A745',
+    sortOrder: 14
+  },
+  BELOW: {
+    id: 'BELOW',
+    label: 'Below',
+    description: 'Risk Appetite Status Below and is read-only',
+    color: 'success',
+    style: 'solid',
+    hexColor: '#28A745',
+    sortOrder: 14
+  },
+  ABOVE: {
+    id: 'ABOVE',
+    label: 'Above',
+    description: 'Risk Appetite Status Above and is read-only',
+    color: 'danger',
+    style: 'solid',
+    hexColor: '#DC3545',
+    sortOrder: 12
+  },
+  
 };
 
 // ============================================================================
@@ -178,7 +229,12 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: [],
       COMPLETED: ['ARCHIVED'],
       CLOSED: [],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
     }
   },
 
@@ -197,7 +253,13 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: [],
       COMPLETED: ['ARCHIVED'],
       CLOSED: [],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
+
     }
   },
 
@@ -216,7 +278,12 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: ['PENDING', 'COMPLETED', 'CLOSED'],
       COMPLETED: ['CLOSED', 'ARCHIVED'],
       CLOSED: ['ARCHIVED'],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
     }
   },
 
@@ -235,7 +302,12 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: ['PENDING', 'ON_HOLD', 'CLOSED'],
       COMPLETED: [],
       CLOSED: ['ARCHIVED'],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
     }
   },
 
@@ -254,7 +326,12 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: [],
       COMPLETED: ['CLOSED', 'ARCHIVED'],
       CLOSED: ['ARCHIVED'],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
     }
   },
 
@@ -273,7 +350,12 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: [],
       COMPLETED: ['ARCHIVED'],
       CLOSED: [],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
     }
   },
 
@@ -292,7 +374,12 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: ['COMPLETED', 'ON_HOLD', 'CLOSED'],
       COMPLETED: ['CLOSED', 'ARCHIVED'],
       CLOSED: ['ARCHIVED'],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
     }
   },
 
@@ -311,7 +398,35 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       OPEN: ['IN_REVIEW', 'COMPLETED', 'CLOSED'],
       COMPLETED: ['CLOSED', 'ARCHIVED'],
       CLOSED: ['ARCHIVED'],
-      ARCHIVED: []
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
+    }
+  },
+   // ========== RISK MATRIX STATUSES ==========
+  matrix: {
+    allowedStatuses: ['PENDING', 'IN_REVIEW', 'OPEN', 'COMPLETED', 'CLOSED'],
+    defaultStatus: 'PENDING',
+    transitions: {
+      DRAFT: [],
+      PENDING: ['OPEN'],
+      SUBMITTED: [],
+      IN_REVIEW: ['OPEN', 'CLOSED'],
+      APPROVED: [],
+      REJECTED: [],
+      ON_HOLD: [],
+      OPEN: ['IN_REVIEW', 'COMPLETED', 'CLOSED'],
+      COMPLETED: ['CLOSED', 'ARCHIVED'],
+      CLOSED: ['ARCHIVED'],
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW:[],
     }
   }
 };

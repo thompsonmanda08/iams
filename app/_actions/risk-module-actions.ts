@@ -414,11 +414,7 @@ export interface KRIMeasurement {
 }
 
 export interface KRIMeasurementInput {
-  measurement_date: Date;
   measured_value: number;
-  status: KRIStatus;
-  notes?: string;
-  measured_by: string;
 }
 
 // Heat Map Data
@@ -1378,19 +1374,19 @@ export async function deleteKRI(id: string): Promise<APIResponse> {
  * Add a KRI measurement
  */
 export async function addKRIMeasurement(
-  kriId: string,
+  kri_id: string,
   input: KRIMeasurementInput
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: `/api/v1/kris/${kriId}/measurements`,
+      url: `/api/v1/kris/${kri_id}/measurements`,
       data: input,
       method: "POST"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
     return successResponse(response.data.data);
   } catch (error) {
-    return handleError(error, "POST | ADD KRI MEASUREMENT", `/api/v1/kris/${kriId}/measurements`);
+    return handleError(error, "POST | ADD KRI MEASUREMENT", `/api/v1/kris/${kri_id}/measurements`);
   }
 }
 

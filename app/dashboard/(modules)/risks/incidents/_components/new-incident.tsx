@@ -227,7 +227,6 @@ export function NewIncident() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SearchSelectField
               label="Key Risk Indicator (KRI)"
-              required
               placeholder={
                 !formData.department_id
                   ? "Select department first"
