@@ -1,15 +1,23 @@
 "use client";
 import { useState } from "react";
-import { Pencil, Trash2, ChevronLeft, ChevronRight, Eye, Globe, Plus } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Globe,
+  Plus,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
+  Filter,
+  View,
+  ClipboardListIcon
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -27,6 +35,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import Search from "@/components/ui/search-field";
+import { SelectField } from "@/components/ui/select-field";
 import { deleteUniverse } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import {
@@ -37,6 +46,7 @@ import {
   EmptyDescription,
   EmptyContent
 } from "@/components/ui/empty";
+import { stat } from "fs/promises";
 
 // Mock data removed - using real backend data only
 
@@ -109,41 +119,88 @@ export default function AuditUniverseList({
     router.push(`/dashboard/audit/universe/${id}`);
   };
 
+  const statsCards = [
+    {
+      id: "total",
+      label: "Total Universes",
+      value: data.length,
+      icon: BarChart3,
+      gradientFrom: "from-cyan-500/20",
+      gradientTo: "to-blue-500/20",
+      iconBgColor: "bg-cyan-500/20",
+      iconColor: "text-cyan-400",
+      trendIcon: ArrowUpRight,
+      trendColor: "text-emerald-400",
+      subtitle: "12% increase from last month"
+    },
+    {
+      id: "approved",
+      label: "Approved",
+      value: data.filter((d) => d.status === "APPROVED").length,
+      icon: Globe,
+      gradientFrom: "from-emerald-500/20",
+      gradientTo: "to-teal-500/20",
+      iconBgColor: "bg-emerald-500/20",
+      iconColor: "text-emerald-400",
+      trendIcon: ArrowUpRight,
+      trendColor: "text-emerald-400",
+      subtitle: "+15% from last period"
+    },
+    {
+      id: "inReview",
+      label: "In Review",
+      value: data.filter((d) => d.status === "IN_REVIEW").length,
+      icon: Eye,
+      gradientFrom: "from-blue-500/20",
+      gradientTo: "to-cyan-500/20",
+      iconBgColor: "bg-blue-500/20",
+      iconColor: "text-blue-400",
+      trendIcon: ArrowDownRight,
+      trendColor: "text-red-400",
+      subtitle: "-5% from last period"
+    },
+    {
+      id: "draft",
+      label: "Draft",
+      value: data.filter((d) => d.status === "DRAFT").length,
+      icon: Calendar,
+      gradientFrom: "from-slate-500/20",
+      gradientTo: "to-gray-500/20",
+      iconBgColor: "bg-slate-500/20",
+      iconColor: "text-slate-400",
+      trendIcon: ArrowUpRight,
+      trendColor: "text-emerald-400",
+      subtitle: "Active drafts awaiting review"
+    }
+  ];
+
   return (
     <div className="bg-background min-h-screen">
       <div className="container mx-auto space-y-8 px-6 py-8">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-          <Card className="p-6 transition-shadow hover:shadow-lg">
-            <div className="space-y-2">
-              <p className="text-muted-foreground text-sm font-medium">Total Universes</p>
-              <p className="text-foreground text-3xl font-bold">{data.length}</p>
-            </div>
-          </Card>
-          <Card className="p-6 transition-shadow hover:shadow-lg">
-            <div className="space-y-2">
-              <p className="text-muted-foreground text-sm font-medium">Approved</p>
-              <p className="text-success text-3xl font-bold">
-                {data.filter((d) => d.status === "APPROVED").length}
-              </p>
-            </div>
-          </Card>
-          <Card className="p-6 transition-shadow hover:shadow-lg">
-            <div className="space-y-2">
-              <p className="text-muted-foreground text-sm font-medium">Under Review</p>
-              <p className="text-warning text-3xl font-bold">
-                {data.filter((d) => d.status === "UNDER_REVIEW").length}
-              </p>
-            </div>
-          </Card>
-          <Card className="p-6 transition-shadow hover:shadow-lg">
-            <div className="space-y-2">
-              <p className="text-muted-foreground text-sm font-medium">In Progress</p>
-              <p className="text-info text-3xl font-bold">
-                {data.filter((d) => d.status === "UNIVERSE_CREATION").length}
-              </p>
-            </div>
-          </Card>
+          {statsCards.map((stat) => {
+            const IconComponent = stat.icon;
+            const TrendIcon = stat.trendIcon;
+            return (
+              <div key={stat.id} className="group relative">
+                <div
+                  className={`absolute inset-0 bg-linear-to-r ${stat.gradientFrom} ${stat.gradientTo} rounded-2xl opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100`}></div>
+                <Card className="hover:border-primary/30 relative p-7 backdrop-blur-sm transition-all duration-300">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-muted-foreground text-sm font-medium">{stat.label}</p>
+                      <p className="text-foreground my-1 text-3xl font-bold">{stat.value}</p>
+                      <p className="text-muted-foreground text-xs">{stat.subtitle}</p>
+                    </div>
+                    <div className={`p-3 ${stat.iconBgColor} rounded-xl`}>
+                      <IconComponent className={`h-6 w-6 ${stat.iconColor}`} />
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            );
+          })}
         </div>
 
         {data.length === 0 ? (
@@ -168,165 +225,209 @@ export default function AuditUniverseList({
             </EmptyContent>
           </Empty>
         ) : (
-          <Card className="animate-fade-in">
-            <div className="bg-card border-b p-6">
-              <div className="max-w-md flex-1">
-                <Search
-                  placeholder="Search universes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e)}
-                />
+          <div className="relative">
+            <div className="absolute inset-0 rounded-3xl bg-linear-to-r from-cyan-500/10 to-blue-500/10 opacity-50 blur-2xl"></div>
+            <Card className="animate-fade-in relative overflow-hidden">
+              <div className="border-muted from-muted/5 border-b bg-linear-to-r to-transparent p-8">
+                <div className="flex items-center justify-between gap-6">
+                  <div className="max-w-md flex-1">
+                    <Search
+                      placeholder="Search audit universes..."
+                      value={searchQuery}
+                      onChange={setSearchQuery}
+                      classNames={
+                        {
+                          // wrapper: "w-full",
+                          // base: "bg-muted/30 border-muted rounded-xl",
+                          // input: "text-foreground hover:bg-muted/40"
+                        }
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Filter className="text-muted-foreground h-5 w-5" />
+                    <SelectField
+                      value="latest"
+                      onValueChange={() => {}}
+                      placeholder="Sort by"
+                      options={[
+                        { id: "latest", label: "Latest First" },
+                        { id: "name", label: "By Name" },
+                        { id: "status", label: "By Status" }
+                      ]}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="text-foreground h-14 font-semibold">
-                      Universe Name
-                    </TableHead>
-                    <TableHead className="text-foreground font-semibold">
-                      Functional Areas
-                    </TableHead>
-                    <TableHead className="text-foreground font-semibold">Auditable Areas</TableHead>
-                    <TableHead className="text-foreground font-semibold">Status</TableHead>
-                    <TableHead className="text-foreground font-semibold">Date Created</TableHead>
-                    <TableHead className="text-foreground text-right font-semibold">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-muted-foreground py-12 text-center">
-                        No universes match your search. Try a different search term.
-                      </TableCell>
+              <div className="border-muted overflow-x-auto rounded-md border">
+                <Table className="">
+                  <TableHeader className="bg-muted/40">
+                    <TableRow className="border-muted hover:bg-muted/40 border-b px-4">
+                      <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
+                        Universe Name
+                      </TableHead>
+                      <TableHead className="text-foreground/70 text-xs font-bold whitespace-nowrap uppercase">
+                        Functional Areas
+                      </TableHead>
+                      <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
+                        Auditable Areas
+                      </TableHead>
+                      <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
+                        Status
+                      </TableHead>
+                      <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
+                        Date Created
+                      </TableHead>
+                      <TableHead className="text-foreground/70 text-center text-sm font-bold whitespace-nowrap uppercase">
+                        Actions
+                      </TableHead>
                     </TableRow>
-                  ) : (
-                    currentData.map((item: any) => {
-                      const universeName = item.universe_name || item.universeName || "Unnamed";
-                      const functionalAreas = item.functionalAreas || [];
-                      const auditableAreas = item.auditableAreas || [];
-                      const status = item.status || "UNIVERSE_CREATION";
-                      const dateCreated =
-                        item.date_created ||
-                        item.dateCreated ||
-                        item.created_at ||
-                        new Date().toISOString().split("T")[0];
-                      const itemCount = universeItemsMap[item.id]?.length || 0;
+                  </TableHeader>
+                  <TableBody>
+                    {currentData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-muted-foreground py-12 text-center">
+                          No universes match your search. Try a different search term.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      currentData.map((item: any) => {
+                        const universeName =
+                          item.universe_name || `Audit Universe ${new Date().getFullYear}`;
+                        const functionalAreas = item.functionalAreas || [];
+                        const auditableAreas = item.auditableAreas || [];
+                        const status = item.status || "UNIVERSE_CREATION";
+                        const dateCreated =
+                          item.created_at || new Date().toISOString().split("T")[0];
+                        const itemCount = universeItemsMap[item.id]?.length || 0;
 
-                      return (
-                        <TableRow key={item.id} className="hover:bg-muted/20 transition-all">
-                          <TableCell className="text-foreground py-4 font-semibold">
-                            <div className="flex flex-col gap-1">
-                              <span>{universeName}</span>
-                              {itemCount > 0 && (
-                                <span className="text-muted-foreground text-xs">
-                                  {itemCount} {itemCount === 1 ? "item" : "items"}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1.5">
-                              {functionalAreas.length > 0 ? (
-                                functionalAreas.map((area: string, idx: number) => (
-                                  <span
-                                    key={idx}
-                                    className="text-primary bg-primary/10 rounded-md px-2.5 py-1 text-xs font-medium">
-                                    {area}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-muted-foreground text-xs">No areas</span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1.5">
-                              {auditableAreas.length > 0 ? (
-                                auditableAreas.map((area: string, idx: number) => (
-                                  <span
-                                    key={idx}
-                                    className="bg-primary/70 rounded-md px-2.5 py-1 text-xs font-medium text-white">
-                                    {area}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-muted-foreground text-xs">No areas</span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge status={status} />
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">
-                            {new Date(dateCreated).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  handleView(item.id);
-                                  e.stopPropagation();
-                                }}
-                                className="h-8 gap-1.5">
-                                <Eye className="h-3.5 w-3.5" />
-                                View
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  handleEdit(item.id);
-                                  e.stopPropagation();
-                                }}
-                                className="h-8 gap-1.5">
-                                <Pencil className="h-3.5 w-3.5" />
-                                Edit
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  handleDeleteClick(item.id, universeName);
-                                  e.stopPropagation();
-                                }}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                                <Trash2 className="h-4 w-4" />
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                        return (
+                          <TableRow
+                            key={item.id}
+                            onClick={(e) => {
+                              handleView(item.id);
+                              e.stopPropagation();
+                            }}
+                            className="hover:bg-muted/30 border-muted/50 cursor-pointer border-b transition-all duration-200">
+                            <TableCell className="text-foreground font-medium whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`shadow-lg" rounded-xl bg-linear-to-br from-cyan-400 via-blue-500 to-blue-600 p-3`}>
+                                  <ClipboardListIcon className={`h-6 w-6 text-white`} />
+                                </div>
+                                <div className="space-y-1 capitalize">
+                                  <p className="text-sm font-semibold">{universeName}</p>
+                                  {itemCount > 0 && (
+                                    <p className="text-muted-foreground text-xs">
+                                      {itemCount}{" "}
+                                      {itemCount === 1 ? "Universe Item" : "Universe Items"}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="min-w-[180px]">
+                              <div className="flex flex-wrap gap-1.5">
+                                {functionalAreas.length > 0 ? (
+                                  functionalAreas.map((area: string, idx: number) => (
+                                    <span
+                                      key={idx}
+                                      className="text-primary bg-primary/10 rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap">
+                                      {area}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">No areas</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="min-w-[180px]">
+                              <div className="flex flex-wrap gap-1.5">
+                                {auditableAreas.length > 0 ? (
+                                  auditableAreas.map((area: string, idx: number) => (
+                                    <span
+                                      key={idx}
+                                      className="bg-primary rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white">
+                                      {area}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">No areas</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge status={status} />
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                              {new Date(dateCreated).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    handleView(item.id);
+                                    e.stopPropagation();
+                                  }}
+                                  className="h-8 gap-1.5">
+                                  <View className="h-3.5 w-3.5" />
+                                  View
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    handleEdit(item.id);
+                                    e.stopPropagation();
+                                  }}
+                                  className="h-8 gap-1.5">
+                                  <Pencil className="h-3.5 w-3.5" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    handleDeleteClick(item.id, universeName);
+                                    e.stopPropagation();
+                                  }}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-            <div className="bg-card flex items-center justify-between border-t p-6">
-              <CustomPagination
-                pagination={
-                  pagination ||
-                  ({
-                    page: 1,
-                    page_size: 10,
-                    total_pages: Math.ceil(filteredData.length / 10),
-                    totalCount: filteredData.length
-                  } as Pagination)
-                }
-                updatePagination={({ page, page_size }) => setCurrentPage(page)}
-                showDetails
-                allowSetPageSize
-              />
-            </div>
-          </Card>
+              {currentData.length === 0 ? null : (
+                <div className="bg-card border-muted flex items-center justify-between border-t p-6">
+                  <CustomPagination
+                    pagination={
+                      pagination ||
+                      ({
+                        page: 1,
+                        page_size: 10,
+                        total_pages: Math.ceil(filteredData.length / 10),
+                        totalCount: filteredData.length
+                      } as Pagination)
+                    }
+                    updatePagination={({ page, page_size }) => setCurrentPage(page)}
+                    showDetails
+                    allowSetPageSize
+                  />
+                </div>
+              )}
+            </Card>
+          </div>
         )}
       </div>
 

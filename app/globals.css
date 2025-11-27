@@ -26,9 +26,9 @@
   --card-foreground: var(--base-800);
   --popover: var(--color-white);
   --popover-foreground: var(--base-800);
-  --primary: oklch(28.526% 0.15946 265.909);
+  --primary: oklch(64.452% 0.18938 251.372);
   --primary-foreground: var(--color-white);
-  --secondary: oklch(59.261% 0.23747 30.019);
+  --secondary: oklch(28.319% 0.07643 269.711);
   --secondary-foreground: var(--base-50);
   --muted: var(--color-neutral-100);
   --muted-foreground: var(--color-neutral-500);
@@ -43,7 +43,7 @@
   --chart-3: var(--base-800);
   --chart-4: var(--base-400);
   --chart-5: var(--base-300);
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --sidebar: var(--base-100);
   --sidebar-foreground: var(--base-800);
   --sidebar-primary: var(--base-950);
@@ -61,7 +61,9 @@
   --state-node-initial: oklch(45% 0.18 265.909);
   --state-node-final: oklch(55% 0.18 145);
 
-  --amber-active: oklch(75.518% 0.14826 76.566);
+  --green-active: hsl(124, 53%, 61%);
+  --amber-active: hsl(39, 95%, 60%);
+  --red-active: hsl(0, 100%, 62%);
 
   --display-weight: 700;
 
@@ -86,14 +88,14 @@
   --popover: var(--base-950);
   --popover-foreground: var(--base-200);
   --primary: var(--base-50);
-  --primary-foreground: oklch(28.526% 0.15946 265.909);
-  --secondary: oklch(59.261% 0.23747 30.019);
+  --primary: oklch(64.452% 0.18938 251.372);
+  --secondary: oklch(28.319% 0.07643 269.711);
   --secondary-foreground: var(--base-50);
   --muted: var(--base-900);
   --muted-foreground: var(--base-400);
   --accent: var(--base-900);
   --accent-foreground: var(--base-200);
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.577 0.245 27.325);
   --border: var(--base-800);
   --input: var(--base-700);
   --ring: var(--base-200);
@@ -117,9 +119,16 @@
   --state-node: var(--base-900);
   --state-node-border: var(--base-600);
   --state-node-initial: oklch(75% 0.15 265.909);
-  --state-node-final: oklch(70% 0.16 145);
+  --state-node-final: oklch(77.486% 0.16717 145.076);
 
-  --amber-active: oklch(75.518% 0.14826 76.566);
+  /* RISK AND AUDIT CHARTS HSL VALUES */
+  /* --green-active: 124 53% 61%;
+  --amber-active: 39 95% 60%;
+  --red-active: 124 53% 61%; */
+
+  --green-active: hsl(124, 53%, 61%);
+  --amber-active: hsl(39, 95%, 60%);
+  --red-active: hsl(0, 100%, 62%);
 }
 
 @theme inline {
@@ -188,6 +197,8 @@
   --color-state-node-final: var(--state-node-final);
 
   --color-amber-active: var(--amber-active);
+  --color-green-active: var(--green-active);
+  --color-red-active: var(--red-active);
 
   --font-display: var(--display-family);
   --display-weight: var(--display-weight);
@@ -240,5 +251,9 @@
       hsl(340deg 100% 36%) 100%,
       hsl(359deg 66% 49%) 100%
     );
+  }
+
+  .gradient-blue {
+    @apply bg-linear-to-br from-cyan-400 to-blue-600;
   }
 }

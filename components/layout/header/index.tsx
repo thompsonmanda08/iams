@@ -12,6 +12,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { User } from "@/lib/types/account";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { useMemo } from "react";
+import { ThemeCustomizerPanel } from "@/components/theme-customizer";
 
 export function SiteHeader({ user: userData }: { user: User }) {
   const { toggleSidebar } = useSidebar();
@@ -39,7 +40,7 @@ export function SiteHeader({ user: userData }: { user: User }) {
         <div className="ml-auto flex items-center gap-2">
           <Notifications />
           <ThemeSwitch />
-          {/* <ThemeCustomizerPanel /> */}
+          <ThemeCustomizerPanel />
           <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
           <UserMenu user={user} />
         </div>

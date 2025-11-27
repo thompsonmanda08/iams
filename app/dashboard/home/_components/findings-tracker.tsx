@@ -86,7 +86,7 @@ export default function FindingsTracker({ findings }: FindingsTrackerProps) {
                     </div>
                     {finding.severity && (
                       <span
-                        className={`rounded px-2 py-1 text-xs font-semibold ${getSeverityColor(finding.severity)}`}>
+                        className={`rounded px-2 py-1 text-xs font-semibold ${getStatusColor(finding.severity)}`}>
                         {finding.severity}
                       </span>
                     )}

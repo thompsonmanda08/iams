@@ -139,7 +139,20 @@ export default function AuditUniverseForm({
     if (initialData?.audit_universe_id) {
       return {
         ...INIT_ITEM_DATA,
-        audit_universe_id: initialData.audit_universe_id
+        audit_universe_id: initialData.audit_universe_id,
+        process_activity_id: initialData.process_activity_id || "",
+        name: initialData.name || "",
+        department_id: initialData.department_id || "",
+        strategic_pillar_id: initialData.strategic_pillar_id || "",
+        strategic_pillar_name: initialData.strategic_pillar_name || "",
+        auditable_area_id: initialData.auditable_area_id || "",
+        auditable_area_name: initialData.auditable_area_name || "",
+        indicative_target_id: initialData.indicative_target_id || "",
+        strategic_initiative_id: initialData.strategic_initiative_id || "",
+        strategic_initiative_name: initialData.strategic_initiative_name || "",
+        risk_id: initialData.risk_id || "",
+        audit_frequency: initialData.audit_frequency || "ANNUALLY",
+        is_active: initialData.is_active ?? true
       };
     }
     return INIT_ITEM_DATA;

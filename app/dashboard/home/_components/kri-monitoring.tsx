@@ -37,15 +37,15 @@ const kriChartConfig = {
   },
   green: {
     label: "Green",
-    color: "hsl(var(--state-node-final))"
+    color: "var(--green-active)"
   },
   amber: {
     label: "Amber",
-    color: "hsl(var(--amber-active))"
+    color: "var(--amber-active)"
   },
   red: {
     label: "Red",
-    color: "hsl(var(--destructive))"
+    color: "var(--red-active)"
   }
 } satisfies ChartConfig;
 
@@ -56,9 +56,9 @@ export default function KriMonitoring({ kriSummary }: KriMonitoringProps) {
   const amberCount = kriSummary.kris_by_status.Amber || 0;
 
   const kriStatus = [
-    { name: "green", value: greenCount, fill: "var(--color-state-node-final)" },
-    { name: "amber", value: amberCount, fill: "var(--color-amber-active)" },
-    { name: "red", value: redCount, fill: "var(--color-destructive)" }
+    { name: "green", value: greenCount, fill: "var(--green-active)" },
+    { name: "amber", value: amberCount, fill: "var(--amber-active)" },
+    { name: "red", value: redCount, fill: "var(--red-active)" }
   ];
 
   const totalKris = kriSummary.total_kris || 0;
@@ -67,12 +67,12 @@ export default function KriMonitoring({ kriSummary }: KriMonitoringProps) {
     const normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
       case "green":
-        return "text-state-node-final bg-state-node-final/10 dark:text-state-node-final/40";
+        return "text-green-active bg-green-active/5 dark:text-green-active";
       case "amber":
       case "yellow":
-        return "text-amber-active bg-amber-active/10 dark:text-amber-active/40";
+        return "text-amber-active bg-amber-active/5 dark:text-amber-active";
       case "red":
-        return "text-destructive bg-destructive/5";
+        return "text-red-active bg-red-active/5 dark:text-red-active";
       default:
         return "text-muted-foreground";
     }

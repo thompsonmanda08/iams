@@ -22,22 +22,22 @@ interface SystemHealthProps {
 const activityChartConfig = {
   active: {
     label: "Active",
-    color: "hsl(var(--state-node-final))"
+    color: "var(--green-active)"
   },
   inactive: {
     label: "Inactive",
-    color: "hsl(var(--amber-active))"
+    color: "var(--amber-active)"
   },
   locked: {
     label: "Locked",
-    color: "hsl(var(--destructive))"
+    color: "var(--red-active)"
   }
 } satisfies ChartConfig;
 
 const COLORS = {
-  active: "var(--state-node-final)",
+  active: "var(--green-active)",
   inactive: "var(--amber-active)",
-  locked: "var(--destructive)"
+  locked: "var(--red-active)"
 };
 
 export default function SystemHealth({ systemHealth }: SystemHealthProps) {
