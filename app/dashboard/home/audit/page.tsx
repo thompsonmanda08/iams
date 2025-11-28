@@ -1,7 +1,14 @@
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
+import {
+  TrendingUp,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  AlertCircle,
+  ClipboardCheckIcon
+} from "lucide-react";
 
 export default function AuditDashboard() {
   const auditStats = [
@@ -67,9 +74,21 @@ export default function AuditDashboard() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <PageHeader
-              title="  Audit Dashboard"
+              title="Audit Dashboard Overview"
               description="Completion rates and audit analytics"
               icon="AlertCircle"
+              classNames={{
+                container: "flex items-center gap-4",
+                title: "text-3xl font-bold text-foreground"
+              }}
+              customIcon={
+                <div className="relative">
+                  <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
+                  <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
+                    <ClipboardCheckIcon className="h-7 w-7 text-white" strokeWidth={2.5} />
+                  </div>
+                </div>
+              }
             />
 
             <div className="flex items-center gap-8">

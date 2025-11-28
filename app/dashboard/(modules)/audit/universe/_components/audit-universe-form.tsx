@@ -25,7 +25,7 @@ import {
   useProcessActivities
 } from "@/hooks/use-audit-settings-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
-import { useRisks } from "@/hooks/use-risk-query-data";
+import { useKRIs, useRisks } from "@/hooks/use-risk-query-data";
 import { SelectField } from "@/components/ui/select-field";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import {
@@ -66,7 +66,8 @@ interface UniverseItemFormData {
   indicative_target_id: string;
   strategic_initiative_id: string;
   strategic_initiative_name?: string;
-  risk_id: string;
+  risk_id?: string;
+  kri_id: string;
   audit_frequency: string;
   is_active: boolean;
 }
@@ -90,6 +91,7 @@ const INIT_ITEM_DATA: UniverseItemFormData = {
   indicative_target_id: "",
   strategic_initiative_id: "",
   risk_id: "",
+  kri_id: "",
   audit_frequency: "ANNUALLY",
   is_active: true
 };
@@ -134,6 +136,7 @@ export default function AuditUniverseForm({
       is_active: initialData.is_active ?? true
     };
   });
+
   const [itemData, setItemData] = useState<UniverseItemFormData>(() => {
     // If we have initialData with audit_universe_id (edit mode), pre-populate it
     if (initialData?.audit_universe_id) {
@@ -151,6 +154,7 @@ export default function AuditUniverseForm({
         strategic_initiative_id: initialData.strategic_initiative_id || "",
         strategic_initiative_name: initialData.strategic_initiative_name || "",
         risk_id: initialData.risk_id || "",
+        kri_id: initialData.kri_id || "",
         audit_frequency: initialData.audit_frequency || "ANNUALLY",
         is_active: initialData.is_active ?? true
       };
@@ -296,8 +300,18 @@ export default function AuditUniverseForm({
   const { data: indicativeTargetsResponse } = useIndicativeTargets();
   const indicativeTargetsData = mode === "item" ? indicativeTargetsResponse?.data || [] : [];
 
-  const { data: risksResponse } = useRisks();
-  const risksData = mode === "item" ? risksResponse?.data || [] : [];
+  const { data: KRIResponse } = useKRIs();
+  const KRI_Data = mode === "item" ? KRIResponse?.data || [] : [];
+
+  const KRI_OPTIONS = useMemo(() => {
+    return KRI_Data?.map((item: any) => ({
+      id: item.id,
+      name: `${item.name} - [ ${item.last_status} ]`,
+      status: item.last_status
+    }));
+  }, [KRI_Data]);
+
+  console.log("KRI_OPTIONS", KRI_OPTIONS);
 
   const { data: processActivitiesResponse, isLoading: isLoadingActivities } = useProcessActivities({
     department_id: itemData.department_id
@@ -362,6 +376,7 @@ export default function AuditUniverseForm({
       indicative_target_id: item.indicative_target_id || "",
       strategic_initiative_id: item.strategic_initiative_id || "",
       risk_id: item.risk_id || "",
+      kri_id: item.kri_id || "",
       audit_frequency: item.audit_frequency || "ANNUALLY",
       is_active: item.is_active ?? true
     });
@@ -484,13 +499,6 @@ export default function AuditUniverseForm({
     }));
   }, [indicativeTargetsData]);
 
-  const risksOptions = useMemo(() => {
-    return risksData?.map((risk: any) => ({
-      id: risk.id,
-      name: risk.risk_name || risk.name || risk.title
-    }));
-  }, [risksData]);
-
   // const strategicInitiativesOptions = useMemo(() => {
   //   return strategicInitiativesData?.map((initiative: any) => ({
   //     id: initiative.id,
@@ -562,18 +570,6 @@ export default function AuditUniverseForm({
               <div className="space-y-4">
                 {/* Universe Selection */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <Input
-                    id="name"
-                    label="Universe Entry Name"
-                    value={itemData.name}
-                    onChange={(e) => updateItemData({ name: e.target.value })}
-                    placeholder="Enter name"
-                    required={true}
-                    className="md:col-span-1"
-                    classNames={{
-                      wrapper: "md:col-span-1"
-                    }}
-                  />
                   <SearchSelectField
                     id="audit_universe_id"
                     label="Universe"
@@ -587,21 +583,20 @@ export default function AuditUniverseForm({
                       wrapper: "w-full md:col-span-2"
                     }}
                   />
+                  <SearchSelectField
+                    id="department_id"
+                    label="Department / Functional Unit"
+                    required
+                    placeholder="--Select a Functional Unit--"
+                    className="w-full max-w-none"
+                    classNames={{
+                      wrapper: "w-full max-w-none"
+                    }}
+                    value={itemData.department_id}
+                    onValueChange={(value) => updateItemData({ department_id: value })}
+                    options={(departments as any) || []}
+                  />
                 </div>
-
-                <SearchSelectField
-                  id="department_id"
-                  label="Department / Functional Unit"
-                  required
-                  placeholder="--Select a Department / Functional Unit--"
-                  className="w-full max-w-none"
-                  classNames={{
-                    wrapper: "w-full max-w-none"
-                  }}
-                  value={itemData.department_id}
-                  onValueChange={(value) => updateItemData({ department_id: value })}
-                  options={(departments as any) || []}
-                />
 
                 {/* Process/Activity - Full Width */}
                 <SearchSelectField
@@ -705,18 +700,18 @@ export default function AuditUniverseForm({
                         onValueChange={(value) => updateItemData({ indicative_target_id: value })}
                         options={indicativeTargetsOptions}
                       />{" "}
-                      <SelectField
-                        id="risk_id"
-                        label="Associated Risk"
-                        placeholder="Select a risk (optional)"
+                      <SearchSelectField
+                        id="kri_id"
+                        label="Associated KRI (Key Risk Indicator)"
+                        placeholder="-- Select a KRI (Key Risk Indicator) --"
                         required
                         className="w-full"
                         classNames={{
                           wrapper: "w-full"
                         }}
-                        value={itemData.risk_id}
-                        onValueChange={(value) => updateItemData({ risk_id: value })}
-                        options={risksOptions}
+                        value={itemData.kri_id}
+                        onValueChange={(value) => updateItemData({ kri_id: value })}
+                        options={KRI_OPTIONS}
                       />
                     </div>
                   </div>
@@ -984,7 +979,7 @@ export default function AuditUniverseForm({
           <Button
             type="submit"
             disabled={universeSubmitMutation.isPending}
-            className="w-full min-w-[160px] gap-2 sm:w-auto"
+            className="w-full min-w-40 gap-2 sm:w-auto"
             isLoading={universeSubmitMutation.isPending}
             loadingText={isEditing ? "Updating..." : "Creating..."}>
             <Save className="h-4 w-4" />

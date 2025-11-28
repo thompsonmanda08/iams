@@ -42,7 +42,7 @@ const AuditUniversePage = async () => {
               }}
               customIcon={
                 <div className="relative">
-                  <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-cyan-400 to-blue-600 opacity-40 blur-lg"></div>
+                  <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
                   <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
                     <Globe className="h-7 w-7 text-white" strokeWidth={2.5} />
                   </div>

@@ -39,21 +39,18 @@ const NewAuditUniversePage = () => {
       {/* Main Content */}
       <div className="container mx-auto space-y-6 px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="w-full">
+          <TabsList className="h-12 w-full">
             <TabsTrigger value="universe" className="gap-2">
-              <Globe className="h-4 w-4" />
+              <Globe className="h-6 w-6" />
               New Universe
             </TabsTrigger>
             <TabsTrigger value="item" className="gap-2">
-              <List className="h-4 w-4" />
+              <List className="h-6 w-6" />
               Universe Item
             </TabsTrigger>
           </TabsList>
           <TabsContent value="universe">
-            <AuditUniverseForm
-              mode="universe"
-              onSwitchToItemTab={() => setActiveTab("item")}
-            />
+            <AuditUniverseForm mode="universe" onSwitchToItemTab={() => setActiveTab("item")} />
           </TabsContent>
           <TabsContent value="item">
             <AuditUniverseForm

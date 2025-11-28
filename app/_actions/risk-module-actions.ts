@@ -13,7 +13,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { APIResponse } from "@/lib/types";
+import type { APIResponse, Pagination } from "@/lib/types";
 import authenticatedApiClient, {
   handleBadRequest,
   handleError,
@@ -670,8 +670,6 @@ export async function getRiskCategories(params?: {
     });
     return successResponse(response.data?.data);
   } catch (error) {
-   
-
     return handleError(error, "GET | GET RISK CATEGORIES", "/api/v1/risk-categories");
   }
 }
@@ -835,8 +833,6 @@ export async function createRiskRegister(input: RiskRegisterInput): Promise<APIR
     revalidatePath("/dashboard/(modules)/risks/risk-registers");
     return successResponse(response.data.data);
   } catch (error) {
-   
-
     return handleError(error, "POST | CREATE RISK REGISTER", "/api/v1/risk-registers");
   }
 }
@@ -1213,7 +1209,7 @@ export async function getKRIStats(): Promise<APIResponse> {
       url: "/api/v1/kris/stats",
       method: "GET"
     });
-    
+
     return successResponse(response.data.data);
   } catch (error) {
     return handleError(error, "GET | GET KRI STATS", "/api/v1/kris/stats");
@@ -1267,7 +1263,7 @@ export async function deleteKRIRegister(id: string): Promise<APIResponse> {
       method: "DELETE"
     });
     revalidatePath("/dashboard/(modules)/risks/kri");
-    return successResponse(response.data.data);
+    return successResponse(response.data.data, "KRI Register deleted successfully");
   } catch (error) {
     return handleError(error, "DELETE | DELETE KRI REGISTER", `/api/v1/kri-registers/${id}`);
   }
@@ -1280,24 +1276,35 @@ export async function deleteKRIRegister(id: string): Promise<APIResponse> {
 /**
  * Get all KRIs with filters
  */
-export async function getKRIs(params?: {
-  category_id?: string;
-  department_id?: string;
-  kri_register_id?: string;
-  status?: string;
-  frequency?: KRIFrequency;
-}): Promise<APIResponse> {
+export async function _getKRIs(
+  params?: Partial<Pagination> & {
+    category_id?: string;
+    department_id?: string;
+    kri_register_id?: string;
+    status?: string;
+    frequency?: KRIFrequency;
+  }
+): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.category_id) queryParams.append("category_id", params.category_id);
+  if (params?.department_id) queryParams.append("department_id", params.department_id);
+  if (params?.kri_register_id) queryParams.append("kri_register_id", params.kri_register_id);
+  if (params?.status) queryParams.append("status", params.status);
+  if (params?.frequency) queryParams.append("frequency", params.frequency);
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
+  const url = `/api/v1/kris${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
   try {
-    const response = await authenticatedApiClient({
-      url: "/api/v1/kris",
-      params,
-      method: "GET"
-    });
-     return successResponse(response.data.data);
+    const response = await authenticatedApiClient({ url, params });
+    return successResponse(response.data.data, "KRIs fetched successfully");
   } catch (error) {
-    return handleError(error, "GET | GET KRIs", "/api/v1/kris");
+    return handleError(error, "GET | GET KRIs", url);
   }
 }
+
+export const getKRIs = cache(_getKRIs);
 
 /**
  * Get KRI by ID
@@ -1585,7 +1592,6 @@ export async function createRiskAction(data: {
   if (!data?.risk_id) {
     return handleBadRequest("Risk ID is required");
   }
- 
 
   const url = `/api/v1/risks/${data.risk_id}/actions`;
   try {
@@ -1639,9 +1645,8 @@ export async function getRiskAcceptances(params?: ActionQueryParams): Promise<AP
   }
 }
 
-
-export async function createRiskAcceptance(id: string, data:any): Promise<APIResponse> {
-  const url = `/api/v1/risks/${id}/accept`; 
+export async function createRiskAcceptance(id: string, data: any): Promise<APIResponse> {
+  const url = `/api/v1/risks/${id}/accept`;
   try {
     const response = await authenticatedApiClient({ url, data, method: "POST" });
     revalidatePath("/dashboard/(modules)/risks");
@@ -1686,10 +1691,6 @@ export async function submitRiskAcceptanceForApproval(acceptanceId: string): Pro
 
     return successResponse(response.data, "Risk acceptance submitted for approval successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | SUBMIT RISK ACCEPTANCE",
-      url
-    );
+    return handleError(error, "GET | SUBMIT RISK ACCEPTANCE", url);
   }
 }

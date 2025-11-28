@@ -10,7 +10,8 @@ import {
   BookTemplate,
   Sliders,
   LayoutDashboard,
-  Workflow
+  Workflow,
+  Home
 } from "lucide-react";
 
 export type NavGroup = {
@@ -86,9 +87,9 @@ export const navItems: NavGroup[] = [
     title: "Home",
     items: [
       {
-        title: "Overview",
+        title: "Home",
         href: "/dashboard/home",
-        icon: LayoutDashboard
+        icon: Home
       }
     ]
   },
