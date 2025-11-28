@@ -415,6 +415,7 @@ export interface KRIMeasurement {
 
 export interface KRIMeasurementInput {
   measured_value: number;
+  measurement_date?: Date | undefined;
 }
 
 // Heat Map Data

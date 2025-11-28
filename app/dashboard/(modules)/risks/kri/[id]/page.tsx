@@ -279,18 +279,30 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 {/* Trigger Range */}
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-muted-foreground mb-2 text-xs">Trigger Range (Warning Zone)</p>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium">
-                      {formatValue(kri.from_trigger_value, kri.measurement_type, kri.currency_code)}
-                    </span>
-                    <span className="text-muted-foreground">{kri.from_trigger_condition}</span>
-                    <span className="text-muted-foreground">to</span>
-                    <span className="font-medium">
-                      {formatValue(kri.to_trigger_value, kri.measurement_type, kri.currency_code)}
-                    </span>
-                    <span className="text-muted-foreground">{kri.to_trigger_condition}</span>
+                <div className="bg-muted/50 rounded-lg p-3 flex justify-between">
+                  <div>
+                    <p className="text-muted-foreground mb-2 text-xs">
+                      Trigger Range (Warning Zone)
+                    </p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium">
+                        {formatValue(
+                          kri.from_trigger_value,
+                          kri.measurement_type,
+                          kri.currency_code
+                        )}
+                      </span>
+                      <span className="text-muted-foreground">{kri.from_trigger_condition}</span>
+                      <span className="text-muted-foreground">to</span>
+                      <span className="font-medium">
+                        {formatValue(kri.to_trigger_value, kri.measurement_type, kri.currency_code)}
+                      </span>
+                      <span className="text-muted-foreground">{kri.to_trigger_condition}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-2 text-xs">Average Risk Score</p>
+                    <span className="text-muted-foreground">{kri.average_risk_score || 0}</span>
                   </div>
                 </div>
 
