@@ -37,6 +37,8 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import PageHeader from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { KRIStatsSection } from "./kri-stats-section";
+import { is } from "date-fns/locale";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type KRIRegister = {
   id: string;
@@ -59,6 +61,7 @@ type Pagination = {
 type CreateRegisterForm = {
   name: string;
   description: string;
+  is_active?: boolean;
 };
 
 type Props = {
@@ -82,7 +85,8 @@ export default function KRIRegistersClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateRegisterForm>({
     name: "",
-    description: ""
+    description: "",
+    is_active: true
   });
   const [errors, setErrors] = useState<Partial<CreateRegisterForm>>({});
 
@@ -173,7 +177,8 @@ export default function KRIRegistersClient({
     setEditingRegister(register);
     setFormData({
       name: register.name,
-      description: register.description
+      description: register.description,
+      is_active: register.is_active
     });
     setErrors({});
     setEditDialogOpen(true);
@@ -189,7 +194,7 @@ export default function KRIRegistersClient({
       if (response.success) {
         setEditDialogOpen(false);
         setEditingRegister(null);
-        setFormData({ name: "", description: "" });
+        setFormData({ name: "", description: "", is_active: true });
         setErrors({});
         toast.success(response.message || "KRI Register updated successfully");
         router.refresh();
@@ -233,10 +238,6 @@ export default function KRIRegistersClient({
 
   const handleNavigateToRegister = (registerId: string) => {
     router.push(`/dashboard/risks/kri/${registerId}`);
-  };
-
-  const getStatusColor = (isActive: boolean) => {
-    return isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700";
   };
 
   const customPaginationData = {
@@ -522,6 +523,29 @@ export default function KRIRegistersClient({
               {errors.description && (
                 <p className="text-destructive text-sm">{errors.description}</p>
               )}
+            </div>
+            <div className="bg-muted space-y-2 rounded-md p-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-is-active"
+                  checked={formData.is_active ?? true}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, is_active: checked === true })
+                  }
+                  disabled={isSubmitting}
+                  className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+                <Label
+                  htmlFor="edit-is-active"
+                  className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Active Status
+                </Label>
+              </div>
+              <p className="text-muted-foreground ml-6 text-xs">
+                {formData.is_active
+                  ? "This register is currently active and visible to users"
+                  : "This register is inactive and will be hidden from the main view"}
+              </p>
             </div>
           </div>
           <DialogFooter>

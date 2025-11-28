@@ -203,6 +203,49 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
     return fullName || user.username || user.email;
   };
 
+  const getDirectionWarning = () => {
+    const target = parseFloat(formData.target_value);
+    const limit = parseFloat(formData.limit_value);
+
+    if (!formData.target_value || !formData.from_trigger_value || !formData.limit_value) {
+      return null;
+    }
+
+    if (formData.measurement_type === "PERCENTAGE") {
+      if (!formData.invert_direction && target > limit) {
+        return {
+          level: "info",
+          message: '💡 Tip: Your target is greater than limit. Did you mean "Lower is Better"?'
+        };
+      }
+      if (formData.invert_direction && target < limit) {
+        return {
+          level: "info",
+          message: '💡 Tip: Your target is less than limit. Did you mean "Higher is Better"?'
+        };
+      }
+    }
+    if (!formData.invert_direction) {
+      if (target < limit) {
+        return {
+          level: "warning",
+          message:
+            '⚠️ Warning: With "Higher is Better", Target should typically be ≥ Limit. Consider enabling "Invert Direction"?'
+        };
+      }
+    } else {
+      if (target > limit) {
+        return {
+          level: "warning",
+          message:
+            '⚠️ Warning: With "Lower is Better", Target should typically be ≤ Limit. Consider disabling "Invert Direction"?'
+        };
+      }
+    }
+
+    return null;
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -547,12 +590,10 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                     Enable if lower/smaller values are better. Disable if higher/larger values are
                     better.
                   </p>
-                  {formData.invert_direction && (
-                    <div className="mt-2 rounded-md bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-                      ⚠️ Warning: With "Higher is Better", target should typically be ≥ Limit.
-                      Consider enabling "Invert Direction"?
-                    </div>
-                  )}
+
+                  <div className="mt-2 rounded-md bg-amber-100 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                    {getDirectionWarning()?.message || 'N/A'}
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
