@@ -14,6 +14,7 @@ export type IncidentStatus = "PENDING" | "IN_REVIEW" | "OPEN" | "COMPLETED" | "C
 
 export type Incident = {
   id: string;
+  kri_id: string;
   organization_id: string;
   department_id: string;
   incident_date: string;

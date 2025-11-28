@@ -31,7 +31,8 @@ export const STATUS_VALUES = {
   MEDIUM : 'MEDIUM',
   LOW: 'LOW',
   ABOVE: 'ABOVE',
-  BELOW: 'BELOW'
+  BELOW: 'BELOW',
+  CRITICAL: 'CRITICAL'
 } as const;
 
 export type StandardStatus = typeof STATUS_VALUES[keyof typeof STATUS_VALUES];
@@ -199,6 +200,15 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     hexColor: '#DC3545',
     sortOrder: 12
   },
+  CRITICAL: {
+    id: 'CRITICAL',
+    label: 'Critical',
+    description: 'Incident severity level Critical and is read-only',
+    color: 'danger',
+    style: 'solid',
+    hexColor: '#DC3545',
+    sortOrder: 13
+  },
   
 };
 
@@ -235,6 +245,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   },
 
@@ -259,6 +270,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
 
     }
   },
@@ -284,6 +296,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   },
 
@@ -308,6 +321,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   },
 
@@ -332,6 +346,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   },
 
@@ -356,6 +371,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   },
 
@@ -380,6 +396,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   },
 
@@ -404,6 +421,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   },
    // ========== RISK MATRIX STATUSES ==========
@@ -427,6 +445,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW:[],
+      CRITICAL:[]
     }
   }
 };

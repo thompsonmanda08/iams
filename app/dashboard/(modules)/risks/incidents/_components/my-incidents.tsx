@@ -44,6 +44,7 @@ import { IncidentData } from "@/lib/types/incidents-types";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
+import { StatusBadge } from "@/components/status-badge";
 
 export function MyIncidents() {
   const router = useRouter();
@@ -135,26 +136,6 @@ export function MyIncidents() {
     const days =
       Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     return days;
-  };
-
-  const getMaterialityColor = (materiality: string) => {
-    const colors = {
-      LOW: "bg-green-100 text-green-800 border-green-200",
-      MEDIUM: "bg-amber-100 text-amber-800 border-amber-200",
-      HIGH: "bg-orange-100 text-orange-800 border-orange-200",
-      CRITICAL: "bg-red-100 text-red-800 border-red-200"
-    };
-    return colors[materiality as keyof typeof colors] || "bg-gray-100 text-gray-800";
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors = {
-      PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-200",
-      RESOLVED: "bg-green-100 text-green-800 border-green-200",
-      CLOSED: "bg-gray-100 text-gray-800 border-gray-200"
-    };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
   const filteredIncidents = incidents.filter((item) => {
@@ -394,17 +375,15 @@ export function MyIncidents() {
                         <TableCell className="whitespace-nowrap">
                           {format(new Date(item.incident.incident_date), "MMM dd, yyyy")}
                         </TableCell>
-                        <TableCell>{item.department.name}</TableCell>
+                        <TableCell className="flex flex-col gap-y-2">
+                          <span>{item.department.name}</span>
+                          <span className="font-bold">
+                            KRI: <span className="font-normal text-xs text-gray-600">{item.incident.kri_id || 'N/A'}</span>
+                          </span>
+                        </TableCell>
                         <TableCell>{item.primary_cause.name}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "font-medium capitalize",
-                              getMaterialityColor(item.incident.materiality)
-                            )}>
-                            {item.incident.materiality}
-                          </Badge>
+                          <StatusBadge status={item.incident.materiality} />
                         </TableCell>
                         <TableCell>{item.incident.location}</TableCell>
                         <TableCell>
@@ -414,13 +393,7 @@ export function MyIncidents() {
                           {format(new Date(item.incident.due_date), "MMM dd, yyyy")}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            className={cn(
-                              "font-medium capitalize",
-                              getStatusColor(item.incident.status)
-                            )}>
-                            {item.incident.status.replace("_", " ")}
-                          </Badge>
+                          <StatusBadge status={item.incident.status} />
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -507,25 +480,13 @@ export function MyIncidents() {
                     <Label className="text-muted-foreground text-xs">Location</Label>
                     <p className="font-medium">{selectedIncident.incident.location}</p>
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label className="text-muted-foreground text-xs">Materiality</Label>
-                    <Badge
-                      className={cn(
-                        "mt-1 font-medium capitalize",
-                        getMaterialityColor(selectedIncident.incident.materiality)
-                      )}>
-                      {selectedIncident.incident.materiality}
-                    </Badge>
+                    <StatusBadge status={selectedIncident.incident.materiality} />
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label className="text-muted-foreground text-xs">Status</Label>
-                    <Badge
-                      className={cn(
-                        "mt-1 font-medium capitalize",
-                        getStatusColor(selectedIncident.incident.status)
-                      )}>
-                      {selectedIncident.incident.status.replace("_", " ")}
-                    </Badge>
+                    <StatusBadge status={selectedIncident.incident.status} />
                   </div>
                 </div>
               </div>
@@ -554,7 +515,7 @@ export function MyIncidents() {
               {/* Details */}
               <div className="space-y-2">
                 <h3 className="border-b pb-2 text-lg font-semibold">Incident Details</h3>
-                <div className="rounded-md bg-gray-50 p-4 border">
+                <div className="rounded-md border bg-gray-50 p-4">
                   <p className="text-sm whitespace-pre-wrap">{selectedIncident.incident.details}</p>
                 </div>
               </div>
@@ -562,7 +523,7 @@ export function MyIncidents() {
               {/* Root Cause */}
               <div className="space-y-2">
                 <h3 className="border-b pb-2 text-lg font-semibold">Root Cause</h3>
-                <div className="rounded-md bg-gray-50 p-4 border">
+                <div className="rounded-md border bg-gray-50 p-4">
                   <p className="text-sm whitespace-pre-wrap">
                     {selectedIncident.incident.root_cause}
                   </p>
@@ -572,7 +533,7 @@ export function MyIncidents() {
               {/* Action Plan */}
               <div className="space-y-2">
                 <h3 className="border-b pb-2 text-lg font-semibold">Action Plan</h3>
-                <div className="rounded-md bg-gray-50 p-4 border">
+                <div className="rounded-md border bg-gray-50 p-4">
                   <p className="text-sm whitespace-pre-wrap">
                     {selectedIncident.incident.action_plan}
                   </p>
