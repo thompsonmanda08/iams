@@ -46,6 +46,7 @@ import {
   EmptyDescription,
   EmptyContent
 } from "@/components/ui/empty";
+import UniverseDialog from "./universe-dialog";
 import { stat } from "fs/promises";
 
 // Mock data removed - using real backend data only
@@ -68,6 +69,8 @@ export default function AuditUniverseList({
   const [selectedUniverse, setSelectedUniverse] = useState<{ id: string; name: string } | null>(
     null
   );
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUniverse, setEditingUniverse] = useState<any | null>(null);
 
   // Use only real data from backend, no mock data fallback
   const data = universes || [];
@@ -111,8 +114,9 @@ export default function AuditUniverseList({
     setIsDeleting(false);
   };
 
-  const handleEdit = (id: string) => {
-    router.push(`/dashboard/audit/universe/${id}/edit`);
+  const handleEdit = (universe: any) => {
+    setEditingUniverse(universe);
+    setEditDialogOpen(true);
   };
 
   const handleView = (id: string) => {
@@ -380,7 +384,7 @@ export default function AuditUniverseList({
                                   size="sm"
                                   variant="outline"
                                   onClick={(e) => {
-                                    handleEdit(item.id);
+                                    handleEdit(item);
                                     e.stopPropagation();
                                   }}
                                   className="h-8 gap-1.5">
@@ -447,21 +451,13 @@ export default function AuditUniverseList({
         isLoading={isDeleting}
       />
 
-      {/* <ConfirmationModal
-        open={deleteConfirmOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedUniverse(null);
-            setDeleteConfirmOpen(false);
-          }
-        }}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Universe"
-        description={`Are you sure you want to delete "${selectedUniverse?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        isLoading={isDeleting}
-        type="delete"
-      /> */}
+      <UniverseDialog
+        showTrigger={false}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        initialData={editingUniverse}
+        universeId={editingUniverse?.id}
+      />
     </div>
   );
 }

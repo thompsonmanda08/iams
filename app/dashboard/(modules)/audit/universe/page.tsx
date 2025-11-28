@@ -1,8 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Plus, Globe } from "lucide-react";
-import Link from "next/link";
+import { Globe } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import AuditUniverseList from "./_components/audit-universe-list";
+import UniverseDialog from "./_components/universe-dialog";
 import { getUniverses, getUniverseItems } from "@/app/_actions/audit-module-actions";
 
 const AuditUniversePage = async () => {
@@ -49,12 +48,7 @@ const AuditUniversePage = async () => {
                 </div>
               }
             />
-            <Link href="/dashboard/audit/universe/new">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Universe
-              </Button>
-            </Link>
+            <UniverseDialog />
           </div>
         </div>
       </header>

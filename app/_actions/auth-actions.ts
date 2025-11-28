@@ -23,6 +23,7 @@ import { UserType } from "@/lib/types/account";
 import { cache } from "react";
 import { logger } from "@/lib/logger";
 import { SESSION_CONFIG } from "@/lib/session-config";
+import { tokenRefreshLock } from "@/lib/token-refresh-lock";
 
 export async function loginUser({
   username,
@@ -361,67 +362,81 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
 export const initializeSystemSetup = cache(_initializeSystemSetup);
 
 /**
+ * Check if token refresh is currently in progress
+ * Used to prevent premature logout during refresh attempts
+ */
+export async function isTokenRefreshInProgress(): Promise<boolean> {
+  return tokenRefreshLock.isRefreshInProgress();
+}
+
+/**
  * Refresh user Token
+ *
+ * ✅ CRITICAL FIX: Protected with tokenRefreshLock to prevent concurrent refresh attempts.
+ * Multiple simultaneous requests will wait for the same refresh operation to complete,
+ * preventing the race condition where multiple 403 responses trigger multiple refreshes.
  */
 export async function getRefreshToken(): Promise<APIResponse> {
-  const url = `/api/v1/auth/refresh-token`;
+  return tokenRefreshLock.acquire(async () => {
+    const url = `/api/v1/auth/refresh-token`;
 
-  const { isAuthenticated, session } = await verifySession();
+    const { isAuthenticated, session } = await verifySession();
 
-  if (!isAuthenticated) {
-    logger.warn("Cannot refresh token - user not authenticated", {
-      function: "getRefreshToken",
-      isAuthenticated
-    });
-    return unauthorizedResponse("UNAUTHORIZED");
-  }
+    if (!isAuthenticated) {
+      logger.warn("Cannot refresh token - user not authenticated", {
+        function: "getRefreshToken",
+        isAuthenticated
+      });
+      return unauthorizedResponse("UNAUTHORIZED");
+    }
 
-  try {
-    // ✅ Log expiry time before attempting refresh
-    const expiryTime = session?.expiresAt ? new Date(session.expiresAt) : null;
-    const timeUntilExpiry = expiryTime ? expiryTime.getTime() - Date.now() : null;
+    try {
+      // ✅ Log expiry time before attempting refresh
+      const expiryTime = session?.expiresAt ? new Date(session.expiresAt) : null;
+      const timeUntilExpiry = expiryTime ? expiryTime.getTime() - Date.now() : null;
 
-    logger.debug("Attempting to refresh token", {
-      function: "getRefreshToken",
-      endpoint: url,
-      expiresAt: expiryTime?.toISOString(),
-      timeUntilExpiryMs: timeUntilExpiry,
-      timeUntilExpiryMins: timeUntilExpiry ? Math.round(timeUntilExpiry / 60000) : null
-    });
+      logger.debug("Attempting to refresh token", {
+        function: "getRefreshToken",
+        endpoint: url,
+        expiresAt: expiryTime?.toISOString(),
+        timeUntilExpiryMs: timeUntilExpiry,
+        timeUntilExpiryMins: timeUntilExpiry ? Math.round(timeUntilExpiry / 60000) : null
+      });
 
-    const response = await authenticatedApiClient({ url });
+      const response = await authenticatedApiClient({ url });
 
-    const access_token = response.data?.access_token;
+      const access_token = response.data?.access_token;
 
-    // ✅ CRITICAL FIX: Reset session expiration to 30 minutes from now
-    // When refreshing token, we must extend the session TTL
-    // Otherwise cookie expiration stays at old value and user gets logged out prematurely
-    const newExpiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+      // ✅ CRITICAL FIX: Reset session expiration to 30 minutes from now
+      // When refreshing token, we must extend the session TTL
+      // Otherwise cookie expiration stays at old value and user gets logged out prematurely
+      const newExpiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
 
-    await updateAuthSession({
-      access_token,
-      expiresAt: newExpiresAt
-    });
+      await updateAuthSession({
+        access_token,
+        expiresAt: newExpiresAt
+      });
 
-    // ✅ Log success without exposing token value
-    logger.info("✅ Token refreshed successfully", {
-      function: "getRefreshToken",
-      endpoint: url,
-      previousExpiryMs: timeUntilExpiry,
-      newExpiresAt: newExpiresAt.toISOString()
-    });
+      // ✅ Log success without exposing token value
+      logger.info("✅ Token refreshed successfully", {
+        function: "getRefreshToken",
+        endpoint: url,
+        previousExpiryMs: timeUntilExpiry,
+        newExpiresAt: newExpiresAt.toISOString()
+      });
 
-    return successResponse({ access_token }, response.data?.message);
-  } catch (error: Error | any) {
-    logger.error("❌ Token refresh failed - user will experience auth failure on next request", error, {
-      function: "getRefreshToken",
-      endpoint: url,
-      errorCode: (error as any)?.code,
-      errorMessage: (error as Error)?.message,
-      status: (error as any)?.response?.status
-    });
-    return handleError(error, "GET | REFRESH TOKEN", url);
-  }
+      return successResponse({ access_token }, response.data?.message);
+    } catch (error: Error | any) {
+      logger.error("❌ Token refresh failed - user will experience auth failure on next request", error, {
+        function: "getRefreshToken",
+        endpoint: url,
+        errorCode: (error as any)?.code,
+        errorMessage: (error as Error)?.message,
+        status: (error as any)?.response?.status
+      });
+      return handleError(error, "GET | REFRESH TOKEN", url);
+    }
+  });
 }
 
 export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {

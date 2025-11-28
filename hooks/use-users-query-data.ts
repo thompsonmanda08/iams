@@ -37,9 +37,18 @@ export const useRefreshToken = (enabled: boolean = false) =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN, enabled],
     queryFn: getRefreshToken,
-    // ✅ CRITICAL FIX: Increase retries to prevent silent token expiry
-    // With only 1 retry, temporary network issues cause permanent failure
-    retry: 3,
+    // ✅ CRITICAL FIX: Smart retry logic
+    // Don't retry on 403 token expiration - these should fail fast
+    // Retry temporary network issues (timeouts, connection errors) but not auth failures
+    retry: (failureCount, error: any) => {
+      // Check if it's a 403 token expiration error
+      if (error?.response?.status === 403 || error?.status === 403) {
+        // Don't retry - user session is invalid
+        return false;
+      }
+      // Retry temporary network errors up to 3 times
+      return failureCount < 3;
+    },
     retryDelay: (attemptIndex) => {
       // Exponential backoff: 1s, 2s, 4s
       return Math.min(1000 * Math.pow(2, attemptIndex), 8000);

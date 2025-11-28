@@ -161,6 +161,7 @@ export default function AuditUniverseForm({
     }
     return INIT_ITEM_DATA;
   });
+
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -311,8 +312,6 @@ export default function AuditUniverseForm({
     }));
   }, [KRI_Data]);
 
-  console.log("KRI_OPTIONS", KRI_OPTIONS);
-
   const { data: processActivitiesResponse, isLoading: isLoadingActivities } = useProcessActivities({
     department_id: itemData.department_id
   });
@@ -337,6 +336,8 @@ export default function AuditUniverseForm({
         ? initialUniverseItems
         : universeItemsResponse?.data || []
       : [];
+
+  console.log("universeItemsData", universeItemsData);
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -452,7 +453,8 @@ export default function AuditUniverseForm({
       auditable_area_id: itemData.auditable_area_id || selectedActivity?.auditable_area_id || null,
       indicative_target_id: itemData.indicative_target_id || null,
       strategic_initiative_id: itemData.strategic_initiative_id || null,
-      risk_id: itemData.risk_id || null,
+
+      kri_id: itemData.kri_id || null,
       audit_frequency: itemData.audit_frequency,
       is_active: itemData.is_active || true
     };
@@ -547,10 +549,10 @@ export default function AuditUniverseForm({
     }
 
     return (
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Form Section - 2 columns */}
-        <Card className="animate-fade-in lg:col-span-2">
-          <form onSubmit={handleItemSubmit} className="p-6 sm:p-8">
+        <Card className="animate-fade-in grid h-full lg:col-span-2">
+          <form onSubmit={handleItemSubmit} className="h-full p-6 sm:p-8">
             {/* Header Section */}
             <div className="mb-8">
               <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
