@@ -42,6 +42,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Department } from "@/lib/types";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
@@ -162,7 +163,10 @@ export default function AuditUniverseForm({
     return INIT_ITEM_DATA;
   });
 
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(() => {
+    // If we have initialData with an id, we're editing
+    return initialData?.id || null;
+  });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -819,47 +823,114 @@ export default function AuditUniverseForm({
             ) : (
               <div className="max-h-[600px] space-y-2 overflow-y-auto">
                 {universeItemsData.map((item: any, index: number) => (
-                  <div
-                    key={item.id || index}
-                    className="hover:bg-muted/50 group rounded-lg border p-3 transition-colors">
-                    <div className="mb-1.5 flex items-start justify-between gap-2">
-                      <h4 className="text-foreground line-clamp-2 flex-1 text-sm font-medium">
-                        {item.name || "Unnamed Activity"}
-                      </h4>
-                      <div className="flex gap-1 transition-opacity">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className=""
-                          onClick={() => handleEditItem(item)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteClick(item.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground text-xs">
-                        <span className="font-medium">Frequency:</span>{" "}
-                        {item.audit_frequency?.replace("_", " ") || "N/A"}
-                      </p>
-                      {item.department?.name && (
-                        <p className="text-muted-foreground text-xs">
-                          <span className="font-medium">Department:</span> {item.department.name}
-                        </p>
-                      )}
-                      {item.auditable_area?.name && (
-                        <p className="text-muted-foreground text-xs">
-                          <span className="font-medium">Area:</span> {item.auditable_area.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <TooltipProvider key={item.id || index}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="hover:bg-muted/50 group cursor-pointer rounded-lg border p-3 transition-colors">
+                          <div className="mb-2 flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              {/* Process Activity - Highlighted Secondary Information */}
+                              {item.process_activity_name && (
+                                <p className="text-foreground mb-1 line-clamp-2 text-sm font-semibold">
+                                  {item.process_activity_name}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-7 w-7"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditItem(item);
+                                }}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClick(item.id);
+                                }}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          {/* Quick Info Row */}
+                          <div className="flex flex-wrap justify-between gap-2 text-xs">
+                            {/* KRI - Highlighted Primary Information */}
+                            {item.kri_name && (
+                              <div className="mb-1.5">
+                                <span className="max-w-xs truncate italic">
+                                  KRI: {item.kri_name}
+                                </span>
+                              </div>
+                            )}{" "}
+                            {item.audit_frequency && (
+                              <Badge variant="secondary" className="text-xs">
+                                {item.audit_frequency.replace("_", " ")}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs">
+                        <div className="space-y-2 text-sm">
+                          {item.kri_name && (
+                            <div>
+                              <p className="font-semibold text-blue-200">KRI</p>
+                              <p className="text-xs">{item.kri_name}</p>
+                            </div>
+                          )}
+                          {item.process_activity_name && (
+                            <div>
+                              <p className="font-semibold">Process/Activity</p>
+                              <p className="text-xs">{item.process_activity_name}</p>
+                            </div>
+                          )}
+                          {item.department?.name && (
+                            <div>
+                              <p className="font-semibold">Department</p>
+                              <p className="text-xs">{item.department.name}</p>
+                            </div>
+                          )}
+                          {item.auditable_area?.name && (
+                            <div>
+                              <p className="font-semibold">Auditable Area</p>
+                              <p className="text-xs">{item.auditable_area.name}</p>
+                            </div>
+                          )}
+                          {item.strategic_pillar_name && (
+                            <div>
+                              <p className="font-semibold">Strategic Pillar</p>
+                              <p className="text-xs">{item.strategic_pillar_name}</p>
+                            </div>
+                          )}
+                          {item.strategic_initiative_name && (
+                            <div>
+                              <p className="font-semibold">Strategic Initiative</p>
+                              <p className="text-xs">{item.strategic_initiative_name}</p>
+                            </div>
+                          )}
+                          {item.indicative_target_name && (
+                            <div>
+                              <p className="font-semibold">Indicative Target</p>
+                              <p className="text-xs">{item.indicative_target_name}</p>
+                            </div>
+                          )}
+                          {item.audit_frequency && (
+                            <div>
+                              <p className="font-semibold">Audit Frequency</p>
+                              <p className="text-xs">{item.audit_frequency.replace("_", " ")}</p>
+                            </div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
             )}

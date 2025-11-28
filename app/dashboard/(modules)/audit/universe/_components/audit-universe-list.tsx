@@ -14,7 +14,8 @@ import {
   Calendar,
   Filter,
   View,
-  ClipboardListIcon
+  ClipboardListIcon,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,7 +37,7 @@ import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import Search from "@/components/ui/search-field";
 import { SelectField } from "@/components/ui/select-field";
-import { deleteUniverse } from "@/app/_actions/audit-module-actions";
+import { deleteUniverse, submitUniverseForApproval } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import {
   Empty,
@@ -48,6 +49,7 @@ import {
 } from "@/components/ui/empty";
 import UniverseDialog from "./universe-dialog";
 import { stat } from "fs/promises";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Mock data removed - using real backend data only
 
@@ -71,6 +73,11 @@ export default function AuditUniverseList({
   );
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUniverse, setEditingUniverse] = useState<any | null>(null);
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
+  const [universeToSubmit, setUniverseToSubmit] = useState<{ id: string; name: string } | null>(
+    null
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Use only real data from backend, no mock data fallback
   const data = universes || [];
@@ -121,6 +128,32 @@ export default function AuditUniverseList({
 
   const handleView = (id: string) => {
     router.push(`/dashboard/audit/universe/${id}`);
+  };
+
+  const handleSubmitClick = (id: string, name: string) => {
+    setUniverseToSubmit({ id, name });
+    setSubmitConfirmOpen(true);
+  };
+
+  const handleSubmitConfirm = async () => {
+    if (!universeToSubmit) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await submitUniverseForApproval(universeToSubmit.id);
+      if (result.success) {
+        toast.success("Universe submitted for approval successfully");
+        router.refresh();
+        setSubmitConfirmOpen(false);
+      } else {
+        toast.error(result.message || "Failed to submit universe for approval");
+      }
+    } catch (error) {
+      toast.error("An error occurred while submitting the universe");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const statsCards = [
@@ -271,12 +304,12 @@ export default function AuditUniverseList({
                       <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
                         Universe Name
                       </TableHead>
-                      <TableHead className="text-foreground/70 text-xs font-bold whitespace-nowrap uppercase">
+                      {/* <TableHead className="text-foreground/70 text-xs font-bold whitespace-nowrap uppercase">
                         Functional Areas
                       </TableHead>
                       <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
                         Auditable Areas
-                      </TableHead>
+                      </TableHead> */}
                       <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
                         Status
                       </TableHead>
@@ -331,7 +364,7 @@ export default function AuditUniverseList({
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="min-w-[180px]">
+                            {/* <TableCell className="min-w-[180px]">
                               <div className="flex flex-wrap gap-1.5">
                                 {functionalAreas.length > 0 ? (
                                   functionalAreas.map((area: string, idx: number) => (
@@ -360,7 +393,7 @@ export default function AuditUniverseList({
                                   <span className="text-muted-foreground text-xs">No areas</span>
                                 )}
                               </div>
-                            </TableCell>
+                            </TableCell> */}
                             <TableCell>
                               <StatusBadge status={status} />
                             </TableCell>
@@ -368,40 +401,78 @@ export default function AuditUniverseList({
                               {new Date(dateCreated).toLocaleDateString()}
                             </TableCell>
                             <TableCell className="text-center">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    handleView(item.id);
-                                    e.stopPropagation();
-                                  }}
-                                  className="h-8 gap-1.5">
-                                  <View className="h-3.5 w-3.5" />
-                                  View
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    handleEdit(item);
-                                    e.stopPropagation();
-                                  }}
-                                  className="h-8 gap-1.5">
-                                  <Pencil className="h-3.5 w-3.5" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    handleDeleteClick(item.id, universeName);
-                                    e.stopPropagation();
-                                  }}
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete
-                                </Button>
+                              <div className="flex justify-end gap-1">
+                                {status === "DRAFT" && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary h-8 gap-1.5"
+                                        onClick={(e) => {
+                                          handleSubmitClick(item.id, universeName);
+                                          e.stopPropagation();
+                                        }}>
+                                        <Send className="h-3.5 w-3.5" />
+                                        Submit
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Submit for Approval</TooltipContent>
+                                  </Tooltip>
+                                )}
+
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          handleView(item.id);
+                                          e.stopPropagation();
+                                        }}
+                                        className="h-8 gap-1.5">
+                                        <View className="h-3.5 w-3.5" />
+                                        View
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>View Details</TooltipContent>
+                                  </Tooltip>
+
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          handleEdit(item);
+                                          e.stopPropagation();
+                                        }}
+                                        className="h-8 gap-1.5">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                        Edit
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Edit Universe</TooltipContent>
+                                  </Tooltip>
+
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          handleDeleteClick(item.id, universeName);
+                                          e.stopPropagation();
+                                        }}
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                                        <Trash2 className="h-4 w-4" />
+                                        Delete
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete Universe</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -449,6 +520,22 @@ export default function AuditUniverseList({
         confirmText="Delete"
         type="delete"
         isLoading={isDeleting}
+      />
+
+      <ConfirmationModal
+        open={submitConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setUniverseToSubmit(null);
+            setSubmitConfirmOpen(false);
+          }
+        }}
+        onConfirm={handleSubmitConfirm}
+        title="Submit Universe for Approval?"
+        description={`You are about to submit "${universeToSubmit?.name}" for approval. Once submitted, it will be reviewed by the approval committee.`}
+        confirmText="Submit"
+        type="default"
+        isLoading={isSubmitting}
       />
 
       <UniverseDialog

@@ -29,6 +29,9 @@ import {
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { StatusBadge } from "@/components/status-badge";
 
 interface Universe {
   id: string;
@@ -183,8 +186,8 @@ const UniverseDetails = ({
                 End Date
               </Label>
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-emerald-500/20 p-2">
-                  <Globe className="h-4 w-4 text-emerald-400" />
+                <div className="rounded-lg bg-cyan-500/20 p-2">
+                  <Globe className="h-4 w-4 text-cyan-400" />
                 </div>
                 <p className="text-foreground text-lg font-semibold">
                   {universe.end_date ? formatDate(universe.end_date) : "Not set"}
@@ -196,11 +199,11 @@ const UniverseDetails = ({
                 Created By
               </Label>
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-emerald-500/20 p-2">
-                  <User className="h-4 w-4 text-emerald-400" />
+                <div className="rounded-lg bg-cyan-500/20 p-2">
+                  <User className="h-4 w-4 text-cyan-500" />
                 </div>
                 <p className="text-foreground line-clamp-1 truncate text-lg font-semibold">
-                  {universe.created_by || "N/A"}
+                  {universe.created_by_name || universe.created_by || "N/A"}
                 </p>
               </div>
             </div>
@@ -209,11 +212,11 @@ const UniverseDetails = ({
                 Approved By
               </Label>
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-emerald-500/20 p-2">
-                  <UserCheckIcon className="h-4 w-4 text-emerald-400" />
+                <div className="rounded-lg bg-cyan-500/20 p-2">
+                  <UserCheckIcon className="h-4 w-4 text-cyan-500" />
                 </div>
                 <p className="text-foreground line-clamp-1 truncate text-lg font-semibold">
-                  {universe.approved_by || "Pending Review"}
+                  {universe.approved_by_name || universe.approved_by || "Pending Review"}
                 </p>
               </div>
             </div>
@@ -269,8 +272,8 @@ const UniverseDetails = ({
         <div className="group relative">
           <div className="absolute inset-0 rounded-2xl bg-linear-to-r from-emerald-500/20 to-teal-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"></div>
           <Card className="hover:border-primary/30 relative overflow-hidden backdrop-blur-sm transition-all duration-300">
-            <div className="border-muted from-muted/5 border-b bg-linear-to-r to-transparent p-8">
-              <div className="mb-6 flex items-center justify-between">
+            <div className="border-muted from-muted/5 border-b bg-linear-to-r to-transparent px-6 py-4">
+              <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-foreground text-2xl font-bold">Universe Items</h3>
                   <p className="text-muted-foreground mt-1 text-sm">
@@ -302,87 +305,179 @@ const UniverseDetails = ({
                   <Table>
                     <TableHeader className="bg-muted/40">
                       <TableRow className="border-muted hover:bg-muted/40 border-b">
-                        <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
-                          Item Name
+                        <TableHead className="text-foreground/70 text-sm font-bold uppercase">
+                          Process/Activity
                         </TableHead>
-                        <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
+                        <TableHead className="text-foreground/70 text-sm font-bold uppercase">
                           Department
                         </TableHead>
-                        <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
-                          Audit Frequency
+                        <TableHead className="text-foreground/70 text-sm font-bold uppercase">
+                          Auditable Area
                         </TableHead>
-                        <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
+                        <TableHead className="text-foreground/70 text-sm font-bold uppercase">
+                          Frequency
+                        </TableHead>
+                        <TableHead className="text-foreground/70 text-sm font-bold uppercase">
                           Status
                         </TableHead>
-                        <TableHead className="text-foreground/70 text-center text-sm font-bold whitespace-nowrap uppercase">
+                        <TableHead className="text-foreground/70 text-center text-sm font-bold uppercase">
                           Actions
                         </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {safeUniverseItems.map((item: any) => (
-                        <TableRow
-                          key={item.id}
-                          className="hover:bg-muted/30 border-muted/50 cursor-pointer border-b transition-all duration-200">
-                          <TableCell className="text-foreground font-medium whitespace-nowrap">
-                            <div className="space-y-1">
-                              <p className="text-sm font-semibold">{item.name}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-foreground text-sm whitespace-nowrap">
-                            {item.department_name || "Not set"}
-                          </TableCell>
-                          <TableCell className="text-foreground text-sm whitespace-nowrap">
-                            {item.audit_frequency?.replace("_", " ") || "Not set"}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-all ${
-                                item.is_active
-                                  ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                                  : "bg-slate-500/20 text-slate-600 dark:text-slate-400"
-                              }`}>
-                              {item.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-end gap-2">
-                              {/* <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                className="h-8 gap-1.5">
-                                <View className="h-3.5 w-3.5" />
-                                View
-                              </Button> */}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingItemId(item.id);
-                                  setShowItemForm(true);
-                                }}
-                                className="h-8 gap-1.5">
-                                <Pencil className="h-3.5 w-3.5" />
-                                Edit
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteClick(item.id);
-                                }}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                                <Trash2 className="h-4 w-4" />
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                        <TooltipProvider key={item.id}>
+                          <TableRow className="hover:bg-muted/30 border-muted/50 border-b transition-all duration-200">
+                            {/* Process/Activity */}
+                            <TableCell className="text-foreground text-sm">
+                              {item.process_activity_name ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="hover:text-primary flex max-w-xs cursor-help flex-col truncate font-semibold">
+                                      {item.process_activity_name}
+                                      <span className="text-xs italic">
+                                        {" "}
+                                        KRI: {item.kri_name || "--"}{" "}
+                                      </span>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="space-y-2 text-xs">
+                                      <div>
+                                        <p className="font-semibold">Process/Activity</p>
+                                        <p>{item.process_activity_name}</p>
+                                      </div>
+                                      {item.strategic_pillar_name && (
+                                        <div>
+                                          <p className="font-semibold">Strategic Pillar</p>
+                                          <p>{item.strategic_pillar_name}</p>
+                                        </div>
+                                      )}
+                                      {item.kri_name && (
+                                        <div>
+                                          <p className="font-semibold">KRI</p>
+                                          <p>{item.kri_name}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+
+                            {/* Department */}
+                            <TableCell className="text-foreground text-sm">
+                              {item.department_name ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="hover:text-primary max-w-xs cursor-help truncate">
+                                      {item.department_name}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs">{item.department_name}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+
+                            {/* Auditable Area */}
+                            <TableCell className="text-foreground text-sm">
+                              {item.auditable_area_name ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="hover:text-primary max-w-xs cursor-help truncate">
+                                      {item.auditable_area_name}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="space-y-2 text-xs">
+                                      <div>
+                                        <p className="font-semibold">Auditable Area</p>
+                                        <p>{item.auditable_area_name}</p>
+                                      </div>
+                                      {item.indicative_target_name && (
+                                        <div>
+                                          <p className="font-semibold">Indicative Target</p>
+                                          <p>{item.indicative_target_name}</p>
+                                        </div>
+                                      )}
+                                      {item.strategic_initiative_name && (
+                                        <div>
+                                          <p className="font-semibold">Strategic Initiative</p>
+                                          <p>{item.strategic_initiative_name}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+
+                            {/* Audit Frequency */}
+                            <TableCell className="text-foreground text-sm">
+                              {item.audit_frequency ? (
+                                <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                                  {item.audit_frequency.replace("_", " ")}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+
+                            {/* Status */}
+                            <TableCell>
+                              <StatusBadge
+                                variant={item.is_active ? "success" : "outline"}
+                                status={item.is_active ? "ACTIVE" : "INACTIVE"}
+                              />
+                            </TableCell>
+
+                            {/* Actions */}
+                            <TableCell className="text-center">
+                              <div className="flex justify-end gap-1">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingItemId(item.id);
+                                        setShowItemForm(true);
+                                      }}
+                                      className="gap-1 p-0">
+                                      <Pencil className="h-4 w-4" /> Edit
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteClick(item.id);
+                                      }}
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1 p-0">
+                                      <Trash2 className="h-4 w-4" /> Delete
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        </TooltipProvider>
                       ))}
                     </TableBody>
                   </Table>
