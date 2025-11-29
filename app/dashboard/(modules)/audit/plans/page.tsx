@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, ListCheck } from "lucide-react";
 import Link from "next/link";
 import { AuditPlansTable } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plans-table";
 import { getAuditPlans } from "@/app/_actions/audit-module-actions";
@@ -21,7 +21,18 @@ export default async function AuditPlansPage() {
             <PageHeader
               title="Audit Plans"
               description="  Manage and track all audit plans and schedules"
-              icon="ListCheck"
+              classNames={{
+                container: "flex items-center gap-4",
+                title: "text-3xl font-bold text-foreground"
+              }}
+              customIcon={
+                <div className="relative">
+                  <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
+                  <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
+                    <ListCheck className="h-7 w-7 text-white" strokeWidth={2.5} />
+                  </div>
+                </div>
+              }
             />
             <div className="flex gap-2">
               <Button variant="outline" className="gap-2">

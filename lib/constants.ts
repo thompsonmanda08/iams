@@ -100,6 +100,7 @@ export const QUERY_KEYS = {
   RISKS: "risks",
   RISK_REGISTERS: "risk-registers",
   KRI: "KRI",
+  KRIS: "KRIS",
   KRI_REGISTERS: "kri-registers",
   RISK_CATEGORIES: "risk-categories",
   ACTIONS: "actions",

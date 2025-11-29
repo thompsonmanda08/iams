@@ -798,7 +798,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/backoffice/organizations/update",
+                  "raw": "{{base_url}}/api/v1/backoffice/organizations/{id}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -806,13 +806,13 @@
                   "path": [
                     "backoffice",
                     "organizations",
-                    "update"
+                    "{id}"
                   ],
                   "query": []
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Updated Organization\",\n  \"code\": \"UPD_ORG\",\n  \"country_id\": \"{{country_id}}\",\n  \"province_id\": \"{{province_id}}\",\n  \"town_id\": \"{{town_id}}\",\n  \"address\": \"456 Updated St\",\n  \"description\": \"Updated\",\n  \"contact_email\": \"contact@updated.org\",\n  \"contact_phone\": \"987-654-3210\",\n  \"subscription_tier\": \"enterprise\",\n  \"max_users\": 200,\n  \"admin_username\": \"updatedadmin\",\n  \"admin_email\": \"admin@updated.org\",\n  \"admin_first_name\": \"Updated\",\n  \"admin_last_name\": \"Admin\",\n  \"admin_password\": \"NewAdminPass@2025\"\n}",
+                  "raw": "{\n  \"name\": \"Updated Organization\",\n  \"code\": \"UPD_ORG\",\n  \"address\": \"456 Updated St\",\n  \"description\": \"Updated\",\n  \"contact_email\": \"contact@updated.org\",\n  \"contact_phone\": \"987-654-3210\",\n  \"subscription_tier\": \"enterprise\",\n  \"max_users\": 200,\n  \"logo_url\": \"https://example.com/logo-updated.png\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -6511,7 +6511,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"measurement_date\": \"2025-01-15T10:30:00Z\",\n  \"measured_value\": 99.2,\n  \"notes\": \"Weekly measurement - system uptime verified\",\n  \"measured_by\": \"{{user_id}}\"\n}",
+                  "raw": "{\n  \"measured_value\": 99.2\n}",
                   "options": {
                     "raw": {
                       "language": "json"

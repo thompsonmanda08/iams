@@ -40,15 +40,15 @@ const riskChartConfig = {
   },
   High: {
     label: "High",
-    color: "hsl(var(--destructive))"
+    color: "var(--red-active)"
   },
   Medium: {
     label: "Medium",
-    color: "hsl(var(--amber-active))"
+    color: "var(--amber-active)"
   },
   Low: {
     label: "Low",
-    color: "hsl(var(--state-node-final))"
+    color: "var(--green-active)"
   }
 } satisfies ChartConfig;
 
@@ -57,17 +57,17 @@ export default function RiskOverview({ riskSummary }: RiskOverviewProps) {
     {
       name: "High",
       value: riskSummary.risks_by_rating.High || 0,
-      fill: "var(--color-destructive)"
+      fill: "var(--red-active)"
     },
     {
       name: "Medium",
       value: riskSummary.risks_by_rating.Normal || 0,
-      fill: "var(--color-amber-active)"
+      fill: "var(--amber-active)"
     },
     {
       name: "Low",
       value: riskSummary.risks_by_rating.Low || 0,
-      fill: "var(--color-state-node-final)"
+      fill: "var(--green-active)"
     }
   ];
 
@@ -108,7 +108,7 @@ export default function RiskOverview({ riskSummary }: RiskOverviewProps) {
                     <p className="text-sm font-medium">{dept.department_name}</p>
                     <p className="text-muted-foreground text-xs">{dept.risk_count} total risks</p>
                   </div>
-                  <div className="text-right">
+                  <div className="bg-destructive/5 p-2 text-right">
                     <p className="text-destructive/70 text-sm font-semibold">
                       {dept.open_risk_count} open
                     </p>

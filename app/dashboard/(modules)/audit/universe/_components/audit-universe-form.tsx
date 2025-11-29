@@ -25,7 +25,7 @@ import {
   useProcessActivities
 } from "@/hooks/use-audit-settings-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
-import { useRisks } from "@/hooks/use-risk-query-data";
+import { useKRIs, useRisks } from "@/hooks/use-risk-query-data";
 import { SelectField } from "@/components/ui/select-field";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import {
@@ -42,6 +42,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Department } from "@/lib/types";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
@@ -66,7 +67,8 @@ interface UniverseItemFormData {
   indicative_target_id: string;
   strategic_initiative_id: string;
   strategic_initiative_name?: string;
-  risk_id: string;
+  risk_id?: string;
+  kri_id: string;
   audit_frequency: string;
   is_active: boolean;
 }
@@ -90,6 +92,7 @@ const INIT_ITEM_DATA: UniverseItemFormData = {
   indicative_target_id: "",
   strategic_initiative_id: "",
   risk_id: "",
+  kri_id: "",
   audit_frequency: "ANNUALLY",
   is_active: true
 };
@@ -134,17 +137,36 @@ export default function AuditUniverseForm({
       is_active: initialData.is_active ?? true
     };
   });
+
   const [itemData, setItemData] = useState<UniverseItemFormData>(() => {
     // If we have initialData with audit_universe_id (edit mode), pre-populate it
     if (initialData?.audit_universe_id) {
       return {
         ...INIT_ITEM_DATA,
-        audit_universe_id: initialData.audit_universe_id
+        audit_universe_id: initialData.audit_universe_id,
+        process_activity_id: initialData.process_activity_id || "",
+        name: initialData.name || "",
+        department_id: initialData.department_id || "",
+        strategic_pillar_id: initialData.strategic_pillar_id || "",
+        strategic_pillar_name: initialData.strategic_pillar_name || "",
+        auditable_area_id: initialData.auditable_area_id || "",
+        auditable_area_name: initialData.auditable_area_name || "",
+        indicative_target_id: initialData.indicative_target_id || "",
+        strategic_initiative_id: initialData.strategic_initiative_id || "",
+        strategic_initiative_name: initialData.strategic_initiative_name || "",
+        risk_id: initialData.risk_id || "",
+        kri_id: initialData.kri_id || "",
+        audit_frequency: initialData.audit_frequency || "ANNUALLY",
+        is_active: initialData.is_active ?? true
       };
     }
     return INIT_ITEM_DATA;
   });
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+
+  const [editingItemId, setEditingItemId] = useState<string | null>(() => {
+    // If we have initialData with an id, we're editing
+    return initialData?.id || null;
+  });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -283,8 +305,16 @@ export default function AuditUniverseForm({
   const { data: indicativeTargetsResponse } = useIndicativeTargets();
   const indicativeTargetsData = mode === "item" ? indicativeTargetsResponse?.data || [] : [];
 
-  const { data: risksResponse } = useRisks();
-  const risksData = mode === "item" ? risksResponse?.data || [] : [];
+  const { data: KRIResponse } = useKRIs();
+  const KRI_Data = mode === "item" ? KRIResponse?.data || [] : [];
+
+  const KRI_OPTIONS = useMemo(() => {
+    return KRI_Data?.map((item: any) => ({
+      id: item.id,
+      name: `${item.name} - [ ${item.last_status} ]`,
+      status: item.last_status
+    }));
+  }, [KRI_Data]);
 
   const { data: processActivitiesResponse, isLoading: isLoadingActivities } = useProcessActivities({
     department_id: itemData.department_id
@@ -310,6 +340,8 @@ export default function AuditUniverseForm({
         ? initialUniverseItems
         : universeItemsResponse?.data || []
       : [];
+
+  console.log("universeItemsData", universeItemsData);
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -349,6 +381,7 @@ export default function AuditUniverseForm({
       indicative_target_id: item.indicative_target_id || "",
       strategic_initiative_id: item.strategic_initiative_id || "",
       risk_id: item.risk_id || "",
+      kri_id: item.kri_id || "",
       audit_frequency: item.audit_frequency || "ANNUALLY",
       is_active: item.is_active ?? true
     });
@@ -424,7 +457,8 @@ export default function AuditUniverseForm({
       auditable_area_id: itemData.auditable_area_id || selectedActivity?.auditable_area_id || null,
       indicative_target_id: itemData.indicative_target_id || null,
       strategic_initiative_id: itemData.strategic_initiative_id || null,
-      risk_id: itemData.risk_id || null,
+
+      kri_id: itemData.kri_id || null,
       audit_frequency: itemData.audit_frequency,
       is_active: itemData.is_active || true
     };
@@ -470,13 +504,6 @@ export default function AuditUniverseForm({
       name: target.name || target.title
     }));
   }, [indicativeTargetsData]);
-
-  const risksOptions = useMemo(() => {
-    return risksData?.map((risk: any) => ({
-      id: risk.id,
-      name: risk.risk_name || risk.name || risk.title
-    }));
-  }, [risksData]);
 
   // const strategicInitiativesOptions = useMemo(() => {
   //   return strategicInitiativesData?.map((initiative: any) => ({
@@ -526,10 +553,10 @@ export default function AuditUniverseForm({
     }
 
     return (
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Form Section - 2 columns */}
-        <Card className="animate-fade-in lg:col-span-2">
-          <form onSubmit={handleItemSubmit} className="p-6 sm:p-8">
+        <Card className="animate-fade-in grid h-full lg:col-span-2">
+          <form onSubmit={handleItemSubmit} className="h-full p-6 sm:p-8">
             {/* Header Section */}
             <div className="mb-8">
               <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
@@ -549,18 +576,6 @@ export default function AuditUniverseForm({
               <div className="space-y-4">
                 {/* Universe Selection */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <Input
-                    id="name"
-                    label="Universe Entry Name"
-                    value={itemData.name}
-                    onChange={(e) => updateItemData({ name: e.target.value })}
-                    placeholder="Enter name"
-                    required={true}
-                    className="md:col-span-1"
-                    classNames={{
-                      wrapper: "md:col-span-1"
-                    }}
-                  />
                   <SearchSelectField
                     id="audit_universe_id"
                     label="Universe"
@@ -574,21 +589,20 @@ export default function AuditUniverseForm({
                       wrapper: "w-full md:col-span-2"
                     }}
                   />
+                  <SearchSelectField
+                    id="department_id"
+                    label="Department / Functional Unit"
+                    required
+                    placeholder="--Select a Functional Unit--"
+                    className="w-full max-w-none"
+                    classNames={{
+                      wrapper: "w-full max-w-none"
+                    }}
+                    value={itemData.department_id}
+                    onValueChange={(value) => updateItemData({ department_id: value })}
+                    options={(departments as any) || []}
+                  />
                 </div>
-
-                <SearchSelectField
-                  id="department_id"
-                  label="Department / Functional Unit"
-                  required
-                  placeholder="--Select a Department / Functional Unit--"
-                  className="w-full max-w-none"
-                  classNames={{
-                    wrapper: "w-full max-w-none"
-                  }}
-                  value={itemData.department_id}
-                  onValueChange={(value) => updateItemData({ department_id: value })}
-                  options={(departments as any) || []}
-                />
 
                 {/* Process/Activity - Full Width */}
                 <SearchSelectField
@@ -692,18 +706,18 @@ export default function AuditUniverseForm({
                         onValueChange={(value) => updateItemData({ indicative_target_id: value })}
                         options={indicativeTargetsOptions}
                       />{" "}
-                      <SelectField
-                        id="risk_id"
-                        label="Associated Risk"
-                        placeholder="Select a risk (optional)"
+                      <SearchSelectField
+                        id="kri_id"
+                        label="Associated KRI (Key Risk Indicator)"
+                        placeholder="-- Select a KRI (Key Risk Indicator) --"
                         required
                         className="w-full"
                         classNames={{
                           wrapper: "w-full"
                         }}
-                        value={itemData.risk_id}
-                        onValueChange={(value) => updateItemData({ risk_id: value })}
-                        options={risksOptions}
+                        value={itemData.kri_id}
+                        onValueChange={(value) => updateItemData({ kri_id: value })}
+                        options={KRI_OPTIONS}
                       />
                     </div>
                   </div>
@@ -809,47 +823,114 @@ export default function AuditUniverseForm({
             ) : (
               <div className="max-h-[600px] space-y-2 overflow-y-auto">
                 {universeItemsData.map((item: any, index: number) => (
-                  <div
-                    key={item.id || index}
-                    className="hover:bg-muted/50 group rounded-lg border p-3 transition-colors">
-                    <div className="mb-1.5 flex items-start justify-between gap-2">
-                      <h4 className="text-foreground line-clamp-2 flex-1 text-sm font-medium">
-                        {item.name || "Unnamed Activity"}
-                      </h4>
-                      <div className="flex gap-1 transition-opacity">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className=""
-                          onClick={() => handleEditItem(item)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteClick(item.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground text-xs">
-                        <span className="font-medium">Frequency:</span>{" "}
-                        {item.audit_frequency?.replace("_", " ") || "N/A"}
-                      </p>
-                      {item.department?.name && (
-                        <p className="text-muted-foreground text-xs">
-                          <span className="font-medium">Department:</span> {item.department.name}
-                        </p>
-                      )}
-                      {item.auditable_area?.name && (
-                        <p className="text-muted-foreground text-xs">
-                          <span className="font-medium">Area:</span> {item.auditable_area.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <TooltipProvider key={item.id || index}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="hover:bg-muted/50 group cursor-pointer rounded-lg border p-3 transition-colors">
+                          <div className="mb-2 flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              {/* Process Activity - Highlighted Secondary Information */}
+                              {item.process_activity_name && (
+                                <p className="text-foreground mb-1 line-clamp-2 text-sm font-semibold">
+                                  {item.process_activity_name}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-7 w-7"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditItem(item);
+                                }}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClick(item.id);
+                                }}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          {/* Quick Info Row */}
+                          <div className="flex flex-wrap justify-between gap-2 text-xs">
+                            {/* KRI - Highlighted Primary Information */}
+                            {item.kri_name && (
+                              <div className="mb-1.5">
+                                <span className="max-w-xs truncate italic">
+                                  KRI: {item.kri_name}
+                                </span>
+                              </div>
+                            )}{" "}
+                            {item.audit_frequency && (
+                              <Badge variant="secondary" className="text-xs">
+                                {item.audit_frequency.replace("_", " ")}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs">
+                        <div className="space-y-2 text-sm">
+                          {item.kri_name && (
+                            <div>
+                              <p className="font-semibold text-blue-200">KRI</p>
+                              <p className="text-xs">{item.kri_name}</p>
+                            </div>
+                          )}
+                          {item.process_activity_name && (
+                            <div>
+                              <p className="font-semibold">Process/Activity</p>
+                              <p className="text-xs">{item.process_activity_name}</p>
+                            </div>
+                          )}
+                          {item.department?.name && (
+                            <div>
+                              <p className="font-semibold">Department</p>
+                              <p className="text-xs">{item.department.name}</p>
+                            </div>
+                          )}
+                          {item.auditable_area?.name && (
+                            <div>
+                              <p className="font-semibold">Auditable Area</p>
+                              <p className="text-xs">{item.auditable_area.name}</p>
+                            </div>
+                          )}
+                          {item.strategic_pillar_name && (
+                            <div>
+                              <p className="font-semibold">Strategic Pillar</p>
+                              <p className="text-xs">{item.strategic_pillar_name}</p>
+                            </div>
+                          )}
+                          {item.strategic_initiative_name && (
+                            <div>
+                              <p className="font-semibold">Strategic Initiative</p>
+                              <p className="text-xs">{item.strategic_initiative_name}</p>
+                            </div>
+                          )}
+                          {item.indicative_target_name && (
+                            <div>
+                              <p className="font-semibold">Indicative Target</p>
+                              <p className="text-xs">{item.indicative_target_name}</p>
+                            </div>
+                          )}
+                          {item.audit_frequency && (
+                            <div>
+                              <p className="font-semibold">Audit Frequency</p>
+                              <p className="text-xs">{item.audit_frequency.replace("_", " ")}</p>
+                            </div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
             )}
@@ -971,7 +1052,7 @@ export default function AuditUniverseForm({
           <Button
             type="submit"
             disabled={universeSubmitMutation.isPending}
-            className="w-full min-w-[160px] gap-2 sm:w-auto"
+            className="w-full min-w-40 gap-2 sm:w-auto"
             isLoading={universeSubmitMutation.isPending}
             loadingText={isEditing ? "Updating..." : "Creating..."}>
             <Save className="h-4 w-4" />

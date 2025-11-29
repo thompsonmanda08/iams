@@ -48,7 +48,7 @@ export function generateAvatarFallback(string: string) {
 export function getAvatarSrc(name: string) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
     name
-  )}&background=1a2982&color=ffffff&size=128`;
+  )}&background=008ffb&color=ffffff&size=128`;
 }
 
 export function capitalize(str: string) {

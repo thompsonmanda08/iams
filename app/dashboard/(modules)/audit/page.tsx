@@ -1,12 +1,13 @@
 import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, ClipboardCheckIcon } from "lucide-react";
 import Link from "next/link";
 import { AuditMetricsCards } from "@/components/audit/audit-metrics-cards";
 import { ConformityChart } from "@/components/audit/conformity-chart";
 import { RecentActivity } from "@/components/audit/recent-activity";
 import { getAuditMetrics } from "@/app/_actions/audit-module-actions";
+import PageHeader from "@/components/page-header";
 
 export default async function AuditDashboardPage() {
   const metricsResponse = await getAuditMetrics();
@@ -59,12 +60,24 @@ export default async function AuditDashboardPage() {
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Audit Management</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                ISO 27001 compliance monitoring and audit tracking
-              </p>
-            </div>
+            <PageHeader
+              title="Audit Dashboard Overview"
+              description="Completion rates and audit analytics"
+              icon="AlertCircle"
+              classNames={{
+                container: "flex items-center gap-4",
+                title: "text-3xl font-bold text-foreground"
+              }}
+              customIcon={
+                <div className="relative">
+                  <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
+                  <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
+                    <ClipboardCheckIcon className="h-7 w-7 text-white" strokeWidth={2.5} />
+                  </div>
+                </div>
+              }
+            />
+
             <div className="flex gap-2">
               <Link href="/dashboard/audit/plans">
                 <Button variant="outline" className="gap-2">

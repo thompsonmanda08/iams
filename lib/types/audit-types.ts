@@ -63,7 +63,16 @@ export type FindingSeverity = "critical" | "high" | "medium" | "low";
  *
  * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
-export type FindingStatus = "OPEN" | "PENDING" | "IN_REVIEW" | "COMPLETED" | "CLOSED" | "open" | "in-progress" | "resolved" | "closed";
+export type FindingStatus =
+  | "OPEN"
+  | "PENDING"
+  | "IN_REVIEW"
+  | "COMPLETED"
+  | "CLOSED"
+  | "open"
+  | "in-progress"
+  | "resolved"
+  | "closed";
 
 /**
  * Report types available for generation
@@ -96,7 +105,13 @@ export type TemplateCategoryGroup = "main-clauses" | "annex-a-controls";
  *
  * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
-export type WorkpaperStatus = "PENDING" | "IN_REVIEW" | "COMPLETED" | "unlinked" | "linked" | "in-progress";
+export type WorkpaperStatus =
+  | "PENDING"
+  | "IN_REVIEW"
+  | "COMPLETED"
+  | "unlinked"
+  | "linked"
+  | "in-progress";
 
 /**
  * Audit Plan status types representing the lifecycle of an audit plan
@@ -113,7 +128,14 @@ export type WorkpaperStatus = "PENDING" | "IN_REVIEW" | "COMPLETED" | "unlinked"
  *
  * @deprecated Prefer using StandardStatus from lib/statuses.ts for new code
  */
-export type AuditPlanStatus = "DRAFT" | "SUBMITTED" | "IN_REVIEW" | "APPROVED" | "COMPLETED" | "REJECTED" | "ARCHIVED";
+export type AuditPlanStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "IN_REVIEW"
+  | "APPROVED"
+  | "COMPLETED"
+  | "REJECTED"
+  | "ARCHIVED";
 
 // ============================================================================
 // TEMPLATE TYPES
@@ -889,7 +911,7 @@ export interface CreateUniverseItemPayload {
   auditable_area_id?: string | null;
   indicative_target_id?: string | null;
   strategic_initiative_id?: string | null;
-  risk_id?: string | null;
+  kri_id?: string | null;
   process_activity_id: string;
   audit_frequency: string;
   is_active: boolean;

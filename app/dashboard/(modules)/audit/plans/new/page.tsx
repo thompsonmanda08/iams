@@ -94,7 +94,8 @@ export default function NewAuditPlanPage() {
   });
 
   // Store the complete template object with categories from template selector
-  const [selectedTemplateWithCategories, setSelectedTemplateWithCategories] = useState<WorkpaperTemplateDefinition | null>(null);
+  const [selectedTemplateWithCategories, setSelectedTemplateWithCategories] =
+    useState<WorkpaperTemplateDefinition | null>(null);
 
   // Fetch universes dynamically for the dropdown
   const { data: universesResponse, isLoading: loadingUniverses } = useUniverses();
@@ -241,8 +242,8 @@ export default function NewAuditPlanPage() {
       year: formData.year,
       title: formData.title,
       description: formData.description,
-      start_date: formData.start_date?.toISOString().split('T')[0] as string,
-      end_date: formData.end_date?.toISOString().split('T')[0] as string,
+      start_date: formData.start_date?.toISOString().split("T")[0] as string,
+      end_date: formData.end_date?.toISOString().split("T")[0] as string,
       ref_no: formData.ref_no,
       audit_plan_date: formData.audit_plan_date?.toISOString() || new Date().toISOString(),
       audit_area: formData.audit_area,
@@ -448,13 +449,21 @@ export default function NewAuditPlanPage() {
                       rows={2}
                     />
 
-                    <Input
+                    <SelectField
                       id="management_standard"
                       label="Management Standard"
                       value={formData.management_standard}
-                      onChange={(e) =>
-                        setFormData({ ...formData, management_standard: e.target.value })
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, management_standard: value })
                       }
+                      // onChange={(e) =>
+                      //   setFormData({ ...formData, management_standard: e.target.value })
+                      // }
+                      options={[
+                        { id: "ISO", name: "ISO 27001" },
+                        { id: "ISO-IMIS", name: "ISO 27001 IMIS" },
+                        { id: "ISO-IEC", name: "ISO 27001 IEC" }
+                      ]}
                       placeholder="e.g., ISO IEC 27001"
                       required
                     />
