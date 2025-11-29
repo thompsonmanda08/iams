@@ -19,27 +19,49 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from "recharts";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { getKRIMeasurements } from "@/app/_actions/risk-module-actions";
 
 interface KRI {
   id: string;
   name: string;
   description: string;
-  currentValue: number;
-  targetValue: number;
-  threshold: number;
+  currentValue?: number;
+  targetValue?: number;
+  threshold?: number;
   target_value: number | string;
   limit_value: number | string;
   measurement_type?: string;
   currency_code?: string;
-  unit: string;
+  unit?: string;
   status: string;
   trend: string;
-  lastUpdated: Date | string;
+  lastUpdated?: Date | string;
+  last_measured_value?: number;
+  last_status?: string;
+}
+
+interface Measurement {
+  id: string;
+  kri_id: string;
+  incident_id: string | null;
+  measurement_date: string;
+  measured_value: number;
+  status: string;
+  notes: string;
+  measured_by: string | null;
+  created_at: string;
+  user?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
 }
 
 interface KRIHistoryProps {
   kri: KRI | null;
+  open: boolean;
   onClose: () => void;
 }
 
@@ -77,132 +99,38 @@ function getUnit(measurementType?: string, currencyCode?: string): string {
   }
 }
 
-function generateHistoricalData(kri: KRI) {
-  const history = [];
-  const today = new Date();
-  const targetValue =
-    typeof kri.target_value === "string"
-      ? parseFloat(kri.target_value)
-      : kri.targetValue || kri.target_value;
-  const limitValue =
-    typeof kri.limit_value === "string"
-      ? parseFloat(kri.limit_value)
-      : kri.threshold || kri.limit_value;
-
-  for (let i = 6; i >= 0; i--) {
-    const date = subDays(today, i);
-    const dateStr = format(date, "MMM dd");
-
-    // Create variance based on measurement type
-    let variance = 0;
-    if (kri.measurement_type === "CURRENCY") {
-      variance = (Math.random() - 0.5) * ((targetValue as any) * 0.1); // 10% variance
-    } else if (kri.measurement_type === "PERCENTAGE") {
-      variance = (Math.random() - 0.5) * 5; // 5% variance
-    } else {
-      variance = (Math.random() - 0.5) * (targetValue * 0.2); // 20% variance
-    }
-
-    const trend = (kri.currentValue - targetValue) / 7;
-    const value = Number(((targetValue as any) + trend * (7 - i) + variance).toFixed(2));
-
-    history.push({
-      date: dateStr,
-      value: value,
-      status: value <= limitValue ? "critical" : value < targetValue ? "warning" : "normal"
-    });
-  }
-
-  history[history.length - 1].value = kri.currentValue;
-
-  return history;
-}
-
-function generateEvents(kri: KRI) {
-  const events = [];
-  const today = new Date();
-  const unit = getUnit(kri.measurement_type, kri.currency_code);
-  const targetValue =
-    typeof kri.target_value === "string"
-      ? parseFloat(kri.target_value)
-      : kri.targetValue || kri.target_value;
-  const limitValue =
-    typeof kri.limit_value === "string"
-      ? parseFloat(kri.limit_value)
-      : kri.threshold || kri.limit_value;
-
-  // Current status event
-  events.push({
-    date: format(today, "MMM dd, yyyy HH:mm"),
-    event: `Value updated to ${formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)}`,
-    type: "update"
-  });
-
-  // Status-based events
-  if (kri.status === "critical") {
-    events.push({
-      date: format(subDays(today, 1), "MMM dd, yyyy HH:mm"),
-      event: `Critical threshold breach: Value is below ${formatValue(limitValue as any, kri.measurement_type, kri.currency_code)}`,
-      type: "warning"
-    });
-  } else if (kri.status === "warning") {
-    events.push({
-      date: format(subDays(today, 1), "MMM dd, yyyy HH:mm"),
-      event: `Warning: Value is below target (${formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)})`,
-      type: "warning"
-    });
-  } else {
-    events.push({
-      date: format(subDays(today, 1), "MMM dd, yyyy HH:mm"),
-      event: "Value within acceptable range",
-      type: "info"
-    });
-  }
-
-  // Trend event
-  if (kri.trend === "up") {
-    events.push({
-      date: format(subDays(today, 2), "MMM dd, yyyy HH:mm"),
-      event: "Upward trend detected - Improving performance",
-      type: "info"
-    });
-  } else if (kri.trend === "down") {
-    events.push({
-      date: format(subDays(today, 2), "MMM dd, yyyy HH:mm"),
-      event: "Downward trend detected - Requires attention",
-      type: "warning"
-    });
-  }
-
-  // Measurement type specific events
-  if (kri.measurement_type === "CURRENCY") {
-    events.push({
-      date: format(subDays(today, 3), "MMM dd, yyyy HH:mm"),
-      event: `Financial metric tracking in ${kri.currency_code}`,
-      type: "info"
-    });
-  }
-
-  // Weekly review event
-  events.push({
-    date: format(subDays(today, 7), "MMM dd, yyyy HH:mm"),
-    event: "Weekly KRI review completed",
-    type: "info"
-  });
-
-  return events;
-}
-
-export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
-  const [history, setHistory] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+export function KRIHistory({ kri, open, onClose }: KRIHistoryProps) {
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (kri) {
-      setHistory(generateHistoricalData(kri));
-      setEvents(generateEvents(kri));
+    if (kri?.id) {
+      fetchMeasurements();
     }
-  }, [kri]);
+  }, [kri?.id]);
+
+  const fetchMeasurements = async () => {
+    if (!kri?.id) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getKRIMeasurements(kri.id);
+
+      if (response.success && response.data) {
+        setMeasurements(response.data);
+      } else {
+        setError(response.message || "Failed to fetch measurements");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      console.error("Error fetching measurements:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!kri) return null;
 
@@ -214,10 +142,30 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
     typeof kri.limit_value === "string"
       ? parseFloat(kri.limit_value)
       : kri.threshold || kri.limit_value;
+  const currentValue = kri.currentValue || kri.last_measured_value || 0;
   const unit = getUnit(kri.measurement_type, kri.currency_code);
 
+  // Transform measurements for chart
+  const chartData = measurements
+    .slice()
+    .reverse()
+    .map((m) => ({
+      date: format(new Date(m.measurement_date), "MMM dd"),
+      value: m.measured_value,
+      status: m.status
+    }));
+
+  // Transform measurements for events
+  const events = measurements.map((m) => ({
+    date: format(new Date(m.measurement_date), "MMM dd, yyyy HH:mm"),
+    event: `Value updated to ${formatValue(m.measured_value, kri.measurement_type, kri.currency_code)} - ${m.status}`,
+    type: m.status === "Red" ? "warning" : m.status === "Green" ? "success" : "info",
+    notes: m.notes,
+    user: m.user ? `${m.user.first_name} ${m.user.last_name}` : "System"
+  }));
+
   return (
-    <Sheet open={!!kri} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={open} onOpenChange={onClose}>
       <SheetContent className="w-full overflow-y-auto px-4 sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle className="text-xl">{kri.name} - History</SheetTitle>
@@ -231,139 +179,161 @@ export function KRIHistory({ kri, onClose }: KRIHistoryProps) {
           </SheetDescription>
         </SheetHeader>
 
-        <Tabs defaultValue="chart" className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="chart">Trend Chart</TabsTrigger>
-            <TabsTrigger value="events">Event Log</TabsTrigger>
-          </TabsList>
+        {loading ? (
+          <div className="flex h-96 items-center justify-center">
+            <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="flex h-96 flex-col items-center justify-center">
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={fetchMeasurements}
+              className="mt-4 text-sm text-blue-600 hover:underline">
+              Retry
+            </button>
+          </div>
+        ) : (
+          <Tabs defaultValue="chart" className="mt-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="chart">Trend Chart</TabsTrigger>
+              <TabsTrigger value="events">Event Log</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="chart" className="mt-6 space-y-4">
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h4 className="text-foreground mb-4 text-sm font-medium">7-Day Trend</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={history}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="date"
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
-                    tickFormatter={(value) => {
-                      if (kri.measurement_type === "CURRENCY") {
-                        return `${kri.currency_code} ${value.toLocaleString()}`;
-                      } else if (kri.measurement_type === "PERCENTAGE") {
-                        return `${value}%`;
-                      }
-                      return value.toString();
-                    }}
-                    label={{
-                      value: unit,
-                      angle: -90,
-                      position: "insideLeft",
-                      style: { fill: "hsl(var(--muted-foreground))" }
-                    }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "0.5rem",
-                      color: "hsl(var(--popover-foreground))"
-                    }}
-                    formatter={(value: any) => [
-                      formatValue(value, kri.measurement_type, kri.currency_code),
-                      "Value"
-                    ]}
-                  />
-                  <ReferenceLine
-                    y={targetValue}
-                    stroke="#22c55e"
-                    strokeDasharray="3 3"
-                    label={{
-                      value: "Target",
-                      position: "right",
-                      fill: "#22c55e"
-                    }}
-                  />
-                  <ReferenceLine
-                    y={limitValue}
-                    stroke="#ef4444"
-                    strokeDasharray="3 3"
-                    label={{
-                      value: "Limit",
-                      position: "right",
-                      fill: "#ef4444"
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
+            <TabsContent value="chart" className="mt-6 space-y-4">
               <div className="border-border bg-card rounded-lg border p-4">
-                <p className="text-muted-foreground text-xs">Current</p>
-                <p className="text-foreground mt-1 text-xl font-semibold">
-                  {formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)}
-                </p>
-              </div>
-              <div className="border-border bg-card rounded-lg border p-4">
-                <p className="text-muted-foreground text-xs">Target</p>
-                <p className="mt-1 text-xl font-semibold text-green-600">
-                  {formatValue(targetValue, kri.measurement_type, kri.currency_code)}
-                </p>
-              </div>
-              <div className="border-border bg-card rounded-lg border p-4">
-                <p className="text-muted-foreground text-xs">Limit</p>
-                <p className="mt-1 text-xl font-semibold text-red-600">
-                  {formatValue(limitValue, kri.measurement_type, kri.currency_code)}
-                </p>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="events" className="mt-6">
-            <div className="space-y-4">
-              {events.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-muted-foreground text-sm">No events recorded</p>
-                </div>
-              ) : (
-                events.map((event, index) => (
-                  <div
-                    key={index}
-                    className="border-border bg-card flex gap-4 rounded-lg border p-4">
-                    <div
-                      className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${
-                        event.type === "warning"
-                          ? "bg-amber-500"
-                          : event.type === "info"
-                            ? "bg-blue-500"
-                            : "bg-gray-500"
-                      }`}
+                <h4 className="text-foreground mb-4 text-sm font-medium">
+                  {measurements.length}-Period Trend
+                </h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="date"
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                     />
-                    <div className="flex-1">
-                      <p className="text-foreground text-sm font-medium">{event.event}</p>
-                      <p className="text-muted-foreground mt-1 text-xs">{event.date}</p>
-                    </div>
+                    <YAxis
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
+                      tickFormatter={(value) => {
+                        if (kri.measurement_type === "CURRENCY") {
+                          return `${kri.currency_code} ${value.toLocaleString()}`;
+                        } else if (kri.measurement_type === "PERCENTAGE") {
+                          return `${value}%`;
+                        }
+                        return value.toString();
+                      }}
+                      label={{
+                        value: unit,
+                        angle: -90,
+                        position: "insideLeft",
+                        style: { fill: "hsl(var(--muted-foreground))" }
+                      }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "0.5rem",
+                        color: "hsl(var(--popover-foreground))"
+                      }}
+                      formatter={(value: any) => [
+                        formatValue(value, kri.measurement_type, kri.currency_code),
+                        "Value"
+                      ]}
+                    />
+                    <ReferenceLine
+                      y={targetValue}
+                      stroke="#22c55e"
+                      strokeDasharray="3 3"
+                      label={{
+                        value: "Target",
+                        position: "right",
+                        fill: "#22c55e"
+                      }}
+                    />
+                    <ReferenceLine
+                      y={limitValue}
+                      stroke="#ef4444"
+                      strokeDasharray="3 3"
+                      label={{
+                        value: "Limit",
+                        position: "right",
+                        fill: "#ef4444"
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="border-border bg-card rounded-lg border p-4">
+                  <p className="text-muted-foreground text-xs">Current</p>
+                  <p className="text-foreground mt-1 text-xl font-semibold">
+                    {formatValue(currentValue, kri.measurement_type, kri.currency_code)}
+                  </p>
+                </div>
+                <div className="border-border bg-card rounded-lg border p-4">
+                  <p className="text-muted-foreground text-xs">Target</p>
+                  <p className="mt-1 text-xl font-semibold text-green-600">
+                    {formatValue(targetValue, kri.measurement_type, kri.currency_code)}
+                  </p>
+                </div>
+                <div className="border-border bg-card rounded-lg border p-4">
+                  <p className="text-muted-foreground text-xs">Limit</p>
+                  <p className="mt-1 text-xl font-semibold text-red-600">
+                    {formatValue(limitValue, kri.measurement_type, kri.currency_code)}
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="events" className="mt-6">
+              <div className="space-y-4 pb-8">
+                {events.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <p className="text-muted-foreground text-sm">No events recorded</p>
                   </div>
-                ))
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+                ) : (
+                  events.map((event, index) => (
+                    <div
+                      key={index}
+                      className="border-border bg-card flex gap-4 rounded-lg border p-4">
+                      <div
+                        className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${
+                          event.type === "warning"
+                            ? "bg-destructive"
+                            : event.type === "success"
+                              ? "bg-green-500"
+                              : "bg-amber-500"
+                        }`}
+                      />
+                      <div className="flex-1">
+                        <p className="text-foreground text-sm font-medium">{event.event}</p>
+                        {event.notes && (
+                          <p className="text-muted-foreground mt-1 text-xs">{event.notes}</p>
+                        )}
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {event.date} • {event.user}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </SheetContent>
     </Sheet>
   );

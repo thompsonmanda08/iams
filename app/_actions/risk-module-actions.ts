@@ -444,108 +444,74 @@ type RiskRegisterParams = {
   page?: number;
   page_size?: number;
 };
-const mockRisks: Risk[] = [
-  {
-    id: "1",
-    riskId: "RSK-2024-001",
-    title: "Cyber Security Breach Risk",
-    description:
-      "Risk of unauthorized access to systems and data theft. Potential for significant system downtime and data loss.",
-    category: "Technology",
-    category_id: "cat-tech-1",
-    department_id: "dept-it-1",
-    inherentScore: 20,
-    inherentImpact: 5,
-    inherentLikelihood: 4,
-    residualScore: 8,
-    residualImpact: 4,
-    residualLikelihood: 2,
-    riskMagnitude: "high",
-    status: "OPEN",
-    owner: "IT Security Manager",
-    risk_owner_id: "user-sec-mgr-1",
-    risk_action_owner_id: "user-action-owner-1", // Test user assigned to submit findings
-    treatment_plan: "Implement multi-factor authentication and enhance network security",
-    risk_response: "REDUCE",
-    target_closing_date: new Date("2024-12-31"),
-    control_effectiveness: 3
-  },
-  {
-    id: "2",
-    riskId: "RSK-2024-002",
-    title: "Regulatory Compliance Risk",
-    description:
-      "Risk of non-compliance with GDPR and other regulatory requirements. Potential for significant fines and reputational damage.",
-    category: "Compliance",
-    category_id: "cat-comp-1",
-    department_id: "dept-legal-1",
-    inherentScore: 15,
-    inherentImpact: 5,
-    inherentLikelihood: 3,
-    residualScore: 6,
-    residualImpact: 3,
-    residualLikelihood: 2,
-    riskMagnitude: "medium",
-    status: "OPEN",
-    owner: "Compliance Officer",
-    risk_owner_id: "user-comp-officer-1",
-    risk_action_owner_id: "user-action-owner-2", // Different test user
-    treatment_plan: "Update policies and procedures to align with GDPR requirements",
-    risk_response: "REDUCE",
-    target_closing_date: new Date("2024-12-15"),
-    control_effectiveness: 2
-  },
-  {
-    id: "3",
-    riskId: "RSK-2024-003",
-    title: "Data Privacy Incident Risk",
-    description:
-      "Risk of unauthorized data disclosure and privacy breaches. Impact on customer trust and brand reputation.",
-    category: "Data Protection",
-    category_id: "cat-dp-1",
-    department_id: "dept-it-1",
-    inherentScore: 18,
-    inherentImpact: 5,
-    inherentLikelihood: 3,
-    residualScore: 7,
-    residualImpact: 4,
-    residualLikelihood: 2,
-    riskMagnitude: "high",
-    status: "OPEN",
-    owner: "Data Protection Officer",
-    risk_owner_id: "user-dpo-1",
-    risk_action_owner_id: "user-action-owner-1", // Same as first risk for testing multiple actions
-    treatment_plan: "Implement data encryption and access controls",
-    risk_response: "REDUCE",
-    target_closing_date: new Date("2025-01-15"),
-    control_effectiveness: 2
-  },
-  {
-    id: "4",
-    riskId: "RSK-2024-004",
-    title: "Business Continuity Risk",
-    description:
-      "Risk of system downtime and inability to continue operations. Could impact service delivery to customers.",
-    category: "Operations",
-    category_id: "cat-ops-1",
-    department_id: "dept-ops-1",
-    inherentScore: 12,
-    inherentImpact: 4,
-    inherentLikelihood: 3,
-    residualScore: 6,
-    residualImpact: 3,
-    residualLikelihood: 2,
-    riskMagnitude: "medium",
-    status: "OPEN",
-    owner: "Operations Manager",
-    risk_owner_id: "user-ops-mgr-1",
-    risk_action_owner_id: "user-action-owner-2", // Same as second risk for testing multiple actions
-    treatment_plan: "Implement backup and disaster recovery procedures",
-    risk_response: "REDUCE",
-    target_closing_date: new Date("2024-12-20"),
-    control_effectiveness: 2
-  }
-];
+
+interface KRIDetail {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  kri_register_id: string;
+  category_id: string;
+  department_id: string;
+  target_value: string;
+  limit_value: string;
+  from_trigger_value: string;
+  from_trigger_condition: string;
+  to_trigger_value: string;
+  to_trigger_condition: string;
+  measurement_type: string;
+  currency_code: string;
+  monitoring_frequency: string;
+  owner_id: string;
+  status_evaluation_method: string;
+  use_moving_average: boolean;
+  invert_direction: boolean;
+  is_active: boolean;
+  last_measured_date: string;
+  last_measured_value: number;
+  last_status: string;
+  trend_direction: string | null;
+  trend_calculated_at: string | null;
+  variance_percentage: number | null;
+  primary_risk_id: string | null;
+  auto_generate_risks: boolean;
+  last_breach_detected_at: string | null;
+  breach_severity_score: number | null;
+  consecutive_red_count: number | null;
+  last_linked_incident_at: string;
+  incident_correlation_score: number | null;
+  commentary: string;
+  mitigant_plan: string;
+  average_risk_score: number;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+  department_name: string;
+  kri_register: any;
+  category: any;
+  department: any;
+  owner: any;
+}
+
+interface Measurement {
+  id: string;
+  kri_id: string;
+  incident_id: string | null;
+  measurement_date: string;
+  measured_value: number;
+  status: string;
+  notes: string;
+  measured_by: string | null;
+  created_at: string;
+  user?: any;
+}
+
+interface StatusSummary {
+  Green?: number;
+  Amber?: number;
+  Red?: number;
+}
 
 // ============================================================================
 // MOCK ACTION FINDINGS DATA
@@ -1693,5 +1659,34 @@ export async function submitRiskAcceptanceForApproval(acceptanceId: string): Pro
     return successResponse(response.data, "Risk acceptance submitted for approval successfully");
   } catch (error: any) {
     return handleError(error, "GET | SUBMIT RISK ACCEPTANCE", url);
+  }
+}
+
+/**
+ * Get KRI details by ID
+ */
+export async function getKRIDetails(kriId: string): Promise<APIResponse> {
+  const url = `/api/v1/kris/${kriId}`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "GET | KRI DETAILS", url);
+  }
+}
+
+/**
+ * Get KRI status summary by department
+ */
+export async function getKRIStatusDepartmentSummary(departmentId: string): Promise<APIResponse> {
+  const url = `/api/v1/kris/status-summary?department_id=${departmentId}`;
+  try {
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    return successResponse(response.data.data);
+  } catch (error: any) {
+    return handleError(error, "GET | KRI STATUS SUMMARY", url);
   }
 }

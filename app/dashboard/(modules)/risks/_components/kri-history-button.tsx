@@ -22,7 +22,7 @@ export function KRIHistoryButton({ kri }: KRIHistoryButtonProps) {
       <Button variant="ghost" size="sm" onClick={() => setIsOpen(true)}>
         View History
       </Button>
-      {isOpen && <KRIHistory kri={kri} onClose={() => setIsOpen(false)} />}
+      <KRIHistory kri={kri as any} open={isOpen} onClose={() => setIsOpen(false)} />
 
       <KRIMeasureDialog kri_id={kri.id} isOpen={open} onClose={() => setOpen(false)} />
     </div>

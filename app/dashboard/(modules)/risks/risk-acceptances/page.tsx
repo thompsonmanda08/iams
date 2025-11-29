@@ -7,14 +7,12 @@ import {
   AlertCircle,
   FileText,
   Eye,
-  Loader2,
   View,
   Send
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -44,6 +42,7 @@ import { toast } from "sonner";
 import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
 import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { StatusBadge } from "@/components/status-badge";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -132,7 +131,6 @@ export default function RiskAcceptanceList() {
     try {
       setIsLoading(true);
       const response = await getRiskAcceptances();
-      console.log("RES:", response);
 
       if (response.status && response.data?.acceptances) {
         setAcceptances(response.data.acceptances);
@@ -242,22 +240,14 @@ export default function RiskAcceptanceList() {
               </p>
             </div>
           </div>
-          <Badge variant={config.badge as any}>{config.label}</Badge>
+          <StatusBadge status={config.label} />
         </div>
 
         <div className="space-y-2 text-xs">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <p className="font-medium text-gray-700">Risk Rate</p>
-              <Badge
-                variant={acceptance.risk_rate === "HIGH" ? "destructive" : "default"}
-                className={
-                  acceptance.risk_rate === "HIGH"
-                    ? ""
-                    : "border-yellow-200 bg-yellow-100 text-yellow-700"
-                }>
-                {acceptance.risk_rate}
-              </Badge>
+              <StatusBadge status={acceptance.risk_rate} />
             </div>
             <div>
               <p className="font-medium text-gray-700">Created By</p>
@@ -401,24 +391,9 @@ export default function RiskAcceptanceList() {
                 <div className="mt-2 flex items-center gap-2">
                   {selectedAcceptance && (
                     <>
-                      <Badge
-                        variant="outline"
-                        className={statusConfig[selectedAcceptance.acceptance_status].color
-                          .replace("bg-", "bg-")
-                          .replace("border-", "border-")}>
-                        {selectedAcceptance.acceptance_status}
-                      </Badge>
-                      <Badge
-                        variant={
-                          selectedAcceptance.risk_rate === "HIGH" ? "destructive" : "default"
-                        }
-                        className={
-                          selectedAcceptance.risk_rate === "HIGH"
-                            ? ""
-                            : "border-yellow-200 bg-yellow-100 text-yellow-700"
-                        }>
-                        {selectedAcceptance.risk_rate}
-                      </Badge>
+                      <StatusBadge status={selectedAcceptance.acceptance_status} />
+
+                      <StatusBadge status={selectedAcceptance.risk_rate} />
                     </>
                   )}
                 </div>
