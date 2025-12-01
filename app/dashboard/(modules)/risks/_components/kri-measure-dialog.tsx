@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function KRIMeasureDialog({
   kri_id,
@@ -32,6 +33,8 @@ export function KRIMeasureDialog({
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  const queryClient = useQueryClient();
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -43,6 +46,7 @@ export function KRIMeasureDialog({
         toast.success(response.message || "Measure added successfully");
         onClose();
         setFormData({ measured_value: 0, measurement_date: undefined });
+        queryClient.invalidateQueries(["kri-measurements", kri_id] as any);
       } else {
         toast.error(response.message || "Failed to add measure");
       }
