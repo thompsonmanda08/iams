@@ -95,7 +95,7 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
         )}>
         {label && (
           <label
-            className={cn("mb-0.5 pl-1 text-sm font-medium text-nowrap text-slate-900/80", {
+            className={cn("dark:text-foreground mb-0.5 pl-1 text-sm font-medium text-nowrap", {
               "text-red-500": onError || isInvalid,
               "opacity-80": isDisabled || props?.disabled
             })}
@@ -115,7 +115,7 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 "justify-between",
                 {
                   "cursor-not-allowed": isDisabled,
-                  "border-red-500": onError || isInvalid,
+                  "border! border-red-500!": onError || isInvalid,
                   "text-foreground/70": !selected
                 },
                 classNames?.input
@@ -130,7 +130,9 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 <>
                   {selected
                     ? (() => {
-                        const selectedItem = options.find((item) => String(item.id || item.value) === selected);
+                        const selectedItem = options.find(
+                          (item) => String(item.id || item.value) === selected
+                        );
                         if (!selectedItem) return placeholder || "Select an item...";
 
                         const label = listItemName

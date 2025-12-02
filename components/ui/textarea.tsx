@@ -56,7 +56,8 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           className={cn(
             "dark:bg-input/20 border-input text-foreground ring-offset-foreground placeholder:text-foreground/50 flex min-h-[60px] w-full rounded-lg border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
             {
-              "border-red-500 focus:border-red-500/70 focus-visible:ring-red-500/30": onError,
+              "border-red-500 focus:border-red-500/70 focus-visible:ring-red-500/30":
+                onError || isInvalid,
               "opacity-50": props?.disabled
             },
             className,

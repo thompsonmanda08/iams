@@ -217,7 +217,7 @@ export const useUniverses = (params?: {
  */
 export const useUniverseItems = (
   universeId?: string,
-  params?: { page?: number; page_size?: number }
+  params?: { page?: number; page_size?: number; department_id?: string }
 ) => {
   return useQuery({
     queryKey: [QUERY_KEYS.UNIVERSE_ITEMS, universeId, params],

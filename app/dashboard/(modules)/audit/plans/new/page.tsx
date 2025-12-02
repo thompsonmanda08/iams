@@ -28,7 +28,7 @@ import { SelectField } from "@/components/ui/select-field";
 import { WorkpaperTemplateDefinition, TemplateCategory } from "@/lib/types/audit-types";
 import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
 import { notify } from "@/lib/utils";
-import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useHeadsOfDepartments, useTeamMembers } from "@/hooks/use-users-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
 import { User } from "@/lib/types/account";
 import { MultiSelectField } from "@/components/ui/multi-select-field";
@@ -89,19 +89,9 @@ export default function NewAuditPlanPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
-  const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
-
-  const { data: departmentsResponse, isLoading: loadingDepartments } = useDepartments({
-    is_active: true,
-    page_size: 100,
-    page: 1
-  });
-  const departmentsData = departmentsResponse?.data?.data || [];
-
   // Form state
   const [formData, setFormData] = useState<AuditPlanFormData>({
-    year: new Date().getFullYear(),
+    year: new Date().getFullYear(), // DEFAULT BUT NOT REQUIRED
     title: "",
     description: "",
     ref_no: "",
@@ -128,6 +118,29 @@ export default function NewAuditPlanPage() {
     selectedCategories: []
   });
 
+  const { data: teamMemberResponse } = useTeamMembers({
+    page_size: 100,
+    departmentId: formData.department_id
+  });
+  const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
+
+  const { data: headsOfDepartmentResponse } = useHeadsOfDepartments({
+    page_size: 100,
+    department_id: formData.department_id
+  });
+
+  const headsOfDepartment =
+    ((headsOfDepartmentResponse?.data?.data || teamMembers) as User[]) ?? [];
+
+  console.log({ headsOfDepartment });
+
+  const { data: departmentsResponse, isLoading: loadingDepartments } = useDepartments({
+    is_active: true,
+    page_size: 100,
+    page: 1
+  });
+  const departmentsData = departmentsResponse?.data?.data || [];
+
   // Store the complete template object with categories from template selector
   const [selectedTemplateWithCategories, setSelectedTemplateWithCategories] =
     useState<WorkpaperTemplateDefinition | null>(null);
@@ -136,7 +149,9 @@ export default function NewAuditPlanPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   // Fetch universes dynamically for the dropdown
-  const { data: universesResponse, isLoading: loadingUniverses } = useUniverses();
+  const { data: universesResponse, isLoading: loadingUniverses } = useUniverses({
+    is_active: true
+  });
   const universesData = Array.isArray(universesResponse?.data)
     ? universesResponse.data
     : Array.isArray(universesResponse)
@@ -152,8 +167,12 @@ export default function NewAuditPlanPage() {
     ? String(formData.selected_audit_universe_id)
     : undefined;
 
-  const { data: universeItemsResponse, isLoading: loadingUniverseItems } =
-    useUniverseItems(universeIdForItems);
+  const { data: universeItemsResponse, isLoading: loadingUniverseItems } = useUniverseItems(
+    universeIdForItems,
+    {
+      department_id: formData.department_id
+    }
+  );
 
   // Extract universe items data - hook returns data.data structure
   const universeItemsData = Array.isArray(universeItemsResponse)
@@ -164,8 +183,8 @@ export default function NewAuditPlanPage() {
 
   // Fetch budgets
   const { data: budgetsResponse, isLoading: loadingBudgets } = useBudgets({
-    is_active: true
-    // status: "APPROVED"
+    is_active: true,
+    department_id: formData.department_id
   });
 
   const budgetsData = Array.isArray(budgetsResponse?.data)
@@ -177,6 +196,7 @@ export default function NewAuditPlanPage() {
   const { data: budgetLinesResponse, isLoading: loadingBudgetLines } = useBudgetLines(
     formData.budget_id
   );
+
   const budgetLinesData = Array.isArray(budgetLinesResponse?.data?.data)
     ? budgetLinesResponse.data.data
     : Array.isArray(budgetLinesResponse?.data)
@@ -189,7 +209,9 @@ export default function NewAuditPlanPage() {
     useWorkpaperTemplateCategories(formData.working_paper_template_id);
 
   // Extract categories from the API response
-  const templateCategoriesFromAPI: TemplateCategory[] = Array.isArray(fullTemplateResponse?.data?.data)
+  const templateCategoriesFromAPI: TemplateCategory[] = Array.isArray(
+    fullTemplateResponse?.data?.data
+  )
     ? fullTemplateResponse.data.data
     : Array.isArray(fullTemplateResponse?.data)
       ? fullTemplateResponse.data
@@ -199,7 +221,10 @@ export default function NewAuditPlanPage() {
   const selectedTemplate: WorkpaperTemplateDefinition = selectedTemplateWithCategories
     ? {
         ...selectedTemplateWithCategories,
-        categories: templateCategoriesFromAPI.length > 0 ? templateCategoriesFromAPI : selectedTemplateWithCategories.categories
+        categories:
+          templateCategoriesFromAPI.length > 0
+            ? templateCategoriesFromAPI
+            : selectedTemplateWithCategories.categories
       }
     : ({} as WorkpaperTemplateDefinition);
 
@@ -783,7 +808,7 @@ export default function NewAuditPlanPage() {
                           setFormData({ ...formData, client_representative: v });
                         }}
                         placeholder="e.g., John Doe, CISO"
-                        options={teamMembers.map((member) => ({
+                        options={headsOfDepartment.map((member) => ({
                           id: member.id,
                           name: `${member.first_name} ${member.last_name}  - (${member.role.name})`
                         }))}

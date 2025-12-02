@@ -970,7 +970,9 @@ export async function updateTemplateCategory(
 
     revalidatePath("/dashboard/audit/templates");
     revalidatePath(`/dashboard/audit/templates/${data.template_id}`);
-    revalidatePath(`/dashboard/system-configs/audit-settings/templates/${data.template_id}/categories`);
+    revalidatePath(
+      `/dashboard/system-configs/audit-settings/templates/${data.template_id}/categories`
+    );
     revalidatePath(
       `/dashboard/system-configs/audit-settings/templates/${data.template_id}/categories/${categoryId}`
     );
@@ -1672,9 +1674,11 @@ export async function getUniverseItems(params?: {
   page?: number;
   page_size?: number;
   audit_universe_id?: string;
+  department_id?: string;
 }): Promise<APIResponse> {
   try {
     const queryParams = new URLSearchParams();
+    if (params?.department_id) queryParams.append("department_id", params.department_id);
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.page_size) queryParams.append("page_size", params.page_size.toString());
     if (params?.audit_universe_id)

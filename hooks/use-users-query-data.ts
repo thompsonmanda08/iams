@@ -13,7 +13,8 @@ import { SESSION_CONFIG } from "@/lib/session-config";
 export const USERS_QUERY_KEYS = {
   USERS: "users",
   REFRESH_TOKEN: "refresh-token",
-  SYS_SETUP: "system-setup"
+  SYS_SETUP: "system-setup",
+  HEADS_OF_DEPARTMENTS: "heads-of-departments"
 } as const;
 
 /**
@@ -29,9 +30,11 @@ export const useTeamMembers = (params: UserQueryParams | undefined) => {
 /**
  * Hook to fetch team members
  */
-export const useHeadsOfDepartments = (params: UserQueryParams | undefined) => {
+export const useHeadsOfDepartments = (
+  params: { page?: number; page_size?: number; department_id?: string } | undefined
+) => {
   return useQuery({
-    queryKey: [USERS_QUERY_KEYS.USERS, params],
+    queryKey: [USERS_QUERY_KEYS.HEADS_OF_DEPARTMENTS, params],
     queryFn: async () => await getHeadsOfDepartments(params),
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
