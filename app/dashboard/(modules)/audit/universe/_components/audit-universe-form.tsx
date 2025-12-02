@@ -341,7 +341,6 @@ export default function AuditUniverseForm({
         : universeItemsResponse?.data || []
       : [];
 
-  console.log("universeItemsData", universeItemsData);
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));

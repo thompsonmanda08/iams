@@ -18,7 +18,7 @@ import { notify } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ErrorState } from "@/lib/types";
 
-const FRAMEWORK_TYPES = [
+export const FRAMEWORK_TYPES = [
   { id: "ISO27001", name: "ISO 27001 Audit" },
   { id: "COSO", name: "COSO Audit" },
   { id: "COBIT", name: "COBIT Audit" },

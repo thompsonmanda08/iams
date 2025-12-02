@@ -41,6 +41,39 @@ import {
   useBudgetLines
 } from "@/hooks/use-audit-settings-query-data";
 import { SearchSelectField } from "@/components/ui/search-select-field";
+import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
+
+/**
+ * Audit Plan Form Data Type
+ * Represents the structure of the form data used in the audit plan creation flow
+ */
+type AuditPlanFormData = {
+  year: number;
+  title: string;
+  description: string;
+  ref_no: string;
+  department_id: string;
+  audit_area: string;
+  audit_scope: string;
+  audit_criteria: string;
+  audit_objective: string;
+  management_standard: string;
+  audit_team_leader: string;
+  audit_team_member: string[];
+  client_representative: string;
+  audit_language: string;
+  start_date: Date | null;
+  end_date: Date | null;
+  audit_plan_date: Date | null;
+  opening_meeting_datetime: Date | null;
+  closing_meeting_datetime: Date | null;
+  working_paper_template_id: string;
+  selected_audit_universe_id: string;
+  audit_universe_item_ids: string[];
+  budget_id: string;
+  budget_item_ids: string[];
+  selectedCategories: string[];
+};
 
 const STEPS = [
   { id: 1, name: "Basic Details", icon: Calendar },
@@ -65,7 +98,7 @@ export default function NewAuditPlanPage() {
   const departmentsData = departmentsResponse?.data?.data || [];
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AuditPlanFormData>({
     year: new Date().getFullYear(),
     title: "",
     description: "",
@@ -75,22 +108,22 @@ export default function NewAuditPlanPage() {
     audit_scope: "",
     audit_criteria: "",
     audit_objective: "",
-    management_standard: "ISO",
+    management_standard: FRAMEWORK_TYPES[0].id,
     audit_team_leader: "",
-    audit_team_member: [] as string[],
+    audit_team_member: [],
     client_representative: "",
     audit_language: "English",
-    start_date: null as Date | null,
-    end_date: null as Date | null,
-    audit_plan_date: null as Date | null,
-    opening_meeting_datetime: null as Date | null,
-    closing_meeting_datetime: null as Date | null,
+    start_date: null,
+    end_date: null,
+    audit_plan_date: null,
+    opening_meeting_datetime: null,
+    closing_meeting_datetime: null,
     working_paper_template_id: "",
-    selected_audit_universe_id: "" as string,
-    audit_universe_item_ids: [] as string[],
-    budget_id: "" as string,
-    budget_item_ids: [] as string[],
-    selectedCategories: [] as string[]
+    selected_audit_universe_id: "",
+    audit_universe_item_ids: [],
+    budget_id: "",
+    budget_item_ids: [],
+    selectedCategories: []
   });
 
   // Store the complete template object with categories from template selector
@@ -116,12 +149,12 @@ export default function NewAuditPlanPage() {
 
   const { data: universeItemsResponse, isLoading: loadingUniverseItems } =
     useUniverseItems(universeIdForItems);
-  // const universeItemsData = universeIdForItems ? universeItemsResponse?.data : [];
 
-  const universeItemsData = Array.isArray(universeItemsResponse?.data)
-    ? universeItemsResponse.data
-    : Array.isArray(universeItemsResponse)
-      ? universeItemsResponse
+  // Extract universe items data - hook returns data.data structure
+  const universeItemsData = Array.isArray(universeItemsResponse)
+    ? universeItemsResponse
+    : Array.isArray(universeItemsResponse?.data)
+      ? universeItemsResponse.data
       : [];
 
   // Fetch budgets
@@ -316,12 +349,10 @@ export default function NewAuditPlanPage() {
     () =>
       universeItemsData.map((universeItem: any) => ({
         value: universeItem.id,
-        label: universeItem.name
+        label: `KRI:${universeItem.kri_name} - (${universeItem.audit_area_name})`
       })),
     [universeItemsData]
   );
-
-  // console.log({ universeItemsData });
 
   return (
     <div className="bg-background min-h-screen">
@@ -398,15 +429,49 @@ export default function NewAuditPlanPage() {
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <Input
-                        id="year"
-                        type="number"
-                        label="Year"
-                        value={formData.year}
-                        onChange={(e) =>
-                          setFormData({ ...formData, year: parseInt(e.target.value) })
-                        }
-                        placeholder="2025"
+                        id="title"
+                        label="Audit Plan Title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="e.g., Annual Audit Plan 2025"
                         required
+                      />
+                      <SelectField
+                        id="management_standard"
+                        label="Management Standard"
+                        className="w-full"
+                        value={formData.management_standard}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, management_standard: value })
+                        }
+                        options={FRAMEWORK_TYPES}
+                        placeholder="e.g., ISO 27001"
+                        required
+                      />
+                    </div>
+
+                    <Textarea
+                      id="description"
+                      label="Description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Comprehensive audit plan for fiscal year..."
+                      rows={2}
+                    />
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <SearchSelectField
+                        id="department_id"
+                        label="Department / Functional Unit"
+                        required
+                        placeholder="--Select a Department / Functional Unit--"
+                        className="w-full max-w-none"
+                        value={formData.department_id}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, department_id: value })
+                        }
+                        options={(departmentsData as any) || []}
+                        isLoading={loadingDepartments}
                       />
 
                       <Input
@@ -418,55 +483,6 @@ export default function NewAuditPlanPage() {
                         required
                       />
                     </div>
-
-                    <SearchSelectField
-                      id="department_id"
-                      label="Department / Functional Unit"
-                      required
-                      placeholder="--Select a Department / Functional Unit--"
-                      className="w-full max-w-none"
-                      value={formData.department_id}
-                      onValueChange={(value) => setFormData({ ...formData, department_id: value })}
-                      options={(departmentsData as any) || []}
-                      isLoading={loadingDepartments}
-                    />
-
-                    <Input
-                      id="title"
-                      label="Audit Plan Title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="e.g., Annual Audit Plan 2025"
-                      required
-                    />
-
-                    <Textarea
-                      id="description"
-                      label="Description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Comprehensive audit plan for fiscal year..."
-                      rows={2}
-                    />
-
-                    <SelectField
-                      id="management_standard"
-                      label="Management Standard"
-                      value={formData.management_standard}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, management_standard: value })
-                      }
-                      // onChange={(e) =>
-                      //   setFormData({ ...formData, management_standard: e.target.value })
-                      // }
-                      options={[
-                        { id: "ISO", name: "ISO 27001" },
-                        { id: "ISO-IMIS", name: "ISO 27001 IMIS" },
-                        { id: "ISO-IEC", name: "ISO 27001 IEC" }
-                      ]}
-                      placeholder="e.g., ISO IEC 27001"
-                      required
-                    />
 
                     <Textarea
                       id="audit_area"
@@ -505,13 +521,13 @@ export default function NewAuditPlanPage() {
                         setFormData({ ...formData, audit_objective: e.target.value })
                       }
                       placeholder="Assess compliance with ISO 27001:2022 and effectiveness of ISMS..."
-                      rows={3}
+                      rows={4}
                       required
                     />
                   </div>
 
-                  <div className="space-y-4 border-t pt-4">
-                    <h3 className="flex items-center gap-2 text-lg font-semibold">
+                  <div className="space-y-4 rounded-xl border-t border-slate-400/5 bg-slate-50 p-4 dark:bg-slate-900/30">
+                    <h3 className="mb-4 flex items-center gap-2 text-base font-semibold">
                       <Calendar className="h-5 w-5" />
                       Schedule & Timelines
                     </h3>
@@ -668,14 +684,18 @@ export default function NewAuditPlanPage() {
                         />
                       </div>
 
-                      <Input
+                      <SearchSelectField
                         id="client_representative"
                         label="Client Representative"
                         value={formData.client_representative}
-                        onChange={(e) =>
-                          setFormData({ ...formData, client_representative: e.target.value })
-                        }
+                        onValueChange={(v) => {
+                          setFormData({ ...formData, client_representative: v });
+                        }}
                         placeholder="e.g., John Doe, CISO"
+                        options={teamMembers.map((member) => ({
+                          id: member.id,
+                          name: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                        }))}
                       />
                     </div>
 
@@ -716,6 +736,7 @@ export default function NewAuditPlanPage() {
                   value={formData.working_paper_template_id}
                   onChange={handleTemplateChange}
                   loadingTemplateDetails={loadingTemplateDetails}
+                  frameworkType={formData.management_standard}
                 />
               )}
 

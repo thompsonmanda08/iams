@@ -2,11 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, BarChart3, Clock, Download, FileSpreadsheet } from "lucide-react";
-import { getReportTemplates } from "@/app/_actions/audit-module-actions";
+import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
 import { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 
 export default async function ReportsPage() {
-  const templatesResponse = await getReportTemplates();
+  const templatesResponse = await getWorkingPaperTemplates();
   const templates = templatesResponse.success
     ? (templatesResponse.data as WorkpaperTemplateDefinition[])
     : [];

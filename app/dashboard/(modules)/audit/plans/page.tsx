@@ -6,6 +6,7 @@ import { AuditPlansTable } from "@/app/dashboard/(modules)/audit/plans/_componen
 import { getAuditPlans } from "@/app/_actions/audit-module-actions";
 import PageHeader from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import Loader from "@/components/ui/loader";
 
 export default async function AuditPlansPage() {
   const plansResponse = await getAuditPlans();
@@ -62,49 +63,9 @@ export default async function AuditPlansPage() {
           )}
 
           {/* Table */}
-          {Array.isArray(plans) || plans.length > 0 ? (
-            <Suspense fallback={<TableLoading />}>
-              <AuditPlansTable plans={plans} />
-            </Suspense>
-          ) : (
-            <Card className="bg-canvas/50 border-2 border-dashed">
-              <CardContent className="flex flex-col items-center justify-center px-8 py-8">
-                <div className="relative mb-4">
-                  <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
-                  <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
-                    <ClipboardListIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
-                  </div>
-                </div>
-
-                <h3 className="text-foreground mb-2 text-2xl font-semibold">No Audit Plans</h3>
-                <p className="text-muted-foreground mb-8 max-w-md text-center">
-                  Create your first audit plan to get started
-                </p>
-
-                <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
-                  <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                    <div className="text-primary mb-1 font-mono">CONFIGURE TEMPLATES</div>
-                    <div className="text-muted-foreground">Clauses & Procedures Required</div>
-                  </div>
-                  <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                    <div className="text-primary mb-1 font-mono">CREATE PLAN</div>
-                    <div className="text-muted-foreground">Engagement Audit Plan</div>
-                  </div>
-                  <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                    <div className="text-primary mb-1 font-mono">EXECUTE</div>
-                    <div className="text-muted-foreground">Collect Findings & Evidence</div>
-                  </div>
-                </div>
-
-                <Button size="lg" className="gap-2" asChild>
-                  <Link href="/dashboard/audit/plans/new">
-                    <Plus className="h-4 w-4" />
-                    Create Audit Plan
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          <Suspense fallback={<TableLoading />}>
+            <AuditPlansTable plans={plans} />
+          </Suspense>
         </div>
       </div>
     </div>
@@ -114,9 +75,7 @@ export default async function AuditPlansPage() {
 function TableLoading() {
   return (
     <div className="space-y-3">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="bg-muted h-16 animate-pulse rounded-lg" />
-      ))}
+      <Loader size={32} loadingText="Please wait..." />
     </div>
   );
 }

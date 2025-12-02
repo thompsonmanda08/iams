@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AuditPlanStatusBadge } from "../../../../../../components/audit/audit-plan-status-badge";
-import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
+import { Eye, Edit, Trash2, Loader2, Plus, ClipboardListIcon } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -29,6 +29,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { deleteAuditPlan } from "@/app/_actions/audit-module-actions";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AuditPlansTableProps {
   plans: AuditPlan[];
@@ -101,18 +102,45 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
 
   if (plans.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
-        <div className="text-center">
-          <p className="text-muted-foreground text-lg font-medium">No audit plans found</p>
-          <p className="text-muted-foreground mt-1 text-sm">
+      <Card className="bg-canvas/50 border-2 border-dashed">
+        <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+          <div className="relative mb-4">
+            <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+            <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+              <ClipboardListIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          <h3 className="text-foreground mb-2 text-2xl font-semibold">No Audit Plans</h3>
+          <p className="text-muted-foreground mb-8 max-w-md text-center">
             Create your first audit plan to get started
           </p>
-        </div>
-      </div>
+
+          <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">CONFIGURE TEMPLATES</div>
+              <div className="text-muted-foreground">Clauses & Procedures Required</div>
+            </div>
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">CREATE PLAN</div>
+              <div className="text-muted-foreground">Engagement Audit Plan</div>
+            </div>
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">EXECUTE</div>
+              <div className="text-muted-foreground">Collect Findings & Evidence</div>
+            </div>
+          </div>
+
+          <Button size="lg" className="gap-2" asChild>
+            <Link href="/dashboard/audit/plans/new">
+              <Plus className="h-4 w-4" />
+              Create Audit Plan
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
-
-  console.log("PLA", plans[0]);
 
   return (
     <div className="bg-card rounded-lg border">

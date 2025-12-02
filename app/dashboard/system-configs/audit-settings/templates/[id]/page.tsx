@@ -37,8 +37,6 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
   const template = templateResponse.success ? templateResponse.data?.data || [] : [];
   const categories = categoriesResponse.success ? categoriesResponse.data?.data || [] : [];
 
-  console.log("templates:", template);
-
   // Only show edit button for ISO27001 framework type
   const isISO27001 =
     template.framework_type.toUpperCase() !== "CUSTOM" ||

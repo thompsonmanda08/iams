@@ -1,10 +1,9 @@
 import PageHeader from "@/components/page-header";
-import { ISOWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
 import { GeneralWorkpaperForm } from "../../../_components/general-workpaper-form";
 import { WorkpaperBuilderTemplateId } from "@/lib/types/audit-types";
 import { Card, CardContent } from "@/components/ui/card";
-import { CustomTemplateBuilder } from "../../../_components/custom-template-builder";
 import { CustomWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/custom-workpaper-form";
+import { ComplianceWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
 
 export default async function CreateNewTemplatePage({
   params
@@ -31,7 +30,7 @@ export default async function CreateNewTemplatePage({
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {builderId == "ISO27001" && (
-          <ISOWorkpaperTemplateForm templateId={null} initialData={null} />
+          <ComplianceWorkpaperTemplateForm templateId={null} initialData={null} />
         )}
 
         {builderId === "GENERAL" && (
@@ -45,9 +44,7 @@ export default async function CreateNewTemplatePage({
 
         {builderId === "CUSTOM" && (
           <Card>
-            <CardContent className="pt-6">
-              <CustomTemplateBuilder />
-            </CardContent>
+            <CardContent className="pt-6">{/* <CustomTemplateBuilder /> */}</CardContent>
           </Card>
         )}
 

@@ -41,15 +41,19 @@ interface TemplateSelectorSimpleProps {
   onChange: (template: WorkpaperTemplateDefinition) => void;
   disabled?: boolean;
   loadingTemplateDetails?: boolean;
+  frameworkType?: string;
 }
 
 export function TemplateSelectorSimple({
   value,
   onChange,
   disabled = false,
-  loadingTemplateDetails
+  loadingTemplateDetails,
+  frameworkType
 }: TemplateSelectorSimpleProps) {
-  const { data: templateResponse, isLoading: loadingTemplates } = useWorkpaperTemplates();
+  const { data: templateResponse, isLoading: loadingTemplates } = useWorkpaperTemplates(
+    frameworkType ? { framework_type: frameworkType } : undefined
+  );
 
   const templates: WorkpaperTemplateDefinition[] = Array.isArray(templateResponse?.data?.data)
     ? templateResponse?.data?.data
@@ -156,6 +160,12 @@ export function TemplateSelectorSimple({
         <p className="text-muted-foreground mt-1 text-sm">
           Choose the template that will be used to generate working papers for this audit plan
         </p>
+        {frameworkType && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-muted-foreground text-xs font-medium">Filtering by:</span>
+            <Badge variant="outline">{frameworkType}</Badge>
+          </div>
+        )}
       </div>
 
       <RadioGroup
