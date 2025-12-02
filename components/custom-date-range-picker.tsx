@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React, { useState } from "react";
 import {
   format,
   subDays,
@@ -42,19 +42,26 @@ const dateFilterPresets = [
 ];
 
 export default function CalendarDateRangePicker({
-  className
-}: React.HTMLAttributes<HTMLDivElement>) {
+  className,
+  initialFrom,
+  initialTo,
+  onChange
+}: {
+  className?: string;
+  initialFrom?: Date;
+  initialTo?: Date;
+  onChange?: (from: string, to: string) => void;
+}) {
   const isMobile = useIsMobile();
   const today = new Date();
   const twentyEightDaysAgo = startOfDay(subDays(today, 27));
 
-  // Initialize with "Last 28 days" as default
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: twentyEightDaysAgo,
-    to: endOfDay(today)
+    from: initialFrom ?? twentyEightDaysAgo,
+    to: initialTo ?? endOfDay(today)
   });
-  const [open, setOpen] = React.useState(false);
-  const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
+  const [open, setOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   const handleQuickSelect = (from: Date, to: Date) => {
     setDate({ from, to });
@@ -170,7 +177,9 @@ export default function CalendarDateRangePicker({
                     value={item.value}
                     onClick={() => changeHandle(item.value)}
                     asChild>
-                    <Button className="justify-start rounded-md">{item.name}</Button>
+                    <Button variant="ghost" className="justify-start rounded-md">
+                      {item.name}
+                    </Button>
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -199,6 +208,11 @@ export default function CalendarDateRangePicker({
                 setDate(newDate);
                 if (newDate?.from) {
                   setCurrentMonth(newDate.from);
+                }
+                if (newDate?.from && newDate?.to) {
+                  const formattedFrom = format(newDate.from, "yyyy-MM-dd");
+                  const formattedTo = format(newDate.to, "yyyy-MM-dd");
+                  onChange?.(formattedFrom, formattedTo);
                 }
               }}
               onMonthChange={setCurrentMonth}
