@@ -805,6 +805,94 @@ export interface Attachment {
   url: string;
 }
 
+/**
+ * Framework-aware finding with framework-specific fields
+ * This represents findings as they are stored in the database with all framework types supported
+ */
+export interface WorkpaperFinding {
+  id: string;
+  organization_id: string;
+  audit_plan_id: string;
+  working_paper_id: string;
+
+  // Base finding information
+  category_name: string;
+  finding_number: string;
+  report: boolean;
+  status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+  status_code?: string;
+  status_name?: string;
+  status_color?: string;
+
+  // Standard finding fields
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | null;
+  recommendation: string | null;
+  management_response: string | null;
+  action_plan: string | null;
+  responsible_person: string | null;
+  due_date: string | null;
+
+  // Audit working papers fields
+  workings_and_test_results: string | null;
+  conclusion: string | null;
+  evidence_links: string | null;
+  evidence_summary: string | null;
+
+  // Framework type and framework-specific fields
+  framework: string; // ISO27001, COSO, COBIT, NIST, GENERAL, CUSTOM
+
+  // ISO27001 specific
+  clause_number?: string;
+  clause_description?: string;
+  compliance_status?: string;
+  compliance_percentage?: number;
+
+  // COSO specific
+  coso_component?: string;
+  coso_principle?: string;
+  control_type?: string;
+  entity_level_control?: string;
+  control_deficiency_type?: string;
+
+  // COBIT specific
+  cobit_domain?: string;
+  cobit_process?: string;
+  cobit_process_name?: string;
+  capability_level?: string;
+  target_capability_level?: string;
+
+  // NIST specific
+  nist_function?: string;
+  nist_category?: string;
+  nist_subcategory?: string;
+  control_number?: string;
+  control_enhancement?: string;
+  assessment_type?: string;
+
+  // General/Custom fields
+  finding_category?: string;
+
+  // Metadata
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships
+  category?: {
+    id: string;
+    working_paper_id: string;
+    template_category_id: string;
+    name: string;
+    sort_order: number;
+    organization_id: string | null;
+    objectives: string | null;
+    is_required: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 // ============================================================================
 // REPORT TYPES
 // ============================================================================
