@@ -172,8 +172,8 @@ export function FrameworkFindingForm({
     );
   }
 
-  // Show collapsed view when form is not expanded
-  if (!isFormExpanded) {
+  // Show collapsed view when form is not expanded (but only if not in modal)
+  if (!isFormExpanded && !isModal) {
     return (
       <Card>
         <CardHeader>
@@ -254,15 +254,17 @@ export function FrameworkFindingForm({
                 </p>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsFormExpanded(false)}
-              className="gap-2">
-              <ChevronUp className="h-4 w-4" />
-              Collapse
-            </Button>
+            {!isModal && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsFormExpanded(false)}
+                className="gap-2">
+                <ChevronUp className="h-4 w-4" />
+                Collapse
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
