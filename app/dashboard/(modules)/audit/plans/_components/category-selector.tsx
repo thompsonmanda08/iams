@@ -46,6 +46,9 @@ export function CategorySelector({
 
   const categories: TemplateCategory[] = selectedTemplate?.categories || [];
 
+  console.log("CategorySelector - selectedTemplate:", selectedTemplate);
+  console.log("CategorySelector - categories:", categories);
+
   useEffect(() => {
     setSelectAll(categories.length > 0 && selectedCategories.length === categories.length);
   }, [selectedCategories, categories]);
@@ -78,8 +81,12 @@ export function CategorySelector({
     return group === "main-clauses" ? "Main Clauses" : "Annex A Controls";
   };
 
-  const mainClauses = categories.filter((cat) => cat.group === "main-clauses");
-  const annexAControls = categories.filter((cat) => cat.group === "annex-a-controls");
+  // Filter categories by group if they have groups defined, otherwise show all
+  const categoriesWithGroups = categories.filter((cat) => cat.group);
+  const categoriesWithoutGroups = categories.filter((cat) => !cat.group);
+
+  const mainClauses = categoriesWithGroups.filter((cat) => cat.group === "main-clauses");
+  const annexAControls = categoriesWithGroups.filter((cat) => cat.group === "annex-a-controls");
 
   // Loading state
   if (loadingTemplateDetails) {
@@ -155,7 +162,9 @@ export function CategorySelector({
           selectedCategories={selectedCategories}
           onCategoryToggle={handleCategoryToggle}
           disabled={disabled}
-          frameworkType={selectedTemplate?.framework_type || selectedTemplate?.standard || "ISO27001"}
+          frameworkType={
+            selectedTemplate?.framework_type || selectedTemplate?.standard || "ISO27001"
+          }
         />
       )}
 
@@ -170,7 +179,26 @@ export function CategorySelector({
           selectedCategories={selectedCategories}
           onCategoryToggle={handleCategoryToggle}
           disabled={disabled}
-          frameworkType={selectedTemplate?.framework_type || selectedTemplate?.standard || "ISO27001"}
+          frameworkType={
+            selectedTemplate?.framework_type || selectedTemplate?.standard || "ISO27001"
+          }
+        />
+      )}
+
+      {/* Show ungrouped categories */}
+      {categoriesWithoutGroups.length > 0 && (categoriesWithGroups.length > 0 ? <Separator /> : null)}
+
+      {categoriesWithoutGroups.length > 0 && (
+        <CategoryGroup
+          title="Categories"
+          description="Framework categories"
+          categories={categoriesWithoutGroups}
+          selectedCategories={selectedCategories}
+          onCategoryToggle={handleCategoryToggle}
+          disabled={disabled}
+          frameworkType={
+            selectedTemplate?.framework_type || selectedTemplate?.standard || "ISO27001"
+          }
         />
       )}
     </div>
@@ -238,7 +266,13 @@ interface CategoryItemProps {
   frameworkType?: string;
 }
 
-function CategoryItem({ category, selected, onToggle, disabled, frameworkType }: CategoryItemProps) {
+function CategoryItem({
+  category,
+  selected,
+  onToggle,
+  disabled,
+  frameworkType
+}: CategoryItemProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (

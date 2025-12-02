@@ -5,7 +5,6 @@
  * Dynamically displays different field configurations for ISO27001, COSO, COBIT, and NIST.
  */
 
-import { Badge } from "@/components/ui/badge";
 
 // Framework field configurations matching the form definitions
 const FRAMEWORK_FIELD_CONFIGS = {
@@ -62,21 +61,20 @@ export function MetadataDisplay({ metadata, frameworkType = "iso27001" }: Metada
     return <p className="text-muted-foreground text-sm">No {config.label} items defined</p>;
   }
 
-  const displayItems = items.slice(0, 3);
-  const remainingCount = items.length - 3;
-
   return (
-    <div className="flex flex-wrap gap-2">
-      {displayItems.map((item: Record<string, any>, idx: number) => (
-        <Badge key={idx} variant="info" className="px-2 py-1 text-xs">
-          {item[config.fields[0].name] || "-"}
-        </Badge>
+    <div className="space-y-2">
+      {items.map((item: Record<string, any>, idx: number) => (
+        <div key={idx} className="rounded-lg border border-dashed bg-muted/30 p-3 text-sm">
+          <div className="space-y-1">
+            {config.fields.map((field) => (
+              <div key={field.name} className="flex flex-col">
+                <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
+                <span className="text-foreground">{item[field.name] || "-"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       ))}
-      {remainingCount > 0 && (
-        <Badge variant="outline" className="px-2 py-1 text-xs">
-          +{remainingCount} others
-        </Badge>
-      )}
     </div>
   );
 }

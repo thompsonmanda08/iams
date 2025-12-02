@@ -25,7 +25,7 @@ import { createAuditPlan } from "@/app/_actions/audit-module-actions";
 import { TemplateSelectorSimple } from "@/app/dashboard/(modules)/audit/plans/_components/template-selector-simple";
 import { CategorySelector } from "@/app/dashboard/(modules)/audit/plans/_components/category-selector";
 import { SelectField } from "@/components/ui/select-field";
-import { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
+import { WorkpaperTemplateDefinition, TemplateCategory } from "@/lib/types/audit-types";
 import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
 import { notify } from "@/lib/utils";
 import { useTeamMembers } from "@/hooks/use-users-query-data";
@@ -188,8 +188,20 @@ export default function NewAuditPlanPage() {
   const { data: fullTemplateResponse, isLoading: loadingTemplateDetails } =
     useWorkpaperTemplateCategories(formData.working_paper_template_id);
 
-  const selectedTemplate: WorkpaperTemplateDefinition =
-    fullTemplateResponse?.data ?? ({} as WorkpaperTemplateDefinition);
+  // Extract categories from the API response
+  const templateCategoriesFromAPI: TemplateCategory[] = Array.isArray(fullTemplateResponse?.data?.data)
+    ? fullTemplateResponse.data.data
+    : Array.isArray(fullTemplateResponse?.data)
+      ? fullTemplateResponse.data
+      : [];
+
+  // Use selectedTemplateWithCategories if available (set when user selects template), otherwise use fetched data
+  const selectedTemplate: WorkpaperTemplateDefinition = selectedTemplateWithCategories
+    ? {
+        ...selectedTemplateWithCategories,
+        categories: templateCategoriesFromAPI.length > 0 ? templateCategoriesFromAPI : selectedTemplateWithCategories.categories
+      }
+    : ({} as WorkpaperTemplateDefinition);
 
   const validateStep1 = (): boolean => {
     const errors: FieldErrors = {};
@@ -834,7 +846,7 @@ export default function NewAuditPlanPage() {
                   templateId={formData.working_paper_template_id}
                   selectedCategories={formData.selectedCategories}
                   loadingTemplateDetails={loadingTemplateDetails}
-                  selectedTemplate={selectedTemplateWithCategories || selectedTemplate}
+                  selectedTemplate={selectedTemplate}
                   onCategoriesChange={(categories) =>
                     setFormData({ ...formData, selectedCategories: categories })
                   }
