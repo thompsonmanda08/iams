@@ -40,6 +40,7 @@ import { cn, notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
 import { submitAuditPlanForApproval, deleteAuditPlan } from "@/app/_actions/audit-module-actions";
 import { StatusBadge } from "@/components/status-badge";
+import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -710,6 +711,34 @@ export function AuditPlanWorkpaperView({
                                 <p className="text-muted-foreground line-clamp-2 text-xs">
                                   {category.description}
                                 </p>
+
+                                {/* Show framework-specific fields if finding exists */}
+                                {catFindings.length > 0 && (() => {
+                                  // Derive framework type from category metadata
+                                  let frameworkType = "ISO27001";
+                                  if (category.metadata) {
+                                    const metadataKeys = Object.keys(category.metadata);
+                                    if (metadataKeys.length > 0) {
+                                      frameworkType = metadataKeys[0];
+                                    }
+                                  }
+
+                                  const frameworkFields = getFrameworkSidebarFields(
+                                    catFindings[0],
+                                    frameworkType as any
+                                  );
+                                  return frameworkFields.length > 0 ? (
+                                    <div className="mt-1 space-y-0.5 text-xs">
+                                      {frameworkFields.map((field, idx) => (
+                                        <div key={idx} className="flex items-start gap-1">
+                                          <span className="text-muted-foreground min-w-fit font-medium">{field.label}:</span>
+                                          <span className="line-clamp-1 text-foreground break-all">{field.value}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : null;
+                                })()}
+
                                 {/* Show conformity status if finding exists */}
                                 {catFindings.length > 0 && catFindings[0].is_conformity !== null && (
                                   <div className="mt-1 flex items-center gap-1">

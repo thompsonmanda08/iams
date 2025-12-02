@@ -178,3 +178,27 @@ export function validateFrameworkRequiredFields(
     errors
   };
 }
+
+/**
+ * Extract framework-specific compliance fields for sidebar display
+ */
+export function getFrameworkSidebarFields(
+  finding: WorkpaperFinding,
+  framework: FrameworkType
+): Array<{ label: string; value: string }> {
+  const config = getFrameworkFieldConfig(framework);
+  const sidebarFields: Array<{ label: string; value: string }> = [];
+
+  // Show only compliance fields (first 2-3 for sidebar display)
+  config.complianceFields.forEach((field) => {
+    const value = (finding as any)[field.name];
+    if (value !== undefined && value !== null && value !== "") {
+      sidebarFields.push({
+        label: field.label,
+        value: String(value)
+      });
+    }
+  });
+
+  return sidebarFields;
+}
