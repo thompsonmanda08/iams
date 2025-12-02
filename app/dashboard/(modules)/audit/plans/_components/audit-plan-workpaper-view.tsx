@@ -33,6 +33,7 @@ import type { AuditPlan } from "@/lib/types/audit-types";
 import type { Task } from "@/lib/types/task";
 import { WorkpaperCategoryPanel } from "./workpaper-category-panel";
 import { FindingForm } from "./finding-form";
+import { FrameworkFindingForm } from "./framework-finding-form";
 import { FindingsList } from "./findings-list";
 import { AuditPlanApprovalsPanel } from "./audit-plan-approvals-panel";
 import { cn, notify } from "@/lib/utils";
@@ -49,9 +50,11 @@ interface AuditPlanWorkpaperViewProps {
 }
 
 // Helper function to check if a finding is completed
-// A finding is considered completed if it has all required fields filled
+// A finding is considered completed if it has conformity status AND all required fields filled
 const isCompletedFinding = (finding: any): boolean => {
   return !!(
+    finding.is_conformity !== null &&
+    finding.is_conformity !== undefined &&
     finding.conclusion &&
     finding.recommendation &&
     finding.severity &&
@@ -700,13 +703,29 @@ export function AuditPlanWorkpaperView({
                               ) : (
                                 <div className="border-muted-foreground mt-0.5 h-4 w-4 shrink-0 rounded-full border" />
                               )}
-                              <div className="min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <p className="truncate text-xs font-medium">
                                   {category.display_name}
                                 </p>
                                 <p className="text-muted-foreground line-clamp-2 text-xs">
                                   {category.description}
                                 </p>
+                                {/* Show conformity status if finding exists */}
+                                {catFindings.length > 0 && catFindings[0].is_conformity !== null && (
+                                  <div className="mt-1 flex items-center gap-1">
+                                    {catFindings[0].is_conformity ? (
+                                      <>
+                                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                                        <span className="text-xs text-green-600">Conformity</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                                        <span className="text-xs text-red-600">Non-Conformity</span>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </button>
@@ -729,12 +748,12 @@ export function AuditPlanWorkpaperView({
                   {/* Category Details */}
                   <WorkpaperCategoryPanel category={selectedCategory} />
 
-                  {/* Finding Form */}
+                  {/* Finding Form - Framework Aware */}
                   <div data-finding-form>
-                    <FindingForm
+                    <FrameworkFindingForm
                       category={selectedCategory}
                       auditPlan={auditPlan}
-                      existingFindings={categoryFindings}
+                      finding={categoryFindings.length > 0 ? categoryFindings[categoryFindings.length - 1] : null}
                       onEditComplete={() => setEditingFinding(null)}
                     />
                   </div>
