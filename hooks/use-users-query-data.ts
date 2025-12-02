@@ -1,7 +1,12 @@
 import { UserQueryParams } from "@/lib/types/account";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRefreshToken, initializeSystemSetup } from "@/app/_actions/auth-actions";
-import { getUsers, createNewUser, updateUser } from "@/app/_actions/user-actions";
+import {
+  getUsers,
+  createNewUser,
+  updateUser,
+  getHeadsOfDepartments
+} from "@/app/_actions/user-actions";
 import { SESSION_CONFIG } from "@/lib/session-config";
 
 // Query Keys
@@ -19,6 +24,16 @@ export const useTeamMembers = (params: UserQueryParams | undefined) => {
     queryKey: [USERS_QUERY_KEYS.USERS, params],
     queryFn: async () => await getUsers(params),
     staleTime: 5 * 60 * 1000 // Cache for 10 minutes
+  });
+};
+/**
+ * Hook to fetch team members
+ */
+export const useHeadsOfDepartments = (params: UserQueryParams | undefined) => {
+  return useQuery({
+    queryKey: [USERS_QUERY_KEYS.USERS, params],
+    queryFn: async () => await getHeadsOfDepartments(params),
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };
 
@@ -101,8 +116,7 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: string; data: any }) =>
-      updateUser(userId, data),
+    mutationFn: ({ userId, data }: { userId: string; data: any }) => updateUser(userId, data),
     onSuccess: () => {
       // Invalidate all user queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEYS.USERS] });

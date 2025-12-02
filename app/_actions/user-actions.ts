@@ -85,10 +85,32 @@ export async function getUsers(params?: {
     return handleError(error, "GET", url);
   }
 }
-
-export async function getDepartmentHeads(params?: {
-  departmentId?: string;
+export async function getHeadsOfDepartments(params?: {
+  department_id?: string;
+  role_id?: string;
+  is_active?: boolean;
+  page?: number;
+  page_size?: number;
 }): Promise<APIResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.department_id) queryParams.append("department_id", params.department_id);
+  if (params?.role_id) queryParams.append("role_id", params.role_id);
+  if (params?.is_active !== undefined) queryParams.append("is_active", String(params.is_active));
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
+  const url = `/api/v1/users/department-heads${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
+  try {
+    const response = await authenticatedApiClient({ url: url, method: "GET" });
+    return successResponse(response.data.data, "HODs fetched successfully");
+  } catch (error) {
+    return handleError(error, "GET", url);
+  }
+}
+
+export async function getDepartmentHeads(params?: { departmentId?: string }): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
   if (params?.departmentId) queryParams.append("department_id", params.departmentId);
   const url = `/api/v1/users/department-heads/list${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;

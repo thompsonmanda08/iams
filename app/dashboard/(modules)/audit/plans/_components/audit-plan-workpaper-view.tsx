@@ -777,15 +777,78 @@ export function AuditPlanWorkpaperView({
                   {/* Category Details */}
                   <WorkpaperCategoryPanel category={selectedCategory} />
 
-                  {/* Finding Form - Framework Aware */}
-                  <div data-finding-form>
-                    <FrameworkFindingForm
-                      category={selectedCategory}
-                      auditPlan={auditPlan}
-                      finding={categoryFindings.length > 0 ? categoryFindings[categoryFindings.length - 1] : null}
-                      onEditComplete={() => setEditingFinding(null)}
-                    />
-                  </div>
+                  {/* Findings List for Category */}
+                  {categoryFindings.length > 0 ? (
+                    <div className="space-y-4">
+                      {categoryFindings.map((finding, index) => (
+                        <Card key={finding.id || index} className="border">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <CardTitle className="text-sm">
+                                  Finding #{index + 1} - {finding.finding_number || `#${index + 1}`}
+                                </CardTitle>
+                                <CardDescription className="mt-1">
+                                  {finding.is_conformity !== null ? (
+                                    finding.is_conformity ? (
+                                      <span className="text-green-600">✓ Conformity</span>
+                                    ) : (
+                                      <span className="text-red-600">✗ Non-Conformity</span>
+                                    )
+                                  ) : (
+                                    <span className="text-amber-600">⊘ Pending Assessment</span>
+                                  )}
+                                </CardDescription>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingFinding(finding)}
+                              >
+                                Edit
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          {editingFinding?.id === finding.id && (
+                            <CardContent className="pt-0">
+                              <FrameworkFindingForm
+                                category={selectedCategory}
+                                auditPlan={auditPlan}
+                                finding={finding}
+                                onEditComplete={() => setEditingFinding(null)}
+                              />
+                            </CardContent>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <Card>
+                      <CardContent className="pt-12">
+                        <div className="text-center">
+                          <AlertCircle className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
+                          <p className="text-muted-foreground">No findings for this category yet</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Add New Finding Form */}
+                  {!editingFinding && categoryFindings.length > 0 && (
+                    <Card className="border-dashed">
+                      <CardHeader>
+                        <CardTitle className="text-sm">Add New Finding</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <FrameworkFindingForm
+                          category={selectedCategory}
+                          auditPlan={auditPlan}
+                          finding={null}
+                          onEditComplete={() => setEditingFinding(null)}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
                 </>
               ) : (
                 <Card>
