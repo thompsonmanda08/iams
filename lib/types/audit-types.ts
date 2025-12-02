@@ -841,6 +841,10 @@ export interface WorkpaperFinding {
   // Framework type and framework-specific fields
   framework: string; // ISO27001, COSO, COBIT, NIST, GENERAL, CUSTOM
 
+  // Conformity assessment (applies to all frameworks)
+  conformity_status?: "CONFORMITY" | "NON_CONFORMITY" | "PARTIAL_CONFORMITY" | null;
+  is_conformity?: boolean; // Simple checkbox: true = Conformity, false = Non-Conformity
+
   // ISO27001 specific
   clause_number?: string;
   clause_description?: string;

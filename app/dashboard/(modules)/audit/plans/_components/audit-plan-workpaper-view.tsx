@@ -621,7 +621,11 @@ export function AuditPlanWorkpaperView({
                           </div>
                           <div>
                             <p className="text-muted-foreground text-xs">Department</p>
-                            <p className="font-medium">{item.department_id.slice(0, 8)}...</p>
+                            {item?.department_name ? (
+                              <p className="font-medium">{item.department_name}</p>
+                            ) : (
+                              <p className="font-medium">{item.department_id.slice(0, 8)}...</p>
+                            )}
                           </div>
                         </div>
                       </div>
