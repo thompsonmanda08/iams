@@ -28,17 +28,20 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../../../../../componen
 import { TemplateCategory } from "@/lib/types/audit-types";
 import { toast } from "sonner";
 import Link from "next/link";
+import { MetadataDisplay } from "@/components/audit/metadata-display";
 
 interface TemplateCategoriesTableProps {
   categories: TemplateCategory[];
   templateId: string;
   isLoading?: boolean;
+  frameworkType?: string;
 }
 
 export function TemplateCategoriesTable({
   categories,
   templateId,
-  isLoading
+  isLoading,
+  frameworkType = "ISO27001"
 }: TemplateCategoriesTableProps) {
   const router = useRouter();
   // const { toast } = useToast();
@@ -129,9 +132,7 @@ export function TemplateCategoriesTable({
           <TableRow>
             <TableHead className="w-[50px]">Order</TableHead>
             <TableHead>Category Name</TableHead>
-            <TableHead>Objectives</TableHead>
-            <TableHead>Clause Range</TableHead>
-            <TableHead>Scope</TableHead>
+            <TableHead>Framework Items</TableHead>
             <TableHead className="w-20">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -155,19 +156,9 @@ export function TemplateCategoriesTable({
                 </div>
               </TableCell>
               <TableCell>
-                <p className="text-muted-foreground line-clamp-2 max-w-xs text-sm">
-                  {category.objectives || "No objectives defined"}
-                </p>
-              </TableCell>
-              <TableCell>
-                <p className="text-muted-foreground line-clamp-2 max-w-xs text-sm">
-                  {category.clause_range || "No range defined"}
-                </p>
-              </TableCell>
-              <TableCell>
-                <p className="text-muted-foreground line-clamp-2 max-w-xs text-sm">
-                  {category.scope || "No scope defined"}
-                </p>
+                <div className="max-w-md">
+                  <MetadataDisplay metadata={category.metadata} frameworkType={frameworkType} />
+                </div>
               </TableCell>
               <TableCell>
                 <div className="flex justify-end gap-2">

@@ -20,8 +20,8 @@ export default async function AuditSettingsTabs({
   pillars = [],
   initiatives = [],
   findingsCategories = [],
-  processActivities = []
-  ,templates
+  processActivities = [],
+  templates,
   pagination
 }: TabsComponentProps) {
   return (

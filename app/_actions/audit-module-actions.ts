@@ -677,117 +677,6 @@ export async function getAuditMetrics(): Promise<APIResponse> {
 }
 
 // ============================================================================
-// REPORT ACTIONS
-// ============================================================================
-
-/**
- * Get report templates
- */
-export async function getReportTemplates(): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const templates: ReportTemplate[] = [
-      {
-        id: "1",
-        name: "Summary Report",
-        type: "summary",
-        description: "High-level audit summary",
-        parameters: ["auditId", "dateRange"]
-      },
-      {
-        id: "2",
-        name: "Detailed Audit Report",
-        type: "detailed",
-        description: "Complete audit details",
-        parameters: ["auditId"]
-      },
-      {
-        id: "3",
-        name: "Non-Conformity Report",
-        type: "non-conformity",
-        description: "All findings",
-        parameters: ["dateRange", "severity"]
-      }
-    ];
-
-    return successResponse(templates, "Report templates fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | REPORT TEMPLATES", "/api/audits/templates");
-  }
-}
-
-/**
- * Generate report (mock)
- */
-export async function generateReport(params: ReportParams): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Longer delay for "generation"
-
-    return successResponse(null, "Report generated successfully");
-  } catch (error: any) {
-    return handleError(error, "POST | GENERATE REPORT", "/api/audits/reports");
-  }
-}
-
-/**
- * Get scheduled reports
- */
-export async function getScheduledReports(): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const reports: ScheduledReport[] = [];
-
-    return successResponse(reports, "Scheduled reports fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | SCHEDULED REPORTS", "/api/audits/scheduled-reports");
-  }
-}
-
-// ============================================================================
-// SETTINGS ACTIONS
-// ============================================================================
-
-/**
- * Get audit settings
- */
-export async function getAuditSettings(): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const settings: AuditSettings = {
-      notificationsEnabled: true,
-      emailNotifications: true,
-      dueDateReminderDays: 7,
-      autoSaveInterval: 30,
-      defaultStandard: "ISO 27001:2022",
-      requireApproval: true,
-      allowDraftWorkpapers: true
-    };
-
-    return successResponse(settings, "Settings fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | AUDIT SETTINGS", "/api/audits/settings");
-  }
-}
-
-/**
- * Update audit settings
- */
-export async function updateAuditSettings(data: SettingsInput): Promise<APIResponse> {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    revalidatePath("/dashboard/audit/settings");
-
-    return successResponse(null, "Settings updated successfully");
-  } catch (error: any) {
-    return handleError(error, "PUT | UPDATE AUDIT SETTINGS", "/api/audits/settings");
-  }
-}
-
-// ============================================================================
 // WORKING PAPER TEMPLATE ACTIONS (API Integration)
 // ============================================================================
 
@@ -795,7 +684,7 @@ export async function updateAuditSettings(data: SettingsInput): Promise<APIRespo
  * Get all working paper templates
  */
 export async function getWorkingPaperTemplates(params?: {
-  standard?: string;
+  framework_type?: string;
   is_active?: boolean;
   page?: number;
   page_size?: number;
@@ -803,7 +692,7 @@ export async function getWorkingPaperTemplates(params?: {
   try {
     const urlParams = new URLSearchParams();
 
-    if (params?.standard) urlParams.append("standard", params.standard);
+    if (params?.framework_type) urlParams.append("framework_type", params.framework_type);
     if (params?.is_active !== undefined) urlParams.append("is_active", String(params.is_active));
     if (params?.page) urlParams.append("page", String(params.page));
     if (params?.page_size) urlParams.append("page_size", String(params.page_size));
@@ -873,6 +762,7 @@ export async function getWorkpaperTemplateCategories(templateId: string): Promis
 export async function createWorkingPaperTemplate(data: {
   name: string;
   standard: string;
+  framework_type: string;
   description?: string;
   version?: string;
   is_active?: boolean;
@@ -910,6 +800,7 @@ export async function updateWorkingPaperTemplate(
     name?: string;
     standard?: string;
     description?: string;
+    framework_type?: string;
     version?: string;
     is_active?: boolean;
   }
@@ -1022,7 +913,15 @@ export async function createTemplateCategory(data: TemplateCategory): Promise<AP
   const url = `/api/v1/working-paper-templates/${data.template_id}/categories`;
 
   try {
-    const response = await authenticatedApiClient({ method: "POST", url, data });
+    // Build payload with only the required fields for new metadata structure
+    const payload = {
+      name: data.name,
+      sort_order: data.sort_order || 0,
+      // New structure: metadata with framework-type as key containing array of clauses
+      metadata: data.metadata || {}
+    };
+
+    const response = await authenticatedApiClient({ method: "POST", url, data: payload });
 
     revalidatePath("/dashboard/audit/templates");
     revalidatePath(`/dashboard/audit/templates/${data.template_id}`);
@@ -1046,20 +945,7 @@ export async function createTemplateCategory(data: TemplateCategory): Promise<AP
  */
 export async function updateTemplateCategory(
   categoryId: string,
-  data: {
-    id?: string;
-    template_id?: string;
-    name?: string;
-    objectives?: string;
-    scope?: string;
-    documents_obtained?: string;
-    source_documents?: string;
-    sample_size?: string;
-    frequency_of_control?: string;
-    sampling_methodology?: string;
-    audit_procedure?: string;
-    sort_order?: number;
-  }
+  data: TemplateCategory
 ): Promise<APIResponse> {
   if (!categoryId) {
     return handleBadRequest("Category ID is required");
@@ -1068,17 +954,25 @@ export async function updateTemplateCategory(
   const url = `/api/v1/template-categories/${categoryId}`;
 
   try {
+    // Build payload with only the required fields for new metadata structure
+    const payload = {
+      name: data.name,
+      sort_order: data.sort_order || 0,
+      // New structure: metadata with framework-type as key containing array of clauses
+      metadata: data.metadata || {}
+    };
+
     const response = await authenticatedApiClient({
       method: "PUT",
       url,
-      data
+      data: payload
     });
 
     revalidatePath("/dashboard/audit/templates");
-    revalidatePath(`/dashboard/audit/templates/${data.id}`);
-    revalidatePath(`/dashboard/system-configs/audit-settings/templates/${data.id}/categories`);
+    revalidatePath(`/dashboard/audit/templates/${data.template_id}`);
+    revalidatePath(`/dashboard/system-configs/audit-settings/templates/${data.template_id}/categories`);
     revalidatePath(
-      `/dashboard/system-configs/audit-settings/templates/${data.id}/categories/${categoryId}`
+      `/dashboard/system-configs/audit-settings/templates/${data.template_id}/categories/${categoryId}`
     );
 
     return successResponse(response.data, "Template category updated successfully");
@@ -1275,8 +1169,6 @@ export async function rejectAuditPlan(auditPlanId: string, reason: string): Prom
     );
   }
 }
-
-
 
 /**
  * Activate audit plan
@@ -1899,11 +1791,7 @@ export async function submitBudgetForApproval(budgetId: string): Promise<APIResp
 
     return successResponse(response.data, "Budget submitted for approval successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | SUBMIT BUDGET",
-      url
-    );
+    return handleError(error, "GET | SUBMIT BUDGET", url);
   }
 }
 
@@ -1925,10 +1813,6 @@ export async function submitUniverseForApproval(universeId: string): Promise<API
 
     return successResponse(response.data, "Universe submitted for approval successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "GET | SUBMIT UNIVERSE",
-      url
-    );
+    return handleError(error, "GET | SUBMIT UNIVERSE", url);
   }
 }

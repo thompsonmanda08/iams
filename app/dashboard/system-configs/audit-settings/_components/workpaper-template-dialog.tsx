@@ -68,7 +68,7 @@ export function WorkpaperTemplateDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] w-full max-w-5xl! overflow-y-auto">
+        <DialogContent className="max-h-[90vh] w-full max-w-3xl! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Choose Workpaper Template</DialogTitle>
             <DialogDescription>
@@ -79,15 +79,14 @@ export function WorkpaperTemplateDialog({
           {/* Template Selection */}
           {
             <div className="space-y-6 py-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {/* ISO 27001:2022 Comprehensive Template */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            
                 <Card
                   className="hover:border-primary cursor-pointer border-2 p-6 transition-all hover:bg-slate-50"
                   onClick={() => {
                     setIsCreateDialogOpen(true);
                     onOpenChange(false);
                   }}
-                  // onClick={() => handleTemplateSelect("ISO27001")}
                 >
                   <div className="flex flex-col items-center space-y-4 text-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
@@ -95,17 +94,17 @@ export function WorkpaperTemplateDialog({
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-center gap-2">
-                        <h3 className="text-lg font-semibold">ISO IEC 27001</h3>
+                        <h3 className="text-lg font-semibold">COMPLIANCE BASED WORKPAPER</h3>
                         <Badge variant="secondary" className="text-xs">
                           New
                         </Badge>
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        Category-based template with comprehensive audit documentation
+                        Category-based templates with comprehensive audit documentation
                       </p>
                     </div>
                     <ul className="text-muted-foreground w-full space-y-1 text-left text-xs">
-                      <li>✓ 11 ISO 27001:2022 categories</li>
+                      <li>✓ ISO 27001, COBIT, COSO, NIST templates</li>
                       <li>✓ Category-based organization</li>
                       <li>✓ Documents & sampling fields</li>
                       <li>✓ Compatible with audit plan templates</li>
@@ -115,7 +114,7 @@ export function WorkpaperTemplateDialog({
 
                 {/* General Template */}
                 <Card
-                  className="hover:border-primary cursor-pointer p-6 transition-all hover:bg-slate-50"
+                  className="hover:border-primary cursor-pointer border-2 border-dashed p-6 transition-all hover:bg-slate-50"
                   onClick={() => handleTemplateSelect("GENERAL")}>
                   <div className="flex flex-col items-center space-y-4 text-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
@@ -134,16 +133,16 @@ export function WorkpaperTemplateDialog({
                       </p>
                     </div>
                     <ul className="text-muted-foreground w-full space-y-1 text-left text-xs">
-                      <li>✓ Evidence & testing grid with 26 tick marks</li>
+                      <li>✓ Evidence & testing grid with tick marks</li>
+                      <li>✓ Optional evidence grid</li>
                       <li>✓ Financial transaction testing</li>
-                      <li>✓ Debits/Credits tracking</li>
                       <li>✓ Customizable tick mark selection</li>
                     </ul>
                   </div>
                 </Card>
 
                 {/* Create Custom Template */}
-                <Card
+                {/* <Card
                   className="hover:border-primary cursor-pointer border-2 border-dashed p-6 transition-all hover:bg-slate-50"
                   onClick={() => handleTemplateSelect("CUSTOM")}>
                   <div className="flex flex-col items-center space-y-4 text-center">
@@ -168,7 +167,7 @@ export function WorkpaperTemplateDialog({
                       <li>✓ Reusable across audits</li>
                     </ul>
                   </div>
-                </Card>
+                </Card> */}
               </div>
 
               {/* Custom Templates List */}

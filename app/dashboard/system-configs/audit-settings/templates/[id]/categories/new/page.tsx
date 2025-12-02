@@ -1,25 +1,108 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   createTemplateCategory,
   updateTemplateCategory
 } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
-import { TemplateCategory, TemplateCategoryGroup } from "@/lib/types/audit-types";
-import { SelectField } from "@/components/ui/select-field";
-import { Checkbox } from "@/components/ui/checkbox";
-import { group } from "console";
+import { TemplateCategory } from "@/lib/types/audit-types";
 import { toast } from "sonner";
 import BackButton from "@/components/back-button";
 import PageHeader from "@/components/page-header";
+import { useWorkpaperTemplate } from "@/hooks/use-audit-query-data";
+import Loader from "@/components/ui/loader";
+import { cn } from "@/lib/utils";
+
+// Framework field configurations
+type FrameworkFields = {
+  [key: string]: {
+    label: string;
+    fields: Array<{
+      name: string;
+      label: string;
+      placeholder: string;
+      required?: boolean;
+    }>;
+  };
+};
+
+const FRAMEWORK_FIELD_CONFIGS: FrameworkFields = {
+  iso27001: {
+    label: "ISO 27001",
+    fields: [
+      { name: "clause_number", label: "Clause Number", placeholder: "e.g., 4.1", required: true },
+      {
+        name: "clause_description",
+        label: "Clause Description",
+        placeholder: "e.g., Understanding the organization...",
+        required: true
+      }
+    ]
+  },
+
+  coso: {
+    label: "COSO",
+    fields: [
+      {
+        name: "component",
+        label: "Component",
+        placeholder: "e.g., Governance and Independence",
+        required: true
+      },
+      {
+        name: "control_type",
+        label: "Control Type",
+        placeholder: "e.g., preventive, detective",
+        required: true
+      },
+      {
+        name: "principle",
+        label: "Principle",
+        placeholder: "e.g., Integrity and ethical values",
+        required: false
+      }
+    ]
+  },
+
+  cobit: {
+    label: "COBIT",
+    fields: [
+      { name: "domain", label: "Domain", placeholder: "e.g., EDM", required: true },
+      { name: "process_code", label: "Process Code", placeholder: "e.g., EDM01", required: true },
+      {
+        name: "process_name",
+        label: "Process Name",
+        placeholder: "e.g., Establish governance framework",
+        required: true
+      }
+    ]
+  },
+
+  nist: {
+    label: "NIST",
+    fields: [
+      { name: "function", label: "Function", placeholder: "e.g., Identify", required: true },
+      {
+        name: "category",
+        label: "Category",
+        placeholder: "e.g., Asset Management",
+        required: true
+      },
+      {
+        name: "subcategory",
+        label: "Subcategory",
+        placeholder: "e.g., Inventory of hardware devices",
+        required: true
+      }
+    ]
+  }
+};
 
 interface NewCategoryPageProps {
   params: Promise<{
@@ -35,29 +118,26 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setUpdating] = useState(initialData && categoryId);
 
+  // Fetch template data to get framework type
+  const { data: templateResponse, isLoading } = useWorkpaperTemplate(templateId);
+
+  // Get framework type from template data or use default
+  let frameworkType = "iso27001";
+  if (templateResponse?.data?.framework_type) {
+    frameworkType = templateResponse.data.framework_type.toLowerCase();
+  } else if (templateResponse?.data?.standard) {
+    frameworkType = templateResponse.data.standard.toLowerCase();
+  }
+
   const [formData, setFormData] = useState<TemplateCategory>(
     initialData && categoryId
-      ? ({
-          ...initialData,
-          clauses: ((initialData.clauses || "") as unknown as string).split(",") as any
-        } as unknown as TemplateCategory)
+      ? {
+          ...initialData
+        }
       : {
           name: "",
-          display_name: "",
-          objectives: "",
-          scope: "",
-          clauses: [],
-          clause_range: "",
-          description: "",
-          group: "main-clauses",
-          documents_obtained: "",
-          source_documents: "",
-          sample_size: "",
-          frequency_of_control: "",
-          sampling_methodology: "",
-          audit_procedure: "",
           sort_order: 0,
-          is_required: false,
+          metadata: {},
           template_id: templateId
         }
   );
@@ -67,36 +147,20 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
 
     if (!formData.name) {
       toast.error("Category name is required");
-      // toast({
-      //   title: "Validation Error",
-      //   description: "Category name is required",
-      //   variant: "destructive"
-      // });
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      // Build the new payload structure with metadata only
       const newData: TemplateCategory = {
         template_id: templateId,
         name: formData.name,
-        display_name: formData.display_name,
-        objectives: formData.objectives,
-        scope: formData.scope,
-        documents_obtained: formData.documents_obtained,
-        source_documents: formData.source_documents,
-        sample_size: formData.sample_size,
-        frequency_of_control: formData.frequency_of_control,
-        sampling_methodology: formData.sampling_methodology,
-        audit_procedure: formData.audit_procedure,
-        sort_order: formData.sort_order,
-        group: formData.group,
-        description: formData.description,
-        clauses: formData.clauses.join(",") as any,
-        clause_range: formData.clause_range,
-        is_required: formData.is_required
+        sort_order: formData.sort_order || 0,
+        metadata: formData.metadata || {}
       };
+
       const result =
         isUpdating && categoryId
           ? await updateTemplateCategory(categoryId, newData)
@@ -104,30 +168,45 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
 
       if (result.success) {
         toast.success(`Category ${isUpdating ? "updated" : "created"} successfully`);
-        // toast({
-        //   title: "Success",
-        //   description: `Category ${isUpdating ? "updated" : "created"} successfully`
-        // });
         router.push(`/dashboard/system-configs/audit-settings/templates/${templateId}`);
       } else {
         toast.error(result.message || `Failed to ${isUpdating ? "update" : "create"} category`);
-        // toast({
-        //   title: "Error",
-        //   description: result.message || `Failed to ${isUpdating ? "update" : "create"} category`,
-        //   variant: "destructive"
-        // });
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
-      // toast({
-      //   title: "Error",
-      //   description: "An unexpected error occurred",
-      //   variant: "destructive"
-      // });
     } finally {
       setIsSubmitting(false);
     }
   }
+
+  const deleteCategory = useCallback(
+    (idx: number) => {
+      const updated = (formData.metadata?.[frameworkType] || []).filter((_, i) => i !== idx);
+      setFormData({
+        ...formData,
+        metadata: {
+          ...formData.metadata,
+          [frameworkType]: updated
+        }
+      });
+    },
+    [formData, frameworkType]
+  );
+
+  const updateCategoryItem = useCallback(
+    (idx: number, fieldName: string, value: string) => {
+      const updated = [...(formData.metadata?.[frameworkType] || [])];
+      updated[idx] = { ...updated[idx], [fieldName]: value };
+      setFormData({
+        ...formData,
+        metadata: {
+          ...formData.metadata,
+          [frameworkType]: updated
+        }
+      });
+    },
+    [formData, frameworkType]
+  );
 
   return (
     <div className="bg-background min-h-screen">
@@ -137,282 +216,200 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
           <div className="flex items-center justify-between gap-4">
             <PageHeader
               title={`${isUpdating ? "Update" : "Create"} Template Category`}
-              description={`${isUpdating ? "Update" : "Create"} a new category for this template`}
+              description="Define a category with framework-specific clauses"
             />
-            <BackButton className="mb-0 h-8!" title="Back to Categories" />
+            <BackButton className="mb-0 h-8!" title="Back to Template" />
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-3xl">
-          <form onSubmit={handleSubmit}>
-            <Card className="p-6">
-              <div className="space-y-6">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <div className="grid gap-1">
-                    <h3 className="text-lg font-semibold">Basic Information</h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      You are required to fill in too the required details. Use "N/A" if not
-                      applicable
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Input
-                      id="name"
-                      label="Category Name"
-                      classNames={{
-                        wrapper: "max-w-none w-full flex-1"
-                      }}
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value.replaceAll(" ", "-") })
-                      }
-                      placeholder="e.g., context-of-the-organisation"
-                      required
-                    />
-                    <Input
-                      id="order"
-                      label="Sort Order"
-                      classNames={{
-                        wrapper: "max-w-xs w-full flex-[0.5]"
-                      }}
-                      value={formData.sort_order}
-                      onChange={(e) =>
-                        setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })
-                      }
-                      placeholder="1"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Input
-                      id="name"
-                      label="Category Display Name"
-                      className="flex-1"
-                      value={formData.display_name}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          display_name: e.target.value
-                        })
-                      }
-                      placeholder="e.g., Context of the Organisation (Annex A: 5.1-5.37)"
-                      required
-                    />
-                    <SelectField
-                      id="group"
-                      label="Group Name"
-                      options={[
-                        {
-                          id: "main-clauses",
-                          name: "Main Clauses"
-                        },
-                        {
-                          id: "annex-a-controls",
-                          name: "Annex A Controls"
-                        },
-                        {
-                          id: "other",
-                          name: "Other"
-                        }
-                      ]}
-                      value={formData.group}
-                      onValueChange={(group) =>
-                        setFormData({ ...formData, group: group as TemplateCategoryGroup })
-                      }
-                      placeholder="e.g., Main Clauses, Annex A Controls"
-                      className="w-full"
-                      required
-                    />
-                  </div>
-
-                  <Input
-                    id="description"
-                    label="Description"
-                    className=""
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Understanding the context of the organisation..."
-                    required
-                  />
-
-                  <Textarea
-                    id="objectives"
-                    label="Objectives"
-                    value={formData.objectives}
-                    onChange={(e) => setFormData({ ...formData, objectives: e.target.value })}
-                    placeholder="Assess understanding of organizational context..."
-                    rows={3}
-                    required
-                  />
-
-                  <Textarea
-                    id="scope"
-                    label="Scope"
-                    value={formData.scope}
-                    onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
-                    placeholder="All business units..."
-                    rows={3}
-                    required
-                  />
-
-                  <Textarea
-                    id="clauses"
-                    label="Clauses"
-                    value={formData.clauses.join(",")}
-                    onChange={(e) =>
-                      setFormData({ ...formData, clauses: e.target.value.split(",") })
-                    }
-                    placeholder="Separated by commas. E.g. A.5.1, A.5.2, A.5.3, A.5.4, A.5.5"
-                    rows={2}
-                    required
-                  />
-                  <Input
-                    id="clause_range"
-                    label="Clause Range"
-                    className=""
-                    value={formData.clause_range}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        clause_range: e.target.value
-                      })
-                    }
-                    placeholder="A.5.1 - 5.37"
-                    required
-                  />
-                </div>
-
-                {/* Audit Documentation */}
-                <div className="space-y-4 border-t pt-4">
-                  <h3 className="text-lg font-semibold">Audit Documentation</h3>
-
-                  <Textarea
-                    id="documents_obtained"
-                    label="Documents Obtained"
-                    value={formData.documents_obtained}
-                    onChange={(e) =>
-                      setFormData({ ...formData, documents_obtained: e.target.value })
-                    }
-                    placeholder="Strategic plan, risk register..."
-                    rows={2}
-                    required
-                  />
-
-                  <Textarea
-                    id="source_documents"
-                    label="Source Documents"
-                    value={formData.source_documents}
-                    onChange={(e) => setFormData({ ...formData, source_documents: e.target.value })}
-                    placeholder="Business plan (Jan 2025), Risk assessment (Q4 2024)..."
-                    rows={2}
-                    required
-                  />
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Input
-                      id="sample_size"
-                      label="Sample Size"
-                      value={formData.sample_size}
-                      onChange={(e) => setFormData({ ...formData, sample_size: e.target.value })}
-                      placeholder="e.g., 10 departments"
-                      required
-                    />
-
-                    <Input
-                      id="frequency_of_control"
-                      label="Frequency of Control"
-                      value={formData.frequency_of_control}
-                      onChange={(e) =>
-                        setFormData({ ...formData, frequency_of_control: e.target.value })
-                      }
-                      placeholder="e.g., Quarterly"
-                      required
-                    />
-                  </div>
-
-                  <Textarea
-                    id="sampling_methodology"
-                    label="Sampling Methodology"
-                    value={formData.sampling_methodology}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sampling_methodology: e.target.value })
-                    }
-                    placeholder="Random, stratified, systematic..."
-                    rows={2}
-                    required
-                  />
-                  <p className="flex items-center gap-2 text-sm text-orange-400">
-                    <AlertTriangle className="aspect-square h-5 w-5 text-orange-400" />
-                    <span className="font-semibold">Note:</span>
-                    Enter the value "N/A" for fields that do not apply for this category.
-                  </p>
-                </div>
-
-                {/* Audit Procedure */}
-                <div className="space-y-4 border-t pt-4">
-                  <h3 className="text-lg font-semibold">Audit Procedure</h3>
-
-                  <div className="space-y-2">
-                    <Textarea
-                      id="audit_procedure"
-                      label="Procedure Steps"
-                      value={formData.audit_procedure}
-                      onChange={(e) =>
-                        setFormData({ ...formData, audit_procedure: e.target.value })
-                      }
-                      placeholder="1. Review documents&#10;2. Interview stakeholders&#10;3. Verify compliance..."
-                      rows={4}
-                      descriptionText=""
-                      required
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      Define the audit testing procedures for this category
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2 self-end">
-                    <Checkbox
-                      id="is_required"
-                      checked={formData?.is_required}
-                      title="Define whether this category is a required audit category"
-                      onCheckedChange={(checked) =>
-                        setFormData((prev) => ({ ...prev, is_required: checked }) as any)
-                      }
-                    />
-                    <Label
-                      htmlFor="is_required"
-                      className="text-foreground cursor-pointer text-sm font-medium">
-                      Is a Required Category
-                    </Label>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    Define whether this category is a required audit category
-                  </p>
-                </div>
-
-                <div className="sticky bottom-0 flex flex-col-reverse justify-end gap-3 border-t pt-6 backdrop-blur sm:-mx-6 sm:flex-row sm:px-8 sm:pb-8">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.back()}
-                    disabled={isSubmitting}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    isLoading={isSubmitting}
-                    loadingText="Saving...">
-                    {categoryId ? "Update Category" : "Create Category"}
-                  </Button>
-                </div>
+        <div className="mx-auto max-w-5xl">
+          {isLoading && (
+            <Card className="flex items-center justify-center p-8">
+              <div className="flex flex-col items-center gap-2">
+                <Loader className="h-6 w-6 animate-spin" />
+                <p className="text-muted-foreground text-sm">Loading template information...</p>
               </div>
             </Card>
-          </form>
+          )}
+
+          {!isLoading && (
+            <form onSubmit={handleSubmit}>
+              <Card className="bg-card p-6">
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <div className="grid gap-1">
+                      <h3 className="text-lg font-semibold">Category Information</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Define the basic details for this category
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        id="name"
+                        label="Category Name"
+                        classNames={{
+                          wrapper: "max-w-none w-full flex-1"
+                        }}
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="e.g., Context of the Organisation"
+                        required
+                      />
+                      <Input
+                        id="sort_order"
+                        label="Sort Order"
+                        type="number"
+                        classNames={{
+                          wrapper: "max-w-xs w-full flex-[0.5]"
+                        }}
+                        value={formData.sort_order || 0}
+                        onChange={(e) =>
+                          setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })
+                        }
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Framework Metadata - Dynamic Fields */}
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="grid gap-1">
+                      <h3 className="text-lg font-semibold">Framework Metadata</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Define{" "}
+                        {FRAMEWORK_FIELD_CONFIGS[frameworkType]?.label ||
+                          frameworkType.toUpperCase()}
+                        -specific items
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 rounded-lg border bg-slate-50 p-4 dark:bg-slate-900/5">
+                      {/* Items for Selected Framework */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">
+                            {FRAMEWORK_FIELD_CONFIGS[frameworkType]?.label ||
+                              frameworkType.toUpperCase()}{" "}
+                            TEMPLATE FIELDS
+                          </Label>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const currentItems = formData.metadata?.[frameworkType] || [];
+                              const newItem: Record<string, string> = {};
+                              FRAMEWORK_FIELD_CONFIGS[frameworkType]?.fields.forEach((field) => {
+                                newItem[field.name] = "";
+                              });
+                              setFormData({
+                                ...formData,
+                                metadata: {
+                                  ...formData.metadata,
+                                  [frameworkType]: [...currentItems, newItem]
+                                }
+                              });
+                            }}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Item
+                          </Button>
+                        </div>
+
+                        {/* List of Items */}
+                        <div className="space-y-2">
+                          {(formData.metadata?.[frameworkType] || []).map((item, idx) => (
+                            <div key={idx} className="flex gap-2 rounded-lg border bg-white/5 p-3">
+                              <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+                                {FRAMEWORK_FIELD_CONFIGS[frameworkType]?.fields.map((field) => (
+                                  <Input
+                                    key={field.name}
+                                    label={field.label}
+                                    placeholder={field.placeholder}
+                                    value={item[field.name] || ""}
+                                    // onChange={(e) => {
+                                    //   const updated = [
+                                    //     ...(formData.metadata?.[frameworkType] || [])
+                                    //   ];
+                                    //   updated[idx] = {
+                                    //     ...updated[idx],
+                                    //     [field.name]: e.target.value
+                                    //   };
+                                    //   setFormData({
+                                    //     ...formData,
+                                    //     metadata: {
+                                    //       ...formData.metadata,
+                                    //       [frameworkType]: updated
+                                    //     }
+                                    //   });
+                                    // }}
+                                    onChange={(e) =>
+                                      updateCategoryItem(idx, field.name, e.target.value)
+                                    }
+                                    className={cn("w-full max-w-none", {
+                                      "max-w-xs":
+                                        field.name === "clause_number" ||
+                                        field.name === "domain" ||
+                                        field.name === "component"
+                                    })}
+                                    classNames={{
+                                      wrapper: cn({
+                                        "max-w-xs":
+                                          field.name === "clause_number" ||
+                                          field.name === "domain" ||
+                                          field.name === "component"
+                                      })
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="mt-auto bg-red-50/50 hover:bg-red-50"
+                                onClick={() => deleteCategory(idx)}>
+                                <Trash2 className="text-destructive h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+
+                          {(!formData.metadata?.[frameworkType] ||
+                            formData.metadata[frameworkType].length === 0) && (
+                            <p className="text-muted-foreground py-2 text-center text-sm">
+                              No items added yet. Click "Add Item" to add one.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="sticky bottom-0 flex flex-col-reverse justify-end gap-3 border-t pt-6 backdrop-blur sm:-mx-6 sm:flex-row sm:px-8 sm:pb-8">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.back()}
+                      disabled={isSubmitting}>
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      isLoading={isSubmitting}
+                      loadingText="Saving...">
+                      {categoryId ? "Update Category" : "Create Category"}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </form>
+          )}
         </div>
       </div>
     </div>

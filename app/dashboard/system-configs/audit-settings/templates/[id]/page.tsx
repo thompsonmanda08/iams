@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Edit, Layers, Plus } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,10 @@ import {
 } from "@/app/_actions/audit-module-actions";
 import { format } from "date-fns";
 import { TemplateCategoriesTable } from "@/app/dashboard/system-configs/audit-settings/_components/template-categories-table";
-import Page from "@/app/dashboard/profile/page";
 import PageHeader from "@/components/page-header";
 import BackButton from "@/components/back-button";
+import { CreateOrUpdateISOTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/create-workpaper-dialog";
+import type { WorkpaperTemplate } from "@/lib/types/audit-types";
 
 interface TemplateDetailPageProps {
   params: Promise<{
@@ -38,6 +39,9 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
 
   console.log("templates:", template);
 
+  // Only show edit button for ISO27001 framework type
+  const isISO27001 = (template.framework_type || template.standard || "").toUpperCase() === "ISO27001";
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -47,18 +51,18 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
             <PageHeader
               title={template?.name || "Template Details"}
               description={template?.description || "No description"}
-              // showBackButton
               icon="FileCode2"
             />
 
             <div className="flex items-center gap-3">
               <BackButton className="mb-0 h-8!" title="Back to Templates" />
-              <Link href={`/dashboard/system-configs/audit-settings/templates/${id}/edit`}>
-                <Button variant="outline" size="sm">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Template
-                </Button>
-              </Link>
+              {isISO27001 && (
+                <CreateOrUpdateISOTemplateDialog
+                  showTrigger={true}
+                  initialData={template as WorkpaperTemplate}
+                  templateId={id}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -69,12 +73,17 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
         <div className="space-y-6">
           {/* Template Details */}
           <Card className="border-blue-100 bg-blue-50 p-6">
-            {template.is_active ? (
-              <Badge className="bg-green-500">Active</Badge>
-            ) : (
-              <Badge variant="secondary">Inactive</Badge>
-            )}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-center gap-4">
+              {template.is_active ? (
+                <Badge className="bg-green-500">Active</Badge>
+              ) : (
+                <Badge variant="secondary">Inactive</Badge>
+              )}
+              <Badge variant="outline" className="bg-white">
+                {template.framework_type || template.standard || "ISO27001"}
+              </Badge>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
                 <p className="text-primary dark:text-muted-foreground text-sm font-semibold">
                   Description
@@ -133,7 +142,11 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
             </div>
 
             <TabsContent value="categories" className="space-y-">
-              <TemplateCategoriesTable categories={categories} templateId={id} />
+              <TemplateCategoriesTable
+                categories={categories}
+                templateId={id}
+                frameworkType={template.framework_type || template.standard || "ISO27001"}
+              />
             </TabsContent>
           </Tabs>
         </div>

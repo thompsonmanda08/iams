@@ -142,20 +142,47 @@ export type AuditPlanStatus =
 // ============================================================================
 
 /**
+ * Clause/Item definition for framework-specific standards
+ * Supports different frameworks with different field structures
+ */
+export interface TemplateClause {
+  [key: string]: string | number | boolean | undefined;
+  // ISO frameworks
+  clause_number?: string;
+  clause_description?: string;
+  // COSO framework
+  component?: string;
+  control_type?: string;
+  principle?: string;
+  // COBIT framework
+  domain?: string;
+  process_code?: string;
+  process_name?: string;
+  // NIST framework
+  function?: string;
+  category?: string;
+  subcategory?: string;
+}
+
+/**
  * Template category definition for ISO standards
+ * Now supports dynamic metadata with framework-specific clauses
  */
 export interface TemplateCategory {
   id?: string;
   name: string;
-  display_name: string;
-  clauses: string[];
+  display_name?: string;
+  sort_order?: number;
+  clauses?: string[]; // Legacy support
   clause_range?: string;
-  group: TemplateCategoryGroup;
-  objectives: string;
-  scope: string;
-  audit_procedure: string;
+  group?: TemplateCategoryGroup;
+  objectives?: string;
+  scope?: string;
+  audit_procedure?: string;
   description?: string;
   is_required?: boolean;
+  // New metadata structure: { framework_type: [items with framework-specific fields] }
+  metadata?: Record<string, Array<Record<string, any>>>;
   [key: string]: any;
 }
 
@@ -442,9 +469,11 @@ export type WorkpaperTemplate = {
   id: string;
   name: string;
   standard: string;
+  framework_type: string;
   description: string;
   version: string;
   is_active: boolean;
+  categories?: TemplateCategory[];
   created_at?: Date;
   updated_at?: Date;
 };
