@@ -1,6 +1,4 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -22,6 +20,7 @@ import {
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { getKRIMeasurements } from "@/app/_actions/risk-module-actions";
+import { useQuery } from "@tanstack/react-query";
 
 interface KRI {
   id: string;
@@ -42,6 +41,33 @@ interface KRI {
   last_status?: string;
 }
 
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  user_type: string;
+  organization_id: string | null;
+  branch_id: string | null;
+  department_id: string | null;
+  role_id: string | null;
+  is_active: boolean;
+  is_ldap_user: boolean;
+  last_login: string;
+  change_password: boolean;
+  is_locked: boolean;
+  mfa_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+  old_password: string;
+  new_password: string;
+  otp: string;
+}
+
 interface Measurement {
   id: string;
   kri_id: string;
@@ -52,11 +78,7 @@ interface Measurement {
   notes: string;
   measured_by: string | null;
   created_at: string;
-  user?: {
-    first_name: string;
-    last_name: string;
-    email: string;
-  };
+  user?: User;
 }
 
 interface KRIHistoryProps {
@@ -100,37 +122,16 @@ function getUnit(measurementType?: string, currencyCode?: string): string {
 }
 
 export function KRIHistory({ kri, open, onClose }: KRIHistoryProps) {
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (kri?.id) {
-      fetchMeasurements();
-    }
-  }, [kri?.id]);
-
-  const fetchMeasurements = async () => {
-    if (!kri?.id) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await getKRIMeasurements(kri.id);
-
-      if (response.success && response.data) {
-        setMeasurements(response.data);
-      } else {
-        setError(response.message || "Failed to fetch measurements");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred");
-      console.error("Error fetching measurements:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["kri-measurements", kri?.id],
+    queryFn: async () => {
+      const response = await getKRIMeasurements(kri?.id as string);
+      return response;
+    },
+    enabled: !!kri?.id && open,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false
+  });
 
   if (!kri) return null;
 
@@ -145,23 +146,23 @@ export function KRIHistory({ kri, open, onClose }: KRIHistoryProps) {
   const currentValue = kri.currentValue || kri.last_measured_value || 0;
   const unit = getUnit(kri.measurement_type, kri.currency_code);
 
-  // Transform measurements for chart
+  const measurements = (data?.data as Measurement[]) || [];
+
   const chartData = measurements
     .slice()
     .reverse()
-    .map((m) => ({
+    .map((m: Measurement) => ({
       date: format(new Date(m.measurement_date), "MMM dd"),
       value: m.measured_value,
       status: m.status
     }));
 
-  // Transform measurements for events
-  const events = measurements.map((m) => ({
+  const events = measurements.map((m: Measurement) => ({
     date: format(new Date(m.measurement_date), "MMM dd, yyyy HH:mm"),
     event: `Value updated to ${formatValue(m.measured_value, kri.measurement_type, kri.currency_code)} - ${m.status}`,
     type: m.status === "Red" ? "warning" : m.status === "Green" ? "success" : "info",
     notes: m.notes,
-    user: m.user ? `${m.user.first_name} ${m.user.last_name}` : "System"
+    user: m.user ? `${m.user.first_name} ${m.user.last_name}`.trim() || m.user.email : "System"
   }));
 
   return (
@@ -179,18 +180,13 @@ export function KRIHistory({ kri, open, onClose }: KRIHistoryProps) {
           </SheetDescription>
         </SheetHeader>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex h-96 items-center justify-center">
             <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
           </div>
         ) : error ? (
-          <div className="flex h-96 flex-col items-center justify-center">
-            <p className="text-red-600">{error}</p>
-            <button
-              onClick={fetchMeasurements}
-              className="mt-4 text-sm text-blue-600 hover:underline">
-              Retry
-            </button>
+          <div className="flex h-96 items-center justify-center">
+            <p className="text-destructive text-sm">Failed to load measurements</p>
           </div>
         ) : (
           <Tabs defaultValue="chart" className="mt-6">
@@ -204,76 +200,82 @@ export function KRIHistory({ kri, open, onClose }: KRIHistoryProps) {
                 <h4 className="text-foreground mb-4 text-sm font-medium">
                   {measurements.length}-Period Trend
                 </h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis
-                      dataKey="date"
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                    />
-                    <YAxis
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      tickFormatter={(value) => {
-                        if (kri.measurement_type === "CURRENCY") {
-                          return `${kri.currency_code} ${value.toLocaleString()}`;
-                        } else if (kri.measurement_type === "PERCENTAGE") {
-                          return `${value}%`;
-                        }
-                        return value.toString();
-                      }}
-                      label={{
-                        value: unit,
-                        angle: -90,
-                        position: "insideLeft",
-                        style: { fill: "hsl(var(--muted-foreground))" }
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--popover))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "0.5rem",
-                        color: "hsl(var(--popover-foreground))"
-                      }}
-                      formatter={(value: any) => [
-                        formatValue(value, kri.measurement_type, kri.currency_code),
-                        "Value"
-                      ]}
-                    />
-                    <ReferenceLine
-                      y={targetValue}
-                      stroke="#22c55e"
-                      strokeDasharray="3 3"
-                      label={{
-                        value: "Target",
-                        position: "right",
-                        fill: "#22c55e"
-                      }}
-                    />
-                    <ReferenceLine
-                      y={limitValue}
-                      stroke="#ef4444"
-                      strokeDasharray="3 3"
-                      label={{
-                        value: "Limit",
-                        position: "right",
-                        fill: "#ef4444"
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {chartData.length === 0 ? (
+                  <div className="flex h-[300px] items-center justify-center">
+                    <p className="text-muted-foreground text-sm">No measurement data available</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="date"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                      />
+                      <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                        tickFormatter={(value) => {
+                          if (kri.measurement_type === "CURRENCY") {
+                            return `${kri.currency_code} ${value.toLocaleString()}`;
+                          } else if (kri.measurement_type === "PERCENTAGE") {
+                            return `${value}%`;
+                          }
+                          return value.toString();
+                        }}
+                        label={{
+                          value: unit,
+                          angle: -90,
+                          position: "insideLeft",
+                          style: { fill: "hsl(var(--muted-foreground))" }
+                        }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--popover))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "0.5rem",
+                          color: "hsl(var(--popover-foreground))"
+                        }}
+                        formatter={(value: any) => [
+                          formatValue(value, kri.measurement_type, kri.currency_code),
+                          "Value"
+                        ]}
+                      />
+                      <ReferenceLine
+                        y={targetValue}
+                        stroke="#22c55e"
+                        strokeDasharray="3 3"
+                        label={{
+                          value: "Target",
+                          position: "right",
+                          fill: "#22c55e"
+                        }}
+                      />
+                      <ReferenceLine
+                        y={limitValue}
+                        stroke="#ef4444"
+                        strokeDasharray="3 3"
+                        label={{
+                          value: "Limit",
+                          position: "right",
+                          fill: "#ef4444"
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-4">

@@ -318,6 +318,9 @@ const UniverseDetails = ({
                           Frequency
                         </TableHead>
                         <TableHead className="text-foreground/70 text-sm font-bold uppercase">
+                          KRI Score
+                        </TableHead>
+                        <TableHead className="text-foreground/70 text-sm font-bold uppercase">
                           Status
                         </TableHead>
                         <TableHead className="text-foreground/70 text-center text-sm font-bold uppercase">
@@ -427,6 +430,17 @@ const UniverseDetails = ({
                                 <Badge variant="secondary" className="text-xs whitespace-nowrap">
                                   {item.audit_frequency.replace("_", " ")}
                                 </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+                            {/* Average Risk Score */}
+                            <TableCell className="text-foreground text-sm">
+                              {item.kri_average_score ? (
+                                <div className="flex flex-col">
+                                  <p>{item.kri_average_score}</p>
+                                  <span className="text-xs italic lowercase"> Measure Type: {item.kri_measurement_type}</span>
+                                </div>
                               ) : (
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}

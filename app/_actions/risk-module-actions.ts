@@ -1690,3 +1690,14 @@ export async function getKRIStatusDepartmentSummary(departmentId: string): Promi
     return handleError(error, "GET | KRI STATUS SUMMARY", url);
   }
 }
+
+export async function getRiskOverview(start_date: string, end_date: string): Promise<APIResponse> {
+  const url = `/api/v1/dashboard/risk-overview?start_date=${start_date}&end_date=${end_date}`;
+  
+  try {
+    const response = await authenticatedApiClient({ method: "GET", url });
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "GET | RISK OVERVIEW", url);
+  }
+}
