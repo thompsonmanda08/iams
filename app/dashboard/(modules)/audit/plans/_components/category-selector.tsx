@@ -21,6 +21,7 @@ import type { TemplateCategory, WorkpaperTemplateDefinition } from "@/lib/types/
 import { getRecommendedCategories } from "@/lib/utils/audit-helpers";
 import { Spinner } from "../../../../../../components/ui/spinner";
 import CustomAlert from "../../../../../../components/ui/custom-alert";
+import { MetadataDisplay } from "@/components/audit/metadata-display";
 
 interface CategorySelectorProps {
   templateId: string;
@@ -154,6 +155,7 @@ export function CategorySelector({
           selectedCategories={selectedCategories}
           onCategoryToggle={handleCategoryToggle}
           disabled={disabled}
+          frameworkType={selectedTemplate?.framework_type || selectedTemplate?.standard || "ISO27001"}
         />
       )}
 
@@ -168,6 +170,7 @@ export function CategorySelector({
           selectedCategories={selectedCategories}
           onCategoryToggle={handleCategoryToggle}
           disabled={disabled}
+          frameworkType={selectedTemplate?.framework_type || selectedTemplate?.standard || "ISO27001"}
         />
       )}
     </div>
@@ -181,6 +184,7 @@ interface CategoryGroupProps {
   selectedCategories: string[];
   onCategoryToggle: (categoryId: string) => void;
   disabled?: boolean;
+  frameworkType?: string;
 }
 
 function CategoryGroup({
@@ -189,7 +193,8 @@ function CategoryGroup({
   categories,
   selectedCategories,
   onCategoryToggle,
-  disabled
+  disabled,
+  frameworkType
 }: CategoryGroupProps) {
   const selectedCount = categories.filter((cat) =>
     selectedCategories.includes(cat.id as string)
@@ -217,6 +222,7 @@ function CategoryGroup({
             selected={selectedCategories.includes(category.id as string)}
             onToggle={onCategoryToggle}
             disabled={disabled}
+            frameworkType={frameworkType}
           />
         ))}
       </div>
@@ -229,9 +235,10 @@ interface CategoryItemProps {
   selected: boolean;
   onToggle: (id: string) => void;
   disabled?: boolean;
+  frameworkType?: string;
 }
 
-function CategoryItem({ category, selected, onToggle, disabled }: CategoryItemProps) {
+function CategoryItem({ category, selected, onToggle, disabled, frameworkType }: CategoryItemProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -282,33 +289,56 @@ function CategoryItem({ category, selected, onToggle, disabled }: CategoryItemPr
                 </div>
               )}
 
-              <div>
-                <span className="text-foreground font-medium">Scope:</span>
-                <p className="text-muted-foreground mt-1">{category.scope}</p>
-              </div>
-
-              <div>
-                <span className="text-foreground font-medium">Objectives:</span>
-                <p className="text-muted-foreground mt-1">{category.objectives}</p>
-              </div>
-
-              <div>
-                <span className="text-foreground font-medium">Audit Procedure:</span>
-                <pre className="text-muted-foreground mt-1 font-sans whitespace-pre-wrap">
-                  {category.audit_procedure}
-                </pre>
-              </div>
-
-              <div>
-                <span className="text-foreground font-medium">Clauses:</span>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {(category.clauses as unknown as string).split(",")?.map((clause) => (
-                    <Badge key={clause} variant="outline" className="text-xs">
-                      {clause}
-                    </Badge>
-                  ))}
+              {/* Display framework-specific metadata */}
+              {frameworkType && category.metadata && (
+                <div>
+                  <span className="text-foreground font-medium">Framework Items:</span>
+                  <div className="mt-2 max-w-md">
+                    <MetadataDisplay metadata={category.metadata} frameworkType={frameworkType} />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Show legacy fields only if metadata is not available */}
+              {(!category.metadata || Object.keys(category.metadata).length === 0) && (
+                <>
+                  {category.scope && (
+                    <div>
+                      <span className="text-foreground font-medium">Scope:</span>
+                      <p className="text-muted-foreground mt-1">{category.scope}</p>
+                    </div>
+                  )}
+
+                  {category.objectives && (
+                    <div>
+                      <span className="text-foreground font-medium">Objectives:</span>
+                      <p className="text-muted-foreground mt-1">{category.objectives}</p>
+                    </div>
+                  )}
+
+                  {category.audit_procedure && (
+                    <div>
+                      <span className="text-foreground font-medium">Audit Procedure:</span>
+                      <pre className="text-muted-foreground mt-1 font-sans whitespace-pre-wrap">
+                        {category.audit_procedure}
+                      </pre>
+                    </div>
+                  )}
+
+                  {category.clauses && (
+                    <div>
+                      <span className="text-foreground font-medium">Clauses:</span>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {(category.clauses as unknown as string).split(",")?.map((clause) => (
+                          <Badge key={clause} variant="outline" className="text-xs">
+                            {clause}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>

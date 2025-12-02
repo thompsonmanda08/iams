@@ -195,120 +195,122 @@ export default function StrategicInitiativeTab(
             {/* <Spinner className="h-8 w-8 " /> */}
           </Loader>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Strategic Initiative</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Strategic Pillar</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead className="w-24" align="center">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {initiatives.length === 0 ? (
+          <div className="bg-card rounded-lg border">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    <Empty>
-                      <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                          <Lightbulb />
-                        </EmptyMedia>
-                        <EmptyTitle>No strategic pillar selected yet</EmptyTitle>
-                        <EmptyDescription>
-                          If you haven&apos;t created any strategic initiatives yet. Get started by
-                          creating your first strategic initiative.
-                        </EmptyDescription>
-                      </EmptyHeader>
-                      <EmptyContent>
-                        <div className="flex items-center gap-2">
-                          <SearchSelectField
-                            placeholder="--Select Strategic Pillar--"
-                            value={pillarId || ""}
-                            onValueChange={setPillarId}
-                            isLoading={loadingPillars}
-                            options={pillars}
-                            className="min-w-60"
-                            classNames={{
-                              wrapper: "min-w-40"
-                            }}
-                          />
-                          <Button
-                            size="sm"
-                            className="h-9"
-                            onClick={() => {
-                              setFormData(null);
-                              setOpenModal(true);
-                            }}>
-                            <Plus className="h-4 w-4" />
-                            New Strategic Initiative
-                          </Button>
-                        </div>
-                      </EmptyContent>
-                    </Empty>
-                  </TableCell>
+                  <TableHead>STRATEGIC INITIATIVE</TableHead>
+                  <TableHead>DESCRIPTION</TableHead>
+                  <TableHead>STRATEGIC PILLAR</TableHead>
+                  <TableHead>DEPARTMENT</TableHead>
+                  <TableHead className="w-24" align="center">
+                    ACTIONS
+                  </TableHead>
                 </TableRow>
-              ) : (
-                initiatives.map((item: any) => {
-                  return (
-                    <TableRow key={item.id} className="cursor-pointer">
-                      <TableCell className="p-3 align-top">
-                        <div className="flex min-w-0 items-start gap-2">
-                          <Lightbulb className="text-muted-foreground h-4 w-4" />
-                          <span className="font-medium">{item.title}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">
-                          {item.description || "No description provided"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">
-                          {item?.pillar || selectedPillar?.title || "No parent pillar"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">
-                          {item?.department_name || departmentName}
-                        </span>
-                      </TableCell>
-                      <TableCell align="center">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              setFormData(item);
-                              setSelectedId(item.id);
-                              setOpenModal(true);
-                              e.stopPropagation();
-                            }}
-                            className="h-8 gap-1.5">
-                            <Edit className="h-3.5 w-3.5" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              handleDeleteClick(String(item.id));
-                              e.stopPropagation();
-                            }}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {initiatives.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyMedia variant="icon">
+                            <Lightbulb />
+                          </EmptyMedia>
+                          <EmptyTitle>No strategic pillar selected yet</EmptyTitle>
+                          <EmptyDescription>
+                            If you haven&apos;t created any strategic initiatives yet. Get started
+                            by creating your first strategic initiative.
+                          </EmptyDescription>
+                        </EmptyHeader>
+                        <EmptyContent>
+                          <div className="flex items-center gap-2">
+                            <SearchSelectField
+                              placeholder="--Select Strategic Pillar--"
+                              value={pillarId || ""}
+                              onValueChange={setPillarId}
+                              isLoading={loadingPillars}
+                              options={pillars}
+                              className="min-w-60"
+                              classNames={{
+                                wrapper: "min-w-40"
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              className="h-9"
+                              onClick={() => {
+                                setFormData(null);
+                                setOpenModal(true);
+                              }}>
+                              <Plus className="h-4 w-4" />
+                              New Strategic Initiative
+                            </Button>
+                          </div>
+                        </EmptyContent>
+                      </Empty>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  initiatives.map((item: any) => {
+                    return (
+                      <TableRow key={item.id} className="cursor-pointer">
+                        <TableCell className="p-3 align-top">
+                          <div className="flex min-w-0 items-start gap-2">
+                            <Lightbulb className="text-muted-foreground h-4 w-4" />
+                            <span className="font-medium">{item.title}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono text-sm">
+                            {item.description || "No description provided"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono text-sm">
+                            {item?.pillar || selectedPillar?.title || "No parent pillar"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono text-sm">
+                            {item?.department_name || departmentName}
+                          </span>
+                        </TableCell>
+                        <TableCell align="center">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                setFormData(item);
+                                setSelectedId(item.id);
+                                setOpenModal(true);
+                                e.stopPropagation();
+                              }}
+                              className="h-8 gap-1.5">
+                              <Edit className="h-3.5 w-3.5" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                handleDeleteClick(String(item.id));
+                                e.stopPropagation();
+                              }}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </Card>
 

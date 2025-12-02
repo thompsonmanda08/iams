@@ -40,7 +40,9 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
   console.log("templates:", template);
 
   // Only show edit button for ISO27001 framework type
-  const isISO27001 = (template.framework_type || template.standard || "").toUpperCase() === "ISO27001";
+  const isISO27001 =
+    template.framework_type.toUpperCase() !== "CUSTOM" ||
+    template.framework_type.toUpperCase() !== "GENERAL";
 
   return (
     <div className="bg-background min-h-screen">
@@ -56,12 +58,20 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
 
             <div className="flex items-center gap-3">
               <BackButton className="mb-0 h-8!" title="Back to Templates" />
-              {isISO27001 && (
+              {isISO27001 ? (
                 <CreateOrUpdateISOTemplateDialog
                   showTrigger={true}
                   initialData={template as WorkpaperTemplate}
                   templateId={id}
                 />
+              ) : (
+                <Link
+                  href={`/dashboard/system-configs/audit-settings/templates/${id}/edit?builderId=GENERAL&framework_type=CUSTOM`}>
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Manage General Template
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
@@ -72,14 +82,14 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           {/* Template Details */}
-          <Card className="border-blue-100 bg-blue-50 p-6">
+          <Card className="border-blue-100 bg-blue-50 p-6 dark:border-blue-950/80 dark:bg-blue-950/10">
             <div className="flex items-center gap-4">
               {template.is_active ? (
                 <Badge className="bg-green-500">Active</Badge>
               ) : (
                 <Badge variant="secondary">Inactive</Badge>
               )}
-              <Badge variant="outline" className="bg-white">
+              <Badge variant="warning">
                 {template.framework_type || template.standard || "ISO27001"}
               </Badge>
             </div>
@@ -132,13 +142,27 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   Categories ({categories.length})
                 </TabsTrigger>
               </TabsList>
-              <Link
-                href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
-                <Button size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Category
-                </Button>
-              </Link>
+              {isISO27001 ? (
+                <Link
+                  href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Category
+                  </Button>
+                </Link>
+              ) : (
+                <Link
+                  href={`/dashboard/system-configs/audit-settings/templates/${id}/edit?builderId=${(
+                    template.framework_type ||
+                    template.standard ||
+                    ""
+                  ).toUpperCase()}&framework_type=${(template.framework_type || template.standard || "").toUpperCase()}`}>
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Manage Categories
+                  </Button>
+                </Link>
+              )}
             </div>
 
             <TabsContent value="categories" className="space-y-">

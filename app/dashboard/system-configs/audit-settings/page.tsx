@@ -6,7 +6,6 @@ import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
 import {
   getStrategicPillars,
   getStrategicInitiatives,
-  getFindingsCategories,
   getProcessActivities,
   getIndicativeTargets,
   getAuditableAreas
@@ -15,19 +14,10 @@ import AuditableAreaConfig from "./_components/auditable-areas-tab";
 import IndicativeTargetsTab from "./_components/indicative-targets-tab";
 import StrategicPillarsTab from "./_components/strategic-pillars-tab";
 import StrategicInitiativeTab from "./_components/strategic-initiative-tab";
-import FindingsCategoryTab from "./_components/findings-category-tab";
 import ProcessActivityTab from "./_components/process-activity-tab";
 import WorkpaperTemplatesTab from "./_components/workpaper-templates-tab";
 import PageHeader from "@/components/page-header";
-import {
-  FileText,
-  MapPin,
-  Target,
-  Building2,
-  Lightbulb,
-  AlertCircle,
-  Workflow
-} from "lucide-react";
+import { FileText, MapPin, Target, Building2, Lightbulb, Workflow } from "lucide-react";
 
 type PageProps = {
   params: Promise<{ [key: string]: string }>;
@@ -47,7 +37,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     initiativesResponse, //5
     townsResponse, // 6
     departmentsResponse, //7
-    categoriesResponse, //8
+    // categoriesResponse, //8
     processActivitiesResponse //9
   ] = await Promise.all([
     getWorkingPaperTemplates(), //1
@@ -59,7 +49,7 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     getDepartments(), //7
     // getBranches({ page, page_size }),
     // getProvinces(),
-    getFindingsCategories(),
+    // getFindingsCategories(),
     getProcessActivities()
   ]);
 
@@ -84,11 +74,11 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
     ? initiativesResponse.data?.data || []
     : [];
 
-  const findingsCategories = categoriesResponse.success ? categoriesResponse.data?.data : [];
+  // const findingsCategories = categoriesResponse.success ? categoriesResponse.data?.data : [];
 
-  const findingsCategoriesPagination = categoriesResponse.success
-    ? categoriesResponse.data?.pagination
-    : null;
+  // const findingsCategoriesPagination = categoriesResponse.success
+  //   ? categoriesResponse.data?.pagination
+  //   : null;
 
   const processActivities = processActivitiesResponse.success
     ? processActivitiesResponse.data?.data || []

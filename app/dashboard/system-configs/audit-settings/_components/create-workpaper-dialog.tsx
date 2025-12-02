@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, PencilLine } from "lucide-react";
 import {
@@ -16,7 +18,6 @@ export function CreateOrUpdateISOTemplateDialog({
   setOpenModal,
   initialData = null,
   templateId = "",
-  setInitialData
 }: {
   showTrigger?: boolean;
   openModal?: boolean;
@@ -25,86 +26,15 @@ export function CreateOrUpdateISOTemplateDialog({
   setInitialData?: React.Dispatch<React.SetStateAction<WorkpaperTemplate | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  // const queryClient = useQueryClient();
-  // const [error, setError] = useState<ErrorState>({
-  //   status: false,
-  //   message: ""
-  // });
-  // const [formData, setFormData] = useState<Omit<WorkpaperTemplate, "id">>(INIT_WORKPAPER_TEMPLATE);
+  // Internal state for when setOpenModal is not provided
+  const [internalOpenModal, setInternalOpenModal] = useState(false);
 
-  // PRE-POPULATE FORM DATA - Fixed to respond to prop changes
-  // useEffect(() => {
-  //   if (initialData && templateId) {
-  //     setFormData({
-  //       // id: initialData.id,
-  //       name: initialData.name || "",
-  //       version: initialData.version || "",
-  //       description: initialData.description || "",
-  //       standard: initialData.standard || "",
-  //       is_active: initialData.is_active || true,
-  //       framework_type: initialData.framework_type || "ISO27001"
-  //     });
-  //   } else {
-  //     setFormData(INIT_WORKPAPER_TEMPLATE);
-  //   }
-  //   setError({ status: false, message: "" });
-  // }, [initialData, templateId, openModal]); // Added dependencies
-
-  // Reset form when modal closes
-  // useEffect(() => {
-  //   if (!openModal) {
-  //     // Small delay to allow animation to complete
-  //     const timer = setTimeout(() => {
-  //       setFormData(INIT_WORKPAPER_TEMPLATE);
-  //       setError({ status: false, message: "" });
-  //       setInitialData?.(null);
-  //     }, 200);
-
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [openModal, setInitialData]);
-
-  // Create/Update mutation
-  // const saveMutation = useMutation({
-  //   mutationFn: (data: Omit<WorkpaperTemplate, "id">) => {
-  //     return initialData && templateId
-  //       ? updateWorkingPaperTemplate(templateId, data)
-  //       : createWorkingPaperTemplate(data);
-  //   },
-  //   onSuccess: (response) => {
-  //     if (response.success) {
-  //       notify({
-  //         title: "Success",
-  //         description: `Working paper template ${templateId ? "updated" : "created"} successfully`
-  //       });
-  //       // queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
-  //       setOpenModal?.(false);
-  //       setInitialData?.(null);
-  //       setFormData(INIT_WORKPAPER_TEMPLATE);
-  //       setError({ status: false, message: "" });
-  //     } else {
-  //       notify({
-  //         title: "Error",
-  //         description: response.message || `Failed to ${templateId ? "update" : "create"} template`,
-  //         type: "error"
-  //       });
-  //       setError({ status: true, message: response.message });
-  //     }
-  //   },
-  //   onError: (error) => {
-  //     toast.error("An error occurred");
-  //     setError({ status: true, message: "An unexpected error occurred" });
-  //     console.error("Error saving department:", error);
-  //   }
-  // });
-
-  // async function handleCreateOrUpdate(e: React.FormEvent) {
-  //   e.preventDefault();
-  //   saveMutation.mutate(formData);
-  // }
+  // Use external state if provided, otherwise use internal state
+  const isOpen = setOpenModal !== undefined ? openModal : internalOpenModal;
+  const handleOpenChange = setOpenModal !== undefined ? setOpenModal : setInternalOpenModal;
 
   return (
-    <Dialog open={openModal} onOpenChange={setOpenModal}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {showTrigger && (
         <DialogTrigger asChild>
           <Button size="sm">
@@ -217,6 +147,12 @@ export function CreateOrUpdateISOTemplateDialog({
         <ComplianceWorkpaperTemplateForm
           templateId={String(templateId)}
           initialData={initialData}
+          onSuccess={() => {
+            handleOpenChange(false);
+          }}
+          onCancel={() => {
+            handleOpenChange(false);
+          }}
         />
       </DialogContent>
     </Dialog>

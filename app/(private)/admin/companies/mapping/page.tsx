@@ -2,6 +2,7 @@ import CompanyMapping from "./mapping";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PageHeader from "@/components/page-header";
+import { Building2 } from "lucide-react";
 // import { getOrganizations, getCountries } from "@/app/_actions/backoffice-actions";
 // import { getProvinces, getTowns } from "@/app/_actions/config-actions";
 
@@ -58,7 +59,14 @@ async function CompanyMappingPage() {
             <PageHeader
               title="Company Location Mapping"
               description="All Institutions and Organizations onboarded in the IAMS system"
-              icon="Building2"
+              customIcon={
+                <div className="relative">
+                  <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
+                  <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
+                    <Building2 className="h-7 w-7 text-white" strokeWidth={2.5} />
+                  </div>
+                </div>
+              }
             />
             {/* <MultiStepCompanyForm showTrigger={true} company={null} /> */}
           </div>

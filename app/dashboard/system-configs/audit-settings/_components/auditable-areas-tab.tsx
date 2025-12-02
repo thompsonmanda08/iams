@@ -152,126 +152,127 @@ export default function AuditableAreaConfig({
           </Button>
         </div>
 
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-1/4">Auditable Area</TableHead>
-              <TableHead className="w-1/3">Description</TableHead>
-              <TableHead className="w-1/4">Department</TableHead>
-              {/* <TableHead>Status</TableHead> */}
-              <TableHead className="w-[120px]" align="center">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {!items || items?.length === 0 ? (
+        <div className="bg-card rounded-lg border">
+          <Table className="table-fixed">
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Building />
-                      </EmptyMedia>
-                      <EmptyTitle>No areas yet</EmptyTitle>
-                      <EmptyDescription>
-                        You haven&apos;t created any areas yet. Get started by creating your first
-                        auditable area.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setFormData(null);
-                            setOpenModal(true);
-                          }}>
-                          <Plus className="h-4 w-4" /> Create New Auditable Area
-                        </Button>
-                      </div>
-                    </EmptyContent>
-                  </Empty>
-                </TableCell>
+                <TableHead className="w-1/4">AUDITABLE AREA</TableHead>
+                <TableHead className="w-1/3">DESCRIPTION</TableHead>
+                <TableHead className="w-1/4">DEPARTMENT</TableHead>
+                <TableHead className="w-[120px] text-center" align="center">
+                  ACTIONS
+                </TableHead>
               </TableRow>
-            ) : (
-              items &&
-              items?.map((item) => {
-                const departmentName =
-                  item?.department ||
-                  departments.find((d) => d.id === item.department_id)?.name ||
-                  "No parent department";
-                return (
-                  <TableRow
-                    key={item.id}
-                    className="cursor-pointer"
-                    // onClick={() => {
-                    //   router.push(`/dashboard/system-configs/items/${item.id}`);
-                    // }}
-                  >
-                    <TableCell className="p-3 align-top">
-                      <div className="flex min-w-0 items-start gap-2">
-                        <Building className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-                        <div className="line-clamp-6 min-w-0 flex-1 font-medium">
-                          {item.name || item?.title}
+            </TableHeader>
+            <TableBody>
+              {!items || items?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <Building />
+                        </EmptyMedia>
+                        <EmptyTitle>No areas yet</EmptyTitle>
+                        <EmptyDescription>
+                          You haven&apos;t created any areas yet. Get started by creating your first
+                          auditable area.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                      <EmptyContent>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setFormData(null);
+                              setOpenModal(true);
+                            }}>
+                            <Plus className="h-4 w-4" /> Create New Auditable Area
+                          </Button>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="p-3 align-top">
-                      <div className="line-clamp-6 min-w-0 font-mono text-sm">
-                        {item.description || "No description provided"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="p-3 align-top">
-                      <div className="line-clamp-6 min-w-0 font-mono text-sm">
-                        {item?.department_name || "No parent department"}
-                      </div>
-                    </TableCell>
-                    {/* <TableCell>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium",
-                        item.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      )}>
-                      {item.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </TableCell> */}
-                    <TableCell align="center">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            setFormData(item);
-                            setAreaId(item.id);
-                            setOpenModal(true);
-                            e.stopPropagation();
-                          }}
-                          className="h-8 gap-1.5">
-                          <Edit className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            handleDeleteClick(String(item.id));
-                            e.stopPropagation();
-                          }}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                      </EmptyContent>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items &&
+                items?.map((item) => {
+                  const departmentName =
+                    item?.department ||
+                    departments.find((d) => d.id === item.department_id)?.name ||
+                    "No parent department";
+                  return (
+                    <TableRow
+                      key={item.id}
+                      className="cursor-pointer"
+                      // onClick={() => {
+                      //   router.push(`/dashboard/system-configs/items/${item.id}`);
+                      // }}
+                    >
+                      <TableCell className="p-3 align-top">
+                        <div className="flex min-w-0 items-start gap-2">
+                          <Building className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+                          <div className="line-clamp-6 min-w-0 flex-1 font-medium">
+                            {item.name || item?.title}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-3 align-top">
+                        <div className="line-clamp-6 min-w-0 font-mono text-sm">
+                          {item.description || "No description provided"}
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-3 align-top">
+                        <div className="line-clamp-6 min-w-0 font-mono text-sm">
+                          {item?.department_name || "No parent department"}
+                        </div>
+                      </TableCell>
+                      {/* <TableCell>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-1 text-xs font-medium",
+                          item.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700"
+                        )}>
+                        {item.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </TableCell> */}
+                      <TableCell align="center">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              setFormData(item);
+                              setAreaId(item.id);
+                              setOpenModal(true);
+                              e.stopPropagation();
+                            }}
+                            className="h-8 gap-1.5">
+                            <Edit className="h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              handleDeleteClick(String(item.id));
+                              e.stopPropagation();
+                            }}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       <CreateOrUpdateArea

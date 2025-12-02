@@ -49,42 +49,34 @@ interface MetadataDisplayProps {
 
 export function MetadataDisplay({ metadata, frameworkType = "iso27001" }: MetadataDisplayProps) {
   const normalizedFrameworkType = frameworkType.toLowerCase();
-  const config = FRAMEWORK_FIELD_CONFIGS[normalizedFrameworkType as keyof typeof FRAMEWORK_FIELD_CONFIGS];
+  const config =
+    FRAMEWORK_FIELD_CONFIGS[normalizedFrameworkType as keyof typeof FRAMEWORK_FIELD_CONFIGS];
 
   if (!config) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        Unknown framework type: {frameworkType}
-      </p>
-    );
+    return <p className="text-muted-foreground text-sm">Unknown framework type: {frameworkType}</p>;
   }
 
   const items = metadata?.[normalizedFrameworkType] || [];
 
   if (!items || items.length === 0) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        No {config.label} items defined
-      </p>
-    );
+    return <p className="text-muted-foreground text-sm">No {config.label} items defined</p>;
   }
 
+  const displayItems = items.slice(0, 3);
+  const remainingCount = items.length - 3;
+
   return (
-    <div className="space-y-2">
-      {items.map((item: Record<string, any>, idx: number) => (
-        <div key={idx} className="flex flex-wrap gap-2 rounded-lg border bg-slate-50 p-3">
-          {config.fields.map((field) => (
-            <div key={field.name} className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs font-medium">
-                {field.shortLabel}:
-              </span>
-              <Badge variant="secondary" className="text-xs">
-                {item[field.name] || "-"}
-              </Badge>
-            </div>
-          ))}
-        </div>
+    <div className="flex flex-wrap gap-2">
+      {displayItems.map((item: Record<string, any>, idx: number) => (
+        <Badge key={idx} variant="info" className="px-2 py-1 text-xs">
+          {item[config.fields[0].name] || "-"}
+        </Badge>
       ))}
+      {remainingCount > 0 && (
+        <Badge variant="outline" className="px-2 py-1 text-xs">
+          +{remainingCount} others
+        </Badge>
+      )}
     </div>
   );
 }

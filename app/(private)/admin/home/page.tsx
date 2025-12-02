@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LayoutDashboard } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Admin Home",
@@ -68,7 +69,14 @@ async function AdminDashboardHomePage() {
             <PageHeader
               title="Dashboard Overview"
               description="A summary of key metrics and statistics for your dashboard."
-              icon="LayoutDashboard"
+              customIcon={
+                <div className="relative">
+                  <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
+                  <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
+                    <LayoutDashboard className="h-7 w-7 text-white" strokeWidth={2.5} />
+                  </div>
+                </div>
+              }
             />
           </div>
         </div>

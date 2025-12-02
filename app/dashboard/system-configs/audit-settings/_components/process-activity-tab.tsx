@@ -163,124 +163,125 @@ export default function ProcessActivityTab({
           </Button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Process Name</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Strategic Pillar</TableHead>
-              <TableHead>Auditable Area</TableHead>
-
-              <TableHead className="text-right" align="center">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.length === 0 ? (
+        <div className="bg-card rounded-lg border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Workflow />
-                      </EmptyMedia>
-                      <EmptyTitle>No processes yet</EmptyTitle>
-                      <EmptyDescription>
-                        You haven&apos;t created any processes yet. Get started by creating your
-                        first process/activity.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setFormData(null);
-                            setOpenModal(true);
-                          }}>
-                          <Plus className="h-4 w-4" /> Create New Process/Activity
-                        </Button>
-                      </div>
-                    </EmptyContent>
-                  </Empty>
-                </TableCell>
+                <TableHead>PROCESS NAME / ACTIVITY</TableHead>
+                <TableHead>DEPARTMENT</TableHead>
+                <TableHead>STRATEGIC PILLAR</TableHead>
+                <TableHead>AUDITABLE AREA</TableHead>
+                <TableHead className="text-right" align="center">
+                  ACTIONS
+                </TableHead>
               </TableRow>
-            ) : (
-              items.map((item: any) => {
-                return (
-                  <TableRow key={item.id} className="cursor-pointer">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Workflow className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.title}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">
-                        {item?.department_name || "No parent department"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">
-                        {getPillarName(item.strategic_pillar_id)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">
-                        {getAuditableArea(item.auditable_area_id)}
-                      </span>
-                    </TableCell>
-                    {/* <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {activities.slice(0, 3).map((activity: string, idx: number) => (
-                          <span
-                            key={idx}
-                            className="bg-primary/10 rounded-full px-2 py-0.5 text-xs">
-                            {activity}
-                          </span>
-                        ))}
-                        {activities.length > 3 && (
-                          <span className="text-muted-foreground text-xs">
-                            +{activities.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </TableCell> */}
-                    <TableCell align="center">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            setFormData(item);
-                            setSelectedId(item.id);
-                            setOpenModal(true);
-                            e.stopPropagation();
-                          }}
-                          className="h-8 gap-1.5">
-                          <Edit className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            handleDeleteClick(String(item.id));
-                            e.stopPropagation();
-                          }}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <Workflow />
+                        </EmptyMedia>
+                        <EmptyTitle>No processes yet</EmptyTitle>
+                        <EmptyDescription>
+                          You haven&apos;t created any processes yet. Get started by creating your
+                          first process/activity.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                      <EmptyContent>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setFormData(null);
+                              setOpenModal(true);
+                            }}>
+                            <Plus className="h-4 w-4" /> Create New Process/Activity
+                          </Button>
+                        </div>
+                      </EmptyContent>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((item: any) => {
+                  return (
+                    <TableRow key={item.id} className="cursor-pointer">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Workflow className="text-muted-foreground h-4 w-4" />
+                          <span className="font-medium">{item.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {item?.department_name || "No parent department"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {getPillarName(item.strategic_pillar_id)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {getAuditableArea(item.auditable_area_id)}
+                        </span>
+                      </TableCell>
+                      {/* <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {activities.slice(0, 3).map((activity: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="bg-primary/10 rounded-full px-2 py-0.5 text-xs">
+                              {activity}
+                            </span>
+                          ))}
+                          {activities.length > 3 && (
+                            <span className="text-muted-foreground text-xs">
+                              +{activities.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </TableCell> */}
+                      <TableCell align="center">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              setFormData(item);
+                              setSelectedId(item.id);
+                              setOpenModal(true);
+                              e.stopPropagation();
+                            }}
+                            className="h-8 gap-1.5">
+                            <Edit className="h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              handleDeleteClick(String(item.id));
+                              e.stopPropagation();
+                            }}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       <CreateOrUpdate

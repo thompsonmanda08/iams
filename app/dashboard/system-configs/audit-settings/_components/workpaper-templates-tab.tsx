@@ -7,6 +7,7 @@ import { Pagination } from "@/lib/types";
 import type { CustomTemplate } from "@/lib/types/audit-types";
 import { WorkpaperTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-template-dialog";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
+import { Card } from "@/components/ui/card";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -77,9 +78,14 @@ export default function WorkpaperTemplatesTab({
 
   return (
     <>
-      <div className="p-4">
+      <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
-          {templates.length !== 0 && <h3 className="text-lg font-semibold">Workpaper Templates</h3>}
+          <div className="space-y-1">
+            <h4 className="text-sm leading-none font-medium">Workpaper Templates</h4>
+            <p className="text-muted-foreground text-sm">
+              Showing {templates.length} workpaper{templates.length !== 1 ? "s" : ""}
+            </p>
+          </div>
           <Button className="ml-auto gap-2" onClick={handleOpenCreateDialog}>
             <Plus className="h-4 w-4" />
             Create Workpaper Template
@@ -87,24 +93,10 @@ export default function WorkpaperTemplatesTab({
         </div>
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-6">
-            {/* Results Summary */}
-            {templates && templates.length > 0 && (
-              <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-sm">
-                  Showing {templates.length} workpaper{templates.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-            )}
-
-            {/* Table */}
-            <WorkpaperTemplatesTable
-              templates={templates || []}
-              onCreateClick={handleOpenCreateDialog}
-            />
-          </div>
-        </div>
+        <WorkpaperTemplatesTable
+          templates={templates || []}
+          onCreateClick={handleOpenCreateDialog}
+        />
 
         {/* Create Workpaper Template Selection Dialog */}
         <WorkpaperTemplateDialog
@@ -113,7 +105,7 @@ export default function WorkpaperTemplatesTab({
           // audits={audits}
           customTemplates={mockCustomTemplates}
         />
-      </div>
+      </Card>
     </>
   );
 }

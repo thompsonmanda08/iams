@@ -150,103 +150,104 @@ export default function IndicativeTargetsTab({
           </Button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Indicative Target</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Department</TableHead>
-              {/* <TableHead>Status</TableHead> */}
-              <TableHead className="w-24" align="center">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.length === 0 ? (
+        <div className="bg-card rounded-lg border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Target />
-                      </EmptyMedia>
-                      <EmptyTitle>No indicative targets yet</EmptyTitle>
-                      <EmptyDescription>
-                        You haven&apos;t created any indicative targets yet. Get started by creating
-                        your first Indicative Target.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setFormData(null);
-                            setOpenModal(true);
-                          }}>
-                          <Plus className="h-4 w-4" /> Create New Indicative Target
-                        </Button>
-                      </div>
-                    </EmptyContent>
-                  </Empty>
-                </TableCell>
+                <TableHead>INDICATIVE TARGET</TableHead>
+                <TableHead>DESCRIPTION</TableHead>
+                <TableHead>DEPARTMENT</TableHead>
+                <TableHead className="w-24 text-center" align="center">
+                  ACTIONS
+                </TableHead>
               </TableRow>
-            ) : (
-              items.map((item) => {
-                return (
-                  <TableRow key={item.id} className="cursor-pointer">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Target className="text-muted-foreground h-4 w-4" />
-                        <span className="font-medium">{item.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">
-                        {item.description || "No description provided"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">
-                        {getDepartmentName(item.department_id)}
-                      </span>
-                    </TableCell>
+            </TableHeader>
+            <TableBody>
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <Target />
+                        </EmptyMedia>
+                        <EmptyTitle>No indicative targets yet</EmptyTitle>
+                        <EmptyDescription>
+                          You haven&apos;t created any indicative targets yet. Get started by
+                          creating your first Indicative Target.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                      <EmptyContent>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setFormData(null);
+                              setOpenModal(true);
+                            }}>
+                            <Plus className="h-4 w-4" /> Create New Indicative Target
+                          </Button>
+                        </div>
+                      </EmptyContent>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((item) => {
+                  return (
+                    <TableRow key={item.id} className="cursor-pointer">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Target className="text-muted-foreground h-4 w-4" />
+                          <span className="font-medium">{item.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {item.description || "No description provided"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {getDepartmentName(item.department_id)}
+                        </span>
+                      </TableCell>
 
-                    <TableCell align="center">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            setFormData(item);
-                            setSelectedId(item.id);
-                            setOpenModal(true);
-                            e.stopPropagation();
-                          }}
-                          className="h-8 gap-1.5">
-                          <Edit className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            handleDeleteClick(String(item.id));
-                            e.stopPropagation();
-                          }}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                      <TableCell align="center">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              setFormData(item);
+                              setSelectedId(item.id);
+                              setOpenModal(true);
+                              e.stopPropagation();
+                            }}
+                            className="h-8 gap-1.5">
+                            <Edit className="h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              handleDeleteClick(String(item.id));
+                              e.stopPropagation();
+                            }}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       <CreateOrUpdate

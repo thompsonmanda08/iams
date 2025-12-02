@@ -1,15 +1,21 @@
 import { AlertCircle } from "lucide-react";
 import PageHeader from "@/components/page-header";
-import { ISOWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
-import { CustomTemplateBuilder } from "../../../_components/custom-template-builder";
 import { getWorkingPaperTemplate } from "@/app/_actions/audit-module-actions";
 import { notFound } from "next/navigation";
 import type { WorkpaperBuilderTemplateId } from "@/lib/types/audit-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ComplianceWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
 
-export default async function UpdateTemplatePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function UpdateTemplatePage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { id: templateId } = await params;
+  const { framework_type } = await searchParams;
 
   // Fetch the template data
   const templateResponse = await getWorkingPaperTemplate(templateId);
@@ -38,8 +44,6 @@ export default async function UpdateTemplatePage({ params }: { params: Promise<{
         ? "Update General Workpaper Template"
         : "Update Custom Workpaper Template";
 
-  console.log(template);
-
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -53,8 +57,8 @@ export default async function UpdateTemplatePage({ params }: { params: Promise<{
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* {builderId === "ISO27001" && (
-          <ISOWorkpaperTemplateForm templateId={templateId} initialData={template} />
+        {builderId === "ISO27001" && (
+          <ComplianceWorkpaperTemplateForm templateId={templateId} initialData={template} />
         )}
 
         {builderId === "GENERAL" && (
@@ -70,19 +74,19 @@ export default async function UpdateTemplatePage({ params }: { params: Promise<{
               </Alert>
               <div className="mt-6 space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Template Name</p>
+                  <p className="text-muted-foreground text-sm font-medium">Template Name</p>
                   <p className="text-lg">{template.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Description</p>
+                  <p className="text-muted-foreground text-sm font-medium">Description</p>
                   <p className="text-sm">{template.description || "No description"}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Version</p>
+                  <p className="text-muted-foreground text-sm font-medium">Version</p>
                   <p className="text-sm">{template.version || "1.0"}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <p className="text-muted-foreground text-sm font-medium">Status</p>
                   <p className="text-sm">{template.is_active ? "Active" : "Inactive"}</p>
                 </div>
               </div>
@@ -93,11 +97,10 @@ export default async function UpdateTemplatePage({ params }: { params: Promise<{
         {builderId === "CUSTOM" && (
           <Card>
             <CardContent className="pt-6">
-              <CustomTemplateBuilder initialData={template as any} />
+              {/* <CustomTemplateBuilder initialData={template as any} /> */}
             </CardContent>
           </Card>
-        )} */}
-        <ISOWorkpaperTemplateForm templateId={templateId} initialData={template} />
+        )}
       </div>
     </div>
   );

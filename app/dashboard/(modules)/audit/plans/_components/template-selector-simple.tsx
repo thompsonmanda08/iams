@@ -188,6 +188,11 @@ export function TemplateSelectorSimple({
                               v{template.version}
                             </Badge>
                           )}
+                          {(template.framework_type || template.standard) && (
+                            <Badge className="text-xs font-normal">
+                              {template.framework_type || template.standard}
+                            </Badge>
+                          )}
                         </CardTitle>
                         <CardDescription className="mt-1">{template.description}</CardDescription>
                       </div>

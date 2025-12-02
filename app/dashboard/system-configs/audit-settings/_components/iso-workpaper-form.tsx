@@ -36,7 +36,9 @@ const INIT_WORKPAPER_TEMPLATE: Omit<WorkpaperTemplate, "id"> = {
 
 export function ComplianceWorkpaperTemplateForm({
   templateId,
-  initialData
+  initialData,
+  onSuccess,
+  onCancel
 }: {
   templateId: string | null;
   initialData?: WorkpaperTemplate | null;
@@ -75,13 +77,13 @@ export function ComplianceWorkpaperTemplateForm({
       if (response.success) {
         notify({
           title: "Success",
-          description: `Working paper template ${templateId ? "updated" : "created"} successfully`
+          description: `Working paper template ${templateId ? "updated" : "created"} successfully`,
+          type: "success"
         });
         // queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
-        // setOpenModal?.(false);
-        // setInitialData?.(null);
         setFormData(INIT_WORKPAPER_TEMPLATE);
         setError({ status: false, message: "" });
+        onSuccess?.();
       } else {
         notify({
           title: "Error",
@@ -126,7 +128,7 @@ export function ComplianceWorkpaperTemplateForm({
               />
               <Input
                 id="version"
-                label="Vision"
+                label="Version"
                 classNames={{
                   wrapper: "max-w-xs w-full flex-[0.5]"
                 }}
@@ -179,14 +181,17 @@ export function ComplianceWorkpaperTemplateForm({
             <Button
               type="button"
               variant="destructive"
-              onClick={() => router.back()}
+              onClick={() => {
+                onCancel?.();
+                router.back();
+              }}
               disabled={isSubmitting}>
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              isLoading={isSubmitting}
+              isLoading={isSubmitting || saveMutation.isPending}
               loadingText="Saving...">
               {templateId ? "Update Template" : "Create Template"}
             </Button>

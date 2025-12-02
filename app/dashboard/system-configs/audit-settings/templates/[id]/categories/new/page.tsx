@@ -123,10 +123,11 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
 
   // Get framework type from template data or use default
   let frameworkType = "iso27001";
-  if (templateResponse?.data?.framework_type) {
-    frameworkType = templateResponse.data.framework_type.toLowerCase();
-  } else if (templateResponse?.data?.standard) {
-    frameworkType = templateResponse.data.standard.toLowerCase();
+  const templateData = templateResponse?.data?.data || templateResponse?.data;
+  if (templateData?.framework_type) {
+    frameworkType = templateData.framework_type.toLowerCase();
+  } else if (templateData?.standard) {
+    frameworkType = templateData.standard.toLowerCase();
   }
 
   const [formData, setFormData] = useState<TemplateCategory>(

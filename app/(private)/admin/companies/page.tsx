@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import Companies from "./companies";
 import PageHeader from "@/components/page-header";
 import Link from "next/link";
@@ -41,7 +41,14 @@ async function CompaniesPage() {
             <PageHeader
               title="Companies, Institutions & Organizations"
               description="All Institutions and Organizations onboarded in the IAMS system"
-              icon="Building2"
+              customIcon={
+                <div className="relative">
+                  <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
+                  <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
+                    <Building2 className="h-7 w-7 text-white" strokeWidth={2.5} />
+                  </div>
+                </div>
+              }
             />
             <MultiStepCompanyForm showTrigger={true} company={null} />
           </div>

@@ -130,10 +130,22 @@ export function TemplateCategoriesTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px]">Order</TableHead>
-            <TableHead>Category Name</TableHead>
-            <TableHead>Framework Items</TableHead>
-            <TableHead className="w-20">Actions</TableHead>
+            <TableHead className="w-[50px]">ORDER</TableHead>
+            <TableHead>NAME</TableHead>
+            <TableHead>
+              {frameworkType == "ISO27001"
+                ? "ISO 27001 CLAUSES"
+                : frameworkType == "COBIT"
+                  ? "COBIT FRAMEWORK ITEMS"
+                  : frameworkType == "COSO"
+                    ? "COSO FRAMEWORK ITEMS"
+                    : frameworkType == "NIST"
+                      ? "NIST FRAMEWORK ITEMS"
+                      : "FRAMEWORK ITEMS"}
+            </TableHead>
+            <TableHead className="w-[80px] text-center" align="center">
+              ACTIONS
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

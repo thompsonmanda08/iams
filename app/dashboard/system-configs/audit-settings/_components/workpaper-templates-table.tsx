@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, View, ClipboardCheck, Plus } from "lucide-react";
+import { CreateOrUpdateISOTemplateDialog } from "./create-workpaper-dialog";
 import { format } from "date-fns";
 import Link from "next/link";
 import {
@@ -38,6 +39,7 @@ interface WorkingPaperTemplate {
   description?: string;
   version?: string;
   is_active?: boolean;
+  framework_type?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -58,10 +60,26 @@ export function WorkpaperTemplatesTable({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<WorkingPaperTemplate | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [templateToEdit, setTemplateToEdit] = useState<WorkingPaperTemplate | null>(null);
 
   const handleDeleteClick = (template: WorkingPaperTemplate) => {
     setTemplateToDelete(template);
     setDeleteDialogOpen(true);
+  };
+
+  const handleEditClick = (template: WorkingPaperTemplate) => {
+    const frameworkType = (template.framework_type || "").toUpperCase();
+    const isStandardFramework = ["ISO27001", "COSO", "COBIT", "NIST"].includes(frameworkType);
+
+    if (isStandardFramework) {
+      // Open modal for standard frameworks
+      setTemplateToEdit(template);
+      setIsEditModalOpen(true);
+    } else {
+      // Route to edit page for custom/general frameworks
+      router.push(`/dashboard/system-configs/audit-settings/templates/${template.id}/edit`);
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -152,13 +170,13 @@ export function WorkpaperTemplatesTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Template Name</TableHead>
-            <TableHead>Standard</TableHead>
-            <TableHead>Version</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Updated</TableHead>
+            <TableHead>TEMPLATE NAME</TableHead>
+            <TableHead>STANDARD / FRAMEWORK TYPE</TableHead>
+            <TableHead>VERSION</TableHead>
+            <TableHead>STATUS</TableHead>
+            <TableHead>LAST UPDATED</TableHead>
             <TableHead className="w-[80px] text-center" align="center">
-              Actions
+              ACTIONS
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -218,17 +236,11 @@ export function WorkpaperTemplatesTable({
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(
-                        `/dashboard/system-configs/audit-settings/templates/${template.id}/edit`
-                      );
+                      handleEditClick(template);
                     }}
                     className="h-8 gap-1.5">
-                    <Link
-                      href={`/dashboard/system-configs/audit-settings/templates/${template.id}/edit`}
-                      className="flex cursor-pointer items-center gap-2">
-                      <Pencil className="h-3.5 w-3.5" />
-                      Edit
-                    </Link>
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
                   </Button>
                   <Button
                     size="sm"
@@ -275,6 +287,16 @@ export function WorkpaperTemplatesTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Modal for Standard Frameworks */}
+      {templateToEdit && (
+        <CreateOrUpdateISOTemplateDialog
+          openModal={isEditModalOpen}
+          setOpenModal={setIsEditModalOpen}
+          initialData={templateToEdit as any}
+          templateId={templateToEdit.id}
+        />
+      )}
     </div>
   );
 }
