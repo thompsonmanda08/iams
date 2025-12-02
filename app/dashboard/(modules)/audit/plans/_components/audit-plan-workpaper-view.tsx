@@ -880,6 +880,7 @@ export function AuditPlanWorkpaperView({
                       auditPlan={auditPlan}
                       finding={editingFinding}
                       onEditComplete={() => setEditingFinding(null)}
+                      isModal={true}
                     />
                   )}
                 </DialogContent>

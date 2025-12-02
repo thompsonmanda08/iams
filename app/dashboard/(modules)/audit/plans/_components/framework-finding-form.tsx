@@ -35,6 +35,7 @@ interface FrameworkFindingFormProps {
   auditPlan: AuditPlan;
   finding: WorkpaperFinding | null;
   onEditComplete?: () => void;
+  isModal?: boolean; // When true, form is expanded by default
 }
 
 const SEVERITY_OPTIONS = [
@@ -60,7 +61,8 @@ export function FrameworkFindingForm({
   category,
   auditPlan,
   finding,
-  onEditComplete
+  onEditComplete,
+  isModal = false
 }: FrameworkFindingFormProps) {
   const queryClient = useQueryClient();
   const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
@@ -70,7 +72,7 @@ export function FrameworkFindingForm({
   const config = getFrameworkFieldConfig(framework);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [isFormExpanded, setIsFormExpanded] = useState(false);
+  const [isFormExpanded, setIsFormExpanded] = useState(isModal);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [responsiblePersonName, setResponsiblePersonName] = useState("");
 
