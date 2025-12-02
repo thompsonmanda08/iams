@@ -75,6 +75,8 @@ type AuditPlanFormData = {
   selectedCategories: string[];
 };
 
+type FieldErrors = Partial<Record<keyof AuditPlanFormData, string>>;
+
 const STEPS = [
   { id: 1, name: "Basic Details", icon: Calendar },
   { id: 2, name: "Template Selection", icon: FileText },
@@ -129,6 +131,9 @@ export default function NewAuditPlanPage() {
   // Store the complete template object with categories from template selector
   const [selectedTemplateWithCategories, setSelectedTemplateWithCategories] =
     useState<WorkpaperTemplateDefinition | null>(null);
+
+  // Field validation errors
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   // Fetch universes dynamically for the dropdown
   const { data: universesResponse, isLoading: loadingUniverses } = useUniverses();
@@ -186,41 +191,95 @@ export default function NewAuditPlanPage() {
   const selectedTemplate: WorkpaperTemplateDefinition =
     fullTemplateResponse?.data ?? ({} as WorkpaperTemplateDefinition);
 
+  const validateStep1 = (): boolean => {
+    const errors: FieldErrors = {};
+    let hasErrors = false;
+
+    if (!formData.title) {
+      errors.title = "Audit plan title is required";
+      hasErrors = true;
+    }
+    if (!formData.ref_no) {
+      errors.ref_no = "Reference number is required";
+      hasErrors = true;
+    }
+    if (!formData.department_id) {
+      errors.department_id = "Department is required";
+      hasErrors = true;
+    }
+    if (!formData.audit_area) {
+      errors.audit_area = "Audit area is required";
+      hasErrors = true;
+    }
+    if (!formData.audit_scope) {
+      errors.audit_scope = "Audit scope is required";
+      hasErrors = true;
+    }
+    if (!formData.audit_criteria) {
+      errors.audit_criteria = "Audit criteria is required";
+      hasErrors = true;
+    }
+    if (!formData.audit_objective) {
+      errors.audit_objective = "Audit objective is required";
+      hasErrors = true;
+    }
+    if (!formData.start_date) {
+      errors.start_date = "Start date is required";
+      hasErrors = true;
+    }
+    if (!formData.end_date) {
+      errors.end_date = "End date is required";
+      hasErrors = true;
+    }
+    if (formData.start_date && formData.end_date && formData.start_date > formData.end_date) {
+      errors.start_date = "Start date must be before end date";
+      hasErrors = true;
+    }
+    if (!formData.audit_team_leader) {
+      errors.audit_team_leader = "Audit team leader is required";
+      hasErrors = true;
+    }
+
+    setFieldErrors(errors);
+    return !hasErrors;
+  };
+
+  const validateStep2 = (): boolean => {
+    const errors: FieldErrors = {};
+    let hasErrors = false;
+
+    if (!formData.working_paper_template_id) {
+      errors.working_paper_template_id = "Please select a working paper template";
+      hasErrors = true;
+    }
+
+    setFieldErrors(errors);
+    return !hasErrors;
+  };
+
   const handleNext = () => {
-    // Validate current step before proceeding
+    setValidationError(null);
+
     if (currentStep === 1) {
-      if (
-        !formData.title ||
-        !formData.ref_no ||
-        !formData.department_id ||
-        !formData.audit_scope ||
-        !formData.audit_objective ||
-        !formData.start_date ||
-        !formData.end_date ||
-        !formData.audit_team_leader ||
-        !formData.audit_area ||
-        !formData.audit_criteria
-      ) {
-        setValidationError("Please fill in all required fields on this step.");
+      if (!validateStep1()) {
         notify({
-          // title: "Validation Error",
           description: "Please fill in all required fields",
           type: "error"
         });
         return;
       }
     } else if (currentStep === 2) {
-      if (!formData.working_paper_template_id) {
-        setValidationError("Please select a working paper template.");
+      if (!validateStep2()) {
         notify({
-          // title: "Validation Error",
           description: "Please select a template",
           type: "error"
         });
         return;
       }
     }
-    setValidationError(null);
+
+    // Clear errors on successful validation
+    setFieldErrors({});
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   };
 
@@ -349,7 +408,7 @@ export default function NewAuditPlanPage() {
     () =>
       universeItemsData.map((universeItem: any) => ({
         value: universeItem.id,
-        label: `KRI:${universeItem.kri_name} - (${universeItem.audit_area_name})`
+        label: `KRI:${universeItem.kri_name} - (${universeItem.auditable_area_name})`
       })),
     [universeItemsData]
   );
@@ -435,6 +494,8 @@ export default function NewAuditPlanPage() {
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         placeholder="e.g., Annual Audit Plan 2025"
                         required
+                        isInvalid={!!fieldErrors.title}
+                        errorText={fieldErrors.title}
                       />
                       <SelectField
                         id="management_standard"
@@ -472,6 +533,8 @@ export default function NewAuditPlanPage() {
                         }
                         options={(departmentsData as any) || []}
                         isLoading={loadingDepartments}
+                        isInvalid={!!fieldErrors.department_id}
+                        errorText={fieldErrors.department_id}
                       />
 
                       <Input
@@ -481,6 +544,8 @@ export default function NewAuditPlanPage() {
                         onChange={(e) => setFormData({ ...formData, ref_no: e.target.value })}
                         placeholder="e.g., AP-2025-001"
                         required
+                        isInvalid={!!fieldErrors.ref_no}
+                        errorText={fieldErrors.ref_no}
                       />
                     </div>
 
@@ -492,6 +557,8 @@ export default function NewAuditPlanPage() {
                       onChange={(e) => setFormData({ ...formData, audit_area: e.target.value })}
                       placeholder="e.g., ISMS based on ISO 27001:2022"
                       required
+                      isInvalid={!!fieldErrors.audit_area}
+                      errorText={fieldErrors.audit_area}
                     />
 
                     <Textarea
@@ -502,6 +569,8 @@ export default function NewAuditPlanPage() {
                       placeholder="All information security controls across the organization..."
                       rows={3}
                       required
+                      isInvalid={!!fieldErrors.audit_scope}
+                      errorText={fieldErrors.audit_scope}
                     />
 
                     <Input
@@ -511,6 +580,8 @@ export default function NewAuditPlanPage() {
                       onChange={(e) => setFormData({ ...formData, audit_criteria: e.target.value })}
                       placeholder="e.g., ISO 27001:2022 requirements"
                       required
+                      isInvalid={!!fieldErrors.audit_criteria}
+                      errorText={fieldErrors.audit_criteria}
                     />
 
                     <Textarea
@@ -523,6 +594,8 @@ export default function NewAuditPlanPage() {
                       placeholder="Assess compliance with ISO 27001:2022 and effectiveness of ISMS..."
                       rows={4}
                       required
+                      isInvalid={!!fieldErrors.audit_objective}
+                      errorText={fieldErrors.audit_objective}
                     />
                   </div>
 
@@ -547,6 +620,8 @@ export default function NewAuditPlanPage() {
                         onValueChange={(date) =>
                           setFormData({ ...formData, start_date: date || null })
                         }
+                        isInvalid={!!fieldErrors.start_date}
+                        errorText={fieldErrors.start_date}
                       />
 
                       <DatePicker
@@ -556,6 +631,8 @@ export default function NewAuditPlanPage() {
                         onValueChange={(date) =>
                           setFormData({ ...formData, end_date: date || null })
                         }
+                        isInvalid={!!fieldErrors.end_date}
+                        errorText={fieldErrors.end_date}
                       />
                     </div>
 
@@ -681,6 +758,8 @@ export default function NewAuditPlanPage() {
                             id: member.id,
                             name: `${member.first_name} ${member.last_name}  - (${member.role.name})`
                           }))}
+                          isInvalid={!!fieldErrors.audit_team_leader}
+                          errorText={fieldErrors.audit_team_leader}
                         />
                       </div>
 
@@ -732,12 +811,21 @@ export default function NewAuditPlanPage() {
 
               {/* Step 2: Template Selection */}
               {currentStep === 2 && (
-                <TemplateSelectorSimple
-                  value={formData.working_paper_template_id}
-                  onChange={handleTemplateChange}
-                  loadingTemplateDetails={loadingTemplateDetails}
-                  frameworkType={formData.management_standard}
-                />
+                <div className="space-y-4">
+                  {fieldErrors.working_paper_template_id && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Validation Error</AlertTitle>
+                      <AlertDescription>{fieldErrors.working_paper_template_id}</AlertDescription>
+                    </Alert>
+                  )}
+                  <TemplateSelectorSimple
+                    value={formData.working_paper_template_id}
+                    onChange={handleTemplateChange}
+                    loadingTemplateDetails={loadingTemplateDetails}
+                    frameworkType={formData.management_standard}
+                  />
+                </div>
               )}
 
               {/* Step 3: Category Selection */}
