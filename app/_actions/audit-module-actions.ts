@@ -1820,3 +1820,150 @@ export async function submitUniverseForApproval(universeId: string): Promise<API
     return handleError(error, "GET | SUBMIT UNIVERSE", url);
   }
 }
+
+// ============================================================================
+// FINDING EVIDENCE ACTIONS
+// ============================================================================
+
+/**
+ * Get all evidence for a finding
+ */
+export async function getFindingEvidence(finding_id: string): Promise<APIResponse> {
+  if (!finding_id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/working-paper-findings/${finding_id}/evidence`
+    });
+
+    return successResponse(response.data?.data, "Finding evidence fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FINDING EVIDENCE",
+      `/api/v1/working-paper-findings/${finding_id}/evidence`
+    );
+  }
+}
+
+/**
+ * Get single evidence by ID
+ */
+export async function getEvidence(evidence_id: string): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/finding-evidence/${evidence_id}`
+    });
+
+    return successResponse(response.data?.data, "Evidence fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | EVIDENCE", `/api/v1/finding-evidence/${evidence_id}`);
+  }
+}
+
+/**
+ * Create finding evidence
+ */
+export async function createFindingEvidence(
+  finding_id: string,
+  data: {
+    evidence_type: string;
+    title: string;
+    description?: string;
+    external_link?: string;
+    file_link?: string;
+    collection_date?: string;
+    notes?: string;
+  }
+): Promise<APIResponse> {
+  if (!finding_id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
+  if (!data.title) {
+    return handleBadRequest("Evidence title is required");
+  }
+
+  const url = `/api/v1/finding-evidence`;
+
+  try {
+    // Include finding_id in the payload
+    const payload = {
+      finding_id,
+      ...data
+    };
+
+    const response = await authenticatedApiClient({ method: "POST", url, data: payload });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(response.data?.data, "Evidence created successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE EVIDENCE", `/api/v1/finding-evidence`);
+  }
+}
+
+/**
+ * Update finding evidence
+ */
+export async function updateFindingEvidence(
+  evidence_id: string,
+  data: {
+    evidence_type?: string;
+    title?: string;
+    description?: string;
+    external_link?: string;
+    file_link?: string;
+    collection_date?: string;
+    notes?: string;
+  }
+): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  const url = `/api/v1/finding-evidence/${evidence_id}`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "PUT", url, data });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(response.data?.data, "Evidence updated successfully");
+  } catch (error: any) {
+    return handleError(error, "PUT | UPDATE EVIDENCE", `/api/v1/finding-evidence/${evidence_id}`);
+  }
+}
+
+/**
+ * Delete finding evidence
+ */
+export async function deleteFindingEvidence(evidence_id: string): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/finding-evidence/${evidence_id}`
+    });
+
+    revalidatePath("/dashboard/audit/findings");
+    revalidatePath("/dashboard/audit/workpapers");
+
+    return successResponse(null, "Evidence deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | EVIDENCE", `/api/v1/finding-evidence/${evidence_id}`);
+  }
+}

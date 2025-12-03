@@ -15,10 +15,9 @@ export function extractFrameworkFields(
   const config = getFrameworkFieldConfig(framework);
   const result: Record<string, any> = {};
 
-  // Extract all framework-specific fields
+  // Extract all framework-specific fields (compliance and evidence)
   const allFields = [
     ...config.complianceFields,
-    ...config.managementFields,
     ...config.evidenceFields
   ];
 
@@ -33,55 +32,46 @@ export function extractFrameworkFields(
 }
 
 /**
- * Build complete payload with framework-specific fields
+ * Build payload with ONLY required update fields
+ * Keeps payload minimal and consistent across all framework types
+ *
+ * ALWAYS included:
+ * - severity: Impact level of the finding
+ * - recommendation: What should be done to remediate
+ * - compliance_status: Assessment of compliance level
+ * - compliance_percentage: Percentage of requirements met
+ *
+ * These fields are the same across ALL framework types.
+ * Framework-specific fields (clause_number, coso_component, etc.)
+ * are displayed in the UI but NOT included in the API payload.
  */
 export function buildFindingPayload(
-  finding: WorkpaperFinding,
-  formData: Record<string, any>,
-  framework: FrameworkType
+  formData: Record<string, any>
 ): Record<string, any> {
-  const config = getFrameworkFieldConfig(framework);
-  const payload: Record<string, any> = {
-    // Base fields (always included)
-    finding_number: finding.finding_number,
-    category_name: finding.category_name,
-    status: formData.status,
-    report: true,
+  const payload: Record<string, any> = {};
 
-    // Standard fields from management section
-    severity: formData.severity,
-    recommendation: formData.recommendation || "",
-    management_response: formData.management_response || "",
-    action_plan: formData.action_plan || "",
-    responsible_person: formData.responsible_person || "",
-    due_date: formData.due_date ? new Date(formData.due_date).toISOString().split("T")[0] : "",
+  // ===== STANDARD FIELDS FOR ALL FRAMEWORKS =====
+  // These 4 fields are ALWAYS sent in the payload, regardless of framework type
 
-    // Audit working paper fields
-    workings_and_test_results: formData.workings_and_test_results || "",
-    conclusion: formData.conclusion || "",
-    evidence_links: formData.evidence_links || ""
-  };
+  // Severity is required for all frameworks
+  if (formData.severity) {
+    payload.severity = formData.severity;
+  }
 
-  // Add framework-specific compliance fields
-  config.complianceFields.forEach((field) => {
-    if (formData[field.name] !== undefined && formData[field.name] !== null) {
-      payload[field.name] = formData[field.name];
-    }
-  });
+  // Recommendation is required for all frameworks
+  if (formData.recommendation) {
+    payload.recommendation = formData.recommendation;
+  }
 
-  // Add framework-specific management fields
-  config.managementFields.forEach((field) => {
-    if (formData[field.name] !== undefined && formData[field.name] !== null) {
-      payload[field.name] = formData[field.name];
-    }
-  });
+  // Compliance Status (same for all frameworks)
+  if (formData.compliance_status !== undefined && formData.compliance_status !== null && formData.compliance_status !== "") {
+    payload.compliance_status = formData.compliance_status;
+  }
 
-  // Add framework-specific evidence fields
-  config.evidenceFields.forEach((field) => {
-    if (formData[field.name] !== undefined && formData[field.name] !== null) {
-      payload[field.name] = formData[field.name];
-    }
-  });
+  // Compliance Percentage (same for all frameworks)
+  if (formData.compliance_percentage !== undefined && formData.compliance_percentage !== null && formData.compliance_percentage !== "") {
+    payload.compliance_percentage = formData.compliance_percentage;
+  }
 
   return payload;
 }
@@ -139,18 +129,20 @@ export function initializeFormDataFromFinding(finding: WorkpaperFinding): Record
 
 /**
  * Determine which fields to display based on framework type
+ * TODO: Add managementFields support when available
  */
-export function getVisibleFieldsForFramework(framework: FrameworkType) {
-  const config = getFrameworkFieldConfig(framework);
-  return {
-    compliance: config.complianceFields.map(f => f.name),
-    management: config.managementFields.map(f => f.name),
-    evidence: config.evidenceFields.map(f => f.name)
-  };
-}
+// export function getVisibleFieldsForFramework(framework: FrameworkType) {
+//   const config = getFrameworkFieldConfig(framework);
+//   return {
+//     compliance: config.complianceFields.map(f => f.name),
+//     management: config.managementFields.map(f => f.name),
+//     evidence: config.evidenceFields.map(f => f.name)
+//   };
+// }
 
 /**
  * Validate required fields for a framework
+ * TODO: Add managementFields validation when available
  */
 export function validateFrameworkRequiredFields(
   formData: Record<string, any>,
@@ -158,9 +150,10 @@ export function validateFrameworkRequiredFields(
 ): { valid: boolean; errors: Record<string, string> } {
   const config = getFrameworkFieldConfig(framework);
   const errors: Record<string, string> = {};
+  // Validate compliance and evidence fields only (managementFields commented out)
   const allFields = [
     ...config.complianceFields,
-    ...config.managementFields,
+    // ...config.managementFields,  // TODO: Add when available
     ...config.evidenceFields
   ];
 

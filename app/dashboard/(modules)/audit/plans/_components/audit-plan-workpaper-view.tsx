@@ -258,6 +258,8 @@ export function AuditPlanWorkpaperView({
   const auditTeamLeaderId = auditPlan?.audit_team_leader;
   const teamMembersCount = auditPlan?.audit_team_members?.length || 0;
 
+  console.log({ categoryFindings });
+
   return (
     <div className="space-y-6">
       {/* Audit Plan Header */}
@@ -710,7 +712,8 @@ export function AuditPlanWorkpaperView({
                                 <p className="truncate text-xs font-medium">
                                   {category.display_name}
                                 </p>
-                                <p className={`line-clamp-2 text-xs ${isSelected ? "text-primary-foreground" : "text-muted-foreground"}`}>
+                                <p
+                                  className={`line-clamp-2 text-xs ${isSelected ? "text-primary-foreground" : "text-muted-foreground"}`}>
                                   {category.description}
                                 </p>
 
@@ -734,10 +737,12 @@ export function AuditPlanWorkpaperView({
                                       <div className="mt-1 space-y-0.5 text-xs">
                                         {frameworkFields.map((field, idx) => (
                                           <div key={idx} className="flex items-start gap-1">
-                                            <span className={`min-w-fit font-medium ${isSelected ? "text-primary-foreground" : "text-muted-foreground"}`}>
+                                            <span
+                                              className={`min-w-fit font-medium ${isSelected ? "text-primary-foreground" : "text-muted-foreground"}`}>
                                               {field.label}:
                                             </span>
-                                            <span className={`line-clamp-1 break-all ${isSelected ? "text-primary-foreground" : "text-foreground"}`}>
+                                            <span
+                                              className={`line-clamp-1 break-all ${isSelected ? "text-primary-foreground" : "text-foreground"}`}>
                                               {field.value}
                                             </span>
                                           </div>
@@ -752,13 +757,21 @@ export function AuditPlanWorkpaperView({
                                     <div className="mt-1 flex items-center gap-1">
                                       {catFindings[0].is_conformity ? (
                                         <>
-                                          <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-primary-foreground" : "bg-green-500"}`} />
-                                          <span className={`text-xs ${isSelected ? "text-primary-foreground" : "text-green-600"}`}>Conformity</span>
+                                          <span
+                                            className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-primary-foreground" : "bg-green-500"}`}
+                                          />
+                                          <span
+                                            className={`text-xs ${isSelected ? "text-primary-foreground" : "text-green-600"}`}>
+                                            Conformity
+                                          </span>
                                         </>
                                       ) : (
                                         <>
-                                          <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-primary-foreground" : "bg-red-500"}`} />
-                                          <span className={`text-xs ${isSelected ? "text-primary-foreground" : "text-red-600"}`}>
+                                          <span
+                                            className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-primary-foreground" : "bg-red-500"}`}
+                                          />
+                                          <span
+                                            className={`text-xs ${isSelected ? "text-primary-foreground" : "text-red-600"}`}>
                                             Non-Conformity
                                           </span>
                                         </>
@@ -785,7 +798,7 @@ export function AuditPlanWorkpaperView({
               {selectedCategory ? (
                 <>
                   {/* Category Details */}
-                  <WorkpaperCategoryPanel category={selectedCategory} />
+                  <WorkpaperCategoryPanel category={selectedCategory} auditPlan={auditPlan} />
 
                   {/* Findings List for Category */}
                   {categoryFindings.length > 0 ? (
@@ -797,39 +810,92 @@ export function AuditPlanWorkpaperView({
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          {categoryFindings.map((finding, index) => (
-                            <div
-                              key={finding.id || index}
-                              className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-3">
-                                  <div className="text-sm font-medium">Finding #{index + 1}</div>
-                                  <div className="text-muted-foreground text-sm">
-                                    {finding.finding_number}
+                          {categoryFindings.map((finding, index) => {
+                            // Derive framework type from category metadata
+                            let frameworkType = "ISO27001";
+                            if (selectedCategory?.metadata) {
+                              const metadataKeys = Object.keys(selectedCategory.metadata);
+                              if (metadataKeys.length > 0) {
+                                frameworkType = metadataKeys[0];
+                              }
+                            }
+
+                            // Get framework-specific sidebar fields
+                            const frameworkFields = getFrameworkSidebarFields(
+                              finding,
+                              frameworkType as any
+                            );
+
+                            return (
+                              <div
+                                key={finding.id || index}
+                                className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-3">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs font-medium">
+                                        Finding #{finding.finding_number}
+                                      </p>
+
+                                      {/* Framework-Specific Fields */}
+                                      {frameworkFields.length > 0 && (
+                                        <div className="mt-1 space-y-0.5 text-xs">
+                                          {frameworkFields.slice(0, 2).map((field, idx) => (
+                                            <div key={idx} className="flex items-start gap-1">
+                                              <span className="text-muted-foreground font-medium">
+                                                {field.label}:
+                                              </span>
+                                              <span className="text-foreground line-clamp-1 break-all">
+                                                {field.value}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+
+                                      {/* Compliance Status Badge */}
+                                      {finding.compliance_status && (
+                                        <div className="mt-1 flex items-center gap-1">
+                                          <span className="text-xs text-muted-foreground">
+                                            Status:
+                                          </span>
+                                          <Badge
+                                            variant={
+                                              finding.compliance_status?.toLowerCase() ==
+                                              "compliant"
+                                                ? "success"
+                                                : finding.compliance_status?.toLowerCase() ==
+                                                    "non-compliant"
+                                                  ? "destructive"
+                                                  : "warning"
+                                            }
+                                            className="text-xs">
+                                            {finding.compliance_status}
+                                          </Badge>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Conformity Badge */}
+                                    {finding.is_conformity !== null && (
+                                      <Badge
+                                        variant={finding.is_conformity ? "default" : "destructive"}
+                                        className="ml-auto shrink-0 text-xs">
+                                        {finding.is_conformity ? "✓ Conformity" : "✗ Non-Conformity"}
+                                      </Badge>
+                                    )}
                                   </div>
-                                  {finding.is_conformity !== null && (
-                                    <Badge
-                                      variant={finding.is_conformity ? "default" : "destructive"}
-                                      className="ml-auto">
-                                      {finding.is_conformity ? "✓ Conformity" : "✗ Non-Conformity"}
-                                    </Badge>
-                                  )}
-                                  {finding.is_conformity === null && (
-                                    <Badge variant="secondary" className="ml-auto">
-                                      ⊘ Pending
-                                    </Badge>
-                                  )}
                                 </div>
+
+                                <Button
+                                  size="sm"
+                                  onClick={() => setEditingFinding(finding)}
+                                  className="ml-3 shrink-0">
+                                  Edit
+                                </Button>
                               </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEditingFinding(finding)}
-                                className="ml-3 shrink-0">
-                                Edit
-                              </Button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </Card>
@@ -845,14 +911,14 @@ export function AuditPlanWorkpaperView({
                   )}
 
                   {/* Add New Finding Button */}
-                  {categoryFindings.length > 0 && (
+                  {/* {categoryFindings.length > 0 && (
                     <Button
                       onClick={() => setEditingFinding(null)}
                       className="w-full"
                       variant="outline">
                       + Add New Finding
                     </Button>
-                  )}
+                  )} */}
                 </>
               ) : (
                 <Card>
@@ -869,7 +935,7 @@ export function AuditPlanWorkpaperView({
               <Dialog
                 open={editingFinding !== null}
                 onOpenChange={(open) => !open && setEditingFinding(null)}>
-                <DialogContent className="max-h-[90vh] max-w-5xl! overflow-y-auto pb-0">
+                <DialogContent className="max-h-[90vh] max-w-xl! overflow-y-auto pb-0">
                   <DialogHeader>
                     <DialogTitle>
                       {editingFinding

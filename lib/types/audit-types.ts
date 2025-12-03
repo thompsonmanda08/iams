@@ -7,6 +7,9 @@
  * @module audit-types
  */
 
+import { FrameworkType } from "../config/finding-framework-fields";
+import { StandardStatus } from "../statuses";
+
 // ============================================================================
 // ENUMS AND LITERAL TYPES
 // ============================================================================
@@ -217,7 +220,7 @@ export interface AuditPlan {
   description: string;
   start_date: string; // ISO 8601 datetime string
   end_date: string; // ISO 8601 datetime string
-  status: AuditPlanStatus;
+  status: StandardStatus;
   department_id: string | null;
   audit_universe_id: string | null;
   audit_universe_item_id: string | null;
@@ -231,7 +234,8 @@ export interface AuditPlan {
   audit_scope: string;
   audit_criteria: string;
   audit_objective: string;
-  management_standard: ManagementStandard | string; // Consider using: 'ISO IEC 27001' | 'ISO 9001' | etc.
+  management_standard: FrameworkType | string;
+  framework_type: FrameworkType | string;
   audit_team_leader: string; // UUID
   audit_team_members: string[] | null; // Likely an array of UUIDs
   client_representative: string;
@@ -481,7 +485,11 @@ export type WorkpaperTemplate = {
 /**
  * Evidence type categories
  */
-export type EvidenceType = "Policy" | "Screenshot" | "Minutes" | "Report" | "Other";
+export type EvidenceType = FindingEvidenceType;
+
+export type ConformityStatus = "conformity" | "partial-conformity" | "non-conformity";
+
+export type ComplianceStatus = "Compliant" | "Non-Compliant" | "Partial";
 
 /**
  * Evidence input for uploading
@@ -1152,4 +1160,76 @@ export interface BudgetItem {
   amount: number;
   description: string;
   date: string | null;
+}
+
+// ============================================================================
+// FINDING EVIDENCE TYPES
+// ============================================================================
+
+/**
+ * Evidence type for finding evidence objects
+ */
+export type FindingEvidenceType = "Document" | "Observation" | "Testing" | "Interview";
+
+/**
+ * Finding evidence interface - evidence attached to findings
+ */
+export interface FindingEvidence {
+  id: string;
+  finding_id: string;
+  evidence_type: FindingEvidenceType;
+  title: string;
+  description?: string;
+  file_link?: string; // File URL from PocketBase
+  external_link?: string; // External URL/reference
+  collection_date?: string; // ISO 8601 date string
+  notes?: string;
+  created_by: string; // UUID
+  created_at: string; // ISO 8601 datetime string
+  updated_at: string; // ISO 8601 datetime string
+}
+
+/**
+ * Input type for creating finding evidence
+ */
+export interface CreateFindingEvidenceInput {
+  finding_id: string;
+  evidence_type: FindingEvidenceType;
+  title: string;
+  description?: string;
+  file?: File; // File to upload (optional)
+  external_link?: string;
+  collection_date?: string;
+  notes?: string;
+}
+
+/**
+ * Input type for updating finding evidence
+ */
+export interface UpdateFindingEvidenceInput {
+  evidence_type?: FindingEvidenceType;
+  title?: string;
+  description?: string;
+  file?: File; // New file to upload (optional)
+  external_link?: string;
+  collection_date?: string;
+  notes?: string;
+}
+
+/**
+ * Finding evidence response from API
+ */
+export interface FindingEvidenceResponse {
+  success: boolean;
+  data?: FindingEvidence;
+  message?: string;
+}
+
+/**
+ * Multiple finding evidence response from API
+ */
+export interface FindingEvidenceListResponse {
+  success: boolean;
+  data?: FindingEvidence[];
+  message?: string;
 }

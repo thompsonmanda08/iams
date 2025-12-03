@@ -12,9 +12,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { SelectField } from "@/components/ui/select-field";
-import { CheckCircle2, Save, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
+import { CheckCircle2, Save, ChevronDown, ChevronUp, AlertCircle, Plus } from "lucide-react";
 import { notify } from "@/lib/utils";
-import type { AuditPlan, WorkpaperFinding } from "@/lib/types/audit-types";
+import type {
+  AuditPlan,
+  WorkpaperFinding,
+  FindingEvidence,
+  FindingEvidenceType
+} from "@/lib/types/audit-types";
 import { updateFinding } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { useTeamMembers } from "@/hooks/use-users-query-data";
@@ -29,6 +34,15 @@ import {
   buildFindingPayload,
   validateFrameworkRequiredFields
 } from "@/lib/utils/finding-form-utils";
+import {
+  useFindingEvidence,
+  useCreateEvidenceMutation,
+  useUpdateEvidenceMutation,
+  useDeleteEvidenceMutation
+} from "@/hooks/use-evidence-queries";
+import { EvidenceForm } from "./evidence-form";
+import { EvidenceList } from "./evidence-list";
+import { Spinner } from "@/components/ui/spinner";
 
 interface FrameworkFindingFormProps {
   category: any;
@@ -61,8 +75,7 @@ export function FrameworkFindingForm({
   category,
   auditPlan,
   finding,
-  onEditComplete,
-  isModal = false
+  onEditComplete
 }: FrameworkFindingFormProps) {
   const queryClient = useQueryClient();
   const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
@@ -72,9 +85,26 @@ export function FrameworkFindingForm({
   const config = getFrameworkFieldConfig(framework);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [isFormExpanded, setIsFormExpanded] = useState(isModal);
+  // const [isFormExpanded, setIsFormExpanded] = useState(isModal);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [responsiblePersonName, setResponsiblePersonName] = useState("");
+
+  // Evidence management state
+  const { data: evidenceResponse, isLoading: isLoadingEvidence } = useFindingEvidence(finding?.id);
+  const createEvidenceMutation = useCreateEvidenceMutation();
+  const updateEvidenceMutation = useUpdateEvidenceMutation();
+  const deleteEvidenceMutation = useDeleteEvidenceMutation();
+
+  const existingEvidence = evidenceResponse?.evidence || [];
+  const evidenceStats = {
+    total_count: evidenceResponse?.total_count || 0,
+    verified_count: evidenceResponse?.verified_count || 0,
+    unverified_count: evidenceResponse?.unverified_count || 0
+  };
+
+  const [showEvidenceForm, setShowEvidenceForm] = useState(false);
+  const [editingEvidence, setEditingEvidence] = useState<FindingEvidence | null>(null);
+  const [unsavedEvidence, setUnsavedEvidence] = useState<FindingEvidence[]>([]);
 
   // Initialize form from finding
   useEffect(() => {
@@ -83,7 +113,9 @@ export function FrameworkFindingForm({
       setFormData(initialized);
       // Set responsible person name
       const person = teamMembers.find((m) => m.id === finding.responsible_person);
-      setResponsiblePersonName(person?.name || "");
+      setResponsiblePersonName(
+        `${person?.first_name} ${person?.last_name} - [${person?.role}]` || ""
+      );
     } else {
       // Initialize with empty form for new finding
       setFormData({
@@ -108,7 +140,7 @@ export function FrameworkFindingForm({
         throw new Error("Please fill in all required fields");
       }
 
-      const payload = buildFindingPayload(finding, formData, framework);
+      const payload = buildFindingPayload(formData);
       const result = await updateFinding(finding.id, payload);
       return result;
     },
@@ -120,7 +152,6 @@ export function FrameworkFindingForm({
           description: "Finding updated successfully.",
           type: "success"
         });
-        setIsFormExpanded(false);
         setFieldErrors({});
         onEditComplete?.();
       } else {
@@ -154,8 +185,88 @@ export function FrameworkFindingForm({
     }
   };
 
+  const handleAddEvidence = async (evidenceData: {
+    evidence_type: FindingEvidenceType;
+    title: string;
+    description?: string;
+    external_link?: string;
+    collection_date?: string;
+    notes?: string;
+    file?: File;
+  }) => {
+    if (!finding?.id) return;
+
+    try {
+      await createEvidenceMutation.mutateAsync({
+        finding_id: finding.id,
+        ...evidenceData
+      });
+      setShowEvidenceForm(false);
+    } catch (error) {
+      console.error("Error adding evidence:", error);
+    }
+  };
+
+  const handleUpdateEvidence = async (evidenceData: {
+    evidence_type: FindingEvidenceType;
+    title: string;
+    description?: string;
+    external_link?: string;
+    collection_date?: string;
+    notes?: string;
+    file?: File;
+  }) => {
+    if (!editingEvidence) return;
+
+    try {
+      await updateEvidenceMutation.mutateAsync({
+        evidence_id: editingEvidence.id,
+        finding_id: editingEvidence.finding_id,
+        ...evidenceData
+      });
+      setEditingEvidence(null);
+      setShowEvidenceForm(false);
+    } catch (error) {
+      console.error("Error updating evidence:", error);
+    }
+  };
+
+  const handleDeleteEvidence = async (evidence: FindingEvidence) => {
+    if (!window.confirm("Are you sure you want to delete this evidence?")) return;
+
+    try {
+      await deleteEvidenceMutation.mutateAsync({
+        evidence_id: evidence.id,
+        finding_id: evidence.finding_id
+      });
+    } catch (error) {
+      console.error("Error deleting evidence:", error);
+    }
+  };
+
+  const handleEditEvidence = (evidence: FindingEvidence) => {
+    setEditingEvidence(evidence);
+    setShowEvidenceForm(true);
+  };
+
+  const handleCancelEvidenceForm = () => {
+    setShowEvidenceForm(false);
+    setEditingEvidence(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if there's unsaved evidence form
+    if (showEvidenceForm) {
+      notify({
+        title: "Unsaved Evidence",
+        description: "Please save or cancel the evidence form before saving the finding.",
+        type: "warning"
+      });
+      return;
+    }
+
     mutation.mutate();
   };
 
@@ -172,75 +283,12 @@ export function FrameworkFindingForm({
     );
   }
 
-  // Show collapsed view when form is not expanded (but only if not in modal)
-  if (!isFormExpanded && !isModal) {
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <CardTitle className="text-base">Finding Details</CardTitle>
-              <CardDescription className="mt-1 text-xs">
-                {finding.finding_number && `Finding #${finding.finding_number}`}
-                {formData.is_conformity !== null && (
-                  <span className="ml-2">
-                    {formData.is_conformity ? "✓ Conformity" : "✗ Non-Conformity"}
-                  </span>
-                )}
-              </CardDescription>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsFormExpanded(true)}
-              className="gap-2">
-              <ChevronDown className="h-4 w-4" />
-              Edit
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 space-y-3 sm:grid-cols-2">
-          {formData.is_conformity !== null && (
-            <div>
-              <p className="text-primary mb-1 text-sm font-semibold">Conformity Status</p>
-              <Badge variant={formData.is_conformity ? "default" : "destructive"}>
-                {formData.is_conformity ? "Conformity" : "Non-Conformity"}
-              </Badge>
-            </div>
-          )}
-
-          {formData.severity && (
-            <div>
-              <p className="text-primary mb-1 text-sm font-semibold">Severity</p>
-              <Badge>{formData.severity}</Badge>
-            </div>
-          )}
-
-          {formData.conclusion && (
-            <div>
-              <p className="text-primary mb-1 text-sm font-semibold">Conclusion</p>
-              <p className="line-clamp-2 text-sm">{formData.conclusion}</p>
-            </div>
-          )}
-
-          {responsiblePersonName && (
-            <div>
-              <p className="text-primary mb-1 text-sm font-semibold">Responsible Person</p>
-              <p className="text-sm">{responsiblePersonName}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Expanded form view
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Header */}
       <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-        <CardContent className="pt-6">
+        <CardContent className="">
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-1 items-start gap-3">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
@@ -252,25 +300,36 @@ export function FrameworkFindingForm({
                   {finding.finding_number && `Finding #${finding.finding_number}`}
                   {finding.category?.name && ` • ${finding.category.name}`}
                 </p>
+
+                {/* Framework-Specific Fields (Read-Only Display) */}
+                {config.complianceFields.length > 0 && (
+                  <div className="mt-4 space-y-2 border-t border-blue-200 pt-3 dark:border-blue-900">
+                    {config.complianceFields
+                      .filter(
+                        (f) =>
+                          !["compliance_status", "compliance_percentage"].includes(f.name) &&
+                          formData[f.name]
+                      )
+                      .map((field) => (
+                        <div key={field.name} className="flex items-start gap-2">
+                          <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                            {field.label}:
+                          </span>
+                          <span className="text-xs text-blue-900 dark:text-blue-100">
+                            {String(formData[field.name])}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
             </div>
-            {!isModal && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsFormExpanded(false)}
-                className="gap-2">
-                <ChevronUp className="h-4 w-4" />
-                Collapse
-              </Button>
-            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Conformity Assessment - Top Priority */}
-      <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+      {/* <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
         <CardHeader>
           <CardTitle className="text-base">Conformity Assessment</CardTitle>
           <CardDescription>Indicate whether this {framework} requirement is met</CardDescription>
@@ -295,228 +354,235 @@ export function FrameworkFindingForm({
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
-      {/* Framework-Specific Compliance Fields */}
-      {config.complianceFields.length > 0 && (
+      {/* Framework-Specific Compliance Fields - Only Editable Ones (compliance_status, compliance_percentage) */}
+      {config.complianceFields.some((f) =>
+        ["compliance_status", "compliance_percentage"].includes(f.name)
+      ) && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{framework} Compliance Details</CardTitle>
-            <CardDescription>
-              Framework-specific compliance information for this finding
-            </CardDescription>
+            <CardTitle className="text-base">Compliance Assessment</CardTitle>
+            <CardDescription>Compliance status and assessment for this finding</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {config.complianceFields.map((field) => (
-                <div key={field.name}>
-                  <Label className="text-sm font-medium">
-                    {field.label}
-                    {field.required && <span className="ml-1 text-red-500">*</span>}
-                  </Label>
-                  {field.description && (
-                    <p className="text-muted-foreground mb-2 text-xs">{field.description}</p>
-                  )}
+              {config.complianceFields
+                .filter((f) => ["compliance_status", "compliance_percentage"].includes(f.name))
+                .map((field) => (
+                  <div key={field.name}>
+                    {field.type === "textarea" && (
+                      <Textarea
+                        label={field.label}
+                        required={field.required}
+                        descriptionText={field.description}
+                        value={formData[field.name] || ""}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                        placeholder={field.placeholder}
+                        errorText={fieldErrors[field.name]}
+                        rows={2}
+                        className="text-sm"
+                      />
+                    )}
 
-                  {field.type === "textarea" && (
-                    <Textarea
-                      value={formData[field.name] || ""}
-                      onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      placeholder={field.placeholder}
-                      rows={3}
-                      className="text-sm"
-                    />
-                  )}
+                    {field.type === "text" && (
+                      <Input
+                        label={field.label}
+                        required={field.required}
+                        descriptionText={field.description}
+                        type="text"
+                        value={formData[field.name] || ""}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                        placeholder={field.placeholder}
+                        errorText={fieldErrors[field.name]}
+                        className="text-sm"
+                      />
+                    )}
+                    {field.type === "select" && (
+                      <SelectField
+                        label={field.label}
+                        required={field.required}
+                        descriptionText={field.description}
+                        type="text"
+                        value={formData[field.name] || ""}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                        placeholder={field.placeholder}
+                        errorText={fieldErrors[field.name]}
+                        className="w-full text-sm"
+                        options={field.options || []}
+                      />
+                    )}
 
-                  {field.type === "text" && (
-                    <Input
-                      type="text"
-                      value={formData[field.name] || ""}
-                      onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      placeholder={field.placeholder}
-                      className="text-sm"
-                    />
-                  )}
+                    {field.type === "number" && (
+                      <Input
+                        label={field.label}
+                        required={field.required}
+                        descriptionText={field.description}
+                        type="number"
+                        value={formData[field.name] || ""}
+                        onChange={(e) => handleInputChange(field.name, parseInt(e.target.value))}
+                        placeholder={field.placeholder}
+                        errorText={fieldErrors[field.name]}
+                        min="0"
+                        max="100"
+                        className="text-sm"
+                      />
+                    )}
 
-                  {field.type === "number" && (
-                    <Input
-                      type="number"
-                      value={formData[field.name] || ""}
-                      onChange={(e) => handleInputChange(field.name, parseInt(e.target.value))}
-                      placeholder={field.placeholder}
-                      min="0"
-                      max="100"
-                      className="text-sm"
-                    />
-                  )}
+                    {field.type === "checkbox" && field.options && (
+                      <div>
+                        <Label className="text-sm font-medium">{field.label}</Label>
+                        {field.description && (
+                          <p className="text-muted-foreground mb-3 text-xs">{field.description}</p>
+                        )}
+                        <div className="flex gap-4">
+                          {field.options.map((option) => (
+                            <div key={option.id} className="flex items-center gap-2">
+                              <Checkbox
+                                id={`${field.name}-${option.id}`}
+                                checked={formData[field.name] === option.id}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    handleInputChange(field.name, option.id);
+                                  } else {
+                                    handleInputChange(field.name, null);
+                                  }
+                                }}
+                              />
+                              <Label
+                                htmlFor={`${field.name}-${option.id}`}
+                                className="cursor-pointer text-sm font-normal">
+                                {option.name}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                        {fieldErrors[field.name] && (
+                          <p className="mt-2 text-xs text-red-500">{fieldErrors[field.name]}</p>
+                        )}
+                      </div>
+                    )}
 
-                  {fieldErrors[field.name] && (
-                    <p className="mt-1 text-xs text-red-500">{fieldErrors[field.name]}</p>
-                  )}
-                </div>
-              ))}
+                    {field.type === "date" && (
+                      <DatePicker
+                        label={field.label}
+                        value={formData[field.name]}
+                        onChange={(date) => handleInputChange(field.name, date)}
+                      />
+                    )}
+                  </div>
+                ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Management Response & Action Plan */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Workings & Test Results</CardTitle>
-          <CardDescription>Document the audit procedures performed and findings</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={formData.workings_and_test_results || ""}
-            onChange={(e) => handleInputChange("workings_and_test_results", e.target.value)}
-            placeholder="Document your audit procedures and findings..."
-            rows={5}
-            className="text-sm"
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Audit Conclusion</CardTitle>
-          <CardDescription>Summarize the audit conclusion for this requirement</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={formData.conclusion || ""}
-            onChange={(e) => handleInputChange("conclusion", e.target.value)}
-            placeholder="Provide your audit conclusion..."
-            rows={4}
-            className="text-sm"
-          />
-        </CardContent>
-      </Card>
-
-      {/* Finding Details */}
+      {/* Finding Details - Severity & Recommendation */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Finding Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <SelectField
-              id="severity"
-              label="Severity Level"
-              value={formData.severity}
-              className="w-full"
-              onValueChange={(v) => handleInputChange("severity", v)}
-              options={SEVERITY_OPTIONS.map((option) => ({
-                id: option.value,
-                name: option.label,
-                label: option.label
-              }))}
-              placeholder="Select severity level"
-            />
-
-            <SelectField
-              id="status"
-              label="Status"
-              value={formData.status}
-              className="w-full"
-              onValueChange={(v) => handleInputChange("status", v)}
-              options={STATUS_OPTIONS.map((option) => ({
-                id: option.value,
-                name: option.label,
-                label: option.label
-              }))}
-              placeholder="Select status"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Management Response */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Management Response & Action Plan</CardTitle>
-          <CardDescription>
-            Document management's response and corrective action plan
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label className="text-sm font-medium">Recommendation</Label>
-            <Textarea
-              value={formData.recommendation || ""}
-              onChange={(e) => handleInputChange("recommendation", e.target.value)}
-              placeholder="Provide your recommendation..."
-              rows={3}
-              className="text-sm"
-            />
-          </div>
-
-          <div>
-            <Label className="text-sm font-medium">Management Response</Label>
-            <Textarea
-              value={formData.management_response || ""}
-              onChange={(e) => handleInputChange("management_response", e.target.value)}
-              placeholder="Document management's response..."
-              rows={3}
-              className="text-sm"
-            />
-          </div>
-
-          <div>
-            <Label className="text-sm font-medium">Action Plan</Label>
-            <Textarea
-              value={formData.action_plan || ""}
-              onChange={(e) => handleInputChange("action_plan", e.target.value)}
-              placeholder="Detail the corrective action plan and timeline..."
-              rows={3}
-              className="text-sm"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <SearchSelectField
-              id="responsible_person"
-              label="Responsible Person"
-              value={formData.responsible_person}
-              onSelect={(value) => {
-                handleInputChange("responsible_person", value.id);
-                setResponsiblePersonName(value.name);
-              }}
-              options={teamMembers.map((m) => ({
-                id: m.id,
-                name: m.name
-              }))}
-              placeholder="Select responsible person"
-            />
-
-            <DatePicker
-              label="Due Date"
-              value={formData.due_date}
-              onChange={(date) => handleInputChange("due_date", date)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Evidence & Attachments */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Evidence & Supporting Documentation</CardTitle>
+          <CardDescription>Impact level and recommended actions for this finding</CardDescription>
         </CardHeader>
         <CardContent>
-          <div>
-            <Label className="text-sm font-medium">Evidence Links</Label>
-            <Textarea
-              value={formData.evidence_links || ""}
-              onChange={(e) => handleInputChange("evidence_links", e.target.value)}
-              placeholder="Provide links to supporting documentation (semicolon-separated)..."
-              rows={3}
-              className="text-sm"
-            />
-            <p className="text-muted-foreground mt-2 text-xs">
-              Enter multiple links separated by semicolons (;)
-            </p>
+          <div className="space-y-4">
+            {/* Severity Level */}
+            <div>
+              <SelectField
+                label="Severity Level"
+                required={true}
+                descriptionText="Impact level of this finding"
+                type="text"
+                value={formData.severity || ""}
+                onChange={(e) => handleInputChange("severity", e.target.value)}
+                placeholder="Select severity..."
+                errorText={fieldErrors["severity"]}
+                className="w-full text-sm"
+                options={[
+                  { id: "LOW", name: "Low" },
+                  { id: "MEDIUM", name: "Medium" },
+                  { id: "HIGH", name: "High" },
+                  { id: "CRITICAL", name: "Critical" }
+                ]}
+              />
+            </div>
+
+            {/* Recommendation */}
+            <div>
+              <Textarea
+                label="Recommendation"
+                required={true}
+                descriptionText="What should be done to address this finding?"
+                value={formData.recommendation || ""}
+                onChange={(e) => handleInputChange("recommendation", e.target.value)}
+                placeholder="Enter recommended actions to address this finding..."
+                errorText={fieldErrors["recommendation"]}
+                rows={3}
+                className="text-sm"
+              />
+            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Evidence Management Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Evidence & Support Documentation</CardTitle>
+              <CardDescription className="text-xs">
+                Attach evidence and documentation to support this finding
+              </CardDescription>
+            </div>
+            {!showEvidenceForm && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setEditingEvidence(null);
+                  setShowEvidenceForm(true);
+                }}
+                disabled={isLoadingEvidence || createEvidenceMutation.isPending}
+                className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Evidence Form */}
+          {isLoadingEvidence ? (
+            <div className="text-muted-foreground flex items-center gap-2 py-4 text-center text-sm">
+              <Spinner className="size-6" />
+              Loading evidence...
+            </div>
+          ) : showEvidenceForm ? (
+            <EvidenceForm
+              finding_id={finding.id}
+              evidence={editingEvidence}
+              onSubmit={editingEvidence ? handleUpdateEvidence : handleAddEvidence}
+              onCancel={handleCancelEvidenceForm}
+              isLoading={createEvidenceMutation.isPending || updateEvidenceMutation.isPending}
+            />
+          ) : !showEvidenceForm &&
+            Array.isArray(existingEvidence) &&
+            existingEvidence.length > 0 ? (
+            <div>
+              <h4 className="mb-3 text-sm font-semibold">Attached Evidence</h4>
+              <EvidenceList
+                evidence={existingEvidence || []}
+                stats={evidenceStats}
+                onEdit={handleEditEvidence}
+                onDelete={handleDeleteEvidence}
+                isLoading={deleteEvidenceMutation.isPending}
+              />
+            </div>
+          ) : (
+            <div className="text-muted-foreground py-4 text-center text-xs">
+              No evidence attached yet. Click "Add" button to attach files or links.
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -526,7 +592,6 @@ export function FrameworkFindingForm({
           type="button"
           variant="destructive"
           onClick={() => {
-            setIsFormExpanded(false);
             setFieldErrors({});
           }}>
           Cancel
