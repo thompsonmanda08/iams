@@ -92,7 +92,7 @@ export function FrameworkFindingForm({
         is_conformity: null
       });
     }
-  }, [finding, teamMembers]);
+  }, [finding?.id, finding?.responsible_person]);
 
   // Setup mutation for updating finding
   const mutation = useMutation({

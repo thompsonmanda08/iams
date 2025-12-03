@@ -96,8 +96,7 @@ const coloredBadgeVariants = cva("", {
     {
       color: "default",
       style: "outline",
-      className:
-        "border-gray-400 bg-gray-50 text-gray-800 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-700"
+      className: "border-gray-400 bg-transparent hover:bg-foreground/5 text-foreground/80"
     }
   ]
 });
@@ -147,6 +146,7 @@ export const StatusBadge = ({
     return (
       <Badge
         className={cn(
+          "cursor-auto",
           coloredBadgeVariants({ size, color: "default", style: "outline" }),
           className
         )}
@@ -163,7 +163,7 @@ export const StatusBadge = ({
   return (
     <Badge
       variant={variant}
-      className={cn(coloredBadgeVariants({ color, style, size }), className)}
+      className={cn("cursor-auto", coloredBadgeVariants({ color, style, size }), className)}
       title={showTooltip ? description : undefined}>
       {label}
     </Badge>

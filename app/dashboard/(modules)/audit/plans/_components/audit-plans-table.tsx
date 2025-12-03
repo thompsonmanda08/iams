@@ -30,6 +30,7 @@ import { Progress } from "@/components/ui/progress";
 import { deleteAuditPlan } from "@/app/_actions/audit-module-actions";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
+import { StatusBadge } from "@/components/status-badge";
 
 interface AuditPlansTableProps {
   plans: AuditPlan[];
@@ -147,23 +148,27 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Audit Title</TableHead>
-            <TableHead>Standard</TableHead>
-            <TableHead>Team Leader</TableHead>
-            <TableHead>Date Range</TableHead>
-            <TableHead>Progress</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-20">Actions</TableHead>
+            <TableHead>AUDIT TITLE</TableHead>
+            <TableHead>STANDARD/FRAMEWORK TYPE</TableHead>
+            <TableHead>TEAM LEADER</TableHead>
+            <TableHead>PERIOD</TableHead>
+            <TableHead>PROGRESS</TableHead>
+            <TableHead>STATUS</TableHead>
+            <TableHead className="w-20 text-center">ACTIONS</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {plans.map((plan) => (
-            <TableRow key={plan.id}>
+            <TableRow
+              key={plan.id}
+              onClick={() => {
+                router.push(`/dashboard/audit/plans/${plan.id}`);
+              }}>
               <TableCell>
                 <div className="space-y-1">
                   <Link
                     href={`/dashboard/audit/plans/${plan.id}`}
-                    className="hover:text-primary font-medium hover:underline">
+                    className="hover:text-primary/80 text-lg font-medium text-blue-500 hover:underline">
                     {plan.title}
                   </Link>
                   <p className="text-muted-foreground line-clamp-1 text-xs">
@@ -205,7 +210,7 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <AuditPlanStatusBadge status={plan.status} />
+                <StatusBadge status={plan.status} />
               </TableCell>
               <TableCell>
                 <div className="flex justify-end gap-2">
@@ -220,7 +225,10 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => router.push(`/dashboard/audit/plans/${plan.id}/edit`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/dashboard/audit/plans/${plan.id}/edit`);
+                        }}
                         className="h-8 gap-1.5">
                         <Edit className="h-3.5 w-3.5" />
                         Edit
@@ -228,7 +236,10 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDeleteClick(plan)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(plan);
+                        }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
