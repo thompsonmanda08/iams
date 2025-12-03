@@ -647,9 +647,9 @@ export function AuditPlanWorkpaperView({
 
         {/* Workpaper Tab */}
         <TabsContent value="workpaper" className="h-">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-6">
             {/* Left Sidebar - Categories */}
-            <div className="flex h-full max-h-[calc(100vh-16rem)] flex-col lg:col-span-1">
+            <div className="flex h-full max-h-[calc(100vh-16rem)] flex-col lg:col-span-2">
               <Card className="flex h-full flex-col">
                 <CardHeader className="shrink-0">
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -695,7 +695,7 @@ export function AuditPlanWorkpaperView({
                             onClick={handleCategoryClick}
                             className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
                               isSelected
-                                ? "bg-primary text-primary-foreground"
+                                ? "bg-primary text-primary-foreground [&_p]:text-primary-foreground [&_span]:text-primary-foreground"
                                 : "hover:bg-muted text-foreground"
                             }`}>
                             <div className="flex items-start gap-2">
@@ -710,7 +710,7 @@ export function AuditPlanWorkpaperView({
                                 <p className="truncate text-xs font-medium">
                                   {category.display_name}
                                 </p>
-                                <p className="text-muted-foreground line-clamp-2 text-xs">
+                                <p className={`line-clamp-2 text-xs ${isSelected ? "text-primary-foreground" : "text-muted-foreground"}`}>
                                   {category.description}
                                 </p>
 
@@ -734,10 +734,10 @@ export function AuditPlanWorkpaperView({
                                       <div className="mt-1 space-y-0.5 text-xs">
                                         {frameworkFields.map((field, idx) => (
                                           <div key={idx} className="flex items-start gap-1">
-                                            <span className="text-muted-foreground min-w-fit font-medium">
+                                            <span className={`min-w-fit font-medium ${isSelected ? "text-primary-foreground" : "text-muted-foreground"}`}>
                                               {field.label}:
                                             </span>
-                                            <span className="text-foreground line-clamp-1 break-all">
+                                            <span className={`line-clamp-1 break-all ${isSelected ? "text-primary-foreground" : "text-foreground"}`}>
                                               {field.value}
                                             </span>
                                           </div>
@@ -752,13 +752,13 @@ export function AuditPlanWorkpaperView({
                                     <div className="mt-1 flex items-center gap-1">
                                       {catFindings[0].is_conformity ? (
                                         <>
-                                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                                          <span className="text-xs text-green-600">Conformity</span>
+                                          <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-primary-foreground" : "bg-green-500"}`} />
+                                          <span className={`text-xs ${isSelected ? "text-primary-foreground" : "text-green-600"}`}>Conformity</span>
                                         </>
                                       ) : (
                                         <>
-                                          <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                                          <span className="text-xs text-red-600">
+                                          <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-primary-foreground" : "bg-red-500"}`} />
+                                          <span className={`text-xs ${isSelected ? "text-primary-foreground" : "text-red-600"}`}>
                                             Non-Conformity
                                           </span>
                                         </>
@@ -781,7 +781,7 @@ export function AuditPlanWorkpaperView({
             </div>
 
             {/* Right Workspace */}
-            <div className="space-y-4 lg:col-span-3">
+            <div className="space-y-4 lg:col-span-4">
               {selectedCategory ? (
                 <>
                   {/* Category Details */}
@@ -869,7 +869,7 @@ export function AuditPlanWorkpaperView({
               <Dialog
                 open={editingFinding !== null}
                 onOpenChange={(open) => !open && setEditingFinding(null)}>
-                <DialogContent className="max-h-[90vh] max-w-5xl! overflow-y-auto">
+                <DialogContent className="max-h-[90vh] max-w-5xl! overflow-y-auto pb-0">
                   <DialogHeader>
                     <DialogTitle>
                       {editingFinding

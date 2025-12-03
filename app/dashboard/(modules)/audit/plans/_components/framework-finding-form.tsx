@@ -163,7 +163,7 @@ export function FrameworkFindingForm({
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-muted-foreground text-center text-sm">
             <AlertCircle className="mx-auto mb-3 h-8 w-8" />
             <p>No finding to edit. Create a finding for this category first.</p>
           </div>
@@ -273,9 +273,7 @@ export function FrameworkFindingForm({
       <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
         <CardHeader>
           <CardTitle className="text-base">Conformity Assessment</CardTitle>
-          <CardDescription>
-            Indicate whether this {framework} requirement is met
-          </CardDescription>
+          <CardDescription>Indicate whether this {framework} requirement is met</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -285,9 +283,7 @@ export function FrameworkFindingForm({
                   <Checkbox
                     id={`conformity-${option.value}`}
                     checked={formData.is_conformity === option.value}
-                    onCheckedChange={() =>
-                      handleInputChange("is_conformity", option.value)
-                    }
+                    onCheckedChange={() => handleInputChange("is_conformity", option.value)}
                   />
                   <Label
                     htmlFor={`conformity-${option.value}`}
@@ -368,9 +364,7 @@ export function FrameworkFindingForm({
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Workings & Test Results</CardTitle>
-          <CardDescription>
-            Document the audit procedures performed and findings
-          </CardDescription>
+          <CardDescription>Document the audit procedures performed and findings</CardDescription>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -527,22 +521,23 @@ export function FrameworkFindingForm({
       </Card>
 
       {/* Action Buttons - Sticky at bottom */}
-      <div className="sticky bottom-0 -mx-6 -mb-6 flex gap-2 border-t bg-background px-6 py-4">
-        <Button
-          type="submit"
-          disabled={mutation.isPending}
-          className="gap-2">
-          <Save className="h-4 w-4" />
-          {mutation.isPending ? "Saving..." : "Save Finding"}
-        </Button>
+      <div className="bg-card/30 sticky bottom-0 -mx-6 -mb-6 flex justify-end gap-2 border-t px-6 py-4 pb-8 backdrop-blur-md">
         <Button
           type="button"
-          variant="outline"
+          variant="destructive"
           onClick={() => {
             setIsFormExpanded(false);
             setFieldErrors({});
           }}>
           Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={mutation.isPending}
+          isLoading={mutation.isPending}
+          className="gap-2">
+          <Save className="h-4 w-4" />
+          Save Finding
         </Button>
       </div>
     </form>
