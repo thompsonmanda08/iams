@@ -140,14 +140,6 @@ export default function RiskRegistersTable({
     });
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      OPEN: "bg-blue-100 text-blue-700",
-      CLOSED: "bg-gray-100 text-gray-700"
-    };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  };
-
   const getTimelineStatusColor = (timelineStatus: string) => {
     const colors = {
       ON_TRACK: "bg-green-100 text-green-700",
@@ -207,7 +199,7 @@ export default function RiskRegistersTable({
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Branch</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
@@ -237,8 +229,8 @@ export default function RiskRegistersTable({
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="text-sm font-medium">{register.branch.name}</p>
-                      <p className="text-xs text-gray-500">{register.branch.code}</p>
+                      <p className="text-sm font-medium">{register?.department?.name || "-"}</p>
+                      <p className="text-xs text-gray-500">{register?.department?.code || "-"}</p>
                     </div>
                   </TableCell>
                   <TableCell>

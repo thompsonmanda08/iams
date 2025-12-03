@@ -17,7 +17,7 @@ export type RiskRegister = {
   due_date: string;
   status: "OPEN" | "CLOSED";
   timeline_status: "ON_TRACK" | "AT_RISK" | "OVERDUE";
-  branch: RiskRegisterBranch;
+  department: RiskRegisterBranch;
   created_at: string;
   updated_at: string;
   created_by?: string;

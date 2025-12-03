@@ -27,8 +27,9 @@ import { Plus, Building2, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { getBranches } from "@/app/_actions/config-actions";
+import { getBranches, getDepartments } from "@/app/_actions/config-actions";
 import { createRiskRegister } from "@/app/_actions/risk-module-actions";
+import { SearchSelectField } from "../ui/search-select-field";
 
 type Branch = {
   id: string;
@@ -40,35 +41,34 @@ export default function CreateRiskRegisterDialog() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingBranches, setLoadingBranches] = useState(true);
-  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [departments, setDepartments] = useState<Branch[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [formData, setFormData] = useState({
-    branch_id: "",
+    department_id: "",
     name: ""
   });
 
   // Load branches when dialog opens
   useEffect(() => {
     if (isOpen) {
-      loadBranches();
+      loadDepartments();
     }
   }, [isOpen]);
 
-  const loadBranches = async () => {
-    setLoadingBranches(true);
+  // Load functions
+  const loadDepartments = async () => {
+    setLoadingDepartments(true);
     try {
-      const response = await getBranches({ isActive: true });
+      const response = await getDepartments({ isActive: true });
       if (response.success && response.data?.data) {
-        setBranches(response.data?.data);
-      } else {
-        toast.error("Failed to load branches");
+        setDepartments(response.data.data);
       }
     } catch (error) {
-      toast.error("Error loading branches");
+      toast.error("Error loading departments");
     } finally {
-      setLoadingBranches(false);
+      setLoadingDepartments(false);
     }
   };
 
@@ -91,7 +91,7 @@ export default function CreateRiskRegisterDialog() {
 
     try {
       const response = await createRiskRegister({
-        branch_id: formData.branch_id,
+        department_id: formData.department_id,
         name: formData.name,
         start_date: format(startDate, "yyyy-MM-dd"),
         due_date: format(dueDate, "yyyy-MM-dd")
@@ -100,7 +100,7 @@ export default function CreateRiskRegisterDialog() {
       if (response.success) {
         toast.success(response.message || "Risk register created successfully");
         setFormData({
-          branch_id: "",
+          department_id: "",
           name: ""
         });
         setStartDate(undefined);
@@ -134,54 +134,27 @@ export default function CreateRiskRegisterDialog() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="branch">
-                Branch <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.branch_id}
-                onValueChange={(value) => setFormData({ ...formData, branch_id: value })}
-                disabled={isLoading || loadingBranches}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select branch">
-                    {loadingBranches
-                      ? "Loading branches..."
-                      : formData.branch_id
-                        ? branches.find((b) => b.id === formData.branch_id)?.name
-                        : "Select branch"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {branches.length === 0 ? (
-                    <div className="text-muted-foreground p-2 text-sm">No branches available</div>
-                  ) : (
-                    branches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="text-muted-foreground h-4 w-4" />
-                          <span>{branch.name}</span>
-                          <span className="text-muted-foreground text-xs">({branch.code})</span>
-                        </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+            <SearchSelectField
+              label="Department"
+              required
+              placeholder="Select department"
+              options={departments}
+              value={formData.department_id}
+              onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+              isLoading={loadingDepartments}
+              isDisabled={isLoading || loadingDepartments}
+              classNames={{ wrapper: "max-w-full" }}
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="Enter risk register name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Name"
+              id="name"
+              placeholder="Enter risk register name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              disabled={isLoading}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -255,7 +228,7 @@ export default function CreateRiskRegisterDialog() {
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !formData.branch_id || !startDate || !dueDate}>
+              disabled={isLoading || !formData.department_id || !startDate || !dueDate}>
               {isLoading ? "Creating..." : "Create Register"}
             </Button>
           </DialogFooter>
