@@ -129,10 +129,7 @@ export default function NewAuditPlanPage() {
     department_id: formData.department_id
   });
 
-  const headsOfDepartment =
-    ((headsOfDepartmentResponse?.data?.data || teamMembers) as User[]) ?? [];
-
-  console.log({ headsOfDepartment });
+  const headsOfDepartment = (headsOfDepartmentResponse?.data as User[]) ?? {};
 
   const { data: departmentsResponse, isLoading: loadingDepartments } = useDepartments({
     is_active: true,

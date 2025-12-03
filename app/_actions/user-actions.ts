@@ -100,7 +100,7 @@ export async function getHeadsOfDepartments(params?: {
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.page_size) queryParams.append("page_size", String(params.page_size));
 
-  const url = `/api/v1/users/department-heads${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+  const url = `/api/v1/users/department-heads/list${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url: url, method: "GET" });
