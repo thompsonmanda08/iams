@@ -526,8 +526,8 @@ export function FrameworkFindingForm({
         </CardContent>
       </Card>
 
-      {/* Action Buttons */}
-      <div className="flex gap-2">
+      {/* Action Buttons - Sticky at bottom */}
+      <div className="sticky bottom-0 -mx-6 -mb-6 flex gap-2 border-t bg-background px-6 py-4">
         <Button
           type="submit"
           disabled={mutation.isPending}

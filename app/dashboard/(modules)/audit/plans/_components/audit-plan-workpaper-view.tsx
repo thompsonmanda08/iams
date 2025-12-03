@@ -869,7 +869,7 @@ export function AuditPlanWorkpaperView({
               <Dialog
                 open={editingFinding !== null}
                 onOpenChange={(open) => !open && setEditingFinding(null)}>
-                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+                <DialogContent className="max-h-[90vh] max-w-5xl! overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingFinding
