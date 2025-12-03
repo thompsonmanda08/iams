@@ -284,7 +284,7 @@ export interface RiskRegister {
 }
 
 export interface RiskRegisterInput {
-  branch_id: string;
+  department_id: string;
   name: string;
   start_date: string;
   due_date: string;

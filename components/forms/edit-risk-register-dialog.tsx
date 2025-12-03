@@ -22,15 +22,16 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
-import { Building2, CalendarIcon } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { getBranches } from "@/app/_actions/config-actions";
+import { getDepartments } from "@/app/_actions/config-actions";
 import { updateRiskRegister } from "@/app/_actions/risk-module-actions";
 import { RiskRegister } from "@/lib/types/risk-types";
+import { SearchSelectField } from "../ui/search-select-field";
 
-type Branch = {
+type Department = {
   id: string;
   name: string;
   code: string;
@@ -49,8 +50,8 @@ export default function EditRiskRegisterDialog({
 }: EditRiskRegisterDialogProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingBranches, setLoadingBranches] = useState(true);
-  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(
     register.start_date ? new Date(register.start_date) : undefined
   );
@@ -58,30 +59,29 @@ export default function EditRiskRegisterDialog({
     register.due_date ? new Date(register.due_date) : undefined
   );
   const [formData, setFormData] = useState({
-    branch_id: register.branch.id,
+    department_id: register.department.id,
     name: register.name,
     status: register.status
   });
 
   useEffect(() => {
     if (open) {
-      loadBranches();
+      loadDepartments();
     }
   }, [open]);
 
-  const loadBranches = async () => {
-    setLoadingBranches(true);
+  // Load functions
+  const loadDepartments = async () => {
+    setLoadingDepartments(true);
     try {
-      const response = await getBranches({ isActive: true });
+      const response = await getDepartments({ isActive: true });
       if (response.success && response.data?.data) {
-        setBranches(response.data?.data);
-      } else {
-        toast.error("Failed to load branches");
+        setDepartments(response.data.data);
       }
     } catch (error) {
-      toast.error("Error loading branches");
+      toast.error("Error loading departments");
     } finally {
-      setLoadingBranches(false);
+      setLoadingDepartments(false);
     }
   };
 
@@ -104,7 +104,7 @@ export default function EditRiskRegisterDialog({
 
     try {
       const response = await updateRiskRegister(register.id, {
-        branch_id: formData.branch_id,
+        department_id: formData.department_id,
         name: formData.name,
         status: formData.status,
         start_date: format(startDate, "yyyy-MM-dd"),
@@ -135,45 +135,19 @@ export default function EditRiskRegisterDialog({
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="branch">
-                Branch <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.branch_id}
-                onValueChange={(value) => setFormData({ ...formData, branch_id: value })}
-                disabled={isLoading || loadingBranches}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select branch">
-                    {loadingBranches
-                      ? "Loading branches..."
-                      : formData.branch_id
-                        ? branches.find((b) => b.id === formData.branch_id)?.name
-                        : "Select branch"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {branches.length === 0 ? (
-                    <div className="text-muted-foreground p-2 text-sm">No branches available</div>
-                  ) : (
-                    branches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="text-muted-foreground h-4 w-4" />
-                          <span>{branch.name}</span>
-                          <span className="text-muted-foreground text-xs">({branch.code})</span>
-                        </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
-              </Label>
+              <SearchSelectField
+                label="Department"
+                required
+                placeholder="Select department"
+                options={departments}
+                value={formData.department_id}
+                onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                isLoading={loadingDepartments}
+                isDisabled={isLoading || loadingDepartments}
+                classNames={{ wrapper: "max-w-full" }}
+              />
               <Input
+                label="Name "
                 id="name"
                 placeholder="Enter risk register name"
                 value={formData.name}
@@ -286,7 +260,7 @@ export default function EditRiskRegisterDialog({
             <Button
               type="submit"
               disabled={
-                isLoading || !formData.branch_id || !formData.status || !startDate || !dueDate
+                isLoading || !formData.department_id || !formData.status || !startDate || !dueDate
               }>
               {isLoading ? "Updating..." : "Update Register"}
             </Button>
