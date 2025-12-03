@@ -31,7 +31,7 @@ import { getBranches, getDepartments } from "@/app/_actions/config-actions";
 import { createRiskRegister } from "@/app/_actions/risk-module-actions";
 import { SearchSelectField } from "../ui/search-select-field";
 
-type Branch = {
+type Department = {
   id: string;
   name: string;
   code: string;
@@ -42,7 +42,7 @@ export default function CreateRiskRegisterDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-  const [departments, setDepartments] = useState<Branch[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [formData, setFormData] = useState({

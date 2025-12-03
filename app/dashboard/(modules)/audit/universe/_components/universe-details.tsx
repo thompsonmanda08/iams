@@ -439,7 +439,10 @@ const UniverseDetails = ({
                               {item.kri_average_score ? (
                                 <div className="flex flex-col">
                                   <p>{item.kri_average_score}</p>
-                                  <span className="text-xs italic lowercase"> Measure Type: {item.kri_measurement_type}</span>
+                                  <span className="text-xs lowercase italic">
+                                    {" "}
+                                    Measure Type: {item.kri_measurement_type}
+                                  </span>
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground text-sm">—</span>
