@@ -223,3 +223,143 @@ export async function getTaskStats(): Promise<APIResponse> {
     return handleError(error, "GET | TASK STATS", "/api/v1/workflow/tasks/stats");
   }
 }
+
+// ============================================================================
+// WORKFLOW TASKS ACTIONS (User-Assigned Tasks)
+// ============================================================================
+
+/**
+ * Get all workflow tasks assigned to the current user
+ * These are tasks that require action from the logged-in user
+ */
+export async function getUserAssignedWorkflowTasks(filters?: {
+  page?: string;
+  page_size?: string;
+  status?: string;
+}): Promise<APIResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append("page", filters.page);
+    if (filters?.page_size) params.append("page_size", filters.page_size);
+    if (filters?.status) params.append("status", filters.status);
+
+    const queryString = params.toString();
+    const url = `/api/v1/workflow-tasks/user${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    return successResponse(response.data?.data || [], "User workflow tasks fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | USER WORKFLOW TASKS", "/api/v1/workflow-tasks/user");
+  }
+}
+
+/**
+ * Get all workflow tasks for a specific workflow instance
+ * These are the tasks related to a particular workflow execution
+ */
+export async function getWorkflowInstanceTasks(
+  instanceId: string,
+  filters?: {
+    page?: string;
+    page_size?: string;
+  }
+): Promise<APIResponse> {
+  if (!instanceId) {
+    return handleBadRequest("Instance ID is required");
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append("page", filters.page);
+    if (filters?.page_size) params.append("page_size", filters.page_size);
+
+    const queryString = params.toString();
+    const url = `/api/v1/workflow-tasks/instance/${instanceId}${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({ method: "GET", url });
+
+    return successResponse(
+      response.data?.data || [],
+      "Workflow instance tasks fetched successfully"
+    );
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | WORKFLOW INSTANCE TASKS",
+      `/api/v1/workflow-tasks/instance/${instanceId}`
+    );
+  }
+}
+
+/**
+ * Complete a workflow task (approve or reject)
+ * Executes the task with the specified action and optional remarks
+ */
+export async function completeWorkflowTask(
+  taskId: string,
+  action: "APPROVED" | "REJECTED",
+  remarks?: string
+): Promise<APIResponse> {
+  if (!taskId) {
+    return handleBadRequest("Task ID is required");
+  }
+
+  if (!action || !["APPROVED", "REJECTED"].includes(action)) {
+    return handleBadRequest("Valid action (APPROVED or REJECTED) is required");
+  }
+
+  const url = `/api/v1/workflow-tasks/${taskId}/complete`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url,
+      data: {
+        action,
+        remarks
+      }
+    });
+
+    revalidatePath("/dashboard/audit/tasks");
+    return successResponse(response.data, `Workflow task completed with action: ${action}`);
+  } catch (error: any) {
+    return handleError(error, "POST | COMPLETE WORKFLOW TASK", url);
+  }
+}
+
+/**
+ * Reassign a workflow task to another user
+ * Transfers the task responsibility to a different user
+ */
+export async function reassignWorkflowTask(
+  taskId: string,
+  assignedToUserId: string,
+  remarks?: string
+): Promise<APIResponse> {
+  if (!taskId) {
+    return handleBadRequest("Task ID is required");
+  }
+
+  if (!assignedToUserId) {
+    return handleBadRequest("Target user ID is required for task reassignment");
+  }
+
+  const url = `/api/v1/workflow-tasks/${taskId}/reassign`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url,
+      data: {
+        assigned_to_user_id: assignedToUserId,
+        remarks
+      }
+    });
+
+    revalidatePath("/dashboard/audit/tasks");
+    return successResponse(response.data, "Workflow task reassigned successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | REASSIGN WORKFLOW TASK", url);
+  }
+}

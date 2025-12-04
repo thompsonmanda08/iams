@@ -17,7 +17,7 @@ export default async function TasksPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
-              title="Workflow Tasks"
+              title="Workflow Instances & Tasks"
               description="Manage and execute workflow tasks assigned to users (Simulation Mode)"
               icon="Workflow"
             />

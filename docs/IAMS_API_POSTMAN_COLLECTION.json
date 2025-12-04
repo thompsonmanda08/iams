@@ -798,7 +798,1136 @@
       ]
     },
     {
-      "name": "03. Audit Planning",
+      "name": "03. User Management",
+      "item": [
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "Create User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"first_name\": \"New\",\n  \"last_name\": \"User\",\n  \"password\": \"Password@2025\",\n  \"role_ids\": [\n    \"{{role_id}}\"\n  ],\n  \"department_ids\": [\n    \"{{dept_id}}\"\n  ],\n  \"is_active\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Users",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "List Users by Department",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users?department_id={{dept_id}}&page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "department_id",
+                      "value": "{{dept_id}}"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get User by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update User",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"updated@example.com\",\n  \"first_name\": \"Updated\",\n  \"last_name\": \"User\",\n  \"is_active\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete User",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Deactivate User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/status",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "status"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_active\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Activate User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/status",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "status"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_active\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Department Heads (HOD)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/department-heads/list?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "department-heads",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "List Department Heads by Department",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/department-heads/list?department_id={{dept_id}}&page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "department-heads",
+                    "list"
+                  ],
+                  "query": [
+                    {
+                      "key": "department_id",
+                      "value": "{{dept_id}}"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Reset User Password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/reset-password",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "reset-password"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"new_password\": \"NewPass@2025\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Lock User Account",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/lock",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "lock"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Unlock User Account",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/unlock",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "unlock"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "User Roles",
+          "item": [
+            {
+              "name": "Create Role",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/roles",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "roles"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Audit Manager\",\n  \"description\": \"Manages audit operations and planning\",\n  \"permissions\": [\n    \"create:audit_plan\",\n    \"read:audit_plan\",\n    \"update:audit_plan\",\n    \"delete:audit_plan\",\n    \"create:working_paper\",\n    \"read:working_paper\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Roles",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/roles?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "roles"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Role by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/roles/{{role_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "roles",
+                    "{{role_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Role",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/roles/{{role_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "roles",
+                    "{{role_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Audit Manager\",\n  \"description\": \"Updated role description\",\n  \"permissions\": [\n    \"create:audit_plan\",\n    \"read:audit_plan\",\n    \"update:audit_plan\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Role",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/roles/{{role_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "roles",
+                    "{{role_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "User Assignments",
+          "item": [
+            {
+              "name": "Assign Role to User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/roles",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "roles"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role_id\": \"{{role_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get User Roles",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/roles",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "roles"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Remove Role from User",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/roles/{{role_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "roles",
+                    "{{role_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Assign User to Department",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/departments",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "departments"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"department_id\": \"{{dept_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get User Departments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/departments",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "departments"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Remove User from Department",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/users/{{user_id}}/departments/{{dept_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{user_id}}",
+                    "departments",
+                    "{{dept_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Branches & Departments",
+          "item": [
+            {
+              "name": "Create Branch",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/backoffice/branches",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "backoffice",
+                    "branches"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Branch\",\n  \"code\": \"BRANCH\",\n  \"organization_id\": \"{{organization_id}}\",\n  \"location\": \"Branch Location\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Branches",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/branches?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "branches"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Branch by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/branches/{{branch_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "branches",
+                    "{{branch_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Branch",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/branches/{{branch_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "branches",
+                    "{{branch_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Branch\",\n  \"code\": \"UPD_BRANCH\",\n  \"location\": \"Updated Location\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Create Department",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/departments",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "departments"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Department\",\n  \"code\": \"DEPT\",\n  \"description\": \"Department description\",\n  \"branch_id\": \"{{branch_id}}\",\n  \"head_of_department\": \"{{user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Departments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/departments?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "departments"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Department by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/departments/{{dept_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "departments",
+                    "{{dept_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Department",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/departments/{{dept_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "departments",
+                    "{{dept_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Department\",\n  \"description\": \"Updated description\",\n  \"head_of_department\": \"{{user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Department",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/departments/{{dept_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "departments",
+                    "{{dept_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04. Audit Planning",
       "item": [
         {
           "name": "Audit Plans",
@@ -1168,7 +2297,7 @@
       ]
     },
     {
-      "name": "04. Working Paper Management",
+      "name": "05. Working Paper Management",
       "item": [
         {
           "name": "Templates",
@@ -2366,6 +3495,43 @@
               }
             },
             {
+              "name": "Submit Category for Approval",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/working-paper-categories/{{category_id}}/conclusion",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "working-paper-categories",
+                    "{{category_id}}",
+                    "conclusion"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"objectives\": \"Category objectives and scope definition\",\n  \"conclusion\": \"Assessment and findings summary\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
               "name": "Delete Working Paper Category",
               "request": {
                 "method": "DELETE",
@@ -2397,7 +3563,7 @@
       ]
     },
     {
-      "name": "05. Findings & Evidence",
+      "name": "06. Findings & Evidence",
       "item": [
         {
           "name": "Findings",
@@ -3041,7 +4207,7 @@
       ]
     },
     {
-      "name": "06. Risk Management",
+      "name": "07. Risk Management",
       "item": [
         {
           "name": "Risk Categories",
@@ -3589,7 +4755,7 @@
       ]
     },
     {
-      "name": "07. KRI & Incidents",
+      "name": "08. KRI & Incidents",
       "item": [
         {
           "name": "KRI Registers",
@@ -4134,7 +5300,7 @@
       ]
     },
     {
-      "name": "08. Audit Universe",
+      "name": "09. Audit Universe",
       "item": [
         {
           "name": "Audit Universe",
@@ -4288,7 +5454,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/audit-universe-items",
+                  "raw": "{{base_url}}/api/v1/audit/universe-items",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4297,7 +5463,8 @@
                   "path": [
                     "api",
                     "v1",
-                    "audit-universe-items"
+                    "audit",
+                    "universe-items"
                   ],
                   "query": []
                 },
@@ -4323,7 +5490,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/audit-universe-items?page=1&page_size=20",
+                  "raw": "{{base_url}}/api/v1/audit/universe-items?page=1&page_size=20",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4332,7 +5499,8 @@
                   "path": [
                     "api",
                     "v1",
-                    "audit-universe-items"
+                    "audit",
+                    "universe-items"
                   ],
                   "query": [
                     {
@@ -4358,7 +5526,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/audit-universe-items/{{audit_universe_item_id}}",
+                  "raw": "{{base_url}}/api/v1/audit/universe-items/{{audit_universe_item_id}}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4367,7 +5535,8 @@
                   "path": [
                     "api",
                     "v1",
-                    "audit-universe-items",
+                    "audit",
+                    "universe-items",
                     "{{audit_universe_item_id}}"
                   ],
                   "query": []
@@ -4385,7 +5554,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/audit-universe-items/{{audit_universe_item_id}}",
+                  "raw": "{{base_url}}/api/v1/audit/universe-items/{{audit_universe_item_id}}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4394,7 +5563,8 @@
                   "path": [
                     "api",
                     "v1",
-                    "audit-universe-items",
+                    "audit",
+                    "universe-items",
                     "{{audit_universe_item_id}}"
                   ],
                   "query": []
@@ -4421,7 +5591,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/audit-universe-items/{{audit_universe_item_id}}",
+                  "raw": "{{base_url}}/api/v1/audit/universe-items/{{audit_universe_item_id}}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4430,7 +5600,8 @@
                   "path": [
                     "api",
                     "v1",
-                    "audit-universe-items",
+                    "audit",
+                    "universe-items",
                     "{{audit_universe_item_id}}"
                   ],
                   "query": []
@@ -4442,13 +5613,13 @@
       ]
     },
     {
-      "name": "09. Workflow & Approvals",
+      "name": "10. Workflow & Approvals",
       "item": [
         {
-          "name": "Workflow Definitions",
+          "name": "Simple Workflows",
           "item": [
             {
-              "name": "Create Workflow",
+              "name": "Create Simple Workflow",
               "request": {
                 "method": "POST",
                 "header": [
@@ -4458,7 +5629,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflows",
+                  "raw": "{{base_url}}/api/v1/simple-workflows",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4467,13 +5638,13 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflows"
+                    "simple-workflows"
                   ],
                   "query": []
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Audit Plan Approval\",\n  \"description\": \"Workflow for approving audit plans\",\n  \"entity_type\": \"audit_plan\"\n}",
+                  "raw": "{\n  \"name\": \"Findings Approval\",\n  \"description\": \"Multi-stage approval workflow for audit findings\",\n  \"trigger_type\": \"FINDINGS\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -4483,7 +5654,7 @@
               }
             },
             {
-              "name": "List Workflows",
+              "name": "List Simple Workflows",
               "request": {
                 "method": "GET",
                 "header": [
@@ -4493,7 +5664,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflows?page=1&page_size=20",
+                  "raw": "{{base_url}}/api/v1/simple-workflows?page=1&page_size=20",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4502,7 +5673,7 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflows"
+                    "simple-workflows"
                   ],
                   "query": [
                     {
@@ -4518,7 +5689,7 @@
               }
             },
             {
-              "name": "Get Workflow",
+              "name": "Get Simple Workflow",
               "request": {
                 "method": "GET",
                 "header": [
@@ -4528,7 +5699,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflows/{{workflow_id}}",
+                  "raw": "{{base_url}}/api/v1/simple-workflows/{{workflow_id}}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4537,10 +5708,110 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflows",
+                    "simple-workflows",
                     "{{workflow_id}}"
                   ],
                   "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Simple Workflow",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/{{workflow_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "{{workflow_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Findings Approval\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Simple Workflow",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/{{workflow_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "{{workflow_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Validate Workflow Configuration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/{{workflow_id}}/validate",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "{{workflow_id}}",
+                    "validate"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
                 }
               }
             }
@@ -4560,7 +5831,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflows/{{workflow_id}}/states",
+                  "raw": "{{base_url}}/api/v1/simple-workflows/{{workflow_id}}/states",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4569,7 +5840,7 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflows",
+                    "simple-workflows",
                     "{{workflow_id}}",
                     "states"
                   ],
@@ -4577,7 +5848,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Draft\",\n  \"description\": \"Initial state\",\n  \"is_initial\": true,\n  \"is_final\": false\n}",
+                  "raw": "{\n  \"name\": \"Initial Review\",\n  \"description\": \"Initial review by audit team\",\n  \"is_initial\": true,\n  \"is_final\": false\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -4597,7 +5868,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflows/{{workflow_id}}/states",
+                  "raw": "{{base_url}}/api/v1/simple-workflows/{{workflow_id}}/states",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4606,7 +5877,7 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflows",
+                    "simple-workflows",
                     "{{workflow_id}}",
                     "states"
                   ],
@@ -4625,7 +5896,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflow-states/{{state_id}}",
+                  "raw": "{{base_url}}/api/v1/simple-workflow-states/{{state_id}}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4634,7 +5905,70 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflow-states",
+                    "simple-workflow-states",
+                    "{{state_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update State",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflow-states/{{state_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflow-states",
+                    "{{state_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated State\",\n  \"is_initial\": true,\n  \"is_final\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete State",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflow-states/{{state_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflow-states",
                     "{{state_id}}"
                   ],
                   "query": []
@@ -4657,7 +5991,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflows/{{workflow_id}}/transitions",
+                  "raw": "{{base_url}}/api/v1/simple-workflow-transitions",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4666,15 +6000,13 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflows",
-                    "{{workflow_id}}",
-                    "transitions"
+                    "simple-workflow-transitions"
                   ],
                   "query": []
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"from_state_id\": \"{{from_state_id}}\",\n  \"to_state_id\": \"{{to_state_id}}\",\n  \"action\": \"Submit\",\n  \"description\": \"Submit for approval\"\n}",
+                  "raw": "{\n  \"workflow_id\": \"{{workflow_id}}\",\n  \"from_status\": \"Initial Review\",\n  \"to_status\": \"Senior Review\",\n  \"required_role_id\": \"{{role_id}}\",\n  \"action_required\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -4694,7 +6026,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflows/{{workflow_id}}/transitions",
+                  "raw": "{{base_url}}/api/v1/simple-workflow-transitions?workflow_id={{workflow_id}}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4703,21 +6035,19 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflows",
-                    "{{workflow_id}}",
-                    "transitions"
+                    "simple-workflow-transitions"
                   ],
-                  "query": []
+                  "query": [
+                    {
+                      "key": "workflow_id",
+                      "value": "{{workflow_id}}"
+                    }
+                  ]
                 }
               }
-            }
-          ]
-        },
-        {
-          "name": "Workflow History",
-          "item": [
+            },
             {
-              "name": "Get Workflow History",
+              "name": "Get Transition",
               "request": {
                 "method": "GET",
                 "header": [
@@ -4727,7 +6057,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/workflow-history?entity_id={{audit_plan_id}}&page=1&page_size=20",
+                  "raw": "{{base_url}}/api/v1/simple-workflow-transitions/{{transition_id}}",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -4736,13 +6066,105 @@
                   "path": [
                     "api",
                     "v1",
-                    "workflow-history"
+                    "simple-workflow-transitions",
+                    "{{transition_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Transition",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflow-transitions/{{transition_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflow-transitions",
+                    "{{transition_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"from_status\": \"Initial Review\",\n  \"to_status\": \"Updated Status\",\n  \"required_role_id\": \"{{role_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Transition",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflow-transitions/{{transition_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflow-transitions",
+                    "{{transition_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Workflow Instances",
+          "item": [
+            {
+              "name": "List Workflow Instances",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/instances?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "instances"
                   ],
                   "query": [
-                    {
-                      "key": "entity_id",
-                      "value": "{{audit_plan_id}}"
-                    },
                     {
                       "key": "page",
                       "value": "1"
@@ -4754,13 +6176,281 @@
                   ]
                 }
               }
+            },
+            {
+              "name": "Get Workflow Instance Status",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/instances/{{instance_id}}/status",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "instances",
+                    "{{instance_id}}",
+                    "status"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Workflow Approvals",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/instances/{{instance_id}}/approvals",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "instances",
+                    "{{instance_id}}",
+                    "approvals"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Approve Workflow",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/instances/{{instance_id}}/approve",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "instances",
+                    "{{instance_id}}",
+                    "approve"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"remarks\": \"Approved - meets all requirements\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Reject Workflow",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/simple-workflows/instances/{{instance_id}}/reject",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "simple-workflows",
+                    "instances",
+                    "{{instance_id}}",
+                    "reject"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"remarks\": \"Needs revision before approval\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Workflow Tasks",
+          "item": [
+            {
+              "name": "Get User Workflow Tasks",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/workflow-tasks/user",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "workflow-tasks",
+                    "user"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Instance Workflow Tasks",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/workflow-tasks/instance/{{instance_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "workflow-tasks",
+                    "instance",
+                    "{{instance_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Complete Workflow Task",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/workflow-tasks/{{task_id}}/complete",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "workflow-tasks",
+                    "{{task_id}}",
+                    "complete"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"APPROVED\",\n  \"remarks\": \"Task completed with approval\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Reassign Workflow Task",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/workflow-tasks/{{task_id}}/reassign",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "workflow-tasks",
+                    "{{task_id}}",
+                    "reassign"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assigned_to_user_id\": \"{{user_id}}\",\n  \"remarks\": \"Reassigned to another approver\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
             }
           ]
         }
       ]
     },
     {
-      "name": "10. Risk Matrix & Budget",
+      "name": "11. Risk Matrix & Budget",
       "item": [
         {
           "name": "Risk Matrix",

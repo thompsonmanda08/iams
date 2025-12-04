@@ -877,15 +877,19 @@ export function AuditPlanWorkpaperView({
                                     </div>
 
                                     {/* Conformity Badge */}
-                                    {finding.is_conformity !== null && (
+                                    {
                                       <Badge
-                                        variant={finding.is_conformity ? "default" : "destructive"}
+                                        variant={
+                                          finding.compliance_status?.toLowerCase() == "compliant"
+                                            ? "success"
+                                            : "destructive"
+                                        }
                                         className="ml-auto shrink-0 text-xs">
-                                        {finding.is_conformity
+                                        {finding.compliance_status?.toLowerCase() == "compliant"
                                           ? "✓ Conformity"
                                           : "✗ Non-Conformity"}
                                       </Badge>
-                                    )}
+                                    }
                                   </div>
                                 </div>
 
@@ -925,8 +929,9 @@ export function AuditPlanWorkpaperView({
                   <Button
                     onClick={() => {
                       // Open confirmation Modal
-                      // api/v1working-paper-categories/{id}/conclusion
+                      // Create a server action for ~ api/v1working-paper-categories/{id}/conclusion
                       // this {id} is categoryID
+                      // pass the categoryID to the server action from a client onConfirm function
                     }}
                     className="w-full">
                     Submit for Approval
