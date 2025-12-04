@@ -350,6 +350,21 @@ export default function AuditUniverseForm({
     setItemData((prev) => ({ ...prev, ...fields }));
   };
 
+  const handleDepartmentChange = (deptId: string) => {
+    // Clear dependent fields when department changes
+    updateItemData({
+      department_id: deptId,
+      process_activity_id: "",
+      strategic_pillar_id: "",
+      strategic_pillar_name: "",
+      auditable_area_id: "",
+      auditable_area_name: "",
+      indicative_target_id: "",
+      strategic_initiative_id: "",
+      strategic_initiative_name: ""
+    });
+  };
+
   const handleProcessActivityChange = (activityId: string) => {
     const selectedActivity = processActivitiesData?.find((a: any) => a.id === activityId);
 
@@ -598,7 +613,7 @@ export default function AuditUniverseForm({
                       wrapper: "w-full max-w-none"
                     }}
                     value={itemData.department_id}
-                    onValueChange={(value) => updateItemData({ department_id: value })}
+                    onValueChange={handleDepartmentChange}
                     options={(departments as any) || []}
                   />
                 </div>
