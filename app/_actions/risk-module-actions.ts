@@ -1083,6 +1083,22 @@ export async function deleteRisk(id: string): Promise<APIResponse> {
 }
 
 /**
+ * Close a risk
+ */
+export async function closeRisk(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risks/${id}/close`,
+      method: "POST"
+    });
+    revalidatePath("/dashboard/(modules)/risks");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "POST | CLOSE RISK", `/api/v1/risks/${id}/close`);
+  }
+}
+
+/**
  * Get risk matrix data
  * Endpoint: GET /api/v1/risk-matrix
  */
