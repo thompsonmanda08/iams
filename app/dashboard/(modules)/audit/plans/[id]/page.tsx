@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getAuditPlan, getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
-import { getTasks } from "@/app/_actions/task-actions";
+import { getWorkflowInstances } from "@/app/_actions/task-actions";
 import { AuditPlan } from "@/lib/types/audit-types";
 import { AuditPlanWorkpaperView } from "../_components/audit-plan-workpaper-view";
 import PageHeader from "@/components/page-header";
@@ -34,7 +34,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   const allFindings = workpaper?.findings || [];
 
   // Fetch tasks for this audit plan
-  const tasksResponse = await getTasks({
+  const tasksResponse = await getWorkflowInstances({
     entity_id: auditPlanId
   });
 

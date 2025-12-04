@@ -9,6 +9,7 @@ import { AlertCircle, CheckCircle2, List } from "lucide-react";
 
 interface TasksPageLayoutProps {
   initialInstances: Task[];
+  initialTasks?: any[];
 }
 
 /**
@@ -25,7 +26,7 @@ interface TasksPageLayoutProps {
  *
  * This clear naming prevents confusion between the two types of data
  */
-export function TasksPageLayout({ initialInstances }: TasksPageLayoutProps) {
+export function TasksPageLayout({ initialInstances, initialTasks = [] }: TasksPageLayoutProps) {
   const [activeTab, setActiveTab] = useState("instances");
 
   return (
@@ -77,7 +78,7 @@ export function TasksPageLayout({ initialInstances }: TasksPageLayoutProps) {
 
         {/* TAB 2: WORKFLOW TASKS (User-Assigned) */}
         <TabsContent value="tasks" className="space-y-4">
-          <WorkflowTasksPanel />
+          <WorkflowTasksPanel initialTasks={initialTasks} />
         </TabsContent>
       </Tabs>
     </div>

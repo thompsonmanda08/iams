@@ -21,7 +21,7 @@ import authenticatedApiClient from "./api-config";
 /**
  * Get all tasks with optional filters
  */
-export async function getTasks(filters?: {
+export async function getWorkflowInstances(filters?: {
   page?: string;
   page_size?: string;
   workflow_id?: string;

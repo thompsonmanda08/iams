@@ -40,13 +40,14 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
   const [pageSize, setPageSize] = useState(10);
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
 
-  // Fetch user's assigned workflow tasks
+  // Use initial server-side fetched tasks, with React Query for pagination and updates
   const { data: tasksData, isLoading, error } = useUserAssignedWorkflowTasks({
     page: currentPage,
     page_size: pageSize
   });
 
-  const tasks = tasksData as any || initialTasks;
+  // Prefer server-side data on first load, then use React Query data for updates
+  const tasks = (tasksData && tasksData.length > 0) ? tasksData : initialTasks;
 
   // Calculate pagination info
   const pagination: Pagination = {

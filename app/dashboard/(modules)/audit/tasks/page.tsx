@@ -1,14 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Workflow } from "lucide-react";
 import PageHeader from "@/components/page-header";
-import { getTasks } from "@/app/_actions/task-actions";
+import { getWorkflowInstances, getUserAssignedWorkflowTasks } from "@/app/_actions/task-actions";
 import { TasksPageLayout } from "./_components/tasks-page-layout";
 import Link from "next/link";
 
 export default async function TasksPage() {
   // Fetch workflow instances (SSR)
-  const instancesResponse = await getTasks();
+  const instancesResponse = await getWorkflowInstances({ page: "1", page_size: "20" });
   const instances = instancesResponse.success ? instancesResponse.data : [];
+
+  // Fetch user-assigned workflow tasks (SSR)
+  const tasksResponse = await getUserAssignedWorkflowTasks({ page: "1", page_size: "20" });
+  const tasks = tasksResponse.success ? tasksResponse.data : [];
 
   return (
     <div className="bg-background min-h-screen">
@@ -38,7 +42,7 @@ export default async function TasksPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           {/* Two-Tab Layout: Workflow Instances & Your Tasks */}
-          <TasksPageLayout initialInstances={instances} />
+          <TasksPageLayout initialInstances={instances} initialTasks={tasks} />
         </div>
       </div>
     </div>
