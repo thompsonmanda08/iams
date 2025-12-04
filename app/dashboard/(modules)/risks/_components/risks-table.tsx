@@ -18,10 +18,10 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Trash2, View, Pencil, UserPlus } from "lucide-react";
+import { Trash2, View, Pencil, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
+import { closeRisk, deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
@@ -148,6 +148,10 @@ export default function RisksTable({
   const [riskToDelete, setRiskToDelete] = useState<{ id: string; title: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [riskToClose, setRiskToClose] = useState<{ id: string; title: string } | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
+
   const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
   const [riskForAssignment, setRiskForAssignment] = useState<Risk | undefined>();
 
@@ -207,6 +211,10 @@ export default function RisksTable({
     setRiskToDelete({ id: risk.id, title: risk.title });
     setDeleteDialogOpen(true);
   };
+  const handleCloseClick = (risk: Risk) => {
+    setRiskToClose({ id: risk.id, title: risk.title });
+    setCloseDialogOpen(true);
+  };
 
   const confirmDelete = async () => {
     if (!riskToDelete) return;
@@ -215,7 +223,7 @@ export default function RisksTable({
     try {
       const response = await deleteRisk(riskToDelete.id);
       if (response.success) {
-        toast.success("Risk deleted successfully");
+        toast.success(response.message || "Risk deleted successfully");
         setDeleteDialogOpen(false);
         setRiskToDelete(null);
         router.refresh();
@@ -226,6 +234,26 @@ export default function RisksTable({
       toast.error("An unexpected error occurred");
     } finally {
       setIsDeleting(false);
+    }
+  };
+  const confirmClose = async () => {
+    if (!riskToClose) return;
+
+    setIsClosing(true);
+    try {
+      const response = await closeRisk(riskToClose.id);
+      if (response.success) {
+        toast.success(response.message || "Risk closed successfully");
+        setCloseDialogOpen(false);
+        setRiskToClose(null);
+        router.refresh();
+      } else {
+        toast.error(response.message || "Failed to delete risk");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsClosing(false);
     }
   };
 
@@ -431,6 +459,19 @@ export default function RisksTable({
                           Assign Action
                         </Button>
                       ) : null}
+                      {risk.residual_rating === "Low" && risk.status !== "CLOSED" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            handleCloseClick(risk);
+                            e.stopPropagation();
+                          }}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <X className="h-4 w-4" />
+                          Close
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
@@ -485,6 +526,16 @@ export default function RisksTable({
         onConfirm={confirmDelete}
         isLoading={isDeleting}
         type="delete"
+      />
+
+      <ConfirmationModal
+        open={closeDialogOpen}
+        onOpenChange={setCloseDialogOpen}
+        title="Close Risk"
+        description={`Are you sure you want to close "${riskToClose?.title}"? This action cannot be undone.`}
+        onConfirm={confirmClose}
+        isLoading={isClosing}
+        type="close"
       />
 
       {riskForAssignment && (
