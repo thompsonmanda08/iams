@@ -49,26 +49,26 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
       {/* Stats Summary */}
       {stats && (
         <div className="grid grid-cols-3 gap-2">
-          <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/50">
-            <CardContent className="">
+          <Card className="border-blue-200 bg-blue-50 py-4 dark:border-blue-900 dark:bg-blue-950/50">
+            <CardContent className="py-0">
               <p className="text-muted-foreground text-xs">Total</p>
-              <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
+              <p className="text-base font-bold text-blue-600 dark:text-blue-400">
                 {stats.total_count || 0}
               </p>
             </CardContent>
           </Card>
-          <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/50">
-            <CardContent className="">
+          <Card className="border-green-200 bg-green-50 py-4 dark:border-green-900 dark:bg-green-950/50">
+            <CardContent className="py-0">
               <p className="text-muted-foreground text-xs">Verified</p>
-              <p className="text-sm font-bold text-green-600 dark:text-green-400">
+              <p className="text-base font-bold text-green-600 dark:text-green-400">
                 {stats.verified_count || 0}
               </p>
             </CardContent>
           </Card>
-          <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/50">
-            <CardContent className="">
+          <Card className="border-yellow-200 bg-yellow-50 py-4 dark:border-yellow-900 dark:bg-yellow-950/50">
+            <CardContent className="py-0">
               <p className="text-muted-foreground text-xs">Unverified</p>
-              <p className="text-sm font-bold text-yellow-600 dark:text-yellow-400">
+              <p className="text-base font-bold text-yellow-600 dark:text-yellow-400">
                 {stats.unverified_count || 0}
               </p>
             </CardContent>
