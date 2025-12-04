@@ -2,13 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Workflow } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { getTasks } from "@/app/_actions/task-actions";
-import { TasksPageClient } from "./_components/tasks-page-client";
+import { TasksPageLayout } from "./_components/tasks-page-layout";
 import Link from "next/link";
 
 export default async function TasksPage() {
-  // Fetch tasks
-  const tasksResponse = await getTasks();
-  const tasks = tasksResponse.success ? tasksResponse.data : [];
+  // Fetch workflow instances (SSR)
+  const instancesResponse = await getTasks();
+  const instances = instancesResponse.success ? instancesResponse.data : [];
 
   return (
     <div className="bg-background min-h-screen">
@@ -17,8 +17,8 @@ export default async function TasksPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
-              title="Workflow Instances & Tasks"
-              description="Manage and execute workflow tasks assigned to users (Simulation Mode)"
+              title="Task Management"
+              description="Manage workflow instances and review your assigned tasks"
               icon="Workflow"
             />
             <div className="flex gap-2">
@@ -37,8 +37,8 @@ export default async function TasksPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
-          {/* Tasks Table with Approval History Drawer */}
-          <TasksPageClient tasks={tasks} />
+          {/* Two-Tab Layout: Workflow Instances & Your Tasks */}
+          <TasksPageLayout initialInstances={instances} />
         </div>
       </div>
     </div>
