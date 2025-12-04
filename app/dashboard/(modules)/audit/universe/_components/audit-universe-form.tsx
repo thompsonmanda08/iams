@@ -446,23 +446,23 @@ export default function AuditUniverseForm({
       (a: any) => a.id === itemData.process_activity_id
     );
 
+    // Ensure null values are properly set for empty optional fields
     const payload: CreateUniverseItemPayload = {
       audit_universe_id: Number(itemData.audit_universe_id),
       name: itemData.name || "",
       process_activity_id: itemData.process_activity_id,
-      department_id: itemData.department_id || selectedActivity?.department_id || null,
+      department_id: itemData.department_id || selectedActivity?.department_id || "",
       strategic_pillar_id:
-        itemData.strategic_pillar_id || selectedActivity?.strategic_pillar_id || null,
-      auditable_area_id: itemData.auditable_area_id || selectedActivity?.auditable_area_id || null,
-      indicative_target_id: itemData.indicative_target_id || null,
-      strategic_initiative_id: itemData.strategic_initiative_id || null,
-
-      kri_id: itemData.kri_id || null,
+        itemData.strategic_pillar_id || selectedActivity?.strategic_pillar_id || "",
+      auditable_area_id: itemData.auditable_area_id || selectedActivity?.auditable_area_id || "",
+      indicative_target_id: itemData.indicative_target_id || "",
+      strategic_initiative_id: itemData.strategic_initiative_id || "",
+      kri_id: itemData.kri_id || "",
       audit_frequency: itemData.audit_frequency,
       is_active: itemData.is_active || true
     };
 
-    // console.log("payload", payload);
+    console.log("payload", payload, "editingItemId", editingItemId);
 
     itemSubmitMutation.mutate(payload);
   };

@@ -856,7 +856,7 @@ export function AuditPlanWorkpaperView({
                                       {/* Compliance Status Badge */}
                                       {finding.compliance_status && (
                                         <div className="mt-1 flex items-center gap-1">
-                                          <span className="text-xs text-muted-foreground">
+                                          <span className="text-muted-foreground text-xs">
                                             Status:
                                           </span>
                                           <Badge
@@ -881,7 +881,9 @@ export function AuditPlanWorkpaperView({
                                       <Badge
                                         variant={finding.is_conformity ? "default" : "destructive"}
                                         className="ml-auto shrink-0 text-xs">
-                                        {finding.is_conformity ? "✓ Conformity" : "✗ Non-Conformity"}
+                                        {finding.is_conformity
+                                          ? "✓ Conformity"
+                                          : "✗ Non-Conformity"}
                                       </Badge>
                                     )}
                                   </div>
@@ -919,6 +921,16 @@ export function AuditPlanWorkpaperView({
                       + Add New Finding
                     </Button>
                   )} */}
+
+                  <Button
+                    onClick={() => {
+                      // Open confirmation Modal
+                      // api/v1working-paper-categories/{id}/conclusion
+                      // this {id} is categoryID
+                    }}
+                    className="w-full">
+                    Submit for Approval
+                  </Button>
                 </>
               ) : (
                 <Card>

@@ -247,16 +247,10 @@ const UniverseDetails = ({
               mode="item"
               initialData={
                 editingItemId
-                  ? safeUniverseItems.find((item) => item.id === editingItemId) || {
-                      audit_universe_id: universe.id
-                    }
-                  : {
-                      audit_universe_id: universe.id,
-                      ...universe,
-                      universe_items: [...safeUniverseItems]
-                    }
+                  ? safeUniverseItems.find((item) => item.id === editingItemId)
+                  : { audit_universe_id: universe.id }
               }
-              universeId={editingItemId || undefined}
+              universeId={undefined}
               onSwitchToUniverseTab={() => {}}
               onCancel={() => {
                 setShowItemForm(false);
