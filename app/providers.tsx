@@ -46,7 +46,7 @@ function Providers({
         )}
 
         {children}
-        {session.accessToken && <IdleTimerContainer session={session} />}
+        {session?.accessToken && <IdleTimerContainer session={session} />}
         {session?.change_password && <FirstLogin open={session?.change_password} />}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
