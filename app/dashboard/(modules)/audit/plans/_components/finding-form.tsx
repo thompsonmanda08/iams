@@ -16,7 +16,7 @@ import { notify } from "@/lib/utils";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { updateFinding } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
-import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 
 interface FindingFormProps {
@@ -47,7 +47,7 @@ export function FindingForm({
   onEditComplete
 }: FindingFormProps) {
   const queryClient = useQueryClient();
-  const { data: teamMemberResponse, isLoading: loadingTeamMembers } = useTeamMembers({
+  const { data: teamMemberResponse, isLoading: loadingTeamMembers } = useUsers({
     page_size: 100
   });
   const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
@@ -537,10 +537,7 @@ export function FindingForm({
 
       {/* Form Actions */}
       <div className="bg-background sticky bottom-0 flex justify-end gap-2 border-t py-4">
-        <Button
-          variant="outline"
-          type="button"
-          onClick={() => setIsFormExpanded(false)}>
+        <Button variant="outline" type="button" onClick={() => setIsFormExpanded(false)}>
           Cancel
         </Button>
         <Button

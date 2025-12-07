@@ -19,7 +19,7 @@ import type {
 } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS } from "@/lib/data/tick-marks";
-import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useUsers } from "@/hooks/use-users-query-data";
 import { SelectField } from "@/components/ui/select-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { User } from "@/lib/types/account";
@@ -35,7 +35,7 @@ interface CustomWorkpaperFormProps {
 export function CustomWorkpaperForm({ auditId, auditTitle, template, onSuccess, onCancel }: any) {
   const router = useRouter();
   const { toast } = useToast();
-  const { data: teamMembersResponse } = useTeamMembers({ page_size: 100 });
+  const { data: teamMembersResponse } = useUsers({ page_size: 100 });
   const [isSaving, setIsSaving] = useState(false);
 
   const teamMembers = (teamMembersResponse?.data?.data || []) as User[];

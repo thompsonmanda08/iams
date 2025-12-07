@@ -66,12 +66,12 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
 
-        {(errorText || descriptionText) && (
+        {((errorText && isInvalid) || descriptionText) && (
           <motion.span
             className={cn(
               "text-muted-foreground ml-1 flex items-center justify-between gap-2 text-xs",
               {
-                "text-red-600": onError
+                "text-red-600": onError || isInvalid
               },
               classNames?.descriptionText,
               classNames?.errorText

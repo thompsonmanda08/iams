@@ -42,7 +42,7 @@ import type {
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SelectField } from "../../../../../components/ui/select-field";
-import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 
 interface CreateWorkpaperFormProps {
@@ -65,7 +65,7 @@ export function CreateWorkpaperForm({
   const router = useRouter();
   const { toast } = useToast();
   const createMutation = useCreateWorkpaper();
-  const { data: teamMembersResponse, isLoading: loadingTeam } = useTeamMembers({ page_size: 100 });
+  const { data: teamMembersResponse, isLoading: loadingTeam } = useUsers({ page_size: 100 });
   const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
 
   // Draft store

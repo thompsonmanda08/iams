@@ -27,7 +27,9 @@ import {
   CircleAlertIcon,
   CircleCheckBig,
   FileArchive,
-  Trash2
+  Trash2,
+  ClipboardXIcon,
+  Plus
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import type { Task } from "@/lib/types/task";
@@ -41,6 +43,8 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { submitAuditPlanForApproval, deleteAuditPlan } from "@/app/_actions/audit-module-actions";
 import { StatusBadge } from "@/components/status-badge";
 import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
+import Link from "next/link";
+import { useDeleteAuditPlan, useSubmitAuditPlanForApproval } from "@/hooks/use-audt-plan-queries";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -79,65 +83,68 @@ export function AuditPlanWorkpaperView({
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
 
   // Submit for approval mutation
-  const submitMutation = useMutation({
-    mutationFn: async () => {
-      const result = await submitAuditPlanForApproval(auditPlan.id);
-      return result;
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
-        notify({
-          title: "Success",
-          description: "Audit plan submitted for approval",
-          type: "success"
-        });
-        // Update local state - set status to SUBMITTED
-        setAuditPlanData((prev) => ({ ...prev, status: "SUBMITTED" }));
-      } else {
-        notify({
-          title: "Error",
-          description: response.message || "Failed to submit audit plan for approval",
-          type: "error"
-        });
-      }
-    },
-    onError: (error: any) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to submit audit plan for approval",
-        type: "error"
-      });
-    }
-  });
+  // const submitMutation = useMutation({
+  //   mutationFn: async () => {
+  //     const result = await submitAuditPlanForApproval(auditPlan.id);
+  //     return result;
+  //   },
+  //   onSuccess: (response) => {
+  //     if (response.success) {
+  //       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+  //       notify({
+  //         title: "Success",
+  //         description: "Audit plan submitted for approval",
+  //         type: "success"
+  //       });
+  //       // Update local state - set status to SUBMITTED
+  //       setAuditPlanData((prev) => ({ ...prev, status: "SUBMITTED" }));
+  //     } else {
+  //       notify({
+  //         title: "Error",
+  //         description: response.message || "Failed to submit audit plan for approval",
+  //         type: "error"
+  //       });
+  //     }
+  //   },
+  //   onError: (error: any) => {
+  //     notify({
+  //       title: "Error",
+  //       description: error.message || "Failed to submit audit plan for approval",
+  //       type: "error"
+  //     });
+  //   }
+  // });
 
   // Delete audit plan mutation
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      const result = await deleteAuditPlan(auditPlan.id);
-      return result;
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
-        notify({
-          title: "Success",
-          description: "Audit plan deleted successfully",
-          type: "success"
-        });
-        setDeleteDialogOpen(false);
-        window.location.href = "/dashboard/audit/plans";
-        // Optionally navigate away or trigger parent callback
-      }
-    },
-    onError: (error: any) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to delete audit plan",
-        type: "error"
-      });
-    }
-  });
+  // const deleteMutation = useMutation({
+  //   mutationFn: async () => {
+  //     const result = await deleteAuditPlan(auditPlan.id);
+  //     return result;
+  //   },
+  //   onSuccess: (response) => {
+  //     if (response.success) {
+  //       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+  //       notify({
+  //         title: "Success",
+  //         description: "Audit plan deleted successfully",
+  //         type: "success"
+  //       });
+  //       setDeleteDialogOpen(false);
+  //       window.location.href = "/dashboard/audit/plans";
+  //       // Optionally navigate away or trigger parent callback
+  //     }
+  //   },
+  //   onError: (error: any) => {
+  //     notify({
+  //       title: "Error",
+  //       description: error.message || "Failed to delete audit plan",
+  //       type: "error"
+  //     });
+  //   }
+  // });
+
+  const submitMutation = useSubmitAuditPlanForApproval({ auditPlan, setAuditPlanData });
+  const deleteMutation = useDeleteAuditPlan({ planId: auditPlan.id, setDeleteDialogOpen });
 
   const handleEditFinding = (finding: any) => {
     // Use the category object from the finding if available, otherwise find matching category
@@ -258,7 +265,7 @@ export function AuditPlanWorkpaperView({
   const auditTeamLeaderId = auditPlan?.audit_team_leader;
   const teamMembersCount = auditPlan?.audit_team_members?.length || 0;
 
-  console.log({ categoryFindings });
+  console.log({ categoryFindings, selectedCategory });
 
   return (
     <div className="space-y-6">
@@ -906,12 +913,46 @@ export function AuditPlanWorkpaperView({
                       </CardContent>
                     </Card>
                   ) : (
-                    <Card>
-                      <CardContent className="pt-12">
-                        <div className="text-center">
-                          <AlertCircle className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-                          <p className="text-muted-foreground">No findings for this category yet</p>
+                    // NO FINDINGS YET
+                    <Card className="bg-canvas/50 border-2 border-dashed">
+                      <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+                        <div className="relative mb-4">
+                          <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+                          <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                            <ClipboardXIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
+                          </div>
                         </div>
+
+                        <h3 className="text-foreground mb-2 text-2xl font-semibold">
+                          No Findings added
+                        </h3>
+                        <p className="text-muted-foreground mb-8 max-w-md text-center">
+                          No findings for this category yet
+                        </p>
+
+                        <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+                          <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                            <div className="text-primary mb-1 font-mono">CONFIGURE TEMPLATES</div>
+                            <div className="text-muted-foreground">
+                              Clauses & Procedures Required
+                            </div>
+                          </div>
+                          <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                            <div className="text-primary mb-1 font-mono">CREATE PLAN</div>
+                            <div className="text-muted-foreground">Engagement Audit Plan</div>
+                          </div>
+                          <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                            <div className="text-primary mb-1 font-mono">EXECUTE</div>
+                            <div className="text-muted-foreground">Collect Findings & Evidence</div>
+                          </div>
+                        </div>
+
+                        <Button size="lg" className="gap-2" asChild>
+                          <Link href="/dashboard/audit/plans/new">
+                            <Plus className="h-4 w-4" />
+                            Create Audit Plan
+                          </Link>
+                        </Button>
                       </CardContent>
                     </Card>
                   )}
@@ -925,25 +966,46 @@ export function AuditPlanWorkpaperView({
                       + Add New Finding
                     </Button>
                   )} */}
-
-                  <Button
-                    onClick={() => {
-                      // Open confirmation Modal
-                      // Create a server action for ~ api/v1working-paper-categories/{id}/conclusion
-                      // this {id} is categoryID
-                      // pass the categoryID to the server action from a client onConfirm function
-                    }}
-                    className="w-full">
-                    Submit for Approval
-                  </Button>
                 </>
               ) : (
-                <Card>
-                  <CardContent className="pt-12">
-                    <div className="text-center">
-                      <AlertCircle className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-                      <p className="text-muted-foreground">Select a category to begin</p>
+                // NO CATEGORY SELECTED YET
+                <Card className="bg-canvas/50 border-2 border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+                    <div className="relative mb-4">
+                      <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+                      <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                        <ClipboardXIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
+                      </div>
                     </div>
+
+                    <h3 className="text-foreground mb-2 text-2xl font-semibold">
+                      No Category Selected
+                    </h3>
+                    <p className="text-muted-foreground mb-8 max-w-md text-center">
+                      You need to choose a category to submit findings.
+                    </p>
+
+                    <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+                      <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                        <div className="text-primary mb-1 font-mono">SELECT CATEGORY</div>
+                        <div className="text-muted-foreground">Clauses & Procedures</div>
+                      </div>
+                      <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                        <div className="text-primary mb-1 font-mono">UPDATE FINDINGS</div>
+                        <div className="text-muted-foreground">Collect Findings & Evidence</div>
+                      </div>
+                      <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                        <div className="text-primary mb-1 font-mono">SUBMIT FOR APPROVAL</div>
+                        <div className="text-muted-foreground">Send to Team lead for Approval</div>
+                      </div>
+                    </div>
+
+                    {/* <Button onClick={handleCategoryClick}  size="lg" className="gap-2" asChild>
+                      <Link href="/dashboard/audit/plans/new">
+                        <Plus className="h-4 w-4" />
+                        Create Audit Plan
+                      </Link>
+                    </Button> */}
                   </CardContent>
                 </Card>
               )}
@@ -952,7 +1014,7 @@ export function AuditPlanWorkpaperView({
               <Dialog
                 open={editingFinding !== null}
                 onOpenChange={(open) => !open && setEditingFinding(null)}>
-                <DialogContent className="max-h-[90vh] max-w-xl! overflow-y-auto pb-0">
+                <DialogContent className="max-h-[90vh] max-w-2xl! overflow-y-auto pb-0">
                   <DialogHeader>
                     <DialogTitle>
                       {editingFinding

@@ -37,7 +37,7 @@ export interface FrameworkFieldConfig {
 export const FRAMEWORK_FINDING_FIELDS: Record<FrameworkType, FrameworkFieldConfig> = {
   ISO27001: {
     framework: "ISO27001",
-    label: "ISO 27001:2022",
+    label: "ISO 27001",
     complianceFields: [
       {
         name: "clause_number",
@@ -72,7 +72,7 @@ export const FRAMEWORK_FINDING_FIELDS: Record<FrameworkType, FrameworkFieldConfi
       {
         name: "compliance_percentage",
         label: "Compliance Percentage",
-        description: "Percentage of clause requirements that are met (0-100)",
+        description: "Percentage of clause requirements that are met (1-99)",
         required: false,
         type: "number"
       }

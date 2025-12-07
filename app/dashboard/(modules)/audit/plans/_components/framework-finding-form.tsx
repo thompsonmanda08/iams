@@ -22,7 +22,7 @@ import type {
 } from "@/lib/types/audit-types";
 import { updateFinding } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
-import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import {
   getFrameworkFieldConfig,
@@ -78,7 +78,7 @@ export function FrameworkFindingForm({
   onEditComplete
 }: FrameworkFindingFormProps) {
   const queryClient = useQueryClient();
-  const { data: teamMemberResponse } = useTeamMembers({ page_size: 100 });
+  const { data: teamMemberResponse } = useUsers({ page_size: 100 });
   const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
 
   const framework = (auditPlan?.framework_type || "ISO27001") as FrameworkType;
@@ -413,7 +413,7 @@ export function FrameworkFindingForm({
                       />
                     )}
 
-                    {field.type === "number" && (
+                    {field.type === "number" && formData?.compliance_status == "Partial" && (
                       <Input
                         label={field.label}
                         required={field.required}
@@ -425,6 +425,7 @@ export function FrameworkFindingForm({
                         errorText={fieldErrors[field.name]}
                         min="0"
                         max="100"
+                        step={1}
                         className="text-sm"
                       />
                     )}
@@ -493,10 +494,13 @@ export function FrameworkFindingForm({
                 descriptionText="Impact level of this finding"
                 type="text"
                 value={formData.severity || ""}
-                onChange={(e) => handleInputChange("severity", e.target.value)}
+                onValueChange={(value) => handleInputChange("severity", value)}
                 placeholder="Select severity..."
                 errorText={fieldErrors["severity"]}
-                className="w-full text-sm"
+                className="w-full max-w-none text-sm"
+                classNames={{
+                  wrapper: "max-w-none"
+                }}
                 options={[
                   { id: "LOW", name: "Low" },
                   { id: "MEDIUM", name: "Medium" },

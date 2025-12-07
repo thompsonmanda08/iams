@@ -28,7 +28,7 @@ import { SelectField } from "@/components/ui/select-field";
 import { WorkpaperTemplateDefinition, TemplateCategory } from "@/lib/types/audit-types";
 import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
 import { notify } from "@/lib/utils";
-import { useHeadsOfDepartments, useTeamMembers } from "@/hooks/use-users-query-data";
+import { useHeadsOfDepartments, useUsers } from "@/hooks/use-users-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
 import { User } from "@/lib/types/account";
 import { MultiSelectField } from "@/components/ui/multi-select-field";
@@ -118,7 +118,7 @@ export default function NewAuditPlanPage() {
     selectedCategories: []
   });
 
-  const { data: teamMemberResponse } = useTeamMembers({
+  const { data: teamMemberResponse } = useUsers({
     page_size: 100,
     departmentId: formData.department_id
   });

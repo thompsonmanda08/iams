@@ -4,13 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
-import {
-  updateFinding,
-  updateFindingStatus,
-  deleteFinding,
-  getFinding,
-  getFindingsByCategory
-} from "./audit-module-actions";
+import { updateFinding, updateFindingStatus } from "./audit-module-actions";
 
 /**
  * Convert date to YYYY-MM-DD format if it's a Date object
@@ -150,92 +144,33 @@ export async function handleClearFinding(findingId: string): Promise<void> {
 }
 
 /**
- * Server action to delete a finding
- * Requires confirmation before deletion
+ * Submit working paper category findings for approval
  */
-export async function handleDeleteFinding(findingId: string): Promise<void> {
-  if (!findingId) {
-    throw new Error("Finding ID is required");
+export async function submitCategoryFindingsForApproval(data: {
+  category_id: string;
+  objectives: string;
+  conclusion: string;
+}): Promise<APIResponse> {
+  if (!data.category_id) {
+    return handleBadRequest("Category ID is required");
   }
+
+  const url = `/api/v1/working-paper-categories/${data.category_id}/conclusion`;
 
   try {
-    const response = await deleteFinding(findingId);
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url,
+      data: {
+        objectives: data.objectives,
+        conclusion: data.conclusion
+      }
+    });
 
-    if (!response.success) {
-      throw new Error(response.message || "Failed to delete finding");
-    }
+    revalidatePath("/dashboard/audit/plans/[id]", "page");
+
+    return successResponse(response.data, "Findings submitted for approval successfully");
   } catch (error: any) {
-    throw new Error(error.message || "Error deleting finding");
-  }
-}
-
-/**
- * Server action to fetch a single finding by ID
- */
-export async function handleGetFinding(findingId: string): Promise<any> {
-  if (!findingId) {
-    throw new Error("Finding ID is required");
-  }
-
-  try {
-    const response = await getFinding(findingId);
-
-    if (!response.success) {
-      throw new Error(response.message || "Failed to fetch finding");
-    }
-
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.message || "Error fetching finding");
-  }
-}
-
-/**
- * Server action to fetch findings by category
- */
-export async function handleGetFindingsByCategory(
-  workingPaperId: string,
-  categoryName: string
-): Promise<any> {
-  if (!workingPaperId || !categoryName) {
-    throw new Error("Working paper ID and category name are required");
-  }
-
-  try {
-    const response = await getFindingsByCategory(workingPaperId, categoryName);
-
-    if (!response.success) {
-      throw new Error(response.message || "Failed to fetch category findings");
-    }
-
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.message || "Error fetching category findings");
-  }
-}
-
-/**
- * Submit working paper findings for approval
- */
-export async function submitWorkingPaperFindingsForApproval(workingPaperId: string): Promise<APIResponse> {
-  if (!workingPaperId) {
-    return handleBadRequest("Working paper ID is required");
-  }
-
-  const url = `/api/v1/working-paper-findings/${workingPaperId}/submit-for-approval`;
-
-  try {
-    const response = await authenticatedApiClient({ method: "GET", url });
-
-    revalidatePath("/dashboard/audit/workpapers");
-    revalidatePath(`/dashboard/audit/workpapers/${workingPaperId}`);
-
-    return successResponse(response.data, "Working paper findings submitted for approval successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "GET | SUBMIT WORKING PAPER FINDINGS",
-      url
-    );
+    return handleError(error, "PATCH | SUBMIT WORKING-PAPER CATEGORY FINDINGS", url);
   }
 }

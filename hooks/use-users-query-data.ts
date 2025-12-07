@@ -5,7 +5,8 @@ import {
   getUsers,
   createNewUser,
   updateUser,
-  getHeadsOfDepartments
+  getHeadsOfDepartments,
+  getUserById
 } from "@/app/_actions/user-actions";
 import { SESSION_CONFIG } from "@/lib/session-config";
 
@@ -20,10 +21,17 @@ export const USERS_QUERY_KEYS = {
 /**
  * Hook to fetch team members
  */
-export const useTeamMembers = (params: UserQueryParams | undefined) => {
+export const useUsers = (params?: {
+  page?: number;
+  page_size?: number;
+  department_id?: string;
+  user_id?: string;
+}) => {
   return useQuery({
-    queryKey: [USERS_QUERY_KEYS.USERS, params],
-    queryFn: async () => await getUsers(params),
+    queryKey: [USERS_QUERY_KEYS.USERS, params?.user_id, params],
+    queryFn: params?.user_id
+      ? async () => await getUserById(String(params?.user_id))
+      : async () => await getUsers(params),
     staleTime: 5 * 60 * 1000 // Cache for 10 minutes
   });
 };

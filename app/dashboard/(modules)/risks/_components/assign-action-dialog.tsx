@@ -17,7 +17,7 @@ import { MultiSelectField } from "@/components/ui/multi-select-field";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
-import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useUsers } from "@/hooks/use-users-query-data";
 import { createRiskAction } from "@/app/_actions/risk-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 
@@ -62,7 +62,7 @@ export function AssignActionDialog({
   const queryClient = useQueryClient();
 
   // Fetch users
-  const { data: usersResponse, isLoading: isLoadingUsers } = useTeamMembers({
+  const { data: usersResponse, isLoading: isLoadingUsers } = useUsers({
     page_size: 100,
     page: 1
     // is_active: true

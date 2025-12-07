@@ -14,7 +14,7 @@ import { CreateFindingModal } from "../../../../../components/audit/create-findi
 import type { GeneralWorkpaperInput, EvidenceRow } from "@/lib/types/audit-types";
 import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/data/tick-marks";
 import { SelectField } from "../../../../../components/ui/select-field";
-import { useTeamMembers } from "@/hooks/use-users-query-data";
+import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { notify } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ interface GeneralWorkpaperFormProps {
 
 export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpaperFormProps) {
   const router = useRouter();
-  const { data: teamMembersResponse, isLoading: loadingTeam } = useTeamMembers({ page_size: 200 });
+  const { data: teamMembersResponse, isLoading: loadingTeam } = useUsers({ page_size: 200 });
   const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
 
   const teamMemberOptions = useMemo(() => {
