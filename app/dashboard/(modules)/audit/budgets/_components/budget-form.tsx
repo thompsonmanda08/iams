@@ -473,19 +473,21 @@ const BudgetForm = ({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Input
-                    id="lineSpent"
-                    name="lineSpent"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={lineData.spent_amount || ""}
-                    onChange={(e) => updateLineData({ spent_amount: Number(e.target.value) })}
-                    placeholder="0.00"
-                    label="Spent Amount"
-                  />
-                </div>
+                {isEditMode && (
+                  <div className="space-y-2">
+                    <Input
+                      id="lineSpent"
+                      name="lineSpent"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={lineData.spent_amount || ""}
+                      onChange={(e) => updateLineData({ spent_amount: Number(e.target.value) })}
+                      placeholder="0.00"
+                      label="Spent Amount"
+                    />
+                  </div>
+                )}
 
                 <SearchSelectField
                   id="lineCurrency"
