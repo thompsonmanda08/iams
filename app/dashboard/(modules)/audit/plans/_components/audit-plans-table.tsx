@@ -147,14 +147,14 @@ export function AuditPlansTable({ plans, isLoading }: AuditPlansTableProps) {
     <div className="bg-card rounded-lg border">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>AUDIT TITLE</TableHead>
-            <TableHead>STANDARD/FRAMEWORK TYPE</TableHead>
-            <TableHead>TEAM LEADER</TableHead>
-            <TableHead>PERIOD</TableHead>
-            <TableHead>PROGRESS</TableHead>
-            <TableHead>STATUS</TableHead>
-            <TableHead className="w-20 text-center">ACTIONS</TableHead>
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="text-foreground/70 font-bold">AUDIT TITLE</TableHead>
+            <TableHead className="text-foreground/70 font-bold">STANDARD/FRAMEWORK TYPE</TableHead>
+            <TableHead className="text-foreground/70 font-bold">TEAM LEADER</TableHead>
+            <TableHead className="text-foreground/70 font-bold">PERIOD</TableHead>
+            <TableHead className="text-foreground/70 font-bold">PROGRESS</TableHead>
+            <TableHead className="text-foreground/70 font-bold">STATUS</TableHead>
+            <TableHead className="text-foreground/70 w-20 text-center font-bold">ACTIONS</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

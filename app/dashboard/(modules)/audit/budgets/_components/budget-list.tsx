@@ -226,8 +226,8 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
         </Card>
       </div>
 
-      <Card className="animate-fade-in [animation-delay:300ms]">
-        <div className="from-card to-muted/20 border-b bg-linear-to-r p-6">
+      <Card className="animate-fade-in border-none [animation-delay:300ms]">
+        {/* <div className="from-card to-muted/20 border-b bg-linear-to-r p-6">
           <div className="flex items-center justify-end">
             <Search
               placeholder="Search budgets..."
@@ -238,22 +238,22 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
               }}
             />
           </div>
-        </div>
+        </div> */}
 
         {filteredBudgets.length > 0 ? (
-          <>
+          <div className="bg-card rounded-lg border">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-foreground font-bold">Budget Title</TableHead>
-                    <TableHead className="text-foreground font-bold">Department</TableHead>
-                    <TableHead className="text-foreground font-bold">Amount</TableHead>
-                    <TableHead className="text-foreground font-bold">Budget Lines</TableHead>
-                    <TableHead className="text-foreground font-bold">Status</TableHead>
-                    <TableHead className="text-foreground font-bold">Year</TableHead>
-                    <TableHead className="text-foreground font-bold">Start Date</TableHead>
-                    <TableHead className="text-foreground font-bold">End Date</TableHead>
+                    <TableHead className="text-foreground/70 font-bold">BUDGET</TableHead>
+                    <TableHead className="text-foreground/70 font-bold">DEPARTMENT</TableHead>
+                    <TableHead className="text-foreground/70 font-bold">AMOUNT</TableHead>
+                    <TableHead className="text-foreground/70 font-bold">BUDGET LINES</TableHead>
+                    <TableHead className="text-foreground/70 font-bold">STATUS</TableHead>
+                    {/* <TableHead className="text-foreground/70 font-bold">Year</TableHead> */}
+                    <TableHead className="text-foreground/70 font-bold">START DATE</TableHead>
+                    <TableHead className="text-foreground/70 font-bold">END DATE</TableHead>
                     <TableHead className="text-foreground text-center font-bold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -280,7 +280,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-lg font-bold">
+                      <TableCell className="text-base font-bold">
                         {formatCurrency(budget.total_amount, budget.currency)}
                       </TableCell>
                       <TableCell>
@@ -289,7 +289,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                       <TableCell>
                         <StatusBadge status={budget?.status} />
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{budget.year}</TableCell>
+                      {/* <TableCell className="text-muted-foreground">{budget.year}</TableCell> */}
                       <TableCell className="text-muted-foreground">
                         {formatDate(budget.start_date)}
                       </TableCell>
@@ -340,7 +340,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
               showDetails={true}
               className="border-t"
             />
-          </>
+          </div>
         ) : (
           <div className="p-12 text-center">
             <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
