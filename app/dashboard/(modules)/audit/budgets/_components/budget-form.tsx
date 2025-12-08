@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,19 @@ import { useDepartments } from "@/hooks/use-query-data";
 import { useBudgets } from "@/hooks/use-audit-settings-query-data";
 import { useQueryClient } from "@tanstack/react-query";
 import { Budget } from "@/lib/types/audit-types";
+import { cn } from "@/lib/utils";
+
+const formatCurrency = (num: number): string => {
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
+const formatInputDisplay = (value: string): string => {
+  const numValue = Number(value.replace(/,/g, "")) || 0;
+  return formatCurrency(numValue);
+};
 
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
@@ -88,6 +101,10 @@ const BudgetForm = ({
     budget_id: budgetId || ""
   });
   const [isCreating, setIsCreating] = useState(false);
+
+  const totalAmountRef = useRef<HTMLInputElement>(null);
+  const allocatedAmountRef = useRef<HTMLInputElement>(null);
+  const spentAmountRef = useRef<HTMLInputElement>(null);
 
   // Use reusable hooks for data fetching
   const { data: departmentsResponse, isLoading: loadingDepartments } = useDepartments({
@@ -292,13 +309,23 @@ const BudgetForm = ({
 
                 <div className="space-y-2">
                   <Input
+                    ref={totalAmountRef}
                     id="totalAmount"
                     name="totalAmount"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     min="0"
-                    value={budgetData.total_amount || ""}
-                    onChange={(e) => updateBudgetData({ total_amount: Number(e.target.value) })}
+                    defaultValue={budgetData.total_amount}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/,/g, "");
+                      const numValue = Number(rawValue) || 0;
+                      updateBudgetData({ total_amount: numValue });
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value) {
+                        e.target.value = formatInputDisplay(e.target.value);
+                      }
+                    }}
                     placeholder="0.00"
                     label="Total Amount"
                     required
@@ -371,7 +398,17 @@ const BudgetForm = ({
                 />
               </div>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant={"destructive"}
+                disabled={isCreating || loadingBudgets}
+                onClick={() => {
+                  router.back();
+                }}
+                className="gap-2 shadow-lg">
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 form="budget-form"
@@ -398,21 +435,39 @@ const BudgetForm = ({
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <SearchSelectField
-                  id="budget"
-                  label="Select Budget"
-                  required
-                  placeholder="Search and select a budget..."
-                  options={
-                    budgetsData?.map((budget: any) => ({
-                      id: budget.id,
-                      name: `${budget.title} - ${budget.currency} ${budget.total_amount.toLocaleString()}`
-                    })) || []
-                  }
-                  value={lineData.budget_id}
-                  onValueChange={(value) => updateLineData({ budget_id: value })}
-                  isDisabled={loadingBudgets}
-                />
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                  <SearchSelectField
+                    id="budget"
+                    label="Select Budget"
+                    required
+                    placeholder="Search and select a budget..."
+                    options={
+                      budgetsData?.map((budget: any) => ({
+                        id: budget.id,
+                        name: `${budget.title} - ${budget.currency} ${budget.total_amount.toLocaleString()}`
+                      })) || []
+                    }
+                    value={lineData.budget_id}
+                    onValueChange={(value) => updateLineData({ budget_id: value })}
+                    isDisabled={loadingBudgets}
+                  />
+                  <SelectField
+                    id="lineCategory"
+                    name="lineCategory"
+                    label="Category"
+                    required
+                    className="w-full"
+                    value={lineData.category}
+                    onValueChange={(value) => updateLineData({ category: value })}
+                    placeholder="Select category"
+                    options={BUDGET_CATEGORIES.map((cat) => ({
+                      id: cat,
+                      name: cat,
+                      value: cat
+                    }))}
+                  />
+                </div>
+
                 {selectedBudget && (
                   <div className="bg-muted/50 mt-2 rounded-lg p-3">
                     <p className="text-sm">
@@ -426,67 +481,70 @@ const BudgetForm = ({
                 )}
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Input
-                    id="lineName"
-                    name="lineName"
-                    value={lineData.name}
-                    onChange={(e) => updateLineData({ name: e.target.value })}
-                    placeholder="e.g., Personnel Costs"
-                    label="Line Name"
-                    required
-                  />
-                </div>
+              <Input
+                id="lineName"
+                name="lineName"
+                value={lineData.name}
+                onChange={(e) => updateLineData({ name: e.target.value })}
+                placeholder="e.g., Personnel Costs"
+                label="Line Name"
+                required
+                className="w-full"
+                classNames={{
+                  wrapper: "max-w-none w-full",
+                  input: "max-w-none"
+                }}
+              />
 
-                <div className="space-y-2">
-                  <SelectField
-                    id="lineCategory"
-                    name="lineCategory"
-                    label="Category"
-                    required
-                    value={lineData.category}
-                    onValueChange={(value) => updateLineData({ category: value })}
-                    placeholder="Select category"
-                    options={BUDGET_CATEGORIES.map((cat) => ({
-                      id: cat,
-                      name: cat,
-                      value: cat
-                    }))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Input
-                    id="lineAllocated"
-                    name="lineAllocated"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={lineData.allocated_amount || ""}
-                    onChange={(e) => updateLineData({ allocated_amount: Number(e.target.value) })}
-                    placeholder="0.00"
-                    label="Allocated Amount"
-                    required
-                  />
-                </div>
+              <div
+                className={cn("grid grid-cols-1 gap-4 md:grid-cols-2", {
+                  "md:grid-cols-3": isEditMode
+                })}>
+                <Input
+                  ref={allocatedAmountRef}
+                  id="lineAllocated"
+                  name="lineAllocated"
+                  type="text"
+                  inputMode="decimal"
+                  min="0"
+                  defaultValue={lineData.allocated_amount}
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/,/g, "");
+                    const numValue = Number(rawValue) || 0;
+                    updateLineData({ allocated_amount: numValue });
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value) {
+                      e.target.value = formatInputDisplay(e.target.value);
+                    }
+                  }}
+                  placeholder="0.00"
+                  label="Allocated Amount"
+                  required
+                />
 
                 {isEditMode && (
-                  <div className="space-y-2">
-                    <Input
-                      id="lineSpent"
-                      name="lineSpent"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={lineData.spent_amount || ""}
-                      onChange={(e) => updateLineData({ spent_amount: Number(e.target.value) })}
-                      placeholder="0.00"
-                      label="Spent Amount"
-                    />
-                  </div>
+                  <Input
+                    ref={spentAmountRef}
+                    id="lineSpent"
+                    name="lineSpent"
+                    type="text"
+                    inputMode="decimal"
+                    min="0"
+                    defaultValue={lineData.spent_amount}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/,/g, "");
+                      const numValue = Number(rawValue) || 0;
+                      updateLineData({ spent_amount: numValue });
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value) {
+                        e.target.value = formatInputDisplay(e.target.value);
+                      }
+                    }}
+                    placeholder="0.00"
+                    label="Spent Amount"
+                  />
                 )}
 
                 <SearchSelectField
@@ -509,54 +567,57 @@ const BudgetForm = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <DatePicker
-                    label="Start Date"
-                    name="lineStartDate"
-                    required
-                    value={
-                      lineData.start_date
-                        ? (new Date(lineData.start_date) as unknown as any)
-                        : undefined
-                    }
-                    onValueChange={(date) =>
-                      updateLineData({ start_date: date?.toISOString().split("T")[0] || "" })
-                    }
-                  />
-                </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <DatePicker
+                  label="Start Date"
+                  name="lineStartDate"
+                  minDate={new Date()}
+                  required
+                  value={
+                    lineData.start_date
+                      ? (new Date(lineData.start_date) as unknown as any)
+                      : undefined
+                  }
+                  onValueChange={(date) =>
+                    updateLineData({ start_date: date?.toISOString().split("T")[0] || "" })
+                  }
+                />
 
-                <div className="space-y-2">
-                  <DatePicker
-                    label="End Date"
-                    name="lineEndDate"
-                    required
-                    value={
-                      lineData.end_date
-                        ? (new Date(lineData.end_date) as unknown as any)
-                        : undefined
-                    }
-                    onValueChange={(date) =>
-                      updateLineData({ end_date: date?.toISOString().split("T")[0] || "" })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Textarea
-                  id="lineDescription"
-                  name="lineDescription"
-                  label="Description"
-                  value={lineData.description}
-                  onChange={(e) => updateLineData({ description: e.target.value })}
-                  rows={3}
-                  placeholder="Describe the purpose and scope of this budget line..."
-                  className="resize-none"
+                <DatePicker
+                  label="End Date"
+                  name="lineEndDate"
+                  required
+                  value={
+                    lineData.end_date ? (new Date(lineData.end_date) as unknown as any) : undefined
+                  }
+                  onValueChange={(date) =>
+                    updateLineData({ end_date: date?.toISOString().split("T")[0] || "" })
+                  }
                 />
               </div>
+
+              <Textarea
+                id="lineDescription"
+                name="lineDescription"
+                label="Description"
+                value={lineData.description}
+                onChange={(e) => updateLineData({ description: e.target.value })}
+                rows={3}
+                placeholder="Describe the purpose and scope of this budget line..."
+                className="resize-none"
+              />
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant={"destructive"}
+                disabled={isCreating || loadingBudgets}
+                onClick={() => {
+                  router.back();
+                }}
+                className="gap-2 shadow-lg">
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 form="budget-form"
