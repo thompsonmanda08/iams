@@ -13,7 +13,7 @@ import {
   TrendingUp,
   Target,
   Shield,
-  DollarSign,
+  Banknote,
   Calendar,
   User,
   Building,
@@ -510,7 +510,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
               <p className="text-sm">{action?.treatment_plan || "No treatment plan specified"}</p>
               <div className="mt-4 flex items-center gap-4 border-t pt-4">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="text-muted-foreground h-4 w-4" />
+                  <Banknote className="text-muted-foreground h-4 w-4" />
                   <div>
                     <p className="text-muted-foreground text-xs">Mitigation Cost</p>
                     <p className="font-semibold">

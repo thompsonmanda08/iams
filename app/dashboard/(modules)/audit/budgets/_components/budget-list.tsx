@@ -10,7 +10,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Wallet, TrendingUp, DollarSign, View } from "lucide-react";
+import { Pencil, Trash2, Wallet, TrendingUp, Banknote, View } from "lucide-react";
 import { BudgetLinesList } from "./budget-line-list";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
@@ -208,7 +208,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
               </p>
             </div>
             <div className="bg-primary/10 rounded-xl p-3">
-              <DollarSign className="text-primary h-8 w-8" />
+              <Banknote className="text-primary h-8 w-8" />
             </div>
           </div>
         </Card>

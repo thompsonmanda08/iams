@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { SelectField } from "@/components/ui/select-field";
-import { Save, FileText, DollarSign } from "lucide-react";
+import { Save, FileText, Banknote } from "lucide-react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { SearchSelectField } from "@/components/ui/search-select-field";
@@ -386,7 +386,7 @@ const BudgetForm = ({
           <Card className="animate-fade-in p-8">
             <div className="mb-6 flex items-center gap-3 border-b pb-4">
               <div className="bg-primary/10 rounded-lg p-2.5">
-                <DollarSign className="text-primary h-5 w-5" />
+                <Banknote className="text-primary h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Budget Line Information</h2>

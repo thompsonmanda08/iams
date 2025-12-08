@@ -24,7 +24,7 @@ import {
   Pencil,
   Trash2,
   Wallet,
-  DollarSign,
+  Banknote,
   Calendar,
   Package,
   Save,
@@ -370,7 +370,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
         <Card className="animate-fade-in p-6 [animation-delay:100ms]">
           <div className="mb-4 flex items-center gap-3">
             <div className="bg-primary/10 rounded-lg p-2.5">
-              <DollarSign className="text-primary h-5 w-5" />
+              <Banknote className="text-primary h-5 w-5" />
             </div>
             <h3 className="text-sm font-semibold">Allocation Summary</h3>
           </div>

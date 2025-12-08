@@ -66,7 +66,7 @@ export default async function RiskConfigurationsPage() {
             </TabsTrigger>
             <TabsTrigger value="controls" className="gap-2">
               <MonitorCog className="h-4 w-4" />
-              Control Effective
+              Control Effectiveness
             </TabsTrigger>
             <TabsTrigger value="residual-rating" className="gap-2">
               <Columns3Cog className="h-4 w-4" />

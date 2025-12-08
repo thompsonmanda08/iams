@@ -177,10 +177,12 @@ const UniverseDetails = ({
               </p>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2">
-                <Send className="h-4 w-4" />
-                Submit for Approval
-              </Button>
+              {universe.status?.toUpperCase() == "DRAFT" && (
+                <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2">
+                  <Send className="h-4 w-4" />
+                  Submit for Approval
+                </Button>
+              )}
             </div>
           </div>
 
@@ -353,9 +355,9 @@ const UniverseDetails = ({
                                   <TooltipTrigger asChild>
                                     <span className="hover:text-primary flex max-w-xs cursor-help flex-col truncate font-semibold">
                                       {item.process_activity_name}
-                                      <span className="text-xs italic">
+                                      <span className="line-clamp-2 max-w-sm text-xs italic">
                                         {" "}
-                                        KRI: {item.kri_name || "--"}{" "}
+                                        KRI: {item.kri_name || "--"}
                                       </span>
                                     </span>
                                   </TooltipTrigger>
@@ -406,7 +408,7 @@ const UniverseDetails = ({
                               {item.auditable_area_name ? (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="hover:text-primary max-w-xs cursor-help truncate">
+                                    <div className="hover:text-primary line-clamp-2 flex max-w-xs min-w-0 cursor-help items-start gap-2 truncate">
                                       {item.auditable_area_name}
                                     </div>
                                   </TooltipTrigger>
