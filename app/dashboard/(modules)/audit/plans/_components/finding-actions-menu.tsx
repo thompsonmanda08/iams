@@ -98,13 +98,8 @@ export function FindingActionsMenu({
           size="sm"
           onClick={onEdit}
           className="gap-2"
-          disabled={
-            clearMutation.isPending ||
-            statusMutation.isPending ||
-            currentStatus === "IN_REVIEW" ||
-            (currentStatus !== "OPEN" && currentStatus !== "IN_PROGRESS")
-          }
-          title={currentStatus === "IN_REVIEW" ? "Cannot edit findings under review" : ""}>
+          disabled={clearMutation.isPending || statusMutation.isPending}
+          title="">
           <Edit2 className="h-4 w-4" />
           Edit
         </Button>
@@ -120,12 +115,8 @@ export function FindingActionsMenu({
           }))}
           placeholder="Select status"
           isLoading={statusMutation.isPending}
-          disabled={
-            statusMutation.isPending ||
-            clearMutation.isPending ||
-            currentStatus === "IN_REVIEW"
-          }
-          title={currentStatus === "IN_REVIEW" ? "Cannot change status of findings under review" : ""}
+          disabled={statusMutation.isPending || clearMutation.isPending}
+          title=""
         />
 
       </div>

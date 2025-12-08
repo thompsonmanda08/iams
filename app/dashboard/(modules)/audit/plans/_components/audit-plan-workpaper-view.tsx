@@ -762,7 +762,7 @@ export function AuditPlanWorkpaperView({
                                   })()}
 
                                 {/* Show conformity status if finding exists */}
-                                {catFindings.length > 0 &&
+                                {/* {catFindings.length > 0 &&
                                   catFindings[0].is_conformity !== null && (
                                     <div className="mt-1 flex items-center gap-1">
                                       {catFindings[0].is_conformity ? (
@@ -787,7 +787,7 @@ export function AuditPlanWorkpaperView({
                                         </>
                                       )}
                                     </div>
-                                  )}
+                                  )} */}
                               </div>
                             </div>
                           </button>
@@ -839,7 +839,7 @@ export function AuditPlanWorkpaperView({
                             return (
                               <div
                                 key={finding.id || index}
-                                className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors">
+                                className="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-lg border p-4 transition-colors">
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-3">
                                     <div className="min-w-0 flex-1">
@@ -884,6 +884,19 @@ export function AuditPlanWorkpaperView({
                                           </Badge>
                                         </div>
                                       )}
+
+                                      {/* Finding Status Badge */}
+                                      {/* {finding.status && (
+                                        <div className="mt-1 flex items-center gap-1">
+                                          <span className="text-muted-foreground text-xs">
+                                            Approval:
+                                          </span>
+                                          <StatusBadge
+                                            status={finding.status}
+                                            className="text-xs"
+                                          />
+                                        </div>
+                                      )} */}
                                     </div>
 
                                     {/* Conformity Badge */}
@@ -903,25 +916,22 @@ export function AuditPlanWorkpaperView({
                                   </div>
                                 </div>
 
-                                <Button
-                                  size="sm"
-                                  onClick={() => setEditingFinding(finding)}
-                                  disabled={
-                                    finding.status !== "OPEN" && finding.status !== "IN_PROGRESS"
-                                  }
-                                  className="ml-3 shrink-0"
-                                  title={
-                                    finding.status === "IN_REVIEW"
-                                      ? "Cannot edit findings under review"
-                                      : finding.status !== "OPEN" &&
-                                          finding.status !== "IN_PROGRESS"
-                                        ? "Finding is completed"
-                                        : ""
-                                  }>
-                                  {finding.status !== "OPEN" && finding.status !== "IN_PROGRESS"
-                                    ? "Completed"
-                                    : "Edit"}
-                                </Button>
+                                {finding.status === "IN_REVIEW" ||
+                                finding.status === "SUBMITTED" ? (
+                                  <StatusBadge status={finding.status} />
+                                ) : finding.status === "CLOSED" || finding.status === "APPROVED" ? (
+                                  <Badge className="ml-3 shrink-0 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                    ✓ Completed
+                                  </Badge>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => setEditingFinding(finding)}
+                                    className="shrink-0">
+                                    <PencilLineIcon className="h-4 w-4" />
+                                    Edit
+                                  </Button>
+                                )}
                               </div>
                             );
                           })}
