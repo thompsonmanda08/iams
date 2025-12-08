@@ -210,13 +210,18 @@ function ScreenLock({
 /**
  * Custom hook for multi-tab synchronization
  * Handles BroadcastChannel with localStorage fallback
- * IMPROVED: Only locks OTHER tabs when current tab is idle
+ *
+ * IMPROVED: Separates "this tab is idle" from "should show lock dialog"
+ * - isIdle = THIS tab detected idle (only set by THIS tab's idle timer)
+ * - isDialogOpen = Whether to show the dialog (can be from any tab)
+ * - This prevents idle timers from being triggered by other tabs' lock events
  */
 const useScreenLockSync = (loggedIn: boolean) => {
   const [isIdle, setIsIdle] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
   const tabIdRef = useRef(Math.random().toString(36).substring(7)); // Unique tab ID
+  const thisTabInitiatedLock = useRef(false); // Track if THIS tab initiated the lock
 
   useEffect(() => {
     if (!loggedIn || typeof window === "undefined") return;
@@ -224,8 +229,8 @@ const useScreenLockSync = (loggedIn: boolean) => {
     let storageListener: ((e: StorageEvent) => void) | null = null;
 
     const syncState = (isLocked: boolean, sourceTabId?: string) => {
-      // ✅ IMPROVED: Only lock this tab if the lock came from a DIFFERENT tab
-      // This prevents locked tabs from re-locking active tabs
+      // ✅ IMPROVED: Only lock dialog if the lock came from a DIFFERENT tab
+      // This prevents active tabs from showing dialogs due to other tabs' inactivity
       const isFromOtherTab = sourceTabId && sourceTabId !== tabIdRef.current;
 
       logger.info("🔄 Screen lock state sync received", {
@@ -234,16 +239,26 @@ const useScreenLockSync = (loggedIn: boolean) => {
         sourceTabId: sourceTabId || "unknown",
         currentTabId: tabIdRef.current,
         isFromOtherTab,
-        willApplyLock: isFromOtherTab || !sourceTabId
+        willApplyDialogLock: isFromOtherTab || !sourceTabId,
+        thisTabInitiatedLock: thisTabInitiatedLock.current
       });
 
-      // Only apply lock if it came from another tab
-      if (isFromOtherTab || !sourceTabId) {
-        setIsIdle(isLocked);
-        setIsDialogOpen(isLocked);
+      // ✅ CRITICAL: Only show dialog if lock came from ANOTHER tab AND this tab didn't initiate it
+      // Never apply isIdle=true from other tabs - only THIS tab's idle timer can set that
+      if ((isFromOtherTab || !sourceTabId) && !isLocked) {
+        // Clear dialog if other tab unlocked
+        setIsDialogOpen(false);
+      } else if (isFromOtherTab && isLocked && !thisTabInitiatedLock.current) {
+        // Show dialog only if another tab locked AND this tab didn't initiate
+        setIsDialogOpen(true);
+      } else if (!sourceTabId && isLocked) {
+        // Fallback: if no sourceTabId, show dialog (backward compatibility)
+        setIsDialogOpen(true);
       } else {
-        logger.debug("⏭️ Ignoring lock event from same tab", {
-          component: "useScreenLockSync"
+        logger.debug("⏭️ Ignoring lock event (same tab or already locked)", {
+          component: "useScreenLockSync",
+          isFromOtherTab,
+          thisTabInitiatedLock: thisTabInitiatedLock.current
         });
       }
     };
@@ -304,6 +319,14 @@ const useScreenLockSync = (loggedIn: boolean) => {
   }, [loggedIn]);
 
   const broadcastState = useCallback((isLocked: boolean) => {
+    // ✅ CRITICAL: Track if THIS tab initiated the lock
+    // This prevents our own lock message from triggering dialog on this tab again
+    if (isLocked) {
+      thisTabInitiatedLock.current = true;
+    } else {
+      thisTabInitiatedLock.current = false;
+    }
+
     const message = {
       type: "SCREEN_LOCK_CHANGED",
       isLocked,
@@ -319,6 +342,7 @@ const useScreenLockSync = (loggedIn: boolean) => {
           component: "useScreenLockSync",
           isLocked,
           sourceTabId: tabIdRef.current,
+          thisTabInitiatedLock: thisTabInitiatedLock.current,
           method: "BroadcastChannel"
         });
         return;
@@ -337,6 +361,7 @@ const useScreenLockSync = (loggedIn: boolean) => {
         component: "useScreenLockSync",
         isLocked,
         sourceTabId: tabIdRef.current,
+        thisTabInitiatedLock: thisTabInitiatedLock.current,
         method: "localStorage"
       });
     } catch (error) {
