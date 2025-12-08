@@ -53,6 +53,9 @@ interface ScreenLockProps {
 /**
  * Custom hook for countdown timer logic
  * Handles timer state, interval cleanup, and timeout callbacks
+ *
+ * IMPROVED: Only executes timeout if dialog is still open (prevents logout from hidden dialogs)
+ * This prevents inactive tabs from logging out the user if their dialog wasn't actually shown
  */
 const useCountdownTimer = (
   open: boolean,
@@ -91,10 +94,6 @@ const useCountdownTimer = (
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          // ✅ Use a flag to prevent calling after unmount
-          if (!hasLoggedOutRef.current) {
-            onTimeout();
-          }
           return 0;
         }
 
@@ -109,7 +108,15 @@ const useCountdownTimer = (
         intervalRef.current = null;
       }
     };
-  }, [open, onTimeout, timeoutSeconds]);
+  }, [open, timeoutSeconds]);
+
+  // ✅ IMPROVED: Separate effect to handle timeout when seconds reach 0
+  // This ensures we check the current 'open' state before executing logout
+  useEffect(() => {
+    if (seconds <= 0 && open && !hasLoggedOutRef.current) {
+      onTimeout();
+    }
+  }, [seconds, open, onTimeout, hasLoggedOutRef]);
 
   return seconds;
 };
