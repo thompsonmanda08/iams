@@ -134,7 +134,7 @@ export function ResidualRiskRatingList() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {ratings.map((rating) => {
             return (
-              <Card key={rating.id} className="group transition-all hover:shadow-md">
+              <Card key={rating.id} className="group transition-all">
                 <CardHeader>
                   <div className="flex items-center justify-between gap-2">
                     <CardTitle className="text-lg">{rating.name}</CardTitle>
