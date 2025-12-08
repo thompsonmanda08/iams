@@ -35,7 +35,7 @@ import { notify } from "@/lib/utils";
 import { useHeadsOfDepartments, useUsers } from "@/hooks/use-users-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
 import { User } from "@/lib/types/account";
-import { MultiSelectField } from "@/components/ui/multi-select-field";
+import { MultiSelectModal } from "@/components/ui/multi-select-modal";
 import PageHeader from "@/components/page-header";
 import BackButton from "@/components/back-button";
 import {
@@ -806,22 +806,22 @@ export default function EditAuditPlanPage() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 space-y-2 md:grid-cols-2">
-                      <MultiSelectField
+                      <MultiSelectModal
                         label="Universe Items"
                         placeholder="Select universe items to audit"
                         value={formData.audit_universe_item_ids}
-                        onValueChange={(values) => {
+                        onValueChange={(values: string[]) => {
                           setFormData({ ...formData, audit_universe_item_ids: values });
                         }}
                         options={universeItemsOptions}
                         disabled={loadingUniverseItems || !formData.selected_audit_universe_id}
                         isLoading={loadingUniverseItems}
                       />
-                      <MultiSelectField
+                      <MultiSelectModal
                         label="Budget Lines"
                         placeholder="-- Select budget lines --"
                         value={formData.budget_item_ids}
-                        onValueChange={(values) => {
+                        onValueChange={(values: string[]) => {
                           setFormData({ ...formData, budget_item_ids: values });
                         }}
                         options={budgetLinesOptions}
@@ -884,12 +884,12 @@ export default function EditAuditPlanPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <MultiSelectField
+                      <MultiSelectModal
                         label="Audit Team Members"
                         required
                         placeholder="Choose team member"
                         value={formData.audit_team_member}
-                        onValueChange={(values) => {
+                        onValueChange={(values: string[]) => {
                           setFormData({ ...formData, audit_team_member: values });
                         }}
                         options={teamMembers.map((member) => ({

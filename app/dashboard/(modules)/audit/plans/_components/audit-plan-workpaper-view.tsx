@@ -29,7 +29,8 @@ import {
   FileArchive,
   Trash2,
   ClipboardXIcon,
-  Plus
+  Plus,
+  PencilLineIcon
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import type { Task } from "@/lib/types/task";
@@ -294,15 +295,6 @@ export function AuditPlanWorkpaperView({
                 {auditPlanData.status.toUpperCase() === "DRAFT" && (
                   <>
                     <Button
-                      variant="destructive"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => setDeleteDialogOpen(true)}
-                      disabled={deleteMutation.isPending}>
-                      <Trash2 className="h-4 w-4" />
-                      Delete Plan
-                    </Button>
-                    <Button
                       size="sm"
                       className="gap-2"
                       onClick={() => setSubmitConfirmationOpen(true)}
@@ -311,6 +303,21 @@ export function AuditPlanWorkpaperView({
                       loadingText="Submitting...">
                       <Send className="h-4 w-4" />
                       Submit for Approval
+                    </Button>
+                    <Button asChild variant="secondary" size="sm" className="gap-2">
+                      <Link href={`/dashboard/audit/plans/${auditPlan.id}/edit`}>
+                        <PencilLineIcon className="h-4 w-4" />
+                        Edit Plan
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setDeleteDialogOpen(true)}
+                      disabled={deleteMutation.isPending}>
+                      <Trash2 className="h-4 w-4" />
+                      Delete Plan
                     </Button>
                   </>
                 )}
