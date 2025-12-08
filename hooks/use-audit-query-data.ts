@@ -19,10 +19,18 @@ import {
   createTemplateCategory,
   updateTemplateCategory,
   deleteTemplateCategory,
-  getWorkingPaperTemplate
+  getWorkingPaperTemplate,
+  getAuditPlan,
+  deleteAuditPlan,
+  submitAuditPlanForApproval,
+  updateAuditPlan
 } from "@/app/_actions/audit-module-actions";
-import type { WorkpaperInput, TemplateCategory } from "@/lib/types/audit-types";
+import type { WorkpaperInput, TemplateCategory, AuditPlan } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
+import { Pagination } from "@/lib/types";
+import { notify } from "@/lib/utils";
+import { Dispatch, SetStateAction } from "react";
+import { QUERY_KEYS } from "@/lib/constants";
 
 // Query Keys
 export const AUDIT_QUERY_KEYS = {
@@ -146,26 +154,113 @@ export const useUpdateWorkpaper = () => {
 // ============================================================================
 
 /**
- * Hook to fetch audit plans
+ * Hook to fetch audit plans or plan by ID
  */
-export const useAuditPlans = () => {
+export const useAuditPlans = (params: Partial<Pagination> & { planId?: string }) => {
   return useQuery({
-    queryKey: [AUDIT_QUERY_KEYS.AUDIT_PLANS],
+    queryKey: [AUDIT_QUERY_KEYS.AUDIT_PLANS, params?.planId],
     queryFn: async () => {
-      const response = await getAuditPlans();
-      if (!response.success) {
-        throw new Error(response.message);
-      }
+      const response = params?.planId
+        ? await getAuditPlan(params?.planId)
+        : await getAuditPlans(params);
+
       return response.data;
     },
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };
+
+export const useSubmitAuditPlanForApproval = ({
+  auditPlan,
+  setAuditPlanData
+}: {
+  auditPlan: AuditPlan;
+  setAuditPlanData: Dispatch<SetStateAction<AuditPlan>>;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await submitAuditPlanForApproval(auditPlan.id);
+      return result;
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+        notify({
+          title: "Success",
+          description: "Audit plan submitted for approval",
+          type: "success"
+        });
+        // Update local state - set status to SUBMITTED
+        setAuditPlanData((prev) => ({ ...prev, status: "SUBMITTED" }));
+      } else {
+        notify({
+          title: "Error",
+          description: response.message || "Failed to submit audit plan for approval",
+          type: "error"
+        });
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to submit audit plan for approval",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to delete an audit plan
+ */
+export const useDeleteAuditPlan = ({
+  planId,
+  setDeleteDialogOpen
+}: {
+  planId: string;
+  setDeleteDialogOpen: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await deleteAuditPlan(planId);
+      return result;
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+        notify({
+          title: "Success",
+          description: "Audit plan deleted successfully",
+          type: "success"
+        });
+        setDeleteDialogOpen(false);
+        window.location.href = "/dashboard/audit/plans";
+        // Optionally navigate away or trigger parent callback
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to delete audit plan",
+        type: "error"
+      });
+    }
+  });
+};
+
 /**
  * Hook to fetch workpaper templates
  * Supports filtering by framework_type (e.g., 'ISO27001', 'COSO', 'COBIT', 'NIST')
  */
-export const useWorkpaperTemplates = (params?: { page?: number; page_size?: number; framework_type?: string }) => {
+export const useWorkpaperTemplates = (params?: {
+  page?: number;
+  page_size?: number;
+  framework_type?: string;
+}) => {
   return useQuery({
     queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES, params],
     queryFn: async () => {
@@ -357,6 +452,44 @@ export const useDeleteTemplateCategory = () => {
         title: "Error",
         description: error.message || "Failed to delete template category",
         variant: "destructive"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to update an existing audit plan
+ */
+export const useUpdateAuditPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { id: string; data: Record<string, any> }) => {
+      const response = await updateAuditPlan(params.id, params.data);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate the specific audit plan query
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.AUDIT_PLANS, variables.id]
+      });
+      // Also invalidate the list of audit plans
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.AUDIT_PLANS]
+      });
+      notify({
+        title: "Success",
+        description: "Audit plan updated successfully"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to update audit plan",
+        type: "error"
       });
     }
   });

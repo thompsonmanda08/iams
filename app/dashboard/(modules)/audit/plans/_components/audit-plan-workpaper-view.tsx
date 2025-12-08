@@ -44,7 +44,7 @@ import { submitAuditPlanForApproval, deleteAuditPlan } from "@/app/_actions/audi
 import { StatusBadge } from "@/components/status-badge";
 import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 import Link from "next/link";
-import { useDeleteAuditPlan, useSubmitAuditPlanForApproval } from "@/hooks/use-audt-plan-queries";
+import { useDeleteAuditPlan, useSubmitAuditPlanForApproval } from "@/hooks/use-audit-query-data";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;

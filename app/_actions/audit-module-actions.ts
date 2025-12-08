@@ -10,7 +10,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { APIResponse } from "@/lib/types";
+import type { APIResponse, Pagination } from "@/lib/types";
 import type {
   ReportTemplate,
   ReportParams,
@@ -54,10 +54,12 @@ interface CreateBudgetLinePayload {
 /**
  * Get all audit plans with optional filters
  */
-export async function getAuditPlans(filters?: {
-  year?: number;
-  status?: string;
-}): Promise<APIResponse> {
+export async function getAuditPlans(
+  filters?: Partial<Pagination> & {
+    year?: number;
+    status?: string;
+  }
+): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
     if (filters?.year) params.append("year", String(filters.year));
@@ -1047,8 +1049,6 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
     );
   }
 }
-
-
 
 /**
  * Reject audit plan

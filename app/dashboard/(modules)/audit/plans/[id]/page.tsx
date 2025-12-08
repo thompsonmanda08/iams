@@ -4,7 +4,7 @@ import { getWorkflowInstances } from "@/app/_actions/task-actions";
 import { AuditPlan } from "@/lib/types/audit-types";
 import { AuditPlanWorkpaperView } from "../_components/audit-plan-workpaper-view";
 import PageHeader from "@/components/page-header";
-import { ListCheck } from "lucide-react";
+import { ClipboardListIcon, ListCheck } from "lucide-react";
 import BackButton from "@/components/back-button";
 
 interface AuditDetailPageProps {
@@ -60,7 +60,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
               <div className="relative">
                 <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
                 <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
-                  <ListCheck className="h-7 w-7 text-white" strokeWidth={2.5} />
+                  <ClipboardListIcon className="h-7 w-7 text-white" strokeWidth={2.5} />
                 </div>
               </div>
             }

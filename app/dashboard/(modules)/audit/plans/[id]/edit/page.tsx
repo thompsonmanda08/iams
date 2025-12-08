@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
   Calendar,
   Users,
@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheckIcon,
-  TelescopeIcon
+  TelescopeIcon,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,12 +22,15 @@ import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { createAuditPlan } from "@/app/_actions/audit-module-actions";
 import { TemplateSelectorSimple } from "@/app/dashboard/(modules)/audit/plans/_components/template-selector-simple";
 import { CategorySelector } from "@/app/dashboard/(modules)/audit/plans/_components/category-selector";
 import { SelectField } from "@/components/ui/select-field";
 import { WorkpaperTemplateDefinition, TemplateCategory } from "@/lib/types/audit-types";
-import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
+import {
+  useWorkpaperTemplateCategories,
+  useAuditPlans,
+  useUpdateAuditPlan
+} from "@/hooks/use-audit-query-data";
 import { notify } from "@/lib/utils";
 import { useHeadsOfDepartments, useUsers } from "@/hooks/use-users-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
@@ -45,7 +49,6 @@ import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_
 
 /**
  * Audit Plan Form Data Type
- * Represents the structure of the form data used in the audit plan creation flow
  */
 type AuditPlanFormData = {
   year: number;
@@ -83,15 +86,21 @@ const STEPS = [
   { id: 3, name: "Category Selection", icon: CheckCircle2 }
 ];
 
-export default function NewAuditPlanPage() {
+export default function EditAuditPlanPage() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const params = useParams();
+  const auditPlanId = String(params.id);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Mutation hook for updating audit plan
+  const updateMutation = useUpdateAuditPlan();
+  const isSubmitting = updateMutation.isPending;
+
   // Form state
   const [formData, setFormData] = useState<AuditPlanFormData>({
-    year: new Date().getFullYear(), // DEFAULT BUT NOT REQUIRED
+    year: new Date().getFullYear(),
     title: "",
     description: "",
     ref_no: "",
@@ -118,6 +127,52 @@ export default function NewAuditPlanPage() {
     selectedCategories: []
   });
 
+  // Fetch audit plan using hook
+  const { data: auditPlan, isLoading, error: queryError } = useAuditPlans({ planId: auditPlanId });
+
+  const loadError = queryError
+    ? "An error occurred while loading the audit plan"
+    : auditPlan && auditPlan.status !== "DRAFT"
+      ? "Only audit plans in DRAFT status can be edited"
+      : null;
+
+  // Populate form when audit plan data is loaded
+  useEffect(() => {
+    if (auditPlan) {
+      setFormData({
+        year: auditPlan.year,
+        title: auditPlan.title,
+        description: auditPlan.description,
+        ref_no: auditPlan.ref_no,
+        department_id: auditPlan.department_id || "",
+        audit_area: auditPlan.audit_area,
+        audit_scope: auditPlan.audit_scope,
+        audit_criteria: auditPlan.audit_criteria,
+        audit_objective: auditPlan.audit_objective,
+        management_standard: auditPlan.management_standard || FRAMEWORK_TYPES[0].id,
+        audit_team_leader: auditPlan.audit_team_leader,
+        audit_team_member: auditPlan.audit_team_members || [],
+        client_representative: auditPlan.client_representative,
+        audit_language: auditPlan.audit_language,
+        start_date: auditPlan.start_date ? new Date(auditPlan.start_date) : null,
+        end_date: auditPlan.end_date ? new Date(auditPlan.end_date) : null,
+        audit_plan_date: auditPlan.audit_plan_date ? new Date(auditPlan.audit_plan_date) : null,
+        opening_meeting_datetime: auditPlan.opening_meeting_datetime
+          ? new Date(auditPlan.opening_meeting_datetime)
+          : null,
+        closing_meeting_datetime: auditPlan.closing_meeting_datetime
+          ? new Date(auditPlan.closing_meeting_datetime)
+          : null,
+        working_paper_template_id: auditPlan.working_paper_template_id,
+        selected_audit_universe_id: auditPlan.audit_universe_id || "",
+        audit_universe_item_ids: auditPlan.audit_universe_item_ids || [],
+        budget_id: "",
+        budget_item_ids: auditPlan.budget_item_ids || [],
+        selectedCategories: []
+      });
+    }
+  }, [auditPlan]);
+
   const { data: teamMemberResponse } = useUsers({
     page_size: 100,
     department_id: formData.department_id
@@ -128,7 +183,6 @@ export default function NewAuditPlanPage() {
     page_size: 100,
     department_id: formData.department_id
   });
-
   const headsOfDepartment: User[] = ((headsOfDepartmentResponse?.data || []) as User[]) ?? [];
 
   const { data: departmentsResponse, isLoading: loadingDepartments } = useDepartments({
@@ -156,10 +210,6 @@ export default function NewAuditPlanPage() {
       : [];
 
   // Fetch universe items based on selected universe
-  // const { data: universeItemsResponse, isLoading: loadingUniverseItems } = useUniverseItems(
-  //   String(formData.selected_audit_universe_id) || undefined
-  // );
-  // Fetch universe items for the selected universe
   const universeIdForItems = formData.selected_audit_universe_id
     ? String(formData.selected_audit_universe_id)
     : undefined;
@@ -171,7 +221,6 @@ export default function NewAuditPlanPage() {
     }
   );
 
-  // Extract universe items data - hook returns data.data structure
   const universeItemsData = Array.isArray(universeItemsResponse)
     ? universeItemsResponse
     : Array.isArray(universeItemsResponse?.data)
@@ -214,7 +263,7 @@ export default function NewAuditPlanPage() {
       ? fullTemplateResponse.data
       : [];
 
-  // Use selectedTemplateWithCategories if available (set when user selects template), otherwise use fetched data
+  // Use selectedTemplateWithCategories if available, otherwise use fetched data
   const selectedTemplate: WorkpaperTemplateDefinition = selectedTemplateWithCategories
     ? {
         ...selectedTemplateWithCategories,
@@ -325,13 +374,11 @@ export default function NewAuditPlanPage() {
     setFormData((prev) => ({
       ...prev,
       working_paper_template_id: template.id as string,
-      // selectedCategories: [] // Reset categories when template changes
       selectedCategories:
         template != null && template.categories
           ? template.categories?.map((cat) => cat.id as string)
           : []
     }));
-    // Store the complete template object with categories
     setSelectedTemplateWithCategories(template);
   }, []);
 
@@ -361,11 +408,9 @@ export default function NewAuditPlanPage() {
       return;
     }
 
-    setIsSubmitting(true);
-
     // Prepare data according to API structure
     const auditData = {
-      year: formData.year,
+      year: new Date().getFullYear(), // DEFAULT BUT NOT REQUIRED
       title: formData.title,
       description: formData.description,
       start_date: formData.start_date?.toISOString().split("T")[0] as string,
@@ -384,37 +429,18 @@ export default function NewAuditPlanPage() {
       opening_meeting_datetime: formData.opening_meeting_datetime?.toISOString() || undefined,
       closing_meeting_datetime: formData.closing_meeting_datetime?.toISOString() || undefined,
       working_paper_template_id: formData.working_paper_template_id,
-      department_id: formData.department_id,
       audit_universe_item_ids: formData.audit_universe_item_ids || [],
       budget_item_ids: formData.budget_item_ids || []
     };
 
-    try {
-      const result = await createAuditPlan(auditData);
-
-      if (result.success) {
-        notify({
-          title: "Success",
-          description:
-            "Audit plan created successfully as Draft. You can submit it for approval when ready."
-        });
-        router.push("/dashboard/audit/plans");
-      } else {
-        notify({
-          title: "Error",
-          description: result.message || "Failed to create audit plan",
-          type: "error"
-        });
+    updateMutation.mutate(
+      { id: auditPlanId, data: auditData },
+      {
+        onSuccess: () => {
+          router.push(`/dashboard/audit/plans/${auditPlanId}`);
+        }
       }
-    } catch (error) {
-      notify({
-        title: "Error",
-        description: "An unexpected error occurred",
-        type: "error"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    );
   }
 
   const budgetsOptions = useMemo(() => {
@@ -447,6 +473,51 @@ export default function NewAuditPlanPage() {
     [universeItemsData]
   );
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="bg-background flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-foreground">Loading audit plan...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (loadError) {
+    return (
+      <div className="bg-background min-h-screen">
+        <div className="bg-card border-b">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center justify-between gap-4">
+              <PageHeader
+                title="Edit Audit Plan"
+                description="Update your audit plan details"
+                Icon={ClipboardCheckIcon}
+              />
+              <BackButton title="Back to plans" />
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <Card className="p-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{loadError}</AlertDescription>
+            </Alert>
+            <Button variant="outline" onClick={() => router.back()} className="mt-4">
+              Go Back
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -454,8 +525,8 @@ export default function NewAuditPlanPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between gap-4">
             <PageHeader
-              title="New Audit Plan"
-              description="Create a new audit plan and track its progress"
+              title="Edit Audit Plan"
+              description="Update your audit plan details"
               Icon={ClipboardCheckIcon}
             />
             <BackButton title="Back to plans" />
@@ -714,7 +785,7 @@ export default function NewAuditPlanPage() {
                             return {
                               ...prev,
                               selected_audit_universe_id: value,
-                              audit_universe_item_ids: [] // Reset universe items when universe changes
+                              audit_universe_item_ids: []
                             };
                           })
                         }
@@ -906,7 +977,7 @@ export default function NewAuditPlanPage() {
                     </div>
                   ) : (
                     <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
-                      {isSubmitting ? "Creating..." : "Create Audit Plan"}
+                      {isSubmitting ? "Saving..." : "Save Changes"}
                     </Button>
                   )}
                 </div>
