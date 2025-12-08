@@ -32,13 +32,11 @@ const NewBudgetsPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto space-y-6 px-4 py-8">
+      <div className="container mx-auto max-w-4xl space-y-6 px-4 py-8">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
           <TabsList className="w-full">
             <TabsTrigger value="budget">New Budget</TabsTrigger>
-            <TabsTrigger value="line">
-              Budget Line {createdBudgetId && "✓"}
-            </TabsTrigger>
+            <TabsTrigger value="line">Budget Line {createdBudgetId && "✓"}</TabsTrigger>
           </TabsList>
           <TabsContent value="budget">
             <BudgetForm mode="budget" onBudgetCreated={handleBudgetCreated} />

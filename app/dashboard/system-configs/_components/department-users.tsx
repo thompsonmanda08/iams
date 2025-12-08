@@ -416,7 +416,7 @@ export function CreateOrUpdateDepartment({
         code: initialData.code || "",
         description: initialData.description || "",
         parent_id: initialData.parent_id || null,
-        is_active: initialData.is_active || true
+        is_active: true || initialData?.is_active || true
       });
     } else {
       setFormData(INIT_DEPARTMENT);
@@ -447,7 +447,8 @@ export function CreateOrUpdateDepartment({
         name: data.name,
         code: data.code,
         description: data.description,
-        parent_id: data.parent_id
+        parent_id: data.parent_id,
+        is_active: true || initialData?.is_active || true
       };
       return initialData && departmentId
         ? updateDepartment({ ...payload, id: String(departmentId) })

@@ -243,7 +243,7 @@ const BudgetForm = ({
             </div>
 
             <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <SearchSelectField
                     id="department"
@@ -277,7 +277,7 @@ const BudgetForm = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Input
                     id="title"
@@ -306,7 +306,7 @@ const BudgetForm = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <SearchSelectField
                     id="currency"

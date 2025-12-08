@@ -265,7 +265,7 @@ export function AuditPlanWorkpaperView({
   const auditTeamLeaderId = auditPlan?.audit_team_leader;
   const teamMembersCount = auditPlan?.audit_team_members?.length || 0;
 
-  console.log({ categoryFindings, selectedCategory });
+  console.log({ categoryFindings });
 
   return (
     <div className="space-y-6">
