@@ -209,7 +209,7 @@ export async function updateAuthSession(fields: any): Promise<AuthSession | unde
       ...fields
     };
 
-    // Determine expiration: use provided expiresAt from fields, keep existing, or create new (1 hours)
+    // Determine expiration: use provided expiresAt from fields, keep existing, or create new (1 hour)
     const expiresAt = fields?.expiresAt
       ? new Date(fields.expiresAt)
       : oldSession?.expiresAt
@@ -219,8 +219,14 @@ export async function updateAuthSession(fields: any): Promise<AuthSession | unde
     // Ensure expiresAt is included in the session payload
     newSession.expiresAt = expiresAt;
 
-    // Call `encrypt` to generate the session token
-    const session = await encrypt(newSession, "1h");
+    // ✅ CRITICAL FIX: Calculate JWT expiration time to match cookie expiration
+    // This ensures the encrypted token doesn't expire before the cookie
+    const timeUntilExpiry = expiresAt.getTime() - Date.now();
+    const expirationTimeSeconds = Math.ceil(timeUntilExpiry / 1000);
+    const jwtExpirationTime = `${expirationTimeSeconds}s`;
+
+    // Call `encrypt` to generate the session token with proper expiration
+    const session = await encrypt(newSession, jwtExpirationTime);
 
     if (session) {
       (await cookies()).set(AUTH_SESSION, session, {
