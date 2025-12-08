@@ -97,6 +97,23 @@ const UniverseDetails = ({
     }
   };
 
+  const colorConfig = {
+    green: {
+      label: "Green",
+      color: "var(--green-active)"
+    },
+    amber: {
+      label: "Amber",
+      color: "var(--amber-active)"
+    },
+    red: {
+      label: "Red",
+      color: "var(--red-active)"
+    }
+  } as const;
+
+  type KriColor = keyof typeof colorConfig;
+
   if (!universe) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -315,6 +332,9 @@ const UniverseDetails = ({
                           KRI Score
                         </TableHead>
                         <TableHead className="text-foreground/70 text-sm font-bold uppercase">
+                          KRI Color
+                        </TableHead>
+                        <TableHead className="text-foreground/70 text-sm font-bold uppercase">
                           Status
                         </TableHead>
                         <TableHead className="text-foreground/70 text-center text-sm font-bold uppercase">
@@ -364,7 +384,6 @@ const UniverseDetails = ({
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </TableCell>
-
                             {/* Department */}
                             <TableCell className="text-foreground text-sm">
                               {item.department_name ? (
@@ -382,7 +401,6 @@ const UniverseDetails = ({
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </TableCell>
-
                             {/* Auditable Area */}
                             <TableCell className="text-foreground text-sm">
                               {item.auditable_area_name ? (
@@ -417,7 +435,6 @@ const UniverseDetails = ({
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </TableCell>
-
                             {/* Audit Frequency */}
                             <TableCell className="text-foreground text-sm">
                               {item.audit_frequency ? (
@@ -442,7 +459,21 @@ const UniverseDetails = ({
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </TableCell>
-
+                            {/*KRI Color*/}
+                            <TableCell className="text-foreground text-sm">
+                              {item.kri_color ? (
+                                <Badge
+                                  style={{
+                                    backgroundColor:
+                                      colorConfig[item.kri_color.toLowerCase() as KriColor].color,
+                                    width: "3rem"
+                                  }}>
+                                  {item.kri_color}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
                             {/* Status */}
                             <TableCell>
                               <StatusBadge
@@ -450,7 +481,6 @@ const UniverseDetails = ({
                                 status={item.is_active ? "ACTIVE" : "INACTIVE"}
                               />
                             </TableCell>
-
                             {/* Actions */}
                             <TableCell className="text-center">
                               <div className="flex justify-end gap-1">

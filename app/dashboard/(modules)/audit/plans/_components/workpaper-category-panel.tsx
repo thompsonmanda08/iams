@@ -160,9 +160,11 @@ export function WorkpaperCategoryPanel({ category, auditPlan }: WorkpaperCategor
             </div>
           )}
 
-          <Button onClick={() => setOpenModal(true)} className="w-">
-            Submit for Approval
-          </Button>
+          {category.status === "PENDING" && (
+            <Button onClick={() => setOpenModal(true)} className="w-">
+              Submit for Approval
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -209,7 +211,7 @@ export function WorkpaperCategoryPanel({ category, auditPlan }: WorkpaperCategor
             />
           </>
 
-          <div className="bg-card/30 sticky bottom-0 -mx-6 flex justify-end gap-2 border-t px-6 pt-4 backdrop-blur-md">
+          <div className="bg-card/30 -mx-6 flex justify-end gap-2 border-t px-6 pt-4 backdrop-blur-md">
             <Button
               type="button"
               variant="destructive"
