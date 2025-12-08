@@ -21,7 +21,6 @@ import {
   Users,
   FileText,
   CheckCircle2,
-  AlertCircle,
   Download,
   Send,
   CircleAlertIcon,
@@ -56,16 +55,11 @@ interface AuditPlanWorkpaperViewProps {
 }
 
 // Helper function to check if a finding is completed
-// A finding is considered completed if it has conformity status AND all required fields filled
+// A finding is considered completed if its status is not OPEN
 const isCompletedFinding = (finding: any): boolean => {
-  return !!(
-    finding.is_conformity !== null &&
-    finding.is_conformity !== undefined &&
-    finding.conclusion &&
-    finding.recommendation &&
-    finding.severity &&
-    finding.responsible_person
-  );
+  // Consider a finding completed if it's not in OPEN status
+  // OPEN = 0%, IN_REVIEW/SUBMITTED/CLOSED = completed
+  return finding.status !== "OPEN";
 };
 
 export function AuditPlanWorkpaperView({
@@ -266,7 +260,7 @@ export function AuditPlanWorkpaperView({
   const auditTeamLeaderId = auditPlan?.audit_team_leader;
   const teamMembersCount = auditPlan?.audit_team_members?.length || 0;
 
-  console.log({ categoryFindings });
+  // console.log("CATEGORY FINDINGS", { categoryFindings });
 
   return (
     <div className="space-y-6">
@@ -718,8 +712,10 @@ export function AuditPlanWorkpaperView({
                               {isCompleted ? (
                                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
                               ) : catFindings.length > 0 ? (
-                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                                // Show partial completion if some findings are in progress
+                                <div className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-amber-600" />
                               ) : (
+                                // Empty circle if no findings
                                 <div className="border-muted-foreground mt-0.5 h-4 w-4 shrink-0 rounded-full border" />
                               )}
                               <div className="min-w-0 flex-1">
@@ -910,8 +906,21 @@ export function AuditPlanWorkpaperView({
                                 <Button
                                   size="sm"
                                   onClick={() => setEditingFinding(finding)}
-                                  className="ml-3 shrink-0">
-                                  Edit
+                                  disabled={
+                                    finding.status !== "OPEN" && finding.status !== "IN_PROGRESS"
+                                  }
+                                  className="ml-3 shrink-0"
+                                  title={
+                                    finding.status === "IN_REVIEW"
+                                      ? "Cannot edit findings under review"
+                                      : finding.status !== "OPEN" &&
+                                          finding.status !== "IN_PROGRESS"
+                                        ? "Finding is completed"
+                                        : ""
+                                  }>
+                                  {finding.status !== "OPEN" && finding.status !== "IN_PROGRESS"
+                                    ? "Completed"
+                                    : "Edit"}
                                 </Button>
                               </div>
                             );

@@ -98,7 +98,13 @@ export function FindingActionsMenu({
           size="sm"
           onClick={onEdit}
           className="gap-2"
-          disabled={clearMutation.isPending || statusMutation.isPending}>
+          disabled={
+            clearMutation.isPending ||
+            statusMutation.isPending ||
+            currentStatus === "IN_REVIEW" ||
+            (currentStatus !== "OPEN" && currentStatus !== "IN_PROGRESS")
+          }
+          title={currentStatus === "IN_REVIEW" ? "Cannot edit findings under review" : ""}>
           <Edit2 className="h-4 w-4" />
           Edit
         </Button>
@@ -114,21 +120,18 @@ export function FindingActionsMenu({
           }))}
           placeholder="Select status"
           isLoading={statusMutation.isPending}
-          disabled={statusMutation.isPending || clearMutation.isPending}
+          disabled={
+            statusMutation.isPending ||
+            clearMutation.isPending ||
+            currentStatus === "IN_REVIEW"
+          }
+          title={currentStatus === "IN_REVIEW" ? "Cannot change status of findings under review" : ""}
         />
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setClearDialogOpen(true)}
-          className="text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20 gap-2 border"
-          disabled={clearMutation.isPending || statusMutation.isPending}>
-          <Trash2 className="h-4 w-4" />
-          Clear
-        </Button>
       </div>
 
-      <ConfirmationModal
+      {/* Clear button and confirmation modal - Hidden for now */}
+      {/* <ConfirmationModal
         open={clearDialogOpen}
         onOpenChange={setClearDialogOpen}
         type="delete"
@@ -138,7 +141,7 @@ export function FindingActionsMenu({
         cancelText="Cancel"
         isLoading={clearMutation.isPending}
         onConfirm={handleClear}
-      />
+      /> */}
     </>
   );
 }
