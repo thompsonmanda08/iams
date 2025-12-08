@@ -1,4 +1,15 @@
 "use client";
+/**
+ * Screen Lock Component
+ *
+ * IMPROVED: Multi-tab synchronization now only locks OTHER tabs when one tab idles
+ * - Each tab has a unique ID (tabIdRef)
+ * - When a tab locks, it broadcasts its ID
+ * - Other tabs only apply the lock if it came from a DIFFERENT tab
+ * - This prevents active tabs from being locked due to another tab's inactivity
+ *
+ * This solves the issue where having an unused tab open would lock your active work
+ */
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useIdleTimer } from "react-idle-timer";
@@ -192,30 +203,47 @@ function ScreenLock({
 /**
  * Custom hook for multi-tab synchronization
  * Handles BroadcastChannel with localStorage fallback
+ * IMPROVED: Only locks OTHER tabs when current tab is idle
  */
 const useScreenLockSync = (loggedIn: boolean) => {
   const [isIdle, setIsIdle] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+  const tabIdRef = useRef(Math.random().toString(36).substring(7)); // Unique tab ID
 
   useEffect(() => {
     if (!loggedIn || typeof window === "undefined") return;
 
     let storageListener: ((e: StorageEvent) => void) | null = null;
 
-    const syncState = (isLocked: boolean) => {
-      logger.info("🔄 Screen lock state synced across tabs", {
+    const syncState = (isLocked: boolean, sourceTabId?: string) => {
+      // ✅ IMPROVED: Only lock this tab if the lock came from a DIFFERENT tab
+      // This prevents locked tabs from re-locking active tabs
+      const isFromOtherTab = sourceTabId && sourceTabId !== tabIdRef.current;
+
+      logger.info("🔄 Screen lock state sync received", {
         component: "useScreenLockSync",
         isLocked,
-        method: isLocked ? "external" : "local"
+        sourceTabId: sourceTabId || "unknown",
+        currentTabId: tabIdRef.current,
+        isFromOtherTab,
+        willApplyLock: isFromOtherTab || !sourceTabId
       });
-      setIsIdle(isLocked);
-      setIsDialogOpen(isLocked);
+
+      // Only apply lock if it came from another tab
+      if (isFromOtherTab || !sourceTabId) {
+        setIsIdle(isLocked);
+        setIsDialogOpen(isLocked);
+      } else {
+        logger.debug("⏭️ Ignoring lock event from same tab", {
+          component: "useScreenLockSync"
+        });
+      }
     };
 
     const handleBroadcastMessage = (event: MessageEvent) => {
       if (event.data.type === "SCREEN_LOCK_CHANGED") {
-        syncState(event.data.isLocked);
+        syncState(event.data.isLocked, event.data.sourceTabId);
       }
     };
 
@@ -224,7 +252,7 @@ const useScreenLockSync = (loggedIn: boolean) => {
         try {
           const data = event.newValue ? JSON.parse(event.newValue) : null;
           if (data?.type === "SCREEN_LOCK_CHANGED") {
-            syncState(data.isLocked);
+            syncState(data.isLocked, data.sourceTabId);
           }
         } catch (error) {
           logger.debug("Failed to parse storage event data", {
@@ -272,6 +300,7 @@ const useScreenLockSync = (loggedIn: boolean) => {
     const message = {
       type: "SCREEN_LOCK_CHANGED",
       isLocked,
+      sourceTabId: tabIdRef.current,  // ✅ IMPROVED: Include source tab ID
       timestamp: Date.now()
     };
 
@@ -282,6 +311,7 @@ const useScreenLockSync = (loggedIn: boolean) => {
         logger.debug("📢 Broadcasted screen lock state change via BroadcastChannel", {
           component: "useScreenLockSync",
           isLocked,
+          sourceTabId: tabIdRef.current,
           method: "BroadcastChannel"
         });
         return;
@@ -299,6 +329,7 @@ const useScreenLockSync = (loggedIn: boolean) => {
       logger.debug("📢 Broadcasted screen lock state change via localStorage", {
         component: "useScreenLockSync",
         isLocked,
+        sourceTabId: tabIdRef.current,
         method: "localStorage"
       });
     } catch (error) {
