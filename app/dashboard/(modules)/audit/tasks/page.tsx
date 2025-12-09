@@ -14,6 +14,8 @@ export default async function TasksPage() {
   const tasksResponse = await getUserAssignedWorkflowTasks({ page: "1", page_size: "20" });
   const tasks = tasksResponse.success ? tasksResponse.data : [];
 
+  console.log({ tasksResponse });
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}

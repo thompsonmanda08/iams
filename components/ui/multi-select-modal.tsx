@@ -104,8 +104,10 @@ export function MultiSelectModal({
               <span className="text-muted-foreground">{placeholder}</span>
             ) : (
               <>
-                <Badge variant="default" className="whitespace-nowrap">
-                  {firstSelectedOption?.label}
+                <Badge
+                  variant="default"
+                  className="line-clamp-1 max-w-xs truncate whitespace-nowrap">
+                  {firstSelectedOption?.label.slice(0, 60)}...
                 </Badge>
                 {remainingCount > 0 && (
                   <Badge
