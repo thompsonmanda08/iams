@@ -107,7 +107,7 @@ export function MultiSelectModal({
                 <Badge
                   variant="default"
                   className="line-clamp-1 max-w-xs truncate whitespace-nowrap">
-                  {firstSelectedOption?.label.slice(0, 60)}...
+                  {firstSelectedOption?.label.slice(0, 50)}...
                 </Badge>
                 {remainingCount > 0 && (
                   <Badge
