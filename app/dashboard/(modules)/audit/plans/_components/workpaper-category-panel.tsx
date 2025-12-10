@@ -52,6 +52,8 @@ export function WorkpaperCategoryPanel({ category, auditPlan }: WorkpaperCategor
   const submitMutation = useSubmitCategoryFindingsForApproval({
     onSuccess: () => {
       setSubmitConfirmationOpen(false);
+      setOpenModal(false);
+      setFormData({ objectives: "", conclusion: "" });
     }
   });
 

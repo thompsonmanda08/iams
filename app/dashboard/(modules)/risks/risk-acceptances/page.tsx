@@ -1,15 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertCircle,
-  FileText,
-  Eye,
-  View,
-  Send
-} from "lucide-react";
+import { CheckCircle2, XCircle, Clock, AlertCircle, FileText, Eye, View, Send } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -134,8 +125,6 @@ export default function RiskAcceptanceList() {
 
       if (response.status && response.data?.acceptances) {
         setAcceptances(response.data.acceptances);
-      } else {
-        toast.error("Failed to load risk acceptances");
       }
     } catch (err) {
       console.error("Error fetching acceptances:", err);

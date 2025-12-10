@@ -1,6 +1,6 @@
 import { getKRIs, type KRI } from "@/app/_actions/risk-module-actions";
 import { Card } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Minus, AlertCircle } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, AlertCircle, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { KRIConfigureDialog } from "../../_components/kri-configure-dialog";
@@ -159,6 +159,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
   const normalCount = enrichedKRIs.filter((k) => k.status === "normal").length;
   const warningCount = enrichedKRIs.filter((k) => k.status === "warning").length;
   const criticalCount = enrichedKRIs.filter((k) => k.status === "critical").length;
+  const totalCount = enrichedKRIs.length;
 
   return (
     <div className="bg-background min-h-screen">
@@ -179,7 +180,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
       </div>
 
       {/* Summary Stats */}
-      <div className="container mx-auto grid grid-cols-1 gap-4 px-4 pt-6 md:grid-cols-3">
+      <div className="container mx-auto grid grid-cols-1 gap-4 px-4 pt-6 md:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -210,6 +211,17 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
             </div>
             <div className="rounded-lg bg-red-50 p-3">
               <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Total KRIs</p>
+              <p className="text-2xl font-bold text-blue-600">{totalCount}</p>
+            </div>
+            <div className="rounded-lg bg-blue-50 p-3">
+              <BarChart3 className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </Card>
@@ -279,7 +291,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 {/* Trigger Range */}
-                <div className="bg-muted/50 rounded-lg p-3 flex justify-between">
+                <div className="bg-muted/50 flex justify-between rounded-lg p-3">
                   <div>
                     <p className="text-muted-foreground mb-2 text-xs">
                       Trigger Range (Warning Zone)
