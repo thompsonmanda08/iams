@@ -228,13 +228,7 @@ export function EvidenceForm({
               value={formData.collection_date as any}
               maxDate={new Date()}
               onValueChange={(date) => {
-                if (date) {
-                  // Convert Date to ISO string (YYYY-MM-DD)
-                  const isoDate = date.toISOString().split("T")[0];
-                  handleInputChange("collection_date", isoDate);
-                } else {
-                  handleInputChange("collection_date", "");
-                }
+                handleInputChange("collection_date", date || null);
               }}
             />
           </div>

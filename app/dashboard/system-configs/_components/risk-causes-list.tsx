@@ -181,7 +181,7 @@ export function RiskCausesList() {
       <RiskCauseDialog
         open={dialog.open}
         onOpenChange={(open) => setDialog({ open, cause: null })}
-        cause={dialog?.cause}
+        cause={dialog?.cause as any}
         onSuccess={fetchCauses}
       />
 

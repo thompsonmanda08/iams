@@ -45,6 +45,7 @@ interface Budget {
   status: string;
   year: number;
   department_id: string | null;
+  department_name: string | null;
   created_at: string;
   budget_lines?: BudgetLine[];
 }
@@ -297,7 +298,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                         {formatDate(budget.end_date)}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
                             size="sm"
                             variant="outline"
@@ -309,22 +310,26 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                             <View className="h-3.5 w-3.5" />
                             View
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditClick(budget.id)}
-                            className="h-8 gap-1.5">
-                            <Pencil className="h-3.5 w-3.5" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteClick(budget)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Delete
-                          </Button>
+                          {budget.status !== "APPROVED" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditClick(budget.id)}
+                              className="h-8 gap-1.5">
+                              <Pencil className="h-3.5 w-3.5" />
+                              Edit
+                            </Button>
+                          )}
+                          {budget.status !== "APPROVED" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteClick(budget)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Delete
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

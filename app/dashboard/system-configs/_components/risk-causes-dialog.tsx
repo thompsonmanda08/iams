@@ -24,6 +24,7 @@ type RiskCause = {
   description: string;
   created_at: string;
   updated_at: string;
+  is_active: boolean;
 };
 
 type RiskCauseDialogProps = {
@@ -40,10 +41,12 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
     name: string;
     description: string;
     parent_id: string | null;
+    is_active: boolean;
   }>({
     name: "",
     description: "",
-    parent_id: null
+    parent_id: null,
+    is_active: true
   });
 
   const isEditMode = !!cause;
@@ -71,10 +74,11 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
       setFormData({
         name: cause.name,
         description: cause.description,
-        parent_id: cause.parent_id || null
+        parent_id: cause.parent_id || null,
+        is_active: true
       });
     } else if (!open) {
-      setFormData({ name: "", description: "", parent_id: null });
+      setFormData({ name: "", description: "", parent_id: null, is_active: true });
     }
   }, [open, cause]);
 
@@ -94,7 +98,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
 
       if (result.success) {
         toast.success(`Risk cause ${isEditMode ? "updated" : "created"} successfully`);
-        setFormData({ name: "", description: "", parent_id: null });
+        setFormData({ name: "", description: "", parent_id: null, is_active: true });
         onOpenChange(false);
         onSuccess();
       } else {

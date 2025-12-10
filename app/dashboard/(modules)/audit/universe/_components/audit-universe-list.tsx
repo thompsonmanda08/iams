@@ -439,39 +439,43 @@ export default function AuditUniverseList({
                                     <TooltipContent>View Details</TooltipContent>
                                   </Tooltip>
 
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={(e) => {
-                                          handleEdit(item);
-                                          e.stopPropagation();
-                                        }}
-                                        className="h-8 gap-1.5">
-                                        <Pencil className="h-3.5 w-3.5" />
-                                        Edit
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Edit Universe</TooltipContent>
-                                  </Tooltip>
+                                  {item.status !== "APPROVED" && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={(e) => {
+                                            handleEdit(item);
+                                            e.stopPropagation();
+                                          }}
+                                          className="h-8 gap-1.5">
+                                          <Pencil className="h-3.5 w-3.5" />
+                                          Edit
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Edit Universe</TooltipContent>
+                                    </Tooltip>
+                                  )}
 
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={(e) => {
-                                          handleDeleteClick(item.id, universeName);
-                                          e.stopPropagation();
-                                        }}
-                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                                        <Trash2 className="h-4 w-4" />
-                                        Delete
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Delete Universe</TooltipContent>
-                                  </Tooltip>
+                                  {item.status !== "APPROVED" && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={(e) => {
+                                            handleDeleteClick(item.id, universeName);
+                                            e.stopPropagation();
+                                          }}
+                                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                                          <Trash2 className="h-4 w-4" />
+                                          Delete
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Delete Universe</TooltipContent>
+                                    </Tooltip>
+                                  )}
                                 </TooltipProvider>
                               </div>
                             </TableCell>
