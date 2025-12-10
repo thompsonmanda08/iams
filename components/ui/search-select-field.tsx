@@ -128,27 +128,28 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 </div>
               ) : (
                 <>
-                  {selected
-                    ? (() => {
-                        const selectedItem = options.find(
-                          (item) => String(item.id || item.value) === selected
-                        );
-                        if (!selectedItem) return placeholder || "Select an item...";
+                  <span className="flex-1 truncate text-left">
+                    {selected
+                      ? (() => {
+                          const selectedItem = options.find(
+                            (item) => String(item.id || item.value) === selected
+                          );
+                          if (!selectedItem) return placeholder || "Select an item...";
 
-                        const label = listItemName
-                          ? selectedItem[listItemName]
-                          : selectedItem?.name ||
-                            selectedItem?.title ||
-                            selectedItem?.label ||
-                            selectedItem?.value;
+                          const label = listItemName
+                            ? selectedItem[listItemName]
+                            : selectedItem?.name ||
+                              selectedItem?.title ||
+                              selectedItem?.label ||
+                              selectedItem?.value;
 
-                        return label || selectedItem;
-                      })()
-                    : placeholder || "Select an item..."}
+                          return label || selectedItem;
+                        })()
+                      : placeholder || "Select an item..."}
+                  </span>
                 </>
               )}
-
-              <ChevronsUpDown className="opacity-50" />
+              <ChevronsUpDown className="ml-2 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="flex w-[var(--radix-popover-trigger-width)] p-0">
