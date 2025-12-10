@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, ListCheck, ClipboardListIcon } from "lucide-react";
+import { Plus, ClipboardListIcon, FileText } from "lucide-react";
 import Link from "next/link";
 import { AuditPlansTable } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plans-table";
 import { getAuditPlans } from "@/app/_actions/audit-module-actions";
 import PageHeader from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
 import Loader from "@/components/ui/loader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AuditAnnualPlan from "./_components/annaul-plans";
+import { Card } from "@/components/ui/card";
 
 export default async function AuditPlansPage() {
   const plansResponse = await getAuditPlans();
@@ -22,7 +24,7 @@ export default async function AuditPlansPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
               title="Audit Plans"
-              description="  Manage and track all audit plans and schedules"
+              description="Manage and track all audit plans and schedules"
               classNames={{
                 container: "flex items-center gap-4",
                 title: "text-3xl font-bold text-foreground"
@@ -41,12 +43,12 @@ export default async function AuditPlansPage() {
                 <Download className="h-4 w-4" />
                 Export
               </Button> */}
-              <Link href="/dashboard/audit/plans/new">
+              {/* <Link href="/dashboard/audit/plans/new">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create Audit Plan
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
@@ -54,21 +56,60 @@ export default async function AuditPlansPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {/* Results Summary */}
-          {plans && plans.length > 0 && (
-            <div className="flex items-center justify-between">
-              <p className="text-muted-foreground text-sm">
-                Showing {plans.length} audit plan{plans.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-          )}
+        <Tabs defaultValue="engagement" className="space-y-4">
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex h-12 w-auto min-w-full gap-1 lg:gap-3">
+              <TabsTrigger value="engagement" className="gap-2">
+                <ClipboardListIcon className="h-6 w-6" />
+                Engagements
+              </TabsTrigger>
+              <TabsTrigger value="annual" className="gap-2">
+                <FileText className="h-6 w-6" />
+                Annual Plans
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* Table */}
-          <Suspense fallback={<TableLoading />}>
-            <AuditPlansTable plans={plans} />
-          </Suspense>
-        </div>
+          <TabsContent value="engagement">
+            <Suspense fallback={<TableLoading />}>
+              <Card className="p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h4 className="text-sm leading-none font-medium">Engagement Plans</h4>
+                    <p className="text-muted-foreground text-sm">
+                      Plan audits and execute to ensure compliance in your organization
+                    </p>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <Link href="/dashboard/audit/plans/new">
+                      <Button className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create Audit Plan
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+                {/* Results Summary */}
+                {plans && plans.length > 0 && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-muted-foreground text-sm">
+                      Showing {plans.length} audit plan{plans.length !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                )}
+
+                <AuditPlansTable plans={plans} />
+              </Card>
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="annual">
+            <Suspense fallback={<TableLoading />}>
+              <div className="space-y-6">
+                <AuditAnnualPlan plans={[]} />
+              </div>
+            </Suspense>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
