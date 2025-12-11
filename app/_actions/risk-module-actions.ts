@@ -1266,6 +1266,7 @@ export async function _getKRIs(
     kri_register_id?: string;
     status?: string;
     frequency?: KRIFrequency;
+    breached?: boolean;
   }
 ): Promise<APIResponse> {
   const queryParams = new URLSearchParams();
@@ -1277,6 +1278,7 @@ export async function _getKRIs(
   if (params?.frequency) queryParams.append("frequency", params.frequency);
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+  if (params?.breached) queryParams.append("breached", Boolean(params.breached).toString());
 
   const url = `/api/v1/kris${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
   try {

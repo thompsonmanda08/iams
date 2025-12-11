@@ -283,6 +283,8 @@ export default function RisksTable({
     has_next: meta.page < meta.totalPages
   };
 
+  console.log("HERE:", risks);
+
   const getRiskOwnerName = (risk: Risk) => {
     if (!risk.risk_owner) return "Unassigned";
     return `${risk.risk_owner.first_name} ${risk.risk_owner.last_name}`.trim();
@@ -387,18 +389,13 @@ export default function RisksTable({
                     <StatusBadge status={risk?.inherent_rating || "-"} />
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "text-sm font-semibold",
-                          getRiskScoreColor(risk.residual_score || 0)
-                        )}>
-                        {risk.residual_score || 0}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        ({risk.residual_impact || 0}×{risk.residual_likelihood || 0})
-                      </span>
-                    </div>
+                    <span
+                      className={cn(
+                        "text-sm font-semibold",
+                        getRiskScoreColor(risk.residual_score || 0)
+                      )}>
+                      {risk.residual_score || 0}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={risk?.residual_rating || "-"} />
@@ -406,7 +403,7 @@ export default function RisksTable({
                   <TableCell>
                     <span
                       className={cn(
-                        "rounded-full px-2 py-1 text-xs font-medium capitalize",
+                        "flex-none rounded-full px-2 py-1 text-xs font-medium capitalize",
                         getMagnitudeColor(risk?.risk_magnitude)
                       )}>
                       {risk.inherent_score || "N/A"}

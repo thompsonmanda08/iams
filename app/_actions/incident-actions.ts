@@ -15,6 +15,8 @@ export async function getIncidents(params?: {
   status?: string;
   department_id?: string;
   materiality?: string;
+  start_date?: string; 
+  end_date?: string; 
 }): Promise<APIResponse> {
   try {
     const queryParams = new URLSearchParams();
@@ -24,6 +26,8 @@ export async function getIncidents(params?: {
     if (params?.status) queryParams.append("status", params.status);
     if (params?.department_id) queryParams.append("department_id", params.department_id);
     if (params?.materiality) queryParams.append("materiality", params.materiality);
+    if(params?.start_date) queryParams.append("start_date", String(params.start_date));
+    if(params?.end_date) queryParams.append("end_date", String(params.end_date));
 
     const queryString = queryParams.toString();
     const url = `/api/v1/incidents${queryString ? `?${queryString}` : ""}`;

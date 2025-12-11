@@ -1,7 +1,10 @@
 import { CheckCircle2, AlertTriangle, XCircle, Zap, BarChart3 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 export function KRIStatsSection({ stats }: any) {
+  const router = useRouter();
+
   const items = [
     {
       label: "Total KRIs",
@@ -36,12 +39,16 @@ export function KRIStatsSection({ stats }: any) {
       border: "border-red-200"
     },
     {
-      label: "Breaches",
+      label: "View KRI Breaches",
       value: stats.breachesDetected,
       icon: Zap,
       bg: "bg-orange-50",
       text: "text-orange-600",
-      border: "border-orange-200"
+      border: "border-orange-200",
+      isClickable: true,
+      click: () => {
+        router.push("/dashboard/risks/kri/breaches");
+      }
     }
   ];
 
@@ -50,8 +57,9 @@ export function KRIStatsSection({ stats }: any) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {items.map((item) => (
           <Card
+            onClick={() => (item.isClickable ? item.click() : null)}
             key={item.label}
-            className={`rounded-xl border p-5 ${item.border} transition`}>
+            className={`${item.isClickable ? "cursor-pointer" : ""} rounded-xl border p-5 ${item.border} transition`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm">{item.label}</p>

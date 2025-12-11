@@ -26,12 +26,12 @@ import {
   FileText,
   FileSpreadsheet,
   Printer,
-  Calendar as CalendarIcon,
+  CalendarIcon,
   X,
   ArrowRight,
   Filter,
   Loader2,
-  View,
+  Eye,
   Trash2
 } from "lucide-react";
 import { format } from "date-fns";
@@ -78,10 +78,19 @@ export function MyIncidents() {
   const fetchIncidents = async () => {
     setIsLoading(true);
     try {
-      const response = await getIncidents({
+      // Build query parameters conditionally
+      const queryParams: any = {
         page: pagination.page,
         page_size: pagination.page_size
-      });
+      };
+
+      // Only add date filters if dateRange is defined and has both from and to
+      if (dateRange?.from && dateRange?.to) {
+        queryParams.start_date = format(dateRange.from, "yyyy-MM-dd");
+        queryParams.end_date = format(dateRange.to, "yyyy-MM-dd");
+      }
+
+      const response = await getIncidents(queryParams);
 
       if (response.success && response.data) {
         setIncidents(response.data.data || []);
@@ -104,6 +113,7 @@ export function MyIncidents() {
 
   const handleClearDates = () => {
     setDateRange(undefined);
+    fetchIncidents();
   };
 
   const handleDeleteClick = (incident: any) => {
@@ -275,7 +285,10 @@ export function MyIncidents() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-2">
-            <Button className="flex-1" disabled={!dateRange?.from || !dateRange?.to}>
+            <Button
+              className="flex-1"
+              onClick={fetchIncidents}
+              disabled={!dateRange?.from || !dateRange?.to}>
               <FileText className="mr-2 h-4 w-4" />
               Generate Report
             </Button>
@@ -378,7 +391,10 @@ export function MyIncidents() {
                         <TableCell className="flex flex-col gap-y-2">
                           <span>{item.department.name}</span>
                           <span className="font-bold">
-                            KRI: <span className="font-normal text-xs text-gray-600">{item.incident.kri_id || 'N/A'}</span>
+                            KRI:{" "}
+                            <span className="text-xs font-normal text-gray-600">
+                              {item.incident.kri_id || "N/A"}
+                            </span>
                           </span>
                         </TableCell>
                         <TableCell>{item.primary_cause.name}</TableCell>
@@ -402,7 +418,7 @@ export function MyIncidents() {
                               size="sm"
                               onClick={() => handleViewDetails(item)}
                               className="h-8 gap-1.5">
-                              <View className="h-3.5 w-3.5" />
+                              <Eye className="h-3.5 w-3.5" />
                               View Incident
                             </Button>
                             <Button
