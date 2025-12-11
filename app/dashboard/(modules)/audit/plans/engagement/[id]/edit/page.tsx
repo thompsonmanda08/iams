@@ -437,7 +437,7 @@ export default function EditAuditPlanPage() {
       { id: auditPlanId, data: auditData },
       {
         onSuccess: () => {
-          router.push(`/dashboard/audit/plans/${auditPlanId}`);
+          router.push(`/dashboard/audit/plans/engagement/${auditPlanId}`);
         }
       }
     );

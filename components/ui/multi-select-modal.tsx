@@ -25,6 +25,7 @@ interface MultiSelectModalProps {
   isInvalid?: boolean;
   isLoading?: boolean;
   name?: string;
+  selectedItemsDisplay?: React.ReactNode;
 }
 
 export function MultiSelectModal({
@@ -37,6 +38,7 @@ export function MultiSelectModal({
   required,
   isLoading = false,
   disabled = false,
+  selectedItemsDisplay,
   ...props
 }: MultiSelectModalProps) {
   const [open, setOpen] = React.useState(false);
@@ -86,6 +88,19 @@ export function MultiSelectModal({
           <Spinner className="h-4 w-4" />
           <span className="text-sm text-slate-400">Loading...</span>
         </div>
+      ) : selectedItemsDisplay ? (
+        <>
+          {selectedItemsDisplay}
+          <button
+            type="button"
+            onClick={handleOpenModal}
+            disabled={disabled}
+            className={cn("mt-2 text-xs text-blue-500 underline hover:text-blue-700", {
+              "cursor-not-allowed opacity-50": disabled
+            })}>
+            Edit
+          </button>
+        </>
       ) : (
         <button
           type="button"
@@ -119,12 +134,13 @@ export function MultiSelectModal({
               </>
             )}
           </div>
+
           {selectedOptions.length > 0 && <Edit2 className="h-4 w-4 shrink-0 opacity-50" />}
         </button>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex max-h-[80vh] max-w-2xl flex-col">
+        <DialogContent className="flex max-h-[80vh] max-w-5xl! flex-col">
           <DialogHeader>
             <DialogTitle>{label || "Select Items"}</DialogTitle>
           </DialogHeader>
@@ -141,76 +157,105 @@ export function MultiSelectModal({
               />
             </div>
 
-            {/* Selected Items Display */}
-            {selectedOptions.length > 0 && (
-              <div className="rounded-md border bg-slate-50 p-4 dark:bg-slate-900">
-                <h4 className="mb-3 flex items-center justify-between text-sm font-medium">
-                  <span>Selected Items ({selectedOptions.length})</span>
+            {/* Two Column Layout */}
+            <div className="flex flex-1 gap-4 overflow-hidden">
+              {/* Left Column - Available Items */}
+              <div className="flex flex-1 flex-col overflow-hidden rounded-md border">
+                <div className="border-b bg-slate-50 p-3 dark:bg-slate-900">
+                  <h4 className="text-sm font-medium">
+                    Available Items (
+                    {filteredOptions.filter((opt) => !value.includes(opt.value)).length})
+                  </h4>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="p-4">
+                    {filteredOptions.filter((opt) => !value.includes(opt.value)).length === 0 ? (
+                      <p className="text-muted-foreground py-8 text-center text-sm">
+                        {filteredOptions.length === 0
+                          ? searchValue
+                            ? "No items found"
+                            : "No items available"
+                          : "All items selected"}
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {filteredOptions
+                          .filter((opt) => !value.includes(opt.value))
+                          .map((option) => (
+                            <div
+                              key={option.value}
+                              className={cn(
+                                "flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                              )}
+                              onClick={() => handleToggleSelect(option.value)}>
+                              <Checkbox
+                                checked={false}
+                                onCheckedChange={() => handleToggleSelect(option.value)}
+                                className="cursor-pointer"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span className="flex-1 text-sm">{option.label}</span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Right Column - Selected Items */}
+              <div className="flex flex-1 flex-col overflow-hidden rounded-md border">
+                <div className="flex items-center justify-between border-b bg-slate-50 p-3 dark:bg-slate-900">
+                  <h4 className="text-sm font-medium">Selected Items ({selectedOptions.length})</h4>
                   {selectedOptions.length > 0 && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => onValueChange([])}
-                      className="text-xs text-red-500 hover:text-red-700">
+                      className="h-6 text-xs text-red-500 hover:text-red-700">
                       Clear All
                     </Button>
                   )}
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedOptions.map((option) => (
-                    <Badge key={option.value} variant="default" className="flex items-center gap-2">
-                      <span>{option.label}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSelect(option.value)}
-                        className="ml-1 flex h-4 w-4 items-center justify-center rounded-full outline-none hover:bg-white/20">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
                 </div>
+                <ScrollArea className="flex-1">
+                  <div className="p-4">
+                    {selectedOptions.length === 0 ? (
+                      <p className="text-muted-foreground py-8 text-center text-sm">
+                        No items selected
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {selectedOptions.map((option) => (
+                          <div
+                            key={option.value}
+                            className={cn(
+                              "flex cursor-pointer items-center gap-3 rounded-md bg-blue-50 p-2 transition-colors hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900"
+                            )}
+                            onClick={() => handleToggleSelect(option.value)}>
+                            <Checkbox
+                              checked={true}
+                              onCheckedChange={() => handleToggleSelect(option.value)}
+                              className="cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <span className="flex-1 text-sm">{option.label}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleSelect(option.value);
+                              }}
+                              className="flex h-5 w-5 items-center justify-center rounded-full outline-none hover:bg-white/30">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
               </div>
-            )}
-
-            {/* Available Items to Select */}
-            <div>
-              <h4 className="mb-3 text-sm font-medium">
-                Available Items ({filteredOptions.length})
-              </h4>
-              <ScrollArea className="h-96 rounded-md border p-4">
-                <div className="space-y-2">
-                  {filteredOptions.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center text-sm">
-                      {searchValue ? "No items found" : "No items available"}
-                    </p>
-                  ) : (
-                    filteredOptions.map((option) => {
-                      const isSelected = value.includes(option.value);
-                      return (
-                        <div
-                          key={option.value}
-                          className={cn(
-                            "flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors",
-                            {
-                              "bg-slate-100 dark:bg-slate-800": isSelected,
-                              "hover:bg-slate-50 dark:hover:bg-slate-900": !isSelected
-                            }
-                          )}
-                          onClick={() => handleToggleSelect(option.value)}>
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => handleToggleSelect(option.value)}
-                            className="cursor-pointer"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <span className="flex-1 text-sm">{option.label}</span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </ScrollArea>
             </div>
           </div>
 

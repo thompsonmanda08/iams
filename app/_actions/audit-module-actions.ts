@@ -12,18 +12,12 @@
 import { revalidatePath } from "next/cache";
 import type { APIResponse, Pagination } from "@/lib/types";
 import type {
-  ReportTemplate,
-  ReportParams,
-  ScheduledReport,
-  AuditSettings,
-  SettingsInput,
   TemplateCategory,
   CreateUniversePayload,
   CreateUniverseItemPayload
 } from "@/lib/types/audit-types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
-import { getUsers } from "./user-actions";
 
 // ============================================================================
 // AUDIT PLAN ACTIONS
@@ -191,7 +185,7 @@ export async function updateAuditPlan(
     });
 
     revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/${id}`);
+    revalidatePath(`/dashboard/audit/plans/engagement/${id}`);
     revalidatePath("/dashboard/home/audit");
 
     return successResponse(response.data, "Audit plan updated successfully");
@@ -367,7 +361,7 @@ export async function createWorkpaper(data: {
     });
 
     revalidatePath("/dashboard/audit/workpapers");
-    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
+    revalidatePath(`/dashboard/audit/plans/engagement/${data.audit_plan_id}`);
 
     return successResponse(response.data, "Workpaper created successfully");
   } catch (error: any) {
@@ -394,7 +388,7 @@ export async function createWorkpaperFromTemplate(data: {
     });
 
     revalidatePath("/dashboard/audit/workpapers");
-    revalidatePath(`/dashboard/audit/plans/${data.audit_plan_id}`);
+    revalidatePath(`/dashboard/audit/plans/engagement/${data.audit_plan_id}`);
 
     return successResponse(response.data, "Workpaper created from template successfully");
   } catch (error: any) {
@@ -1038,7 +1032,7 @@ export async function submitAuditPlanForApproval(auditPlanId: string): Promise<A
     const response = await authenticatedApiClient({ method: "GET", url });
 
     revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 
     return successResponse(response.data, "Audit plan submitted for approval successfully");
   } catch (error: any) {
@@ -1069,7 +1063,7 @@ export async function rejectAuditPlan(auditPlanId: string, reason: string): Prom
     });
 
     revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 
     return successResponse(response.data, "Audit plan rejected successfully");
   } catch (error: any) {
@@ -1096,7 +1090,7 @@ export async function activateAuditPlan(auditPlanId: string): Promise<APIRespons
     });
 
     revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 
     return successResponse(response.data, "Audit plan activated successfully");
   } catch (error: any) {
@@ -1123,7 +1117,7 @@ export async function completeAuditPlan(auditPlanId: string): Promise<APIRespons
     });
 
     revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/${auditPlanId}`);
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 
     return successResponse(response.data, "Audit plan completed successfully");
   } catch (error: any) {
@@ -1587,9 +1581,9 @@ export async function getUniverseItems(params?: {
 }): Promise<APIResponse> {
   try {
     const queryParams = new URLSearchParams();
-    if (params?.department_id) queryParams.append("department_id", params.department_id);
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.page_size) queryParams.append("page_size", params.page_size.toString());
+    if (params?.department_id) queryParams.append("department_id", params.department_id);
     if (params?.audit_universe_id)
       queryParams.append("audit_universe_id", params.audit_universe_id);
 
@@ -1602,7 +1596,10 @@ export async function getUniverseItems(params?: {
       url
     });
 
-    return successResponse(response.data.data, "Universe items fetched successfully");
+    return successResponse(
+      response.data.data || response?.data,
+      "Universe items fetched successfully"
+    );
   } catch (error: any) {
     return handleError(error, "GET | FETCH UNIVERSE ITEMS", "/api/v1/audit/universe-items");
   }
@@ -1874,5 +1871,438 @@ export async function deleteFindingEvidence(evidence_id: string): Promise<APIRes
     return successResponse(null, "Evidence deleted successfully");
   } catch (error: any) {
     return handleError(error, "DELETE | EVIDENCE", `/api/v1/finding-evidence/${evidence_id}`);
+  }
+}
+
+// ============================================================================
+// ANNUAL AUDIT PLAN ACTIONS
+// ============================================================================
+
+/**
+ * Get all annual audit plan registers with optional filters
+ */
+export async function getAnnualAuditPlans(filters?: {
+  year?: number;
+  status?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.year) params.append("year", String(filters.year));
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.page) params.append("page", String(filters.page));
+    if (filters?.page_size) params.append("page_size", String(filters.page_size));
+
+    const queryString = params.toString();
+    const url = `/api/v1/annual-audit-plans${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data?.data, "Annual audit plans fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | ANNUAL AUDIT PLANS", "/api/v1/annual-audit-plans");
+  }
+}
+
+/**
+ * Get annual audit plan register by ID or year
+ */
+export async function getAnnualAuditPlan(filter: {
+  register_id?: string;
+  year?: number;
+}): Promise<APIResponse> {
+  if (!filter.register_id && !filter.year) {
+    return handleBadRequest("Either register_id or year is required");
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (filter.register_id) params.append("register_id", filter.register_id);
+    if (filter.year) params.append("year", String(filter.year));
+
+    const queryString = params.toString();
+    const url = `/api/v1/annual-audit-plans/get${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data?.data, "Annual audit plan fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | ANNUAL AUDIT PLAN", "/api/v1/annual-audit-plans/get");
+  }
+}
+
+/**
+ * Update annual audit plan register status
+ */
+export async function updateAnnualAuditPlan(
+  registerId: string,
+  data: {
+    status?: string;
+    [key: string]: any;
+  }
+): Promise<APIResponse> {
+  if (!registerId) {
+    return handleBadRequest("Register ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url: `/api/v1/annual-audit-plans/${registerId}`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+
+    return successResponse(response.data, "Annual audit plan updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PATCH | UPDATE ANNUAL AUDIT PLAN",
+      `/api/v1/annual-audit-plans/${registerId}`
+    );
+  }
+}
+
+/**
+ * Submit annual audit plan for approval
+ */
+export async function submitAnnualAuditPlanForApproval(
+  registerId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!registerId) {
+    return handleBadRequest("Register ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/annual-audit-plans/${registerId}/submit`,
+      data: {
+        comments: comments || ""
+      }
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+
+    return successResponse(response.data, "Annual audit plan submitted for approval successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SUBMIT ANNUAL AUDIT PLAN",
+      `/api/v1/annual-audit-plans/${registerId}/submit`
+    );
+  }
+}
+
+/**
+ * Approve annual audit plan
+ */
+export async function approveAnnualAuditPlan(
+  registerId: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!registerId) {
+    return handleBadRequest("Register ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/annual-audit-plans/${registerId}/approve`,
+      data: {
+        comments: comments || "Approved"
+      }
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+
+    return successResponse(response.data, "Annual audit plan approved successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | APPROVE ANNUAL AUDIT PLAN",
+      `/api/v1/annual-audit-plans/${registerId}/approve`
+    );
+  }
+}
+
+/**
+ * Reject annual audit plan
+ */
+export async function rejectAnnualAuditPlan(
+  registerId: string,
+  reason: string
+): Promise<APIResponse> {
+  if (!registerId) {
+    return handleBadRequest("Register ID is required");
+  }
+
+  if (!reason) {
+    return handleBadRequest("Rejection reason is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/annual-audit-plans/${registerId}/reject`,
+      data: {
+        reason
+      }
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+
+    return successResponse(response.data, "Annual audit plan rejected successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | REJECT ANNUAL AUDIT PLAN",
+      `/api/v1/annual-audit-plans/${registerId}/reject`
+    );
+  }
+}
+
+// ============================================================================
+// ANNUAL AUDIT PLAN ITEM ACTIONS
+// ============================================================================
+
+/**
+ * Create annual audit plan item
+ */
+export async function createAnnualAuditPlanItem(
+  registerId: string,
+  data: {
+    department_id: string;
+    universe_item_ids: string[];
+    engagement_date: string;
+    responsible_person: string;
+    [key: string]: any;
+  }
+): Promise<APIResponse> {
+  if (!registerId) {
+    return handleBadRequest("Register ID is required");
+  }
+
+  if (!data.department_id || !data.universe_item_ids || !data.engagement_date) {
+    return handleBadRequest("Department ID, universe items, and engagement date are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/annual-audit-plans/${registerId}/items`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+    revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
+
+    return successResponse(response.data, "Annual audit plan item created successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE ANNUAL AUDIT PLAN ITEM",
+      `/api/v1/annual-audit-plans/${registerId}/items`
+    );
+  }
+}
+
+/**
+ * Get all annual audit plan items for a register
+ */
+export async function getAnnualAuditPlanItems(
+  registerId: string,
+  filters?: {
+    page?: number;
+    page_size?: number;
+  }
+): Promise<APIResponse> {
+  if (!registerId) {
+    return handleBadRequest("Register ID is required");
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append("page", String(filters.page));
+    if (filters?.page_size) params.append("page_size", String(filters.page_size));
+
+    const queryString = params.toString();
+    const url = `/api/v1/annual-audit-plans/${registerId}/items${queryString ? `?${queryString}` : ""}`;
+
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data?.data, "Annual audit plan items fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | ANNUAL AUDIT PLAN ITEMS",
+      `/api/v1/annual-audit-plans/${registerId}/items`
+    );
+  }
+}
+
+/**
+ * Get single annual audit plan item by ID
+ */
+export async function getAnnualAuditPlanItem(
+  registerId: string,
+  itemId: string
+): Promise<APIResponse> {
+  if (!registerId || !itemId) {
+    return handleBadRequest("Register ID and Item ID are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/annual-audit-plans/${registerId}/items/${itemId}`
+    });
+
+    return successResponse(response.data?.data, "Annual audit plan item fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | ANNUAL AUDIT PLAN ITEM",
+      `/api/v1/annual-audit-plans/${registerId}/items/${itemId}`
+    );
+  }
+}
+
+/**
+ * Update annual audit plan item
+ */
+export async function updateAnnualAuditPlanItem(
+  registerId: string,
+  itemId: string,
+  data: {
+    department_id?: string;
+    universe_item_ids?: string[];
+    engagement_date?: string;
+    responsible_person?: string;
+    [key: string]: any;
+  }
+): Promise<APIResponse> {
+  if (!registerId || !itemId) {
+    return handleBadRequest("Register ID and Item ID are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/annual-audit-plans/${registerId}/items/${itemId}`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+    revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
+
+    return successResponse(response.data, "Annual audit plan item updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE ANNUAL AUDIT PLAN ITEM",
+      `/api/v1/annual-audit-plans/${registerId}/items/${itemId}`
+    );
+  }
+}
+
+/**
+ * Generate audit plan from annual audit plan item
+ */
+export async function generateAuditPlanFromItem(
+  registerId: string,
+  itemId: string,
+  data: {
+    title: string;
+    description?: string;
+    ref_no: string;
+    end_date: string;
+    audit_plan_date: string;
+    audit_area: string;
+    audit_scope: string;
+    audit_criteria: string;
+    audit_objective: string;
+    management_standard: string;
+    audit_team_members?: string[];
+    client_representative: string;
+    budget_item_ids?: string[];
+    [key: string]: any;
+  }
+): Promise<APIResponse> {
+  if (!registerId || !itemId) {
+    return handleBadRequest("Register ID and Item ID are required");
+  }
+
+  if (
+    !data.title ||
+    !data.ref_no ||
+    !data.end_date ||
+    !data.audit_plan_date ||
+    !data.audit_area ||
+    !data.audit_scope
+  ) {
+    return handleBadRequest("Required fields for audit plan generation are missing");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/annual-audit-plans/${registerId}/items/${itemId}/generate-audit-plan`,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+    revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
+    revalidatePath("/dashboard/audit/plans");
+
+    return successResponse(response.data, "Audit plan generated successfully from annual item");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | GENERATE AUDIT PLAN FROM ITEM",
+      `/api/v1/annual-audit-plans/${registerId}/items/${itemId}/generate-audit-plan`
+    );
+  }
+}
+
+/**
+ * Delete annual audit plan item
+ */
+export async function deleteAnnualAuditPlanItem(
+  registerId: string,
+  itemId: string
+): Promise<APIResponse> {
+  if (!registerId || !itemId) {
+    return handleBadRequest("Register ID and Item ID are required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/annual-audit-plans/${registerId}/items/${itemId}`
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+    revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
+
+    return successResponse(null, "Annual audit plan item deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | ANNUAL AUDIT PLAN ITEM",
+      `/api/v1/annual-audit-plans/${registerId}/items/${itemId}`
+    );
   }
 }

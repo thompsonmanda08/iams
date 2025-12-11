@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, ClipboardListIcon, FileText } from "lucide-react";
 import Link from "next/link";
 import { AuditPlansTable } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plans-table";
-import { getAuditPlans } from "@/app/_actions/audit-module-actions";
+import { getAuditPlans, getAnnualAuditPlans } from "@/app/_actions/audit-module-actions";
 import PageHeader from "@/components/page-header";
 import Loader from "@/components/ui/loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +14,11 @@ export default async function AuditPlansPage() {
   const plansResponse = await getAuditPlans();
   const plans = plansResponse.success ? plansResponse.data || [] : [];
 
-  // console.log({ plans });
+  // Fetch annual audit plans
+  const annualPlansResponse = await getAnnualAuditPlans();
+  const annualPlans = annualPlansResponse.success ? annualPlansResponse.data || [] : [];
+
+  // console.log({ plans, annualPlans });
 
   return (
     <div className="bg-background min-h-screen">
@@ -43,7 +47,7 @@ export default async function AuditPlansPage() {
                 <Download className="h-4 w-4" />
                 Export
               </Button> */}
-              {/* <Link href="/dashboard/audit/plans/new">
+              {/* <Link href="/dashboard/audit/plans/engagement/new">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create Audit Plan
@@ -81,7 +85,7 @@ export default async function AuditPlansPage() {
                     </p>
                   </div>
                   <div className="flex items-end gap-2">
-                    <Link href="/dashboard/audit/plans/new">
+                    <Link href="/dashboard/audit/plans/engagement/new">
                       <Button className="gap-2">
                         <Plus className="h-4 w-4" />
                         Create Audit Plan
@@ -104,9 +108,7 @@ export default async function AuditPlansPage() {
           </TabsContent>
           <TabsContent value="annual">
             <Suspense fallback={<TableLoading />}>
-              <div className="space-y-6">
-                <AuditAnnualPlan plans={[]} />
-              </div>
+              <AuditAnnualPlan plans={annualPlans} />
             </Suspense>
           </TabsContent>
         </Tabs>

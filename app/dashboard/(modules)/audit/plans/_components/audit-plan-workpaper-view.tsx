@@ -299,7 +299,7 @@ export function AuditPlanWorkpaperView({
                       Submit for Approval
                     </Button>
                     <Button asChild variant="secondary" size="sm" className="gap-2">
-                      <Link href={`/dashboard/audit/plans/${auditPlan.id}/edit`}>
+                      <Link href={`/dashboard/audit/plans/engagement/${auditPlan.id}/edit`}>
                         <PencilLineIcon className="h-4 w-4" />
                         Edit Plan
                       </Link>
@@ -974,7 +974,7 @@ export function AuditPlanWorkpaperView({
                         </div>
 
                         <Button size="lg" className="gap-2" asChild>
-                          <Link href="/dashboard/audit/plans/new">
+                          <Link href="/dashboard/audit/plans/engagement/new">
                             <Plus className="h-4 w-4" />
                             Create Audit Plan
                           </Link>
@@ -1027,7 +1027,7 @@ export function AuditPlanWorkpaperView({
                     </div>
 
                     {/* <Button onClick={handleCategoryClick}  size="lg" className="gap-2" asChild>
-                      <Link href="/dashboard/audit/plans/new">
+                      <Link href="/dashboard/audit/plans/engagement/new">
                         <Plus className="h-4 w-4" />
                         Create Audit Plan
                       </Link>

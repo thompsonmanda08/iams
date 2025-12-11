@@ -6450,6 +6450,503 @@
       ]
     },
     {
+      "name": "10. Annual Audit Planning",
+      "item": [
+        {
+          "name": "Annual Audit Plan Registers",
+          "item": [
+            {
+              "name": "Initialize Annual Audit Plan (Current Year)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/init",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "init"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Annual Audit Plan Registers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Annual Audit Plan Register by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/get?register_id={{register_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "get"
+                  ],
+                  "query": [
+                    {
+                      "key": "register_id",
+                      "value": "{{register_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Annual Audit Plan Register by Year",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/get?year=2025",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "get"
+                  ],
+                  "query": [
+                    {
+                      "key": "year",
+                      "value": "2025"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Annual Audit Plan Register",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"DRAFT\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Submit Annual Audit Plan for Approval",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/submit",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "submit"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"comments\": \"Ready for approval\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Approve Annual Audit Plan",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/approve",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "approve"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"comments\": \"Approved\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Reject Annual Audit Plan",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/reject",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "reject"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Requires revision\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Annual Audit Plan Items",
+          "item": [
+            {
+              "name": "Create Annual Audit Plan Item",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/items",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "items"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"department_id\": \"{{dept_id}}\",\n  \"universe_item_ids\": [\n    \"{{audit_universe_item_id}}\"\n  ],\n  \"engagement_date\": \"2025-03-15\",\n  \"engagement_end_date\": \"2025-04-15\",\n  \"responsible_person\": \"{{user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Annual Audit Plan Items",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/items?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "items"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Annual Audit Plan Item by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/items/{{item_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "items",
+                    "{{item_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Annual Audit Plan Item",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/items/{{item_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "items",
+                    "{{item_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"department_id\": \"{{dept_id}}\",\n  \"universe_item_ids\": [\n    \"{{audit_universe_item_id}}\"\n  ],\n  \"engagement_date\": \"2025-04-15\",\n  \"engagement_end_date\": \"2025-05-15\",\n  \"responsible_person\": \"{{user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Generate Audit Plan from Item",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/items/{{item_id}}/generate-audit-plan",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "items",
+                    "{{item_id}}",
+                    "generate-audit-plan"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Generated Audit Plan\",\n  \"description\": \"Auto-generated from annual plan\",\n  \"ref_no\": \"AP-GEN-001\",\n  \"end_date\": \"2025-12-31\",\n  \"audit_plan_date\": \"2024-12-01\",\n  \"audit_area\": \"Risk Management\",\n  \"audit_scope\": \"Organization-wide\",\n  \"audit_criteria\": \"ISO 27001\",\n  \"audit_objective\": \"Assess effectiveness of controls\",\n  \"management_standard\": \"ISO 27001\",\n  \"audit_team_members\": [\n    \"{{user_id}}\"\n  ],\n  \"client_representative\": \"{{client_rep_id}}\",\n  \"budget_item_ids\": [\n    \"{{budget_line_id}}\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Annual Audit Plan Item",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/annual-audit-plans/{{register_id}}/items/{{item_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "annual-audit-plans",
+                    "{{register_id}}",
+                    "items",
+                    "{{item_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "11. Risk Matrix & Budget",
       "item": [
         {
@@ -7207,6 +7704,30 @@
       "value": "",
       "type": "string",
       "description": "User ID of HOD (Head of Department) for audit"
+    },
+    {
+      "key": "register_id",
+      "value": "",
+      "type": "string",
+      "description": "From initialize annual audit plan register response"
+    },
+    {
+      "key": "item_id",
+      "value": "",
+      "type": "string",
+      "description": "From create annual audit plan item response"
+    },
+    {
+      "key": "audit_universe_item_id",
+      "value": "",
+      "type": "string",
+      "description": "From create audit universe item response"
+    },
+    {
+      "key": "end_date",
+      "value": "2025-12-31",
+      "type": "string",
+      "description": "Audit plan end date (YYYY-MM-DD format). Optional - defaults to 1 month after engagement date if not provided"
     }
   ]
 }

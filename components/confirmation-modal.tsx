@@ -1,6 +1,7 @@
 "use client";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -17,6 +18,7 @@ interface ConfirmationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void | Promise<void>;
+  onCancel?: () => void;
   title?: string;
   description?: string;
   confirmText?: string;
@@ -70,7 +72,8 @@ export function ConfirmationModal({
   confirmText,
   cancelText = "Cancel",
   type = "default",
-  isLoading = false
+  isLoading = false,
+  onCancel
 }: ConfirmationModalProps) {
   const config = typeConfig[type];
   const Icon = config.icon;
@@ -80,7 +83,15 @@ export function ConfirmationModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        onOpenChange(open);
+
+        if (!open) {
+          onCancel?.();
+        }
+      }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -99,13 +110,18 @@ export function ConfirmationModal({
         </DialogHeader>
 
         <DialogFooter className="gap-2 space-x-2 sm:gap-0">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}>
-            {cancelText}
-          </Button>
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                onOpenChange(false);
+                onCancel?.();
+              }}
+              disabled={isLoading}>
+              {cancelText}
+            </Button>
+          </DialogClose>
           <Button
             type="button"
             variant={config.variant}

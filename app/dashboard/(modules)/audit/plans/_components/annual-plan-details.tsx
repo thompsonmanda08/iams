@@ -1,0 +1,206 @@
+"use client";
+import {
+  getAnnualAuditPlan,
+  getAuditPlan,
+  getWorkpaperByAuditPlanId
+} from "@/app/_actions/audit-module-actions";
+import { getWorkflowInstances } from "@/app/_actions/task-actions";
+import { AuditPlan } from "@/lib/types/audit-types";
+import PageHeader from "@/components/page-header";
+import { ClipboardListIcon, Download, ListCheck, Plus, Send } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/status-badge";
+import { Button } from "@/components/ui/button";
+import {
+  useAnnualAuditPlanItems,
+  useDeleteAnnualAuditPlanItem,
+  useSubmitAnnualAuditPlanForApproval
+} from "@/hooks/use-audit-query-data";
+import { Suspense, useState } from "react";
+import Loader from "@/components/ui/loader";
+import { AnnualPlanItems, CreateOrUpdatePlanItem } from "./annual-plan-items";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
+
+interface AuditDetailPageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default function AuditDetailClient({ auditPlan }: { auditPlan: any }) {
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [comments, setComments] = useState("");
+  const [openAddPlanItemModal, setOpenAddPlanItemModal] = useState(false);
+
+  const { data: itemsResponse } = useAnnualAuditPlanItems(auditPlan?.id, {
+    page: 1,
+    page_size: 100
+  });
+
+  const items = itemsResponse?.data || itemsResponse || [];
+
+  const submitMutation = useSubmitAnnualAuditPlanForApproval();
+
+  const confirmSubmitForApproval = () => {
+    submitMutation.mutate({
+      registerId: auditPlan?.id,
+      comments
+    });
+  };
+
+  // Close dialog only on successful submission
+  if (submitMutation.isSuccess && submitDialogOpen) {
+    setSubmitDialogOpen(false);
+    setComments("");
+  }
+
+  return (
+    <>
+      {/* Audit Plan Header */}
+      <Card className="border-0 bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-1 flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <h3 className="text-foreground text-3xl font-bold">
+                  Annual Plan ({auditPlan.year})
+                </h3>
+                <StatusBadge status={auditPlan.status} size="md" />
+              </div>
+              <div className="mt-4 flex items-center gap-2">
+                {auditPlan.status.toUpperCase() === "COMPLETED" && (
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                )}
+                {auditPlan.status.toUpperCase() === "DRAFT" && (
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setSubmitDialogOpen(true)}
+                    disabled={submitMutation.isPending}
+                    isLoading={submitMutation.isPending}
+                    loadingText="Submitting...">
+                    <Send className="h-4 w-4" />
+                    Submit for Approval
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* CREATED/UPDATED INFO */}
+            <div className="text-muted-foreground flex gap-6">
+              <div className="text-right">
+                <p className="text-foreground mb-1.5 font-medium">Created</p>
+                <p>{format(new Date(auditPlan.created_at), "MMM d, yyyy")}</p>
+                {auditPlan?.created_by_name && (
+                  <>
+                    <p className="text-sm">by {auditPlan?.created_by_name || "System"}</p>
+                  </>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-foreground mb-1.5 font-medium">Updated</p>
+                <p>{format(new Date(auditPlan?.updated_at), "MMM d, yyyy")}</p>
+                {auditPlan?.updated_by_name && (
+                  <>
+                    <p className="text-sm">by {auditPlan?.updated_by_name || "System"}</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Suspense fallback={<TableLoading />}>
+        <Card className="p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-base leading-none font-medium">Engagement Items</h4>
+              <p className="text-muted-foreground text-sm">
+                Possible audit engagements and future audits
+              </p>
+            </div>
+            <div className="flex items-end gap-2">
+              <CreateOrUpdatePlanItem
+                planId={auditPlan?.id}
+                showTrigger={true}
+                openModal={openAddPlanItemModal}
+                setOpenModal={setOpenAddPlanItemModal}
+              />
+            </div>
+          </div>
+          {/* Results Summary */}
+          {auditPlan && items.length > 0 && (
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-sm">
+                Showing {items.length} audit plan item
+                {auditPlan?.items.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
+
+          <AnnualPlanItems items={items} planId={auditPlan?.id} />
+        </Card>
+      </Suspense>
+
+      {/* Submit for Approval Dialog */}
+      <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Submit Annual Plan for Approval?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to submit this audit plan for approval? This will send it to
+              HIAR or HOD for review.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              label="Comments"
+              placeholder="Provide comments here..."
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setSubmitDialogOpen(false);
+                setComments("");
+              }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmSubmitForApproval}
+              disabled={submitMutation.isPending}
+              isLoading={submitMutation.isPending}
+              loadingText="Submitting...">
+              Submit for Approval
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function TableLoading() {
+  return (
+    <div className="space-y-3">
+      <Loader size={32} loadingText="Please wait..." />
+    </div>
+  );
+}

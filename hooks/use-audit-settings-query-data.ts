@@ -222,9 +222,6 @@ export const useUniverseItems = (
   return useQuery({
     queryKey: [QUERY_KEYS.UNIVERSE_ITEMS, universeId, params],
     queryFn: async () => {
-      if (!universeId) {
-        throw new Error("Universe ID is required");
-      }
       const response = await getUniverseItems({
         audit_universe_id: universeId,
         ...params
@@ -234,7 +231,7 @@ export const useUniverseItems = (
       }
       return response.data;
     },
-    enabled: !!universeId, // Only run query if universeId is provided
+    // enabled: !!universeId, // Only run query if universeId is provided
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };
@@ -285,7 +282,7 @@ export const useBudgetLines = (
       }
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    enabled: !!budgetId
+    enabled: !!budgetId,
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };

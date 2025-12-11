@@ -85,7 +85,7 @@ export default async function AuditDashboardPage() {
                   View All Audits
                 </Button>
               </Link>
-              <Link href="/dashboard/audit/plans/new">
+              <Link href="/dashboard/audit/plans/engagement/new">
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create New Audit

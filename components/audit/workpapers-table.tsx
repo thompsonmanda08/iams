@@ -198,7 +198,7 @@ export function WorkpapersTable({
                 </TableCell>
                 <TableCell>
                   <Link
-                    href={`/dashboard/audit/plans/${workpaper.auditId}`}
+                    href={`/dashboard/audit/plans/engagement/${workpaper.auditId}`}
                     className="hover:text-primary line-clamp-1 text-sm hover:underline">
                     {workpaper.auditTitle}
                   </Link>

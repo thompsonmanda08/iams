@@ -23,7 +23,19 @@ import {
   getAuditPlan,
   deleteAuditPlan,
   submitAuditPlanForApproval,
-  updateAuditPlan
+  updateAuditPlan,
+  getAnnualAuditPlans,
+  getAnnualAuditPlan,
+  updateAnnualAuditPlan,
+  submitAnnualAuditPlanForApproval,
+  approveAnnualAuditPlan,
+  rejectAnnualAuditPlan,
+  createAnnualAuditPlanItem,
+  getAnnualAuditPlanItems,
+  getAnnualAuditPlanItem,
+  updateAnnualAuditPlanItem,
+  generateAuditPlanFromItem,
+  deleteAnnualAuditPlanItem
 } from "@/app/_actions/audit-module-actions";
 import type { WorkpaperInput, TemplateCategory, AuditPlan } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
@@ -42,7 +54,9 @@ export const AUDIT_QUERY_KEYS = {
   AUDIT_PLANS: "auditPlans",
   WORKPAPER_TEMPLATES: "workpaperTemplates",
   TEMPLATE_CATEGORIES: "templateCategories",
-  TEMPLATE_CATEGORY: "templateCategory"
+  TEMPLATE_CATEGORY: "templateCategory",
+  ANNUAL_AUDIT_PLANS: "annualAuditPlans",
+  ANNUAL_AUDIT_PLAN: "annualAuditPlan"
 } as const;
 
 // ============================================================================
@@ -489,6 +503,438 @@ export const useUpdateAuditPlan = () => {
       notify({
         title: "Error",
         description: error.message || "Failed to update audit plan",
+        type: "error"
+      });
+    }
+  });
+};
+
+// ============================================================================
+// ANNUAL AUDIT PLAN HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch all annual audit plans with optional filters
+ */
+export const useAnnualAuditPlans = (params?: {
+  year?: number;
+  status?: string;
+  page?: number;
+  page_size?: number;
+}) => {
+  return useQuery({
+    queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, params],
+    queryFn: async () => {
+      const response = await getAnnualAuditPlans(params);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+};
+
+/**
+ * Hook to fetch a single annual audit plan by ID or year
+ */
+export const useAnnualAuditPlan = (filter?: { register_id?: string; year?: number }) => {
+  return useQuery({
+    queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, filter],
+    queryFn: async () => {
+      if (!filter?.register_id && !filter?.year) {
+        throw new Error("Either register_id or year is required");
+      }
+      const response = await getAnnualAuditPlan(filter);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+
+    enabled: !!(filter?.register_id || filter?.year),
+    staleTime: 5 * 60 * 1000
+  });
+};
+
+/**
+ * Hook to update annual audit plan
+ */
+export const useUpdateAnnualAuditPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { registerId: string; data: Record<string, any> }) => {
+      const response = await updateAnnualAuditPlan(params.registerId, params.data);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, { register_id: variables.registerId }]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan updated successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to update annual audit plan",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to submit annual audit plan for approval
+ */
+export const useSubmitAnnualAuditPlanForApproval = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { registerId: string; comments?: string }) => {
+      const response = await submitAnnualAuditPlanForApproval(params.registerId, params.comments);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, { register_id: variables.registerId }]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan submitted for approval successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to submit annual audit plan for approval",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to approve annual audit plan
+ */
+export const useApproveAnnualAuditPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { registerId: string; comments?: string }) => {
+      const response = await approveAnnualAuditPlan(params.registerId, params.comments);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, { register_id: variables.registerId }]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan approved successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to approve annual audit plan",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to reject annual audit plan
+ */
+export const useRejectAnnualAuditPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { registerId: string; reason: string }) => {
+      const response = await rejectAnnualAuditPlan(params.registerId, params.reason);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, { register_id: variables.registerId }]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan rejected successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to reject annual audit plan",
+        type: "error"
+      });
+    }
+  });
+};
+
+// ============================================================================
+// ANNUAL AUDIT PLAN ITEM HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch all annual audit plan items for a register
+ */
+export const useAnnualAuditPlanItems = (
+  registerId: string,
+  filters?: {
+    page?: number;
+    page_size?: number;
+  }
+) => {
+  return useQuery({
+    queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, registerId, "items", filters],
+    queryFn: async () => {
+      const response = await getAnnualAuditPlanItems(registerId, filters);
+      return response.data;
+    },
+    enabled: !!registerId,
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+};
+
+/**
+ * Hook to fetch a single annual audit plan item
+ */
+export const useAnnualAuditPlanItem = (registerId: string, itemId: string) => {
+  return useQuery({
+    queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, registerId, "item", itemId],
+    queryFn: async () => {
+      const response = await getAnnualAuditPlanItem(registerId, itemId);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    enabled: !!(registerId && itemId),
+    staleTime: 5 * 60 * 1000
+  });
+};
+
+/**
+ * Hook to create annual audit plan item
+ */
+export const useCreateAnnualAuditPlanItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      registerId: string;
+      data: {
+        department_id: string;
+        universe_item_ids: string[];
+        engagement_date: string;
+        responsible_person: string;
+        [key: string]: any;
+      };
+    }) => {
+      const response = await createAnnualAuditPlanItem(params.registerId, params.data);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, variables.registerId, "items"]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan item created successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to create annual audit plan item",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to update annual audit plan item
+ */
+export const useUpdateAnnualAuditPlanItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      registerId: string;
+      itemId: string;
+      data: {
+        department_id?: string;
+        universe_item_ids?: string[];
+        engagement_date?: string;
+        responsible_person?: string;
+        [key: string]: any;
+      };
+    }) => {
+      const response = await updateAnnualAuditPlanItem(
+        params.registerId,
+        params.itemId,
+        params.data
+      );
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, variables.registerId, "items"]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [
+          AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS,
+          variables.registerId,
+          "item",
+          variables.itemId
+        ]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan item updated successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to update annual audit plan item",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to generate audit plan from annual audit plan item
+ */
+export const useGenerateAuditPlanFromItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      registerId: string;
+      itemId: string;
+      data: {
+        title: string;
+        description?: string;
+        ref_no: string;
+        end_date: string;
+        audit_plan_date: string;
+        audit_area: string;
+        audit_scope: string;
+        audit_criteria: string;
+        audit_objective: string;
+        management_standard: string;
+        audit_team_members?: string[];
+        client_representative: string;
+        budget_item_ids?: string[];
+        [key: string]: any;
+      };
+    }) => {
+      const response = await generateAuditPlanFromItem(
+        params.registerId,
+        params.itemId,
+        params.data
+      );
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, variables.registerId, "items"]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.AUDIT_PLANS]
+      });
+      notify({
+        title: "Success",
+        description: "Audit plan generated successfully from annual plan item",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to generate audit plan from item",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to delete annual audit plan item
+ */
+export const useDeleteAnnualAuditPlanItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { registerId: string; itemId: string }) => {
+      const response = await deleteAnnualAuditPlanItem(params.registerId, params.itemId);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, variables.registerId, "items"]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan item deleted successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to delete annual audit plan item",
         type: "error"
       });
     }
