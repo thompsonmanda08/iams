@@ -169,8 +169,7 @@ await updateAuthSession({
 // Verify session
 const { isAuthenticated, session } = await verifySession();
 
-// Get user session
-const userSession = await getUserSession();
+
 
 // Get permissions
 const permissionsSession = await getPermissionsSession();

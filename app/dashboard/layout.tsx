@@ -5,9 +5,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 import { User } from "@/lib/types/account";
-import { initializeSystemSetup } from "../_actions/auth-actions";
 import { redirect } from "next/navigation";
-import { getUserSession, verifySession } from "@/lib/session";
+import { verifySession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 

@@ -348,17 +348,7 @@ export async function getAuthSession(): Promise<Omit<AuthSession, "user" | "perm
   return decrypt(cookie);
 }
 
-/**
- * Retrieves and decrypts the USER_SESSION cookie.
- * Contains public user profile information.
- */
-export async function _getUserSession(): Promise<AuthSession["user"] | null> {
-  const cookie = (await cookies()).get(USER_SESSION)?.value;
-  if (!cookie) return null;
-  return decrypt(cookie) as AuthSession["user"];
-}
 
-export const getUserSession = cache(_getUserSession);
 
 /**
  * Retrieves and decrypts the PERMISSIONS_SESSION cookie.

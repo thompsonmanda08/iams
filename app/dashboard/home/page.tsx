@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { initializeSystemSetup } from "@/app/_actions/auth-actions";
 import { User } from "@/lib/types/account";
-import { getUserSession, verifySession } from "@/lib/session";
+import {  verifySession } from "@/lib/session";
 import Dashboard from "./_components/dashboard";
 
 export default async function RiskDashboard() {

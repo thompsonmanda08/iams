@@ -37,14 +37,13 @@ import { WorkpaperCategoryPanel } from "./workpaper-category-panel";
 import { FindingForm } from "./finding-form";
 import { FrameworkFindingForm } from "./framework-finding-form";
 import { FindingsList } from "./findings-list";
-import { AuditPlanApprovalsPanel } from "./audit-plan-approvals-panel";
 import { cn, notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
-import { submitAuditPlanForApproval, deleteAuditPlan } from "@/app/_actions/audit-module-actions";
 import { StatusBadge } from "@/components/status-badge";
 import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 import Link from "next/link";
 import { useDeleteAuditPlan, useSubmitAuditPlanForApproval } from "@/hooks/use-audit-query-data";
+import { AuditPlanApprovalsPanel } from "./audit-plan-approvals-panel";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -76,67 +75,6 @@ export function AuditPlanWorkpaperView({
   const [auditPlanData, setAuditPlanData] = useState(auditPlan);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
-
-  // Submit for approval mutation
-  // const submitMutation = useMutation({
-  //   mutationFn: async () => {
-  //     const result = await submitAuditPlanForApproval(auditPlan.id);
-  //     return result;
-  //   },
-  //   onSuccess: (response) => {
-  //     if (response.success) {
-  //       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
-  //       notify({
-  //         title: "Success",
-  //         description: "Audit plan submitted for approval",
-  //         type: "success"
-  //       });
-  //       // Update local state - set status to SUBMITTED
-  //       setAuditPlanData((prev) => ({ ...prev, status: "SUBMITTED" }));
-  //     } else {
-  //       notify({
-  //         title: "Error",
-  //         description: response.message || "Failed to submit audit plan for approval",
-  //         type: "error"
-  //       });
-  //     }
-  //   },
-  //   onError: (error: any) => {
-  //     notify({
-  //       title: "Error",
-  //       description: error.message || "Failed to submit audit plan for approval",
-  //       type: "error"
-  //     });
-  //   }
-  // });
-
-  // Delete audit plan mutation
-  // const deleteMutation = useMutation({
-  //   mutationFn: async () => {
-  //     const result = await deleteAuditPlan(auditPlan.id);
-  //     return result;
-  //   },
-  //   onSuccess: (response) => {
-  //     if (response.success) {
-  //       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
-  //       notify({
-  //         title: "Success",
-  //         description: "Audit plan deleted successfully",
-  //         type: "success"
-  //       });
-  //       setDeleteDialogOpen(false);
-  //       window.location.href = "/dashboard/audit/plans";
-  //       // Optionally navigate away or trigger parent callback
-  //     }
-  //   },
-  //   onError: (error: any) => {
-  //     notify({
-  //       title: "Error",
-  //       description: error.message || "Failed to delete audit plan",
-  //       type: "error"
-  //     });
-  //   }
-  // });
 
   const submitMutation = useSubmitAuditPlanForApproval({ auditPlan, setAuditPlanData });
   const deleteMutation = useDeleteAuditPlan({ planId: auditPlan.id, setDeleteDialogOpen });

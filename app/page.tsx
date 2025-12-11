@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/session";
 
+export const dynamic = "force-dynamic";
 /**
  * Root "/" page - Entry point routing
  *

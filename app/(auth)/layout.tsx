@@ -1,7 +1,7 @@
 import PoweredBy from "@/components/powered-by";
 import Image from "next/image";
 import { PropsWithChildren } from "react";
-import { getUserSession, verifySession } from "@/lib/session";
+import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
