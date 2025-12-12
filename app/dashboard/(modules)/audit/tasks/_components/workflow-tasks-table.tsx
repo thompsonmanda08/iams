@@ -15,8 +15,10 @@ import { CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import type { Task } from "@/lib/types/task";
 import { WorkflowTaskActionDialog } from "./workflow-task-action-dialog";
 import { WorkflowTaskReassignDialog } from "./workflow-task-reassign-dialog";
+import { EntityPreviewDialog } from "./entity-preview-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
+import { normalizeEntityType } from "@/lib/utils/entity-preview-utils";
 
 interface WorkflowTask {
   id: string;
@@ -52,6 +54,7 @@ interface WorkflowTasksTableProps {
 export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowTasksTableProps) {
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<"APPROVED" | "REJECTED" | null>(null);
 
@@ -63,6 +66,10 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
     e?.stopPropagation();
     setSelectedTask(task);
     setSelectedAction(action);
+    setPreviewDialogOpen(true);
+  };
+
+  const handleProceedToAction = () => {
     setActionDialogOpen(true);
   };
 
@@ -250,6 +257,15 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
 
       {selectedTask && (
         <>
+          <EntityPreviewDialog
+            open={previewDialogOpen}
+            onOpenChange={setPreviewDialogOpen}
+            entityId={selectedTask.entity_id}
+            entityType={normalizeEntityType(selectedTask.entity_type)}
+            entityName={selectedTask.entity_name}
+            action={selectedAction || "APPROVED"}
+            onProceed={handleProceedToAction}
+          />
           <WorkflowTaskActionDialog
             task={selectedTask}
             action={selectedAction}

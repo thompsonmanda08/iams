@@ -15,6 +15,7 @@ export default async function TasksPage() {
   const tasks = tasksResponse.success ? tasksResponse.data : [];
 
   console.log({ tasks });
+  console.log(instances);
 
   return (
     <div className="bg-background min-h-screen">

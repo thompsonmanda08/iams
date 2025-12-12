@@ -312,7 +312,7 @@ export default function AuditAnnualPlan({
         )}
       </Card>
 
-      {/* Submit for Approval Dialog */}
+      {/* Create Approval Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

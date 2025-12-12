@@ -21,9 +21,11 @@ import {
 import type { Task } from "@/lib/types/task";
 import { TaskActionDialog } from "./task-action-dialog";
 import { TaskReassignDialog } from "./task-reassign-dialog";
+import { EntityPreviewDialog } from "./entity-preview-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
 import { StatusBadge } from "@/components/status-badge";
+import { normalizeEntityType } from "@/lib/utils/entity-preview-utils";
 
 interface WorkflowInstancesTableProps {
   instances: Task[];
@@ -48,6 +50,7 @@ export function WorkflowInstancesTable({
 }: WorkflowInstancesTableProps) {
   const [selectedInstance, setSelectedInstance] = useState<Task | null>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<"APPROVE" | "REJECT" | null>(null);
 
@@ -59,6 +62,10 @@ export function WorkflowInstancesTable({
     e?.stopPropagation();
     setSelectedInstance(instance);
     setSelectedAction(action);
+    setPreviewDialogOpen(true);
+  };
+
+  const handleProceedToAction = () => {
     setActionDialogOpen(true);
   };
 
@@ -242,6 +249,15 @@ export function WorkflowInstancesTable({
 
       {selectedInstance && (
         <>
+          <EntityPreviewDialog
+            open={previewDialogOpen}
+            onOpenChange={setPreviewDialogOpen}
+            entityId={selectedInstance.instance.entity_id}
+            entityType={normalizeEntityType(selectedInstance.instance.entity_type)}
+            entityName={selectedInstance.entity_name}
+            action={selectedAction || "APPROVE"}
+            onProceed={handleProceedToAction}
+          />
           <TaskActionDialog
             task={selectedInstance}
             action={selectedAction}
