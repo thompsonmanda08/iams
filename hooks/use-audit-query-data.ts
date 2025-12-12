@@ -35,12 +35,13 @@ import {
   getAnnualAuditPlanItem,
   updateAnnualAuditPlanItem,
   generateAuditPlanFromItem,
-  deleteAnnualAuditPlanItem
+  deleteAnnualAuditPlanItem,
+  createAnnualAuditPlan
 } from "@/app/_actions/audit-module-actions";
 import type { WorkpaperInput, TemplateCategory, AuditPlan } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
 import { Pagination } from "@/lib/types";
-import { notify } from "@/lib/utils";
+import { capitalize, notify } from "@/lib/utils";
 import { Dispatch, SetStateAction } from "react";
 import { QUERY_KEYS } from "@/lib/constants";
 
@@ -554,6 +555,42 @@ export const useAnnualAuditPlan = (filter?: { register_id?: string; year?: numbe
 
     enabled: !!(filter?.register_id || filter?.year),
     staleTime: 5 * 60 * 1000
+  });
+};
+
+/**
+ * Hook to generate annual audit plan for next year
+ */
+export const useCreateAnnualAuditPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { year: number }) => {
+      const response = await createAnnualAuditPlan(params.year);
+
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS]
+      });
+      notify({
+        title: "Success",
+        description: "Annual audit plan created successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: capitalize(error.message) || "Failed to create annual audit plan",
+        type: "error"
+      });
+    }
   });
 };
 

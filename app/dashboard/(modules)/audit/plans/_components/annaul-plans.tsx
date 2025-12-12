@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Lightbulb, RefreshCcw, Send, View } from "lucide-react";
+import { Lightbulb, Plus, RefreshCcw, Send, View } from "lucide-react";
 import { Pagination } from "@/lib/types";
 import {
   Empty,
@@ -32,6 +32,7 @@ import {
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import {
   useAnnualAuditPlan,
+  useCreateAnnualAuditPlan,
   useSubmitAnnualAuditPlanForApproval
 } from "@/hooks/use-audit-query-data";
 import Loader from "@/components/ui/loader";
@@ -43,6 +44,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useRouter } from "next/navigation";
 import { notify } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import { SelectField } from "@/components/ui/select-field";
 
 const years = Array.from({ length: 20 }).map((_, index: number) => {
   return { id: String(2025 + index), name: String(2025 + index) };
@@ -64,8 +66,10 @@ export default function AuditAnnualPlan({
 }) {
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [submitId, setSubmitId] = useState<string | null>(null);
   const [comments, setComments] = useState("");
+  const [createPlanForm, setCreatePlanForm] = useState({ year: new Date().getFullYear() });
 
   const router = useRouter();
 
@@ -84,6 +88,22 @@ export default function AuditAnnualPlan({
   };
 
   const submitMutation = useSubmitAnnualAuditPlanForApproval();
+  const createMutation = useCreateAnnualAuditPlan();
+
+  const createPlan = useCallback(async (year: number) => {
+    if (year > year + 2) {
+      notify({
+        title: "Error",
+        description: "Cannot create plan for future years",
+        type: "error"
+      });
+      return;
+    }
+
+    const response = await createMutation.mutateAsync({ year });
+
+    return response;
+  }, []);
 
   const confirmSubmitForApproval = () => {
     if (!submitId) {
@@ -132,16 +152,15 @@ export default function AuditAnnualPlan({
               <RefreshCcw className="h-4 w-4" />
               Reset
             </Button>
-            {/* <Button
+            <Button
               size="sm"
               className="h-9"
               onClick={() => {
-                setFormData(null);
-                setOpenModal(true);
+                setCreateDialogOpen(true);
               }}>
               <Plus className="h-4 w-4" />
               Create a Plan
-            </Button> */}
+            </Button>
           </div>
         </div>
 
@@ -292,6 +311,49 @@ export default function AuditAnnualPlan({
           </div>
         )}
       </Card>
+
+      {/* Submit for Approval Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Generate Annual Audit Plan?</DialogTitle>
+            <DialogDescription>
+              You'll be generating an annual audit plan for the year {createPlanForm.year}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <SelectField
+              label="Select a Year"
+              placeholder="--Choose a year --"
+              value={String(createPlanForm.year)}
+              onValueChange={(year) => setCreatePlanForm({ year: Number(year) })}
+              options={Array.from({ length: 2 }).map((_, index) => ({
+                id: String(new Date().getFullYear() + index),
+                name: String(new Date().getFullYear() + index)
+              }))}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setCreateDialogOpen(false);
+                setCreatePlanForm({ year: new Date().getFullYear() });
+              }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                createPlan(createPlanForm.year);
+              }}
+              disabled={createMutation.isPending}
+              isLoading={createMutation.isPending}
+              loadingText="Generating...">
+              Create Annual Plan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Submit for Approval Dialog */}
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>

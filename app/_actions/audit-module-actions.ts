@@ -1939,6 +1939,32 @@ export async function getAnnualAuditPlan(filter: {
 }
 
 /**
+ * Create annual audit plan register status
+ */
+export async function createAnnualAuditPlan(year: number): Promise<APIResponse> {
+  if (!year) {
+    return handleBadRequest("Year is required");
+  }
+
+  const url = `/api/v1/annual-audit-plans/init`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url,
+      data: {
+        year
+      }
+    });
+
+    revalidatePath("/dashboard/audit/annual-plans");
+
+    return successResponse(response.data, "Annual audit plan created successfully");
+  } catch (error: any) {
+    return handleError(error, "PATCH | UPDATE ANNUAL AUDIT PLAN", url);
+  }
+}
+/**
  * Update annual audit plan register status
  */
 export async function updateAnnualAuditPlan(
