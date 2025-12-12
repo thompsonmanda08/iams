@@ -250,7 +250,7 @@ export default function AuditAnnualPlan({
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            <span className="font-medium">By: ({item.updated_by_name})</span>
+                            <span className="font-medium">By: {item.updated_by_name}</span>
                             <span className="font-mono text-sm">
                               Date: {format(new Date(item.updated_at), "MMM dd, yyyy")}
                             </span>

@@ -11,10 +11,10 @@ export default async function TasksPage() {
   const instances = instancesResponse.success ? instancesResponse.data : [];
 
   // Fetch user-assigned workflow tasks (SSR)
-  const tasksResponse = await getUserAssignedWorkflowTasks({ page: "1", page_size: "20" });
+  const tasksResponse = await getUserAssignedWorkflowTasks();
   const tasks = tasksResponse.success ? tasksResponse.data : [];
 
-  console.log({ tasksResponse });
+  console.log({ tasks });
 
   return (
     <div className="bg-background min-h-screen">

@@ -28,7 +28,7 @@ interface WorkflowTask {
   entity_name: string;
   entity_type: string;
   workflow_state: string;
-  task_status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
   created_at: string;
   updated_at: string;
 }
@@ -49,11 +49,7 @@ interface WorkflowTasksTableProps {
  * Naming: This table is specifically for USER-ASSIGNED WORKFLOW TASKS
  * NOT for all workflow instances (see WorkflowInstancesTable for that)
  */
-export function WorkflowTasksTable({
-  tasks,
-  onTaskSelect,
-  isLoading
-}: WorkflowTasksTableProps) {
+export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowTasksTableProps) {
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
@@ -77,10 +73,7 @@ export function WorkflowTasksTable({
   };
 
   const getTaskStatusBadge = (status: string) => {
-    const statusVariants: Record<
-      string,
-      "default" | "secondary" | "destructive" | "outline"
-    > = {
+    const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       PENDING: "outline",
       IN_PROGRESS: "default",
       COMPLETED: "default",
@@ -133,8 +126,8 @@ export function WorkflowTasksTable({
     return (
       <div className="bg-card rounded-lg border p-8">
         <div className="flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-primary"></div>
-          <span className="ml-4 text-muted-foreground">Loading your workflow tasks...</span>
+          <div className="border-t-primary h-8 w-8 animate-spin rounded-full border-4 border-gray-300"></div>
+          <span className="text-muted-foreground ml-4">Loading your workflow tasks...</span>
         </div>
       </div>
     );
@@ -174,8 +167,7 @@ export function WorkflowTasksTable({
               <TableRow
                 key={task.id}
                 onClick={() => onTaskSelect?.(task)}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-              >
+                className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* TASK ID */}
                 <TableCell>
                   <span className="font-mono text-sm">{task.id.slice(0, 8)}...</span>
@@ -194,7 +186,7 @@ export function WorkflowTasksTable({
                   <Badge variant="outline">{task.workflow_state}</Badge>
                 </TableCell>
                 {/* TASK STATUS */}
-                <TableCell>{getTaskStatusBadge(task.task_status)}</TableCell>
+                <TableCell>{getTaskStatusBadge(task.status)}</TableCell>
                 {/* ASSIGNED DATE */}
                 <TableCell>
                   <span className="text-muted-foreground text-sm">
@@ -205,15 +197,14 @@ export function WorkflowTasksTable({
                 {/* ACTIONS */}
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
-                    {task.task_status === "PENDING" && (
+                    {task.status === "PENDING" && (
                       <>
                         <Button
                           size="sm"
                           variant="outline"
                           className="gap-1 border-green-100 bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600"
                           onClick={(e) => handleTaskAction(task, "APPROVED", e)}
-                          title="Complete and approve this task"
-                        >
+                          title="Complete and approve this task">
                           <CheckCircle className="h-4 w-4" />
                           Approve
                         </Button>
@@ -222,8 +213,7 @@ export function WorkflowTasksTable({
                           variant="outline"
                           className="gap-1 border-red-100 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600"
                           onClick={(e) => handleTaskAction(task, "REJECTED", e)}
-                          title="Complete and reject this task"
-                        >
+                          title="Complete and reject this task">
                           <XCircle className="h-4 w-4" />
                           Reject
                         </Button>
@@ -232,23 +222,22 @@ export function WorkflowTasksTable({
                           variant="outline"
                           className="gap-1 border-blue-100 bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600"
                           onClick={(e) => handleTaskReassign(task, e)}
-                          title="Reassign this task to another user"
-                        >
+                          title="Reassign this task to another user">
                           <ArrowRight className="h-4 w-4" />
                           Reassign
                         </Button>
                       </>
                     )}
 
-                    {task.task_status === "COMPLETED" && (
+                    {task.status === "COMPLETED" && (
                       <span className="text-muted-foreground text-sm">Task completed</span>
                     )}
 
-                    {task.task_status === "REJECTED" && (
+                    {task.status === "REJECTED" && (
                       <span className="text-muted-foreground text-sm">Task rejected</span>
                     )}
 
-                    {task.task_status === "REASSIGNED" && (
+                    {task.status === "REASSIGNED" && (
                       <span className="text-muted-foreground text-sm">Task reassigned</span>
                     )}
                   </div>

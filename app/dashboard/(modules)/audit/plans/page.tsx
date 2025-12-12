@@ -63,13 +63,13 @@ export default async function AuditPlansPage() {
         <Tabs defaultValue="engagement" className="space-y-4">
           <div className="overflow-x-auto">
             <TabsList className="inline-flex h-12 w-auto min-w-full gap-1 lg:gap-3">
-              <TabsTrigger value="engagement" className="gap-2">
-                <ClipboardListIcon className="h-6 w-6" />
-                Engagements
-              </TabsTrigger>
               <TabsTrigger value="annual" className="gap-2">
                 <FileText className="h-6 w-6" />
                 Annual Plans
+              </TabsTrigger>
+              <TabsTrigger value="engagement" className="gap-2">
+                <ClipboardListIcon className="h-6 w-6" />
+                Engagements
               </TabsTrigger>
             </TabsList>
           </div>
