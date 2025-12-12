@@ -955,14 +955,14 @@ export interface ScheduledReport {
  * Key audit metrics for dashboard
  */
 export interface AuditMetrics {
-  totalAudits: number;
+  total_audit_count: number;
   activeAudits: number;
   completedAudits: number;
-  conformityRate: number;
+  in_progress_audit_count: number;
   openFindings: number;
-  criticalFindings: number;
+  approved_audit_count: number;
   overdueFindings: number;
-  upcomingAudits: number;
+  upcoming_audit_count: number;
 }
 
 /**
