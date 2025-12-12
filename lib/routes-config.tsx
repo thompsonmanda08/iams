@@ -11,7 +11,9 @@ import {
   Sliders,
   LayoutDashboard,
   Workflow,
-  Home
+  Home,
+  ShieldCheck,
+  FileUserIcon
 } from "lucide-react";
 
 export type NavGroup = {
@@ -119,12 +121,37 @@ export const navItems: NavGroup[] = [
           { title: "Budgets", href: "/dashboard/audit/budgets" },
           { title: "Audit Universes", href: "/dashboard/audit/universe" },
           { title: "Plans & Executions", href: "/dashboard/audit/plans" },
-          { title: "Tasks & Actions", href: "/dashboard/audit/tasks" } // WORKFLOW
+          // { title: "Tasks & Actions", href: "/dashboard/audit/tasks" } // WORKFLOW
           // { title: "Workpapers", href: "/dashboard/audit/workpapers" }
           // { title: "Findings", href: "/dashboard/audit/findings" },
           // { title: "Reports", href: "/dashboard/audit/reports" }
         ]
       }
+    ]
+  },
+
+  {
+    title: "Workflow & Actions",
+    items: [
+      {
+        title: "Actions",
+        href: "/dashboard/actions",
+        icon: FileUserIcon,
+        items: [
+          { title: "Risk Actions", href: "/dashboard/actions/risk" },
+          { title: "Audit Actions", href: "/dashboard/actions/audit" }
+        ]
+      },
+      {
+        title: "Approvals",
+        href: "/dashboard/approvals",
+        icon: ShieldCheck
+      }
+      // {
+      //   title: "Workflow Settings",
+      //   href: "/dashboard/system-configs/workflow",
+      //   icon: Workflow
+      // }
     ]
   },
   {

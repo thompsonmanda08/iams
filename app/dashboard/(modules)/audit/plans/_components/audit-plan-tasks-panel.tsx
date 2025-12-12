@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { TasksTable } from "@/app/dashboard/(modules)/audit/tasks/_components/tasks-table";
-import { ApprovalHistorySlide } from "@/app/dashboard/(modules)/audit/tasks/_components/approval-history-slide";
+import { TasksTable } from "@/app/dashboard/(workflows)/approvals/_components/tasks-table";
+import { ApprovalHistorySlide } from "@/app/dashboard/(workflows)/approvals/_components/approval-history-slide";
 import type { Task } from "@/lib/types/task";
 import type { Pagination } from "@/lib/types";
 import { getApprovalsLog } from "@/app/_actions/task-actions";
