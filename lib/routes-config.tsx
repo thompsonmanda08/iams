@@ -106,8 +106,7 @@ export const navItems: NavGroup[] = [
           { title: "Overview", href: "/dashboard/risks" },
           { title: "Risk Registers", href: "/dashboard/risks/risk-registers" },
           { title: "Heat Map", href: "/dashboard/risks/heat-map" },
-          { title: "KRI Registers", href: "/dashboard/risks/kri" },
-          { title: "Actions", href: "/dashboard/risks/actions" },
+          { title: "KRI Registers", href: "/dashboard/risks/kri" }, 
           { title: "Incidents", href: "/dashboard/risks/incidents" },
           { title: "Risk Acceptances", href: "/dashboard/risks/risk-acceptances" }
         ]
@@ -120,11 +119,7 @@ export const navItems: NavGroup[] = [
           { title: "Overview", href: "/dashboard/audit" },
           { title: "Budgets", href: "/dashboard/audit/budgets" },
           { title: "Audit Universes", href: "/dashboard/audit/universe" },
-          { title: "Plans & Executions", href: "/dashboard/audit/plans" },
-          // { title: "Tasks & Actions", href: "/dashboard/audit/tasks" } // WORKFLOW
-          // { title: "Workpapers", href: "/dashboard/audit/workpapers" }
-          // { title: "Findings", href: "/dashboard/audit/findings" },
-          // { title: "Reports", href: "/dashboard/audit/reports" }
+          { title: "Plans & Executions", href: "/dashboard/audit/plans" } 
         ]
       }
     ]

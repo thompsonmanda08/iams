@@ -7,6 +7,7 @@ This document provides a quick reference for all mock data used in testing the a
 ## Test User IDs
 
 ### Action Owner 1
+
 - **ID**: `user-action-owner-1`
 - **Type**: Action Owner (responsible for submitting findings)
 - **Assigned Risks**: Risk 1, Risk 3
@@ -15,6 +16,7 @@ This document provides a quick reference for all mock data used in testing the a
   - Submit findings for Data Privacy Incident Risk
 
 ### Action Owner 2
+
 - **ID**: `user-action-owner-2`
 - **Type**: Action Owner (responsible for submitting findings)
 - **Assigned Risks**: Risk 2, Risk 4
@@ -25,6 +27,7 @@ This document provides a quick reference for all mock data used in testing the a
 ## Mock Risks
 
 ### Risk 1: Cyber Security Breach Risk
+
 ```json
 {
   "id": "1",
@@ -53,6 +56,7 @@ This document provides a quick reference for all mock data used in testing the a
 ```
 
 **Expected Actions**:
+
 - Submit MFA implementation details
 - Upload deployment report
 - Document user enrollment
@@ -60,6 +64,7 @@ This document provides a quick reference for all mock data used in testing the a
 ---
 
 ### Risk 2: Regulatory Compliance Risk
+
 ```json
 {
   "id": "2",
@@ -88,6 +93,7 @@ This document provides a quick reference for all mock data used in testing the a
 ```
 
 **Expected Actions**:
+
 - Document policy updates
 - Upload GDPR compliance checklist
 - Evidence of stakeholder review
@@ -95,6 +101,7 @@ This document provides a quick reference for all mock data used in testing the a
 ---
 
 ### Risk 3: Data Privacy Incident Risk
+
 ```json
 {
   "id": "3",
@@ -123,6 +130,7 @@ This document provides a quick reference for all mock data used in testing the a
 ```
 
 **Expected Actions**:
+
 - Document encryption implementation
 - Demonstrate access control configuration
 - Upload audit logs
@@ -130,6 +138,7 @@ This document provides a quick reference for all mock data used in testing the a
 ---
 
 ### Risk 4: Business Continuity Risk
+
 ```json
 {
   "id": "4",
@@ -158,6 +167,7 @@ This document provides a quick reference for all mock data used in testing the a
 ```
 
 **Expected Actions**:
+
 - Document backup procedures
 - Upload disaster recovery plan
 - Evidence of recovery testing
@@ -169,6 +179,7 @@ This document provides a quick reference for all mock data used in testing the a
 ### Completed Findings Examples
 
 #### AF-2024-001 (Status: COMPLETED)
+
 ```json
 {
   "id": "AF-2024-001",
@@ -187,6 +198,7 @@ This document provides a quick reference for all mock data used in testing the a
 ```
 
 #### AF-2024-004 (Status: COMPLETED - Perfect Score)
+
 ```json
 {
   "id": "AF-2024-004",
@@ -207,6 +219,7 @@ This document provides a quick reference for all mock data used in testing the a
 ### Pending Review Example
 
 #### AF-2024-002 (Status: PENDING_REVIEW)
+
 ```json
 {
   "id": "AF-2024-002",
@@ -223,6 +236,7 @@ This document provides a quick reference for all mock data used in testing the a
 ### Needs Revision Example
 
 #### AF-2024-003 (Status: NEEDS_REVISION)
+
 ```json
 {
   "id": "AF-2024-003",
@@ -305,6 +319,7 @@ Mock Risk Scores:
 ## Quick Test Scenarios
 
 ### Test 1: Login as user-action-owner-1
+
 ```
 Expected Risks: 1, 3
 Actions to Complete:
@@ -313,6 +328,7 @@ Actions to Complete:
 ```
 
 ### Test 2: Login as user-action-owner-2
+
 ```
 Expected Risks: 2, 4
 Actions to Complete:
@@ -321,16 +337,18 @@ Actions to Complete:
 ```
 
 ### Test 3: Submit Findings
+
 ```
 1. Click "Submit Findings" on Risk 1
 2. Fill ActionFindingsDialog
 3. See status change to PENDING_REVIEW
-4. Check /dashboard/risks/actions-demo
+4. Check /dashboard/actions/risk-demo
 ```
 
 ### Test 4: View Complete Workflow
+
 ```
-1. Go to /dashboard/risks/actions-demo
+1. Go to /dashboard/actions/risk-demo
 2. See all findings across all statuses
 3. View completed examples with assessments
 4. View pending review waiting for assessment
@@ -342,17 +360,21 @@ Actions to Complete:
 ## File Locations
 
 **Mock Data Definition**:
+
 - Location: `app/_actions/risk-module-actions.ts`
 - Lines: 357-453 (mockRisks) and 456-556 (mockActionFindings)
 
 **Actions Page with New Filter**:
+
 - Location: `app/dashboard/(modules)/risks/actions/page.tsx`
 - Line: 16 (risk_action_owner_id filter)
 
 **getRisks with Mock Filtering**:
+
 - Location: `app/_actions/risk-module-actions.ts`
 - Lines: 935-989 (getRisks function with filtering)
 
 **Type Definitions**:
+
 - Location: `app/_actions/risk-module-actions.ts`
 - Lines: 87 (risk_action_owner_id field) and 150 (RiskQueryParams)

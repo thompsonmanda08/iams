@@ -347,7 +347,7 @@ export function RiskHeatMap({ heatmapData }: { heatmapData: HeatmapData }) {
                                 </div>
                                 <Button
                                   onClick={() => {
-                                    router.push(`/dashboard/risks/actions/${risk.id}`);
+                                    router.push(`/dashboard/actions/risk/${risk.id}`);
                                   }}
                                   size="sm"
                                   variant="outline">

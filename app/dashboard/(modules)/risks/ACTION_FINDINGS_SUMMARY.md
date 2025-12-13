@@ -137,7 +137,7 @@ const response = await getAllRisks{ risk_action_owner_id: user?.id });
 ```
 1. Login with user-action-owner-1
         ↓
-2. Navigate to /dashboard/risks/actions
+2. Navigate to /dashboard/actions/risk
         ↓
 3. See Risks 1 & 3
         ↓
@@ -150,7 +150,7 @@ const response = await getAllRisks{ risk_action_owner_id: user?.id });
         ↓
 6. Dialog closes, status → PENDING_REVIEW
         ↓
-7. View in /dashboard/risks/actions-demo
+7. View in /dashboard/actions/risk-demo
 ```
 
 ### For Test User 2: `user-action-owner-2`
@@ -158,7 +158,7 @@ const response = await getAllRisks{ risk_action_owner_id: user?.id });
 ```
 1. Login with user-action-owner-2
         ↓
-2. Navigate to /dashboard/risks/actions
+2. Navigate to /dashboard/actions/risk
         ↓
 3. See Risks 2 & 4
         ↓
@@ -171,7 +171,7 @@ const response = await getAllRisks{ risk_action_owner_id: user?.id });
         ↓
 6. Dialog closes, status → PENDING_REVIEW
         ↓
-7. View in /dashboard/risks/actions-demo
+7. View in /dashboard/actions/risk-demo
 ```
 
 ---
@@ -226,7 +226,7 @@ const response = await getAllRisks{ risk_action_owner_id: user?.id });
 
 ### ✅ Demo Showcase
 
-- View all findings at `/dashboard/risks/actions-demo`
+- View all findings at `/dashboard/actions/risk-demo`
 - Filter by status
 - See complete workflow examples
 - View reviewer feedback and scores
@@ -276,7 +276,7 @@ hooks/use-audit-settings-query-data.ts (added useBudgets hook)
 1. **View Actions Assigned to You**
 
    ```
-   Navigate to: /dashboard/risks/actions
+   Navigate to: /dashboard/actions/risk
    Filter: By current user's risk_action_owner_id
    ```
 
@@ -291,7 +291,7 @@ hooks/use-audit-settings-query-data.ts (added useBudgets hook)
 
 3. **View All Findings**
    ```
-   Navigate to: /dashboard/risks/actions-demo
+   Navigate to: /dashboard/actions/risk-demo
    See: All findings across all statuses
    ```
 
@@ -385,8 +385,8 @@ npm run build
 npm run dev
 
 # Navigate to pages
-http://localhost:3000/dashboard/risks/actions          # Actions list
-http://localhost:3000/dashboard/risks/actions-demo     # Demo showcase
+http://localhost:3000/dashboard/actions/risk          # Actions list
+http://localhost:3000/dashboard/actions/risk-demo     # Demo showcase
 ```
 
 ---

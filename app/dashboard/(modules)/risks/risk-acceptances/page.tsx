@@ -273,7 +273,7 @@ export default function RiskAcceptanceList() {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    router.push(`/dashboard/risks/actions/${acceptance.risk_id}`);
+                    router.push(`/dashboard/actions/risk/${acceptance.risk_id}`);
                   }}
                   className="h-8 gap-1.5">
                   <View className="h-3.5 w-3.5" />
