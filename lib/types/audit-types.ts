@@ -1233,3 +1233,221 @@ export interface FindingEvidenceListResponse {
   data?: FindingEvidence[];
   message?: string;
 }
+
+// ============================================================================
+// FINDING ACTION TYPES
+// ============================================================================
+
+/**
+ * Finding Action status types
+ */
+export type FindingActionStatus =
+  | "PENDING"
+  | "IN_PROGRESS"
+  | "UNDER_REVIEW"
+  | "APPROVED"
+  | "COMPLETED"
+  | "REJECTED";
+
+/**
+ * Finding Action interface - actions assigned to findings for remediation
+ */
+export interface FindingAction {
+  id: string;
+  finding_id: string;
+  action_description: string;
+  assigned_to: string; // User ID
+  reviewer_id: string; // User ID
+  due_date: string; // ISO 8601 date string
+  status: FindingActionStatus;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships (populated by API)
+  finding?: WorkpaperFinding;
+  assigned_to_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  reviewer_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  evidence_count?: number;
+  reviews_count?: number;
+}
+
+/**
+ * Input type for creating finding action
+ */
+export interface CreateFindingActionInput {
+  finding_id: string;
+  action_description: string;
+  assigned_to: string;
+  reviewer_id: string;
+  due_date: string;
+}
+
+/**
+ * Input type for updating finding action
+ */
+export interface UpdateFindingActionInput {
+  action_description?: string;
+  assigned_to?: string;
+  reviewer_id?: string;
+  due_date?: string;
+  status?: FindingActionStatus;
+}
+
+// ============================================================================
+// FINDING ACTION EVIDENCE TYPES
+// ============================================================================
+
+/**
+ * Finding Action Evidence interface
+ */
+export interface FindingActionEvidence {
+  id: string;
+  finding_action_id: string;
+  title: string;
+  description?: string;
+  file_link?: string;
+  submission_date: string;
+  submitted_by: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships
+  submitted_by_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  reviews?: FindingActionReview[];
+}
+
+/**
+ * Input type for creating finding action evidence
+ */
+export interface CreateFindingActionEvidenceInput {
+  finding_action_id: string;
+  title: string;
+  description?: string;
+  file_link?: string;
+}
+
+/**
+ * Input type for updating finding action evidence
+ */
+export interface UpdateFindingActionEvidenceInput {
+  title?: string;
+  description?: string;
+  file_link?: string;
+}
+
+// ============================================================================
+// FINDING ACTION REVIEW TYPES
+// ============================================================================
+
+/**
+ * Finding Action Review status
+ */
+export type FindingActionReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+/**
+ * Finding Action Review interface
+ */
+export interface FindingActionReview {
+  id: string;
+  finding_action_evidence_id: string;
+  reviewer_id: string;
+  review_status: FindingActionReviewStatus;
+  review_comments?: string;
+  reviewed_at: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships
+  reviewer_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
+/**
+ * Input type for creating finding action review
+ */
+export interface CreateFindingActionReviewInput {
+  finding_action_evidence_id: string;
+  review_status: FindingActionReviewStatus;
+  review_comments?: string;
+}
+
+// ============================================================================
+// FINDING REASSESSMENT TYPES
+// ============================================================================
+
+/**
+ * Finding Reassessment Compliance Status
+ */
+export type ReassessmentComplianceStatus = "COMPLIANT" | "NON_COMPLIANT" | "PARTIAL";
+
+/**
+ * Finding Reassessment interface
+ */
+export interface FindingReassessment {
+  id: string;
+  finding_id: string;
+  finding_action_id: string;
+  compliance_status: ReassessmentComplianceStatus;
+  auditor_comments: string;
+  new_severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  new_recommendation?: string;
+  compliance_percentage?: number;
+  reassessed_by: string;
+  reassessed_at: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships
+  reassessed_by_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  finding_action?: FindingAction;
+}
+
+/**
+ * Input type for creating finding reassessment
+ */
+export interface CreateFindingReassessmentInput {
+  finding_id: string;
+  finding_action_id: string;
+  compliance_status: ReassessmentComplianceStatus;
+  auditor_comments: string;
+  new_severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  new_recommendation?: string;
+  compliance_percentage?: number;
+}
+
+/**
+ * Input type for updating finding reassessment
+ */
+export interface UpdateFindingReassessmentInput {
+  compliance_status?: ReassessmentComplianceStatus;
+  auditor_comments?: string;
+  new_severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  new_recommendation?: string;
+  compliance_percentage?: number;
+}

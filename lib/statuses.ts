@@ -20,6 +20,8 @@ export const STATUS_VALUES = {
   PENDING: 'PENDING',
   SUBMITTED: 'SUBMITTED',
   IN_REVIEW: 'IN_REVIEW',
+  IN_PROGRESS: 'IN_PROGRESS',
+  UNDER_REVIEW: 'UNDER_REVIEW',
   APPROVED: 'APPROVED',
   REJECTED: 'REJECTED',
   ON_HOLD: 'ON_HOLD',
@@ -91,6 +93,24 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     style: 'outline',
     hexColor: '#0DCAF0',
     sortOrder: 4
+  },
+  IN_PROGRESS: {
+    id: 'IN_PROGRESS',
+    label: 'In Progress',
+    description: 'Action is being worked on by assigned user',
+    color: 'info',
+    style: 'outline',
+    hexColor: '#0D6EFD',
+    sortOrder: 5
+  },
+  UNDER_REVIEW: {
+    id: 'UNDER_REVIEW',
+    label: 'Under Review',
+    description: 'Evidence is under review by the reviewer',
+    color: 'warning',
+    style: 'outline',
+    hexColor: '#FFC107',
+    sortOrder: 6
   },
   APPROVED: {
     id: 'APPROVED',
@@ -446,6 +466,31 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       ABOVE: [],
       BELOW:[],
       CRITICAL:[]
+    }
+  },
+
+  // ========== FINDING ACTION STATUSES ==========
+  findingAction: {
+    allowedStatuses: ['PENDING', 'IN_PROGRESS', 'UNDER_REVIEW', 'APPROVED', 'COMPLETED', 'REJECTED'],
+    defaultStatus: 'PENDING',
+    transitions: {
+      DRAFT: [],
+      PENDING: ['IN_PROGRESS', 'REJECTED'],
+      SUBMITTED: [],
+      IN_REVIEW: [],
+      APPROVED: ['COMPLETED'],
+      REJECTED: [],
+      ON_HOLD: [],
+      OPEN: [],
+      COMPLETED: [],
+      CLOSED: [],
+      ARCHIVED: [],
+      HIGH: [],
+      MEDIUM: [],
+      LOW: [],
+      ABOVE: [],
+      BELOW: [],
+      CRITICAL: []
     }
   }
 };

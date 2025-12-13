@@ -18,7 +18,7 @@ import {
   Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -302,7 +302,7 @@ export default function AuditUniverseList({
                   <TableHeader className="bg-muted/40">
                     <TableRow className="border-muted hover:bg-muted/40 border-b px-4">
                       <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
-                        Universe Name
+                        UNIVERSE
                       </TableHead>
                       {/* <TableHead className="text-foreground/70 text-xs font-bold whitespace-nowrap uppercase">
                         Functional Areas
@@ -311,21 +311,65 @@ export default function AuditUniverseList({
                         Auditable Areas
                       </TableHead> */}
                       <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
-                        Status
+                        STATUS
                       </TableHead>
                       <TableHead className="text-foreground/70 text-sm font-bold whitespace-nowrap uppercase">
-                        Date Created
+                        DATE CREATED
                       </TableHead>
                       <TableHead className="text-foreground/70 text-center text-sm font-bold whitespace-nowrap uppercase">
-                        Actions
+                        ACTIONS
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {currentData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-muted-foreground py-12 text-center">
-                          No universes match your search. Try a different search term.
+                        <TableCell colSpan={4} className="text-muted-foreground py-12 text-center">
+                          <Card className="bg-canvas/50 border-2 border-dashed">
+                            <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+                              <div className="relative mb-4">
+                                <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+                                <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                                  <ClipboardListIcon
+                                    className="text-primary h-16 w-16"
+                                    strokeWidth={1.5}
+                                  />
+                                </div>
+                              </div>
+
+                              <h3 className="text-foreground mb-2 text-2xl font-semibold">
+                                No Universes
+                              </h3>
+                              <p className="text-muted-foreground mb-8 max-w-md text-center">
+                                No universes match your search. Try a different search term or
+                                create a new one.
+                              </p>
+
+                              <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+                                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                  <div className="text-primary mb-1 font-mono">CREATE</div>
+                                  <div className="text-muted-foreground">Audit Universe</div>
+                                </div>
+                                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                  <div className="text-primary mb-1 font-mono">ADD</div>
+                                  <div className="text-muted-foreground">Universe Items</div>
+                                </div>
+                                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                  <div className="text-primary mb-1 font-mono">CREATE</div>
+                                  <div className="text-muted-foreground">Annual Audit Plan</div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <Link href="/dashboard/audit/universe/new">
+                                  <Button className="gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Create New Universe
+                                  </Button>
+                                </Link>
+                              </div>
+                            </CardContent>
+                          </Card>
                         </TableCell>
                       </TableRow>
                     ) : (

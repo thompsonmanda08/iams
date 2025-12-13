@@ -76,6 +76,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
           workpaperCategories={workpaper?.categories}
           findings={allFindings}
           tasks={tasks}
+          auditPlanStatus={auditPlan.status}
         />
       </div>
     </div>
