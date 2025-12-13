@@ -1,61 +1,80 @@
 import { Suspense } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, ClipboardCheckIcon } from "lucide-react";
 import Link from "next/link";
 import { AuditMetricsCards } from "@/components/audit/audit-metrics-cards";
-import { ConformityChart } from "@/components/audit/conformity-chart";
-import { RecentActivity } from "@/components/audit/recent-activity";
 import { getAuditMetrics } from "@/app/_actions/audit-module-actions";
 import PageHeader from "@/components/page-header";
+
+import { AuditPlanAnalytics } from "./_components/audit-plan-analytics";
+import { AuditActivitiesDistribution } from "./_components/audit-activities-distribution";
+import { AuditStatusDistribution } from "./_components/audit-status-distribution";
 
 export default async function AuditDashboardPage() {
   const metricsResponse = await getAuditMetrics();
   const metrics = metricsResponse.success ? metricsResponse.data : null;
 
-  // Mock data for charts - replace with real data from server actions later
-  const conformityTrendData = [
-    { month: "Jul", conformityRate: 75, nonConformities: 8 },
-    { month: "Aug", conformityRate: 78, nonConformities: 7 },
-    { month: "Sep", conformityRate: 82, nonConformities: 5 },
-    { month: "Oct", conformityRate: 85, nonConformities: 4 },
-    { month: "Nov", conformityRate: 88, nonConformities: 3 },
-    { month: "Dec", conformityRate: 90, nonConformities: 2 }
+  const summary = {
+    overview_stats: {
+      total_audit_count: 4,
+      approved_audit_count: 3,
+      upcoming_audit_count: 0,
+      in_progress_audit_count: 2
+    },
+    audit_plan_stats: {
+      quarterly_count: {
+        Q1: 1,
+        Q2: 4,
+        Q3: 3,
+        Q4: 4
+      },
+      monthly_count: 4,
+      weekly_count: 3,
+      annual_count: 4,
+      total_count: 4
+    },
+    audit_activities_stats: {
+      total_auditable_area_count: 5,
+      total_process_activities_count: 4,
+      quarterly_count: {
+        Q1: 1,
+        Q2: 4,
+        Q3: 2,
+        Q4: 5
+      }
+    }
+  };
+
+  // Prepare chart data
+  const overviewChartData = [
+    { name: "Approved", value: summary.overview_stats.approved_audit_count },
+    { name: "In Progress", value: summary.overview_stats.in_progress_audit_count },
+    { name: "Upcoming", value: summary.overview_stats.upcoming_audit_count }
+  ].filter((item) => item.value > 0);
+
+  const planTypeChartData = [
+    { name: "Annual", value: summary.audit_plan_stats.annual_count },
+    { name: "Monthly", value: summary.audit_plan_stats.monthly_count },
+    { name: "Weekly", value: summary.audit_plan_stats.weekly_count }
   ];
 
-  const recentActivities = [
-    {
-      id: "1",
-      type: "created" as const,
-      description: "New audit plan created for Q1 2025",
-      user: "John Doe",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 mins ago
-    },
-    {
-      id: "2",
-      type: "finding-added" as const,
-      description: "Critical finding added to Security Controls Review",
-      user: "Jane Smith",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
-    },
-    {
-      id: "3",
-      type: "workpaper-completed" as const,
-      description: "Workpaper for Clause 8.2 completed",
-      user: "Mike Johnson",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5) // 5 hours ago
-    },
-    {
-      id: "4",
-      type: "status-changed" as const,
-      description: "Audit status changed to In Progress",
-      user: "Sarah Williams",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
-    }
-  ];
+  const planQuarterlyData = Object.entries(summary.audit_plan_stats.quarterly_count).map(
+    ([quarter, count]) => ({
+      name: quarter,
+      value: count
+    })
+  );
+
+  const activitiesQuarterlyData = Object.entries(
+    summary.audit_activities_stats.quarterly_count
+  ).map(([quarter, count]) => ({
+    name: quarter,
+    value: count
+  }));
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
       {/* Header */}
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
@@ -101,49 +120,51 @@ export default async function AuditDashboardPage() {
         <div className="space-y-8">
           {/* Metrics Cards */}
           <Suspense fallback={<MetricsLoading />}>
-            <AuditMetricsCards metrics={metrics} />
+            <AuditMetricsCards metrics={summary.overview_stats as any} />
           </Suspense>
 
-          {/* Charts and Activity */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <ConformityChart data={conformityTrendData} />
-            </div>
-            <div>
-              <RecentActivity activities={recentActivities} />
-            </div>
+          {/* Charts Section */}
+          <div className="space-y-8">
+            <AuditStatusDistribution data={overviewChartData} stats={summary.overview_stats} />
+
+            <AuditPlanAnalytics
+              planTypeData={planTypeChartData}
+              quarterlyData={planQuarterlyData}
+              quarterlyStats={summary.audit_plan_stats.quarterly_count}
+            />
+
+            <AuditActivitiesDistribution
+              quarterlyData={activitiesQuarterlyData}
+              stats={summary.audit_activities_stats}
+            />
           </div>
 
           {/* Quick Actions */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Link href="/dashboard/audit/plans">
-              <Card className="cursor-pointer p-6 transition-all hover:shadow-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">Audit Plans</h3>
-                    <p className="text-muted-foreground mt-2 text-sm">
-                      View and manage all audit plans
-                    </p>
-                  </div>
-                  <FileText className="text-muted-foreground h-8 w-8" />
-                </div>
-              </Card>
-            </Link>
 
-            <Link href="/dashboard/audit/workpapers">
-              <Card className="cursor-pointer p-6 transition-all hover:shadow-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">Workpapers</h3>
-                    <p className="text-muted-foreground mt-2 text-sm">
-                      Document audit testing procedures
-                    </p>
-                  </div>
-                  <FileText className="text-muted-foreground h-8 w-8" />
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common audit management tasks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/dashboard/audit/plans">
+                    <Button className="gap-2">
+                      <FileText className="h-4 w-4" />
+                      Audit Plans
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/audit/workpapers">
+                    <Button variant="outline" className="gap-2">
+                      <FileText className="h-4 w-4" />
+                      Workpapers
+                    </Button>
+                  </Link>
                 </div>
-              </Card>
-            </Link>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
