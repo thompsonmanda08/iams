@@ -89,9 +89,10 @@ export default function AuditDetailClient({ auditPlan }: { auditPlan: any }) {
                     size="sm"
                     className="gap-2"
                     onClick={() => setSubmitDialogOpen(true)}
-                    disabled={submitMutation.isPending}
+                    disabled={submitMutation.isPending || items.length === 0}
                     isLoading={submitMutation.isPending}
-                    loadingText="Submitting...">
+                    loadingText="Submitting..."
+                    title={items.length === 0 ? "Add at least one plan item before submitting for approval" : ""}>
                     <Send className="h-4 w-4" />
                     Submit for Approval
                   </Button>

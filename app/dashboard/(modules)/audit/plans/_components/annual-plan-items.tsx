@@ -44,7 +44,6 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { AUDIT_QUERY_KEYS, useDeleteAnnualAuditPlanItem } from "@/hooks/use-audit-query-data";
 import { Department, ErrorState } from "@/lib/types";
@@ -172,10 +171,10 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
                     <EmptyMedia variant="icon">
                       <ClipboardListIcon />
                     </EmptyMedia>
-                    <EmptyTitle>Select a year</EmptyTitle>
+                    <EmptyTitle>No Plan Items</EmptyTitle>
                     <EmptyDescription>
-                      If you haven&apos;t created any annual plans yet. Get started by creating your
-                      first annual audit item.
+                      If you haven&apos;t created any audit plan items yet. Get started by creating
+                      your first audit item.
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
@@ -493,11 +492,11 @@ export function CreateOrUpdatePlanItem({
   const universeItemsOptions = useMemo(() => {
     return universeItemsData.map((item: any) => ({
       value: item.id,
-      label: `${item.kri_name} - (${item.auditable_area_name})`
+      label: `${item.kri_name} [ ${item.kri_color} ]`
     }));
   }, [universeItemsData]);
 
-  console.log({ universeItemsData, universeItemsOptions });
+  console.log({ universeItemsData });
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -559,6 +558,125 @@ export function CreateOrUpdatePlanItem({
             options={universeItemsOptions}
             disabled={loadingUniverseItems || !formData.department_id}
             isLoading={loadingUniverseItems}
+            tooltipMap={useMemo(() => {
+              const map: Record<string, React.ReactNode> = {};
+              universeItemsData.forEach((item: any) => {
+                // Build tooltip content dynamically based on available data
+                const tooltipContent = [];
+
+                // Always show the name/label
+                if (item.kri_name) {
+                  tooltipContent.push(
+                    <div key="name">
+                      <p className="text-foreground font-semibold">{item.kri_name}</p>
+                    </div>
+                  );
+                }
+
+                // Show status if color is available
+                if (item.kri_color) {
+                  tooltipContent.push(
+                    <div key="status" className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span
+                        className={`rounded px-2 py-0.5 text-xs font-medium text-white ${
+                          item.kri_color === "Red"
+                            ? "bg-red-500"
+                            : item.kri_color === "Amber"
+                              ? "bg-amber-500"
+                              : "bg-green-500"
+                        }`}>
+                        {item.kri_color}
+                      </span>
+                    </div>
+                  );
+                }
+
+                // Show score if available
+                if (item.kri_average_score !== undefined && item.kri_average_score !== null) {
+                  tooltipContent.push(
+                    <div key="score">
+                      <p className="text-muted-foreground">
+                        Score: <span className="font-semibold">{item.kri_average_score}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show measurement type if available
+                if (item.kri_measurement_type) {
+                  tooltipContent.push(
+                    <div key="type">
+                      <p className="text-muted-foreground">
+                        Type: <span className="font-semibold">{item.kri_measurement_type}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show department if available
+                if (item.department_name) {
+                  tooltipContent.push(
+                    <div key="department">
+                      <p className="text-muted-foreground">
+                        Department: <span className="font-semibold">{item.department_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show auditable area if available
+                if (item.auditable_area_name) {
+                  tooltipContent.push(
+                    <div key="area">
+                      <p className="text-muted-foreground">
+                        Area: <span className="font-semibold">{item.auditable_area_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show process activity if available
+                if (item.process_activity_name) {
+                  tooltipContent.push(
+                    <div key="activity">
+                      <p className="text-muted-foreground">
+                        Activity:{" "}
+                        <span className="font-semibold">{item.process_activity_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show strategic pillar if available
+                if (item.strategic_pillar_name) {
+                  tooltipContent.push(
+                    <div key="pillar">
+                      <p className="text-muted-foreground">
+                        Pillar: <span className="font-semibold">{item.strategic_pillar_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show indicative target if available
+                if (item.indicative_target_name) {
+                  tooltipContent.push(
+                    <div key="target">
+                      <p className="text-muted-foreground">
+                        Target: <span className="font-semibold">{item.indicative_target_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Only create tooltip if there's content to show
+                if (tooltipContent.length > 0) {
+                  map[item.id] = <div className="space-y-2 text-xs">{tooltipContent}</div>;
+                }
+              });
+              return map;
+            }, [universeItemsData])}
           />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -668,6 +786,7 @@ interface GenerateAuditPlanModalProps {
 }
 
 export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalProps) {
+  const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<GenerateAuditPlanFormData>(INIT_GENERATE_FORM_DATA);
   const queryClient = useQueryClient();
@@ -745,6 +864,7 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
           queryClient.invalidateQueries({
             queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, planId, "items"]
           });
+          router.push("/dashboard/audit/plans");
         }
       }
     );
