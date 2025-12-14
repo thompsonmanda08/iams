@@ -466,7 +466,7 @@ function CreateOrUpdate({
                   setError({ status: false, message: "" });
                   setFormData((c) => ({
                     ...c,
-                    start_date: date ? date.toISOString().split('T')[0] : ""
+                    start_date: date?.toISOString() || ""
                   }));
                 }}
               />
@@ -481,7 +481,7 @@ function CreateOrUpdate({
                   setError({ status: false, message: "" });
                   setFormData((c) => ({
                     ...c,
-                    end_date: date ? date.toISOString().split('T')[0] : ""
+                    end_date: date?.toISOString() || ""
                   }));
                 }}
               />
