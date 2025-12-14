@@ -9,12 +9,16 @@ import { FindingActionsMenu } from "./finding-actions-menu";
 import { useFindingEvidence } from "@/hooks/use-evidence-queries";
 import { useFindingActionsByFinding } from "@/hooks/use-finding-actions-queries";
 import { AssignFindingActionDialog } from "./assign-finding-action-dialog";
+import { RequiresApprovalState } from "./requires-approval-state";
+import type { AuditPlan } from "@/lib/types/audit-types";
 
 interface FindingsListProps {
   findings: any[];
   onRefresh: () => void;
   onEditFinding: (finding: any) => void;
   auditPlanStatus?: string;
+  auditPlan?: AuditPlan;
+  onSubmitForApproval?: () => void;
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -209,7 +213,29 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
   );
 }
 
-export function FindingsList({ findings, onRefresh, onEditFinding, auditPlanStatus }: FindingsListProps) {
+export function FindingsList({
+  findings,
+  onRefresh,
+  onEditFinding,
+  auditPlanStatus,
+  auditPlan,
+  onSubmitForApproval
+}: FindingsListProps) {
+  // Check if plan is approved
+  const isPlanApproved = ["APPROVED", "COMPLETED"].includes(
+    auditPlanStatus?.toUpperCase() || ""
+  );
+
+  // Show "Requires Approval" component if plan is not approved
+  if (!isPlanApproved && auditPlan && onSubmitForApproval) {
+    return (
+      <RequiresApprovalState
+        auditPlan={auditPlan}
+        onSubmitForApproval={onSubmitForApproval}
+      />
+    );
+  }
+
   if (!findings || findings.length === 0) {
     return (
       <Card>

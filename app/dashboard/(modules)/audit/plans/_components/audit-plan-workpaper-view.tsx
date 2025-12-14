@@ -37,6 +37,7 @@ import { WorkpaperCategoryPanel } from "./workpaper-category-panel";
 import { FindingForm } from "./finding-form";
 import { FrameworkFindingForm } from "./framework-finding-form";
 import { FindingsList } from "./findings-list";
+import { RequiresApprovalState } from "./requires-approval-state";
 import { cn, notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
 import { StatusBadge } from "@/components/status-badge";
@@ -755,8 +756,11 @@ export function AuditPlanWorkpaperView({
                   {/* Category Details */}
                   <WorkpaperCategoryPanel category={selectedCategory} auditPlan={auditPlan} />
 
-                  {/* Findings List for Category */}
-                  {categoryFindings.length > 0 ? (
+                  {/* Check if plan is approved before showing findings */}
+                  {auditPlan.status.toUpperCase() === "APPROVED" || auditPlan.status.toUpperCase() === "COMPLETED" ? (
+                    <>
+                      {/* Findings List for Category */}
+                      {categoryFindings.length > 0 ? (
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base">
@@ -928,15 +932,24 @@ export function AuditPlanWorkpaperView({
                     </Card>
                   )}
 
-                  {/* Add New Finding Button */}
-                  {/* {categoryFindings.length > 0 && (
-                    <Button
-                      onClick={() => setEditingFinding(null)}
-                      className="w-full"
-                      variant="outline">
-                      + Add New Finding
-                    </Button>
-                  )} */}
+                      {/* Add New Finding Button */}
+                      {/* {categoryFindings.length > 0 && (
+                        <Button
+                          onClick={() => setEditingFinding(null)}
+                          className="w-full"
+                          variant="outline">
+                          + Add New Finding
+                        </Button>
+                      )} */}
+                    </>
+                  ) : (
+                    /* Plan is not approved - show requires approval state */
+                    <RequiresApprovalState
+                      auditPlan={auditPlan}
+                      onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
+                      isSubmitting={submitMutation.isPending}
+                    />
+                  )}
                 </>
               ) : (
                 // NO CATEGORY SELECTED YET
@@ -1027,6 +1040,8 @@ export function AuditPlanWorkpaperView({
             onRefresh={() => setFindingsRefreshKey((prev) => prev + 1)}
             onEditFinding={handleEditFinding}
             auditPlanStatus={auditPlanStatus || auditPlan.status}
+            auditPlan={auditPlan}
+            onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
           />
         </TabsContent>
 
