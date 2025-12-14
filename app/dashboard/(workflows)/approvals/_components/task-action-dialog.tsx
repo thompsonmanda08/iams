@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { approveTask, rejectTask } from "@/app/_actions/task-actions";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
 
 interface TaskActionDialogProps {
   task: Task;
@@ -66,7 +68,8 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
   const actionConfig = {
     APPROVE: {
       title: "Approve Task",
-      description: "You are about to approve this task. This action will move the workflow forward.",
+      description:
+        "You are about to approve this task. This action will move the workflow forward.",
       icon: CheckCircle,
       iconColor: "text-green-600",
       buttonText: "Approve",
@@ -96,25 +99,32 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
           <DialogDescription>{config.description}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="grid gap-4 py-4">
           {/* Task Details */}
-          <div className="bg-muted rounded-lg p-4 space-y-2">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Workflow ID:</span>
-                <p className="font-medium">{task.instance.workflow_id}</p>
+          <div className="bg-muted space-y-2 rounded-lg p-4">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs font-semibold">Type:</span>
+                <Badge variant={"secondary"} className="font-medium">
+                  {task.instance.entity_type.replace(/_/g, " ")}
+                </Badge>
               </div>
               <div>
-                <span className="text-muted-foreground">Status:</span>
-                <p className="font-medium">{task.instance.status}</p>
+                <span className="text-muted-foreground text-xs font-semibold">Entity:</span>
+                <h4 className="font-medium">{task.entity_name}</h4>
               </div>
-              <div>
-                <span className="text-muted-foreground">Entity:</span>
-                <p className="font-medium">{task.entity_name}</p>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs font-semibold">Status:</span>
+                <Badge variant={"info"} className="font-medium">
+                  {task.instance.status}
+                </Badge>
               </div>
+
               <div>
-                <span className="text-muted-foreground">Type:</span>
-                <p className="font-medium">{task.instance.entity_type.replace(/_/g, " ")}</p>
+                <span className="text-muted-foreground text-xs font-semibold">Last Updated</span>
+                <p className="font-medium">
+                  {formatDistanceToNow(new Date(task.instance.updated_at), { addSuffix: true })}
+                </p>
               </div>
             </div>
           </div>
@@ -146,8 +156,7 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
           <Button
             variant={config.buttonVariant}
             onClick={handleSubmit}
-            disabled={isSubmitting || (action === "REJECT" && !comment.trim())}
-          >
+            disabled={isSubmitting || (action === "REJECT" && !comment.trim())}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

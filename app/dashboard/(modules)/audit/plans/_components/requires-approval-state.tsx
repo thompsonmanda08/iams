@@ -22,16 +22,11 @@ export function RequiresApprovalState({
         <div className="relative mb-4">
           <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
           <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
-            <ClipboardListIcon
-              className="text-primary h-16 w-16"
-              strokeWidth={1.5}
-            />
+            <ClipboardListIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
           </div>
         </div>
 
-        <h3 className="text-foreground mb-2 text-2xl font-semibold">
-          Requires Approval
-        </h3>
+        <h3 className="text-foreground mb-2 text-2xl font-semibold">Requires Approval</h3>
         <p className="text-muted-foreground mb-8 max-w-md text-center">
           You need to submit this plan for approval before findings can be recorded.
         </p>
@@ -51,17 +46,18 @@ export function RequiresApprovalState({
           </div>
         </div>
 
-        <Button
-          size="lg"
-          onClick={onSubmitForApproval}
-          disabled={isSubmitting}
-          isLoading={isSubmitting}
-          loadingText="Submitting..."
-          className="gap-2"
-        >
-          <Send className="h-6 w-6" />
-          Submit for Approval
-        </Button>
+        {auditPlan.status.toUpperCase() === "DRAFT" && (
+          <Button
+            size="lg"
+            onClick={onSubmitForApproval}
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+            loadingText="Submitting..."
+            className="gap-2">
+            <Send className="h-6 w-6" />
+            Submit for Approval
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
