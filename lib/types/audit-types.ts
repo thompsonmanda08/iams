@@ -1340,6 +1340,7 @@ export interface CreateFindingActionEvidenceInput {
   finding_action_id: string;
   title: string;
   description?: string;
+  evidence_summary?: string;
   file_link?: string;
 }
 
