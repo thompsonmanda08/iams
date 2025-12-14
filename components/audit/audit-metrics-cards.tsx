@@ -53,7 +53,7 @@ export function AuditMetricsCards({ metrics, isLoading }: AuditMetricsCardsProps
     },
     {
       title: "Audits In Progress",
-      value: `${metrics.in_progress_audit_count}%`,
+      value: `${metrics.in_progress_audit_count}`,
       subtitle: "Average across audits",
       icon: TrendingUp,
       iconColor: "text-green-600",

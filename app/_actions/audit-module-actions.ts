@@ -662,13 +662,13 @@ export async function getAuditMetrics(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       method: "GET",
-      url: "/api/v1/audit-plans/metrics"
+      url: "/api/v1/audit-dashboard/overview"
     });
 
-    return successResponse(response.data, "Audit metrics fetched successfully");
+    return successResponse(response.data);
   } catch (error: any) {
-    // Providing mock data on error for development purposes
-    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-plans/metrics");
+    
+    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-dashboard/overview");
   }
 }
 
