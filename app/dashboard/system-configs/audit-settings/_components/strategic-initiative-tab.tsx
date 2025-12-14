@@ -62,8 +62,8 @@ const INIT_FORM_DATA: InitiativeFormData = {
   description: "",
   department_id: null,
   pillar_id: "",
-  start_date: new Date().toISOString(),
-  end_date: new Date().toISOString()
+  start_date: new Date().toISOString().split('T')[0],
+  end_date: new Date().toISOString().split('T')[0]
 };
 
 export default function StrategicInitiativeTab(
@@ -553,7 +553,7 @@ function CreateOrUpdate({
                   setError({ status: false, message: "" });
                   setFormData((c) => ({
                     ...c,
-                    start_date: date?.toISOString() || ""
+                    start_date: date ? date.toISOString().split('T')[0] : ""
                   }));
                 }}
               />
@@ -569,7 +569,7 @@ function CreateOrUpdate({
                   setError({ status: false, message: "" });
                   setFormData((c) => ({
                     ...c,
-                    end_date: date?.toISOString() || ""
+                    end_date: date ? date.toISOString().split('T')[0] : ""
                   }));
                 }}
               />

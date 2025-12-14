@@ -436,8 +436,8 @@ export default function AuditUniverseForm({
 
     const payload: CreateUniversePayload = {
       universe_name: universeData.universe_name,
-      start_date: universeData.start_date.toISOString(),
-      end_date: universeData.end_date.toISOString(),
+      start_date: universeData.start_date.toISOString().split('T')[0],
+      end_date: universeData.end_date.toISOString().split('T')[0],
       is_active: universeData.is_active
     };
 
