@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Loader2, AlertCircle, Cable } from "lucide-react";
@@ -8,6 +8,15 @@ import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
 import { RiskCauseDialog } from "./risk-causes-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { CustomPagination } from "@/components/ui/pagination";
 
 type RiskCause = {
   id: string;
@@ -31,9 +40,17 @@ export function RiskCausesList() {
     causeName: string | null;
   }>({ open: false, causeId: null, causeName: null });
 
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 10,
+    totalCount: 0,
+    total_pages: 0
+  });
+
   useEffect(() => {
     fetchCauses();
-  }, []);
+  }, [pagination.page, pagination.page_size]);
 
   const fetchCauses = async () => {
     setIsLoading(true);
@@ -41,6 +58,11 @@ export function RiskCausesList() {
       const response = await getRiskCauses();
       if (response.success && response.data?.data) {
         setCauses(response.data.data);
+        setPagination((prev) => ({
+          ...prev,
+          totalCount: response.data.data.length,
+          total_pages: Math.ceil(response.data.data.length / prev.page_size)
+        }));
       } else {
         setCauses([]);
       }
@@ -51,6 +73,24 @@ export function RiskCausesList() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const updatePagination = (updates: Partial<typeof pagination>) => {
+    setPagination((prev) => ({ ...prev, ...updates }));
+  };
+
+  const getPaginatedData = () => {
+    const startIndex = (pagination.page - 1) * pagination.page_size;
+    const endIndex = startIndex + pagination.page_size;
+    return causes.slice(startIndex, endIndex);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
   };
 
   const handleDeleteClick = (cause: RiskCause) => {
@@ -103,8 +143,8 @@ export function RiskCausesList() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <Card className="p-4">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-foreground text-2xl font-bold">Risk Causes</h2>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -117,66 +157,110 @@ export function RiskCausesList() {
         </Button>
       </div>
 
-      {causes.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="bg-muted mb-4 rounded-full p-4">
-              <AlertCircle className="text-muted-foreground h-8 w-8" />
-            </div>
-            <h3 className="text-foreground mb-2 text-lg font-semibold">No Risk Causes Yet</h3>
-            <p className="text-muted-foreground mb-6 max-w-md text-center text-sm">
-              Get started by creating your first risk cause to identify and manage potential risks.
-            </p>
-            <Button onClick={handleCreateClick} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Your First Risk Cause
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {causes.map((cause) => {
-            const parentName = getParentCauseName(cause.parent_id);
-            return (
-              <Card key={cause.id} className="group transition-all">
-                <CardHeader>
-                  <div className="flex min-w-0 flex-1 flex-col gap-4">
-                    <CardTitle>{cause.name}</CardTitle>
-                    {parentName && (
-                      <Badge variant="success" className="gap-1 text-xs">
-                        <Cable className="h-3 w-3" />
-                        {parentName}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription className="line-clamp-2">
-                    {cause.description || "No description provided"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClick(cause)}
-                      className="flex-1">
-                      <Edit2 className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteClick(cause)}
-                      className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
+      <div className="bg-card rounded-lg border">
+        <Table>
+          <TableHeader className="uppercase">
+            <TableRow>
+              <TableHead>Cause Name</TableHead>
+              <TableHead>Parent Cause</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Created Date</TableHead>
+              <TableHead>Updated Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {!causes.length ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-12 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="bg-muted mb-4 rounded-full p-4">
+                      <AlertCircle className="text-muted-foreground h-8 w-8" />
+                    </div>
+                    <h3 className="text-foreground mb-2 text-lg font-semibold">
+                      No Risk Causes Yet
+                    </h3>
+                    <p className="text-muted-foreground mb-6 max-w-md text-center text-sm">
+                      Get started by creating your first risk cause to identify and manage potential
+                      risks.
+                    </p>
+                    <Button onClick={handleCreateClick} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Create Your First Risk Cause
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                </TableCell>
+              </TableRow>
+            ) : (
+              getPaginatedData().map((cause) => {
+                const parentName = getParentCauseName(cause.parent_id);
+
+                return (
+                  <TableRow key={cause.id}>
+                    <TableCell>
+                      <p className="text-foreground font-medium">{cause.name}</p>
+                    </TableCell>
+                    <TableCell>
+                      {parentName ? (
+                        <Badge variant="success" className="gap-1 text-xs">
+                          <Cable className="h-3 w-3" />
+                          {parentName}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <p className="line-clamp-2 text-sm text-gray-500">
+                        {cause.description || "No description provided"}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">
+                        {formatDate(cause.created_at)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">
+                        {formatDate(cause.updated_at)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditClick(cause)}
+                          className="h-8 gap-1.5">
+                          <Edit2 className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteClick(cause)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+        {causes.length > 0 && (
+          <CustomPagination
+            pagination={pagination}
+            updatePagination={updatePagination}
+            allowSetPageSize={true}
+            showDetails={true}
+            className="border-t"
+          />
+        )}
+      </div>
 
       <RiskCauseDialog
         open={dialog.open}
@@ -193,6 +277,6 @@ export function RiskCausesList() {
         description={`Are you sure you want to delete "${deleteDialog.causeName}"? This action cannot be undone.`}
         type="delete"
       />
-    </div>
+    </Card>
   );
 }

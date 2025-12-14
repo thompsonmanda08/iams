@@ -155,7 +155,7 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <Card className="p-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-foreground text-2xl font-bold">Rating Levels</h2>
@@ -188,80 +188,78 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
           </div>
         </Card>
       ) : (
-        <Card>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="text-foreground w-20">Color</TableHead>
-                  <TableHead className="text-foreground">Name</TableHead>
-                  <TableHead className="text-foreground">Score Range</TableHead>
-                  <TableHead className="text-foreground">Description</TableHead>
-                  <TableHead className="text-foreground text-right">Actions</TableHead>
+        <div className="bg-card rounded-lg border" >
+          <Table>
+            <TableHeader className="uppercase">
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="text-foreground w-20">Color</TableHead>
+                <TableHead className="text-foreground">Name</TableHead>
+                <TableHead className="text-foreground">Score Range</TableHead>
+                <TableHead className="text-foreground">Description</TableHead>
+                <TableHead className="text-foreground text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedRatings.map((rating, index) => (
+                <TableRow
+                  key={rating.id}
+                  className="hover:bg-muted/30 transition-colors"
+                  style={{ animationDelay: `${index * 50}ms` }}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-10 w-10 rounded-lg shadow-sm ring-1 ring-black/10"
+                        style={{ backgroundColor: rating.color_hex }}
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-semibold">{rating.name}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="inline-flex items-center gap-2">
+                      <div
+                        className="flex items-center gap-1.5 rounded-lg px-3 py-1 text-sm font-semibold shadow-sm"
+                        style={{
+                          backgroundColor: `${rating.color_hex}20`,
+                          color: rating.color_hex,
+                          border: `1px solid ${rating.color_hex}40`
+                        }}>
+                        <span className="tabular-nums">{rating.min_score}</span>
+                        <span className="opacity-60">→</span>
+                        <span className="tabular-nums">{rating.max_score}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">
+                      {rating.description || "No description provided"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditClick(rating)}
+                        className="h-8 gap-1.5">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(rating)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedRatings.map((rating, index) => (
-                  <TableRow
-                    key={rating.id}
-                    className="hover:bg-muted/30 transition-colors"
-                    style={{ animationDelay: `${index * 50}ms` }}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="h-10 w-10 rounded-lg shadow-sm ring-1 ring-black/10"
-                          style={{ backgroundColor: rating.color_hex }}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-semibold">{rating.name}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="inline-flex items-center gap-2">
-                        <div
-                          className="flex items-center gap-1.5 rounded-lg px-3 py-1 text-sm font-semibold shadow-sm"
-                          style={{
-                            backgroundColor: `${rating.color_hex}20`,
-                            color: rating.color_hex,
-                            border: `1px solid ${rating.color_hex}40`
-                          }}>
-                          <span className="tabular-nums">{rating.min_score}</span>
-                          <span className="opacity-60">→</span>
-                          <span className="tabular-nums">{rating.max_score}</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-muted-foreground text-sm">
-                        {rating.description || "No description provided"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditClick(rating)}
-                          className="h-8 gap-1.5">
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteClick(rating)}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
 
           {ratings.length > 0 && (
             <CustomPagination
@@ -272,7 +270,7 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
               className="border-t"
             />
           )}
-        </Card>
+        </div>
       )}
 
       <CreateRatingDialog
@@ -299,6 +297,6 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
         description={`Are you sure you want to delete "${deleteDialog.ratingName}"? This action cannot be undone.`}
         type="delete"
       />
-    </div>
+    </Card>
   );
 }

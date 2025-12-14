@@ -163,7 +163,7 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <Card className="p-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-foreground text-2xl font-bold">
@@ -200,65 +200,63 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
           </div>
         </Card>
       ) : (
-        <Card>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="text-foreground w-24">Level</TableHead>
-                  <TableHead className="text-foreground">Name</TableHead>
-                  <TableHead className="text-foreground">Description</TableHead>
-                  <TableHead className="text-foreground text-right">Actions</TableHead>
+        <div className="bg-card rounded-lg border">
+          <Table>
+            <TableHeader className="uppercase">
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="text-foreground w-24">Level</TableHead>
+                <TableHead className="text-foreground">Name</TableHead>
+                <TableHead className="text-foreground">Description</TableHead>
+                <TableHead className="text-foreground text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedScales.map((scale, index) => (
+                <TableRow
+                  key={scale.id}
+                  className="hover:bg-muted/30 transition-colors"
+                  style={{ animationDelay: `${index * 50}ms` }}>
+                  <TableCell>
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-lg text-white shadow-sm",
+                        getLevelColor(scale.level)
+                      )}>
+                      <span className="text-base font-bold">{scale.level}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-semibold">{scale.name}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">
+                      {scale.description || "No description provided"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditClick(scale)}
+                        className="h-8 gap-1.5">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(scale)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedScales.map((scale, index) => (
-                  <TableRow
-                    key={scale.id}
-                    className="hover:bg-muted/30 transition-colors"
-                    style={{ animationDelay: `${index * 50}ms` }}>
-                    <TableCell>
-                      <div
-                        className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-lg text-white shadow-sm",
-                          getLevelColor(scale.level)
-                        )}>
-                        <span className="text-base font-bold">{scale.level}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-semibold">{scale.name}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-muted-foreground text-sm">
-                        {scale.description || "No description provided"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditClick(scale)}
-                          className="h-8 gap-1.5">
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteClick(scale)}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
 
           {scales.length > 0 && (
             <CustomPagination
@@ -269,7 +267,7 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
               className="border-t"
             />
           )}
-        </Card>
+        </div>
       )}
 
       <CreateScaleDialog
@@ -297,6 +295,6 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
         description={`Are you sure you want to delete "${deleteDialog.scaleName}"? This action cannot be undone.`}
         type="delete"
       />
-    </div>
+    </Card>
   );
 }

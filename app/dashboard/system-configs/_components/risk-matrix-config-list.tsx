@@ -11,6 +11,15 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateRiskMatrixDialog } from "./create-risk-matrix-dialog";
 import { EditRiskMatrixDialog } from "./edit-risk-matrix-dialog";
 import { deleteRiskMatrix, getRiskMatrices } from "@/app/_actions/config-actions";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { CustomPagination } from "@/components/ui/pagination";
 
 type RiskMatrix = {
   id: string;
@@ -35,10 +44,16 @@ export function RiskMatrixConfigList() {
     matrixId: string | null;
     matrixName: string | null;
   }>({ open: false, matrixId: null, matrixName: null });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 10,
+    totalCount: 0,
+    total_pages: 0
+  });
 
   useEffect(() => {
     fetchMatrices();
-  }, []);
+  }, [pagination.page, pagination.page_size]);
 
   const fetchMatrices = async () => {
     setIsLoading(true);
@@ -46,13 +61,37 @@ export function RiskMatrixConfigList() {
       const response = await getRiskMatrices();
 
       if (response.success && response.data.data) {
-        setMatrices(Array.isArray(response.data.data) ? response.data.data : [response.data.data]);
+        const data = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+
+        setMatrices(data);
+        setPagination((prev) => ({
+          ...prev,
+          totalCount: data.length,
+          total_pages: Math.ceil(data.length / prev.page_size)
+        }));
       }
     } catch (error: any) {
       toast.error(error?.message || "Failed to load risk matrices");
     } finally {
       setIsLoading(false);
     }
+  };
+  const updatePagination = (updates: Partial<typeof pagination>) => {
+    setPagination((prev) => ({ ...prev, ...updates }));
+  };
+
+  const getPaginatedData = () => {
+    const startIndex = (pagination.page - 1) * pagination.page_size;
+    const endIndex = startIndex + pagination.page_size;
+    return matrices.slice(startIndex, endIndex);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
   };
 
   const handleDeleteClick = (matrix: RiskMatrix) => {
@@ -97,7 +136,7 @@ export function RiskMatrixConfigList() {
   }
 
   return (
-    <div className="space-y-6">
+    <Card className="p-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-foreground text-2xl font-semibold">Risk Matrices</h2>
@@ -111,70 +150,107 @@ export function RiskMatrixConfigList() {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {matrices.map((matrix) => (
-          <Card key={matrix.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="mb-2 flex items-center gap-2">
-                    {matrix.name}
-                    {matrix.is_default && (
-                      <Badge variant="secondary" className="text-xs">
-                        Default
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {matrix.description || "No description"}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleConfigureScales(matrix.id)}
-                  className="flex-1">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configure
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleEditClick(matrix)}>
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteClick(matrix)}
-                  disabled={matrix.is_default}
-                  className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        {matrices.length === 0 && (
-          <Card className="border-dashed md:col-span-2 lg:col-span-3">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="bg-muted mb-4 rounded-full p-4">
-                <Grid3x3 className="text-muted-foreground h-8 w-8" />
-              </div>
-              <h3 className="text-foreground mb-2 text-lg font-semibold">
-                No risk matrices configured
-              </h3>
-              <p className="text-muted-foreground mb-6 text-center text-sm">
-                Get started by creating your first risk matrix to organize and classify risks.
-              </p>
-              <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Your First Matrix
-              </Button>
-            </CardContent>
-          </Card>
+      <div className="bg-card rounded-lg border">
+        <Table>
+          <TableHeader className="uppercase">
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Created Date</TableHead>
+              <TableHead>Updated Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {!matrices.length ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-12 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="bg-muted mb-4 rounded-full p-4">
+                      <Grid3x3 className="text-muted-foreground h-8 w-8" />
+                    </div>
+                    <h3 className="text-foreground mb-2 text-lg font-semibold">
+                      No risk matrices configured
+                    </h3>
+                    <p className="text-muted-foreground mb-6 text-center text-sm">
+                      Get started by creating your first risk matrix to organize and classify risks.
+                    </p>
+                    <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Create Your First Matrix
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              getPaginatedData().map((matrix) => (
+                <TableRow key={matrix.id}>
+                  <TableCell>
+                    <p className="text-foreground font-medium">{matrix.name}</p>
+                  </TableCell>
+                  <TableCell>
+                    <p className="line-clamp-2 text-sm text-gray-500">
+                      {matrix.description || "No description"}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={matrix.is_default ? "secondary" : "outline"}>
+                      {matrix.is_default ? "Default" : "Custom"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">
+                      {formatDate(matrix.created_at)}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">
+                      {formatDate(matrix.updated_at)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleConfigureScales(matrix.id)}
+                        className="h-8 gap-1.5">
+                        <Settings className="h-3.5 w-3.5" />
+                        Configure
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditClick(matrix)}
+                        className="h-8 gap-1.5">
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(matrix)}
+                        disabled={matrix.is_default}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        {matrices.length > 0 && (
+          <CustomPagination
+            pagination={pagination}
+            updatePagination={updatePagination}
+            allowSetPageSize={true}
+            showDetails={true}
+            className="border-t"
+          />
         )}
       </div>
 
@@ -201,6 +277,6 @@ export function RiskMatrixConfigList() {
         description={`Are you sure you want to delete "${deleteDialog.matrixName}"? This will also delete all associated scales and rating levels.`}
         type="delete"
       />
-    </div>
+    </Card>
   );
 }
