@@ -426,6 +426,7 @@ export async function createFindingActionEvidence(
       data: {
         title: data.title,
         description: data.description,
+        evidence_summary: data.evidence_summary,
         file_link: data.file_link
       }
     });

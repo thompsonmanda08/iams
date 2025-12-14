@@ -128,8 +128,8 @@ export function WorkflowInstancesTable({
     return (
       <div className="bg-card rounded-lg border p-8">
         <div className="flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-primary"></div>
-          <span className="ml-4 text-muted-foreground">Loading workflow instances...</span>
+          <div className="border-t-primary h-8 w-8 animate-spin rounded-full border-4 border-gray-300"></div>
+          <span className="text-muted-foreground ml-4">Loading workflow instances...</span>
         </div>
       </div>
     );
@@ -167,8 +167,7 @@ export function WorkflowInstancesTable({
               <TableRow
                 key={instance.instance.id}
                 onClick={() => onInstanceSelect?.(instance)}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-              >
+                className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* ENTITY NAME */}
                 <TableCell>
                   <div className="flex flex-col">
@@ -224,7 +223,8 @@ export function WorkflowInstancesTable({
                     {(instance.entity?.status === "COMPLETED" ||
                       instance.entity?.status === "APPROVED") && (
                       <span className="text-muted-foreground text-sm">
-                        Completed by {instance.instance.created_by_user?.name || "System"}
+                        {/* Completed by {instance.instance.created_by_user?.name || "Workflow User"} */}
+                        N/A
                       </span>
                     )}
 

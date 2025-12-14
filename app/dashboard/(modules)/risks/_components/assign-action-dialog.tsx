@@ -220,7 +220,7 @@ export function AssignActionDialog({
             onValueChange={(date) => {
               setFormData((prev) => ({
                 ...prev,
-                due_date: date?.toISOString()
+                due_date: date ? date.toISOString().split('T')[0] : ""
               }));
               if (errors.due_date) {
                 setErrors((prev) => ({ ...prev, due_date: undefined }));

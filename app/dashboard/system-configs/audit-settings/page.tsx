@@ -1,6 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getDepartments, getTowns } from "@/app/_actions/config-actions";
-import { Pagination } from "@/lib/types";
 import { Suspense } from "react";
 import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
 import {
@@ -19,90 +18,62 @@ import WorkpaperTemplatesTab from "./_components/workpaper-templates-tab";
 import PageHeader from "@/components/page-header";
 import { FileText, MapPin, Target, Building2, Lightbulb, Workflow } from "lucide-react";
 
-type PageProps = {
-  params: Promise<{ [key: string]: string }>;
-  searchParams: Promise<Pagination & { [key: string]: string }>;
-};
-
-export default async function AuditSettingsPage({ searchParams }: PageProps) {
-  const urlParams = await searchParams;
-  const page = urlParams.page ? Number(urlParams.page) : 1;
-  const page_size = urlParams.page_size ? Number(urlParams.page_size) : 100;
-
+export default async function AuditSettingsPage() {
   const [
-    templatesResponse, //1
-    auditableAreasResponse, //2
-    indicativeTargetsResponse, //3
-    pillarsResponse, //4
-    initiativesResponse, //5
-    townsResponse, // 6
-    departmentsResponse, //7
-    // categoriesResponse, //8
-    processActivitiesResponse //9
+    templatesResponse, // 1
+    auditableAreasResponse, // 2
+    indicativeTargetsResponse, // 3
+    pillarsResponse, // 4
+    initiativesResponse, // 5
+    departmentsResponse, // 6
+    processActivitiesResponse //7
   ] = await Promise.all([
     getWorkingPaperTemplates(), //1
     getAuditableAreas(), //2
     getIndicativeTargets(), //3
     getStrategicPillars(), //4
     getStrategicInitiatives(), //5
-    getTowns({ page, page_size }), //6
-    getDepartments(), //7
-    // getBranches({ page, page_size }),
-    // getProvinces(),
-    // getFindingsCategories(),
-    getProcessActivities()
+    getDepartments(), // 6
+    getProcessActivities() //7
   ]);
 
   const templates = templatesResponse.success ? templatesResponse.data?.data || [] : [];
+  const templatesPagination = templatesResponse.success
+    ? templatesResponse.data?.pagination || []
+    : [];
 
   const departments = departmentsResponse.success ? departmentsResponse.data?.data || [] : [];
+  const departmentsPagination = departmentsResponse.success
+    ? departmentsResponse.data?.pagination || []
+    : [];
 
   const areas = auditableAreasResponse.success ? auditableAreasResponse.data?.data || [] : [];
   const areasPagination = auditableAreasResponse.success
     ? auditableAreasResponse.data?.pagination
     : null;
 
-  const towns = townsResponse.success ? townsResponse.data?.data || [] : [];
-  const townsPagination = townsResponse.success ? townsResponse.data?.data?.pagination : null;
-
   // Audit settings data
   const pillars = pillarsResponse.success ? pillarsResponse.data?.data || [] : [];
-  const pillarsPagination = pillarsResponse.success ? pillarsResponse.data?.pagination || [] : [];
+  const pillarsPagination = pillarsResponse.success ? pillarsResponse.data?.pagination || [] : null;
 
   const initiatives = initiativesResponse.success ? initiativesResponse.data?.data || [] : [];
   const initiativesPagination = initiativesResponse.success
     ? initiativesResponse.data?.data || []
-    : [];
-
-  // const findingsCategories = categoriesResponse.success ? categoriesResponse.data?.data : [];
-
-  // const findingsCategoriesPagination = categoriesResponse.success
-  //   ? categoriesResponse.data?.pagination
-  //   : null;
+    : null;
 
   const processActivities = processActivitiesResponse.success
     ? processActivitiesResponse.data?.data || []
     : [];
-
-  // const processActivitiesPagination = processActivitiesResponse.success
-  //   ? processActivitiesResponse.data?.pagination
-  //   : null;
+  const processActivitiesPagination = processActivitiesResponse.success
+    ? processActivitiesResponse.data?.pagination || []
+    : null;
 
   const indicativeTargets = indicativeTargetsResponse.success
     ? indicativeTargetsResponse.data?.data || []
     : [];
-
-  console.log("Audit Settings Page:", {
-    // templates,
-    // areas,
-    // pillars
-    // initiatives
-    // towns,
-    // departments,
-    // indicativeTargets
-    // findingsCategories
-    // processActivities
-  });
+  const indicativeTargetsPagination = indicativeTargetsResponse.success
+    ? indicativeTargetsResponse.data?.pagination || []
+    : null;
 
   return (
     <div className="">
@@ -151,10 +122,6 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
                 <Lightbulb className="h-4 w-4" />
                 Strategic Initiative
               </TabsTrigger>
-              {/* <TabsTrigger value="findings" className="gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Findings Categories
-              </TabsTrigger> */}
               <TabsTrigger value="process" className="gap-2">
                 <Workflow className="h-4 w-4" />
                 Process/Activity
@@ -164,49 +131,54 @@ export default async function AuditSettingsPage({ searchParams }: PageProps) {
 
           <TabsContent value="templates">
             <Suspense fallback={<TableLoading />}>
-              <WorkpaperTemplatesTab templates={templates || []} />
+              <WorkpaperTemplatesTab templates={templates || []} pagination={templatesPagination} />
             </Suspense>
           </TabsContent>
 
           {/* Auditable Areas Tab */}
           <TabsContent value="areas">
             <Suspense fallback={<TableLoading />}>
-              <AuditableAreaConfig areas={areas} pagination={townsPagination} />
+              <AuditableAreaConfig areas={areas} pagination={areasPagination} />
             </Suspense>
           </TabsContent>
 
           {/* Indicative Targets Tab */}
           <TabsContent value="targets">
             <Suspense fallback={<TableLoading />}>
-              <IndicativeTargetsTab targets={indicativeTargets} />
+              <IndicativeTargetsTab
+                targets={indicativeTargets}
+                pagination={indicativeTargetsPagination}
+              />
             </Suspense>
           </TabsContent>
 
           {/* Strategic Pillars Tab */}
           <TabsContent value="pillars">
             <Suspense fallback={<TableLoading />}>
-              <StrategicPillarsTab pillars={pillars} />
+              <StrategicPillarsTab pillars={pillars} pagination={pillarsPagination} />
             </Suspense>
           </TabsContent>
 
           {/* Strategic Initiative Tab */}
           <TabsContent value="initiative">
             <Suspense fallback={<TableLoading />}>
-              <StrategicInitiativeTab initiatives={initiatives} departments={departments} />
+              <StrategicInitiativeTab
+                initiatives={initiatives}
+                departments={departments}
+                pagination={initiativesPagination}
+              />
             </Suspense>
           </TabsContent>
-
-          {/* Findings Categories Tab */}
-          {/* <TabsContent value="findings">
-            <Suspense fallback={<TableLoading />}>
-              <FindingsCategoryTab categories={findingsCategories} />
-            </Suspense>
-          </TabsContent> */}
 
           {/* Process Activity Tab */}
           <TabsContent value="process">
             <Suspense fallback={<TableLoading />}>
-              <ProcessActivityTab processes={processActivities} pillars={pillars} areas={areas} />
+              <ProcessActivityTab
+                processes={processActivities}
+                pillars={pillars}
+                areas={areas}
+                pagination={processActivitiesPagination}
+              />
             </Suspense>
           </TabsContent>
         </Tabs>

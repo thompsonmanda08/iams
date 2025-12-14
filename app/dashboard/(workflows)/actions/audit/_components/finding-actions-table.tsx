@@ -23,11 +23,26 @@ interface FindingActionsTableProps {
 }
 
 const STATUS_COLORS: Record<string, { badge: string; text: string }> = {
-  PENDING: { badge: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200", text: "Pending" },
-  IN_PROGRESS: { badge: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", text: "In Progress" },
-  UNDER_REVIEW: { badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200", text: "Under Review" },
-  APPROVED: { badge: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200", text: "Approved" },
-  COMPLETED: { badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200", text: "Completed" },
+  PENDING: {
+    badge: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200",
+    text: "Pending"
+  },
+  IN_PROGRESS: {
+    badge: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    text: "In Progress"
+  },
+  UNDER_REVIEW: {
+    badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    text: "Under Review"
+  },
+  APPROVED: {
+    badge: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    text: "Approved"
+  },
+  COMPLETED: {
+    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+    text: "Completed"
+  },
   REJECTED: { badge: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200", text: "Rejected" }
 };
 
@@ -56,102 +71,97 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
 
   return (
     <>
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Finding</TableHead>
-                  <TableHead>Action Description</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Reviewer</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+      <>
+        <div className="bg-card rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Finding</TableHead>
+                <TableHead>Action Description</TableHead>
+                <TableHead>Assigned To</TableHead>
+                <TableHead>Reviewer</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {actions.map((action, index) => (
+                <TableRow key={action.id + index}>
+                  {/* Finding */}
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">
+                        {action.finding?.finding_number || "N/A"}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {action.finding?.category_name || "Unknown"}
+                      </p>
+                    </div>
+                  </TableCell>
+
+                  {/* Action Description */}
+                  <TableCell>
+                    <p className="line-clamp-2 max-w-xs text-sm">
+                      {action.action_description || "-"}
+                    </p>
+                  </TableCell>
+
+                  {/* Assigned To */}
+                  <TableCell>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">
+                        {action.assigned_user?.name || "Unassigned"}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {action.assigned_user?.email || ""}
+                      </p>
+                    </div>
+                  </TableCell>
+
+                  {/* Reviewer */}
+                  <TableCell>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">{action.reviewer?.name || "Unassigned"}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {action.reviewer?.email || ""}
+                      </p>
+                    </div>
+                  </TableCell>
+
+                  {/* Due Date */}
+                  <TableCell>
+                    <p className="text-sm">
+                      {action.due_date ? format(new Date(action.due_date), "MMM d, yyyy") : "-"}
+                    </p>
+                  </TableCell>
+
+                  {/* Status */}
+                  <TableCell>
+                    {action.status && STATUS_COLORS[action.status] && (
+                      <Badge className={cn("text-xs", STATUS_COLORS[action.status].badge)}>
+                        {STATUS_COLORS[action.status].text}
+                      </Badge>
+                    )}
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleViewDetails(action)}
+                      className="gap-2">
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {actions.map((action) => (
-                  <TableRow key={action.id}>
-                    {/* Finding */}
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">
-                          {action.finding?.finding_number || "N/A"}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {action.finding?.category_name || "Unknown"}
-                        </p>
-                      </div>
-                    </TableCell>
-
-                    {/* Action Description */}
-                    <TableCell>
-                      <p className="text-sm line-clamp-2 max-w-xs">
-                        {action.action_description || "-"}
-                      </p>
-                    </TableCell>
-
-                    {/* Assigned To */}
-                    <TableCell>
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium">
-                          {action.assigned_user?.name || "Unassigned"}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {action.assigned_user?.email || ""}
-                        </p>
-                      </div>
-                    </TableCell>
-
-                    {/* Reviewer */}
-                    <TableCell>
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium">
-                          {action.reviewer?.name || "Unassigned"}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {action.reviewer?.email || ""}
-                        </p>
-                      </div>
-                    </TableCell>
-
-                    {/* Due Date */}
-                    <TableCell>
-                      <p className="text-sm">
-                        {action.due_date ? format(new Date(action.due_date), "MMM d, yyyy") : "-"}
-                      </p>
-                    </TableCell>
-
-                    {/* Status */}
-                    <TableCell>
-                      {action.status && STATUS_COLORS[action.status] && (
-                        <Badge className={cn("text-xs", STATUS_COLORS[action.status].badge)}>
-                          {STATUS_COLORS[action.status].text}
-                        </Badge>
-                      )}
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleViewDetails(action)}
-                        className="gap-2"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </>
 
       {/* Details Dialog */}
       {selectedAction && (

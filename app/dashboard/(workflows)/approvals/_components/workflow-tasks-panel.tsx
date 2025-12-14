@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { CustomPagination } from "@/components/ui/pagination";
 import { WorkflowTasksTable } from "./workflow-tasks-table";
 import { useUserAssignedWorkflowTasks } from "@/hooks/use-workflow-tasks";
 import type { Pagination } from "@/lib/types";
@@ -63,10 +64,10 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
     setSelectedTask(task);
   };
 
-  const handlePageChange = (newPage: number, newPageSize?: number) => {
-    setCurrentPage(newPage);
-    if (newPageSize) {
-      setPageSize(newPageSize);
+  const handlePageChange = (params: { page: number; page_size?: number }) => {
+    setCurrentPage(params.page);
+    if (params.page_size) {
+      setPageSize(params.page_size);
     }
   };
 
@@ -126,15 +127,15 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
           isLoading={isLoading}
         />
 
-        {/* PAGINATION INFO */}
+        {/* PAGINATION */}
         {tasks && tasks.length > 0 && (
-          <div className="mt-4 flex items-center justify-between border-t pt-4">
-            <p className="text-muted-foreground text-sm">
-              Showing {Math.min(pageSize, tasks.length)} of {tasks.length} tasks
-            </p>
-            <div className="text-muted-foreground text-sm">
-              Page {currentPage} of {pagination.total_pages}
-            </div>
+          <div className="border-t">
+            <CustomPagination
+              pagination={pagination}
+              updatePagination={handlePageChange}
+              allowSetPageSize={true}
+              showDetails={true}
+            />
           </div>
         )}
       </div>

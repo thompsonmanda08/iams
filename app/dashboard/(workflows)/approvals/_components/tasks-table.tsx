@@ -137,8 +137,7 @@ export function TasksTable({ tasks, onTaskSelect }: TasksTableProps) {
               <TableRow
                 key={task.instance.id}
                 onClick={() => onTaskSelect?.(task)}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-              >
+                className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* NAME */}
                 <TableCell>
                   <div className="flex flex-col">
@@ -202,7 +201,8 @@ export function TasksTable({ tasks, onTaskSelect }: TasksTableProps) {
                     {(task.entity?.status === "COMPLETED" ||
                       task.entity?.status === "APPROVED") && (
                       <span className="text-muted-foreground text-sm">
-                        Completed by {task.instance.created_by_user?.name || "System"}
+                        {/* Completed by {task.instance.created_by_name || "Workflow User"} */}
+                        N/A
                       </span>
                     )}
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CustomPagination } from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -87,6 +88,11 @@ export default function StrategicPillarsTab({
 
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
+    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
+    router.push(`?pillars_page=${pageConfig.page}&pillars_page_size=${pageSize}`);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteStrategicPillar(id),
@@ -254,6 +260,16 @@ export default function StrategicPillarsTab({
           </Table>
         </div>
       </Card>
+
+      {/* Pagination */}
+      {pagination && (
+        <CustomPagination
+          pagination={pagination}
+          updatePagination={handlePaginationChange}
+          showDetails={true}
+          allowSetPageSize={true}
+        />
+      )}
 
       <CreateOrUpdate
         openModal={openModal}

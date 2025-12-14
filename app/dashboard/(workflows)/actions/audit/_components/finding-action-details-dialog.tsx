@@ -14,13 +14,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus } from "lucide-react";
+import { Plus, SquareArrowOutUpRight } from "lucide-react";
 import type { FindingAction } from "@/lib/types/audit-types";
-import { useFindingActionEvidence, useFindingActionReviews } from "@/hooks/use-finding-actions-queries";
+import {
+  useFindingActionEvidence,
+  useFindingActionReviews
+} from "@/hooks/use-finding-actions-queries";
 import { SubmitEvidenceDialog } from "./submit-evidence-dialog";
 import { ReviewEvidenceDialog } from "./review-evidence-dialog";
 import { CreateReassessmentDialog } from "./create-reassessment-dialog";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface FindingActionDetailsDialogProps {
   open: boolean;
@@ -29,17 +33,27 @@ interface FindingActionDetailsDialogProps {
 }
 
 const STATUS_COLORS: Record<string, { badge: string; text: string }> = {
-  PENDING: { badge: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200", text: "Pending" },
-  IN_PROGRESS: { badge: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", text: "In Progress" },
-  UNDER_REVIEW: { badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200", text: "Under Review" },
-  APPROVED: { badge: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200", text: "Approved" },
-  COMPLETED: { badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200", text: "Completed" },
+  PENDING: {
+    badge: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200",
+    text: "Pending"
+  },
+  IN_PROGRESS: {
+    badge: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    text: "In Progress"
+  },
+  UNDER_REVIEW: {
+    badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    text: "Under Review"
+  },
+  APPROVED: {
+    badge: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    text: "Approved"
+  },
+  COMPLETED: {
+    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+    text: "Completed"
+  },
   REJECTED: { badge: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200", text: "Rejected" }
-};
-
-const REVIEW_STATUS_COLORS: Record<string, string> = {
-  APPROVED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  REJECTED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
 };
 
 export function FindingActionDetailsDialog({
@@ -61,7 +75,7 @@ export function FindingActionDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="h-[90vh] max-w-3xl! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Finding Action Details</DialogTitle>
             <DialogDescription>
@@ -73,7 +87,7 @@ export function FindingActionDetailsDialog({
           <div className="space-y-6">
             {/* Action Overview */}
             <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <CardTitle className="text-base">Action Overview</CardTitle>
@@ -85,10 +99,10 @@ export function FindingActionDetailsDialog({
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2">
                 {/* Description */}
                 <div>
-                  <p className="text-muted-foreground text-sm font-medium mb-1">Description</p>
+                  <p className="text-muted-foreground mb-1 text-xs font-medium">Description</p>
                   <p className="text-sm whitespace-pre-wrap">{action.action_description}</p>
                 </div>
 
@@ -97,32 +111,42 @@ export function FindingActionDetailsDialog({
                 {/* Details Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-muted-foreground text-sm font-medium mb-1">Assigned To</p>
+                    <p className="text-muted-foreground mb-1 text-xs font-medium">Assigned To</p>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">{action.assigned_user?.name || "Unassigned"}</p>
-                      <p className="text-muted-foreground text-xs">{action.assigned_user?.email || ""}</p>
+                      <p className="text-sm font-medium">
+                        {action.assigned_user?.name || "Unassigned"}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {action.assigned_user?.email || ""}
+                      </p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-muted-foreground text-sm font-medium mb-1">Reviewer</p>
+                    <p className="text-muted-foreground mb-1 text-xs font-medium">Reviewer</p>
                     <div className="space-y-0.5">
                       <p className="text-sm font-medium">{action.reviewer?.name || "Unassigned"}</p>
-                      <p className="text-muted-foreground text-xs">{action.reviewer?.email || ""}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {action.reviewer?.email || ""}
+                      </p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-muted-foreground text-sm font-medium mb-1">Due Date</p>
+                    <p className="text-muted-foreground mb-1 text-xs font-medium">Due Date</p>
                     <p className="text-sm">
-                      {action.due_date ? format(new Date(action.due_date), "MMM d, yyyy") : "Not set"}
+                      {action.due_date
+                        ? format(new Date(action.due_date), "MMM d, yyyy")
+                        : "Not set"}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-muted-foreground text-sm font-medium mb-1">Created</p>
+                    <p className="text-muted-foreground mb-1 text-xs font-medium">Created</p>
                     <p className="text-sm">
-                      {action.created_at ? format(new Date(action.created_at), "MMM d, yyyy") : "Unknown"}
+                      {action.created_at
+                        ? format(new Date(action.created_at), "MMM d, yyyy")
+                        : "Unknown"}
                     </p>
                   </div>
                 </div>
@@ -149,11 +173,7 @@ export function FindingActionDetailsDialog({
                       {evidence.length} evidence{evidence.length !== 1 ? "s" : ""} submitted
                     </p>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setSubmitEvidenceOpen(true)}
-                    className="gap-2"
-                  >
+                  <Button size="sm" onClick={() => setSubmitEvidenceOpen(true)} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Submit Evidence
                   </Button>
@@ -161,39 +181,51 @@ export function FindingActionDetailsDialog({
 
                 {evidence.length > 0 ? (
                   <div className="space-y-3">
-                    {evidence.map((item) => (
+                    {evidence.map((item, index) => (
                       <Card key={item.id} className="bg-muted/50">
-                        <CardContent className="pt-6">
+                        <CardContent className="">
                           <div className="space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
-                                <p className="text-sm font-medium">{item.title}</p>
-                                {item.description && (
-                                  <p className="text-muted-foreground text-xs mt-1">
-                                    {item.description}
+                                <p className="text-sm font-medium">
+                                  {item.evidence_file_name || `Evidence File #${index}`}
+                                </p>
+                                {item.evidence_summary && (
+                                  <p className="text-muted-foreground mt-1 text-xs">
+                                    {item.evidence_summary}
                                   </p>
                                 )}
                               </div>
-                              {item.review_status && REVIEW_STATUS_COLORS[item.review_status] && (
-                                <Badge className={cn("text-xs", REVIEW_STATUS_COLORS[item.review_status])}>
-                                  {item.review_status}
-                                </Badge>
-                              )}
+                              <div className="flex flex-col items-end justify-end space-y-2">
+                                {item.status && (
+                                  <Badge
+                                    className={cn("text-xs", STATUS_COLORS[item.status].badge)}>
+                                    {STATUS_COLORS[item.status].text}
+                                  </Badge>
+                                )}
+                                {item.evidence_file_url && (
+                                  <Button
+                                    size="sm"
+                                    variant="link"
+                                    className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
+                                    asChild>
+                                    <Link
+                                      href={item.evidence_file_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer">
+                                      View File
+                                      <SquareArrowOutUpRight className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                            {item.file_link && (
-                              <Button
-                                size="sm"
-                                variant="link"
-                                className="h-auto p-0 text-xs"
-                                asChild
-                              >
-                                <a href={item.file_link} target="_blank" rel="noopener noreferrer">
-                                  View File
-                                </a>
-                              </Button>
-                            )}
+
                             <p className="text-muted-foreground text-xs">
-                              Submitted {item.submitted_at ? format(new Date(item.submitted_at), "MMM d, yyyy") : "Unknown"}
+                              Submitted{" "}
+                              {item.submitted_at
+                                ? format(new Date(item.submitted_at), "MMM d, yyyy")
+                                : "Unknown"}
                             </p>
                           </div>
                         </CardContent>
@@ -224,8 +256,7 @@ export function FindingActionDetailsDialog({
                     size="sm"
                     onClick={() => setReviewEvidenceOpen(true)}
                     className="gap-2"
-                    disabled={!hasEvidence}
-                  >
+                    disabled={!hasEvidence}>
                     <Plus className="h-4 w-4" />
                     Add Review
                   </Button>
@@ -246,17 +277,17 @@ export function FindingActionDetailsDialog({
                                   {review.reviewer?.email || ""}
                                 </p>
                               </div>
-                              {review.status && REVIEW_STATUS_COLORS[review.status] && (
-                                <Badge className={cn("text-xs", REVIEW_STATUS_COLORS[review.status])}>
+                              {review.status && STATUS_COLORS[review.status] && (
+                                <Badge className={cn("text-xs", STATUS_COLORS[review.status])}>
                                   {review.status}
                                 </Badge>
                               )}
                             </div>
-                            {review.comments && (
-                              <p className="text-sm mt-2">{review.comments}</p>
-                            )}
+                            {review.comments && <p className="mt-2 text-sm">{review.comments}</p>}
                             <p className="text-muted-foreground text-xs">
-                              {review.created_at ? format(new Date(review.created_at), "MMM d, yyyy") : "Unknown"}
+                              {review.created_at
+                                ? format(new Date(review.created_at), "MMM d, yyyy")
+                                : "Unknown"}
                             </p>
                           </div>
                         </CardContent>
@@ -267,7 +298,8 @@ export function FindingActionDetailsDialog({
                   <Card className="bg-muted/50 border-dashed">
                     <CardContent className="flex flex-col items-center justify-center px-8 py-12">
                       <p className="text-muted-foreground text-center text-sm">
-                        No reviews yet. Reviews will appear here once evidence is submitted and reviewed.
+                        No reviews yet. Reviews will appear here once evidence is submitted and
+                        reviewed.
                       </p>
                     </CardContent>
                   </Card>
@@ -279,9 +311,8 @@ export function FindingActionDetailsDialog({
             {hasEvidence && (
               <Button
                 onClick={() => setCreateReassessmentOpen(true)}
-                variant="outline"
-                className="w-full"
-              >
+                // variant="outline"
+                className="w-full">
                 Create Reassessment
               </Button>
             )}
