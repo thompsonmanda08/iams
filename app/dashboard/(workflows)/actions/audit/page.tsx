@@ -6,9 +6,24 @@ import { CheckCircle2 } from "lucide-react";
 import { FindingActionsPageLayout } from "./_components/finding-actions-page-layout";
 import { Pagination } from "@/lib/types";
 
-export default async function FindingActionsPage() {
+export default async function FindingActionsPage({
+  params,
+  searchParams
+}: {
+  params?: Promise<{ id: string }>;
+  searchParams?: Promise<{
+    page?: string;
+    page_size?: string;
+    // [key: string]: string | string[] | undefined;
+  }>;
+}) {
+  const urlSearchParams = await searchParams;
+
+  const page = urlSearchParams?.page ? Number(urlSearchParams.page) : 1;
+  const page_size = urlSearchParams?.page_size ? Number(urlSearchParams.page_size) : 10;
+
   // Fetch all finding actions server-side
-  const actionsResponse = await getFindingActions();
+  const actionsResponse = await getFindingActions({ page, page_size });
 
   if (!actionsResponse.success) {
     notFound();

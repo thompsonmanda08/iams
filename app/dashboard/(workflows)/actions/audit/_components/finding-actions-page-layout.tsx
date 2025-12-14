@@ -43,20 +43,8 @@ export function FindingActionsPageLayout({ initialActions = [] }: FindingActions
   const [statusFilter, setStatusFilter] = useState<ActionStatus | "ALL">("ALL");
   const [activeTab, setActiveTab] = useState<"my-actions" | "all-actions">("my-actions");
 
-  // Get current user ID (would come from auth context in real app)
-  // For now, we'll filter by assignee in "My Actions" tab
-  const currentUserId =
-    typeof window !== "undefined" ? localStorage.getItem("currentUserId") : null;
-
   const filteredActions = useMemo(() => {
     let filtered = initialActions;
-
-    // Filter by tab (My Actions vs All Actions)
-    if (activeTab === "my-actions" && currentUserId) {
-      filtered = filtered.filter(
-        (action) => action.assigned_to === currentUserId || action.reviewer_id === currentUserId
-      );
-    }
 
     // Filter by search term (action description, finding name, assigned user)
     if (searchTerm.trim()) {
@@ -76,7 +64,7 @@ export function FindingActionsPageLayout({ initialActions = [] }: FindingActions
     }
 
     return filtered;
-  }, [initialActions, searchTerm, statusFilter, activeTab, currentUserId]);
+  }, [initialActions, searchTerm, statusFilter, activeTab]);
 
   return (
     <div className="space-y-6">
