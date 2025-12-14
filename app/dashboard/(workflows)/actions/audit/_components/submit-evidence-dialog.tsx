@@ -15,6 +15,7 @@ import {
 import { Loader2, Link2 } from "lucide-react";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useCreateFindingActionEvidenceMutation } from "@/hooks/use-finding-actions-queries";
+import { Input } from "@/components/ui/input";
 
 interface SubmitEvidenceDialogProps {
   open: boolean;
@@ -24,11 +25,7 @@ interface SubmitEvidenceDialogProps {
 
 type EvidenceSubmissionType = "file" | "link";
 
-export function SubmitEvidenceDialog({
-  open,
-  onOpenChange,
-  actionId
-}: SubmitEvidenceDialogProps) {
+export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvidenceDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [submissionType, setSubmissionType] = useState<EvidenceSubmissionType>("file");
@@ -76,10 +73,7 @@ export function SubmitEvidenceDialog({
 
         if (response.success && response.data?.file_url) {
           // Add to uploaded files list
-          setUploadedFiles((prev) => [
-            ...prev,
-            { file, url: response.data.file_url }
-          ]);
+          setUploadedFiles((prev) => [...prev, { file, url: response.data.file_url }]);
 
           // Clear file error when file is added
           const newErrors = { ...errors };
@@ -115,19 +109,18 @@ export function SubmitEvidenceDialog({
       }
 
       // Submit each file as a separate evidence record
-      uploadedFiles.forEach((uploadedFile) => {
-        const formData = new FormData();
-        formData.append("finding_action_id", actionId);
-        formData.append("title", title);
-        if (description.trim()) {
-          formData.append("description", description);
-        }
-        formData.append("file_link", uploadedFile.url);
+      uploadedFiles.forEach((uploadedFile, index) => {
+        const payload = {
+          finding_action_id: actionId,
+          title,
+          ...(description.trim() && { description }),
+          file_link: uploadedFile.url
+        };
 
-        createEvidenceMutation.mutate(formData as any, {
+        createEvidenceMutation.mutate(payload, {
           onSuccess: () => {
             // Reset form after last file is submitted
-            if (uploadedFile === uploadedFiles[uploadedFiles.length - 1]) {
+            if (index === uploadedFiles.length - 1) {
               resetForm();
             }
           }
@@ -135,15 +128,14 @@ export function SubmitEvidenceDialog({
       });
     } else {
       // Submit with link
-      const formData = new FormData();
-      formData.append("finding_action_id", actionId);
-      formData.append("title", title);
-      if (description.trim()) {
-        formData.append("description", description);
-      }
-      formData.append("file_link", fileLink);
+      const payload = {
+        finding_action_id: actionId,
+        title,
+        ...(description.trim() && { description }),
+        file_link: fileLink
+      };
 
-      createEvidenceMutation.mutate(formData as any, {
+      createEvidenceMutation.mutate(payload, {
         onSuccess: () => {
           resetForm();
         }
@@ -174,34 +166,30 @@ export function SubmitEvidenceDialog({
 
         <div className="space-y-4">
           {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="evidence_title">
-              Title <span className="text-red-500">*</span>
-            </Label>
-            <input
-              id="evidence_title"
-              type="text"
-              placeholder="e.g., Policy Document, Test Results..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={`w-full rounded-md border px-3 py-2 text-sm ${
-                errors.title ? "border-red-500" : "border-input"
-              }`}
-            />
-            {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
-          </div>
+          <Input
+            id="evidence_title"
+            type="text"
+            label="Title"
+            required
+            placeholder="e.g., Policy Document, Test Results..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={`w-full rounded-md border px-3 py-2 text-sm ${
+              errors.title ? "border-red-500" : "border-input"
+            }`}
+            isInvalid={!!errors.title}
+            errorText={errors.title}
+          />
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="evidence_description">Description</Label>
-            <Textarea
-              id="evidence_description"
-              placeholder="Describe the evidence or findings..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </div>
+          <Textarea
+            id="evidence_description"
+            label="Description"
+            placeholder="Describe the evidence or findings..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+          />
 
           {/* Submission Type Selector */}
           <div className="space-y-2">
@@ -220,10 +208,14 @@ export function SubmitEvidenceDialog({
                   delete newErrors.file;
                   setErrors(newErrors);
                 }}
-                className="gap-2"
-              >
+                className="gap-2">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
                 </svg>
                 Upload File
               </Button>
@@ -238,8 +230,7 @@ export function SubmitEvidenceDialog({
                   delete newErrors.fileLink;
                   setErrors(newErrors);
                 }}
-                className="gap-2"
-              >
+                className="gap-2">
                 <Link2 className="h-4 w-4" />
                 Provide Link
               </Button>
@@ -249,13 +240,10 @@ export function SubmitEvidenceDialog({
           {/* File Upload Option */}
           {submissionType === "file" && (
             <div className="space-y-2">
-              <Label>
-                Evidence Files <span className="text-red-500">*</span>
-              </Label>
               <UploadField
-                label=""
+                label="Evidence Files"
                 isLoading={uploading}
-                required={false}
+                required
                 handleFile={handleFileUpload}
                 acceptedFiles={{
                   ...ACCEPTABLE_FILE_TYPES.pdf,
@@ -268,28 +256,24 @@ export function SubmitEvidenceDialog({
               {/* Uploaded files list */}
               {uploadedFiles.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-600">
+                  <p className="text-muted-foreground/70 text-xs font-medium">
                     Uploaded Files ({uploadedFiles.length})
                   </p>
                   {uploadedFiles.map((uploadedFile, index) => (
-                    <div
-                      key={index}
-                      className="rounded-lg border border-green-200 bg-green-50 p-3"
-                    >
+                    <div key={index} className="rounded-lg border border-green-200 bg-green-50 p-3">
                       <div className="flex items-center gap-3">
                         <svg
                           className="h-5 w-5 shrink-0 text-green-600"
                           fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
+                          viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                             clipRule="evenodd"
                           />
                         </svg>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-green-900 truncate">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-green-900">
                             {uploadedFile.file.name}
                           </p>
                           <p className="text-xs text-green-700">
@@ -300,13 +284,8 @@ export function SubmitEvidenceDialog({
                           type="button"
                           onClick={() => removeUploadedFile(index)}
                           disabled={uploading}
-                          className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50"
-                        >
-                          <svg
-                            className="h-5 w-5"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
+                          className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50">
+                          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
                               d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -341,7 +320,7 @@ export function SubmitEvidenceDialog({
                 }`}
               />
               {errors.fileLink && <p className="text-sm text-red-500">{errors.fileLink}</p>}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Provide a URL to an external document, Google Drive file, or other resource
               </p>
             </div>
@@ -353,14 +332,10 @@ export function SubmitEvidenceDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={createEvidenceMutation.isPending}
-            >
+              disabled={createEvidenceMutation.isPending}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createEvidenceMutation.isPending}
-            >
+            <Button onClick={handleSubmit} disabled={createEvidenceMutation.isPending}>
               {createEvidenceMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
