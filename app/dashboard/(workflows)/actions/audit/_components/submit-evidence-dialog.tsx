@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, X, FileText, File as FileIcon } from "lucide-react";
+import { useFileUpload, formatBytes } from "@/hooks/use-file-upload";
 import { useCreateFindingActionEvidenceMutation } from "@/hooks/use-finding-actions-queries";
 
 interface SubmitEvidenceDialogProps {
@@ -26,77 +27,81 @@ export function SubmitEvidenceDialog({
   onOpenChange,
   actionId
 }: SubmitEvidenceDialogProps) {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    file_link: ""
-  });
-
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createEvidenceMutation = useCreateFindingActionEvidenceMutation();
 
+  // File upload hook - single file mode
+  const [fileState, fileActions] = useFileUpload({
+    multiple: false,
+    maxSize: 10 * 1024 * 1024, // 10MB
+    accept: ".pdf,.docx,.xlsx,.png,.jpg,.jpeg,.gif,.zip,.txt,.csv",
+    onFilesAdded: () => {
+      // Clear file error when new file is added
+      if (errors.file) {
+        const newErrors = { ...errors };
+        delete newErrors.file;
+        setErrors(newErrors);
+      }
+    }
+  });
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) {
+    if (!title.trim()) {
       newErrors.title = "Title is required";
     }
 
-    if (!formData.file_link.trim()) {
-      newErrors.file_link = "File link is required";
+    if (fileState.files.length === 0) {
+      newErrors.file = "Please upload a file";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear field error
-    if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
-    createEvidenceMutation.mutate(
-      {
-        finding_action_id: actionId,
-        title: formData.title,
-        description: formData.description || undefined,
-        file_link: formData.file_link || undefined
-      },
-      {
-        onSuccess: () => {
-          // Reset form
-          setFormData({
-            title: "",
-            description: "",
-            file_link: ""
-          });
-          setErrors({});
-          onOpenChange(false);
-        }
+    const uploadedFile = fileState.files[0];
+    if (!uploadedFile || !(uploadedFile.file instanceof File)) {
+      setErrors({ file: "Invalid file selected" });
+      return;
+    }
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append("finding_action_id", actionId);
+    formData.append("title", title);
+    if (description.trim()) {
+      formData.append("description", description);
+    }
+    formData.append("file", uploadedFile.file);
+
+    createEvidenceMutation.mutate(formData as any, {
+      onSuccess: () => {
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setErrors({});
+        fileActions.clearFiles();
+        onOpenChange(false);
       }
-    );
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Submit Evidence</DialogTitle>
           <DialogDescription>
-            Upload evidence to demonstrate progress on this action
+            Upload supporting documents to demonstrate progress on this action
           </DialogDescription>
         </DialogHeader>
 
@@ -106,12 +111,15 @@ export function SubmitEvidenceDialog({
             <Label htmlFor="evidence_title">
               Title <span className="text-red-500">*</span>
             </Label>
-            <Input
+            <input
               id="evidence_title"
+              type="text"
               placeholder="e.g., Policy Document, Test Results..."
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
-              className={errors.title ? "border-red-500" : ""}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={`w-full rounded-md border px-3 py-2 text-sm ${
+                errors.title ? "border-red-500" : "border-input"
+              }`}
             />
             {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
           </div>
@@ -122,31 +130,92 @@ export function SubmitEvidenceDialog({
             <Textarea
               id="evidence_description"
               placeholder="Describe the evidence or findings..."
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               rows={3}
             />
           </div>
 
-          {/* File Link */}
+          {/* File Upload */}
           <div className="space-y-2">
-            <Label htmlFor="evidence_file">
-              File Link <span className="text-red-500">*</span>
+            <Label>
+              Evidence File <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="evidence_file"
-              placeholder="https://example.com/file"
-              type="url"
-              value={formData.file_link}
-              onChange={(e) => handleInputChange("file_link", e.target.value)}
-              className={errors.file_link ? "border-red-500" : ""}
-            />
-            {errors.file_link && <p className="text-sm text-red-500">{errors.file_link}</p>}
-            {!errors.file_link && (
-              <p className="text-muted-foreground text-xs">
-                Provide a URL to the evidence file or document
-              </p>
+            <Card
+              className={`border-2 border-dashed p-4 transition-colors cursor-pointer ${
+                fileState.isDragging
+                  ? "border-primary bg-primary/5"
+                  : "border-slate-300 hover:border-slate-400"
+              } ${errors.file ? "border-red-500" : ""}`}
+              onDragEnter={fileActions.handleDragEnter}
+              onDragLeave={fileActions.handleDragLeave}
+              onDragOver={fileActions.handleDragOver}
+              onDrop={fileActions.handleDrop}
+            >
+              <div className="flex flex-col items-center justify-center space-y-2 text-center">
+                <Upload className="h-6 w-6 text-slate-600" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    Drag and drop file here, or click to browse
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    PDF, DOCX, XLSX, PNG, JPG, ZIP (max 10MB)
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={fileActions.openFileDialog}
+                >
+                  Browse Files
+                </Button>
+                <input {...fileActions.getInputProps()} className="hidden" />
+              </div>
+            </Card>
+
+            {/* File errors */}
+            {fileState.errors.length > 0 && (
+              <div className="rounded-lg bg-destructive/10 p-3">
+                {fileState.errors.map((error, idx) => (
+                  <p key={idx} className="text-sm text-destructive">
+                    {error}
+                  </p>
+                ))}
+              </div>
             )}
+
+            {/* Uploaded file display */}
+            {fileState.files.length > 0 && (
+              <Card className="bg-muted/50 p-3">
+                <div className="flex items-center gap-3">
+                  <FileIcon className="h-4 w-4 shrink-0 text-slate-600" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {fileState.files[0].file instanceof File
+                        ? fileState.files[0].file.name
+                        : fileState.files[0].file.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {fileState.files[0].file instanceof File
+                        ? formatBytes(fileState.files[0].file.size)
+                        : formatBytes(fileState.files[0].file.size)}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 shrink-0"
+                    onClick={() => fileActions.removeFile(fileState.files[0].id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
           </div>
 
           {/* Actions */}
