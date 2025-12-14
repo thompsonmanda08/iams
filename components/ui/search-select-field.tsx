@@ -75,6 +75,7 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
   ) => {
     const [open, setOpen] = React.useState(false);
     const [selected, setSelected] = React.useState("");
+    const [searchValue, setSearchValue] = React.useState("");
 
     // Sync external value prop with internal state
     React.useEffect(() => {
@@ -82,6 +83,24 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
         setSelected(value);
       }
     }, [value]);
+
+    // Filter options based on search value
+    const filteredOptions = React.useMemo(() => {
+      if (!searchValue.trim()) return options;
+
+      const lowerSearchValue = searchValue.toLowerCase();
+      return options.filter((item) => {
+        const label =
+          item?.[String(listItemName)] ||
+          item.name ||
+          item?.title ||
+          item?.label ||
+          item.id ||
+          item.value;
+
+        return String(label).toLowerCase().includes(lowerSearchValue);
+      });
+    }, [options, searchValue, listItemName]);
 
     return (
       <div
@@ -155,11 +174,16 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
           </PopoverTrigger>
           <PopoverContent className="flex w-[var(--radix-popover-trigger-width)] p-0">
             <Command>
-              <CommandInput placeholder="Type here to search..." className="h-9" />
+              <CommandInput
+                placeholder="Type here to search..."
+                className="h-9"
+                value={searchValue}
+                onValueChange={setSearchValue}
+              />
               <CommandList>
                 <CommandEmpty>No items found.</CommandEmpty>
                 <CommandGroup>
-                  {options.map((item, index) => {
+                  {filteredOptions.map((item, index) => {
                     const itemValue = String(item.id || item.value || index.toString());
                     const itemLabel =
                       item?.[String(listItemName)] ||
