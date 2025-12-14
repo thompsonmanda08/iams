@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit2, Loader2, FolderTree } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +11,15 @@ import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
 import { RiskCategoryFormDialog } from "./risk-category-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { CustomPagination } from "@/components/ui/pagination";
 
 type RiskCategory = {
   id: string;
@@ -39,6 +48,14 @@ export function RiskCategoriesConfig() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
 
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 10,
+    totalCount: 0,
+    total_pages: 0
+  });
+
   // Modal states
   const [formDialog, setFormDialog] = useState<{
     open: boolean;
@@ -66,7 +83,7 @@ export function RiskCategoriesConfig() {
   useEffect(() => {
     fetchCategories();
     fetchDepartments();
-  }, []);
+  }, [pagination.page, pagination.page_size]);
 
   const fetchCategories = async () => {
     try {
@@ -74,6 +91,11 @@ export function RiskCategoriesConfig() {
       const response = await getRiskCategories();
       if (response.success && response.data?.data) {
         setCategories(response.data.data);
+        setPagination((prev) => ({
+          ...prev,
+          totalCount: response.data.data.length,
+          total_pages: Math.ceil(response.data.data.length / prev.page_size)
+        }));
       } else {
         setCategories([]);
       }
@@ -102,6 +124,16 @@ export function RiskCategoriesConfig() {
     } finally {
       setLoadingDepartments(false);
     }
+  };
+
+  const updatePagination = (updates: Partial<typeof pagination>) => {
+    setPagination((prev) => ({ ...prev, ...updates }));
+  };
+
+  const getPaginatedData = () => {
+    const startIndex = (pagination.page - 1) * pagination.page_size;
+    const endIndex = startIndex + pagination.page_size;
+    return categories.slice(startIndex, endIndex);
   };
 
   const handleAddCategory = () => {
@@ -167,7 +199,7 @@ export function RiskCategoriesConfig() {
   }
 
   return (
-    <div className="space-y-6">
+    <Card className="p-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-foreground text-2xl font-bold">Risk Categories</h2>
@@ -181,66 +213,99 @@ export function RiskCategoriesConfig() {
         </Button>
       </div>
 
-      {categories.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="bg-muted mb-4 rounded-full p-4">
-              <FolderTree className="text-muted-foreground h-8 w-8" />
-            </div>
-            <h3 className="text-foreground mb-2 text-lg font-semibold">No Risk Categories Yet</h3>
-            <p className="text-muted-foreground mb-6 text-center text-sm">
-              Get started by creating your first risk category to organize and classify risks.
-            </p>
-            <Button onClick={handleAddCategory} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Your First Category
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Card key={category.id} className="group transition-all">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="mb-2 text-lg">{category.name}</CardTitle>
-                    <Badge variant="outline" className="text-xs">
-                      {getDepartmentName(category.department_id)}
-                    </Badge>
+      <div className="bg-card rounded-lg border">
+        <Table>
+          <TableHeader className="uppercase">
+            <TableRow>
+              <TableHead>Category Name</TableHead>
+              <TableHead>Code</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categories.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-12 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="bg-muted mb-4 rounded-full p-4">
+                      <FolderTree className="text-muted-foreground h-8 w-8" />
+                    </div>
+                    <h3 className="text-foreground mb-2 text-lg font-semibold">
+                      No Risk Categories Yet
+                    </h3>
+                    <p className="text-muted-foreground mb-6 text-center text-sm">
+                      Get started by creating your first risk category to organize and classify
+                      risks.
+                    </p>
+                    <Button onClick={handleAddCategory} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Your First Category
+                    </Button>
                   </div>
-                  <Badge variant="secondary" className="shrink-0 font-mono text-xs">
-                    {category.code}
-                  </Badge>
-                </div>
-                <CardDescription className="mt-2 line-clamp-2">
-                  {category.description || "No description provided"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditCategory(category)}
-                    className="flex-1 gap-1.5">
-                    <Edit2 className="h-3.5 w-3.5" />
-                    Edit
-                  </Button>
+                </TableCell>
+              </TableRow>
+            ) : (
+              getPaginatedData().map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell>
+                    <p className="text-foreground font-medium">{category.name}</p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="font-mono text-xs">
+                      {category.code}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {category.department?.name || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-500">{category.department?.code || "-"}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="line-clamp-2 text-sm text-gray-500">
+                      {category.description || "No description provided"}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditCategory(category)}
+                        className="h-8 gap-1.5">
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(category)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        {categories.length > 0 && (
+          <CustomPagination
+            pagination={pagination}
+            updatePagination={updatePagination}
+            allowSetPageSize={true}
+            showDetails={true}
+            className="border-t"
+          />
+        )}
+      </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteClick(category)}
-                    className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
       <RiskCategoryFormDialog
         open={formDialog.open}
         onOpenChange={(open) => setFormDialog({ open, mode: "create", category: null })}
@@ -258,6 +323,6 @@ export function RiskCategoriesConfig() {
         description={`Are you sure you want to delete "${deleteDialog.categoryName}"? This action cannot be undone.`}
         type="delete"
       />
-    </div>
+    </Card>
   );
 }

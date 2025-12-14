@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Loader2, Columns3Cog } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +8,15 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteResidualRiskRating, getResidualRiskRatings } from "@/app/_actions/config-actions";
 import { ResidualRiskRatingDialog } from "./residual-risk-rating-dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { CustomPagination } from "@/components/ui/pagination";
 
 type ResidualRiskRating = {
   id: string;
@@ -32,9 +41,17 @@ export function ResidualRiskRatingList() {
     ratingName: string | null;
   }>({ open: false, ratingId: null, ratingName: null });
 
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 10,
+    totalCount: 0,
+    total_pages: 0
+  });
+
   useEffect(() => {
     fetchRatings();
-  }, []);
+  }, [pagination.page, pagination.page_size]);
 
   const fetchRatings = async () => {
     setIsLoading(true);
@@ -42,6 +59,11 @@ export function ResidualRiskRatingList() {
       const response = await getResidualRiskRatings();
       if (response.success && response.data?.data) {
         setRatings(response.data.data);
+        setPagination((prev) => ({
+          ...prev,
+          totalCount: response.data.data.length,
+          total_pages: Math.ceil(response.data.data.length / prev.page_size)
+        }));
       } else {
         setRatings([]);
       }
@@ -52,6 +74,24 @@ export function ResidualRiskRatingList() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const updatePagination = (updates: Partial<typeof pagination>) => {
+    setPagination((prev) => ({ ...prev, ...updates }));
+  };
+
+  const getPaginatedData = () => {
+    const startIndex = (pagination.page - 1) * pagination.page_size;
+    const endIndex = startIndex + pagination.page_size;
+    return ratings.slice(startIndex, endIndex);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
   };
 
   const handleDeleteClick = (rating: ResidualRiskRating) => {
@@ -97,8 +137,8 @@ export function ResidualRiskRatingList() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <Card className="p-4">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-foreground text-2xl font-bold">Residual Risk Ratings</h2>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -111,65 +151,105 @@ export function ResidualRiskRatingList() {
         </Button>
       </div>
 
-      {!ratings.length ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="bg-muted mb-4 rounded-full p-4">
-              <Columns3Cog className="text-muted-foreground h-8 w-8" />
-            </div>
-            <h3 className="text-foreground mb-2 text-lg font-semibold">
-              No Residual Risk Ratings Yet
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md text-center text-sm">
-              Get started by creating your first residual risk rating to identify and manage
-              post-control risk levels.
-            </p>
-            <Button onClick={handleCreateClick} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Your First Risk Rating
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {ratings.map((rating) => {
-            return (
-              <Card key={rating.id} className="group transition-all">
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-lg">{rating.name}</CardTitle>
-                    <Badge variant="secondary" className="text-xs font-semibold">
-                      {`${rating.condition} ${rating.value}`}
+      <div className="bg-card rounded-lg border">
+        <Table>
+          <TableHeader className="uppercase">
+            <TableRow>
+              <TableHead>Rating Name</TableHead>
+              <TableHead>Condition</TableHead>
+              <TableHead>Value</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Created Date</TableHead>
+              <TableHead>Updated Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ratings.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="py-12 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="bg-muted mb-4 rounded-full p-4">
+                      <Columns3Cog className="text-muted-foreground h-8 w-8" />
+                    </div>
+                    <h3 className="text-foreground mb-2 text-lg font-semibold">
+                      No Residual Risk Ratings Yet
+                    </h3>
+                    <p className="text-muted-foreground mb-6 max-w-md text-center text-sm">
+                      Get started by creating your first residual risk rating to identify and manage
+                      post-control risk levels.
+                    </p>
+                    <Button onClick={handleCreateClick} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Create Your First Risk Rating
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              getPaginatedData().map((rating) => (
+                <TableRow key={rating.id}>
+                  <TableCell>
+                    <p className="text-foreground font-medium">{rating.name}</p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="font-mono text-xs">
+                      {rating.condition}
                     </Badge>
-                  </div>
-                  <CardDescription className="line-clamp-2">
-                    {rating.description || "No description provided"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClick(rating)}
-                      className="flex-1">
-                      <Edit2 className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteClick(rating)}
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm font-medium">{rating.value}</span>
+                  </TableCell>
+                  <TableCell>
+                    <p className="line-clamp-2 text-sm text-gray-500">
+                      {rating.description || "No description provided"}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">
+                      {formatDate(rating.created_at)}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">
+                      {formatDate(rating.updated_at)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditClick(rating)}
+                        className="h-8 gap-1.5">
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteClick(rating)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        {ratings.length > 0 && (
+          <CustomPagination
+            pagination={pagination}
+            updatePagination={updatePagination}
+            allowSetPageSize={true}
+            showDetails={true}
+            className="border-t"
+          />
+        )}
+      </div>
 
       <ResidualRiskRatingDialog
         open={dialog.open}
@@ -186,6 +266,6 @@ export function ResidualRiskRatingList() {
         description={`Are you sure you want to delete "${deleteDialog.ratingName}"? This action cannot be undone.`}
         type="delete"
       />
-    </div>
+    </Card>
   );
 }
