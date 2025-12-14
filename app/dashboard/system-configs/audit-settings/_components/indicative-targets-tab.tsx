@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CustomPagination } from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -86,6 +87,11 @@ export default function IndicativeTargetsTab({
   }, [targets]);
 
   const router = useRouter();
+
+  const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
+    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
+    router.push(`?targets_page=${pageConfig.page}&targets_page_size=${pageSize}`);
+  };
 
   // Delete item mutation
   const deleteMutation = useMutation({
@@ -249,6 +255,16 @@ export default function IndicativeTargetsTab({
           </Table>
         </div>
       </Card>
+
+      {/* Pagination */}
+      {pagination && (
+        <CustomPagination
+          pagination={pagination}
+          updatePagination={handlePaginationChange}
+          showDetails={true}
+          allowSetPageSize={true}
+        />
+      )}
 
       <CreateOrUpdate
         openModal={openModal}
