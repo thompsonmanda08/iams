@@ -122,10 +122,6 @@ export default async function AuditSettingsPage() {
                 <Lightbulb className="h-4 w-4" />
                 Strategic Initiative
               </TabsTrigger>
-              {/* <TabsTrigger value="findings" className="gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Findings Categories
-              </TabsTrigger> */}
               <TabsTrigger value="process" className="gap-2">
                 <Workflow className="h-4 w-4" />
                 Process/Activity

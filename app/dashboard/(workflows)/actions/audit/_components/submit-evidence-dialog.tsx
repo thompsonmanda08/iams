@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import UploadField, { ACCEPTABLE_FILE_TYPES } from "@/components/ui/file-dropzone";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Loader2, Upload, X, FileText, File as FileIcon } from "lucide-react";
-import { useFileUpload, formatBytes } from "@/hooks/use-file-upload";
+import { Loader2, Link2 } from "lucide-react";
+import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useCreateFindingActionEvidenceMutation } from "@/hooks/use-finding-actions-queries";
 
 interface SubmitEvidenceDialogProps {
@@ -22,6 +22,8 @@ interface SubmitEvidenceDialogProps {
   actionId: string;
 }
 
+type EvidenceSubmissionType = "file" | "link";
+
 export function SubmitEvidenceDialog({
   open,
   onOpenChange,
@@ -29,24 +31,13 @@ export function SubmitEvidenceDialog({
 }: SubmitEvidenceDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [submissionType, setSubmissionType] = useState<EvidenceSubmissionType>("file");
+  const [fileLink, setFileLink] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{ file: File; url: string }>>([]);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createEvidenceMutation = useCreateFindingActionEvidenceMutation();
-
-  // File upload hook - single file mode
-  const [fileState, fileActions] = useFileUpload({
-    multiple: false,
-    maxSize: 10 * 1024 * 1024, // 10MB
-    accept: ".pdf,.docx,.xlsx,.png,.jpg,.jpeg,.gif,.zip,.txt,.csv",
-    onFilesAdded: () => {
-      // Clear file error when new file is added
-      if (errors.file) {
-        const newErrors = { ...errors };
-        delete newErrors.file;
-        setErrors(newErrors);
-      }
-    }
-  });
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -55,12 +46,61 @@ export function SubmitEvidenceDialog({
       newErrors.title = "Title is required";
     }
 
-    if (fileState.files.length === 0) {
-      newErrors.file = "Please upload a file";
+    if (submissionType === "file") {
+      if (uploadedFiles.length === 0) {
+        newErrors.file = "Please upload at least one file";
+      }
+    } else {
+      if (!fileLink.trim()) {
+        newErrors.fileLink = "Please provide a link";
+      } else {
+        // Basic URL validation
+        try {
+          new URL(fileLink);
+        } catch {
+          newErrors.fileLink = "Please provide a valid URL";
+        }
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleFileUpload = async (file: File | undefined) => {
+    if (file) {
+      try {
+        setUploading(true);
+        // Upload file to PocketBase
+        const response = await uploadFile(file);
+
+        if (response.success && response.data?.file_url) {
+          // Add to uploaded files list
+          setUploadedFiles((prev) => [
+            ...prev,
+            { file, url: response.data.file_url }
+          ]);
+
+          // Clear file error when file is added
+          const newErrors = { ...errors };
+          delete newErrors.file;
+          setErrors(newErrors);
+        } else {
+          throw new Error(response.message || "Failed to upload file");
+        }
+      } catch (error) {
+        console.error("File upload failed:", error);
+        setErrors({
+          file: "Failed to upload file. Please try again."
+        });
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -68,31 +108,58 @@ export function SubmitEvidenceDialog({
       return;
     }
 
-    const uploadedFile = fileState.files[0];
-    if (!uploadedFile || !(uploadedFile.file instanceof File)) {
-      setErrors({ file: "Invalid file selected" });
-      return;
-    }
-
-    // Create FormData for file upload
-    const formData = new FormData();
-    formData.append("finding_action_id", actionId);
-    formData.append("title", title);
-    if (description.trim()) {
-      formData.append("description", description);
-    }
-    formData.append("file", uploadedFile.file);
-
-    createEvidenceMutation.mutate(formData as any, {
-      onSuccess: () => {
-        // Reset form
-        setTitle("");
-        setDescription("");
-        setErrors({});
-        fileActions.clearFiles();
-        onOpenChange(false);
+    if (submissionType === "file") {
+      if (uploadedFiles.length === 0) {
+        setErrors({ file: "No files uploaded" });
+        return;
       }
-    });
+
+      // Submit each file as a separate evidence record
+      uploadedFiles.forEach((uploadedFile) => {
+        const formData = new FormData();
+        formData.append("finding_action_id", actionId);
+        formData.append("title", title);
+        if (description.trim()) {
+          formData.append("description", description);
+        }
+        formData.append("file_link", uploadedFile.url);
+
+        createEvidenceMutation.mutate(formData as any, {
+          onSuccess: () => {
+            // Reset form after last file is submitted
+            if (uploadedFile === uploadedFiles[uploadedFiles.length - 1]) {
+              resetForm();
+            }
+          }
+        });
+      });
+    } else {
+      // Submit with link
+      const formData = new FormData();
+      formData.append("finding_action_id", actionId);
+      formData.append("title", title);
+      if (description.trim()) {
+        formData.append("description", description);
+      }
+      formData.append("file_link", fileLink);
+
+      createEvidenceMutation.mutate(formData as any, {
+        onSuccess: () => {
+          resetForm();
+        }
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setFileLink("");
+    setSubmissionType("file");
+    setUploadedFiles([]);
+    setErrors({});
+    setUploading(false);
+    onOpenChange(false);
   };
 
   return (
@@ -101,7 +168,7 @@ export function SubmitEvidenceDialog({
         <DialogHeader>
           <DialogTitle>Submit Evidence</DialogTitle>
           <DialogDescription>
-            Upload supporting documents to demonstrate progress on this action
+            Upload supporting documents or provide a link to demonstrate progress on this action
           </DialogDescription>
         </DialogHeader>
 
@@ -136,87 +203,149 @@ export function SubmitEvidenceDialog({
             />
           </div>
 
-          {/* File Upload */}
+          {/* Submission Type Selector */}
           <div className="space-y-2">
             <Label>
-              Evidence File <span className="text-red-500">*</span>
+              Evidence Type <span className="text-red-500">*</span>
             </Label>
-            <Card
-              className={`border-2 border-dashed p-4 transition-colors cursor-pointer ${
-                fileState.isDragging
-                  ? "border-primary bg-primary/5"
-                  : "border-slate-300 hover:border-slate-400"
-              } ${errors.file ? "border-red-500" : ""}`}
-              onDragEnter={fileActions.handleDragEnter}
-              onDragLeave={fileActions.handleDragLeave}
-              onDragOver={fileActions.handleDragOver}
-              onDrop={fileActions.handleDrop}
-            >
-              <div className="flex flex-col items-center justify-center space-y-2 text-center">
-                <Upload className="h-6 w-6 text-slate-600" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">
-                    Drag and drop file here, or click to browse
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    PDF, DOCX, XLSX, PNG, JPG, ZIP (max 10MB)
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={fileActions.openFileDialog}
-                >
-                  Browse Files
-                </Button>
-                <input {...fileActions.getInputProps()} className="hidden" />
-              </div>
-            </Card>
-
-            {/* File errors */}
-            {fileState.errors.length > 0 && (
-              <div className="rounded-lg bg-destructive/10 p-3">
-                {fileState.errors.map((error, idx) => (
-                  <p key={idx} className="text-sm text-destructive">
-                    {error}
-                  </p>
-                ))}
-              </div>
-            )}
-
-            {/* Uploaded file display */}
-            {fileState.files.length > 0 && (
-              <Card className="bg-muted/50 p-3">
-                <div className="flex items-center gap-3">
-                  <FileIcon className="h-4 w-4 shrink-0 text-slate-600" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {fileState.files[0].file instanceof File
-                        ? fileState.files[0].file.name
-                        : fileState.files[0].file.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {fileState.files[0].file instanceof File
-                        ? formatBytes(fileState.files[0].file.size)
-                        : formatBytes(fileState.files[0].file.size)}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 shrink-0"
-                    onClick={() => fileActions.removeFile(fileState.files[0].id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
-            )}
-
-            {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant={submissionType === "file" ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setSubmissionType("file");
+                  const newErrors = { ...errors };
+                  delete newErrors.fileLink;
+                  delete newErrors.file;
+                  setErrors(newErrors);
+                }}
+                className="gap-2"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Upload File
+              </Button>
+              <Button
+                type="button"
+                variant={submissionType === "link" ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setSubmissionType("link");
+                  const newErrors = { ...errors };
+                  delete newErrors.file;
+                  delete newErrors.fileLink;
+                  setErrors(newErrors);
+                }}
+                className="gap-2"
+              >
+                <Link2 className="h-4 w-4" />
+                Provide Link
+              </Button>
+            </div>
           </div>
+
+          {/* File Upload Option */}
+          {submissionType === "file" && (
+            <div className="space-y-2">
+              <Label>
+                Evidence Files <span className="text-red-500">*</span>
+              </Label>
+              <UploadField
+                label=""
+                isLoading={uploading}
+                required={false}
+                handleFile={handleFileUpload}
+                acceptedFiles={{
+                  ...ACCEPTABLE_FILE_TYPES.pdf,
+                  ...ACCEPTABLE_FILE_TYPES.word,
+                  ...ACCEPTABLE_FILE_TYPES.images,
+                  ...ACCEPTABLE_FILE_TYPES.excel
+                }}
+              />
+
+              {/* Uploaded files list */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-600">
+                    Uploaded Files ({uploadedFiles.length})
+                  </p>
+                  {uploadedFiles.map((uploadedFile, index) => (
+                    <div
+                      key={index}
+                      className="rounded-lg border border-green-200 bg-green-50 p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className="h-5 w-5 shrink-0 text-green-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-green-900 truncate">
+                            {uploadedFile.file.name}
+                          </p>
+                          <p className="text-xs text-green-700">
+                            {(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeUploadedFile(index)}
+                          disabled={uploading}
+                          className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50"
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
+            </div>
+          )}
+
+          {/* Link Option */}
+          {submissionType === "link" && (
+            <div className="space-y-2">
+              <Label htmlFor="evidence_link">
+                Evidence Link <span className="text-red-500">*</span>
+              </Label>
+              <input
+                id="evidence_link"
+                type="url"
+                placeholder="e.g., https://example.com/evidence or https://drive.google.com/file/..."
+                value={fileLink}
+                onChange={(e) => setFileLink(e.target.value)}
+                className={`w-full rounded-md border px-3 py-2 text-sm ${
+                  errors.fileLink ? "border-red-500" : "border-input"
+                }`}
+              />
+              {errors.fileLink && <p className="text-sm text-red-500">{errors.fileLink}</p>}
+              <p className="text-xs text-muted-foreground">
+                Provide a URL to an external document, Google Drive file, or other resource
+              </p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
