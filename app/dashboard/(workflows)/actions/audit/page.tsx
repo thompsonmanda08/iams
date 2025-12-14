@@ -61,7 +61,7 @@ export default async function FindingActionsPage({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <FindingActionsPageLayout initialActions={findingActions} />
+        <FindingActionsPageLayout initialActions={findingActions} pagination={pagination} />
       </div>
     </div>
   );

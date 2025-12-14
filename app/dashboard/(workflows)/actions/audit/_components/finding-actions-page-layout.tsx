@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,10 +16,13 @@ import type { FindingAction } from "@/lib/types/audit-types";
 import { FindingActionsTable } from "./finding-actions-table";
 import Search from "@/components/ui/search-field";
 import { SelectField } from "@/components/ui/select-field";
+import { CustomPagination } from "@/components/ui/pagination";
+import { Pagination } from "@/lib/types";
 import { ClipboardList, ListTodo } from "lucide-react";
 
 interface FindingActionsPageLayoutProps {
   initialActions: FindingAction[];
+  pagination: Pagination;
 }
 
 type ActionStatus =
@@ -38,7 +42,12 @@ const ACTION_STATUSES: { value: ActionStatus; label: string }[] = [
   { value: "REJECTED", label: "Rejected" }
 ];
 
-export function FindingActionsPageLayout({ initialActions = [] }: FindingActionsPageLayoutProps) {
+export function FindingActionsPageLayout({
+  initialActions = [],
+  pagination
+}: FindingActionsPageLayoutProps) {
+  const router = useRouter();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ActionStatus | "ALL">("ALL");
   const [activeTab, setActiveTab] = useState<"my-actions" | "all-actions">("my-actions");
@@ -64,7 +73,12 @@ export function FindingActionsPageLayout({ initialActions = [] }: FindingActions
     }
 
     return filtered;
-  }, [initialActions, searchTerm, statusFilter, activeTab]);
+  }, [initialActions, searchTerm, statusFilter]);
+
+  const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
+    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
+    router.push(`?page=${pageConfig.page}&page_size=${pageSize}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -138,6 +152,14 @@ export function FindingActionsPageLayout({ initialActions = [] }: FindingActions
           <FindingActionsTable actions={filteredActions} />
         </TabsContent>
       </Tabs>
+
+      {/* Pagination */}
+      <CustomPagination
+        pagination={pagination}
+        updatePagination={handlePaginationChange}
+        showDetails={true}
+        allowSetPageSize={true}
+      />
     </div>
   );
 }
