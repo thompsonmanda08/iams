@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -25,35 +25,58 @@ interface SubmitEvidenceDialogProps {
 
 type EvidenceSubmissionType = "file" | "link";
 
+interface EvidencePayload {
+  finding_action_id: string;
+  title: string;
+  description: string;
+  evidence_summary: string;
+  file_link: string;
+}
+
 export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvidenceDialogProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [submissionType, setSubmissionType] = useState<EvidenceSubmissionType>("file");
-  const [fileLink, setFileLink] = useState("");
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ file: File; url: string }>>([]);
+  const [uploadedFile, setUploadedFile] = useState<{ file: File; url: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [payload, setPayload] = useState<EvidencePayload>({
+    finding_action_id: actionId,
+    title: "",
+    description: "",
+    evidence_summary: "",
+    file_link: ""
+  });
 
   const createEvidenceMutation = useCreateFindingActionEvidenceMutation();
+
+  const updatePayload = (field: keyof EvidencePayload, value: string) => {
+    setPayload((prev) => {
+      const updated = { ...prev, [field]: value };
+      // Keep evidence_summary in sync with description
+      if (field === "description") {
+        updated.evidence_summary = value || updated.title;
+      }
+      return updated;
+    });
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) {
+    if (!payload.title.trim()) {
       newErrors.title = "Title is required";
     }
 
     if (submissionType === "file") {
-      if (uploadedFiles.length === 0) {
-        newErrors.file = "Please upload at least one file";
+      if (!uploadedFile) {
+        newErrors.file = "Please upload a file";
       }
     } else {
-      if (!fileLink.trim()) {
+      if (!payload.file_link.trim()) {
         newErrors.fileLink = "Please provide a link";
       } else {
         // Basic URL validation
         try {
-          new URL(fileLink);
+          new URL(payload.file_link);
         } catch {
           newErrors.fileLink = "Please provide a valid URL";
         }
@@ -72,8 +95,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
         const response = await uploadFile(file);
 
         if (response.success && response.data?.file_url) {
-          // Add to uploaded files list
-          setUploadedFiles((prev) => [...prev, { file, url: response.data.file_url }]);
+          setUploadedFile({ file, url: response.data.file_url });
+          updatePayload("file_link", response.data.file_url);
 
           // Clear file error when file is added
           const newErrors = { ...errors };
@@ -90,11 +113,24 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
       } finally {
         setUploading(false);
       }
+    } else {
+      setUploadedFile(null);
+      updatePayload("file_link", "");
     }
   };
 
-  const removeUploadedFile = (index: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  const resetForm = () => {
+    setPayload({
+      finding_action_id: actionId,
+      title: "",
+      description: "",
+      evidence_summary: "",
+      file_link: ""
+    });
+    setUploadedFile(null);
+    setSubmissionType("file");
+    setErrors({});
+    setUploading(false);
   };
 
   const handleSubmit = async () => {
@@ -102,59 +138,26 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
       return;
     }
 
-    if (submissionType === "file") {
-      if (uploadedFiles.length === 0) {
-        setErrors({ file: "No files uploaded" });
-        return;
+    // Ensure evidence_summary is set
+    const finalPayload = {
+      ...payload,
+      evidence_summary: payload.description.trim() || payload.title
+    };
+
+    createEvidenceMutation.mutate(finalPayload, {
+      onSuccess: () => {
+        resetForm();
+        onOpenChange(false);
       }
+    });
+  };
 
-      // Submit each file as a separate evidence record
-      uploadedFiles.forEach((uploadedFile, index) => {
-        const payload = {
-          finding_action_id: actionId,
-          title,
-          description: description.trim() || title,
-          evidence_summary: description.trim() || title,
-          file_link: uploadedFile.url
-        };
-
-        createEvidenceMutation.mutate(payload, {
-          onSuccess: () => {
-            // Reset form after last file is submitted
-            if (index === uploadedFiles.length - 1) {
-              resetForm();
-            }
-          }
-        });
-      });
-    } else {
-      // Submit with link
-      const payload = {
-        finding_action_id: actionId,
-        title,
-        description: description.trim() || title,
-        evidence_summary: description.trim() || title,
-        file_link: fileLink
-      };
-
-      createEvidenceMutation.mutate(payload, {
-        onSuccess: () => {
-          resetForm();
-        }
-      });
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      resetForm();
     }
-  };
-
-  const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setFileLink("");
-    setSubmissionType("file");
-    setUploadedFiles([]);
-    setErrors({});
-    setUploading(false);
-    onOpenChange(false);
-  };
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -162,7 +165,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
         <DialogHeader>
           <DialogTitle>Submit Evidence</DialogTitle>
           <DialogDescription>
-            Upload supporting documents or provide a link to demonstrate progress on this action
+            Upload supporting documents or provide a link to demonstrate progress.
           </DialogDescription>
         </DialogHeader>
 
@@ -174,8 +177,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
             label="Title"
             required
             placeholder="e.g., Policy Document, Test Results..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={payload.title}
+            onChange={(e) => updatePayload("title", e.target.value)}
             className={`w-full rounded-md border px-3 py-2 text-sm ${
               errors.title ? "border-red-500" : "border-input"
             }`}
@@ -188,8 +191,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
             id="evidence_description"
             label="Description"
             placeholder="Describe the evidence or findings..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={payload.description}
+            onChange={(e) => updatePayload("description", e.target.value)}
             rows={3}
           />
 
@@ -242,62 +245,65 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
           {/* File Upload Option */}
           {submissionType === "file" && (
             <div className="space-y-2">
-              <UploadField
-                label="Evidence Files"
-                isLoading={uploading}
-                required
-                handleFile={handleFileUpload}
-                acceptedFiles={{
-                  ...ACCEPTABLE_FILE_TYPES.pdf,
-                  ...ACCEPTABLE_FILE_TYPES.word,
-                  ...ACCEPTABLE_FILE_TYPES.images,
-                  ...ACCEPTABLE_FILE_TYPES.excel
-                }}
-              />
-
-              {/* Uploaded files list */}
-              {uploadedFiles.length > 0 && (
+              {!uploadedFile ? (
+                <UploadField
+                  label="Evidence File"
+                  isLoading={uploading}
+                  required
+                  handleFile={handleFileUpload}
+                  acceptedFiles={{
+                    ...ACCEPTABLE_FILE_TYPES.pdf,
+                    ...ACCEPTABLE_FILE_TYPES.word,
+                    ...ACCEPTABLE_FILE_TYPES.images,
+                    ...ACCEPTABLE_FILE_TYPES.excel
+                  }}
+                />
+              ) : (
                 <div className="space-y-2">
-                  <p className="text-muted-foreground/70 text-xs font-medium">
-                    Uploaded Files ({uploadedFiles.length})
-                  </p>
-                  {uploadedFiles.map((uploadedFile, index) => (
-                    <div key={index} className="rounded-lg border border-green-200 bg-green-50 p-3">
-                      <div className="flex items-center gap-3">
-                        <svg
-                          className="h-5 w-5 shrink-0 text-green-600"
-                          fill="currentColor"
-                          viewBox="0 0 20 20">
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                    <div className="flex items-center gap-3">
+                      <svg
+                        className="h-5 w-5 shrink-0 text-green-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-green-900">
+                          {uploadedFile.file.name}
+                        </p>
+                        <p className="text-xs text-green-700">
+                          {(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleFileUpload(undefined)}
+                        disabled={uploading}
+                        className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50">
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                             clipRule="evenodd"
                           />
                         </svg>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-green-900">
-                            {uploadedFile.file.name}
-                          </p>
-                          <p className="text-xs text-green-700">
-                            {(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeUploadedFile(index)}
-                          disabled={uploading}
-                          className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50">
-                          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      </div>
+                      </button>
                     </div>
-                  ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleFileUpload(undefined)}
+                    disabled={uploading}
+                    className="w-full">
+                    Change File
+                  </Button>
                 </div>
               )}
 
@@ -315,8 +321,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
                 id="evidence_link"
                 type="url"
                 placeholder="e.g., https://example.com/evidence or https://drive.google.com/file/..."
-                value={fileLink}
-                onChange={(e) => setFileLink(e.target.value)}
+                value={payload.file_link}
+                onChange={(e) => updatePayload("file_link", e.target.value)}
                 className={`w-full rounded-md border px-3 py-2 text-sm ${
                   errors.fileLink ? "border-red-500" : "border-input"
                 }`}
