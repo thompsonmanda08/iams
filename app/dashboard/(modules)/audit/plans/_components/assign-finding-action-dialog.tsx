@@ -87,13 +87,17 @@ export function AssignFindingActionDialog({
       return;
     }
 
+    // Format due_date as YYYY-MM-DD
+    const dueDate = formData.due_date!;
+    const formattedDueDate = dueDate.toISOString().split('T')[0];
+
     createActionMutation.mutate(
       {
         finding_id: finding.id,
         action_description: formData.action_description,
         assigned_to: formData.assigned_to,
         reviewer_id: formData.reviewer_id,
-        due_date: formData.due_date!.toISOString()
+        due_date: formattedDueDate
       },
       {
         onSuccess: () => {
