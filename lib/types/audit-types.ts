@@ -1314,12 +1314,16 @@ export interface UpdateFindingActionInput {
  */
 export interface FindingActionEvidence {
   id: string;
+  organization_id: string;
   finding_action_id: string;
-  title: string;
-  description?: string;
-  file_link?: string;
-  submission_date: string;
+  evidence_summary?: string;
+  evidence_file_url?: string;
+  evidence_file_name?: string;
+  evidence_file_type?: string;
+  evidence_file_size?: number;
   submitted_by: string;
+  submitted_at: string;
+  status?: string;
   created_at: string;
   updated_at: string;
 

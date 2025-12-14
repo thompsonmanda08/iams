@@ -126,7 +126,7 @@ export function ReviewEvidenceDialog({
               <SelectContent>
                 {evidence.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    {item.title}
+                    {item.evidence_file_name || item.evidence_summary || `Evidence #${item.id.slice(0, 8)}`}
                   </SelectItem>
                 ))}
               </SelectContent>

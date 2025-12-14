@@ -161,7 +161,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="">
         <DialogHeader>
           <DialogTitle>Submit Evidence</DialogTitle>
           <DialogDescription>
