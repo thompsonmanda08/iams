@@ -80,14 +80,15 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
         {label && (
           <label
             className={cn(
-              "mb-0.5 pl-1 text-sm font-medium text-nowrap",
+              "mb-0.5 pl-1 text-sm font-medium truncate",
               {
                 "text-red-500": onError || isInvalid,
                 "opacity-50": isDisabled || props?.disabled
               },
               classNames?.label
             )}
-            htmlFor={name}>
+            htmlFor={name}
+            title={label}>
             {label} {props?.required && <span className="font-bold text-red-500"> *</span>}
           </label>
         )}

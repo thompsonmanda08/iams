@@ -95,11 +95,12 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
         )}>
         {label && (
           <label
-            className={cn("dark:text-foreground mb-0.5 pl-1 text-sm font-medium text-nowrap", {
+            className={cn("dark:text-foreground mb-0.5 pl-1 text-sm font-medium truncate", {
               "text-red-500": onError || isInvalid,
               "opacity-80": isDisabled || props?.disabled
             })}
-            htmlFor={name}>
+            htmlFor={name}
+            title={label}>
             {label} {props?.required && <span className="font-bold text-red-500"> *</span>}
           </label>
         )}
