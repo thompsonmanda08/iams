@@ -43,6 +43,10 @@ export function SubmitEvidenceDialog({
       newErrors.title = "Title is required";
     }
 
+    if (!formData.file_link.trim()) {
+      newErrors.file_link = "File link is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -126,17 +130,23 @@ export function SubmitEvidenceDialog({
 
           {/* File Link */}
           <div className="space-y-2">
-            <Label htmlFor="evidence_file">File Link</Label>
+            <Label htmlFor="evidence_file">
+              File Link <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="evidence_file"
               placeholder="https://example.com/file"
               type="url"
               value={formData.file_link}
               onChange={(e) => handleInputChange("file_link", e.target.value)}
+              className={errors.file_link ? "border-red-500" : ""}
             />
-            <p className="text-muted-foreground text-xs">
-              Provide a URL to the evidence file or document
-            </p>
+            {errors.file_link && <p className="text-sm text-red-500">{errors.file_link}</p>}
+            {!errors.file_link && (
+              <p className="text-muted-foreground text-xs">
+                Provide a URL to the evidence file or document
+              </p>
+            )}
           </div>
 
           {/* Actions */}
