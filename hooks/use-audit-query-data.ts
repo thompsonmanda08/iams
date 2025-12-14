@@ -754,7 +754,8 @@ export const useAnnualAuditPlanItems = (
   filters?: {
     page?: number;
     page_size?: number;
-  }
+  },
+  initialData?: any
 ) => {
   return useQuery({
     queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, registerId, "items", filters],
@@ -763,6 +764,7 @@ export const useAnnualAuditPlanItems = (
       return response.data;
     },
     enabled: !!registerId,
+    initialData,
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };

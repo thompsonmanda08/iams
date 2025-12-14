@@ -16,35 +16,35 @@
 
 /** Core status values used across all entities */
 export const STATUS_VALUES = {
-  DRAFT: 'DRAFT',
-  PENDING: 'PENDING',
-  SUBMITTED: 'SUBMITTED',
-  IN_REVIEW: 'IN_REVIEW',
-  IN_PROGRESS: 'IN_PROGRESS',
-  UNDER_REVIEW: 'UNDER_REVIEW',
-  APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED',
-  ON_HOLD: 'ON_HOLD',
-  OPEN: 'OPEN',
-  COMPLETED: 'COMPLETED',
-  CLOSED: 'CLOSED',
-  ARCHIVED: 'ARCHIVED',
-  HIGH:'HIGH',
-  MEDIUM : 'MEDIUM',
-  LOW: 'LOW',
-  ABOVE: 'ABOVE',
-  BELOW: 'BELOW',
-  CRITICAL: 'CRITICAL'
+  DRAFT: "DRAFT",
+  PENDING: "PENDING",
+  SUBMITTED: "SUBMITTED",
+  IN_REVIEW: "IN_REVIEW",
+  IN_PROGRESS: "IN_PROGRESS",
+  UNDER_REVIEW: "UNDER_REVIEW",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+  ON_HOLD: "ON_HOLD",
+  OPEN: "OPEN",
+  COMPLETED: "COMPLETED",
+  CLOSED: "CLOSED",
+  ARCHIVED: "ARCHIVED",
+  HIGH: "HIGH",
+  MEDIUM: "MEDIUM",
+  LOW: "LOW",
+  ABOVE: "ABOVE",
+  BELOW: "BELOW",
+  CRITICAL: "CRITICAL"
 } as const;
 
-export type StandardStatus = typeof STATUS_VALUES[keyof typeof STATUS_VALUES];
+export type StandardStatus = (typeof STATUS_VALUES)[keyof typeof STATUS_VALUES];
 
 // ============================================================================
 // COLOR & STYLE CONFIGURATION
 // ============================================================================
 
-export type BadgeColor = 'success' | 'warning' | 'danger' | 'info' | 'default';
-export type BadgeStyle = 'solid' | 'outline';
+export type BadgeColor = "success" | "warning" | "danger" | "info" | "default";
+export type BadgeStyle = "solid" | "outline";
 
 interface StatusConfig {
   id: StandardStatus;
@@ -59,177 +59,176 @@ interface StatusConfig {
 /** Comprehensive status configuration with display properties */
 export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
   DRAFT: {
-    id: 'DRAFT',
-    label: 'Draft',
-    description: 'Entity is being prepared and not yet submitted for review',
-    color: 'default',
-    style: 'outline',
-    hexColor: '#6C757D',
+    id: "DRAFT",
+    label: "Draft",
+    description: "Entity is being prepared and not yet submitted for review",
+    color: "default",
+    style: "outline",
+    hexColor: "#6C757D",
     sortOrder: 1
   },
   PENDING: {
-    id: 'PENDING',
-    label: 'Pending',
-    description: 'Awaiting action or approval',
-    color: 'warning',
-    style: 'outline',
-    hexColor: '#FFC107',
+    id: "PENDING",
+    label: "Pending",
+    description: "Awaiting action or approval",
+    color: "warning",
+    style: "outline",
+    hexColor: "#FFC107",
     sortOrder: 2
   },
   SUBMITTED: {
-    id: 'SUBMITTED',
-    label: 'Submitted',
-    description: 'Entity has been submitted for approval',
-    color: 'info',
-    style: 'outline',
-    hexColor: '#0D6EFD',
+    id: "SUBMITTED",
+    label: "Submitted",
+    description: "Entity has been submitted for approval",
+    color: "info",
+    style: "outline",
+    hexColor: "#0D6EFD",
     sortOrder: 3
   },
   IN_REVIEW: {
-    id: 'IN_REVIEW',
-    label: 'In Review',
-    description: 'Entity is under review by the approval team',
-    color: 'info',
-    style: 'outline',
-    hexColor: '#0DCAF0',
+    id: "IN_REVIEW",
+    label: "In Review",
+    description: "Entity is under review by the approval team",
+    color: "info",
+    style: "outline",
+    hexColor: "#0DCAF0",
     sortOrder: 4
   },
   IN_PROGRESS: {
-    id: 'IN_PROGRESS',
-    label: 'In Progress',
-    description: 'Action is being worked on by assigned user',
-    color: 'info',
-    style: 'outline',
-    hexColor: '#0D6EFD',
+    id: "IN_PROGRESS",
+    label: "In Progress",
+    description: "Action is being worked on by assigned user",
+    color: "info",
+    style: "outline",
+    hexColor: "#0D6EFD",
     sortOrder: 5
   },
   UNDER_REVIEW: {
-    id: 'UNDER_REVIEW',
-    label: 'Under Review',
-    description: 'Evidence is under review by the reviewer',
-    color: 'warning',
-    style: 'outline',
-    hexColor: '#FFC107',
+    id: "UNDER_REVIEW",
+    label: "Under Review",
+    description: "Evidence is under review by the reviewer",
+    color: "warning",
+    style: "outline",
+    hexColor: "#FFC107",
     sortOrder: 6
   },
   APPROVED: {
-    id: 'APPROVED',
-    label: 'Approved',
-    description: 'Entity has been approved and is active',
-    color: 'success',
-    style: 'solid',
-    hexColor: '#198754',
+    id: "APPROVED",
+    label: "Approved",
+    description: "Entity has been approved and is active",
+    color: "success",
+    style: "solid",
+    hexColor: "#198754",
     sortOrder: 5
   },
   REJECTED: {
-    id: 'REJECTED',
-    label: 'Rejected',
-    description: 'Entity was rejected and needs revision',
-    color: 'danger',
-    style: 'solid',
-    hexColor: '#DC3545',
+    id: "REJECTED",
+    label: "Rejected",
+    description: "Entity was rejected and needs revision",
+    color: "danger",
+    style: "solid",
+    hexColor: "#DC3545",
     sortOrder: 6
   },
   ON_HOLD: {
-    id: 'ON_HOLD',
-    label: 'On Hold',
-    description: 'Entity is paused pending other conditions',
-    color: 'warning',
-    style: 'outline',
-    hexColor: '#FFC107',
+    id: "ON_HOLD",
+    label: "On Hold",
+    description: "Entity is paused pending other conditions",
+    color: "warning",
+    style: "outline",
+    hexColor: "#FFC107",
     sortOrder: 7
   },
   OPEN: {
-    id: 'OPEN',
-    label: 'Open',
-    description: 'Entity is active and open (legacy status)',
-    color: 'success',
-    style: 'solid',
-    hexColor: '#28A745',
+    id: "OPEN",
+    label: "Open",
+    description: "Entity is active and open (legacy status)",
+    color: "success",
+    style: "solid",
+    hexColor: "#28A745",
     sortOrder: 8
   },
   COMPLETED: {
-    id: 'COMPLETED',
-    label: 'Completed',
-    description: 'Entity execution is complete',
-    color: 'success',
-    style: 'solid',
-    hexColor: '#20C997',
+    id: "COMPLETED",
+    label: "Completed",
+    description: "Entity execution is complete",
+    color: "success",
+    style: "solid",
+    hexColor: "#20C997",
     sortOrder: 9
   },
   CLOSED: {
-    id: 'CLOSED',
-    label: 'Closed',
-    description: 'Entity is closed and no longer active (legacy status)',
-    color: 'default',
-    style: 'outline',
-    hexColor: '#6C757D',
+    id: "CLOSED",
+    label: "Closed",
+    description: "Entity is closed and no longer active (legacy status)",
+    color: "default",
+    style: "outline",
+    hexColor: "#6C757D",
     sortOrder: 10
   },
   ARCHIVED: {
-    id: 'ARCHIVED',
-    label: 'Archived',
-    description: 'Entity has been archived and is read-only',
-    color: 'default',
-    style: 'outline',
-    hexColor: '#495057',
+    id: "ARCHIVED",
+    label: "Archived",
+    description: "Entity has been archived and is read-only",
+    color: "default",
+    style: "outline",
+    hexColor: "#495057",
     sortOrder: 11
   },
   HIGH: {
-    id: 'HIGH',
-    label: 'High',
-    description: 'Rating High and is read-only',
-    color: 'danger',
-    style: 'solid',
-    hexColor: '#DC3545',
+    id: "HIGH",
+    label: "High",
+    description: "Rating High and is read-only",
+    color: "danger",
+    style: "solid",
+    hexColor: "#DC3545",
     sortOrder: 12
   },
   MEDIUM: {
-    id: 'MEDIUM',
-    label: 'Medium',
-    description: 'Rating Medium and is read-only',
-    color: 'warning',
-    style: 'solid',
-    hexColor: '#FFC107',
+    id: "MEDIUM",
+    label: "Medium",
+    description: "Rating Medium and is read-only",
+    color: "warning",
+    style: "solid",
+    hexColor: "#FFC107",
     sortOrder: 13
   },
   LOW: {
-    id: 'LOW',
-    label: 'Low',
-    description: 'Rating Low and is read-only',
-    color: 'success',
-    style: 'solid',
-    hexColor: '#28A745',
+    id: "LOW",
+    label: "Low",
+    description: "Rating Low and is read-only",
+    color: "success",
+    style: "solid",
+    hexColor: "#28A745",
     sortOrder: 14
   },
   BELOW: {
-    id: 'BELOW',
-    label: 'Below',
-    description: 'Risk Appetite Status Below and is read-only',
-    color: 'success',
-    style: 'solid',
-    hexColor: '#28A745',
+    id: "BELOW",
+    label: "Below",
+    description: "Risk Appetite Status Below and is read-only",
+    color: "success",
+    style: "solid",
+    hexColor: "#28A745",
     sortOrder: 14
   },
   ABOVE: {
-    id: 'ABOVE',
-    label: 'Above',
-    description: 'Risk Appetite Status Above and is read-only',
-    color: 'danger',
-    style: 'solid',
-    hexColor: '#DC3545',
+    id: "ABOVE",
+    label: "Above",
+    description: "Risk Appetite Status Above and is read-only",
+    color: "danger",
+    style: "solid",
+    hexColor: "#DC3545",
     sortOrder: 12
   },
   CRITICAL: {
-    id: 'CRITICAL',
-    label: 'Critical',
-    description: 'Incident severity level Critical and is read-only',
-    color: 'danger',
-    style: 'solid',
-    hexColor: '#DC3545',
+    id: "CRITICAL",
+    label: "Critical",
+    description: "Incident severity level Critical and is read-only",
+    color: "danger",
+    style: "solid",
+    hexColor: "#DC3545",
     sortOrder: 13
-  },
-  
+  }
 };
 
 // ============================================================================
@@ -246,239 +245,269 @@ interface EntityStatusRules {
 export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
   // ========== AUDIT STATUSES ==========
   audit: {
-    allowedStatuses: ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'APPROVED', 'REJECTED', 'COMPLETED', 'ARCHIVED'],
-    defaultStatus: 'DRAFT',
+    allowedStatuses: [
+      "DRAFT",
+      "SUBMITTED",
+      "IN_REVIEW",
+      "APPROVED",
+      "REJECTED",
+      "COMPLETED",
+      "ARCHIVED"
+    ],
+    defaultStatus: "DRAFT",
     transitions: {
-      DRAFT: ['SUBMITTED', 'REJECTED'],
-      PENDING: ['SUBMITTED'],
-      SUBMITTED: ['IN_REVIEW', 'DRAFT'],
-      IN_REVIEW: ['APPROVED', 'REJECTED'],
-      APPROVED: ['COMPLETED', 'ARCHIVED'],
-      REJECTED: ['DRAFT'],
+      DRAFT: ["SUBMITTED", "REJECTED"],
+      PENDING: ["SUBMITTED"],
+      SUBMITTED: ["IN_REVIEW", "DRAFT"],
+      IN_REVIEW: ["APPROVED", "REJECTED"],
+      APPROVED: ["COMPLETED", "ARCHIVED"],
+      REJECTED: ["DRAFT"],
       ON_HOLD: [],
       OPEN: [],
-      COMPLETED: ['ARCHIVED'],
+      COMPLETED: ["ARCHIVED"],
       CLOSED: [],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== AUDIT PLAN STATUSES ==========
   auditPlan: {
-    allowedStatuses: ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'APPROVED', 'REJECTED', 'COMPLETED', 'ARCHIVED'],
-    defaultStatus: 'DRAFT',
+    allowedStatuses: [
+      "DRAFT",
+      "SUBMITTED",
+      "IN_REVIEW",
+      "APPROVED",
+      "REJECTED",
+      "COMPLETED",
+      "ARCHIVED"
+    ],
+    defaultStatus: "DRAFT",
     transitions: {
-      DRAFT: ['SUBMITTED', 'REJECTED'],
-      PENDING: ['SUBMITTED'],
-      SUBMITTED: ['IN_REVIEW', 'DRAFT'],
-      IN_REVIEW: ['APPROVED', 'REJECTED'],
-      APPROVED: ['COMPLETED', 'ARCHIVED'],
-      REJECTED: ['DRAFT'],
+      DRAFT: ["SUBMITTED", "REJECTED"],
+      PENDING: ["SUBMITTED"],
+      SUBMITTED: ["IN_REVIEW", "DRAFT"],
+      IN_REVIEW: ["APPROVED", "REJECTED"],
+      APPROVED: ["COMPLETED", "ARCHIVED"],
+      REJECTED: ["DRAFT"],
       ON_HOLD: [],
       OPEN: [],
-      COMPLETED: ['ARCHIVED'],
+      COMPLETED: ["ARCHIVED"],
       CLOSED: [],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
-
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== FINDING STATUSES ==========
   finding: {
-    allowedStatuses: ['OPEN', 'PENDING', 'IN_REVIEW', 'COMPLETED', 'CLOSED', 'ARCHIVED'],
-    defaultStatus: 'OPEN',
+    allowedStatuses: ["OPEN", "PENDING", "IN_REVIEW", "COMPLETED", "CLOSED", "ARCHIVED"],
+    defaultStatus: "OPEN",
     transitions: {
       DRAFT: [],
-      PENDING: ['IN_REVIEW', 'CLOSED'],
+      PENDING: ["IN_REVIEW", "CLOSED"],
       SUBMITTED: [],
-      IN_REVIEW: ['COMPLETED', 'REJECTED'],
+      IN_REVIEW: ["COMPLETED", "REJECTED"],
       APPROVED: [],
       REJECTED: [],
-      ON_HOLD: ['COMPLETED'],
-      OPEN: ['PENDING', 'COMPLETED', 'CLOSED'],
-      COMPLETED: ['CLOSED', 'ARCHIVED'],
-      CLOSED: ['ARCHIVED'],
+      ON_HOLD: ["COMPLETED"],
+      OPEN: ["PENDING", "COMPLETED", "CLOSED"],
+      COMPLETED: ["CLOSED", "ARCHIVED"],
+      CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== RISK STATUSES ==========
   risk: {
-    allowedStatuses: ['DRAFT', 'OPEN', 'PENDING', 'APPROVED', 'CLOSED', 'ON_HOLD'],
-    defaultStatus: 'DRAFT',
+    allowedStatuses: ["DRAFT", "OPEN", "PENDING", "APPROVED", "CLOSED", "ON_HOLD"],
+    defaultStatus: "DRAFT",
     transitions: {
-      DRAFT: ['OPEN', 'REJECTED'],
-      PENDING: ['OPEN', 'APPROVED'],
-      SUBMITTED: ['OPEN'],
-      IN_REVIEW: ['APPROVED', 'REJECTED'],
-      APPROVED: ['OPEN', 'ON_HOLD', 'CLOSED'],
-      REJECTED: ['DRAFT'],
-      ON_HOLD: ['OPEN', 'CLOSED'],
-      OPEN: ['PENDING', 'ON_HOLD', 'CLOSED'],
+      DRAFT: ["OPEN", "REJECTED"],
+      PENDING: ["OPEN", "APPROVED"],
+      SUBMITTED: ["OPEN"],
+      IN_REVIEW: ["APPROVED", "REJECTED"],
+      APPROVED: ["OPEN", "ON_HOLD", "CLOSED"],
+      REJECTED: ["DRAFT"],
+      ON_HOLD: ["OPEN", "CLOSED"],
+      OPEN: ["PENDING", "ON_HOLD", "CLOSED"],
       COMPLETED: [],
-      CLOSED: ['ARCHIVED'],
+      CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== RISK ACTION STATUSES ==========
   riskAction: {
-    allowedStatuses: ['DRAFT', 'PENDING', 'IN_REVIEW', 'APPROVED', 'COMPLETED', 'CLOSED', 'REJECTED'],
-    defaultStatus: 'DRAFT',
+    allowedStatuses: [
+      "DRAFT",
+      "PENDING",
+      "IN_REVIEW",
+      "APPROVED",
+      "COMPLETED",
+      "CLOSED",
+      "REJECTED"
+    ],
+    defaultStatus: "DRAFT",
     transitions: {
-      DRAFT: ['PENDING', 'REJECTED'],
-      PENDING: ['IN_REVIEW', 'DRAFT'],
-      SUBMITTED: ['IN_REVIEW'],
-      IN_REVIEW: ['APPROVED', 'REJECTED'],
-      APPROVED: ['COMPLETED', 'ON_HOLD'],
-      REJECTED: ['DRAFT'],
-      ON_HOLD: ['APPROVED', 'COMPLETED'],
+      DRAFT: ["PENDING", "REJECTED"],
+      PENDING: ["IN_REVIEW", "DRAFT"],
+      SUBMITTED: ["IN_REVIEW"],
+      IN_REVIEW: ["APPROVED", "REJECTED"],
+      APPROVED: ["COMPLETED", "ON_HOLD"],
+      REJECTED: ["DRAFT"],
+      ON_HOLD: ["APPROVED", "COMPLETED"],
       OPEN: [],
-      COMPLETED: ['CLOSED', 'ARCHIVED'],
-      CLOSED: ['ARCHIVED'],
+      COMPLETED: ["CLOSED", "ARCHIVED"],
+      CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== TASK STATUSES ==========
   task: {
-    allowedStatuses: ['PENDING', 'IN_REVIEW', 'COMPLETED', 'REJECTED', 'ON_HOLD'],
-    defaultStatus: 'PENDING',
+    allowedStatuses: ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "ON_HOLD"],
+    defaultStatus: "PENDING",
     transitions: {
       DRAFT: [],
-      PENDING: ['IN_REVIEW', 'COMPLETED', 'REJECTED'],
+      PENDING: ["IN_REVIEW", "COMPLETED", "REJECTED"],
       SUBMITTED: [],
-      IN_REVIEW: ['COMPLETED', 'REJECTED'],
+      IN_REVIEW: ["COMPLETED", "REJECTED"],
       APPROVED: [],
-      REJECTED: ['PENDING'],
-      ON_HOLD: ['PENDING', 'COMPLETED'],
+      REJECTED: ["PENDING"],
+      ON_HOLD: ["PENDING", "COMPLETED"],
       OPEN: [],
-      COMPLETED: ['ARCHIVED'],
+      COMPLETED: ["ARCHIVED"],
       CLOSED: [],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== WORKFLOW STATUSES ==========
   workflow: {
-    allowedStatuses: ['DRAFT', 'PENDING', 'OPEN', 'COMPLETED', 'CLOSED', 'ARCHIVED'],
-    defaultStatus: 'DRAFT',
+    allowedStatuses: ["DRAFT", "PENDING", "OPEN", "COMPLETED", "CLOSED", "ARCHIVED"],
+    defaultStatus: "DRAFT",
     transitions: {
-      DRAFT: ['PENDING'],
-      PENDING: ['OPEN'],
+      DRAFT: ["PENDING"],
+      PENDING: ["OPEN"],
       SUBMITTED: [],
       IN_REVIEW: [],
       APPROVED: [],
-      REJECTED: ['DRAFT'],
-      ON_HOLD: ['OPEN'],
-      OPEN: ['COMPLETED', 'ON_HOLD', 'CLOSED'],
-      COMPLETED: ['CLOSED', 'ARCHIVED'],
-      CLOSED: ['ARCHIVED'],
+      REJECTED: ["DRAFT"],
+      ON_HOLD: ["OPEN"],
+      OPEN: ["COMPLETED", "ON_HOLD", "CLOSED"],
+      COMPLETED: ["CLOSED", "ARCHIVED"],
+      CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== INCIDENT STATUSES ==========
   incident: {
-    allowedStatuses: ['PENDING', 'IN_REVIEW', 'OPEN', 'COMPLETED', 'CLOSED'],
-    defaultStatus: 'PENDING',
+    allowedStatuses: ["PENDING", "IN_REVIEW", "OPEN", "COMPLETED", "CLOSED"],
+    defaultStatus: "PENDING",
     transitions: {
       DRAFT: [],
-      PENDING: ['OPEN'],
+      PENDING: ["OPEN"],
       SUBMITTED: [],
-      IN_REVIEW: ['OPEN', 'CLOSED'],
+      IN_REVIEW: ["OPEN", "CLOSED"],
       APPROVED: [],
       REJECTED: [],
       ON_HOLD: [],
-      OPEN: ['IN_REVIEW', 'COMPLETED', 'CLOSED'],
-      COMPLETED: ['CLOSED', 'ARCHIVED'],
-      CLOSED: ['ARCHIVED'],
+      OPEN: ["IN_REVIEW", "COMPLETED", "CLOSED"],
+      COMPLETED: ["CLOSED", "ARCHIVED"],
+      CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
-   // ========== RISK MATRIX STATUSES ==========
+  // ========== RISK MATRIX STATUSES ==========
   matrix: {
-    allowedStatuses: ['PENDING', 'IN_REVIEW', 'OPEN', 'COMPLETED', 'CLOSED'],
-    defaultStatus: 'PENDING',
+    allowedStatuses: ["PENDING", "IN_REVIEW", "OPEN", "COMPLETED", "CLOSED"],
+    defaultStatus: "PENDING",
     transitions: {
       DRAFT: [],
-      PENDING: ['OPEN'],
+      PENDING: ["OPEN"],
       SUBMITTED: [],
-      IN_REVIEW: ['OPEN', 'CLOSED'],
+      IN_REVIEW: ["OPEN", "CLOSED"],
       APPROVED: [],
       REJECTED: [],
       ON_HOLD: [],
-      OPEN: ['IN_REVIEW', 'COMPLETED', 'CLOSED'],
-      COMPLETED: ['CLOSED', 'ARCHIVED'],
-      CLOSED: ['ARCHIVED'],
+      OPEN: ["IN_REVIEW", "COMPLETED", "CLOSED"],
+      COMPLETED: ["CLOSED", "ARCHIVED"],
+      CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW:[],
-      CRITICAL:[]
+      BELOW: [],
+      CRITICAL: []
     }
   },
 
   // ========== FINDING ACTION STATUSES ==========
   findingAction: {
-    allowedStatuses: ['PENDING', 'IN_PROGRESS', 'UNDER_REVIEW', 'APPROVED', 'COMPLETED', 'REJECTED'],
-    defaultStatus: 'PENDING',
+    allowedStatuses: [
+      "PENDING",
+      "IN_PROGRESS",
+      "UNDER_REVIEW",
+      "APPROVED",
+      "COMPLETED",
+      "REJECTED"
+    ],
+    defaultStatus: "PENDING",
     transitions: {
       DRAFT: [],
-      PENDING: ['IN_PROGRESS', 'REJECTED'],
+      PENDING: ["IN_PROGRESS", "REJECTED"],
       SUBMITTED: [],
       IN_REVIEW: [],
-      APPROVED: ['COMPLETED'],
+      APPROVED: ["COMPLETED"],
       REJECTED: [],
       ON_HOLD: [],
       OPEN: [],
@@ -505,7 +534,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
  * @returns Status configuration object
  */
 export function getStatusConfig(status: string): StatusConfig | null {
-  const normalizedStatus = status.toUpperCase() as StandardStatus;
+  const normalizedStatus = (status || "DRAFT").toUpperCase() as StandardStatus;
   return STANDARD_STATUSES[normalizedStatus] || null;
 }
 
@@ -526,7 +555,7 @@ export function getStatusLabel(status: string): string {
  */
 export function getStatusDescription(status: string): string {
   const config = getStatusConfig(status);
-  return config?.description || '';
+  return config?.description || "";
 }
 
 /**
@@ -536,7 +565,7 @@ export function getStatusDescription(status: string): string {
  */
 export function getStatusColor(status: string): BadgeColor {
   const config = getStatusConfig(status);
-  return config?.color || 'default';
+  return config?.color || "default";
 }
 
 /**
@@ -546,7 +575,7 @@ export function getStatusColor(status: string): BadgeColor {
  */
 export function getStatusStyle(status: string): BadgeStyle {
   const config = getStatusConfig(status);
-  return config?.style || 'outline';
+  return config?.style || "outline";
 }
 
 /**
@@ -556,7 +585,7 @@ export function getStatusStyle(status: string): BadgeStyle {
  */
 export function getStatusHexColor(status: string): string {
   const config = getStatusConfig(status);
-  return config?.hexColor || '#6C757D';
+  return config?.hexColor || "#6C757D";
 }
 
 /**
@@ -599,10 +628,7 @@ export function getDefaultStatusForEntity(entityType: string): StandardStatus | 
  * @param entityType - The entity type (e.g., 'audit', 'risk', 'task')
  * @returns Array of valid next statuses
  */
-export function getValidTransitions(
-  currentStatus: string,
-  entityType: string
-): StandardStatus[] {
+export function getValidTransitions(currentStatus: string, entityType: string): StandardStatus[] {
   const rules = ENTITY_STATUS_RULES[entityType];
   if (!rules) return [];
 
@@ -660,8 +686,8 @@ export function validateStatusTransition(
 export function normalizeStatus(status: string): StandardStatus | null {
   // Convert various formats to UPPER_SNAKE_CASE
   let normalized = status
-    .replace(/([a-z])([A-Z])/g, '$1_$2') // camelCase to snake_case
-    .replace(/-/g, '_') // kebab-case to snake_case
+    .replace(/([a-z])([A-Z])/g, "$1_$2") // camelCase to snake_case
+    .replace(/-/g, "_") // kebab-case to snake_case
     .toUpperCase();
 
   return isValidStatus(normalized) ? (normalized as StandardStatus) : null;

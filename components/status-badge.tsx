@@ -126,7 +126,7 @@ export interface StatusBadgeProps {
  * <StatusBadge status="DRAFT" className="mr-2" />
  */
 export const StatusBadge = ({
-  status,
+  status = "",
   size = "sm",
   className,
   showTooltip,

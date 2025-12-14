@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,
@@ -12,13 +11,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+import { SelectField } from "@/components/ui/select-field";
+import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import {
   useApproveFindingActionEvidenceMutation,
@@ -115,26 +109,19 @@ export function ReviewEvidenceDialog({
 
         <div className="space-y-4">
           {/* Evidence Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="evidence_select">
-              Select Evidence <span className="text-red-500">*</span>
-            </Label>
-            <Select value={formData.evidence_id} onValueChange={(value) => handleInputChange("evidence_id", value)}>
-              <SelectTrigger className={`w-full ${errors.evidence_id ? "border-red-500" : ""}`}>
-                <SelectValue placeholder="Select evidence..." />
-              </SelectTrigger>
-              <SelectContent className="max-w-sm">
-                {evidence.map((item) => (
-                  <SelectItem key={item.id} value={item.id} className="flex-wrap">
-                    <span className="break-word">
-                      {item.evidence_file_name || item.evidence_summary || `Evidence #${item.id.slice(0, 8)}`}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.evidence_id && <p className="text-sm text-red-500">{errors.evidence_id}</p>}
-          </div>
+          <SelectField
+            label="Select Evidence"
+            value={formData.evidence_id}
+            onValueChange={(value) => handleInputChange("evidence_id", value)}
+            options={evidence.map((item) => ({
+              id: item.id,
+              name: item.evidence_file_name || item.evidence_summary || `Evidence #${item.id.slice(0, 8)}`
+            }))}
+            placeholder="Select evidence..."
+            isInvalid={!!errors.evidence_id}
+            errorText={errors.evidence_id}
+            required
+          />
 
           {/* Review Status */}
           <div className="space-y-2">

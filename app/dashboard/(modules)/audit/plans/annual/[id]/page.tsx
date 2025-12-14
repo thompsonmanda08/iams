@@ -24,12 +24,14 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   }
 
   const auditPlan = (auditResponse.data || {}) as AuditPlan;
-  let planItems = [];
+  let planItems = auditPlan?.items || [];
 
   if (auditResponse.success) {
     const response = await getAnnualAuditPlanItems(planId, { page: 1, page_size: 10 });
     planItems = response?.data?.data || response?.data || [];
   }
+
+  console.log({ auditPlan });
 
   return (
     <div className="bg-background min-h-screen">
@@ -61,7 +63,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
       {/* Audit Plan Header */}
       <div className="container mx-auto space-y-6 px-4 py-6">
-        <AuditDetailClient auditPlan={auditPlan} />
+        <AuditDetailClient auditPlan={auditPlan} planItems={planItems} />
       </div>
     </div>
   );

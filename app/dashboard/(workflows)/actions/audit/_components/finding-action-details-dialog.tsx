@@ -72,6 +72,8 @@ export function FindingActionDetailsDialog({
   // Can only create reassessment if evidence exists
   const hasEvidence = evidence && evidence.length > 0;
 
+  console.log({ evidence, reviews });
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>

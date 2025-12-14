@@ -1067,6 +1067,131 @@ export interface AuditAnalytics {
 }
 
 // ============================================================================
+// ANNUAL PLAN ITEM TYPES
+// ============================================================================
+
+/**
+ * KRI Color indicator for Key Risk Indicators
+ */
+export type KRIColor = "Red" | "Amber" | "Green";
+
+/**
+ * Audit frequency options
+ */
+export type AuditFrequency = "ANNUALLY" | "SEMI_ANNUALLY" | "QUARTERLY" | "MONTHLY";
+
+/**
+ * KRI Measurement type
+ */
+export type KRIMeasurementType = "CURRENCY" | "PERCENTAGE" | "COUNT" | "SCORE";
+
+/**
+ * Universe Item - detailed audit universe item with all relationships
+ * Contains KRI information, strategic planning, and audit area details
+ */
+export interface UniverseItem {
+  id: string;
+  organization_id: string;
+  audit_universe_id: number;
+  department_id: string;
+  department_name: string;
+
+  // Strategic planning
+  strategic_pillar_id: string;
+  strategic_pillar_name: string;
+  strategic_initiative_id: string;
+  strategic_initiative_name: string;
+
+  // Audit areas
+  auditable_area_id: string;
+  auditable_area_name: string;
+  process_activity_id: string;
+  process_activity_name: string;
+
+  // Targets and indicators
+  indicative_target_id: string;
+  indicative_target_name: string;
+
+  // KRI (Key Risk Indicator) information
+  kri_id: string;
+  kri_name: string;
+  kri_average_score: number;
+  kri_measurement_type: KRIMeasurementType;
+  kri_color: KRIColor; // Red, Amber, or Green
+
+  // Configuration
+  audit_frequency: AuditFrequency;
+  include_amber_kris: boolean;
+  include_red_kris: boolean;
+  is_active: boolean;
+  sort_order: number;
+
+  // Metadata
+  created_by: string;
+  updated_by: string;
+  created_by_name: string;
+  updated_by_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Annual Plan Item - complete structure with nested universe items
+ * Represents an audit plan item within an annual audit plan
+ */
+export interface AnnualPlanItemWithDetails {
+  id: string;
+  organization_id: string;
+  register_id: string;
+  department_id: string;
+  department_name: string;
+
+  // Universe item relationships
+  universe_item_ids: string[];
+  universe_items: UniverseItem[];
+
+  // Engagement details
+  engagement_date: string; // ISO 8601 datetime
+  engagement_end_date: string | null; // ISO 8601 datetime
+  total_days: number | null;
+
+  // Assignment
+  responsible_person: string; // User ID
+  responsible_person_name: string;
+
+  // Generation tracking
+  is_generated: boolean;
+  generated_audit_plan_id: string | null;
+  date_generated: string | null;
+
+  // Status tracking
+  is_overdue: boolean;
+  last_reminder_sent_at: string | null;
+
+  // Standard audit fields
+  status?: StandardStatus;
+  title?: string;
+  audit_scope?: string;
+  management_standard?: string;
+  start_date?: string;
+  end_date?: string;
+  team_leader?: {
+    name: string;
+    email?: string;
+  };
+  audit_team_members?: Array<{
+    name: string;
+    email?: string;
+  }>;
+
+  // Metadata
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================================
 // SETTINGS TYPES
 // ============================================================================
 
