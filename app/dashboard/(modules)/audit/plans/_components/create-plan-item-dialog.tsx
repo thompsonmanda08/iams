@@ -220,7 +220,7 @@ export function CreatePlanItemDialog({
                 setError({ status: false, message: "" });
                 setFormData((c) => ({
                   ...c,
-                  engagement_date: date?.toISOString() || ""
+                  engagement_date: date ? date.toISOString().split('T')[0] : ""
                 }));
               }}
             />
@@ -237,7 +237,7 @@ export function CreatePlanItemDialog({
                 setError({ status: false, message: "" });
                 setFormData((c) => ({
                   ...c,
-                  engagement_end_date: date?.toISOString() || ""
+                  engagement_end_date: date ? date.toISOString().split('T')[0] : ""
                 }));
               }}
             />

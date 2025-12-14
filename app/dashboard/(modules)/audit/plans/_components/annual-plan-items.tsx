@@ -839,7 +839,7 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       title: formData.title,
       description: formData.description,
       ref_no: formData.ref_no,
-      audit_plan_date: formData.audit_plan_date?.toISOString() || new Date().toISOString(),
+      audit_plan_date: formData.audit_plan_date ? formData.audit_plan_date.toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
       end_date: formData.end_date?.toISOString().split("T")[0] || "",
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
