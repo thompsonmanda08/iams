@@ -123,10 +123,12 @@ export function ReviewEvidenceDialog({
               <SelectTrigger className={errors.evidence_id ? "border-red-500" : ""}>
                 <SelectValue placeholder="Select evidence..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-w-sm">
                 {evidence.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.evidence_file_name || item.evidence_summary || `Evidence #${item.id.slice(0, 8)}`}
+                  <SelectItem key={item.id} value={item.id} className="flex-wrap">
+                    <span className="break-word">
+                      {item.evidence_file_name || item.evidence_summary || `Evidence #${item.id.slice(0, 8)}`}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
