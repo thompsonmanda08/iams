@@ -68,7 +68,7 @@ export default async function ActionsPage() {
       <div className="bg-card border-b">
         <div className="container mx-auto flex justify-between px-4 py-6">
           <PageHeader
-            title="My Actions"
+            title="Risk Actions"
             description="View risks assigned to you and submit evidence of mitigation actions taken"
             icon="AlertTriangle"
           />

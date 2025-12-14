@@ -108,7 +108,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-semibold">Risk Actions</CardTitle>
+            <CardTitle className="text-xl font-semibold">Action Distribution</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
               Manage and track risk treatment actions
             </p>
