@@ -120,7 +120,7 @@ export function ReviewEvidenceDialog({
               Select Evidence <span className="text-red-500">*</span>
             </Label>
             <Select value={formData.evidence_id} onValueChange={(value) => handleInputChange("evidence_id", value)}>
-              <SelectTrigger className={errors.evidence_id ? "border-red-500" : ""}>
+              <SelectTrigger className={`w-full ${errors.evidence_id ? "border-red-500" : ""}`}>
                 <SelectValue placeholder="Select evidence..." />
               </SelectTrigger>
               <SelectContent className="max-w-sm">
@@ -141,23 +141,24 @@ export function ReviewEvidenceDialog({
             <Label className={errors.review_status ? "text-red-500" : ""}>
               Review Status <span className="text-red-500">*</span>
             </Label>
-            <RadioGroup
-              value={formData.review_status}
-              onValueChange={(value) => handleInputChange("review_status", value)}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="APPROVED" id="approved" />
-                <Label htmlFor="approved" className="font-normal cursor-pointer">
-                  Approve
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="REJECTED" id="rejected" />
-                <Label htmlFor="rejected" className="font-normal cursor-pointer">
-                  Reject
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={formData.review_status === "APPROVED" ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => handleInputChange("review_status", "APPROVED")}
+              >
+                Approve
+              </Button>
+              <Button
+                type="button"
+                variant={formData.review_status === "REJECTED" ? "destructive" : "outline"}
+                className="flex-1"
+                onClick={() => handleInputChange("review_status", "REJECTED")}
+              >
+                Reject
+              </Button>
+            </div>
             {errors.review_status && <p className="text-sm text-red-500">{errors.review_status}</p>}
           </div>
 
@@ -185,6 +186,7 @@ export function ReviewEvidenceDialog({
             </Button>
             <Button
               onClick={handleSubmit}
+              variant={formData.review_status === "REJECTED" ? "destructive" : "default"}
               disabled={approveMutation.isPending || rejectMutation.isPending}
             >
               {(approveMutation.isPending || rejectMutation.isPending) && (
