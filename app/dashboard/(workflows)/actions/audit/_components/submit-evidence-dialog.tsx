@@ -113,7 +113,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
         const payload = {
           finding_action_id: actionId,
           title,
-          ...(description.trim() && { description }),
+          description: description.trim() || title,
+          evidence_summary: description.trim() || title,
           file_link: uploadedFile.url
         };
 
@@ -131,7 +132,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
       const payload = {
         finding_action_id: actionId,
         title,
-        ...(description.trim() && { description }),
+        description: description.trim() || title,
+        evidence_summary: description.trim() || title,
         file_link: fileLink
       };
 
