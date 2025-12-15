@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { DollarSign, TrendingUp, TrendingDown, Target } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Banknote } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface BudgetAnalyticsProps {
@@ -40,7 +40,7 @@ export function BudgetAnalytics({ stats }: BudgetAnalyticsProps) {
   return (
     <Card className="p-6">
       <div className="mb-6 flex items-center gap-2">
-        <DollarSign className="h-5 w-5 text-emerald-600" />
+        <Banknote className="h-5 w-5 text-emerald-600" />
         <h3 className="text-lg font-semibold">Budget Analytics</h3>
       </div>
 
@@ -57,7 +57,7 @@ export function BudgetAnalytics({ stats }: BudgetAnalyticsProps) {
                   {formatCurrency(stats.total_allocated)}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-emerald-600" />
+              <Banknote className="h-8 w-8 text-emerald-600" />
             </div>
           </div>
 
