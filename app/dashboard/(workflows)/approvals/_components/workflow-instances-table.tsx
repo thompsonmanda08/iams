@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import type { Task } from "@/lib/types/task";
-import { TaskActionDialog } from "./task-action-dialog";
 import { TaskReassignDialog } from "./task-reassign-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
@@ -47,20 +46,7 @@ export function WorkflowInstancesTable({
   isLoading
 }: WorkflowInstancesTableProps) {
   const [selectedInstance, setSelectedInstance] = useState<Task | null>(null);
-  const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<"APPROVE" | "REJECT" | null>(null);
-
-  const handleInstanceAction = (
-    instance: Task,
-    action: "APPROVE" | "REJECT",
-    e?: React.MouseEvent
-  ) => {
-    e?.stopPropagation();
-    setSelectedInstance(instance);
-    setSelectedAction(action);
-    setActionDialogOpen(true);
-  };
 
   const handleInstanceReassign = (instance: Task, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -197,42 +183,7 @@ export function WorkflowInstancesTable({
 
                 {/* ACTIONS */}
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-2">
-                    {instance.entity?.status === "IN_REVIEW" &&
-                      !instance.instance.is_finialized && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 border-green-100 bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600"
-                            onClick={(e) => handleInstanceAction(instance, "APPROVE", e)}>
-                            <CheckCircle className="h-4 w-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 border-red-100 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600"
-                            onClick={(e) => handleInstanceAction(instance, "REJECT", e)}>
-                            <XCircle className="h-4 w-4" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-
-                    {(instance.entity?.status === "COMPLETED" ||
-                      instance.entity?.status === "APPROVED") && (
-                      <span className="text-muted-foreground text-sm">
-                        {/* Completed by {instance.instance.created_by_user?.name || "Workflow User"} */}
-                        N/A
-                      </span>
-                    )}
-
-                    {(instance.entity?.status === "REJECTED" ||
-                      instance.entity?.status === "DRAFT") && (
-                      <span className="text-muted-foreground text-sm">No actions available</span>
-                    )}
-                  </div>
+                  <span className="text-muted-foreground text-sm">Manage via Tasks tab</span>
                 </TableCell>
               </TableRow>
             ))}
@@ -242,12 +193,6 @@ export function WorkflowInstancesTable({
 
       {selectedInstance && (
         <>
-          <TaskActionDialog
-            task={selectedInstance}
-            action={selectedAction}
-            open={actionDialogOpen}
-            onOpenChange={setActionDialogOpen}
-          />
           <TaskReassignDialog
             task={selectedInstance}
             open={reassignDialogOpen}

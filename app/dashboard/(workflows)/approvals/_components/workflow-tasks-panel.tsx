@@ -10,16 +10,35 @@ import type { Pagination } from "@/lib/types";
 interface WorkflowTask {
   id: string;
   instance_id: string;
-  workflow_id: string;
+  organization_id?: string;
+  required_role_id?: string;
+  required_role_name?: string;
   assigned_to_user_id: string;
-  assigned_to_user_name?: string;
-  entity_id: string;
-  entity_name: string;
-  entity_type: string;
-  workflow_state: string;
-  task_status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
+  assigned_to_name?: string;
+  assigned_to_email?: string;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
   created_at: string;
   updated_at: string;
+  instance: {
+    id?: string;
+    workflow_id?: string;
+    organization_id?: string;
+    entity_type: string;
+    entity_id?: string;
+    status: string;
+    is_finalized?: boolean;
+    created_by?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
+  entity: {
+    entity_id?: string;
+    entity_name?: string;
+    entity_type?: string;
+    id?: string;
+    status?: string;
+    title?: string;
+  };
 }
 
 interface WorkflowTasksPanelProps {
@@ -73,10 +92,10 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
 
   // Count tasks by status
   const taskStats = {
-    pending: (tasks || []).filter((t: WorkflowTask) => t.task_status === "PENDING").length,
-    completed: (tasks || []).filter((t: WorkflowTask) => t.task_status === "COMPLETED").length,
-    rejected: (tasks || []).filter((t: WorkflowTask) => t.task_status === "REJECTED").length,
-    reassigned: (tasks || []).filter((t: WorkflowTask) => t.task_status === "REASSIGNED").length
+    pending: (tasks || []).filter((t: WorkflowTask) => t.status === "PENDING").length,
+    completed: (tasks || []).filter((t: WorkflowTask) => t.status === "COMPLETED").length,
+    rejected: (tasks || []).filter((t: WorkflowTask) => t.status === "REJECTED").length,
+    reassigned: (tasks || []).filter((t: WorkflowTask) => t.status === "REASSIGNED").length
   };
 
   return (

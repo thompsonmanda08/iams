@@ -64,7 +64,7 @@ export async function completeWorkflowTask(
 ): Promise<APIResponse>;
 
 // Reassign workflow task
-export async function reassignWorkflowTask(
+export async function reassignTask(
   taskId: string,
   assignedToUserId: string,
   remarks?: string
