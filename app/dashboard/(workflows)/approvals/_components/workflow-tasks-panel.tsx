@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { CustomPagination } from "@/components/ui/pagination";
 import { WorkflowTasksTable } from "./workflow-tasks-table";
 import { useUserAssignedWorkflowTasks } from "@/hooks/use-workflow-tasks";
 import type { Pagination } from "@/lib/types";
@@ -9,16 +10,35 @@ import type { Pagination } from "@/lib/types";
 interface WorkflowTask {
   id: string;
   instance_id: string;
-  workflow_id: string;
+  organization_id?: string;
+  required_role_id?: string;
+  required_role_name?: string;
   assigned_to_user_id: string;
-  assigned_to_user_name?: string;
-  entity_id: string;
-  entity_name: string;
-  entity_type: string;
-  workflow_state: string;
-  task_status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
+  assigned_to_name?: string;
+  assigned_to_email?: string;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
   created_at: string;
   updated_at: string;
+  instance: {
+    id?: string;
+    workflow_id?: string;
+    organization_id?: string;
+    entity_type: string;
+    entity_id?: string;
+    status: string;
+    is_finalized?: boolean;
+    created_by?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
+  entity: {
+    entity_id?: string;
+    entity_name?: string;
+    entity_type?: string;
+    id?: string;
+    status?: string;
+    title?: string;
+  };
 }
 
 interface WorkflowTasksPanelProps {
@@ -63,19 +83,19 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
     setSelectedTask(task);
   };
 
-  const handlePageChange = (newPage: number, newPageSize?: number) => {
-    setCurrentPage(newPage);
-    if (newPageSize) {
-      setPageSize(newPageSize);
+  const handlePageChange = (params: { page: number; page_size?: number }) => {
+    setCurrentPage(params.page);
+    if (params.page_size) {
+      setPageSize(params.page_size);
     }
   };
 
   // Count tasks by status
   const taskStats = {
-    pending: (tasks || []).filter((t: WorkflowTask) => t.task_status === "PENDING").length,
-    completed: (tasks || []).filter((t: WorkflowTask) => t.task_status === "COMPLETED").length,
-    rejected: (tasks || []).filter((t: WorkflowTask) => t.task_status === "REJECTED").length,
-    reassigned: (tasks || []).filter((t: WorkflowTask) => t.task_status === "REASSIGNED").length
+    pending: (tasks || []).filter((t: WorkflowTask) => t.status === "PENDING").length,
+    completed: (tasks || []).filter((t: WorkflowTask) => t.status === "COMPLETED").length,
+    rejected: (tasks || []).filter((t: WorkflowTask) => t.status === "REJECTED").length,
+    reassigned: (tasks || []).filter((t: WorkflowTask) => t.status === "REASSIGNED").length
   };
 
   return (
@@ -126,15 +146,15 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
           isLoading={isLoading}
         />
 
-        {/* PAGINATION INFO */}
+        {/* PAGINATION */}
         {tasks && tasks.length > 0 && (
-          <div className="mt-4 flex items-center justify-between border-t pt-4">
-            <p className="text-muted-foreground text-sm">
-              Showing {Math.min(pageSize, tasks.length)} of {tasks.length} tasks
-            </p>
-            <div className="text-muted-foreground text-sm">
-              Page {currentPage} of {pagination.total_pages}
-            </div>
+          <div className="border-t">
+            <CustomPagination
+              pagination={pagination}
+              updatePagination={handlePageChange}
+              allowSetPageSize={true}
+              showDetails={true}
+            />
           </div>
         )}
       </div>

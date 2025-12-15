@@ -1,13 +1,5 @@
 "use client";
-import {
-  getAnnualAuditPlan,
-  getAuditPlan,
-  getWorkpaperByAuditPlanId
-} from "@/app/_actions/audit-module-actions";
-import { getWorkflowInstances } from "@/app/_actions/task-actions";
-import { AuditPlan } from "@/lib/types/audit-types";
-import PageHeader from "@/components/page-header";
-import { ClipboardListIcon, Download, ListCheck, Plus, Send } from "lucide-react";
+import { Download, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,38 +8,42 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import {
   useAnnualAuditPlanItems,
-  useDeleteAnnualAuditPlanItem,
   useSubmitAnnualAuditPlanForApproval
 } from "@/hooks/use-audit-query-data";
 import { Suspense, useState } from "react";
 import Loader from "@/components/ui/loader";
 import { AnnualPlanItems, CreateOrUpdatePlanItem } from "./annual-plan-items";
-import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 
-interface AuditDetailPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default function AuditDetailClient({ auditPlan }: { auditPlan: any }) {
+export default function AuditDetailClient({
+  auditPlan,
+  planItems
+}: {
+  auditPlan: any;
+  planItems: any;
+}) {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [comments, setComments] = useState("");
   const [openAddPlanItemModal, setOpenAddPlanItemModal] = useState(false);
 
-  const { data: itemsResponse } = useAnnualAuditPlanItems(auditPlan?.id, {
-    page: 1,
-    page_size: 100
-  });
+  const { data: itemsResponse } = useAnnualAuditPlanItems(
+    auditPlan?.id,
+    {
+      page: 1,
+      page_size: 100
+    },
+    planItems
+  );
 
   const items = itemsResponse?.data || itemsResponse || [];
+
+  console.log({ items });
 
   const submitMutation = useSubmitAnnualAuditPlanForApproval();
 
@@ -89,9 +85,14 @@ export default function AuditDetailClient({ auditPlan }: { auditPlan: any }) {
                     size="sm"
                     className="gap-2"
                     onClick={() => setSubmitDialogOpen(true)}
-                    disabled={submitMutation.isPending}
+                    disabled={submitMutation.isPending || items.length === 0}
                     isLoading={submitMutation.isPending}
-                    loadingText="Submitting...">
+                    loadingText="Submitting..."
+                    title={
+                      items.length === 0
+                        ? "Add at least one plan item before submitting for approval"
+                        : ""
+                    }>
                     <Send className="h-4 w-4" />
                     Submit for Approval
                   </Button>
@@ -152,7 +153,7 @@ export default function AuditDetailClient({ auditPlan }: { auditPlan: any }) {
             </div>
           )}
 
-          <AnnualPlanItems items={items} planId={auditPlan?.id} />
+          <AnnualPlanItems items={items} planId={auditPlan?.id} annualPlan={auditPlan} />
         </Card>
       </Suspense>
 

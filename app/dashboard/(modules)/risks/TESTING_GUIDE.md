@@ -14,7 +14,7 @@ This guide provides instructions for testing the action findings submission work
 
 ### 2. Updated Filtering
 
-The `/dashboard/risks/actions` page now filters risks by **`risk_action_owner_id`** instead of `risk_owner_id`.
+The `/dashboard/actions/risk` page now filters risks by **`risk_action_owner_id`** instead of `risk_owner_id`.
 
 ```typescript
 // Before
@@ -119,7 +119,7 @@ Control Effectiveness: 2/5
 
 ### Step 1: Access Actions Page
 
-Navigate to `/dashboard/risks/actions`
+Navigate to `/dashboard/actions/risk`
 
 **Expected Result:**
 
@@ -166,7 +166,7 @@ The actions table displays:
 
 ### Step 4: View Demo Page
 
-Navigate to `/dashboard/risks/actions-demo`
+Navigate to `/dashboard/actions/risk-demo`
 
 **Expected Result:**
 
@@ -193,7 +193,7 @@ In the actions table:
 ```
 1. Action Owner logs in with user-action-owner-1
         ↓
-2. Navigates to /dashboard/risks/actions
+2. Navigates to /dashboard/actions/risk
         ↓
 3. Sees "Cyber Security Breach Risk" and "Data Privacy Incident Risk"
         ↓
@@ -209,7 +209,7 @@ In the actions table:
         ↓
 9. Page refreshes
         ↓
-10. Findings visible in /dashboard/risks/actions-demo
+10. Findings visible in /dashboard/actions/risk-demo
 ```
 
 ### User Story: Reviewer assesses findings
@@ -217,7 +217,7 @@ In the actions table:
 ```
 1. Reviewer logs in (any user, reviewer assigned by system)
         ↓
-2. Navigates to /dashboard/risks/actions-demo
+2. Navigates to /dashboard/actions/risk-demo
         ↓
 3. Clicks on PENDING_REVIEW finding
         ↓
@@ -343,12 +343,12 @@ When connecting to real API:
 
 ## Related Files
 
-- **Main Page**: `/dashboard/risks/actions/page.tsx`
-- **Actions Table**: `/dashboard/risks/actions/actions-table.tsx`
+- **Main Page**: `/dashboard/actions/risk/page.tsx`
+- **Actions Table**: `/dashboard/actions/risk/actions-table.tsx`
 - **Findings Dialog**: `/dashboard/risks/_components/action-findings-dialog.tsx`
 - **Findings Display**: `/dashboard/risks/_components/action-findings-display.tsx`
 - **Assessment Form**: `/dashboard/risks/_components/action-assessment-form.tsx`
-- **Demo Page**: `/dashboard/risks/actions-demo/page.tsx`
+- **Demo Page**: `/dashboard/actions/risk-demo/page.tsx`
 - **Demo Component**: `/dashboard/risks/_components/action-findings-demo.tsx`
 - **Server Actions**: `/app/_actions/risk-module-actions.ts`
 

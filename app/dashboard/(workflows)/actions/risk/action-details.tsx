@@ -212,7 +212,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                     Reduce
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/risks/actions/${action.id}/accept`)}>
+                    onClick={() => router.push(`/dashboard/actions/risk/${action.id}/accept`)}>
                     <Target className="mr-2 h-4 w-4" />
                     Accept
                   </DropdownMenuItem>

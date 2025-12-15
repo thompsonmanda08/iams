@@ -1,15 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle2, Clock, FileText, Link as LinkIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, CheckCircle2, Clock, FileText, Link as LinkIcon, Plus } from "lucide-react";
 import { FindingActionsMenu } from "./finding-actions-menu";
 import { useFindingEvidence } from "@/hooks/use-evidence-queries";
+import { useFindingActionsByFinding } from "@/hooks/use-finding-actions-queries";
+import { AssignFindingActionDialog } from "./assign-finding-action-dialog";
+import { RequiresApprovalState } from "./requires-approval-state";
+import type { AuditPlan } from "@/lib/types/audit-types";
 
 interface FindingsListProps {
   findings: any[];
   onRefresh: () => void;
   onEditFinding: (finding: any) => void;
+  auditPlanStatus?: string;
+  auditPlan?: AuditPlan;
+  onSubmitForApproval?: () => void;
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -27,14 +36,23 @@ const STATUS_ICONS: Record<string, any> = {
 };
 
 // Individual finding card component with evidence
-function FindingCard({ finding, onEditFinding, onRefresh }: any) {
+function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any) {
+  const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
   const { data: evidenceData } = useFindingEvidence(finding.id);
+  const { data: actions } = useFindingActionsByFinding(finding.id);
   const evidenceList = evidenceData?.evidence || [];
+  const actionsCount = actions?.length || 0;
   const evidenceStats = {
     total: evidenceData?.total_count || 0,
     verified: evidenceData?.verified_count || 0,
     unverified: evidenceData?.unverified_count || 0
   };
+
+  // Check if finding is editable (only in specific statuses)
+  const isEditable = ["OPEN", "IN_PROGRESS", "DRAFT"].includes(finding.status);
+
+  // Check if can assign actions (only when audit is APPROVED or COMPLETED)
+  const canAssignAction = ["APPROVED", "COMPLETED"].includes(auditPlanStatus);
 
   return (
     <Card className="gap-2 transition-shadow hover:shadow-md">
@@ -55,6 +73,11 @@ function FindingCard({ finding, onEditFinding, onRefresh }: any) {
                 </Badge>
               )}
               {finding.status && <Badge variant="outline">{finding.status}</Badge>}
+              {actionsCount > 0 && (
+                <Badge variant="secondary">
+                  {actionsCount} Action{actionsCount !== 1 ? "s" : ""}
+                </Badge>
+              )}
             </div>
             <div className="space-y-1">
               {finding.finding_number && (
@@ -64,12 +87,27 @@ function FindingCard({ finding, onEditFinding, onRefresh }: any) {
               )}
             </div>
           </div>
-          <FindingActionsMenu
-            findingId={finding.id}
-            currentStatus={finding.status || "OPEN"}
-            onEdit={() => onEditFinding(finding)}
-            onRefresh={onRefresh}
-          />
+          <div className="flex flex-col gap-2">
+            {canAssignAction && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setAssignActionDialogOpen(true)}
+                className="gap-2"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Assign Action
+              </Button>
+            )}
+            {isEditable && (
+              <FindingActionsMenu
+                findingId={finding.id}
+                currentStatus={finding.status || "OPEN"}
+                onEdit={() => onEditFinding(finding)}
+                onRefresh={onRefresh}
+              />
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -163,11 +201,41 @@ function FindingCard({ finding, onEditFinding, onRefresh }: any) {
           </div>
         )}
       </CardContent>
+
+      {/* Assign Action Dialog */}
+      <AssignFindingActionDialog
+        open={assignActionDialogOpen}
+        onOpenChange={setAssignActionDialogOpen}
+        finding={finding}
+        auditPlanStatus={auditPlanStatus || ""}
+      />
     </Card>
   );
 }
 
-export function FindingsList({ findings, onRefresh, onEditFinding }: FindingsListProps) {
+export function FindingsList({
+  findings,
+  onRefresh,
+  onEditFinding,
+  auditPlanStatus,
+  auditPlan,
+  onSubmitForApproval
+}: FindingsListProps) {
+  // Check if plan is approved
+  const isPlanApproved = ["APPROVED", "COMPLETED"].includes(
+    auditPlanStatus?.toUpperCase() || ""
+  );
+
+  // Show "Requires Approval" component if plan is not approved
+  if (!isPlanApproved && auditPlan && onSubmitForApproval) {
+    return (
+      <RequiresApprovalState
+        auditPlan={auditPlan}
+        onSubmitForApproval={onSubmitForApproval}
+      />
+    );
+  }
+
   if (!findings || findings.length === 0) {
     return (
       <Card>
@@ -186,6 +254,7 @@ export function FindingsList({ findings, onRefresh, onEditFinding }: FindingsLis
           finding={finding}
           onEditFinding={onEditFinding}
           onRefresh={onRefresh}
+          auditPlanStatus={auditPlanStatus}
         />
       ))}
     </div>

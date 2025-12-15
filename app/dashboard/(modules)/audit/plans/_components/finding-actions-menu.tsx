@@ -33,6 +33,9 @@ export function FindingActionsMenu({
   const queryClient = useQueryClient();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
+  // Check if finding is editable
+  const isEditable = ["OPEN", "IN_PROGRESS", "DRAFT"].includes(currentStatus);
+
   // Status update mutation
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
@@ -92,34 +95,35 @@ export function FindingActionsMenu({
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onEdit}
-          className="gap-2"
-          disabled={clearMutation.isPending || statusMutation.isPending}
-          title="">
-          <Edit2 className="h-4 w-4" />
-          Edit
-        </Button>
+      {isEditable && (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+            className="gap-2"
+            disabled={clearMutation.isPending || statusMutation.isPending}
+            title="">
+            <Edit2 className="h-4 w-4" />
+            Edit
+          </Button>
 
-        <SelectField
-          id="finding-status"
-          value={currentStatus}
-          onValueChange={handleStatusChange}
-          options={STATUS_OPTIONS.map((option) => ({
-            id: option.value,
-            name: option.label,
-            label: option.label
-          }))}
-          placeholder="Select status"
-          isLoading={statusMutation.isPending}
-          disabled={statusMutation.isPending || clearMutation.isPending}
-          title=""
-        />
-
-      </div>
+          <SelectField
+            id="finding-status"
+            value={currentStatus}
+            onValueChange={handleStatusChange}
+            options={STATUS_OPTIONS.map((option) => ({
+              id: option.value,
+              name: option.label,
+              label: option.label
+            }))}
+            placeholder="Select status"
+            isLoading={statusMutation.isPending}
+            disabled={statusMutation.isPending || clearMutation.isPending}
+            title=""
+          />
+        </div>
+      )}
 
       {/* Clear button and confirmation modal - Hidden for now */}
       {/* <ConfirmationModal

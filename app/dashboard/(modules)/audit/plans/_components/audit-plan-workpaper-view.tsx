@@ -37,6 +37,7 @@ import { WorkpaperCategoryPanel } from "./workpaper-category-panel";
 import { FindingForm } from "./finding-form";
 import { FrameworkFindingForm } from "./framework-finding-form";
 import { FindingsList } from "./findings-list";
+import { RequiresApprovalState } from "./requires-approval-state";
 import { cn, notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
 import { StatusBadge } from "@/components/status-badge";
@@ -44,6 +45,7 @@ import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 import Link from "next/link";
 import { useDeleteAuditPlan, useSubmitAuditPlanForApproval } from "@/hooks/use-audit-query-data";
 import { AuditPlanApprovalsPanel } from "./audit-plan-approvals-panel";
+import { AuditClosureReview } from "./audit-closure-review";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -51,6 +53,7 @@ interface AuditPlanWorkpaperViewProps {
   findings: any[];
   tasks?: Task[];
   isLoading?: boolean;
+  auditPlanStatus?: string;
 }
 
 // Helper function to check if a finding is completed
@@ -65,7 +68,8 @@ export function AuditPlanWorkpaperView({
   auditPlan,
   workpaperCategories,
   findings,
-  tasks = []
+  tasks = [],
+  auditPlanStatus
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -344,7 +348,7 @@ export function AuditPlanWorkpaperView({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid h-12 w-full grid-cols-4">
+        <TabsList className="grid h-12 w-full grid-cols-5">
           <TabsTrigger value="plan-details">
             <FileText className="mr-2 h-5 w-5" />
             Plan Details
@@ -367,6 +371,10 @@ export function AuditPlanWorkpaperView({
           <TabsTrigger value="approvals">
             <CircleCheckBig className="mr-2 h-5 w-5 text-green-500" />
             Audit Approvals
+          </TabsTrigger>
+          <TabsTrigger value="closure">
+            <CheckCircle2 className="mr-2 h-5 w-5 text-blue-500" />
+            Closure
           </TabsTrigger>
         </TabsList>
 
@@ -748,8 +756,11 @@ export function AuditPlanWorkpaperView({
                   {/* Category Details */}
                   <WorkpaperCategoryPanel category={selectedCategory} auditPlan={auditPlan} />
 
-                  {/* Findings List for Category */}
-                  {categoryFindings.length > 0 ? (
+                  {/* Check if plan is approved before showing findings */}
+                  {auditPlan.status.toUpperCase() === "APPROVED" || auditPlan.status.toUpperCase() === "COMPLETED" ? (
+                    <>
+                      {/* Findings List for Category */}
+                      {categoryFindings.length > 0 ? (
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base">
@@ -921,15 +932,24 @@ export function AuditPlanWorkpaperView({
                     </Card>
                   )}
 
-                  {/* Add New Finding Button */}
-                  {/* {categoryFindings.length > 0 && (
-                    <Button
-                      onClick={() => setEditingFinding(null)}
-                      className="w-full"
-                      variant="outline">
-                      + Add New Finding
-                    </Button>
-                  )} */}
+                      {/* Add New Finding Button */}
+                      {/* {categoryFindings.length > 0 && (
+                        <Button
+                          onClick={() => setEditingFinding(null)}
+                          className="w-full"
+                          variant="outline">
+                          + Add New Finding
+                        </Button>
+                      )} */}
+                    </>
+                  ) : (
+                    /* Plan is not approved - show requires approval state */
+                    <RequiresApprovalState
+                      auditPlan={auditPlan}
+                      onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
+                      isSubmitting={submitMutation.isPending}
+                    />
+                  )}
                 </>
               ) : (
                 // NO CATEGORY SELECTED YET
@@ -1019,6 +1039,9 @@ export function AuditPlanWorkpaperView({
             findings={findings || []}
             onRefresh={() => setFindingsRefreshKey((prev) => prev + 1)}
             onEditFinding={handleEditFinding}
+            auditPlanStatus={auditPlanStatus || auditPlan.status}
+            auditPlan={auditPlan}
+            onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
           />
         </TabsContent>
 
@@ -1028,6 +1051,17 @@ export function AuditPlanWorkpaperView({
             auditPlan={auditPlanData}
             tasks={tasks}
             onStatusChange={() => {
+              queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+              setAuditPlanData((prev) => ({ ...prev }));
+            }}
+          />
+        </TabsContent>
+
+        {/* Closure Tab */}
+        <TabsContent value="closure" className="space-y-4">
+          <AuditClosureReview
+            auditPlan={auditPlanData}
+            onClosureRequested={() => {
               queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
               setAuditPlanData((prev) => ({ ...prev }));
             }}

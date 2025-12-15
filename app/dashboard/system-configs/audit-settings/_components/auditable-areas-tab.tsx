@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, PropsWithChildren, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CustomPagination } from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -29,7 +31,6 @@ import {
   updateAuditableArea,
   deleteAuditableArea
 } from "@/app/_actions/audit-settings-actions";
-import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
@@ -90,6 +91,11 @@ export default function AuditableAreaConfig({
 
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
+    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
+    router.push(`?areas_page=${pageConfig.page}&areas_page_size=${pageSize}`);
+  };
 
   // Delete item mutation
   const deleteMutation = useMutation({
@@ -274,6 +280,16 @@ export default function AuditableAreaConfig({
           </Table>
         </div>
       </Card>
+
+      {/* Pagination */}
+      {pagination && (
+        <CustomPagination
+          pagination={pagination}
+          updatePagination={handlePaginationChange}
+          showDetails={true}
+          allowSetPageSize={true}
+        />
+      )}
 
       <CreateOrUpdateArea
         openModal={openModal}

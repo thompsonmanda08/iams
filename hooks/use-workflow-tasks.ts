@@ -13,7 +13,7 @@ import {
   getUserAssignedWorkflowTasks,
   getWorkflowInstanceTasks,
   completeWorkflowTask,
-  reassignWorkflowTask
+  reassignTask
 } from "@/app/_actions/task-actions";
 
 /**
@@ -139,16 +139,8 @@ export function useReassignWorkflowTaskMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      taskId: string;
-      assignedToUserId: string;
-      remarks?: string;
-    }) => {
-      const response = await reassignWorkflowTask(
-        params.taskId,
-        params.assignedToUserId,
-        params.remarks
-      );
+    mutationFn: async (params: { taskId: string; assignedToUserId: string; remarks?: string }) => {
+      const response = await reassignTask(params.taskId, params.assignedToUserId, params.remarks);
 
       if (!response.success) {
         throw new Error(response.message || "Failed to reassign workflow task");

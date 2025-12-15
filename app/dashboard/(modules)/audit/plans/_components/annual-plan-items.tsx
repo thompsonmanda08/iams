@@ -19,21 +19,21 @@ import {
   Plus,
   ClipboardListIcon,
   PencilLine,
-  ShieldAlert
+  ShieldAlert,
+  View,
+  Pencil
 } from "lucide-react";
-import type { AuditPlan } from "@/lib/types/audit-types";
-import { format } from "date-fns";
+import type {
+  AuditPlan,
+  AnnualPlanItemWithDetails,
+  UniverseItem,
+  KRIColor
+} from "@/lib/types/audit-types";
+import { format, formatDistanceToNow } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 import { Progress } from "@/components/ui/progress";
 import {
   Empty,
@@ -44,7 +44,6 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { AUDIT_QUERY_KEYS, useDeleteAnnualAuditPlanItem } from "@/hooks/use-audit-query-data";
 import { Department, ErrorState } from "@/lib/types";
@@ -72,7 +71,6 @@ import {
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import CustomAlert from "@/components/ui/custom-alert";
-import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
@@ -94,8 +92,9 @@ type AnnualPlanItem = {
 };
 
 interface AnnualAuditPlanItemsTableProps {
+  annualPlan: any;
   planId: string;
-  items: AnnualPlanItem[];
+  items: AnnualPlanItemWithDetails[];
   isLoading?: boolean;
 }
 
@@ -108,7 +107,91 @@ const INIT_FORM_DATA: AnnualPlanItem = {
   responsible_person: ""
 };
 
-export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanItemsTableProps) {
+// KRI Color Badge Component
+const KRIColorBadge = ({ color }: { color: KRIColor }) => {
+  const colorClasses = {
+    Red: "bg-red-500",
+    Amber: "bg-amber-500",
+    Green: "bg-green-500"
+  };
+
+  return (
+    <span className={`rounded px-2 py-0.5 text-xs font-medium text-white ${colorClasses[color]}`}>
+      {color}
+    </span>
+  );
+};
+
+// Universe Item Tooltip Component
+const UniverseItemTooltip = ({ item }: { item: UniverseItem }) => {
+  return (
+    <div className="max-w-xs space-y-2 text-xs">
+      <div>
+        <p className="text-foreground text-sm font-semibold">{item.kri_name}</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground">Status:</span>
+        <KRIColorBadge color={item.kri_color} />
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Score: <span className="font-semibold">{item.kri_average_score}</span>
+        </p>
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Type: <span className="font-semibold">{item.kri_measurement_type}</span>
+        </p>
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Department: <span className="font-semibold">{item.department_name}</span>
+        </p>
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Area: <span className="font-semibold">{item.auditable_area_name}</span>
+        </p>
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Activity: <span className="font-semibold">{item.process_activity_name}</span>
+        </p>
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Pillar: <span className="font-semibold">{item.strategic_pillar_name}</span>
+        </p>
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Target: <span className="font-semibold">{item.indicative_target_name}</span>
+        </p>
+      </div>
+
+      <div>
+        <p className="text-muted-foreground">
+          Frequency: <span className="font-semibold">{item.audit_frequency}</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export function AnnualPlanItems({
+  planId,
+  items,
+  isLoading,
+  annualPlan
+}: AnnualAuditPlanItemsTableProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [openModal, setOpenModal] = useState(false);
@@ -117,17 +200,9 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
   const [deleteItem, setDeleteItem] = useState<AnnualPlanItem | null>(null);
   const [openAddPlanItemModal, setOpenAddPlanItemModal] = useState(false);
 
-  const handleDeleteClick = (item: AnnualPlanItem) => {
-    // Only allow deletion for DRAFT items
-    if (item.status !== "DRAFT") {
-      toast({
-        title: "Cannot Delete",
-        description: "Only draft audit items can be deleted.",
-        variant: "destructive"
-      });
-      return;
-    }
-    setDeleteItem(item);
+  const handleDeleteClick = (item: AnnualPlanItemWithDetails) => {
+    // Delete is allowed for all items in draft plan
+    setDeleteItem(item as unknown as AnnualPlanItem);
     setDeleteDialogOpen(true);
   };
 
@@ -154,13 +229,13 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="text-foreground/70 font-bold">AUDIT TITLE</TableHead>
-            <TableHead className="text-foreground/70 font-bold">STANDARD/FRAMEWORK TYPE</TableHead>
-            <TableHead className="text-foreground/70 font-bold">TEAM LEADER</TableHead>
+            <TableHead className="text-foreground/70 font-bold">UNIVERSE ITEMS</TableHead>
+            <TableHead className="text-foreground/70 font-bold">RESPONSIBLE PERSON</TableHead>
+            <TableHead className="text-foreground/70 font-bold">DEPARTMENT</TableHead>
             <TableHead className="text-foreground/70 font-bold">PERIOD</TableHead>
-            <TableHead className="text-foreground/70 font-bold">PROGRESS</TableHead>
             <TableHead className="text-foreground/70 font-bold">STATUS</TableHead>
-            <TableHead className="text-foreground/70 w-20 text-center font-bold">ACTIONS</TableHead>
+            <TableHead className="text-foreground/70 font-bold">LAST UPDATED</TableHead>
+            <TableHead className="text-foreground/70 w-20 text-center font-bold"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -172,10 +247,10 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
                     <EmptyMedia variant="icon">
                       <ClipboardListIcon />
                     </EmptyMedia>
-                    <EmptyTitle>Select a year</EmptyTitle>
+                    <EmptyTitle>No Plan Items</EmptyTitle>
                     <EmptyDescription>
-                      If you haven&apos;t created any annual plans yet. Get started by creating your
-                      first annual audit item.
+                      If you haven&apos;t created any audit plan items yet. Get started by creating
+                      your first audit item.
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
@@ -196,65 +271,114 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
               <TableRow
                 key={item.id}
                 onClick={() => {
-                  router.push(`/dashboard/audit/items/engagement/${item.id}`);
+                  if (item?.generated_audit_plan_id) {
+                    router.push(
+                      `/dashboard/audit/items/engagement/${item.generated_audit_plan_id}`
+                    );
+                  }
                 }}>
                 <TableCell>
-                  <div className="space-y-1">
-                    <Link
-                      href={`/dashboard/audit/items/engagement/${item.id}`}
-                      className="hover:text-primary/80 text-lg font-medium text-blue-500 hover:underline">
-                      {item.title}
-                    </Link>
-                    <p className="text-muted-foreground line-clamp-1 text-xs">
-                      {item.audit_scope || "-"}
-                    </p>
-                  </div>
+                  {item.universe_items && item.universe_items.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {item.universe_items.map((universeItem) => (
+                        <div>
+                          <TooltipProvider key={universeItem.id}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="border-border bg-muted/50 flex cursor-help items-center gap-1 rounded border px-2 py-1">
+                                  <KRIColorBadge color={universeItem.kri_color} />
+                                  <span className="max-w-[120px] truncate text-xs font-medium">
+                                    {universeItem.kri_name}
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="right"
+                                className="bg-card border-border max-w-sm border p-4 shadow">
+                                <UniverseItemTooltip item={universeItem} />
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">No universe items</span>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm">{item.management_standard || " - "}</span>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{item.team_leader?.name}</p>
+                  <Link
+                    className="space-y-1 text-sm"
+                    href={
+                      item.generated_audit_plan_id
+                        ? `/dashboard/audit/items/engagement/${item.generated_audit_plan_id}`
+                        : "#"
+                    }>
+                    <span className="text-foreground cursor-pointer font-medium">
+                      {item.responsible_person_name || "-"}
+                    </span>
                     <p className="text-muted-foreground text-xs">
-                      {item.audit_team_members?.length || 0} Team member
-                      {item.audit_team_members?.length !== 1 ? "s" : ""}
+                      {item.is_generated ? "✓ Plan Generated" : "○ No Plan Generated"}
                     </p>
-                  </div>
+                    {item.is_overdue && (
+                      <p className="text-xs font-medium text-red-600">⚠ Overdue</p>
+                    )}
+                  </Link>
                 </TableCell>
+                <TableCell>{item.department_name}</TableCell>
                 <TableCell>
                   <div className="space-y-1 text-sm">
-                    <p>
-                      {item.start_date ? format(new Date(item.start_date), "MMM d, yyyy") : "-"}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {item.end_date ? format(new Date(item.end_date), "MMM d, yyyy") : "-"}
-                    </p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="cursor-help">
+                            {item.engagement_date
+                              ? format(new Date(item.engagement_date), "MMM d")
+                              : "-"}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">
+                            {item.engagement_date
+                              ? `Start: ${format(new Date(item.engagement_date), "PPPP")}`
+                              : "No start date"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-muted-foreground cursor-help">
+                            {item.engagement_end_date
+                              ? format(new Date(item.engagement_end_date), "MMM d")
+                              : "-"}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">
+                            {item.engagement_end_date
+                              ? `End: ${format(new Date(item.engagement_end_date), "PPPP")}`
+                              : "No end date"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="w-32 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">{(item as any).progress || 0}%</span>
-                      {(item as any).conformityRate && (
-                        <span className="text-green-600">
-                          {(item as any).conformityRate}% conform
-                        </span>
-                      )}
-                    </div>
-                    <Progress value={(item as any).progress || 0} className="h-2" />
-                  </div>
+                  <StatusBadge status={annualPlan.status} />
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={item.status} />
+                  <p className="cursor-help">
+                    {item.updated_at
+                      ? formatDistanceToNow(new Date(item.updated_at), "MMM d")
+                      : "-"}
+                  </p>
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="outline" className="h-8 gap-1.5" asChild>
-                      <Eye className="h-3.5 w-3.5" />
-                      View
-                    </Button>
-                    {item.status === "DRAFT" && (
+                    {annualPlan.status === "DRAFT" && (
                       <>
                         <Button
                           size="sm"
@@ -265,7 +389,7 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
                             setOpenModal(true);
                           }}
                           className="h-8 gap-1.5">
-                          <Edit className="h-3.5 w-3.5" />
+                          <Pencil className="h-3.5 w-3.5" />
                           Edit
                         </Button>
                         <Button
@@ -281,7 +405,7 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
                         </Button>
                       </>
                     )}
-                    {item.status === "APPROVED" && (
+                    {annualPlan.status === "APPROVED" && (
                       // THIS GENERATES AN ENGAGEMENT PLAN
                       <>
                         <GenerateAuditPlanModal item={item} planId={planId} />
@@ -296,33 +420,16 @@ export function AnnualPlanItems({ planId, items, isLoading }: AnnualAuditPlanIte
       </Table>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Audit item</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{deleteItem?.title}&quot;? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleteMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {deleteMutation.isPending ? (
-                <>
-                  <Spinner className="mr-2 h-5 w-5 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmationModal
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        type="delete"
+        title="Delete Audit Item"
+        description="Are you sure you want to delete this audit item? This action cannot be undone."
+        confirmText="Delete"
+        isLoading={deleteMutation.isPending}
+      />
 
       <CreateOrUpdatePlanItem
         openModal={openModal}
@@ -493,11 +600,11 @@ export function CreateOrUpdatePlanItem({
   const universeItemsOptions = useMemo(() => {
     return universeItemsData.map((item: any) => ({
       value: item.id,
-      label: `${item.kri_name} - (${item.auditable_area_name})`
+      label: `${item.kri_name} [ ${item.kri_color} ]`
     }));
   }, [universeItemsData]);
 
-  console.log({ universeItemsData, universeItemsOptions });
+  console.log({ universeItemsData });
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -559,6 +666,125 @@ export function CreateOrUpdatePlanItem({
             options={universeItemsOptions}
             disabled={loadingUniverseItems || !formData.department_id}
             isLoading={loadingUniverseItems}
+            tooltipMap={useMemo(() => {
+              const map: Record<string, React.ReactNode> = {};
+              universeItemsData.forEach((item: any) => {
+                // Build tooltip content dynamically based on available data
+                const tooltipContent = [];
+
+                // Always show the name/label
+                if (item.kri_name) {
+                  tooltipContent.push(
+                    <div key="name">
+                      <p className="text-foreground font-semibold">{item.kri_name}</p>
+                    </div>
+                  );
+                }
+
+                // Show status if color is available
+                if (item.kri_color) {
+                  tooltipContent.push(
+                    <div key="status" className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span
+                        className={`rounded px-2 py-0.5 text-xs font-medium text-white ${
+                          item.kri_color === "Red"
+                            ? "bg-red-500"
+                            : item.kri_color === "Amber"
+                              ? "bg-amber-500"
+                              : "bg-green-500"
+                        }`}>
+                        {item.kri_color}
+                      </span>
+                    </div>
+                  );
+                }
+
+                // Show score if available
+                if (item.kri_average_score !== undefined && item.kri_average_score !== null) {
+                  tooltipContent.push(
+                    <div key="score">
+                      <p className="text-muted-foreground">
+                        Score: <span className="font-semibold">{item.kri_average_score}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show measurement type if available
+                if (item.kri_measurement_type) {
+                  tooltipContent.push(
+                    <div key="type">
+                      <p className="text-muted-foreground">
+                        Type: <span className="font-semibold">{item.kri_measurement_type}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show department if available
+                if (item.department_name) {
+                  tooltipContent.push(
+                    <div key="department">
+                      <p className="text-muted-foreground">
+                        Department: <span className="font-semibold">{item.department_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show auditable area if available
+                if (item.auditable_area_name) {
+                  tooltipContent.push(
+                    <div key="area">
+                      <p className="text-muted-foreground">
+                        Area: <span className="font-semibold">{item.auditable_area_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show process activity if available
+                if (item.process_activity_name) {
+                  tooltipContent.push(
+                    <div key="activity">
+                      <p className="text-muted-foreground">
+                        Activity:{" "}
+                        <span className="font-semibold">{item.process_activity_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show strategic pillar if available
+                if (item.strategic_pillar_name) {
+                  tooltipContent.push(
+                    <div key="pillar">
+                      <p className="text-muted-foreground">
+                        Pillar: <span className="font-semibold">{item.strategic_pillar_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Show indicative target if available
+                if (item.indicative_target_name) {
+                  tooltipContent.push(
+                    <div key="target">
+                      <p className="text-muted-foreground">
+                        Target: <span className="font-semibold">{item.indicative_target_name}</span>
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Only create tooltip if there's content to show
+                if (tooltipContent.length > 0) {
+                  map[item.id] = <div className="space-y-2 text-xs">{tooltipContent}</div>;
+                }
+              });
+              return map;
+            }, [universeItemsData])}
           />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -668,6 +894,7 @@ interface GenerateAuditPlanModalProps {
 }
 
 export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalProps) {
+  const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<GenerateAuditPlanFormData>(INIT_GENERATE_FORM_DATA);
   const queryClient = useQueryClient();
@@ -720,7 +947,9 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       title: formData.title,
       description: formData.description,
       ref_no: formData.ref_no,
-      audit_plan_date: formData.audit_plan_date?.toISOString() || new Date().toISOString(),
+      audit_plan_date: formData.audit_plan_date
+        ? formData.audit_plan_date.toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
       end_date: formData.end_date?.toISOString().split("T")[0] || "",
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
@@ -745,6 +974,7 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
           queryClient.invalidateQueries({
             queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, planId, "items"]
           });
+          router.push("/dashboard/audit/plans");
         }
       }
     );

@@ -1464,8 +1464,8 @@ export async function submitActionFindings(data: ActionFindingsInput): Promise<A
     // Call the actual API endpoint to submit action findings/executions
     const response = await authenticatedApiClient({ url, method: "POST", data });
 
-    revalidatePath("/dashboard/risks/actions");
-    revalidatePath("/dashboard/risks/actions/logs");
+    revalidatePath("/dashboard/actions/risk");
+    revalidatePath("/dashboard/actions/risk/logs");
     return successResponse(response?.data, "Action findings submitted successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST | SUBMIT ACTION FINDINGS", url);
@@ -1507,7 +1507,7 @@ export async function assessActionFindings(
       assessment_date: new Date()
     };
 
-    revalidatePath("/dashboard/risks/actions");
+    revalidatePath("/dashboard/actions/risk");
     return successResponse(assessment, "Action assessment completed successfully");
   } catch (error) {
     return handleError(
@@ -1542,8 +1542,8 @@ export async function submitActionReview(data: {
   try {
     const response = await authenticatedApiClient({ url, method: "POST", data });
 
-    revalidatePath("/dashboard/risks/actions");
-    revalidatePath("/dashboard/risks/actions/logs");
+    revalidatePath("/dashboard/actions/risk");
+    revalidatePath("/dashboard/actions/risk/logs");
     return successResponse(response?.data, "Action review submitted successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST | SUBMIT ACTION REVIEW", url);
@@ -1711,7 +1711,7 @@ export async function getKRIStatusDepartmentSummary(departmentId: string): Promi
 
 export async function getRiskOverview(start_date: string, end_date: string): Promise<APIResponse> {
   const url = `/api/v1/dashboard/risk-overview?start_date=${start_date}&end_date=${end_date}`;
-  
+
   try {
     const response = await authenticatedApiClient({ method: "GET", url });
     return successResponse(response.data);

@@ -12,7 +12,6 @@ import {
 import { Card } from "@/components/ui/card";
 import { Pencil, Trash2, Wallet, TrendingUp, Banknote, View } from "lucide-react";
 import { BudgetLinesList } from "./budget-line-list";
-import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { ConfirmationModal } from "@/components/confirmation-modal";

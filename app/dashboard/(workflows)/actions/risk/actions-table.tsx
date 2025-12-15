@@ -12,20 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Copy,
-  FileText,
-  FileSpreadsheet,
-  Printer,
-  AlertTriangle,
-  View,
-  Upload,
-  Eye,
-  CheckCircle2,
-  Clock,
-  AlertCircle
-} from "lucide-react";
+
+import { AlertTriangle, Upload, Eye, CheckCircle2, AlertCircle } from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
@@ -58,10 +46,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   );
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
-  const handleExport = (type: "copy" | "csv" | "excel" | "pdf" | "print") => {
-    console.log(`Exporting as ${type}`);
-  };
-
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -79,24 +63,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     });
   };
 
-  // Get task status variant
-  const getTaskStatusVariant = (status: string) => {
-    return status === "COMPLETED" ? "default" : "secondary";
-  };
-
-  // Get execution status badge
-  const getExecutionStatusBadge = (status?: string) => {
-    switch (status?.toUpperCase()) {
-      case "SUBMITTED":
-        return { label: "Submitted", color: "bg-green-100 text-green-800" };
-      case "REJECTED":
-        return { label: "Rejected", color: "bg-red-100 text-red-800" };
-      case "PENDING":
-      default:
-        return { label: "Pending", color: "bg-yellow-100 text-yellow-800" };
-    }
-  };
-
   // Check if action is overdue
   const isOverdue = (dueDate: string, status: string) => {
     if (status === "COMPLETED" || status === "CANCELLED") return false;
@@ -108,7 +74,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-semibold">Risk Actions</CardTitle>
+            <CardTitle className="text-xl font-semibold">Action Distribution</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
               Manage and track risk treatment actions
             </p>

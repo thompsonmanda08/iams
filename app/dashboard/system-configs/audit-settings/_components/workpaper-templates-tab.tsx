@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Pagination } from "@/lib/types";
@@ -8,6 +9,7 @@ import type { CustomTemplate } from "@/lib/types/audit-types";
 import { WorkpaperTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-template-dialog";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
 import { Card } from "@/components/ui/card";
+import { CustomPagination } from "@/components/ui/pagination";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -21,48 +23,6 @@ interface WorkpapersPageClientProps {
   templates?: WorkingPaperTemplate[];
 }
 
-// Mock custom templates - replace with actual data fetch
-const mockCustomTemplates: CustomTemplate[] = [
-  // {
-  //   id: "custom-1",
-  //   name: "IT Security Assessment",
-  //   description: "Comprehensive IT security controls testing template",
-  //   type: "custom",
-  //   createdBy: "John Doe",
-  //   createdAt: new Date("2025-01-10"),
-  //   updatedAt: new Date("2025-01-10"),
-  //   isPublic: true,
-  //   includeEvidenceGrid: false,
-  //   sections: [
-  //     {
-  //       id: "sec-1",
-  //       title: "Scope & Objectives",
-  //       description: "Define assessment scope",
-  //       order: 0,
-  //       fields: [
-  //         {
-  //           id: "field-1",
-  //           label: "Assessment Scope",
-  //           type: "textarea",
-  //           required: true,
-  //           placeholder: "Describe the scope...",
-  //           order: 0
-  //         },
-  //         {
-  //           id: "field-2",
-  //           label: "Risk Level",
-  //           type: "select",
-  //           required: true,
-  //           options: ["Low", "Medium", "High", "Critical"],
-  //           order: 1
-  //         }
-  //       ]
-  //     }
-  //   ],
-  //   usageCount: 15
-  // }
-];
-
 export default function WorkpaperTemplatesTab({
   templates,
   pagination
@@ -70,10 +30,16 @@ export default function WorkpaperTemplatesTab({
   templates: WorkingPaperTemplate[];
   pagination?: Pagination;
 }) {
+  const router = useRouter();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
+  };
+
+  const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
+    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
+    router.push(`?templates_page=${pageConfig.page}&templates_page_size=${pageSize}`);
   };
 
   return (
@@ -98,12 +64,22 @@ export default function WorkpaperTemplatesTab({
           onCreateClick={handleOpenCreateDialog}
         />
 
+        {/* Pagination */}
+        {pagination && (
+          <CustomPagination
+            pagination={pagination}
+            updatePagination={handlePaginationChange}
+            showDetails={true}
+            allowSetPageSize={true}
+          />
+        )}
+
         {/* Create Workpaper Template Selection Dialog */}
         <WorkpaperTemplateDialog
           open={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
           // audits={audits}
-          customTemplates={mockCustomTemplates}
+          customTemplates={[]}
         />
       </Card>
     </>

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { APIResponse } from "@/lib/types";
+import type { APIResponse, Pagination } from "@/lib/types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
 import { updateFinding, updateFindingStatus } from "./audit-module-actions";
@@ -172,5 +172,683 @@ export async function submitCategoryFindingsForApproval(data: {
     return successResponse(response.data, "Findings submitted for approval successfully");
   } catch (error: any) {
     return handleError(error, "PATCH | SUBMIT WORKING-PAPER CATEGORY FINDINGS", url);
+  }
+}
+
+// ============================================================================
+// FINDING ACTION ACTIONS
+// ============================================================================
+
+import type {
+  CreateFindingActionInput,
+  UpdateFindingActionInput,
+  CreateFindingActionEvidenceInput,
+  UpdateFindingActionEvidenceInput,
+  CreateFindingActionReviewInput,
+  CreateFindingReassessmentInput,
+  UpdateFindingReassessmentInput
+} from "@/lib/types/audit-types";
+import { ur } from "zod/v4/locales";
+
+/**
+ * Get all finding actions with optional filters
+ */
+export async function getFindingActions(filters?: {
+  status?: string;
+  assigned_to?: string;
+  finding_id?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
+  const params = new URLSearchParams();
+  if (filters?.status) params.append("status", filters.status);
+  if (filters?.assigned_to) params.append("assigned_to", filters.assigned_to);
+  if (filters?.finding_id) params.append("finding_id", filters.finding_id);
+  if (filters?.page) params.append("page", String(filters.page));
+  if (filters?.page_size) params.append("page_size", String(filters.page_size));
+
+  const queryString = params.toString();
+  const url = `/api/v1/finding-actions${queryString ? `?${queryString}` : ""}`;
+  try {
+    const response = await authenticatedApiClient({ url });
+
+    return successResponse(response.data?.data, "Finding actions fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | FINDING ACTIONS", url);
+  }
+}
+
+/**
+ * Get finding actions by finding ID
+ */
+export async function getFindingActionsByFinding(finding_id: string): Promise<APIResponse> {
+  if (!finding_id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/findings/${finding_id}/actions`
+    });
+
+    return successResponse(response.data?.data, "Finding actions fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FINDING ACTIONS BY FINDING",
+      `/api/v1/findings/${finding_id}/actions`
+    );
+  }
+}
+
+/**
+ * Get single finding action by ID
+ */
+export async function getFindingAction(action_id: string): Promise<APIResponse> {
+  if (!action_id) {
+    return handleBadRequest("Action ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/finding-actions/${action_id}`
+    });
+
+    return successResponse(response.data?.data, "Finding action fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | FINDING ACTION", `/api/v1/finding-actions/${action_id}`);
+  }
+}
+
+/**
+ * Create new finding action
+ */
+export async function createFindingAction(data: CreateFindingActionInput): Promise<APIResponse> {
+  if (
+    !data.finding_id ||
+    !data.action_description ||
+    !data.assigned_to ||
+    !data.reviewer_id ||
+    !data.due_date
+  ) {
+    return handleBadRequest(
+      "Finding ID, action description, assigned user, reviewer, and due date are required"
+    );
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/findings/${data.finding_id}/actions`,
+      data: {
+        action_description: data.action_description,
+        assigned_to: data.assigned_to,
+        reviewer_id: data.reviewer_id,
+        due_date: data.due_date
+      }
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+    revalidatePath(`/dashboard/audit/plans/engagement/`, "page");
+
+    return successResponse(response.data?.data, "Finding action created successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE FINDING ACTION",
+      `/api/v1/findings/${data.finding_id}/actions`
+    );
+  }
+}
+
+/**
+ * Update finding action
+ */
+export async function updateFindingAction(
+  action_id: string,
+  data: UpdateFindingActionInput
+): Promise<APIResponse> {
+  if (!action_id) {
+    return handleBadRequest("Action ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/finding-actions/${action_id}`,
+      data
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+    revalidatePath(`/dashboard/audit/plans/engagement/`, "page");
+
+    return successResponse(response.data?.data, "Finding action updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE FINDING ACTION",
+      `/api/v1/finding-actions/${action_id}`
+    );
+  }
+}
+
+/**
+ * Delete finding action
+ */
+export async function deleteFindingAction(action_id: string): Promise<APIResponse> {
+  if (!action_id) {
+    return handleBadRequest("Action ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/finding-actions/${action_id}`
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+    revalidatePath(`/dashboard/audit/plans/engagement/`, "page");
+
+    return successResponse(null, "Finding action deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | FINDING ACTION", `/api/v1/finding-actions/${action_id}`);
+  }
+}
+
+// ============================================================================
+// FINDING ACTION EVIDENCE ACTIONS
+// ============================================================================
+
+/**
+ * Get evidence for a finding action
+ */
+export async function getFindingActionEvidence(action_id: string): Promise<APIResponse> {
+  if (!action_id) {
+    return handleBadRequest("Action ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/finding-actions/${action_id}/evidence`
+    });
+
+    return successResponse(response.data?.data, "Finding action evidence fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FINDING ACTION EVIDENCE",
+      `/api/v1/finding-actions/${action_id}/evidence`
+    );
+  }
+}
+
+/**
+ * Get single evidence by ID
+ */
+export async function getFindingActionEvidenceById(evidence_id: string): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/finding-action-evidence/${evidence_id}`
+    });
+
+    return successResponse(response.data?.data, "Evidence fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FINDING ACTION EVIDENCE BY ID",
+      `/api/v1/finding-action-evidence/${evidence_id}`
+    );
+  }
+}
+
+/**
+ * Submit evidence for a finding action
+ */
+export async function createFindingActionEvidence(
+  data: CreateFindingActionEvidenceInput
+): Promise<APIResponse> {
+  if (!data.finding_action_id || !data.title) {
+    return handleBadRequest("Action ID and title are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/finding-actions/${data.finding_action_id}/evidence`,
+      data: {
+        title: data.title,
+        description: data.description,
+        evidence_summary: data.evidence_summary,
+        file_link: data.file_link
+      }
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(response.data?.data, "Evidence submitted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE FINDING ACTION EVIDENCE",
+      `/api/v1/finding-actions/${data.finding_action_id}/evidence`
+    );
+  }
+}
+
+/**
+ * Update finding action evidence
+ */
+export async function updateFindingActionEvidence(
+  evidence_id: string,
+  data: UpdateFindingActionEvidenceInput
+): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/finding-action-evidence/${evidence_id}`,
+      data
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(response.data?.data, "Evidence updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE FINDING ACTION EVIDENCE",
+      `/api/v1/finding-action-evidence/${evidence_id}`
+    );
+  }
+}
+
+/**
+ * Delete finding action evidence
+ */
+export async function deleteFindingActionEvidence(evidence_id: string): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/finding-action-evidence/${evidence_id}`
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(null, "Evidence deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | FINDING ACTION EVIDENCE",
+      `/api/v1/finding-action-evidence/${evidence_id}`
+    );
+  }
+}
+
+// ============================================================================
+// FINDING ACTION REVIEW ACTIONS
+// ============================================================================
+
+/**
+ * Get reviews for a finding action
+ */
+export async function getFindingActionReviews(action_id: string): Promise<APIResponse> {
+  if (!action_id) {
+    return handleBadRequest("Action ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/finding-actions/${action_id}/reviews`
+    });
+
+    return successResponse(response.data?.data, "Reviews fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FINDING ACTION REVIEWS",
+      `/api/v1/finding-actions/${action_id}/reviews`
+    );
+  }
+}
+
+/**
+ * Create review for evidence
+ */
+export async function createFindingActionReview(
+  data: CreateFindingActionReviewInput
+): Promise<APIResponse> {
+  if (!data.finding_action_evidence_id || !data.review_status) {
+    return handleBadRequest("Evidence ID and review status are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/finding-action-evidence/${data.finding_action_evidence_id}/review`,
+      data: {
+        review_status: data.review_status,
+        review_comments: data.review_comments
+      }
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(response.data?.data, "Review submitted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE FINDING ACTION REVIEW",
+      `/api/v1/finding-action-evidence/${data.finding_action_evidence_id}/review`
+    );
+  }
+}
+
+/**
+ * Approve evidence
+ */
+export async function approveFindingActionEvidence(
+  evidence_id: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/finding-action-evidence/${evidence_id}/approve`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(response.data?.data, "Evidence approved successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | APPROVE FINDING ACTION EVIDENCE",
+      `/api/v1/finding-action-evidence/${evidence_id}/approve`
+    );
+  }
+}
+
+/**
+ * Reject evidence
+ */
+export async function rejectFindingActionEvidence(
+  evidence_id: string,
+  comments?: string
+): Promise<APIResponse> {
+  if (!evidence_id) {
+    return handleBadRequest("Evidence ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/finding-action-evidence/${evidence_id}/reject`,
+      data: { comments }
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(response.data?.data, "Evidence rejected successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | REJECT FINDING ACTION EVIDENCE",
+      `/api/v1/finding-action-evidence/${evidence_id}/reject`
+    );
+  }
+}
+
+/**
+ * Update finding action review
+ */
+export async function updateFindingActionReview(
+  review_id: string,
+  data: { review_status?: string; review_comments?: string }
+): Promise<APIResponse> {
+  if (!review_id) {
+    return handleBadRequest("Review ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/finding-action-reviews/${review_id}`,
+      data
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(response.data?.data, "Review updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE FINDING ACTION REVIEW",
+      `/api/v1/finding-action-reviews/${review_id}`
+    );
+  }
+}
+
+/**
+ * Delete finding action review
+ */
+export async function deleteFindingActionReview(review_id: string): Promise<APIResponse> {
+  if (!review_id) {
+    return handleBadRequest("Review ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/finding-action-reviews/${review_id}`
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+
+    return successResponse(null, "Review deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | FINDING ACTION REVIEW",
+      `/api/v1/finding-action-reviews/${review_id}`
+    );
+  }
+}
+
+// ============================================================================
+// FINDING REASSESSMENT ACTIONS
+// ============================================================================
+
+/**
+ * Get reassessments for a finding
+ */
+export async function getFindingReassessments(finding_id: string): Promise<APIResponse> {
+  if (!finding_id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/findings/${finding_id}/reassessments`
+    });
+
+    return successResponse(response.data?.data, "Reassessments fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FINDING REASSESSMENTS",
+      `/api/v1/findings/${finding_id}/reassessments`
+    );
+  }
+}
+
+/**
+ * Get latest reassessment for a finding
+ */
+export async function getLatestFindingReassessment(finding_id: string): Promise<APIResponse> {
+  if (!finding_id) {
+    return handleBadRequest("Finding ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/findings/${finding_id}/reassessments/latest`
+    });
+
+    return successResponse(response.data?.data, "Latest reassessment fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | LATEST FINDING REASSESSMENT",
+      `/api/v1/findings/${finding_id}/reassessments/latest`
+    );
+  }
+}
+
+/**
+ * Get single reassessment by ID
+ */
+export async function getFindingReassessment(reassessment_id: string): Promise<APIResponse> {
+  if (!reassessment_id) {
+    return handleBadRequest("Reassessment ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: `/api/v1/finding-reassessments/${reassessment_id}`
+    });
+
+    return successResponse(response.data?.data, "Reassessment fetched successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | FINDING REASSESSMENT",
+      `/api/v1/finding-reassessments/${reassessment_id}`
+    );
+  }
+}
+
+/**
+ * Create finding reassessment
+ */
+export async function createFindingReassessment(
+  data: CreateFindingReassessmentInput
+): Promise<APIResponse> {
+  if (
+    !data.finding_id ||
+    !data.finding_action_id ||
+    !data.compliance_status ||
+    !data.auditor_comments
+  ) {
+    return handleBadRequest(
+      "Finding ID, action ID, compliance status, and auditor comments are required"
+    );
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/findings/${data.finding_id}/reassess`,
+      data: {
+        finding_action_id: data.finding_action_id,
+        compliance_status: data.compliance_status,
+        auditor_comments: data.auditor_comments,
+        new_severity: data.new_severity,
+        new_recommendation: data.new_recommendation,
+        compliance_percentage: data.compliance_percentage
+      }
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+    revalidatePath(`/dashboard/audit/plans/engagement/`, "page");
+
+    return successResponse(response.data?.data, "Reassessment created successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE FINDING REASSESSMENT",
+      `/api/v1/findings/${data.finding_id}/reassess`
+    );
+  }
+}
+
+/**
+ * Update finding reassessment
+ */
+export async function updateFindingReassessment(
+  reassessment_id: string,
+  data: UpdateFindingReassessmentInput
+): Promise<APIResponse> {
+  if (!reassessment_id) {
+    return handleBadRequest("Reassessment ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url: `/api/v1/finding-reassessments/${reassessment_id}`,
+      data
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+    revalidatePath(`/dashboard/audit/plans/engagement/`, "page");
+
+    return successResponse(response.data?.data, "Reassessment updated successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE FINDING REASSESSMENT",
+      `/api/v1/finding-reassessments/${reassessment_id}`
+    );
+  }
+}
+
+/**
+ * Delete finding reassessment
+ */
+export async function deleteFindingReassessment(reassessment_id: string): Promise<APIResponse> {
+  if (!reassessment_id) {
+    return handleBadRequest("Reassessment ID is required");
+  }
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url: `/api/v1/finding-reassessments/${reassessment_id}`
+    });
+
+    revalidatePath("/dashboard/actions/audit");
+    revalidatePath(`/dashboard/audit/plans/engagement/`, "page");
+
+    return successResponse(null, "Reassessment deleted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | FINDING REASSESSMENT",
+      `/api/v1/finding-reassessments/${reassessment_id}`
+    );
   }
 }

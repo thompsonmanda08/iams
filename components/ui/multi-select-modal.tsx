@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
 type Option = Record<"value" | "label", string>;
 
@@ -26,6 +27,11 @@ interface MultiSelectModalProps {
   isLoading?: boolean;
   name?: string;
   selectedItemsDisplay?: React.ReactNode;
+  tooltip?: {
+    text?: string;
+    Component?: React.ReactNode;
+  };
+  tooltipMap?: Record<string, React.ReactNode>;
 }
 
 export function MultiSelectModal({
@@ -39,6 +45,8 @@ export function MultiSelectModal({
   isLoading = false,
   disabled = false,
   selectedItemsDisplay,
+  tooltip,
+  tooltipMap,
   ...props
 }: MultiSelectModalProps) {
   const [open, setOpen] = React.useState(false);
@@ -119,11 +127,32 @@ export function MultiSelectModal({
               <span className="text-muted-foreground">{placeholder}</span>
             ) : (
               <>
-                <Badge
-                  variant="default"
-                  className="line-clamp-1 max-w-xs truncate whitespace-nowrap">
-                  {firstSelectedOption?.label.slice(0, 50)}...
-                </Badge>
+                {tooltip ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge
+                          variant="default"
+                          className="line-clamp-1 max-w-xs truncate whitespace-nowrap">
+                          {firstSelectedOption?.label.slice(0, 50)}...
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {tooltip.Component ? (
+                          <>{tooltip.Component}</>
+                        ) : (
+                          tooltip.text || firstSelectedOption?.label
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Badge
+                    variant="default"
+                    className="line-clamp-1 max-w-xs truncate whitespace-nowrap">
+                    {firstSelectedOption?.label.slice(0, 50)}...
+                  </Badge>
+                )}
                 {remainingCount > 0 && (
                   <Badge
                     variant="outline"
@@ -194,7 +223,22 @@ export function MultiSelectModal({
                                 className="cursor-pointer"
                                 onClick={(e) => e.stopPropagation()}
                               />
-                              <span className="flex-1 text-sm">{option.label}</span>
+                              {tooltipMap && tooltipMap[option.value] ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="flex-1 cursor-help text-sm underline decoration-dashed">
+                                        {option.label}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="max-w-xs bg-card p-4 border border-border">
+                                      {tooltipMap[option.value]}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <span className="flex-1 text-sm">{option.label}</span>
+                              )}
                             </div>
                           ))}
                       </div>
@@ -239,7 +283,22 @@ export function MultiSelectModal({
                               className="cursor-pointer"
                               onClick={(e) => e.stopPropagation()}
                             />
-                            <span className="flex-1 text-sm">{option.label}</span>
+                            {tooltipMap && tooltipMap[option.value] ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="flex-1 cursor-help text-sm underline decoration-dashed">
+                                      {option.label}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-xs bg-card p-4 border border-border">
+                                    {tooltipMap[option.value]}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              <span className="flex-1 text-sm">{option.label}</span>
+                            )}
                             <button
                               type="button"
                               onClick={(e) => {

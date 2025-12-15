@@ -955,14 +955,14 @@ export interface ScheduledReport {
  * Key audit metrics for dashboard
  */
 export interface AuditMetrics {
-  totalAudits: number;
+  total_audit_count: number;
   activeAudits: number;
   completedAudits: number;
-  conformityRate: number;
+  in_progress_audit_count: number;
   openFindings: number;
-  criticalFindings: number;
+  approved_audit_count: number;
   overdueFindings: number;
-  upcomingAudits: number;
+  upcoming_audit_count: number;
 }
 
 /**
@@ -1064,6 +1064,131 @@ export interface AuditAnalytics {
     resolved: number;
     closed: number;
   };
+}
+
+// ============================================================================
+// ANNUAL PLAN ITEM TYPES
+// ============================================================================
+
+/**
+ * KRI Color indicator for Key Risk Indicators
+ */
+export type KRIColor = "Red" | "Amber" | "Green";
+
+/**
+ * Audit frequency options
+ */
+export type AuditFrequency = "ANNUALLY" | "SEMI_ANNUALLY" | "QUARTERLY" | "MONTHLY";
+
+/**
+ * KRI Measurement type
+ */
+export type KRIMeasurementType = "CURRENCY" | "PERCENTAGE" | "COUNT" | "SCORE";
+
+/**
+ * Universe Item - detailed audit universe item with all relationships
+ * Contains KRI information, strategic planning, and audit area details
+ */
+export interface UniverseItem {
+  id: string;
+  organization_id: string;
+  audit_universe_id: number;
+  department_id: string;
+  department_name: string;
+
+  // Strategic planning
+  strategic_pillar_id: string;
+  strategic_pillar_name: string;
+  strategic_initiative_id: string;
+  strategic_initiative_name: string;
+
+  // Audit areas
+  auditable_area_id: string;
+  auditable_area_name: string;
+  process_activity_id: string;
+  process_activity_name: string;
+
+  // Targets and indicators
+  indicative_target_id: string;
+  indicative_target_name: string;
+
+  // KRI (Key Risk Indicator) information
+  kri_id: string;
+  kri_name: string;
+  kri_average_score: number;
+  kri_measurement_type: KRIMeasurementType;
+  kri_color: KRIColor; // Red, Amber, or Green
+
+  // Configuration
+  audit_frequency: AuditFrequency;
+  include_amber_kris: boolean;
+  include_red_kris: boolean;
+  is_active: boolean;
+  sort_order: number;
+
+  // Metadata
+  created_by: string;
+  updated_by: string;
+  created_by_name: string;
+  updated_by_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Annual Plan Item - complete structure with nested universe items
+ * Represents an audit plan item within an annual audit plan
+ */
+export interface AnnualPlanItemWithDetails {
+  id: string;
+  organization_id: string;
+  register_id: string;
+  department_id: string;
+  department_name: string;
+
+  // Universe item relationships
+  universe_item_ids: string[];
+  universe_items: UniverseItem[];
+
+  // Engagement details
+  engagement_date: string; // ISO 8601 datetime
+  engagement_end_date: string | null; // ISO 8601 datetime
+  total_days: number | null;
+
+  // Assignment
+  responsible_person: string; // User ID
+  responsible_person_name: string;
+
+  // Generation tracking
+  is_generated: boolean;
+  generated_audit_plan_id: string | null;
+  date_generated: string | null;
+
+  // Status tracking
+  is_overdue: boolean;
+  last_reminder_sent_at: string | null;
+
+  // Standard audit fields
+  status?: StandardStatus;
+  title?: string;
+  audit_scope?: string;
+  management_standard?: string;
+  start_date?: string;
+  end_date?: string;
+  team_leader?: {
+    name: string;
+    email?: string;
+  };
+  audit_team_members?: Array<{
+    name: string;
+    email?: string;
+  }>;
+
+  // Metadata
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // ============================================================================
@@ -1232,4 +1357,227 @@ export interface FindingEvidenceListResponse {
   success: boolean;
   data?: FindingEvidence[];
   message?: string;
+}
+
+// ============================================================================
+// FINDING ACTION TYPES
+// ============================================================================
+
+/**
+ * Finding Action status types
+ */
+export type FindingActionStatus =
+  | "PENDING"
+  | "IN_PROGRESS"
+  | "UNDER_REVIEW"
+  | "APPROVED"
+  | "COMPLETED"
+  | "REJECTED";
+
+/**
+ * Finding Action interface - actions assigned to findings for remediation
+ */
+export interface FindingAction {
+  id: string;
+  finding_id: string;
+  action_description: string;
+  assigned_to: string; // User ID
+  reviewer_id: string; // User ID
+  due_date: string; // ISO 8601 date string
+  status: FindingActionStatus;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships (populated by API)
+  finding?: WorkpaperFinding;
+  assigned_to_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  reviewer_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  evidence_count?: number;
+  reviews_count?: number;
+}
+
+/**
+ * Input type for creating finding action
+ */
+export interface CreateFindingActionInput {
+  finding_id: string;
+  action_description: string;
+  assigned_to: string;
+  reviewer_id: string;
+  due_date: string;
+}
+
+/**
+ * Input type for updating finding action
+ */
+export interface UpdateFindingActionInput {
+  action_description?: string;
+  assigned_to?: string;
+  reviewer_id?: string;
+  due_date?: string;
+  status?: FindingActionStatus;
+}
+
+// ============================================================================
+// FINDING ACTION EVIDENCE TYPES
+// ============================================================================
+
+/**
+ * Finding Action Evidence interface
+ */
+export interface FindingActionEvidence {
+  id: string;
+  organization_id: string;
+  finding_action_id: string;
+  evidence_summary?: string;
+  evidence_file_url?: string;
+  evidence_file_name?: string;
+  evidence_file_type?: string;
+  evidence_file_size?: number;
+  submitted_by: string;
+  submitted_at: string;
+  status?: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships
+  submitted_by_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  reviews?: FindingActionReview[];
+}
+
+/**
+ * Input type for creating finding action evidence
+ */
+export interface CreateFindingActionEvidenceInput {
+  finding_action_id: string;
+  title: string;
+  description?: string;
+  evidence_summary?: string;
+  file_link?: string;
+}
+
+/**
+ * Input type for updating finding action evidence
+ */
+export interface UpdateFindingActionEvidenceInput {
+  title?: string;
+  description?: string;
+  file_link?: string;
+}
+
+// ============================================================================
+// FINDING ACTION REVIEW TYPES
+// ============================================================================
+
+/**
+ * Finding Action Review status
+ */
+export type FindingActionReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+/**
+ * Finding Action Review interface
+ */
+export interface FindingActionReview {
+  id: string;
+  finding_action_evidence_id: string;
+  reviewer_id: string;
+  review_status: FindingActionReviewStatus;
+  review_comments?: string;
+  reviewed_at: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships
+  reviewer_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
+/**
+ * Input type for creating finding action review
+ */
+export interface CreateFindingActionReviewInput {
+  finding_action_evidence_id: string;
+  review_status: FindingActionReviewStatus;
+  review_comments?: string;
+}
+
+// ============================================================================
+// FINDING REASSESSMENT TYPES
+// ============================================================================
+
+/**
+ * Finding Reassessment Compliance Status
+ */
+export type ReassessmentComplianceStatus = "COMPLIANT" | "NON_COMPLIANT" | "PARTIAL";
+
+/**
+ * Finding Reassessment interface
+ */
+export interface FindingReassessment {
+  id: string;
+  finding_id: string;
+  finding_action_id: string;
+  compliance_status: ReassessmentComplianceStatus;
+  auditor_comments: string;
+  new_severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  new_recommendation?: string;
+  compliance_percentage?: number;
+  reassessed_by: string;
+  reassessed_at: string;
+  created_at: string;
+  updated_at: string;
+
+  // Relationships
+  reassessed_by_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  finding_action?: FindingAction;
+}
+
+/**
+ * Input type for creating finding reassessment
+ */
+export interface CreateFindingReassessmentInput {
+  finding_id: string;
+  finding_action_id: string;
+  compliance_status: ReassessmentComplianceStatus;
+  auditor_comments: string;
+  new_severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  new_recommendation?: string;
+  compliance_percentage?: number;
+}
+
+/**
+ * Input type for updating finding reassessment
+ */
+export interface UpdateFindingReassessmentInput {
+  compliance_status?: ReassessmentComplianceStatus;
+  auditor_comments?: string;
+  new_severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  new_recommendation?: string;
+  compliance_percentage?: number;
 }

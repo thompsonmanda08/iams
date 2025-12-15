@@ -81,11 +81,10 @@ export async function getAuditPlan(id: string): Promise<APIResponse> {
     return handleBadRequest("Audit plan ID is required");
   }
 
+  const url = `/api/v1/audit-plans/${id}`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/audit-plans/${id}`
-    });
+    const response = await authenticatedApiClient({ url });
 
     return successResponse(response.data?.data, "Audit plan fetched successfully");
   } catch (error: any) {
@@ -141,13 +140,10 @@ export async function createAuditPlan(data: {
   if (!data.management_standard) {
     return handleBadRequest("Management standard is required");
   }
+  const url = "/api/v1/audit-plans";
 
   try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: "/api/v1/audit-plans",
-      data
-    });
+    const response = await authenticatedApiClient({ method: "POST", url, data });
 
     console.log(response);
 
@@ -156,7 +152,7 @@ export async function createAuditPlan(data: {
 
     return successResponse(response.data, "Audit plan created successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE AUDIT PLAN", "/api/v1/audit-plans");
+    return handleError(error, "POST | CREATE AUDIT PLAN", url);
   }
 }
 
@@ -177,12 +173,10 @@ export async function updateAuditPlan(
     return handleBadRequest("Audit plan ID is required");
   }
 
+  const url = `/api/v1/audit-plans/${id}`;
+
   try {
-    const response = await authenticatedApiClient({
-      method: "PUT",
-      url: `/api/v1/audit-plans/${id}`,
-      data
-    });
+    const response = await authenticatedApiClient({ method: "PUT", url, data });
 
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/engagement/${id}`);
@@ -190,7 +184,7 @@ export async function updateAuditPlan(
 
     return successResponse(response.data, "Audit plan updated successfully");
   } catch (error: any) {
-    return handleError(error, "PUT | UPDATE AUDIT PLAN", `/api/v1/audit-plans/${id}`);
+    return handleError(error, "PUT | UPDATE AUDIT PLAN", url);
   }
 }
 
@@ -662,13 +656,12 @@ export async function getAuditMetrics(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       method: "GET",
-      url: "/api/v1/audit-plans/metrics"
+      url: "/api/v1/audit-dashboard/overview"
     });
 
-    return successResponse(response.data, "Audit metrics fetched successfully");
+    return successResponse(response.data);
   } catch (error: any) {
-    // Providing mock data on error for development purposes
-    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-plans/metrics");
+    return handleError(error, "GET | AUDIT METRICS", "/api/v1/audit-dashboard/overview");
   }
 }
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CustomPagination } from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Lightbulb, Plus, RefreshCcw, Send, View } from "lucide-react";
+import { ClipboardListIcon, Lightbulb, Plus, RefreshCcw, Send, View } from "lucide-react";
 import { Pagination } from "@/lib/types";
 import {
   Empty,
@@ -74,13 +75,18 @@ export default function AuditAnnualPlan({
   const router = useRouter();
 
   // Hook to fetch plans by year - only enabled when user selects a specific year
-  const { data: yearFilteredPlan, isLoading: isFetchingByYear } = useAnnualAuditPlan({
-    year: parseInt(selectedYear)
-  });
+  const { data: yearFilteredPlan, isLoading: isFetchingByYear } = useAnnualAuditPlan(
+    selectedYear ? { year: parseInt(selectedYear) } : undefined
+  );
 
   // Use filtered plans from API if year is selected, otherwise use SSR plans
-  const displayedPlans = yearFilteredPlan && !isFetchingByYear ? [{ ...yearFilteredPlan }] : plans;
-  console.log({ yearFilteredPlan });
+  const displayedPlans =
+    yearFilteredPlan && !isFetchingByYear ? [yearFilteredPlan] : Array.isArray(plans) ? plans : [];
+
+  const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
+    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
+    router.push(`?annual_page=${pageConfig.page}&annual_page_size=${pageSize}`);
+  };
 
   const handleSubmitClick = (id: string) => {
     setSubmitId(id);
@@ -188,38 +194,72 @@ export default function AuditAnnualPlan({
                 {displayedPlans.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
-                      <Empty>
-                        <EmptyHeader>
-                          <EmptyMedia variant="icon">
-                            <Lightbulb />
-                          </EmptyMedia>
-                          <EmptyTitle>Select a year</EmptyTitle>
-                          <EmptyDescription>
-                            If you haven&apos;t created any annual plans yet. Get started by
-                            creating your first annual audit plan.
-                          </EmptyDescription>
-                        </EmptyHeader>
-                        <EmptyContent>
-                          <div className="flex items-center gap-2">
-                            <SearchSelectField
-                              placeholder="-- Select Year --"
-                              value={selectedYear}
-                              onValueChange={setSelectedYear}
-                              isLoading={false}
-                              options={years}
-                            />
-                            <Button
-                              size="sm"
-                              className="h-9"
-                              onClick={() => {
-                                setSelectedYear("");
-                              }}>
-                              <RefreshCcw className="h-4 w-4" />
-                              Reset
-                            </Button>
-                          </div>
-                        </EmptyContent>
-                      </Empty>
+                      <>
+                        <Card className="bg-canvas/50 border-2 border-dashed">
+                          <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+                            <div className="relative mb-4">
+                              <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+                              <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                                <ClipboardListIcon
+                                  className="text-primary h-16 w-16"
+                                  strokeWidth={1.5}
+                                />
+                              </div>
+                            </div>
+
+                            <h3 className="text-foreground mb-2 text-2xl font-semibold">
+                              Select a year
+                            </h3>
+                            <p className="text-muted-foreground mb-8 max-w-md text-center">
+                              If you haven&apos;t created any annual plans yet. Get started by
+                              creating your first annual audit plan.
+                            </p>
+
+                            <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+                              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                <div className="text-primary mb-1 font-mono">CREATE</div>
+                                <div className="text-muted-foreground">Annual Audit Plan</div>
+                              </div>
+                              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                <div className="text-primary mb-1 font-mono">ADD</div>
+                                <div className="text-muted-foreground">Engagement Plan Items</div>
+                              </div>
+                              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                <div className="text-primary mb-1 font-mono">GENERATE</div>
+                                <div className="text-muted-foreground">Engagement Audit Plans</div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {/* <SearchSelectField
+                                placeholder="-- Select Year --"
+                                value={selectedYear}
+                                onValueChange={setSelectedYear}
+                                isLoading={false}
+                                options={years}
+                              />
+                              <Button
+                                size="sm"
+                                className="h-9"
+                                onClick={() => {
+                                  setSelectedYear("");
+                                }}>
+                                <RefreshCcw className="h-4 w-4" />
+                                Reset
+                              </Button> */}
+                              <Button
+                                size="sm"
+                                className="h-9"
+                                onClick={() => {
+                                  setCreateDialogOpen(true);
+                                }}>
+                                <Plus className="h-4 w-4" />
+                                Create a Plan
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -311,6 +351,16 @@ export default function AuditAnnualPlan({
           </div>
         )}
       </Card>
+
+      {/* Pagination */}
+      {pagination && (
+        <CustomPagination
+          pagination={pagination}
+          updatePagination={handlePaginationChange}
+          showDetails={true}
+          allowSetPageSize={true}
+        />
+      )}
 
       {/* Create Approval Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
