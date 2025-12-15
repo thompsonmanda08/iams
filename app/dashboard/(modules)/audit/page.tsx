@@ -10,56 +10,25 @@ import PageHeader from "@/components/page-header";
 import { AuditPlanAnalytics } from "./_components/audit-plan-analytics";
 import { AuditActivitiesDistribution } from "./_components/audit-activities-distribution";
 import { AuditStatusDistribution } from "./_components/audit-status-distribution";
+import { BudgetAnalytics } from "./_components/budget-analytics";
+import { UniverseAnalytics } from "./_components/universe-analytics";
 
 export default async function AuditDashboardPage() {
-  const metricsResponse = await getAuditMetrics();
-  const metrics = metricsResponse.success ? metricsResponse.data : null;
+  const summary = await getAuditMetrics();
 
-  const summary = {
-    overview_stats: {
-      total_audit_count: 4,
-      approved_audit_count: 3,
-      upcoming_audit_count: 0,
-      in_progress_audit_count: 2
-    },
-    audit_plan_stats: {
-      quarterly_count: {
-        Q1: 1,
-        Q2: 4,
-        Q3: 3,
-        Q4: 4
-      },
-      monthly_count: 4,
-      weekly_count: 3,
-      annual_count: 4,
-      total_count: 4
-    },
-    audit_activities_stats: {
-      total_auditable_area_count: 5,
-      total_process_activities_count: 4,
-      quarterly_count: {
-        Q1: 1,
-        Q2: 4,
-        Q3: 2,
-        Q4: 5
-      }
-    }
-  };
-
-  // Prepare chart data
   const overviewChartData = [
-    { name: "Approved", value: summary.overview_stats.approved_audit_count },
-    { name: "In Progress", value: summary.overview_stats.in_progress_audit_count },
-    { name: "Upcoming", value: summary.overview_stats.upcoming_audit_count }
+    { name: "Approved", value: summary.data.overview_stats.approved_audit_count },
+    { name: "In Progress", value: summary.data.overview_stats.in_progress_audit_count },
+    { name: "Upcoming", value: summary.data.overview_stats.upcoming_audit_count }
   ].filter((item) => item.value > 0);
 
   const planTypeChartData = [
-    { name: "Annual", value: summary.audit_plan_stats.annual_count },
-    { name: "Monthly", value: summary.audit_plan_stats.monthly_count },
-    { name: "Weekly", value: summary.audit_plan_stats.weekly_count }
+    { name: "Annual", value: summary.data.audit_plan_stats.annual_count },
+    { name: "Monthly", value: summary.data.audit_plan_stats.monthly_count },
+    { name: "Weekly", value: summary.data.audit_plan_stats.weekly_count }
   ];
 
-  const planQuarterlyData = Object.entries(summary.audit_plan_stats.quarterly_count).map(
+  const planQuarterlyData = Object.entries(summary.data.audit_plan_stats.quarterly_count).map(
     ([quarter, count]) => ({
       name: quarter,
       value: count
@@ -67,7 +36,7 @@ export default async function AuditDashboardPage() {
   );
 
   const activitiesQuarterlyData = Object.entries(
-    summary.audit_activities_stats.quarterly_count
+    summary.data.audit_activities_stats.quarterly_count
   ).map(([quarter, count]) => ({
     name: quarter,
     value: count
@@ -120,22 +89,26 @@ export default async function AuditDashboardPage() {
         <div className="space-y-8">
           {/* Metrics Cards */}
           <Suspense fallback={<MetricsLoading />}>
-            <AuditMetricsCards metrics={summary.overview_stats as any} />
+            <AuditMetricsCards metrics={summary.data.overview_stats as any} />
           </Suspense>
 
           {/* Charts Section */}
           <div className="space-y-8">
-            <AuditStatusDistribution data={overviewChartData} stats={summary.overview_stats} />
+            <BudgetAnalytics stats={summary.data.budget_stats} />
+
+            <AuditStatusDistribution data={overviewChartData} stats={summary.data.overview_stats} />
 
             <AuditPlanAnalytics
               planTypeData={planTypeChartData}
-              quarterlyData={planQuarterlyData}
-              quarterlyStats={summary.audit_plan_stats.quarterly_count}
+              quarterlyData={planQuarterlyData as any}
+              quarterlyStats={summary.data.audit_plan_stats.quarterly_count}
             />
 
+            <UniverseAnalytics stats={summary.data.universe_stats} />
+
             <AuditActivitiesDistribution
-              quarterlyData={activitiesQuarterlyData}
-              stats={summary.audit_activities_stats}
+              quarterlyData={activitiesQuarterlyData as any}
+              stats={summary.data.audit_activities_stats}
             />
           </div>
 
