@@ -11,28 +11,47 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight, Info, Repeat2 } from "lucide-react";
 import type { Task } from "@/lib/types/task";
-import { WorkflowTaskActionDialog } from "./workflow-task-action-dialog";
+import { TaskActionDialog } from "./task-action-dialog";
 import { WorkflowTaskReassignDialog } from "./workflow-task-reassign-dialog";
-import { EntityPreviewDialog } from "./entity-preview-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
-import { normalizeEntityType } from "@/lib/utils/entity-preview-utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { StatusBadge } from "@/components/status-badge";
 
 interface WorkflowTask {
   id: string;
   instance_id: string;
-  workflow_id: string;
+  organization_id?: string;
+  required_role_id?: string;
+  required_role_name?: string;
   assigned_to_user_id: string;
-  assigned_to_user_name?: string;
-  entity_id: string;
-  entity_name: string;
-  entity_type: string;
-  workflow_state: string;
+  assigned_to_name?: string;
+  assigned_to_email?: string;
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
   created_at: string;
   updated_at: string;
+  instance: {
+    id?: string;
+    workflow_id?: string;
+    organization_id?: string;
+    entity_type: string;
+    entity_id?: string;
+    status: string;
+    is_finalized?: boolean;
+    created_by?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
+  entity: {
+    entity_id?: string;
+    entity_name?: string;
+    entity_type?: string;
+    id?: string;
+    status?: string;
+    title?: string;
+  };
 }
 
 interface WorkflowTasksTableProps {
@@ -54,7 +73,6 @@ interface WorkflowTasksTableProps {
 export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowTasksTableProps) {
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<"APPROVED" | "REJECTED" | null>(null);
 
@@ -66,10 +84,6 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
     e?.stopPropagation();
     setSelectedTask(task);
     setSelectedAction(action);
-    setPreviewDialogOpen(true);
-  };
-
-  const handleProceedToAction = () => {
     setActionDialogOpen(true);
   };
 
@@ -116,8 +130,8 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
         label: "Budget",
         className: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
       },
-      CONTRACT: {
-        label: "Contract",
+      UNIVERSE: {
+        label: "Audit Universe",
         className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400"
       }
     };
@@ -155,17 +169,76 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
   }
 
   return (
-    <>
+    <TooltipProvider>
       <div className="bg-card rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Task ID</TableHead>
-              <TableHead>Entity Name</TableHead>
-              <TableHead>Entity Type</TableHead>
-              <TableHead>Workflow State</TableHead>
-              <TableHead>Task Status</TableHead>
-              <TableHead>Assigned Date</TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  ENTITY NAME
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      The name of the document or record requiring approval
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  ENTITY TYPE
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      The category or classification of this entity
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  WORKFLOW STATE
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Current stage in the workflow process
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  TASK STATUS
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Current status of your assigned task
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  ASSIGNED DATE
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      When this task was assigned to you
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -175,35 +248,61 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                 key={task.id}
                 onClick={() => onTaskSelect?.(task)}
                 className="hover:bg-muted/50 cursor-pointer transition-colors">
-                {/* TASK ID */}
-                <TableCell>
-                  <span className="font-mono text-sm">{task.id.slice(0, 8)}...</span>
-                </TableCell>
                 {/* ENTITY NAME */}
                 <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{task.entity_name}</span>
-                    <span className="text-muted-foreground text-[9px]">ID: {task.entity_id}</span>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <p className="text-base font-semibold">
+                        {task.entity?.entity_name || task.entity?.title || "Unknown"}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        ID: {task.entity?.entity_id || task.instance?.entity_id || "N/A"}
+                      </p>
+                    </div>
                   </div>
                 </TableCell>
                 {/* ENTITY TYPE */}
-                <TableCell>{getEntityTypeBadge(task.entity_type)}</TableCell>
+                <TableCell>{getEntityTypeBadge(task.instance?.entity_type || "")}</TableCell>
                 {/* WORKFLOW STATE */}
                 <TableCell>
-                  <Badge variant="outline">{task.workflow_state}</Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline">{task.instance?.status || "Unknown"}</Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Current position in workflow: {task.instance?.status || "Unknown"}
+                    </TooltipContent>
+                  </Tooltip>
                 </TableCell>
                 {/* TASK STATUS */}
-                <TableCell>{getTaskStatusBadge(task.status)}</TableCell>
+                <TableCell>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <StatusBadge status={task.status} />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Status: {getStatusLabel(task.status)}
+                    </TooltipContent>
+                  </Tooltip>
+                </TableCell>
                 {/* ASSIGNED DATE */}
                 <TableCell>
-                  <span className="text-muted-foreground text-sm">
-                    {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
-                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-muted-foreground cursor-help text-sm">
+                        {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Assigned on: {new Date(task.created_at).toLocaleString()}
+                    </TooltipContent>
+                  </Tooltip>
                 </TableCell>
 
                 {/* ACTIONS */}
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
+                    {/* Approve/Reject buttons - only for PENDING tasks */}
                     {task.status === "PENDING" && (
                       <>
                         <Button
@@ -224,28 +323,33 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                           <XCircle className="h-4 w-4" />
                           Reject
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1 border-blue-100 bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600"
-                          onClick={(e) => handleTaskReassign(task, e)}
-                          title="Reassign this task to another user">
-                          <ArrowRight className="h-4 w-4" />
-                          Reassign
-                        </Button>
                       </>
                     )}
 
+                    {/* Reassign button - for any status except REASSIGNED */}
+                    {task.status !== "REASSIGNED" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 border-blue-100 bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600"
+                        onClick={(e) => handleTaskReassign(task, e)}
+                        title="Reassign this task to another user">
+                        <Repeat2 className="h-4 w-4" />
+                        Reassign
+                      </Button>
+                    )}
+
+                    {/* Status messages for completed/final states */}
                     {task.status === "COMPLETED" && (
-                      <span className="text-muted-foreground text-sm">Task completed</span>
+                      <span className="text-muted-foreground text-sm">Completed</span>
                     )}
 
                     {task.status === "REJECTED" && (
-                      <span className="text-muted-foreground text-sm">Task rejected</span>
+                      <span className="text-muted-foreground text-sm">Rejected</span>
                     )}
 
                     {task.status === "REASSIGNED" && (
-                      <span className="text-muted-foreground text-sm">Task reassigned</span>
+                      <span className="text-muted-foreground text-sm">Reassigned</span>
                     )}
                   </div>
                 </TableCell>
@@ -257,16 +361,7 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
 
       {selectedTask && (
         <>
-          <EntityPreviewDialog
-            open={previewDialogOpen}
-            onOpenChange={setPreviewDialogOpen}
-            entityId={selectedTask.entity_id}
-            entityType={normalizeEntityType(selectedTask.entity_type)}
-            entityName={selectedTask.entity_name}
-            action={selectedAction || "APPROVED"}
-            onProceed={handleProceedToAction}
-          />
-          <WorkflowTaskActionDialog
+          <TaskActionDialog
             task={selectedTask}
             action={selectedAction}
             open={actionDialogOpen}
@@ -279,6 +374,6 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
           />
         </>
       )}
-    </>
+    </TooltipProvider>
   );
 }

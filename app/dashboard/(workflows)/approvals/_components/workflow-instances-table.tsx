@@ -19,13 +19,10 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import type { Task } from "@/lib/types/task";
-import { TaskActionDialog } from "./task-action-dialog";
 import { TaskReassignDialog } from "./task-reassign-dialog";
-import { EntityPreviewDialog } from "./entity-preview-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
 import { StatusBadge } from "@/components/status-badge";
-import { normalizeEntityType } from "@/lib/utils/entity-preview-utils";
 
 interface WorkflowInstancesTableProps {
   instances: Task[];
@@ -49,25 +46,7 @@ export function WorkflowInstancesTable({
   isLoading
 }: WorkflowInstancesTableProps) {
   const [selectedInstance, setSelectedInstance] = useState<Task | null>(null);
-  const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<"APPROVE" | "REJECT" | null>(null);
-
-  const handleInstanceAction = (
-    instance: Task,
-    action: "APPROVE" | "REJECT",
-    e?: React.MouseEvent
-  ) => {
-    e?.stopPropagation();
-    setSelectedInstance(instance);
-    setSelectedAction(action);
-    setPreviewDialogOpen(true);
-  };
-
-  const handleProceedToAction = () => {
-    setActionDialogOpen(true);
-  };
 
   const handleInstanceReassign = (instance: Task, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -135,8 +114,8 @@ export function WorkflowInstancesTable({
     return (
       <div className="bg-card rounded-lg border p-8">
         <div className="flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-primary"></div>
-          <span className="ml-4 text-muted-foreground">Loading workflow instances...</span>
+          <div className="border-t-primary h-8 w-8 animate-spin rounded-full border-4 border-gray-300"></div>
+          <span className="text-muted-foreground ml-4">Loading workflow instances...</span>
         </div>
       </div>
     );
@@ -174,8 +153,7 @@ export function WorkflowInstancesTable({
               <TableRow
                 key={instance.instance.id}
                 onClick={() => onInstanceSelect?.(instance)}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-              >
+                className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* ENTITY NAME */}
                 <TableCell>
                   <div className="flex flex-col">
@@ -205,41 +183,7 @@ export function WorkflowInstancesTable({
 
                 {/* ACTIONS */}
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-2">
-                    {instance.entity?.status === "IN_REVIEW" &&
-                      !instance.instance.is_finialized && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 border-green-100 bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600"
-                            onClick={(e) => handleInstanceAction(instance, "APPROVE", e)}>
-                            <CheckCircle className="h-4 w-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 border-red-100 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600"
-                            onClick={(e) => handleInstanceAction(instance, "REJECT", e)}>
-                            <XCircle className="h-4 w-4" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-
-                    {(instance.entity?.status === "COMPLETED" ||
-                      instance.entity?.status === "APPROVED") && (
-                      <span className="text-muted-foreground text-sm">
-                        Completed by {instance.instance.created_by_user?.name || "System"}
-                      </span>
-                    )}
-
-                    {(instance.entity?.status === "REJECTED" ||
-                      instance.entity?.status === "DRAFT") && (
-                      <span className="text-muted-foreground text-sm">No actions available</span>
-                    )}
-                  </div>
+                  <span className="text-muted-foreground text-sm">Manage via Tasks tab</span>
                 </TableCell>
               </TableRow>
             ))}
@@ -249,21 +193,6 @@ export function WorkflowInstancesTable({
 
       {selectedInstance && (
         <>
-          <EntityPreviewDialog
-            open={previewDialogOpen}
-            onOpenChange={setPreviewDialogOpen}
-            entityId={selectedInstance.instance.entity_id}
-            entityType={normalizeEntityType(selectedInstance.instance.entity_type)}
-            entityName={selectedInstance.entity_name}
-            action={selectedAction || "APPROVE"}
-            onProceed={handleProceedToAction}
-          />
-          <TaskActionDialog
-            task={selectedInstance}
-            action={selectedAction}
-            open={actionDialogOpen}
-            onOpenChange={setActionDialogOpen}
-          />
           <TaskReassignDialog
             task={selectedInstance}
             open={reassignDialogOpen}
