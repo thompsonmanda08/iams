@@ -75,13 +75,13 @@ export default function AuditAnnualPlan({
   const router = useRouter();
 
   // Hook to fetch plans by year - only enabled when user selects a specific year
-  const { data: yearFilteredPlan, isLoading: isFetchingByYear } = useAnnualAuditPlan({
-    year: parseInt(selectedYear)
-  });
+  const { data: yearFilteredPlan, isLoading: isFetchingByYear } = useAnnualAuditPlan(
+    selectedYear ? { year: parseInt(selectedYear) } : undefined
+  );
 
   // Use filtered plans from API if year is selected, otherwise use SSR plans
-  const displayedPlans = yearFilteredPlan && !isFetchingByYear ? [{ ...yearFilteredPlan }] : plans;
-  console.log({ yearFilteredPlan });
+  const displayedPlans =
+    yearFilteredPlan && !isFetchingByYear ? [yearFilteredPlan] : Array.isArray(plans) ? plans : [];
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
     const pageSize = pageConfig.page_size || pagination?.page_size || 10;
@@ -231,7 +231,7 @@ export default function AuditAnnualPlan({
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <SearchSelectField
+                              {/* <SearchSelectField
                                 placeholder="-- Select Year --"
                                 value={selectedYear}
                                 onValueChange={setSelectedYear}
@@ -246,6 +246,15 @@ export default function AuditAnnualPlan({
                                 }}>
                                 <RefreshCcw className="h-4 w-4" />
                                 Reset
+                              </Button> */}
+                              <Button
+                                size="sm"
+                                className="h-9"
+                                onClick={() => {
+                                  setCreateDialogOpen(true);
+                                }}>
+                                <Plus className="h-4 w-4" />
+                                Create a Plan
                               </Button>
                             </div>
                           </CardContent>

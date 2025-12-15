@@ -34,16 +34,18 @@ export default async function AuditPlansPage({
     page: engagementPage,
     page_size: engagementPageSize
   });
-  const plans = plansResponse.success ? plansResponse.data || [] : [];
-  const plansPagination = plansResponse.pagination;
+  const plans = plansResponse.success ? plansResponse.data?.data || plansResponse.data || [] : [];
+  const plansPagination = plansResponse?.data.pagination || null;
 
   // Fetch annual audit plans
   const annualPlansResponse = await getAnnualAuditPlans({
     page: annualPage,
     page_size: annualPageSize
   });
-  const annualPlans = annualPlansResponse.success ? annualPlansResponse.data || [] : [];
-  const annualPlansPagination = annualPlansResponse.pagination;
+  const annualPlans = annualPlansResponse.success ? annualPlansResponse.data?.data || [] : [];
+  const annualPlansPagination = annualPlansResponse?.data.pagination;
+
+  console.log({ plans });
 
   return (
     <div className="bg-background min-h-screen">

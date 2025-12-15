@@ -156,18 +156,12 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
           <Button
             variant={config.buttonVariant}
             onClick={handleSubmit}
-            disabled={isSubmitting || (action === "REJECT" && !comment.trim())}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Icon className="mr-2 h-4 w-4" />
-                {config.buttonText}
-              </>
-            )}
+            disabled={isSubmitting || (action === "REJECT" && !comment.trim())}
+            isLoading={isSubmitting}>
+            <>
+              <Icon className="mr-2 h-4 w-4" />
+              {config.buttonText}
+            </>
           </Button>
         </DialogFooter>
       </DialogContent>
