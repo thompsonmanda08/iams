@@ -220,14 +220,23 @@ export async function completeWorkflowTask(
     return handleBadRequest("Valid action (APPROVED or REJECTED) is required");
   }
 
-  const url = `/api/v1/workflow-tasks/${taskId}/complete`;
+  if (!remarks) {
+    return handleBadRequest("Remarks is required for an action");
+  }
+
+  let url = "";
+
+  if (action == "REJECTED") {
+    url = `/api/v1/workflow-tasks/${taskId}/reject`;
+  } else {
+    url = `/api/v1/workflow-tasks/${taskId}/approve`;
+  }
 
   try {
     const response = await authenticatedApiClient({
       method: "POST",
       url,
       data: {
-        action,
         remarks
       }
     });

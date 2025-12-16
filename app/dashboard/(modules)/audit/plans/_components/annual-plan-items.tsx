@@ -83,7 +83,6 @@ import { DialogDescription, DialogFooter } from "@/components/ui/dialog";
 type AnnualPlanItem = {
   id?: string;
   department_id: string;
-  universe_id: string;
   universe_item_ids: string[];
   engagement_date: string; // YYYY-MM-DD Date
   engagement_end_date: string; // YYYY-MM-DD Date
@@ -371,9 +370,7 @@ export function AnnualPlanItems({
                 </TableCell>
                 <TableCell>
                   <p className="cursor-help">
-                    {item.updated_at
-                      ? formatDistanceToNow(new Date(item.updated_at), "MMM d")
-                      : "-"}
+                    {item.updated_at ? formatDistanceToNow(new Date(item.updated_at)) : "-"}
                   </p>
                 </TableCell>
                 <TableCell>
@@ -889,7 +886,7 @@ const INIT_GENERATE_FORM_DATA: GenerateAuditPlanFormData = {
 };
 
 interface GenerateAuditPlanModalProps {
-  item: AnnualPlanItem;
+  item: AnnualPlanItemWithDetails;
   planId: string;
 }
 

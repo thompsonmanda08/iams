@@ -84,8 +84,8 @@ export interface EntityPreviewDialogProps {
   entityId: string;
   entityType: EntityType;
   entityName: string;
-  action: "APPROVE" | "REJECT" | "APPROVED" | "REJECTED";
-  onProceed: () => void;
+  action?: "APPROVE" | "REJECT" | "APPROVED" | "REJECTED" | null;
+  onProceed?: () => void;
 }
 
 /**

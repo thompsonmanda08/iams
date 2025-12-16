@@ -54,10 +54,13 @@ export function EntityPreviewDialog({
   const isReject = action === "REJECT" || action === "REJECTED";
   const buttonVariant = isReject ? "destructive" : "default";
   const actionLabel = isReject ? "Reject" : "Approve";
+  const hasAction = action && onProceed;
 
   const handleProceed = () => {
-    onOpenChange(false);
-    onProceed();
+    if (onProceed) {
+      onOpenChange(false);
+      onProceed();
+    }
   };
 
   return (
@@ -145,16 +148,18 @@ export function EntityPreviewDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {hasAction ? "Cancel" : "Close"}
           </Button>
-          <Button
-            variant={buttonVariant}
-            onClick={handleProceed}
-            disabled={isLoading}
-            className="gap-2"
-          >
-            Proceed to {actionLabel}
-          </Button>
+          {hasAction && (
+            <Button
+              variant={buttonVariant}
+              onClick={handleProceed}
+              disabled={isLoading}
+              className="gap-2"
+            >
+              Proceed to {actionLabel}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -155,6 +155,7 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
                 {/* Expand/Collapse Button */}
                 {(item.external_link || item.file_link || item.notes) && (
                   <button
+                    type="button"
                     onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
                     className="text-primary mt-2 text-xs font-medium hover:underline">
                     {expandedId === item.id ? "Show less" : "Show more"}
