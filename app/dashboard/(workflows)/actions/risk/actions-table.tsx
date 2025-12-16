@@ -123,7 +123,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
 
         <div className="rounded-md border">
           <Table>
-            <TableHeader>
+            <TableHeader className="uppercase">
               <TableRow>
                 <TableHead className="w-[300px]">Action Details</TableHead>
                 <TableHead>Risk</TableHead>

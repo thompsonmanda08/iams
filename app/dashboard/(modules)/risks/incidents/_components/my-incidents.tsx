@@ -343,9 +343,9 @@ export function MyIncidents() {
           </div>
 
           <div className="rounded-lg border">
-            <div className="max-h-[600px] overflow-auto py-1">
+            <div className="max-h-[600px] overflow-auto">
               <Table>
-                <TableHeader className="bg-background sticky top-0 z-10">
+                <TableHeader className="bg-background sticky top-0 z-10 uppercase">
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>
                     <TableHead className="min-w-[120px]">Incident Date</TableHead>
