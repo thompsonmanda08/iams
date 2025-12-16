@@ -194,9 +194,9 @@ export default function RiskRegistersTable({
       </Card>
 
       {/* Table */}
-      <Card>
+      <div className="bg-card rounded-lg border">
         <Table>
-          <TableHeader>
+          <TableHeader className="uppercase">
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Department</TableHead>
@@ -307,7 +307,7 @@ export default function RiskRegistersTable({
             className="border-t"
           />
         )}
-      </Card>
+      </div>
 
       <ConfirmationModal
         open={deleteDialog.open}

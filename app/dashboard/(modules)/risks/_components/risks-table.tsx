@@ -330,9 +330,9 @@ export default function RisksTable({
         </div>
       </Card>
 
-      <Card className="container mx-auto">
+      <div className="bg-card container mx-auto rounded-lg border">
         <Table>
-          <TableHeader>
+          <TableHeader className="uppercase">
             <TableRow>
               <TableHead>Risk ID</TableHead>
               <TableHead>Title</TableHead>
@@ -497,7 +497,7 @@ export default function RisksTable({
             className="border-t"
           />
         )}
-      </Card>
+      </div>
 
       <MultiStepRiskForm
         open={createDialogOpen}

@@ -74,7 +74,7 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
       <>
         <div className="bg-card rounded-lg border">
           <Table>
-            <TableHeader>
+            <TableHeader className="uppercase">
               <TableRow>
                 <TableHead>Finding</TableHead>
                 <TableHead>Action Description</TableHead>

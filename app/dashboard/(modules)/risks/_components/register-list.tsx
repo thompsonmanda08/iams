@@ -320,9 +320,9 @@ export default function KRIRegistersClient({
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        <Card>
+        <div className="bg-card rounded-lg border">
           <Table>
-            <TableHeader>
+            <TableHeader className="uppercase">
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
@@ -423,7 +423,7 @@ export default function KRIRegistersClient({
               className="border-t"
             />
           )}
-        </Card>
+        </div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
