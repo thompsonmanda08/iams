@@ -13,7 +13,7 @@ export default async function Dashboard() {
   // Calculate stats
   const totalRisks = data.data.overview.total_risks || 0;
   const highRisks = data.data.risk_summary.risks_by_rating.High || 0;
-  const mediumRisks = data.data.risk_summary.risks_by_rating.Normal || 0;
+  const mediumRisks = data.data.risk_summary.risks_by_rating.medium || 0;
   const lowRisks = data.data.risk_summary.risks_by_rating.Low || 0;
 
   const totalKris = data.data.overview.total_kris;

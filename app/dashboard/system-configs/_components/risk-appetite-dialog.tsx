@@ -120,6 +120,20 @@ export function RiskAppetiteStatusDialog({
       value: "="
     }
   ];
+  const option_names = [
+    {
+      name: "Below",
+      value: "Below"
+    },
+    {
+      name: "Within",
+      value: "Within"
+    },
+    {
+      name: "Above",
+      value: "Above"
+    }
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,41 +149,37 @@ export function RiskAppetiteStatusDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Risk Appetite Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g., Above, Within, Below"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Risk Appetite Value <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="value"
-                type="number"
-                min="1"
-                placeholder="e.g., 1, 2, 3..."
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <SelectField
-                value={formData.condition}
-                onValueChange={(value) => setFormData({ ...formData, condition: value })}
-                placeholder="Select condition"
-                options={options as any}
-                className="w-full"
-              />
-            </div>
+            <SelectField
+              label="Risk Appetite Name"
+              required
+              value={formData.name}
+              onValueChange={(value) => setFormData({ ...formData, name: value })}
+              placeholder="Select risk appetite name"
+              options={option_names as any}
+              className="w-full"
+            />
+
+            <Input
+              label="Risk Appetite Value"
+              required
+              id="value"
+              type="number"
+              min="1"
+              placeholder="e.g., 1, 2, 3..."
+              value={formData.value}
+              onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
+              disabled={isLoading}
+            />
+
+            <SelectField
+              label="Condition"
+              required
+              value={formData.condition}
+              onValueChange={(value) => setFormData({ ...formData, condition: value })}
+              placeholder="Select condition"
+              options={options as any}
+              className="w-full"
+            />
 
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
