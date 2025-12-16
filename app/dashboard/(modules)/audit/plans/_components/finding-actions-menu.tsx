@@ -39,8 +39,7 @@ export function FindingActionsMenu({
   // Status update mutation
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
-      const result = await handleUpdateFindingStatus(findingId, newStatus);
-      return result;
+      await handleUpdateFindingStatus(findingId, newStatus);
     },
     onSuccess: (response, newStatus) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_FINDINGS] });
@@ -63,8 +62,7 @@ export function FindingActionsMenu({
   // Clear finding mutation
   const clearMutation = useMutation({
     mutationFn: async () => {
-      const result = await handleClearFinding(findingId);
-      return result;
+      await handleClearFinding(findingId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_FINDINGS] });

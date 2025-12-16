@@ -9,7 +9,7 @@ import { Plus, Download, AlertCircle, Clock, CheckCircle2, Search } from "lucide
 import { FindingsTable } from "@/components/audit/findings-table";
 import { FindingsFilters } from "@/components/audit/findings-filters";
 import { FindingsAnalytics } from "@/components/audit/findings-analytics";
-import { CreateFindingModal } from "@/components/audit/create-finding-modal";
+import { CreateOrUpdateFindingModal } from "@/components/audit/create-finding-modal";
 import type { Finding, FindingSeverity, FindingStatus } from "@/lib/types/audit-types";
 
 interface AuditFindingsTabProps {
@@ -200,7 +200,7 @@ export function AuditFindingsTab({ stats, findings, auditPlanId }: AuditFindings
 
       {/* Create Finding Modal */}
       {auditPlanId && (
-        <CreateFindingModal
+        <CreateOrUpdateFindingModal
           open={isCreateModalOpen}
           onOpenChange={setIsCreateModalOpen}
           auditPlanId={auditPlanId}

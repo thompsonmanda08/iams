@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Save, Loader2, AlertCircle, FileText, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EvidenceGrid } from "../../../../../components/audit/evidence-grid";
-import { CreateFindingModal } from "../../../../../components/audit/create-finding-modal";
+import { CreateOrUpdateFindingModal } from "../../../../../components/audit/create-finding-modal";
 import type { GeneralWorkpaperInput, EvidenceRow } from "@/lib/types/audit-types";
 import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/data/tick-marks";
 import { SelectField } from "../../../../../components/ui/select-field";
@@ -434,7 +434,7 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
 
       {/* Create Finding Modal */}
       {showCreateFinding && createdWorkpaperId && (
-        <CreateFindingModal
+        <CreateOrUpdateFindingModal
           open={showCreateFinding}
           onOpenChange={(open) => {
             if (!open) handleSkipFinding();

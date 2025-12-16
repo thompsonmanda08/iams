@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
-import { CreateFindingModal } from "@/components/audit/create-finding-modal";
+import { CreateOrUpdateFindingModal } from "@/components/audit/create-finding-modal";
 import type { Workpaper } from "@/lib/types/audit-types";
 import { WorkpapersTable } from "./workpapers-table";
 
@@ -56,7 +56,7 @@ export function AuditWorkpapersTab({ workpapers }: WorkpapersTabProps) {
       </div>
 
       {/* Create Finding Modal */}
-      <CreateFindingModal
+      <CreateOrUpdateFindingModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         auditPlanId="1"
