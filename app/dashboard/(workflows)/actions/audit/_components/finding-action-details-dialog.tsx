@@ -25,6 +25,7 @@ import { ReviewEvidenceDialog } from "./review-evidence-dialog";
 import { CreateReassessmentDialog } from "./create-reassessment-dialog";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useSession } from "@/store/session-store";
 
 interface FindingActionDetailsDialogProps {
   open: boolean;
@@ -56,6 +57,30 @@ const STATUS_COLORS: Record<string, { badge: string; text: string }> = {
   REJECTED: { badge: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200", text: "Rejected" }
 };
 
+const REVIEW_STATUS_COLORS: Record<string, { badge: string; text: string }> = {
+  PENDING: {
+    badge: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    text: "Pending Review"
+  },
+  APPROVED: {
+    badge: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    text: "Approved"
+  },
+  REJECTED: {
+    badge: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    text: "Rejected"
+  }
+};
+
+// Helper function to get review status for evidence
+const getEvidenceReviewStatus = (item: any) => {
+  if (!item.reviews || item.reviews.length === 0) {
+    return "PENDING";
+  }
+  // Return the status of the most recent review
+  return item.reviews[item.reviews.length - 1]?.review_status || "PENDING";
+};
+
 export function FindingActionDetailsDialog({
   open,
   onOpenChange,
@@ -65,6 +90,10 @@ export function FindingActionDetailsDialog({
   const [reviewEvidenceOpen, setReviewEvidenceOpen] = useState(false);
   const [createReassessmentOpen, setCreateReassessmentOpen] = useState(false);
 
+  // Get current user session
+  const session = useSession();
+  const currentUserId = session?.user?.id;
+
   // Fetch evidence and reviews for this action
   const { data: evidence = [], isLoading: isLoadingEvidence } = useFindingActionEvidence(action.id);
   const { data: reviews = [], isLoading: isLoadingReviews } = useFindingActionReviews(action.id);
@@ -72,12 +101,15 @@ export function FindingActionDetailsDialog({
   // Can only create reassessment if evidence exists
   const hasEvidence = evidence && evidence.length > 0;
 
+  // Can only create reassessment if user is the assigned reviewer (auditor)
+  const isAssignedReviewer = currentUserId === action.reviewer_id;
+
   console.log({ evidence, reviews });
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="h-[90vh] max-w-3xl! overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-3xl! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Finding Action Details</DialogTitle>
             <DialogDescription>
@@ -205,6 +237,19 @@ export function FindingActionDetailsDialog({
                                     {STATUS_COLORS[item.status].text}
                                   </Badge>
                                 )}
+
+                                {(() => {
+                                  const reviewStatus = getEvidenceReviewStatus(item);
+                                  return (
+                                    <Badge
+                                      className={cn(
+                                        "text-xs",
+                                        REVIEW_STATUS_COLORS[reviewStatus].badge
+                                      )}>
+                                      {REVIEW_STATUS_COLORS[reviewStatus].text}
+                                    </Badge>
+                                  );
+                                })()}
                                 {item.evidence_file_url && (
                                   <Button
                                     size="sm"
@@ -310,14 +355,18 @@ export function FindingActionDetailsDialog({
             </Tabs>
 
             {/* Create Reassessment Button */}
-            {hasEvidence && (
-              <Button
-                onClick={() => setCreateReassessmentOpen(true)}
-                // variant="outline"
-                className="w-full">
-                Create Reassessment
-              </Button>
-            )}
+            {hasEvidence &&
+              (action.status == "APPROVED" ||
+                action.status == "COMPLETED" ||
+                action.status == "REJECTED") &&
+              isAssignedReviewer && (
+                <Button
+                  onClick={() => setCreateReassessmentOpen(true)}
+                  // variant="outline"
+                  className="w-full">
+                  Create Reassessment
+                </Button>
+              )}
           </div>
         </DialogContent>
       </Dialog>

@@ -14,19 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { getTopLevelClauses, getChildClauses } from "@/lib/data/iso27001-clauses";
 import type { FindingSeverity, TestResult, EvidenceInput } from "@/lib/types/audit-types";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { handleSaveFinding } from "@/app/_actions/finding-actions";
-import { useRouter } from "next/navigation";
+import { useSaveFindingMutation } from "@/hooks/use-finding-mutations";
 import { SelectField } from "../ui/select-field";
 
 interface CreateFindingModalProps {
@@ -44,7 +34,7 @@ interface CreateFindingModalProps {
   onSuccess?: () => void;
 }
 
-export function CreateFindingModal({
+export function CreateOrUpdateFindingModal({
   open,
   onOpenChange,
   auditPlanId,
@@ -54,9 +44,13 @@ export function CreateFindingModal({
   preFilledData,
   onSuccess: onSuccessCallback
 }: CreateFindingModalProps) {
-  const { toast } = useToast();
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const saveFindingMutation = useSaveFindingMutation({
+    onSuccess: () => {
+      onOpenChange(false);
+      resetForm();
+      onSuccessCallback?.();
+    }
+  });
 
   // Auto-set severity based on test result
   const getDefaultSeverity = (): FindingSeverity => {
@@ -84,70 +78,33 @@ export function CreateFindingModal({
     ...getTopLevelClauses().flatMap((clause) => getChildClauses(clause.id))
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate required fields
     if (!description || !recommendation || !clause) {
-      toast({
-        title: "Missing required fields",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      await handleSaveFinding(
-        auditPlanId,
-        workpaperId || "",
-        {
-          clause,
-          clauseTitle: clause,
-          description,
-          severity,
-          recommendation,
-          action_plan: correctiveAction || undefined,
-          responsible_person: assignedTo || undefined,
-          due_date: dueDate ? new Date(dueDate) : undefined,
-          evidence_links: evidenceRowId ? [evidenceRowId] : [],
-          workings_and_test_results: workingsAndTestResults || undefined,
-          conclusion: conclusion || undefined,
-          status: "OPEN",
-          management_response: ""
-        }
-      );
-      const result = { success: true, data: { id: "created" } };
-
-      if (result.success) {
-        toast({
-          title: "Finding created",
-          description: workpaperId
-            ? "Finding created and linked to workpaper successfully"
-            : "The finding has been created successfully"
-        });
-
-        onOpenChange(false);
-        resetForm();
-        router.refresh();
-        onSuccessCallback?.();
-      } else {
-        toast({
-          title: "Error",
-          description: result.message || "Failed to create finding",
-          variant: "destructive"
-        });
+    saveFindingMutation.mutate({
+      auditPlanId,
+      workingPaperId: workpaperId || "",
+      finding: {
+        clause,
+        clauseTitle: clause,
+        description,
+        severity,
+        recommendation,
+        action_plan: correctiveAction || undefined,
+        responsible_person: assignedTo || undefined,
+        due_date: dueDate ? new Date(dueDate) : undefined,
+        evidence_links: evidenceRowId ? [evidenceRowId] : [],
+        workings_and_test_results: workingsAndTestResults || undefined,
+        conclusion: conclusion || undefined,
+        status: "OPEN",
+        management_response: ""
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   const resetForm = () => {
@@ -207,8 +164,8 @@ export function CreateFindingModal({
                 wrapper: "w-full max-w-none!"
               }}
               required
-              value={severity}
-              onValueChange={(value) => setClause(value as FindingSeverity)}
+              value={clause}
+              onValueChange={(value) => setClause(value)}
               options={allClauses.map((clause) => ({
                 id: clause.number,
                 name: `${clause.number} - ${clause.title}`
@@ -342,11 +299,13 @@ export function CreateFindingModal({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}>
+              disabled={saveFindingMutation.isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              type="submit"
+              disabled={saveFindingMutation.isPending}
+              isLoading={saveFindingMutation.isPending}>
               Create Finding
             </Button>
           </DialogFooter>

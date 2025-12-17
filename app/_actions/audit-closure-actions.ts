@@ -283,6 +283,7 @@ export async function requestAuditClosure(payload: ClosureRequestPayload): Promi
       return handleBadRequest("Failed to create closure workflow");
     }
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 
@@ -351,6 +352,7 @@ export async function approveAuditClosure(payload: ClosureApprovalPayload): Prom
       });
     }
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 
@@ -428,6 +430,7 @@ export async function cancelAuditClosureRequest(auditPlanId: string): Promise<AP
       }
     });
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 

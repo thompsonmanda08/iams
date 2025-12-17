@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,18 +34,17 @@ import {
 import type { AuditPlan } from "@/lib/types/audit-types";
 import type { Task } from "@/lib/types/task";
 import { WorkpaperCategoryPanel } from "./workpaper-category-panel";
-import { FindingForm } from "./finding-form";
 import { FrameworkFindingForm } from "./framework-finding-form";
 import { FindingsList } from "./findings-list";
 import { RequiresApprovalState } from "./requires-approval-state";
-import { cn, notify } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
 import { StatusBadge } from "@/components/status-badge";
 import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 import Link from "next/link";
 import { useDeleteAuditPlan, useSubmitAuditPlanForApproval } from "@/hooks/use-audit-query-data";
-import { AuditPlanApprovalsPanel } from "./audit-plan-approvals-panel";
 import { AuditClosureReview } from "./audit-closure-review";
+import { AuditPlanTasksPanel } from "./audit-plan-tasks-panel";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -757,85 +756,86 @@ export function AuditPlanWorkpaperView({
                   <WorkpaperCategoryPanel category={selectedCategory} auditPlan={auditPlan} />
 
                   {/* Check if plan is approved before showing findings */}
-                  {auditPlan.status.toUpperCase() === "APPROVED" || auditPlan.status.toUpperCase() === "COMPLETED" ? (
+                  {auditPlan.status.toUpperCase() === "APPROVED" ||
+                  auditPlan.status.toUpperCase() === "COMPLETED" ? (
                     <>
                       {/* Findings List for Category */}
                       {categoryFindings.length > 0 ? (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">
-                          Findings ({categoryFindings.length})
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {categoryFindings.map((finding, index) => {
-                            // Derive framework type from category metadata
-                            let frameworkType = "ISO27001";
-                            if (selectedCategory?.metadata) {
-                              const metadataKeys = Object.keys(selectedCategory.metadata);
-                              if (metadataKeys.length > 0) {
-                                frameworkType = metadataKeys[0];
-                              }
-                            }
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">
+                              Findings ({categoryFindings.length})
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              {categoryFindings.map((finding, index) => {
+                                // Derive framework type from category metadata
+                                let frameworkType = "ISO27001";
+                                if (selectedCategory?.metadata) {
+                                  const metadataKeys = Object.keys(selectedCategory.metadata);
+                                  if (metadataKeys.length > 0) {
+                                    frameworkType = metadataKeys[0];
+                                  }
+                                }
 
-                            // Get framework-specific sidebar fields
-                            const frameworkFields = getFrameworkSidebarFields(
-                              finding,
-                              frameworkType as any
-                            );
+                                // Get framework-specific sidebar fields
+                                const frameworkFields = getFrameworkSidebarFields(
+                                  finding,
+                                  frameworkType as any
+                                );
 
-                            return (
-                              <div
-                                key={finding.id || index}
-                                className="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-lg border p-4 transition-colors">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-3">
+                                return (
+                                  <div
+                                    key={finding.id || index}
+                                    className="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-lg border p-4 transition-colors">
                                     <div className="min-w-0 flex-1">
-                                      <p className="text-xs font-medium">
-                                        Finding #{finding.finding_number}
-                                      </p>
+                                      <div className="flex items-center gap-3">
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-xs font-medium">
+                                            Finding #{finding.finding_number}
+                                          </p>
 
-                                      {/* Framework-Specific Fields */}
-                                      {frameworkFields.length > 0 && (
-                                        <div className="mt-1 space-y-0.5 text-xs">
-                                          {frameworkFields.slice(0, 2).map((field, idx) => (
-                                            <div key={idx} className="flex items-start gap-1">
-                                              <span className="text-muted-foreground font-medium">
-                                                {field.label}:
-                                              </span>
-                                              <span className="text-foreground line-clamp-1 break-all">
-                                                {field.value}
-                                              </span>
+                                          {/* Framework-Specific Fields */}
+                                          {frameworkFields.length > 0 && (
+                                            <div className="mt-1 space-y-0.5 text-xs">
+                                              {frameworkFields.slice(0, 2).map((field, idx) => (
+                                                <div key={idx} className="flex items-start gap-1">
+                                                  <span className="text-muted-foreground font-medium">
+                                                    {field.label}:
+                                                  </span>
+                                                  <span className="text-foreground line-clamp-1 break-all">
+                                                    {field.value}
+                                                  </span>
+                                                </div>
+                                              ))}
                                             </div>
-                                          ))}
-                                        </div>
-                                      )}
+                                          )}
 
-                                      {/* Compliance Status Badge */}
-                                      {finding.compliance_status && (
-                                        <div className="mt-1 flex items-center gap-1">
-                                          <span className="text-muted-foreground text-xs">
-                                            Status:
-                                          </span>
-                                          <Badge
-                                            variant={
-                                              finding.compliance_status?.toLowerCase() ==
-                                              "compliant"
-                                                ? "success"
-                                                : finding.compliance_status?.toLowerCase() ==
-                                                    "non-compliant"
-                                                  ? "destructive"
-                                                  : "warning"
-                                            }
-                                            className="text-xs">
-                                            {finding.compliance_status}
-                                          </Badge>
-                                        </div>
-                                      )}
+                                          {/* Compliance Status Badge */}
+                                          {finding.compliance_status && (
+                                            <div className="mt-1 flex items-center gap-1">
+                                              <span className="text-muted-foreground text-xs">
+                                                Status:
+                                              </span>
+                                              <Badge
+                                                variant={
+                                                  finding.compliance_status?.toLowerCase() ==
+                                                  "compliant"
+                                                    ? "success"
+                                                    : finding.compliance_status?.toLowerCase() ==
+                                                        "non-compliant"
+                                                      ? "destructive"
+                                                      : "warning"
+                                                }
+                                                className="text-xs">
+                                                {finding.compliance_status}
+                                              </Badge>
+                                            </div>
+                                          )}
 
-                                      {/* Finding Status Badge */}
-                                      {/* {finding.status && (
+                                          {/* Finding Status Badge */}
+                                          {/* {finding.status && (
                                         <div className="mt-1 flex items-center gap-1">
                                           <span className="text-muted-foreground text-xs">
                                             Approval:
@@ -846,91 +846,100 @@ export function AuditPlanWorkpaperView({
                                           />
                                         </div>
                                       )} */}
+                                        </div>
+
+                                        {/* Conformity Badge */}
+                                        {
+                                          <Badge
+                                            variant={
+                                              finding.compliance_status?.toLowerCase() ==
+                                              "compliant"
+                                                ? "success"
+                                                : "destructive"
+                                            }
+                                            className="ml-auto shrink-0 text-xs">
+                                            {finding.compliance_status?.toLowerCase() == "compliant"
+                                              ? "✓ Conformity"
+                                              : "✗ Non-Conformity"}
+                                          </Badge>
+                                        }
+                                      </div>
                                     </div>
 
-                                    {/* Conformity Badge */}
-                                    {
-                                      <Badge
-                                        variant={
-                                          finding.compliance_status?.toLowerCase() == "compliant"
-                                            ? "success"
-                                            : "destructive"
-                                        }
-                                        className="ml-auto shrink-0 text-xs">
-                                        {finding.compliance_status?.toLowerCase() == "compliant"
-                                          ? "✓ Conformity"
-                                          : "✗ Non-Conformity"}
+                                    {finding.status === "IN_REVIEW" ||
+                                    finding.status === "SUBMITTED" ? (
+                                      <StatusBadge status={finding.status} />
+                                    ) : finding.status === "CLOSED" ||
+                                      finding.status === "APPROVED" ? (
+                                      <Badge className="ml-3 shrink-0 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                        ✓ Completed
                                       </Badge>
-                                    }
+                                    ) : (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => setEditingFinding(finding)}
+                                        className="shrink-0">
+                                        <PencilLineIcon className="h-4 w-4" />
+                                        Edit
+                                      </Button>
+                                    )}
                                   </div>
-                                </div>
-
-                                {finding.status === "IN_REVIEW" ||
-                                finding.status === "SUBMITTED" ? (
-                                  <StatusBadge status={finding.status} />
-                                ) : finding.status === "CLOSED" || finding.status === "APPROVED" ? (
-                                  <Badge className="ml-3 shrink-0 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                                    ✓ Completed
-                                  </Badge>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => setEditingFinding(finding)}
-                                    className="shrink-0">
-                                    <PencilLineIcon className="h-4 w-4" />
-                                    Edit
-                                  </Button>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    // NO FINDINGS YET
-                    <Card className="bg-canvas/50 border-2 border-dashed">
-                      <CardContent className="flex flex-col items-center justify-center px-8 py-8">
-                        <div className="relative mb-4">
-                          <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
-                          <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
-                            <ClipboardXIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
-                          </div>
-                        </div>
-
-                        <h3 className="text-foreground mb-2 text-2xl font-semibold">
-                          No Findings added
-                        </h3>
-                        <p className="text-muted-foreground mb-8 max-w-md text-center">
-                          No findings for this category yet
-                        </p>
-
-                        <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
-                          <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                            <div className="text-primary mb-1 font-mono">CONFIGURE TEMPLATES</div>
-                            <div className="text-muted-foreground">
-                              Clauses & Procedures Required
+                                );
+                              })}
                             </div>
-                          </div>
-                          <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                            <div className="text-primary mb-1 font-mono">CREATE PLAN</div>
-                            <div className="text-muted-foreground">Engagement Audit Plan</div>
-                          </div>
-                          <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                            <div className="text-primary mb-1 font-mono">EXECUTE</div>
-                            <div className="text-muted-foreground">Collect Findings & Evidence</div>
-                          </div>
-                        </div>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        // NO FINDINGS YET
+                        <Card className="bg-canvas/50 border-2 border-dashed">
+                          <CardContent className="flex flex-col items-center justify-center px-8 py-8">
+                            <div className="relative mb-4">
+                              <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+                              <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                                <ClipboardXIcon
+                                  className="text-primary h-16 w-16"
+                                  strokeWidth={1.5}
+                                />
+                              </div>
+                            </div>
 
-                        <Button size="lg" className="gap-2" asChild>
-                          <Link href="/dashboard/audit/plans/engagement/new">
-                            <Plus className="h-4 w-4" />
-                            Create Audit Plan
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
+                            <h3 className="text-foreground mb-2 text-2xl font-semibold">
+                              No Findings added
+                            </h3>
+                            <p className="text-muted-foreground mb-8 max-w-md text-center">
+                              No findings for this category yet
+                            </p>
+
+                            <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+                              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                <div className="text-primary mb-1 font-mono">
+                                  CONFIGURE TEMPLATES
+                                </div>
+                                <div className="text-muted-foreground">
+                                  Clauses & Procedures Required
+                                </div>
+                              </div>
+                              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                <div className="text-primary mb-1 font-mono">CREATE PLAN</div>
+                                <div className="text-muted-foreground">Engagement Audit Plan</div>
+                              </div>
+                              <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                                <div className="text-primary mb-1 font-mono">EXECUTE</div>
+                                <div className="text-muted-foreground">
+                                  Collect Findings & Evidence
+                                </div>
+                              </div>
+                            </div>
+
+                            <Button size="lg" className="gap-2" asChild>
+                              <Link href="/dashboard/audit/plans/engagement/new">
+                                <Plus className="h-4 w-4" />
+                                Create Audit Plan
+                              </Link>
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      )}
 
                       {/* Add New Finding Button */}
                       {/* {categoryFindings.length > 0 && (
@@ -1047,14 +1056,7 @@ export function AuditPlanWorkpaperView({
 
         {/* Approvals Tab */}
         <TabsContent value="approvals" className="space-y-4">
-          <AuditPlanApprovalsPanel
-            auditPlan={auditPlanData}
-            tasks={tasks}
-            onStatusChange={() => {
-              queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
-              setAuditPlanData((prev) => ({ ...prev }));
-            }}
-          />
+          <AuditPlanTasksPanel auditPlanId={auditPlan.id} tasks={tasks} />
         </TabsContent>
 
         {/* Closure Tab */}

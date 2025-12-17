@@ -29,7 +29,7 @@ import { useRouter } from "next/navigation";
 import { TemplateSelector } from "../../../../../components/audit/template-selector";
 import { IsoCategorySelector } from "../../../../../components/audit/iso-category-selector";
 import { EvidenceUpload } from "../../../../../components/audit/evidence-upload";
-import { CreateFindingModal } from "../../../../../components/audit/create-finding-modal";
+import { CreateOrUpdateFindingModal } from "../../../../../components/audit/create-finding-modal";
 import { useCreateWorkpaper } from "@/hooks/use-audit-query-data";
 import useWorkpaperDraftStore from "@/store/useWorkpaperDraftStore";
 import type {
@@ -717,7 +717,7 @@ export function CreateWorkpaperForm({
 
       {/* Create Finding Modal */}
       {showCreateFinding && createdWorkpaperId && auditId && (
-        <CreateFindingModal
+        <CreateOrUpdateFindingModal
           open={showCreateFinding}
           onOpenChange={(open) => {
             if (!open) handleSkipFinding();

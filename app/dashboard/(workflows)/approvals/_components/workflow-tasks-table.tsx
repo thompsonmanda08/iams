@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, ArrowRight, Info, Repeat2 } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Info, Repeat2 } from "lucide-react";
 import type { Task } from "@/lib/types/task";
+import type { EntityType } from "@/lib/types/entity-preview-types";
 import { TaskActionDialog } from "./task-action-dialog";
 import { WorkflowTaskReassignDialog } from "./workflow-task-reassign-dialog";
+import { EntityPreviewDialog } from "./entity-preview-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -74,9 +76,17 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<"APPROVED" | "REJECTED" | null>(null);
 
-  const handleTaskAction = (
+  const handleQuickPreview = (task: WorkflowTask, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedTask(task);
+    setSelectedAction(null); // Preview-only, no action
+    setPreviewDialogOpen(true);
+  };
+
+  const handleQuickAction = (
     task: WorkflowTask,
     action: "APPROVED" | "REJECTED",
     e?: React.MouseEvent
@@ -84,7 +94,14 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
     e?.stopPropagation();
     setSelectedTask(task);
     setSelectedAction(action);
-    setActionDialogOpen(true);
+    setPreviewDialogOpen(true); // Show preview before action
+  };
+
+  const handleProceedToAction = () => {
+    setPreviewDialogOpen(false);
+    if (selectedAction && selectedTask) {
+      setActionDialogOpen(true); // Open TaskActionDialog
+    }
   };
 
   const handleTaskReassign = (task: WorkflowTask, e?: React.MouseEvent) => {
@@ -302,6 +319,17 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                 {/* ACTIONS */}
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
+                    {/* Quick Preview button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1"
+                      onClick={(e) => handleQuickPreview(task, e)}
+                      title="Preview entity details before approving">
+                      <Eye className="h-4 w-4" />
+                      Preview
+                    </Button>
+
                     {/* Approve/Reject buttons - only for PENDING tasks */}
                     {task.status === "PENDING" && (
                       <>
@@ -309,8 +337,8 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                           size="sm"
                           variant="outline"
                           className="gap-1 border-green-100 bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600"
-                          onClick={(e) => handleTaskAction(task, "APPROVED", e)}
-                          title="Complete and approve this task">
+                          onClick={(e) => handleQuickAction(task, "APPROVED", e)}
+                          title="Preview and approve this task">
                           <CheckCircle className="h-4 w-4" />
                           Approve
                         </Button>
@@ -318,8 +346,8 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                           size="sm"
                           variant="outline"
                           className="gap-1 border-red-100 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600"
-                          onClick={(e) => handleTaskAction(task, "REJECTED", e)}
-                          title="Complete and reject this task">
+                          onClick={(e) => handleQuickAction(task, "REJECTED", e)}
+                          title="Preview and reject this task">
                           <XCircle className="h-4 w-4" />
                           Reject
                         </Button>
@@ -361,6 +389,15 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
 
       {selectedTask && (
         <>
+          <EntityPreviewDialog
+            open={previewDialogOpen}
+            onOpenChange={setPreviewDialogOpen}
+            entityId={selectedTask.instance?.entity_id || selectedTask.entity?.entity_id || ""}
+            entityType={(selectedTask.instance?.entity_type || "") as EntityType}
+            entityName={selectedTask.entity?.entity_name || selectedTask.entity?.title || "Unknown"}
+            action={selectedAction}
+            onProceed={handleProceedToAction}
+          />
           <TaskActionDialog
             task={selectedTask}
             action={selectedAction}

@@ -29,7 +29,8 @@ import {
   getLatestFindingReassessment,
   createFindingReassessment,
   updateFindingReassessment,
-  deleteFindingReassessment
+  deleteFindingReassessment,
+  reviewFindingActionEvidence
 } from "@/app/_actions/finding-actions";
 import type {
   FindingAction,
@@ -55,10 +56,8 @@ export const FINDING_ACTION_QUERY_KEYS = {
   byFinding: (findingId: string) =>
     [...FINDING_ACTION_QUERY_KEYS.all, "finding", findingId] as const,
   byId: (actionId: string) => [...FINDING_ACTION_QUERY_KEYS.all, "id", actionId] as const,
-  evidence: (actionId: string) =>
-    [...FINDING_ACTION_QUERY_KEYS.all, "evidence", actionId] as const,
-  reviews: (actionId: string) =>
-    [...FINDING_ACTION_QUERY_KEYS.all, "reviews", actionId] as const,
+  evidence: (actionId: string) => [...FINDING_ACTION_QUERY_KEYS.all, "evidence", actionId] as const,
+  reviews: (actionId: string) => [...FINDING_ACTION_QUERY_KEYS.all, "reviews", actionId] as const,
   reassessments: (findingId: string) =>
     [...FINDING_ACTION_QUERY_KEYS.all, "reassessments", findingId] as const,
   latestReassessment: (findingId: string) =>
@@ -118,9 +117,7 @@ export function useFindingActionsByFinding(findingId: string | null | undefined)
  */
 export function useFindingAction(actionId: string | null | undefined) {
   return useQuery({
-    queryKey: actionId
-      ? FINDING_ACTION_QUERY_KEYS.byId(actionId)
-      : ["finding-action-disabled"],
+    queryKey: actionId ? FINDING_ACTION_QUERY_KEYS.byId(actionId) : ["finding-action-disabled"],
     queryFn: async () => {
       if (!actionId) return null;
       const response = await getFindingAction(actionId);
@@ -409,9 +406,7 @@ export function useDeleteFindingActionEvidenceMutation() {
  */
 export function useFindingActionReviews(actionId: string | null | undefined) {
   return useQuery({
-    queryKey: actionId
-      ? FINDING_ACTION_QUERY_KEYS.reviews(actionId)
-      : ["action-reviews-disabled"],
+    queryKey: actionId ? FINDING_ACTION_QUERY_KEYS.reviews(actionId) : ["action-reviews-disabled"],
     queryFn: async () => {
       if (!actionId) return [];
       const response = await getFindingActionReviews(actionId);
@@ -472,12 +467,22 @@ export function useCreateFindingActionReviewMutation() {
 /**
  * Hook to approve evidence
  */
-export function useApproveFindingActionEvidenceMutation() {
+export function useReviewFindingActionEvidenceMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { evidence_id: string; action_id: string; comments?: string }) => {
-      const response = await approveFindingActionEvidence(params.evidence_id, params.comments);
+    mutationFn: async (params: {
+      evidence_id: string;
+      action_id: string;
+      comments: string;
+      status: "APPROVED" | "REJECTED";
+    }) => {
+      const response = await reviewFindingActionEvidence({
+        evidence_id: params.evidence_id,
+        reviewer_comments: params.comments,
+        finding_action_id: params.action_id,
+        approval_status: params.status
+      });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to approve evidence");
@@ -513,17 +518,26 @@ export function useApproveFindingActionEvidenceMutation() {
 }
 
 /**
- * Hook to reject evidence
+ * Hook to update an existing review
  */
-export function useRejectFindingActionEvidenceMutation() {
+export function useUpdateFindingActionReviewMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { evidence_id: string; action_id: string; comments?: string }) => {
-      const response = await rejectFindingActionEvidence(params.evidence_id, params.comments);
+    mutationFn: async (params: {
+      evidence_id: string;
+      action_id: string;
+      status: "APPROVED" | "REJECTED";
+      comments: string;
+    }) => {
+      const response = await updateFindingActionReview({
+        evidence_id: params.evidence_id,
+        approval_status: params.status,
+        reviewer_comments: params.comments
+      });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to reject evidence");
+        throw new Error(response.message || "Failed to update review");
       }
 
       return params;
@@ -541,14 +555,14 @@ export function useRejectFindingActionEvidenceMutation() {
 
       notify({
         title: "Success",
-        description: "Evidence rejected successfully",
+        description: "Review updated successfully",
         type: "success"
       });
     },
     onError: (error: any) => {
       notify({
         title: "Error",
-        description: error.message || "Failed to reject evidence",
+        description: error.message || "Failed to update review",
         type: "error"
       });
     }

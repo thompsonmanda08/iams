@@ -10,6 +10,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 import type { APIResponse, Pagination } from "@/lib/types";
 import type {
   TemplateCategory,
@@ -286,50 +287,50 @@ export async function getWorkpaper(id: string): Promise<APIResponse> {
 /**
  * Get working paper statistics
  */
-export async function getWorkpaperStatistics(id: string): Promise<APIResponse> {
-  if (!id) {
-    return handleBadRequest("Working paper ID is required");
-  }
+// export async function getWorkpaperStatistics(id: string): Promise<APIResponse> {
+//   if (!id) {
+//     return handleBadRequest("Working paper ID is required");
+//   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/working-papers/${id}/statistics`
-    });
+//   try {
+//     const response = await authenticatedApiClient({
+//       method: "GET",
+//       url: `/api/v1/working-papers/${id}/statistics`
+//     });
 
-    return successResponse(response.data, "Working paper statistics fetched successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "GET | WORKPAPER STATISTICS",
-      `/api/v1/working-papers/${id}/statistics`
-    );
-  }
-}
+//     return successResponse(response.data, "Working paper statistics fetched successfully");
+//   } catch (error: any) {
+//     return handleError(
+//       error,
+//       "GET | WORKPAPER STATISTICS",
+//       `/api/v1/working-papers/${id}/statistics`
+//     );
+//   }
+// }
 
 /**
  * Get audit plan working paper summary
  */
-export async function getAuditPlanWorkpaperSummary(auditPlanId: string): Promise<APIResponse> {
-  if (!auditPlanId) {
-    return handleBadRequest("Audit plan ID is required");
-  }
+// export async function getAuditPlanWorkpaperSummary(auditPlanId: string): Promise<APIResponse> {
+//   if (!auditPlanId) {
+//     return handleBadRequest("Audit plan ID is required");
+//   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
-    });
+//   try {
+//     const response = await authenticatedApiClient({
+//       method: "GET",
+//       url: `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
+//     });
 
-    return successResponse(response.data, "Audit plan workpaper summary fetched successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "GET | AUDIT PLAN WP SUMMARY",
-      `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
-    );
-  }
-}
+//     return successResponse(response.data, "Audit plan workpaper summary fetched successfully");
+//   } catch (error: any) {
+//     return handleError(
+//       error,
+//       "GET | AUDIT PLAN WP SUMMARY",
+//       `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
+//     );
+//   }
+// }
 
 /**
  * Create new workpaper
@@ -428,30 +429,30 @@ export async function updateWorkpaper(
 /**
  * Update workpaper status only
  */
-export async function updateWorkpaperStatus(id: string, status: string): Promise<APIResponse> {
-  if (!id || !status) {
-    return handleBadRequest("Working paper ID and status are required");
-  }
+// export async function updateWorkpaperStatus(id: string, status: string): Promise<APIResponse> {
+//   if (!id || !status) {
+//     return handleBadRequest("Working paper ID and status are required");
+//   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "PATCH",
-      url: `/api/v1/working-papers/${id}/status`,
-      data: { status }
-    });
+//   try {
+//     const response = await authenticatedApiClient({
+//       method: "PATCH",
+//       url: `/api/v1/working-papers/${id}/status`,
+//       data: { status }
+//     });
 
-    revalidatePath("/dashboard/audit/workpapers");
-    revalidatePath(`/dashboard/audit/workpapers/${id}`);
+//     revalidatePath("/dashboard/audit/workpapers");
+//     revalidatePath(`/dashboard/audit/workpapers/${id}`);
 
-    return successResponse(response.data, "Workpaper status updated successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "PATCH | UPDATE WORKPAPER STATUS",
-      `/api/v1/working-papers/${id}/status`
-    );
-  }
-}
+//     return successResponse(response.data, "Workpaper status updated successfully");
+//   } catch (error: any) {
+//     return handleError(
+//       error,
+//       "PATCH | UPDATE WORKPAPER STATUS",
+//       `/api/v1/working-papers/${id}/status`
+//     );
+//   }
+// }
 
 /**
  * Delete workpaper
@@ -482,32 +483,32 @@ export async function deleteWorkpaper(id: string): Promise<APIResponse> {
 /**
  * Get all findings with optional filters
  */
-export async function getFindings(filters?: {
-  working_paper_id?: string;
-  audit_plan_id?: string;
-  severity?: string;
-  status?: string;
-}): Promise<APIResponse> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.working_paper_id) params.append("working_paper_id", filters.working_paper_id);
-    if (filters?.audit_plan_id) params.append("audit_plan_id", filters.audit_plan_id);
-    if (filters?.severity) params.append("severity", filters.severity);
-    if (filters?.status) params.append("status", filters.status);
+// export async function getFindings(filters?: {
+//   working_paper_id?: string;
+//   audit_plan_id?: string;
+//   severity?: string;
+//   status?: string;
+// }): Promise<APIResponse> {
+//   try {
+//     const params = new URLSearchParams();
+//     if (filters?.working_paper_id) params.append("working_paper_id", filters.working_paper_id);
+//     if (filters?.audit_plan_id) params.append("audit_plan_id", filters.audit_plan_id);
+//     if (filters?.severity) params.append("severity", filters.severity);
+//     if (filters?.status) params.append("status", filters.status);
 
-    const queryString = params.toString();
-    const url = `/api/v1/working-paper-findings${queryString ? `?${queryString}` : ""}`;
+//     const queryString = params.toString();
+//     const url = `/api/v1/working-paper-findings${queryString ? `?${queryString}` : ""}`;
 
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url
-    });
+//     const response = await authenticatedApiClient({
+//       method: "GET",
+//       url
+//     });
 
-    return successResponse(response.data?.data, "Findings fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | FINDINGS", "/api/v1/working-paper-findings");
-  }
-}
+//     return successResponse(response.data?.data, "Findings fetched successfully");
+//   } catch (error: any) {
+//     return handleError(error, "GET | FINDINGS", "/api/v1/working-paper-findings");
+//   }
+// }
 
 /**
  * Get findings by category within a working paper
@@ -1979,6 +1980,7 @@ export async function updateAnnualAuditPlan(
     });
 
     revalidatePath("/dashboard/audit/annual-plans");
+    revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
 
     return successResponse(response.data, "Annual audit plan updated successfully");
   } catch (error: any) {
@@ -2042,6 +2044,7 @@ export async function approveAnnualAuditPlan(
       }
     });
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/annual-plans");
 
     return successResponse(response.data, "Annual audit plan approved successfully");
@@ -2078,6 +2081,7 @@ export async function rejectAnnualAuditPlan(
       }
     });
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/annual-plans");
 
     return successResponse(response.data, "Annual audit plan rejected successfully");
@@ -2122,7 +2126,6 @@ export async function createAnnualAuditPlanItem(
       data
     });
 
-    revalidatePath("/dashboard/audit/annual-plans");
     revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
 
     return successResponse(response.data, "Annual audit plan item created successfully");
@@ -2136,9 +2139,9 @@ export async function createAnnualAuditPlanItem(
 }
 
 /**
- * Get all annual audit plan items for a register
+ * Get all annual audit plan items for a register (internal - with caching)
  */
-export async function getAnnualAuditPlanItems(
+async function _getAnnualAuditPlanItems(
   registerId: string,
   filters?: {
     page?: number;
@@ -2171,6 +2174,11 @@ export async function getAnnualAuditPlanItems(
     );
   }
 }
+
+/**
+ * Get all annual audit plan items for a register (cached for request deduplication)
+ */
+export const getAnnualAuditPlanItems = cache(_getAnnualAuditPlanItems);
 
 /**
  * Get single annual audit plan item by ID
