@@ -3,7 +3,7 @@ import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-re
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Pagination } from "@/lib/types";
+import { Pagination as PaginationType} from "@/lib/types";
 import { SelectField } from "./select-field";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
@@ -112,7 +112,7 @@ const CustomPagination = ({
   };
   showDetails?: boolean;
   allowSetPageSize?: boolean;
-  pagination: Pagination;
+  pagination: PaginationType;
   updatePagination: (page: { page: number; page_size?: number }) => void;
 }) => {
   return (
@@ -143,7 +143,7 @@ const CustomPagination = ({
       )}
       {showDetails && (
         <div className="text-foreground/80 order-2 text-sm font-medium sm:order-1">
-          Showing page {pagination.page} of {pagination?.total_pages} ({pagination.totalCount} total
+          Showing page {pagination.page} of {pagination?.total_pages} ({pagination.totalCount || pagination.total} total
           results)
         </div>
       )}

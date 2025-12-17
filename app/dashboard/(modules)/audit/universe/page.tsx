@@ -4,12 +4,28 @@ import AuditUniverseList from "./_components/audit-universe-list";
 import UniverseDialog from "./_components/universe-dialog";
 import { getUniverses, getUniverseItems } from "@/app/_actions/audit-module-actions";
 
-const AuditUniversePage = async () => {
-  const universesResponse = await getUniverses();
+const AuditUniversePage = async ({
+  searchParams
+}: {
+  searchParams: Promise<{ page?: string; page_size?: string }>;
+}) => {
+  const { page = "1", page_size = "10" } = await searchParams;
+  const universesResponse = await getUniverses({
+    page: Number(page),
+    page_size: Number(page_size)
+  });
 
   const universes = universesResponse?.data?.data || [];
   const universeItemsMap: Record<string, any[]> = {};
-  const pagination = universesResponse?.data?.pagination;
+  const paginationData = universesResponse?.data?.pagination;
+  const pagination = universesResponse?.data?.pagination ?? {
+    page: paginationData.page,
+    page_size: paginationData.page_size,
+    total_pages: paginationData.total_pages,
+    totalCount: paginationData.total,
+    has_prev: paginationData.has_prev,
+    has_next: paginationData.has_next
+  };
 
   // Fetch all universe items for each universe
   await Promise.all(

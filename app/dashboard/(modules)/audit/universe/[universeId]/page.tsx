@@ -7,16 +7,36 @@ import BackButton from "@/components/back-button";
 
 const dynamic = "force-dynamic";
 
-const UniversePage = async ({ params }: { params: Promise<{ universeId: string }> }) => {
+const UniversePage = async ({
+  params,
+  searchParams
+}: {
+  params: Promise<{ universeId: string }>;
+  searchParams: Promise<{ page?: string; page_size?: string }>;
+}) => {
   const { universeId } = await params;
 
+  const { page = "1", page_size = "10" } = await searchParams;
+
   const universeResponse = await getUniverseById(universeId);
-  const itemsResponse = await getUniverseItems({ audit_universe_id: universeId });
+  const itemsResponse = await getUniverseItems({
+    audit_universe_id: universeId,
+    page: Number(page),
+    page_size: Number(page_size)
+  });
 
   const universe = universeResponse?.data?.data || universeResponse?.data;
   const universeItems = itemsResponse?.data?.data?.data || itemsResponse?.data?.data || [];
+  const paginationData = itemsResponse.data?.pagination;
 
-  console.log("Universe Items:", universeItems);
+  const pagination = itemsResponse.data?.pagination ?? {
+    page: paginationData.page,
+    page_size: paginationData.page_size,
+    total_pages: paginationData.total_pages,
+    totalCount: paginationData.total,
+    has_prev: paginationData.has_prev,
+    has_next: paginationData.has_next
+  };
 
   return (
     <div className="bg-background min-h-screen">
@@ -38,7 +58,11 @@ const UniversePage = async ({ params }: { params: Promise<{ universeId: string }
       </header>
 
       <div className="container mx-auto px-4 py-12">
-        <UniverseDetails universe={universe} universeItems={universeItems} />
+        <UniverseDetails
+          universe={universe}
+          universeItems={universeItems}
+          universeItemsPagination={pagination}
+        />
       </div>
     </div>
   );

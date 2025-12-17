@@ -3,11 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Plus, Globe, Send, Eye, Pencil, Trash2, User, UserCheckIcon } from "lucide-react";
+import { Plus, Globe, Send, Pencil, Trash2, User, UserCheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { submitUniverseForApproval, deleteUniverseItem } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import BackButton from "@/components/back-button";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import AuditUniverseForm from "./audit-universe-form";
@@ -55,6 +55,7 @@ const UniverseDetails = ({
 }: UniverseDetailsProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const [showItemForm, setShowItemForm] = useState(false);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +64,19 @@ const UniverseDetails = ({
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const safeUniverseItems = Array.isArray(universeItems) ? universeItems : [];
+
+  const handlePaginationUpdate = (updates: { page?: number; page_size?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (updates?.page !== undefined) {
+      params.set("page", updates?.page.toString());
+    }
+    if (updates.page_size !== undefined) {
+      params.set("page_size", updates?.page_size.toString());
+    }
+
+    router.push(`?${params.toString()}`);
+  };
 
   // Mutation for deleting universe item
   const deleteItemMutation = useMutation({
@@ -529,18 +543,10 @@ const UniverseDetails = ({
                 {safeUniverseItems.length === 0 ? null : (
                   <div className="bg-card border-muted flex items-center justify-between border-t p-6">
                     <CustomPagination
-                      pagination={
-                        universeItemsPagination ||
-                        ({
-                          page: 1,
-                          page_size: 10,
-                          total_pages: Math.ceil(safeUniverseItems.length / 10),
-                          totalCount: safeUniverseItems.length
-                        } as Pagination)
-                      }
-                      updatePagination={() => {}}
-                      showDetails
-                      allowSetPageSize
+                      pagination={universeItemsPagination as Pagination}
+                      updatePagination={handlePaginationUpdate}
+                      allowSetPageSize={true}
+                      showDetails={true}
                     />
                   </div>
                 )}

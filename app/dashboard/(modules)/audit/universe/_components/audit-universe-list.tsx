@@ -3,8 +3,6 @@ import { useState } from "react";
 import {
   Pencil,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   Globe,
   Plus,
@@ -30,7 +28,7 @@ import {
 import { toast } from "sonner";
 import { AuditUniverse, AuditUniverseStatus } from "@/lib/types/audit-types";
 import { Badge } from "@/components/ui/badge";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
@@ -64,8 +62,7 @@ export default function AuditUniverseList({
 }) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [entriesPerPage, setEntriesPerPage] = useState("10");
-  const [currentPage, setCurrentPage] = useState(1);
+  const searchParams = useSearchParams();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedUniverse, setSelectedUniverse] = useState<{ id: string; name: string } | null>(
@@ -95,10 +92,20 @@ export default function AuditUniverseList({
     );
   });
 
-  const totalPages = Math.ceil(filteredData.length / parseInt(entriesPerPage));
-  const startIndex = (currentPage - 1) * parseInt(entriesPerPage);
-  const endIndex = startIndex + parseInt(entriesPerPage);
-  const currentData = filteredData.slice(startIndex, endIndex);
+  const currentData = filteredData;
+
+  const handlePaginationUpdate = (updates: { page?: number; page_size?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (updates?.page !== undefined) {
+      params.set("page", updates?.page.toString());
+    }
+    if (updates.page_size !== undefined) {
+      params.set("page_size", updates?.page_size.toString());
+    }
+
+    router.push(`?${params.toString()}`);
+  };
 
   const handleDeleteClick = (id: string, name: string) => {
     setSelectedUniverse({ id, name });
@@ -534,18 +541,10 @@ export default function AuditUniverseList({
               {currentData.length === 0 ? null : (
                 <div className="bg-card border-muted flex items-center justify-between border-t p-6">
                   <CustomPagination
-                    pagination={
-                      pagination ||
-                      ({
-                        page: 1,
-                        page_size: 10,
-                        total_pages: Math.ceil(filteredData.length / 10),
-                        totalCount: filteredData.length
-                      } as Pagination)
-                    }
-                    updatePagination={({ page, page_size }) => setCurrentPage(page)}
-                    showDetails
-                    allowSetPageSize
+                    pagination={pagination as Pagination}
+                    updatePagination={handlePaginationUpdate}
+                    showDetails={true}
+                    allowSetPageSize={true}
                   />
                 </div>
               )}
