@@ -10,6 +10,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 import type { APIResponse, Pagination } from "@/lib/types";
 import type {
   TemplateCategory,
@@ -1979,6 +1980,7 @@ export async function updateAnnualAuditPlan(
     });
 
     revalidatePath("/dashboard/audit/annual-plans");
+    revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
 
     return successResponse(response.data, "Annual audit plan updated successfully");
   } catch (error: any) {
@@ -2042,6 +2044,7 @@ export async function approveAnnualAuditPlan(
       }
     });
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/annual-plans");
 
     return successResponse(response.data, "Annual audit plan approved successfully");
@@ -2078,6 +2081,7 @@ export async function rejectAnnualAuditPlan(
       }
     });
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/annual-plans");
 
     return successResponse(response.data, "Annual audit plan rejected successfully");
@@ -2122,7 +2126,6 @@ export async function createAnnualAuditPlanItem(
       data
     });
 
-    revalidatePath("/dashboard/audit/annual-plans");
     revalidatePath(`/dashboard/audit/annual-plans/${registerId}`);
 
     return successResponse(response.data, "Annual audit plan item created successfully");
@@ -2136,9 +2139,9 @@ export async function createAnnualAuditPlanItem(
 }
 
 /**
- * Get all annual audit plan items for a register
+ * Get all annual audit plan items for a register (internal - with caching)
  */
-export async function getAnnualAuditPlanItems(
+async function _getAnnualAuditPlanItems(
   registerId: string,
   filters?: {
     page?: number;
@@ -2171,6 +2174,11 @@ export async function getAnnualAuditPlanItems(
     );
   }
 }
+
+/**
+ * Get all annual audit plan items for a register (cached for request deduplication)
+ */
+export const getAnnualAuditPlanItems = cache(_getAnnualAuditPlanItems);
 
 /**
  * Get single annual audit plan item by ID

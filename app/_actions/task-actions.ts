@@ -10,6 +10,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 import type { APIResponse } from "@/lib/types";
 import { handleBadRequest, handleError, successResponse } from "./api-config";
 import authenticatedApiClient from "./api-config";
@@ -19,9 +20,9 @@ import authenticatedApiClient from "./api-config";
 // ============================================================================
 
 /**
- * Get all  workflow instances with optional filters
+ * Get all workflow instances with optional filters (internal - with caching)
  */
-export async function getWorkflowInstances(filters?: {
+async function _getWorkflowInstances(filters?: {
   page?: string;
   page_size?: string;
   workflow_id?: string;
@@ -44,6 +45,11 @@ export async function getWorkflowInstances(filters?: {
     return handleError(error, "GET | TASKS", "/api/v1/workflow/tasks");
   }
 }
+
+/**
+ * Get all workflow instances with optional filters (cached for request deduplication)
+ */
+export const getWorkflowInstances = cache(_getWorkflowInstances);
 
 /**
  * Get single workflow instance by ID
@@ -90,6 +96,7 @@ export async function reassignTask(
       }
     });
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/tasks");
     return successResponse(response.data, "Task reassigned successfully");
   } catch (error: any) {
@@ -102,9 +109,9 @@ export async function reassignTask(
 }
 
 /**
- * Get approvals log for a workflow instance
+ * Get approvals log for a workflow instance (internal - with caching)
  */
-export async function getApprovalsLog(
+async function _getApprovalsLog(
   instanceId: string,
   filters?: {
     page?: string;
@@ -135,15 +142,20 @@ export async function getApprovalsLog(
   }
 }
 
+/**
+ * Get approvals log for a workflow instance (cached for request deduplication)
+ */
+export const getApprovalsLog = cache(_getApprovalsLog);
+
 // ============================================================================
 // WORKFLOW TASKS ACTIONS (User-Assigned Tasks)
 // ============================================================================
 
 /**
- * Get all workflow tasks assigned to the current user
+ * Get all workflow tasks assigned to the current user (internal - with caching)
  * These are tasks that require action from the logged-in user
  */
-export async function getUserAssignedWorkflowTasks(filters?: {
+async function _getUserAssignedWorkflowTasks(filters?: {
   page?: string;
   page_size?: string;
   status?: string;
@@ -166,10 +178,15 @@ export async function getUserAssignedWorkflowTasks(filters?: {
 }
 
 /**
- * Get all workflow tasks for a specific workflow instance
+ * Get all workflow tasks assigned to the current user (cached for request deduplication)
+ */
+export const getUserAssignedWorkflowTasks = cache(_getUserAssignedWorkflowTasks);
+
+/**
+ * Get all workflow tasks for a specific workflow instance (internal - with caching)
  * These are the tasks related to a particular workflow execution
  */
-export async function getWorkflowInstanceTasks(
+async function _getWorkflowInstanceTasks(
   instanceId: string,
   filters?: {
     page?: string;
@@ -202,6 +219,11 @@ export async function getWorkflowInstanceTasks(
     );
   }
 }
+
+/**
+ * Get all workflow tasks for a specific workflow instance (cached for request deduplication)
+ */
+export const getWorkflowInstanceTasks = cache(_getWorkflowInstanceTasks);
 
 /**
  * Complete a workflow task (approve or reject)
@@ -241,6 +263,7 @@ export async function completeWorkflowTask(
       }
     });
 
+    revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/tasks");
     return successResponse(response.data, `Workflow task completed with action: ${action}`);
   } catch (error: any) {
