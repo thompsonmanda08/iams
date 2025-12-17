@@ -121,6 +121,24 @@ export function ResidualRiskRatingDialog({
       value: "="
     }
   ];
+  const option_names = [
+    {
+      name: "Low",
+      value: "Low"
+    },
+    {
+      name: "Medium",
+      value: "Medium"
+    },
+    {
+      name: "High",
+      value: "High"
+    },
+    {
+      name: "Critical",
+      value: "Critical"
+    }
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -136,43 +154,39 @@ export function ResidualRiskRatingDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Rating Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g., Low, Medium, High, Critical"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="value">
-                Rating Value <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="value"
-                type="number"
-                min="1"
-                placeholder="e.g., 1, 2, 3..."
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="condition">Condition</Label>
-              <SelectField
-                value={formData.condition}
-                onValueChange={(value) => setFormData({ ...formData, condition: value })}
-                placeholder="Select condition"
-                options={options as any}
-                className="w-full"
-                disabled={isLoading}
-              />
-            </div>
+            <SelectField
+              label="Rating Name"
+              required
+              value={formData.name}
+              onValueChange={(value) => setFormData({ ...formData, name: value })}
+              placeholder="Select rating name"
+              options={option_names as any}
+              className="w-full"
+              disabled={isLoading}
+            />
+
+            <Input
+              label="Rating Value"
+              required
+              id="value"
+              type="number"
+              min="1"
+              placeholder="e.g., 1, 2, 3..."
+              value={formData.value}
+              onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
+              disabled={isLoading}
+            />
+
+            <SelectField
+              label="Condition"
+              required
+              value={formData.condition}
+              onValueChange={(value) => setFormData({ ...formData, condition: value })}
+              placeholder="Select condition"
+              options={options as any}
+              className="w-full"
+              disabled={isLoading}
+            />
 
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
