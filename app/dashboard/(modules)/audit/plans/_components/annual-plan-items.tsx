@@ -75,7 +75,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
 import { useHeadsOfDepartments } from "@/hooks/use-users-query-data";
-import { useBudgetLines } from "@/hooks/use-audit-settings-query-data";
+import { useBudgetLines, useBudgets } from "@/hooks/use-audit-settings-query-data";
 import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
 import { useGenerateAuditPlanFromItem } from "@/hooks/use-audit-query-data";
 import { DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -866,6 +866,7 @@ type GenerateAuditPlanFormData = {
   management_standard: string;
   audit_team_members: string[];
   client_representative: string;
+  budget_id: string;
   budget_item_ids: string[];
 };
 
@@ -882,6 +883,7 @@ const INIT_GENERATE_FORM_DATA: GenerateAuditPlanFormData = {
   management_standard: FRAMEWORK_TYPES[0]?.id || "",
   audit_team_members: [],
   client_representative: "",
+  budget_id: "",
   budget_item_ids: []
 };
 
@@ -910,9 +912,21 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
   });
   const headsOfDepartment: User[] = ((headsOfDepartmentResponse?.data || []) as User[]) ?? [];
 
-  // Fetch budget lines
+  // Fetch budgets for the department
+  const { data: budgetsResponse, isLoading: loadingBudgets } = useBudgets({
+    is_active: true,
+    department_id: item.department_id
+  });
+
+  const budgetsData = Array.isArray(budgetsResponse?.data)
+    ? budgetsResponse.data
+    : Array.isArray(budgetsResponse)
+      ? budgetsResponse
+      : [];
+
+  // Fetch budget lines based on selected budget
   const { data: budgetLinesResponse, isLoading: loadingBudgetLines } = useBudgetLines(
-    "" // No budget_id pre-selected
+    formData.budget_id
   );
   const budgetLinesData = Array.isArray(budgetLinesResponse?.data?.data)
     ? budgetLinesResponse.data.data
@@ -990,6 +1004,13 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       name: `${head.first_name} ${head.last_name} - (${head.role.name})`
     }));
   }, [headsOfDepartment]);
+
+  const budgetsOptions = useMemo(() => {
+    return budgetsData.map((budget: any) => ({
+      value: budget.id,
+      label: `${budget.title} - ${budget.currency} ${budget.total_amount.toLocaleString("en-GB")} [${budget.status}]`
+    }));
+  }, [budgetsData]);
 
   const budgetLinesOptions = useMemo(() => {
     return budgetLinesData.map((budgetLine: any) => ({
@@ -1142,6 +1163,17 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
               isLoading={loadingTeamMembers}
             />
 
+            <SearchSelectField
+              label="Budget"
+              placeholder="Select budget"
+              value={formData.budget_id}
+              onValueChange={(value) => {
+                setFormData({ ...formData, budget_id: value, budget_item_ids: [] });
+              }}
+              options={budgetsOptions}
+              isLoading={loadingBudgets}
+            />
+
             <MultiSelectModal
               label="Budget Lines"
               placeholder="Select budget lines"
@@ -1150,6 +1182,7 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
                 setFormData({ ...formData, budget_item_ids: values })
               }
               options={budgetLinesOptions}
+              disabled={loadingBudgetLines || !formData.budget_id}
               isLoading={loadingBudgetLines}
             />
 
