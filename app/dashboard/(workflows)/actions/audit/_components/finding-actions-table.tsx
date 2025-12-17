@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Eye, AlertCircle } from "lucide-react";
+import { Eye, AlertCircle, View } from "lucide-react";
 import type { FindingAction } from "@/lib/types/audit-types";
 import { FindingActionDetailsDialog } from "./finding-action-details-dialog";
 import { cn } from "@/lib/utils";
@@ -69,6 +69,8 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
     );
   }
 
+  console.log("SELECTED ACTION", selectedAction);
+
   return (
     <>
       <>
@@ -87,7 +89,7 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
             </TableHeader>
             <TableBody>
               {actions.map((action, index) => (
-                <TableRow key={action.id + index}>
+                <TableRow key={action.id + index} onClick={() => handleViewDetails(action)}>
                   {/* Finding */}
                   <TableCell>
                     <div className="space-y-1">
@@ -110,9 +112,7 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
                   {/* Assigned To */}
                   <TableCell>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">
-                        {action.assigned_user?.name || "Unassigned"}
-                      </p>
+                      <p className="text-sm font-medium">{action.assigned_to || "Unassigned"}</p>
                       <p className="text-muted-foreground text-xs">
                         {action.assigned_user?.email || ""}
                       </p>
@@ -123,9 +123,7 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
                   <TableCell>
                     <div className="space-y-0.5">
                       <p className="text-sm font-medium">{action.reviewer?.name || "Unassigned"}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {action.reviewer?.email || ""}
-                      </p>
+                      <p className="text-muted-foreground text-xs">{action.reviewer || ""}</p>
                     </div>
                   </TableCell>
 
@@ -149,10 +147,10 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
                   <TableCell className="text-right">
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
                       onClick={() => handleViewDetails(action)}
                       className="gap-2">
-                      <Eye className="h-4 w-4" />
+                      <View className="h-4 w-4" />
                       View
                     </Button>
                   </TableCell>

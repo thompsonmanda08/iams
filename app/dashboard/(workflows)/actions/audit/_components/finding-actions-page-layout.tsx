@@ -106,14 +106,6 @@ export function FindingActionsPageLayout({
                 Actions assigned to you or where you are the reviewer
               </p>
             </div>
-            {/* <div className="flex items-end gap-2">
-              <Link href="/dashboard/audit/plans/engagement/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Audit Plan
-                </Button>
-              </Link>
-            </div> */}
           </div>
 
           {filteredActions && filteredActions.length > 0 && (

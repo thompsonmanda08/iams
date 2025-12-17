@@ -147,12 +147,8 @@ export function FindingActionDetailsDialog({
                   <div>
                     <p className="text-muted-foreground mb-1 text-xs font-medium">Assigned To</p>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">
-                        {action.assigned_user?.name || "Unassigned"}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {action.assigned_user?.email || ""}
-                      </p>
+                      <p className="text-sm font-medium">{action.assigned_to || "Unassigned"}</p>
+                      <p className="text-muted-foreground text-xs">{action.assigned_to || ""}</p>
                     </div>
                   </div>
 
