@@ -315,8 +315,8 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     const maxDisplayOrder = Math.max(0, ...currentStates.map((s) => s.display_order ?? 0));
 
     const newState: State = {
-      id: `state-${Date.now()}`,
-      name: `State ${currentStates.length + 1}`,
+      id: `stage-${Date.now()}`,
+      name: `Stage ${currentStates.length + 1}`,
       isInitial: false,
       isFinal: false,
       position: {
@@ -488,7 +488,9 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
   const handleTransitionAdd = (from_state_id: string, to_state_id: string) => {
     // Don't allow self-loops through the UI
     if (from_state_id === to_state_id) {
-      toast.error("Cannot create self-loop transitions via connection. Use the right-click menu instead.");
+      toast.error(
+        "Cannot create self-loop transitions via connection. Use the right-click menu instead."
+      );
       return;
     }
 

@@ -16,7 +16,7 @@ This guide provides step-by-step instructions to complete the workflow UI implem
 ## Phase 0: Fix Critical Bug (2 minutes)
 
 ### Bug Location
-**File:** [instance-details.tsx](app/dashboard/system-configs/workflow/_components/instance-details.tsx)
+**File:** [instance-details.tsx](app/dashboard/workflow/manage/_components/instance-details.tsx)
 **Line:** 31
 
 ### Current Code (WRONG)
@@ -245,7 +245,7 @@ Find the transitions display area and add:
 ## Phase 4: Add Worker Controls (30 minutes)
 
 ### File
-**File:** [workflow-worker-status.tsx](app/dashboard/system-configs/workflow/_components/workflow-worker-status.tsx)
+**File:** [workflow-worker-status.tsx](app/dashboard/workflow/manage/_components/workflow-worker-status.tsx)
 
 ### Step 1: Add Imports
 ```typescript
@@ -383,7 +383,7 @@ Show "waiting for other approvers" message:
 
 ### Enhancement 4: Create Instance Feature
 
-**File:** [workflow-administration.tsx](app/dashboard/system-configs/workflow/_components/workflow-administration.tsx)
+**File:** [workflow-administration.tsx](app/dashboard/workflow/manage/_components/workflow-administration.tsx)
 
 Add Create Instance button:
 

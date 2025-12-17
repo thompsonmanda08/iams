@@ -15,15 +15,15 @@ export const WorkflowNode = ({ data, isSelected }: NodeProps<WorkflowNodeData>) 
   const { id, name, isInitial, isFinal, onSelect, onDelete, description } = data;
 
   const getBorderColor = () => {
-    if (isInitial) return "border-amber-500";
-    if (isFinal) return "border-green-500";
-    return "border-slate-300";
+    if (isInitial) return "border-amber-300 dark:border-amber-700";
+    if (isFinal) return "border-green-300 dark:border-green-700";
+    return "border-slate-300 dark:border-slate-600";
   };
 
   const getBgColor = () => {
-    if (isInitial) return "bg-amber-50";
-    if (isFinal) return "bg-green-50";
-    return "bg-white";
+    if (isInitial) return "bg-amber-50 dark:bg-amber-950/30";
+    if (isFinal) return "bg-green-50 dark:bg-green-950/30";
+    return "bg-white dark:bg-slate-900/50";
   };
 
   return (
@@ -50,12 +50,12 @@ export const WorkflowNode = ({ data, isSelected }: NodeProps<WorkflowNodeData>) 
               <GripVertical className="h-4 w-4" />
             </div>
             {isInitial && (
-              <span className="rounded bg-amber-200 px-2 py-1 text-xs font-semibold text-amber-900">
+              <span className="rounded bg-amber-200/70 dark:bg-amber-900/40 px-2 py-1 text-xs font-semibold text-amber-900 dark:text-amber-300">
                 Initial
               </span>
             )}
             {isFinal && (
-              <span className="rounded bg-green-200 px-2 py-1 text-xs font-semibold text-green-900">
+              <span className="rounded bg-green-200/70 dark:bg-green-900/40 px-2 py-1 text-xs font-semibold text-green-900 dark:text-green-300">
                 Final
               </span>
             )}
@@ -89,11 +89,11 @@ export const WorkflowNode = ({ data, isSelected }: NodeProps<WorkflowNodeData>) 
         </div>
 
         {/* State name */}
-        <h3 className="mb-2 text-center font-semibold text-slate-900">{name}</h3>
+        <h3 className="mb-2 text-center font-semibold text-slate-900 dark:text-slate-100">{name}</h3>
 
         {/* Description if present */}
         {description && (
-          <p className="text-xs text-slate-600 text-center line-clamp-2">{description}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 text-center line-clamp-2">{description}</p>
         )}
       </div>
     </>

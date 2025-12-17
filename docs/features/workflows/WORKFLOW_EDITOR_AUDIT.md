@@ -8,7 +8,7 @@ This document audits the complete data flow in the workflow editor, from fetchin
 ## 1. Data Fetching Phase (Edit Mode)
 
 ### 1.1 Entry Point - Fetching Workflow Data
-**File**: `app/dashboard/system-configs/workflow/_components/workflow-editor.tsx` (lines 159-190)
+**File**: `app/dashboard/workflow/manage/_components/workflow-editor.tsx` (lines 159-190)
 
 When editing an existing workflow (`workflowId` is provided), the component uses TanStack Query to fetch data from three separate endpoints in parallel:
 
@@ -67,7 +67,7 @@ const {
 ## 2. Data Transformation Phase
 
 ### 2.1 transformWorkflowData Function
-**File**: `app/dashboard/system-configs/workflow/_components/workflow-editor.tsx` (lines 37-97)
+**File**: `app/dashboard/workflow/manage/_components/workflow-editor.tsx` (lines 37-97)
 
 This function converts API response format (snake_case) to editor format and **crucially marks all data as "synced"**:
 
@@ -129,7 +129,7 @@ const transformWorkflowData = (apiWorkflow: any): Workflow => {
 ```
 
 ### 2.2 Default Workflow Template (Create Mode)
-**File**: `app/dashboard/system-configs/workflow/_components/workflow-editor.tsx` (lines 103-157)
+**File**: `app/dashboard/workflow/manage/_components/workflow-editor.tsx` (lines 103-157)
 
 When creating a new workflow (no `workflowId`), the editor uses a default template:
 
@@ -167,7 +167,7 @@ const createDefaultWorkflow = (): Workflow => ({
 ```
 
 ### 2.3 Initial Workflow Selection Logic
-**File**: `app/dashboard/system-configs/workflow/_components/workflow-editor.tsx` (lines 192-221)
+**File**: `app/dashboard/workflow/manage/_components/workflow-editor.tsx` (lines 192-221)
 
 ```typescript
 // Determine the initial workflow (from API or default template)
@@ -206,7 +206,7 @@ The system tracks changes by modifying the `_changeType` property:
 | Edit deleted state | N/A | N/A | Ignored in UI (not rendered) |
 
 ### 3.2 State Update Example
-**File**: `app/dashboard/system-configs/workflow/_components/workflow-editor.tsx` (lines 241-281)
+**File**: `app/dashboard/workflow/manage/_components/workflow-editor.tsx` (lines 241-281)
 
 ```typescript
 const handleStateUpdate = (updatedState: State) => {
@@ -239,7 +239,7 @@ const handleStateUpdate = (updatedState: State) => {
 ```
 
 ### 3.3 Transition Update with State Renaming
-**File**: `app/dashboard/system-configs/workflow/_components/workflow-editor.tsx` (lines 289-363)
+**File**: `app/dashboard/workflow/manage/_components/workflow-editor.tsx` (lines 289-363)
 
 When a transition is updated:
 
@@ -278,7 +278,7 @@ const handleTransitionUpdate = (updatedTransition: Transition) => {
 ## 4. Save Phase - Categorization & Routing
 
 ### 4.1 Save Entry Point
-**File**: `app/dashboard/system-configs/workflow/_components/workflow-editor.tsx` (lines 478-566)
+**File**: `app/dashboard/workflow/manage/_components/workflow-editor.tsx` (lines 478-566)
 
 ```typescript
 const handleSave = async () => {

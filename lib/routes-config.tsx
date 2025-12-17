@@ -141,12 +141,12 @@ export const navItems: NavGroup[] = [
         title: "Approvals",
         href: "/dashboard/approvals",
         icon: ShieldCheck
+      },
+      {
+        title: "Manage Workflow",
+        href: "/dashboard/workflow/manage",
+        icon: Workflow
       }
-      // {
-      //   title: "Workflow Settings",
-      //   href: "/dashboard/system-configs/workflow",
-      //   icon: Workflow
-      // }
     ]
   },
   {
@@ -166,12 +166,6 @@ export const navItems: NavGroup[] = [
             title: "Departments",
             href: "/dashboard/system-configs/departments",
             icon: Building
-          },
-
-          {
-            title: "Workflow",
-            href: "/dashboard/system-configs/workflow",
-            icon: Workflow
           },
           {
             title: "Users",

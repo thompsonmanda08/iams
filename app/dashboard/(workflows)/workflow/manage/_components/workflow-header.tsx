@@ -64,7 +64,7 @@ export const WorkflowHeader = ({
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" disabled={isLoading} onClick={onStateAdd}>
             <Plus className="mr-2 h-4 w-4" />
-            Add a new state
+            Add a New Stage
           </Button>
           {/* <Button variant="outline" size="sm" disabled={isLoading}>
             <Settings className="mr-2 h-4 w-4" />

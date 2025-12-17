@@ -185,7 +185,7 @@ INFRATEL IAMS provides comprehensive risk and audit management capabilities with
 
 #### Workflow Administration
 
-**Location:** `/dashboard/system-configs/workflow/*`
+**Location:** `/dashboard/workflow/manage/*`
 
 **Workflow Engine**
 - State machine implementation

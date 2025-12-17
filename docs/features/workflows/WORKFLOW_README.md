@@ -102,15 +102,15 @@
 
 | File | Changes | Time | Priority |
 |------|---------|------|----------|
-| [instance-details.tsx](app/dashboard/system-configs/workflow/_components/instance-details.tsx) | Bug fix + 3 button sets | 2 hours | 🔴 Critical + 🟡 High |
-| [workflow-worker-status.tsx](app/dashboard/system-configs/workflow/_components/workflow-worker-status.tsx) | 2 worker buttons | 30 min | 🟡 Medium |
-| [workflow-administration.tsx](app/dashboard/system-configs/workflow/_components/workflow-administration.tsx) | Create instance (optional) | 2 hours | 🟢 Low |
+| [instance-details.tsx](app/dashboard/workflow/manage/_components/instance-details.tsx) | Bug fix + 3 button sets | 2 hours | 🔴 Critical + 🟡 High |
+| [workflow-worker-status.tsx](app/dashboard/workflow/manage/_components/workflow-worker-status.tsx) | 2 worker buttons | 30 min | 🟡 Medium |
+| [workflow-administration.tsx](app/dashboard/workflow/manage/_components/workflow-administration.tsx) | Create instance (optional) | 2 hours | 🟢 Low |
 
 ---
 
 ## The Critical Bug (Fix First!)
 
-**Location:** [instance-details.tsx](app/dashboard/system-configs/workflow/_components/instance-details.tsx) Line 31
+**Location:** [instance-details.tsx](app/dashboard/workflow/manage/_components/instance-details.tsx) Line 31
 
 **Problem:**
 ```typescript

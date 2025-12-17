@@ -21,8 +21,6 @@ import {
   deleteFindingActionEvidence,
   getFindingActionReviews,
   createFindingActionReview,
-  approveFindingActionEvidence,
-  rejectFindingActionEvidence,
   updateFindingActionReview,
   deleteFindingActionReview,
   getFindingReassessments,
@@ -32,6 +30,7 @@ import {
   deleteFindingReassessment,
   reviewFindingActionEvidence
 } from "@/app/_actions/finding-actions";
+import { getFinding } from "@/app/_actions/audit-module-actions";
 import type {
   FindingAction,
   CreateFindingActionInput,
@@ -42,7 +41,8 @@ import type {
   CreateFindingActionReviewInput,
   FindingReassessment,
   CreateFindingReassessmentInput,
-  UpdateFindingReassessmentInput
+  UpdateFindingReassessmentInput,
+  WorkpaperFinding
 } from "@/lib/types/audit-types";
 
 // ============================================================================
@@ -62,6 +62,11 @@ export const FINDING_ACTION_QUERY_KEYS = {
     [...FINDING_ACTION_QUERY_KEYS.all, "reassessments", findingId] as const,
   latestReassessment: (findingId: string) =>
     [...FINDING_ACTION_QUERY_KEYS.all, "reassessments", findingId, "latest"] as const
+};
+
+export const FINDING_QUERY_KEYS = {
+  all: ["findings"] as const,
+  byId: (findingId: string) => [...FINDING_QUERY_KEYS.all, "id", findingId] as const
 };
 
 // ============================================================================
@@ -251,6 +256,34 @@ export function useDeleteFindingActionMutation() {
         type: "error"
       });
     }
+  });
+}
+
+// ============================================================================
+// FINDING HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch a finding by ID
+ */
+export function useFinding(findingId: string | null | undefined) {
+  return useQuery({
+    queryKey: findingId ? FINDING_QUERY_KEYS.byId(findingId) : ["finding-disabled"],
+    queryFn: async () => {
+      if (!findingId) return null;
+      const response = await getFinding(findingId);
+      if (response.success) {
+        // The response has structure: { status, message, data: { actual_finding_data } }
+        // So we need to extract response.data which is the actual finding object
+        const findingData = response.data;
+        if (findingData && typeof findingData === "object") {
+          return findingData?.data as WorkpaperFinding;
+        }
+      }
+      return null;
+    },
+    enabled: !!findingId,
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 }
 

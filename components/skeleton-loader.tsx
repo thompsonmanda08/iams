@@ -365,7 +365,200 @@ export function EffectsReportSkeleton() {
   );
 }
 
+// Skeleton for Finding Information Card
+export function FindingInformationCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Finding Information</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Grid Layout for 2x4 fields matching exact structure */}
+        <div className="grid grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i}>
+              <Skeleton className="mb-1 h-2 w-20" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+        </div>
 
+        {/* Clause Description */}
+        <div>
+          <Skeleton className="mb-1 h-2 w-24" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="mt-1 h-3 w-5/6" />
+        </div>
 
+        {/* Recommendation */}
+        <div>
+          <Skeleton className="mb-1 h-2 w-24" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="mt-1 h-3 w-4/5" />
+        </div>
 
+        {/* Workings & Test Results (conditionally shown) */}
+        <div>
+          <Skeleton className="mb-1 h-2 w-32" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="mt-1 h-3 w-full" />
+          <Skeleton className="mt-1 h-3 w-3/4" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Skeleton for Action Overview Card
+export function ActionOverviewCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <Skeleton className="h-5 w-40" />
+          </div>
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {/* Description */}
+        <div>
+          <Skeleton className="mb-1 h-2 w-20" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="mt-1 h-3 w-full" />
+          <Skeleton className="mt-1 h-3 w-3/4" />
+        </div>
+
+        {/* Separator */}
+        <div className="my-2 h-px bg-accent" />
+
+        {/* Details Grid - 6 items (Assigned To, Reviewer, Auditor, Iteration, Due Date, Created) */}
+        <div className="grid grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i}>
+              <Skeleton className="mb-1 h-2 w-20" />
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="mt-1 h-2 w-40" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Skeleton for Finding Evidence Tab Content
+export function FindingEvidenceTabSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-3 w-48" />
+      </div>
+
+      {/* Evidence Cards */}
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Card key={i} className="bg-muted/30">
+            <CardContent className="">
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <Skeleton className="mb-1 h-4 w-40" />
+                    <Skeleton className="h-2 w-28" />
+                    <Skeleton className="mt-2 h-3 w-full" />
+                  </div>
+                  <div className="flex gap-1">
+                    <Skeleton className="h-8 w-20 rounded-md" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
+                  </div>
+                </div>
+                <Skeleton className="h-2 w-32" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Skeleton for Action Evidence Tab Content
+export function ActionEvidenceTabSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Header with button */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-48" />
+        </div>
+        <Skeleton className="h-9 w-36 rounded-md" />
+      </div>
+
+      {/* Evidence Cards */}
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="bg-muted/50">
+            <CardContent className="">
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <Skeleton className="mb-1 h-4 w-40" />
+                    <Skeleton className="h-2 w-28" />
+                    <Skeleton className="mt-2 h-3 w-full" />
+                  </div>
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+                <Skeleton className="h-2 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Skeleton for Reviews Tab Content
+export function ReviewsTabSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Header with button */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-28" />
+        </div>
+        <Skeleton className="h-9 w-32 rounded-md" />
+      </div>
+
+      {/* Review Cards */}
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Card key={i} className="bg-muted/50">
+            <CardContent className="">
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <Skeleton className="mb-1 h-4 w-32" />
+                    <Skeleton className="h-2 w-40" />
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+                <Skeleton className="h-2 w-24" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="mt-1 h-3 w-5/6" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
 

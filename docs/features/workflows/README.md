@@ -104,7 +104,7 @@ Entities can be automatically entered into workflows upon creation based on cond
 
 ## Admin Configuration
 
-**Location:** `/dashboard/system-configs/workflow/*`
+**Location:** `/dashboard/workflow/manage/*`
 
 Backoffice users can configure:
 - Workflow states and initial state

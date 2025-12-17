@@ -51,7 +51,7 @@ export async function createWorkflow(data: {
   try {
     const response = await authenticatedApiClient({ method: "POST", url, data });
 
-    revalidatePath("/dashboard/system-configs/workflow", "page");
+    revalidatePath("/dashboard/workflow/manage", "page");
 
     return successResponse(response.data, "Workflow created successfully");
   } catch (error: any) {
@@ -157,7 +157,7 @@ export async function createWorkflowState(data: {
   try {
     const response = await authenticatedApiClient({ method: "POST", url, data });
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow state created successfully");
   } catch (error: any) {
     return handleError(error, "POST | CREATE WORKFLOW STATE", url);
@@ -188,7 +188,7 @@ export async function updateWorkflowState(
       data
     });
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow state updated successfully");
   } catch (error: any) {
     return handleError(
@@ -212,7 +212,7 @@ export async function deleteWorkflowState(stateId: string): Promise<APIResponse>
   try {
     const response = await authenticatedApiClient({ method: "DELETE", url });
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow state deleted successfully");
   } catch (error: any) {
     return handleError(error, "DELETE | DELETE WORKFLOW STATE", url);
@@ -271,7 +271,7 @@ export async function createWorkflowTransition(data: {
     console.log("Response:", response.data);
     console.log("==================================");
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow transition created successfully");
   } catch (error: any) {
     console.error("=== ERROR CREATE WORKFLOW TRANSITION ===");
@@ -304,7 +304,7 @@ export async function updateWorkflowTransition(
   try {
     const response = await authenticatedApiClient({ method: "PUT", url, data });
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow transition updated successfully");
   } catch (error: any) {
     return handleError(error, "PUT | UPDATE WORKFLOW TRANSITION", url);
@@ -324,7 +324,7 @@ export async function deleteWorkflowTransition(transitionId: string): Promise<AP
   try {
     const response = await authenticatedApiClient({ method: "DELETE", url });
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow transition deleted successfully");
   } catch (error: any) {
     return handleError(error, "DELETE | DELETE WORKFLOW TRANSITION", url);
@@ -362,7 +362,7 @@ export async function approveWorkflowTransition(
       }
     });
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(
       response.data?.data || response.data,
       "Workflow instance approved successfully"
@@ -407,7 +407,7 @@ export async function rejectWorkflowTransition(
       }
     });
 
-    revalidatePath("/dashboard/system-configs/workflow");
+    revalidatePath("/dashboard/workflow/manage");
     return successResponse(
       response.data?.data || response.data,
       "Workflow instance rejected successfully"

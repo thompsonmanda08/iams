@@ -29,7 +29,7 @@
 
 ## Critical Bug (Fix First - 2 minutes)
 
-**File:** [instance-details.tsx](app/dashboard/system-configs/workflow/_components/instance-details.tsx#L31)
+**File:** [instance-details.tsx](app/dashboard/workflow/manage/_components/instance-details.tsx#L31)
 **Line 31:** Change `useAvailableTransitions(instanceId)` → `useAvailableTransitions(workflowId)`
 
 **Why:** Backend returns transitions for workflow, not filtered by instance.
@@ -174,9 +174,9 @@ Backend API
 
 | Component | File | Changes |
 |-----------|------|---------|
-| Instance Details | [instance-details.tsx](app/dashboard/system-configs/workflow/_components/instance-details.tsx) | Add 3 button sets (approve, reject, execute) |
-| Worker Status | [workflow-worker-status.tsx](app/dashboard/system-configs/workflow/_components/workflow-worker-status.tsx) | Add 2 buttons (trigger, restart) |
-| Admin | [workflow-administration.tsx](app/dashboard/system-configs/workflow/_components/workflow-administration.tsx) | Add create button (optional) |
+| Instance Details | [instance-details.tsx](app/dashboard/workflow/manage/_components/instance-details.tsx) | Add 3 button sets (approve, reject, execute) |
+| Worker Status | [workflow-worker-status.tsx](app/dashboard/workflow/manage/_components/workflow-worker-status.tsx) | Add 2 buttons (trigger, restart) |
+| Admin | [workflow-administration.tsx](app/dashboard/workflow/manage/_components/workflow-administration.tsx) | Add create button (optional) |
 
 ---
 

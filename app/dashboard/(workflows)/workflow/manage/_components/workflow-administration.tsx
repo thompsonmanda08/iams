@@ -138,28 +138,33 @@ export const WorkflowAdministration = ({
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50 border-b">
                         <tr>
-                          <th className="text-left px-4 py-2 font-medium">Instance ID</th>
-                          <th className="text-left px-4 py-2 font-medium">Entity</th>
-                          <th className="text-left px-4 py-2 font-medium">Current State</th>
-                          <th className="text-left px-4 py-2 font-medium">Status</th>
-                          <th className="text-left px-4 py-2 font-medium">Started</th>
-                          <th className="text-left px-4 py-2 font-medium">Actions</th>
+                          <th className="px-4 py-2 text-left font-medium">Instance ID</th>
+                          <th className="px-4 py-2 text-left font-medium">Entity</th>
+                          <th className="px-4 py-2 text-left font-medium">Current State</th>
+                          <th className="px-4 py-2 text-left font-medium">Status</th>
+                          <th className="px-4 py-2 text-left font-medium">Started</th>
+                          <th className="px-4 py-2 text-left font-medium">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {instances.map((instance: any) => (
                           <tr key={instance.id} className="hover:bg-muted/50">
-                            <td className="px-4 py-2 font-mono text-xs">{instance.id?.slice(0, 8)}</td>
+                            <td className="px-4 py-2 font-mono text-xs">
+                              {instance.id?.slice(0, 8)}
+                            </td>
                             <td className="px-4 py-2">{instance.entity_id}</td>
                             <td className="px-4 py-2">
                               <Badge variant="outline">{instance.current_state}</Badge>
                             </td>
                             <td className="px-4 py-2">
-                              <Badge variant={instance.workflow_status === 'COMPLETED' ? 'secondary' : 'default'}>
+                              <Badge
+                                variant={
+                                  instance.workflow_status === "COMPLETED" ? "secondary" : "default"
+                                }>
                                 {instance.workflow_status}
                               </Badge>
                             </td>
-                            <td className="px-4 py-2 text-xs text-muted-foreground">
+                            <td className="text-muted-foreground px-4 py-2 text-xs">
                               {new Date(instance.created_at).toLocaleDateString()}
                             </td>
                             <td className="px-4 py-2">
@@ -181,7 +186,8 @@ export const WorkflowAdministration = ({
                     </EmptyMedia>
                     <EmptyTitle>No workflow instances</EmptyTitle>
                     <EmptyDescription>
-                      Workflow instances will appear here once entities are created and workflows are started.
+                      Workflow instances will appear here once entities are created and workflows
+                      are started.
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
@@ -219,7 +225,7 @@ export const WorkflowAdministration = ({
                     variant="outline"
                     size="sm"
                     // onClick={()=>{
-                    //   router.push(`/dashboard/system-configs/workflow/editor?workflow_id=${workflow.id}`);
+                    //   router.push(`/dashboard/workflow/manage/editor?workflow_id=${workflow.id}`);
                     // }}
                   >
                     Update
@@ -290,7 +296,7 @@ export const WorkflowAdministration = ({
                     variant="outline"
                     size="sm"
                     // onClick={()=>{
-                    //   router.push(`/dashboard/system-configs/workflow/editor?workflow_id=${workflow.id}`);
+                    //   router.push(`/dashboard/workflow/manage/editor?workflow_id=${workflow.id}`);
                     // }}
                   >
                     Update

@@ -1379,12 +1379,15 @@ export type FindingActionStatus =
  */
 export interface FindingAction {
   id: string;
+  organization_id: string;
   finding_id: string;
   action_description: string;
   assigned_to: string; // User ID
   reviewer_id: string; // User ID
+  auditor_id: string; // User ID
   due_date: string; // ISO 8601 date string
   status: FindingActionStatus;
+  iteration_number: number;
   created_by: string;
   updated_by: string;
   created_at: string;
@@ -1398,12 +1401,26 @@ export interface FindingAction {
     last_name: string;
     email: string;
   };
+  assigned_to_name?: string; // Display name for assigned user
   reviewer_user?: {
     id: string;
     first_name: string;
     last_name: string;
     email: string;
   };
+  reviewer_name?: string; // Display name for reviewer
+  auditor_user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  auditor_name?: string; // Display name for auditor
+
+  // Finding details (from WorkpaperFinding)
+  clause_number?: string;
+  clause_description?: string;
+
   evidence_count?: number;
   reviews_count?: number;
 }

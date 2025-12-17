@@ -17,6 +17,7 @@ import { Eye, AlertCircle, View } from "lucide-react";
 import type { FindingAction } from "@/lib/types/audit-types";
 import { FindingActionDetailsDialog } from "./finding-action-details-dialog";
 import { cn } from "@/lib/utils";
+import { StatusBadge } from "@/components/status-badge";
 
 interface FindingActionsTableProps {
   actions: FindingAction[];
@@ -69,14 +70,12 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
     );
   }
 
-  console.log("SELECTED ACTION", selectedAction);
-
   return (
     <>
       <>
         <div className="bg-card rounded-lg border">
           <Table>
-            <TableHeader className="uppercase">
+            <TableHeader className="bg-muted/50 text-muted-foreground uppercase">
               <TableRow>
                 <TableHead>Finding</TableHead>
                 <TableHead>Action Description</TableHead>
@@ -94,10 +93,15 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
                   <TableCell>
                     <div className="space-y-1">
                       <p className="text-sm font-medium">
-                        {action.finding?.finding_number || "N/A"}
+                        {action.engagement_name || action.finding?.audit_plan_name || "Audit Plan"}
+                      </p>
+                      <p className="text-sm font-medium">
+                        Clause No. {action.clause_number || action.finding?.clause_number || "N/A"}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {action.finding?.category_name || "Unknown"}
+                        {action.clause_description
+                          ? action.clause_description.substring(0, 60) + "..."
+                          : action.finding?.category_name || "Unknown"}
                       </p>
                     </div>
                   </TableCell>
@@ -112,9 +116,13 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
                   {/* Assigned To */}
                   <TableCell>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">{action.assigned_to || "Unassigned"}</p>
+                      <p className="text-sm font-medium">
+                        {action.assigned_to_name ||
+                          action.assigned_to_user?.last_name ||
+                          "Unassigned"}
+                      </p>
                       <p className="text-muted-foreground text-xs">
-                        {action.assigned_user?.email || ""}
+                        {action.assigned_to_user?.email || ""}
                       </p>
                     </div>
                   </TableCell>
@@ -122,8 +130,12 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
                   {/* Reviewer */}
                   <TableCell>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">{action.reviewer?.name || "Unassigned"}</p>
-                      <p className="text-muted-foreground text-xs">{action.reviewer || ""}</p>
+                      <p className="text-sm font-medium">
+                        {action.reviewer_name || action.reviewer_user?.last_name || "Unassigned"}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {action.reviewer_user?.email || ""}
+                      </p>
                     </div>
                   </TableCell>
 
@@ -136,11 +148,7 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
 
                   {/* Status */}
                   <TableCell>
-                    {action.status && STATUS_COLORS[action.status] && (
-                      <Badge className={cn("text-xs", STATUS_COLORS[action.status].badge)}>
-                        {STATUS_COLORS[action.status].text}
-                      </Badge>
-                    )}
+                    <StatusBadge status={action.status} />
                   </TableCell>
 
                   {/* Actions */}

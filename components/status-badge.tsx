@@ -41,62 +41,57 @@ const coloredBadgeVariants = cva("", {
     {
       color: "success",
       style: "solid",
-      className:
-        "border-transparent bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+      className: "border-transparent bg-green-600 text-white dark:bg-green-700 "
     },
     {
       color: "warning",
       style: "solid",
-      className:
-        "border-transparent bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800"
+      className: "border-transparent bg-orange-600 text-white dark:bg-orange-700 "
     },
     {
       color: "danger",
       style: "solid",
-      className:
-        "border-transparent bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+      className: "border-transparent bg-red-600 text-white dark:bg-red-700 "
     },
     {
       color: "info",
       style: "solid",
-      className:
-        "border-transparent bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+      className: "border-transparent bg-blue-600 text-white dark:bg-blue-700 "
     },
     {
       color: "default",
       style: "solid",
-      className:
-        "border-transparent bg-gray-600 text-white hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-800"
+      className: "border-transparent bg-gray-600 text-white dark:bg-gray-700 "
     },
     // Outline variants
     {
       color: "success",
       style: "outline",
       className:
-        "border-green-400 bg-green-50 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700"
+        "border-green-400 bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700"
     },
     {
       color: "warning",
       style: "outline",
       className:
-        "border-orange-400 bg-orange-50 text-orange-800 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700"
+        "border-orange-400 bg-orange-50 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700"
     },
     {
       color: "danger",
       style: "outline",
       className:
-        "border-red-400 bg-red-50 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700"
+        "border-red-400 bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700"
     },
     {
       color: "info",
       style: "outline",
       className:
-        "border-blue-400 bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700"
+        "border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700"
     },
     {
       color: "default",
       style: "outline",
-      className: "border-gray-400 bg-transparent hover:bg-foreground/5 text-foreground/80"
+      className: "border-gray-400 bg-transparent text-foreground/80"
     }
   ]
 });

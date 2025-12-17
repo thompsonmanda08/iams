@@ -480,35 +480,6 @@ export async function deleteWorkpaper(id: string): Promise<APIResponse> {
 // FINDING ACTIONS
 // ============================================================================
 
-/**
- * Get all findings with optional filters
- */
-// export async function getFindings(filters?: {
-//   working_paper_id?: string;
-//   audit_plan_id?: string;
-//   severity?: string;
-//   status?: string;
-// }): Promise<APIResponse> {
-//   try {
-//     const params = new URLSearchParams();
-//     if (filters?.working_paper_id) params.append("working_paper_id", filters.working_paper_id);
-//     if (filters?.audit_plan_id) params.append("audit_plan_id", filters.audit_plan_id);
-//     if (filters?.severity) params.append("severity", filters.severity);
-//     if (filters?.status) params.append("status", filters.status);
-
-//     const queryString = params.toString();
-//     const url = `/api/v1/working-paper-findings${queryString ? `?${queryString}` : ""}`;
-
-//     const response = await authenticatedApiClient({
-//       method: "GET",
-//       url
-//     });
-
-//     return successResponse(response.data?.data, "Findings fetched successfully");
-//   } catch (error: any) {
-//     return handleError(error, "GET | FINDINGS", "/api/v1/working-paper-findings");
-//   }
-// }
 
 /**
  * Get findings by category within a working paper
