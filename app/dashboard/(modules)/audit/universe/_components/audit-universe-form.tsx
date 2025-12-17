@@ -270,7 +270,7 @@ export default function AuditUniverseForm({
   // Fetch dropdown data using reusable hooks
   const { data: departmentsResponse } = useDepartments({
     is_active: true,
-    page_size: 100,
+    page_size: 1000,
     page: 1
   });
 
@@ -323,15 +323,20 @@ export default function AuditUniverseForm({
   const processActivitiesData = mode === "item" ? processActivitiesResponse?.data || [] : [];
 
   // Fetch universes dynamically for the dropdown
-  const { data: universesResponse } = useUniverses();
+  const { data: universesResponse } = useUniverses({ page: 1, page_size: 1000 });
   const universesData = mode === "item" ? universesResponse?.data || universes : [];
 
   // Fetch universe items for the selected universe
   const universeIdForItems =
     mode === "item" && itemData.audit_universe_id ? String(itemData.audit_universe_id) : undefined;
 
-  const { data: universeItemsResponse, isLoading: isLoadingItems } =
-    useUniverseItems(universeIdForItems);
+  const { data: universeItemsResponse, isLoading: isLoadingItems } = useUniverseItems(
+    universeIdForItems,
+    {
+      page: 1,
+      page_size: 1000
+    }
+  );
 
   // Use initialUniverseItems if editing a universe, otherwise use fetched data
   const universeItemsData =
@@ -340,7 +345,6 @@ export default function AuditUniverseForm({
         ? initialUniverseItems
         : universeItemsResponse?.data || []
       : [];
-
 
   const updateUniverseData = (fields: Partial<UniverseFormData>) => {
     setUniverseData((prev) => ({ ...prev, ...fields }));
@@ -808,7 +812,7 @@ export default function AuditUniverseForm({
               </h3>
               {universeItemsData && universeItemsData.length > 0 && (
                 <Badge variant={"secondary"} className="p-1 px-4 text-sm font-medium">
-                  {universeItemsData.length}
+                  {universeItemsResponse?.pagination?.total || universeItemsData.length}
                 </Badge>
               )}
             </div>
