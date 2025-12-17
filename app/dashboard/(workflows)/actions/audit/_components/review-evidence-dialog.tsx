@@ -11,38 +11,45 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { SelectField } from "@/components/ui/select-field";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import {
-  useApproveFindingActionEvidenceMutation,
-  useRejectFindingActionEvidenceMutation
+  useReviewFindingActionEvidenceMutation,
+  useUpdateFindingActionReviewMutation
 } from "@/hooks/use-finding-actions-queries";
-import type { FindingActionEvidence } from "@/lib/types/audit-types";
+import type { FindingActionEvidence, FindingActionReview } from "@/lib/types/audit-types";
+import { SearchSelectField } from "@/components/ui/search-select-field";
 
 interface ReviewEvidenceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   actionId: string;
   evidence: FindingActionEvidence[];
+  editingReview?: FindingActionReview | null;
 }
 
 export function ReviewEvidenceDialog({
   open,
   onOpenChange,
   actionId,
-  evidence
+  evidence,
+  editingReview
 }: ReviewEvidenceDialogProps) {
   const [formData, setFormData] = useState({
-    evidence_id: "",
-    review_status: "APPROVED" as "APPROVED" | "REJECTED",
-    comments: ""
+    evidence_id: editingReview?.finding_action_evidence_id || "",
+    review_status:
+      (editingReview?.review_status as "APPROVED" | "REJECTED") ||
+      ("APPROVED" as "APPROVED" | "REJECTED"),
+    comments: editingReview?.review_comments || ""
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const approveMutation = useApproveFindingActionEvidenceMutation();
-  const rejectMutation = useRejectFindingActionEvidenceMutation();
+  const createMutation = useReviewFindingActionEvidenceMutation();
+  const updateMutation = useUpdateFindingActionReviewMutation();
+
+  // Determine if we're in edit mode
+  const isEditing = !!editingReview;
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -75,12 +82,15 @@ export function ReviewEvidenceDialog({
       return;
     }
 
-    const mutation = formData.review_status === "APPROVED" ? approveMutation : rejectMutation;
+    let mutation = isEditing && editingReview ? updateMutation : createMutation;
 
+    // Create Or Update a review
     mutation.mutate(
       {
         evidence_id: formData.evidence_id,
-        comments: formData.comments || undefined
+        action_id: actionId,
+        status: formData.review_status,
+        comments: String(formData.comments || "")
       },
       {
         onSuccess: () => {
@@ -101,26 +111,32 @@ export function ReviewEvidenceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Review Evidence</DialogTitle>
+          <DialogTitle>{isEditing ? "Update Review" : "Review Evidence"}</DialogTitle>
           <DialogDescription>
-            Review and approve or reject submitted evidence
+            {isEditing
+              ? "Update your review of the submitted evidence"
+              : "Review and approve or reject submitted evidence"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Evidence Selection */}
-          <SelectField
+          {/* Evidence Selection - Disabled when editing */}
+          <SearchSelectField
             label="Select Evidence"
             value={formData.evidence_id}
             onValueChange={(value) => handleInputChange("evidence_id", value)}
             options={evidence.map((item) => ({
               id: item.id,
-              name: item.evidence_file_name || item.evidence_summary || `Evidence #${item.id.slice(0, 8)}`
+              name:
+                item.evidence_file_name ||
+                item.evidence_summary ||
+                `Evidence #${item.id.slice(0, 8)}`
             }))}
-            placeholder="Select evidence..."
+            placeholder="-- Select Evidence --"
             isInvalid={!!errors.evidence_id}
             errorText={errors.evidence_id}
             required
+            disabled={isEditing}
           />
 
           {/* Review Status */}
@@ -133,16 +149,14 @@ export function ReviewEvidenceDialog({
                 type="button"
                 variant={formData.review_status === "APPROVED" ? "default" : "outline"}
                 className="flex-1"
-                onClick={() => handleInputChange("review_status", "APPROVED")}
-              >
+                onClick={() => handleInputChange("review_status", "APPROVED")}>
                 Approve
               </Button>
               <Button
                 type="button"
                 variant={formData.review_status === "REJECTED" ? "destructive" : "outline"}
                 className="flex-1"
-                onClick={() => handleInputChange("review_status", "REJECTED")}
-              >
+                onClick={() => handleInputChange("review_status", "REJECTED")}>
                 Reject
               </Button>
             </div>
@@ -167,19 +181,21 @@ export function ReviewEvidenceDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={approveMutation.isPending || rejectMutation.isPending}
-            >
+              disabled={createMutation.isPending || updateMutation.isPending}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               variant={formData.review_status === "REJECTED" ? "destructive" : "default"}
-              disabled={approveMutation.isPending || rejectMutation.isPending}
-            >
-              {(approveMutation.isPending || rejectMutation.isPending) && (
+              disabled={createMutation.isPending || updateMutation.isPending}>
+              {(createMutation.isPending || updateMutation.isPending) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {formData.review_status === "APPROVED" ? "Approve" : "Reject"}
+              {isEditing
+                ? "Update Review"
+                : formData.review_status === "APPROVED"
+                  ? "Approve"
+                  : "Reject"}
             </Button>
           </div>
         </div>

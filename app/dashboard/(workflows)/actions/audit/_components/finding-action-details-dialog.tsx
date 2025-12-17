@@ -237,6 +237,7 @@ export function FindingActionDetailsDialog({
                                     {STATUS_COLORS[item.status].text}
                                   </Badge>
                                 )}
+
                                 {(() => {
                                   const reviewStatus = getEvidenceReviewStatus(item);
                                   return (

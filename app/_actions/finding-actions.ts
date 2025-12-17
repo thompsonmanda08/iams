@@ -561,24 +561,33 @@ export async function createFindingActionReview(
 /**
  * Approve evidence
  */
-export async function approveFindingActionEvidence(
-  evidence_id: string,
-  comments?: string
-): Promise<APIResponse> {
+export async function reviewFindingActionEvidence({
+  evidence_id,
+  finding_action_id,
+  approval_status,
+  reviewer_comments
+}: {
+  evidence_id: string;
+  reviewer_comments: string;
+  finding_action_id: string;
+  approval_status: "APPROVED" | "REJECTED";
+}): Promise<APIResponse> {
   if (!evidence_id) {
     return handleBadRequest("Evidence ID is required");
   }
 
+  const url = `/api/v1/finding-action-evidence/${evidence_id}/review`;
+
   try {
     const response = await authenticatedApiClient({
       method: "POST",
-      url: `/api/v1/finding-action-evidence/${evidence_id}/approve`,
-      data: { comments }
+      url,
+      data: { approval_status, reviewer_comments, finding_action_id }
     });
 
     revalidatePath("/dashboard/actions/audit");
 
-    return successResponse(response.data?.data, "Evidence approved successfully");
+    return successResponse(response.data?.data, "Evidence reviewed successfully");
   } catch (error: any) {
     return handleError(
       error,
@@ -589,51 +598,33 @@ export async function approveFindingActionEvidence(
 }
 
 /**
- * Reject evidence
+ * Update finding action review
+ * Updates an existing review for evidence with new approval status and comments
  */
-export async function rejectFindingActionEvidence(
-  evidence_id: string,
-  comments?: string
-): Promise<APIResponse> {
+export async function updateFindingActionReview({
+  evidence_id,
+  approval_status,
+  reviewer_comments
+}: {
+  evidence_id: string;
+  approval_status: "APPROVED" | "REJECTED";
+  reviewer_comments: string;
+}): Promise<APIResponse> {
   if (!evidence_id) {
     return handleBadRequest("Evidence ID is required");
   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/finding-action-evidence/${evidence_id}/reject`,
-      data: { comments }
-    });
-
-    revalidatePath("/dashboard/actions/audit");
-
-    return successResponse(response.data?.data, "Evidence rejected successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "POST | REJECT FINDING ACTION EVIDENCE",
-      `/api/v1/finding-action-evidence/${evidence_id}/reject`
-    );
+  if (!approval_status) {
+    return handleBadRequest("Approval status is required");
   }
-}
 
-/**
- * Update finding action review
- */
-export async function updateFindingActionReview(
-  review_id: string,
-  data: { review_status?: string; review_comments?: string }
-): Promise<APIResponse> {
-  if (!review_id) {
-    return handleBadRequest("Review ID is required");
-  }
+  const url = `/api/v1/finding-action-reviews/${evidence_id}`;
 
   try {
     const response = await authenticatedApiClient({
       method: "PUT",
-      url: `/api/v1/finding-action-reviews/${review_id}`,
-      data
+      url,
+      data: { approval_status, reviewer_comments }
     });
 
     revalidatePath("/dashboard/actions/audit");
@@ -643,7 +634,7 @@ export async function updateFindingActionReview(
     return handleError(
       error,
       "PUT | UPDATE FINDING ACTION REVIEW",
-      `/api/v1/finding-action-reviews/${review_id}`
+      url
     );
   }
 }
