@@ -31,9 +31,9 @@ export function AssignFindingActionDialog({
   finding,
   auditPlanStatus
 }: AssignFindingActionDialogProps) {
-  // Only allow if audit plan is APPROVED or COMPLETED
+  // Only allow if audit plan is COMPLETED, APPROVED, or REJECTED
   const canAssignAction =
-    auditPlanStatus === "APPROVED" || auditPlanStatus === "COMPLETED";
+    auditPlanStatus === "COMPLETED" || auditPlanStatus === "APPROVED" || auditPlanStatus === "REJECTED";
 
   const [formData, setFormData] = useState({
     action_description: "",

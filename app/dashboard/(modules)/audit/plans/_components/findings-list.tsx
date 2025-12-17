@@ -51,8 +51,10 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
   // Check if finding is editable (only in specific statuses)
   const isEditable = ["OPEN", "IN_PROGRESS", "DRAFT"].includes(finding.status);
 
-  // Check if can assign actions (only when audit is APPROVED or COMPLETED)
-  const canAssignAction = ["APPROVED", "COMPLETED"].includes(auditPlanStatus);
+  // Check if can assign actions (only when audit is COMPLETED, APPROVED, or REJECTED)
+  const canAssignAction = ["COMPLETED", "APPROVED", "REJECTED", "CLOSED", "IN_REVIEW"].includes(
+    finding.status
+  );
 
   return (
     <Card className="gap-2 transition-shadow hover:shadow-md">
@@ -93,8 +95,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
                 size="sm"
                 variant="outline"
                 onClick={() => setAssignActionDialogOpen(true)}
-                className="gap-2"
-              >
+                className="gap-2">
                 <Plus className="mr-2 h-4 w-4" />
                 Assign Action
               </Button>
@@ -146,9 +147,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
               {finding.due_date && (
                 <div className="ml-auto">
                   <p className="text-primary mb-1 text-right text-sm font-semibold">Due Date</p>
-                  <Badge variant="outline">
-                    {new Date(finding.due_date).toLocaleDateString()}
-                  </Badge>
+                  <Badge variant="outline">{new Date(finding.due_date).toLocaleDateString()}</Badge>
                 </div>
               )}
             </div>
@@ -182,19 +181,23 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
             {evidenceList.length > 0 && (
               <div className="space-y-2">
                 {evidenceList.slice(0, 3).map((evidence: any) => (
-                  <div key={evidence.id} className="flex items-start gap-2 rounded-sm border border-dashed px-2 py-1.5">
-                    <FileText className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                  <div
+                    key={evidence.id}
+                    className="flex items-start gap-2 rounded-sm border border-dashed px-2 py-1.5">
+                    <FileText className="text-muted-foreground mt-0.5 h-3 w-3 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium">{evidence.title}</p>
                       <p className="text-muted-foreground text-xs">{evidence.evidence_type}</p>
                     </div>
                     {evidence.file_link && (
-                      <LinkIcon className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <LinkIcon className="text-muted-foreground h-3 w-3 shrink-0" />
                     )}
                   </div>
                 ))}
                 {evidenceList.length > 3 && (
-                  <p className="text-muted-foreground text-xs">+{evidenceList.length - 3} more evidence items</p>
+                  <p className="text-muted-foreground text-xs">
+                    +{evidenceList.length - 3} more evidence items
+                  </p>
                 )}
               </div>
             )}
@@ -222,17 +225,12 @@ export function FindingsList({
   onSubmitForApproval
 }: FindingsListProps) {
   // Check if plan is approved
-  const isPlanApproved = ["APPROVED", "COMPLETED"].includes(
-    auditPlanStatus?.toUpperCase() || ""
-  );
+  const isPlanApproved = ["APPROVED", "COMPLETED"].includes(auditPlanStatus?.toUpperCase() || "");
 
   // Show "Requires Approval" component if plan is not approved
   if (!isPlanApproved && auditPlan && onSubmitForApproval) {
     return (
-      <RequiresApprovalState
-        auditPlan={auditPlan}
-        onSubmitForApproval={onSubmitForApproval}
-      />
+      <RequiresApprovalState auditPlan={auditPlan} onSubmitForApproval={onSubmitForApproval} />
     );
   }
 
