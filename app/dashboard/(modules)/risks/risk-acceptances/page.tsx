@@ -1,6 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, Clock, AlertCircle, FileText, Eye, View, Send } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
+  FileText,
+  Eye,
+  View,
+  Send,
+  Plus,
+  ClipboardListIcon
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -34,6 +45,7 @@ import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
 import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { StatusBadge } from "@/components/status-badge";
+import Link from "next/link";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -76,6 +88,126 @@ interface Acceptance {
   updated_by_name: string;
 }
 
+// Status configuration
+const statusConfig = {
+  PENDING: {
+    icon: Clock,
+    color: "bg-yellow-50 border-yellow-200",
+    badge: "outline",
+    label: "Pending",
+    textColor: "text-yellow-700"
+  },
+  APPROVED: {
+    icon: CheckCircle2,
+    color: "bg-green-50 border-green-200",
+    badge: "default",
+    label: "Approved",
+    textColor: "text-green-700"
+  },
+  REJECTED: {
+    icon: XCircle,
+    color: "bg-red-50 border-red-200",
+    badge: "destructive",
+    label: "Rejected",
+    textColor: "text-red-700"
+  }
+};
+
+// AcceptanceCard component defined outside
+interface AcceptanceCardProps {
+  acceptance: Acceptance;
+  onAcceptanceClick: (acceptance: Acceptance) => void;
+  onViewRisk: (riskId: string) => void;
+}
+
+const AcceptanceCard = ({ acceptance, onAcceptanceClick, onViewRisk }: AcceptanceCardProps) => {
+  const config = statusConfig[acceptance.acceptance_status];
+  const Icon = config?.icon;
+  const hasRemarks = acceptance.additional_remarks;
+
+  return (
+    <Card className={`${config?.color} p-4 transition-all`}>
+      <div className="mb-3 flex items-start justify-between">
+        <div className="flex flex-1 items-start gap-2">
+          {Icon && <Icon className="mt-0.5 h-5 w-5 text-gray-600" />}
+          <div className="flex-1">
+            <h4 className="line-clamp-2 text-sm font-semibold">{acceptance.risk_description}</h4>
+            <p className="mt-1 text-xs text-gray-500 uppercase">
+              ID: {acceptance.id.slice(0, 4)}...
+            </p>
+          </div>
+        </div>
+        <StatusBadge status={config?.label} />
+      </div>
+
+      <div className="space-y-2 text-xs">
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="font-medium text-gray-700">Risk Rate</p>
+            <StatusBadge status={acceptance.risk_rate} />
+          </div>
+          <div>
+            <p className="font-medium text-gray-700">Created By</p>
+            <p className="truncate text-gray-900">{acceptance.created_by_name}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 border-t pt-2">
+          <div>
+            <p className="font-medium text-gray-700">Created Date</p>
+            <p className="text-gray-900">{formatDate(acceptance.created_at)}</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-700">Expiration Date</p>
+            <p className="text-gray-900">{formatDate(acceptance.risk_acceptance_expiry_date)}</p>
+          </div>
+        </div>
+
+        {acceptance.deficiency_description && (
+          <div className="flex justify-between border-t pt-2">
+            <div>
+              <p className="mb-1 font-medium text-gray-700">Deficiency:</p>
+              <p className="line-clamp-2 text-gray-600">{acceptance.deficiency_description}</p>
+            </div>
+            <div className="flex gap-4">
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => onAcceptanceClick(acceptance)}
+                className="h-8 gap-1.5">
+                Acceptance Details
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onViewRisk(acceptance.risk_id)}
+                className="h-8 gap-1.5">
+                <View className="h-3.5 w-3.5" />
+                View Associated Risk
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {acceptance.acceptance_approved_date && (
+          <div className="flex items-center justify-between pt-2 text-gray-500">
+            <span>
+              {acceptance.acceptance_status === "APPROVED" ? "Approved" : "Updated"}:{" "}
+              {formatDate(acceptance.acceptance_approved_date)}
+            </span>
+            {hasRemarks && (
+              <div className="flex items-center gap-1 text-blue-600">
+                <Eye className="h-3 w-3" />
+                <span className="text-xs font-medium">View Details</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
 export default function RiskAcceptanceList() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Status>("all");
@@ -89,30 +221,6 @@ export default function RiskAcceptanceList() {
   const [isLoading, setIsLoading] = useState(true);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
-
-  const statusConfig = {
-    PENDING: {
-      icon: Clock,
-      color: "bg-yellow-50 border-yellow-200",
-      badge: "outline",
-      label: "Pending",
-      textColor: "text-yellow-700"
-    },
-    APPROVED: {
-      icon: CheckCircle2,
-      color: "bg-green-50 border-green-200",
-      badge: "default",
-      label: "Approved",
-      textColor: "text-green-700"
-    },
-    REJECTED: {
-      icon: XCircle,
-      color: "bg-red-50 border-red-200",
-      badge: "destructive",
-      label: "Rejected",
-      textColor: "text-red-700"
-    }
-  };
 
   useEffect(() => {
     fetchAcceptances();
@@ -159,7 +267,13 @@ export default function RiskAcceptanceList() {
     setShowModal(true);
   };
 
+  const handleViewRisk = (riskId: string) => {
+    router.push(`/dashboard/actions/risk/${riskId}`);
+  };
+
   const handleStatusUpdate = async () => {
+    if (!selectedAcceptance || !modalStatus || !remarks.trim()) return;
+
     setIsSubmitting(true);
     try {
       const updatedData = {
@@ -167,20 +281,19 @@ export default function RiskAcceptanceList() {
         acceptance_status: modalStatus as "PENDING" | "APPROVED" | "REJECTED",
         additional_remarks: remarks
       };
-      const response = await updateRiskAcceptance(
-        selectedAcceptance?.id as string,
-        updatedData as any
-      );
+      const response = await updateRiskAcceptance(selectedAcceptance.id, updatedData as any);
       if (response.success) {
         toast.success(response.message || "Successfully updated risk acceptance");
         await fetchAcceptances();
         setShowModal(false);
         setSelectedAcceptance(null);
+        setRemarks("");
       } else {
         toast.error(response.message || "Failed to update acceptance");
       }
     } catch (err) {
       console.error("Error updating acceptance:", err);
+      toast.error("An error occurred while updating acceptance");
     } finally {
       setIsSubmitting(false);
     }
@@ -212,95 +325,111 @@ export default function RiskAcceptanceList() {
     return <RiskAcceptanceListSkeleton />;
   }
 
-  const AcceptanceCard = ({ acceptance }: { acceptance: Acceptance }) => {
-    const config = statusConfig[acceptance.acceptance_status];
-    const Icon = config.icon;
-    const hasRemarks = acceptance.additional_remarks;
-
+  if (!acceptances.length) {
     return (
-      <Card className={`${config.color} p-4 transition-all`}>
-        <div className="mb-3 flex items-start justify-between">
-          <div className="flex flex-1 items-start gap-2">
-            <Icon className="mt-0.5 h-5 w-5 text-gray-600" />
-            <div className="flex-1">
-              <h4 className="line-clamp-2 text-sm font-semibold">{acceptance.risk_description}</h4>
-              <p className="mt-1 text-xs text-gray-500 uppercase">
-                ID: {acceptance.id.slice(0, 4)}...
-              </p>
-            </div>
+      <div className="bg-background min-h-screen">
+        <div className="bg-card border-b">
+          <div className="container mx-auto px-4 py-6">
+            <PageHeader
+              title="Risk Acceptance Log"
+              description="Review and manage all risk acceptance requests"
+              icon="ClipboardCheck"
+            />
           </div>
-          <StatusBadge status={config.label} />
         </div>
 
-        <div className="space-y-2 text-xs">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p className="font-medium text-gray-700">Risk Rate</p>
-              <StatusBadge status={acceptance.risk_rate} />
-            </div>
-            <div>
-              <p className="font-medium text-gray-700">Created By</p>
-              <p className="truncate text-gray-900">{acceptance.created_by_name}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 border-t pt-2">
-            <div>
-              <p className="font-medium text-gray-700">Created Date</p>
-              <p className="text-gray-900">{formatDate(acceptance.created_at)}</p>
-            </div>
-            <div>
-              <p className="font-medium text-gray-700">Expiration Date</p>
-              <p className="text-gray-900">{formatDate(acceptance.risk_acceptance_expiry_date)}</p>
-            </div>
-          </div>
-
-          {acceptance.deficiency_description && (
-            <div className="flex justify-between border-t pt-2">
-              <div>
-                <p className="mb-1 font-medium text-gray-700">Deficiency:</p>
-                <p className="line-clamp-2 text-gray-600">{acceptance.deficiency_description}</p>
-              </div>
-              <div className="flex gap-4">
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={() => handleAcceptanceClick(acceptance)}
-                  className="h-8 gap-1.5">
-                  Acceptance Details
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    router.push(`/dashboard/actions/risk/${acceptance.risk_id}`);
-                  }}
-                  className="h-8 gap-1.5">
-                  <View className="h-3.5 w-3.5" />
-                  View Associated Risk
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {acceptance.acceptance_approved_date && (
-            <div className="flex items-center justify-between pt-2 text-gray-500">
-              <span>
-                {acceptance.acceptance_status === "APPROVED" ? "Approved" : "Updated"}:{" "}
-                {formatDate(acceptance.acceptance_approved_date)}
-              </span>
-              {hasRemarks && (
-                <div className="flex items-center gap-1 text-blue-600">
-                  <Eye className="h-3 w-3" />
-                  <span className="text-xs font-medium">View Details</span>
+        <div className="container mx-auto px-4 py-8">
+          <Card className="bg-canvas/50 border-2 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center px-8 py-16">
+              <div className="relative mb-4">
+                <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+                <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                  <ClipboardListIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+              <h3 className="text-foreground mb-2 text-2xl font-semibold">No Risk Acceptances</h3>
+              <p className="text-muted-foreground mb-8 max-w-md text-center">
+                There are currently no risk acceptance requests in the system
+              </p>
+              <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                  <div className="text-primary mb-1 font-mono">IDENTIFY RISKS</div>
+                  <div className="text-muted-foreground">Document Risk Details</div>
+                </div>
+                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                  <div className="text-primary mb-1 font-mono">REQUEST ACCEPTANCE</div>
+                  <div className="text-muted-foreground">Submit for Review</div>
+                </div>
+                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                  <div className="text-primary mb-1 font-mono">APPROVE/REJECT</div>
+                  <div className="text-muted-foreground">Management Decision</div>
+                </div>
+              </div>
+              <Button size="lg" className="gap-2" asChild>
+                <Link href="/dashboard/risk-registers">
+                  <Plus className="h-4 w-4" />
+                  Go to Risk Register
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      </Card>
+      </div>
     );
-  };
+  }
+
+  if (!acceptances.length) {
+    return (
+      <div className="bg-background min-h-screen">
+        <div className="bg-card border-b">
+          <div className="container mx-auto px-4 py-6">
+            <PageHeader
+              title="Risk Acceptance Log"
+              description="Review and manage all risk acceptance requests"
+              icon="ClipboardCheck"
+            />
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <Card className="bg-canvas/50 border-2 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center px-8 py-16">
+              <div className="relative mb-4">
+                <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+                <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                  <ClipboardListIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
+                </div>
+              </div>
+              <h3 className="text-foreground mb-2 text-2xl font-semibold">No Risk Acceptances</h3>
+              <p className="text-muted-foreground mb-8 max-w-md text-center">
+                There are currently no risk acceptance requests in the system
+              </p>
+              <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                  <div className="text-primary mb-1 font-mono">IDENTIFY RISKS</div>
+                  <div className="text-muted-foreground">Document Risk Details</div>
+                </div>
+                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                  <div className="text-primary mb-1 font-mono">REQUEST ACCEPTANCE</div>
+                  <div className="text-muted-foreground">Submit for Review</div>
+                </div>
+                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+                  <div className="text-primary mb-1 font-mono">APPROVE/REJECT</div>
+                  <div className="text-muted-foreground">Management Decision</div>
+                </div>
+              </div>
+              <Button size="lg" className="gap-2" asChild>
+                <Link href="/dashboard/risks/risk-registers">
+                  <Plus className="h-4 w-4" />
+                  Go to Risk Register
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background min-h-screen">
@@ -352,7 +481,12 @@ export default function RiskAcceptanceList() {
               <TabsContent value={activeTab} className="mt-4 space-y-3">
                 {filteredAcceptances.length > 0 ? (
                   filteredAcceptances.map((acceptance) => (
-                    <AcceptanceCard key={acceptance.id} acceptance={acceptance} />
+                    <AcceptanceCard
+                      key={acceptance.id}
+                      acceptance={acceptance}
+                      onAcceptanceClick={handleAcceptanceClick}
+                      onViewRisk={handleViewRisk}
+                    />
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12">
@@ -381,7 +515,6 @@ export default function RiskAcceptanceList() {
                   {selectedAcceptance && (
                     <>
                       <StatusBadge status={selectedAcceptance.acceptance_status} />
-
                       <StatusBadge status={selectedAcceptance.risk_rate} />
                     </>
                   )}

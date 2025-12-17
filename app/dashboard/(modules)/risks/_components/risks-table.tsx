@@ -28,6 +28,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { AssignActionDialog } from "./assign-action-dialog";
 import { StatusBadge } from "@/components/status-badge";
+import { Pagination } from "@/lib/types";
 
 type Risk = {
   id: string;
@@ -121,7 +122,7 @@ type Meta = {
 
 type RisksTableProps = {
   risks: Risk[];
-  meta: Meta;
+  pagination: Pagination;
   registerId: string;
   currentSearch: string;
   currentCategory: string;
@@ -130,7 +131,7 @@ type RisksTableProps = {
 
 export default function RisksTable({
   risks,
-  meta,
+  pagination,
   registerId,
   currentSearch,
   currentCategory,
@@ -275,15 +276,13 @@ export default function RisksTable({
   };
 
   const customPaginationData = {
-    page: meta.page,
-    page_size: meta.limit,
-    total_pages: meta.totalPages,
-    totalCount: meta.total,
-    has_prev: meta.page > 1,
-    has_next: meta.page < meta.totalPages
+    page: pagination?.page,
+    page_size: pagination?.page_size,
+    total_pages: pagination?.total_pages,
+    total: pagination?.total,
+    has_prev: pagination?.has_prev,
+    has_next: pagination?.has_next
   };
-
-  console.log("HERE:", risks);
 
   const getRiskOwnerName = (risk: Risk) => {
     if (!risk.risk_owner) return "Unassigned";

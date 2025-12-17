@@ -943,7 +943,7 @@ async function _getRisksInRegister(
     category?: string;
     status?: string;
     page?: number;
-    limit?: number;
+    page_size?: number;
   }
 ): Promise<APIResponse> {
   try {
@@ -953,7 +953,7 @@ async function _getRisksInRegister(
     if (params?.category) queryParams.append("category", params.category);
     if (params?.status) queryParams.append("status", params.status);
     if (params?.page) queryParams.append("page", String(params.page));
-    if (params?.limit) queryParams.append("limit", String(params.limit));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
 
     const url = `/api/v1/risk-registers/${registerId}/risks${
       queryParams.toString() ? `?${queryParams.toString()}` : ""
