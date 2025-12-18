@@ -490,7 +490,7 @@ export default function AuditUniverseList({
                                     <TooltipContent>View Details</TooltipContent>
                                   </Tooltip>
 
-                                  {item.status !== "APPROVED" && (
+                                  {item.status === "DRAFT" && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
@@ -509,7 +509,7 @@ export default function AuditUniverseList({
                                     </Tooltip>
                                   )}
 
-                                  {item.status !== "APPROVED" && (
+                                  {item.status === "DRAFT" && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button

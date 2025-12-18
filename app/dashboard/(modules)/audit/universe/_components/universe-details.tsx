@@ -307,10 +307,12 @@ const UniverseDetails = ({
                     Manage individual items and audit areas
                   </p>
                 </div>
-                <Button onClick={() => setShowItemForm(true)} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Item
-                </Button>
+                {universe.status?.toUpperCase() === "DRAFT" && (
+                  <Button onClick={() => setShowItemForm(true)} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Item
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -500,37 +502,41 @@ const UniverseDetails = ({
                             {/* Actions */}
                             <TableCell className="text-center">
                               <div className="flex justify-end gap-1">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setEditingItemId(item.id);
-                                        setShowItemForm(true);
-                                      }}
-                                      className="gap-1 p-0">
-                                      <Pencil className="h-4 w-4" /> Edit
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Edit</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteClick(item.id);
-                                      }}
-                                      className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1 p-0">
-                                      <Trash2 className="h-4 w-4" /> Delete
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Delete</TooltipContent>
-                                </Tooltip>
+                                {universe.status?.toUpperCase() === "DRAFT" && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingItemId(item.id);
+                                          setShowItemForm(true);
+                                        }}
+                                        className="gap-1 p-0">
+                                        <Pencil className="h-4 w-4" /> Edit
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Edit</TooltipContent>
+                                  </Tooltip>
+                                )}
+                                {universe.status?.toUpperCase() === "DRAFT" && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteClick(item.id);
+                                        }}
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1 p-0">
+                                        <Trash2 className="h-4 w-4" /> Delete
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete</TooltipContent>
+                                  </Tooltip>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
