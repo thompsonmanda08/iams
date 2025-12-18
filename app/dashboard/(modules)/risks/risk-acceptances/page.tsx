@@ -366,59 +366,6 @@ export default function RiskAcceptanceList() {
                 </div>
               </div>
               <Button size="lg" className="gap-2" asChild>
-                <Link href="/dashboard/risk-registers">
-                  <Plus className="h-4 w-4" />
-                  Go to Risk Register
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (!acceptances.length) {
-    return (
-      <div className="bg-background min-h-screen">
-        <div className="bg-card border-b">
-          <div className="container mx-auto px-4 py-6">
-            <PageHeader
-              title="Risk Acceptance Log"
-              description="Review and manage all risk acceptance requests"
-              icon="ClipboardCheck"
-            />
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 py-8">
-          <Card className="bg-canvas/50 border-2 border-dashed">
-            <CardContent className="flex flex-col items-center justify-center px-8 py-16">
-              <div className="relative mb-4">
-                <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
-                <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
-                  <ClipboardListIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
-                </div>
-              </div>
-              <h3 className="text-foreground mb-2 text-2xl font-semibold">No Risk Acceptances</h3>
-              <p className="text-muted-foreground mb-8 max-w-md text-center">
-                There are currently no risk acceptance requests in the system
-              </p>
-              <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
-                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                  <div className="text-primary mb-1 font-mono">IDENTIFY RISKS</div>
-                  <div className="text-muted-foreground">Document Risk Details</div>
-                </div>
-                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                  <div className="text-primary mb-1 font-mono">REQUEST ACCEPTANCE</div>
-                  <div className="text-muted-foreground">Submit for Review</div>
-                </div>
-                <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-                  <div className="text-primary mb-1 font-mono">APPROVE/REJECT</div>
-                  <div className="text-muted-foreground">Management Decision</div>
-                </div>
-              </div>
-              <Button size="lg" className="gap-2" asChild>
                 <Link href="/dashboard/risks/risk-registers">
                   <Plus className="h-4 w-4" />
                   Go to Risk Register
