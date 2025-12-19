@@ -11,30 +11,12 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  Eye,
-  Edit,
-  Trash2,
-  Loader2,
-  Plus,
-  ClipboardListIcon,
-  PencilLine,
-  ShieldAlert,
-  View,
-  Pencil
-} from "lucide-react";
-import type {
-  AuditPlan,
-  AnnualPlanItemWithDetails,
-  UniverseItem,
-  KRIColor
-} from "@/lib/types/audit-types";
+import { Trash2, Plus, ClipboardListIcon, PencilLine, ShieldAlert, Pencil } from "lucide-react";
+import type { AnnualPlanItemWithDetails, UniverseItem, KRIColor } from "@/lib/types/audit-types";
 import { format, formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { Progress } from "@/components/ui/progress";
 import {
   Empty,
   EmptyContent,
@@ -48,18 +30,16 @@ import { StatusBadge } from "@/components/status-badge";
 import { AUDIT_QUERY_KEYS, useDeleteAnnualAuditPlanItem } from "@/hooks/use-audit-query-data";
 import { Department, ErrorState } from "@/lib/types";
 import { useDepartments } from "@/hooks/use-query-data";
-import { useUniverseItems, useUniverses } from "@/hooks/use-audit-settings-query-data";
+import { useUniverseItems } from "@/hooks/use-audit-settings-query-data";
 import { MultiSelectModal } from "@/components/ui/multi-select-modal";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createAnnualAuditPlanItem,
-  updateAnnualAuditPlan,
-  generateAuditPlanFromItem
+  updateAnnualAuditPlan
 } from "@/app/_actions/audit-module-actions";
 import { notify } from "@/lib/utils";
-import { QUERY_KEYS } from "@/lib/constants";
 import {
   Dialog,
   DialogClose,
@@ -79,6 +59,7 @@ import { useBudgetLines, useBudgets } from "@/hooks/use-audit-settings-query-dat
 import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
 import { useGenerateAuditPlanFromItem } from "@/hooks/use-audit-query-data";
 import { DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { TemplateSelectorSimple } from "./template-selector-simple";
 
 type AnnualPlanItem = {
   id?: string;
@@ -382,7 +363,14 @@ export function AnnualPlanItems({
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setFormData(item);
+                            setFormData({
+                              id: item.id,
+                              department_id: item.department_id || "",
+                              universe_item_ids: item.universe_item_ids || [],
+                              engagement_date: item.engagement_date || "",
+                              engagement_end_date: item.engagement_end_date || "",
+                              responsible_person: item.responsible_person || ""
+                            });
                             setOpenModal(true);
                           }}
                           className="h-8 gap-1.5">
@@ -868,6 +856,7 @@ type GenerateAuditPlanFormData = {
   client_representative: string;
   budget_id: string;
   budget_item_ids: string[];
+  working_paper_template_id: string;
 };
 
 const INIT_GENERATE_FORM_DATA: GenerateAuditPlanFormData = {
@@ -884,7 +873,8 @@ const INIT_GENERATE_FORM_DATA: GenerateAuditPlanFormData = {
   audit_team_members: [],
   client_representative: "",
   budget_id: "",
-  budget_item_ids: []
+  budget_item_ids: [],
+  working_paper_template_id: ""
 };
 
 interface GenerateAuditPlanModalProps {
@@ -969,7 +959,8 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       management_standard: formData.management_standard,
       audit_team_members: formData.audit_team_members || [],
       client_representative: formData.client_representative,
-      budget_item_ids: formData.budget_item_ids || []
+      budget_item_ids: formData.budget_item_ids || [],
+      working_paper_template_id: formData.working_paper_template_id
     };
 
     generateMutation.mutate(
@@ -1072,6 +1063,15 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
               options={FRAMEWORK_TYPES}
               placeholder="e.g., ISO 27001"
               required
+            />
+
+            {/* Working Paper Template */}
+            <TemplateSelectorSimple
+              value={formData.working_paper_template_id}
+              onChange={(template: any) =>
+                setFormData({ ...formData, working_paper_template_id: template.id })
+              }
+              frameworkType={formData.management_standard}
             />
 
             {/* Description */}

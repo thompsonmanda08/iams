@@ -1146,6 +1146,10 @@ export interface AnnualPlanItemWithDetails {
   department_id: string;
   department_name: string;
 
+  audit_area?: string;
+  audit_criteria?: string;
+  audit_objective?: string;
+
   // Universe item relationships
   universe_item_ids: string[];
   universe_items: UniverseItem[];
