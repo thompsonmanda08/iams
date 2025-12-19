@@ -27,6 +27,7 @@ interface CreateReassessmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   findingId: string;
+  actionId: string;
 }
 
 const SEVERITY_LEVELS = [
@@ -39,10 +40,11 @@ const SEVERITY_LEVELS = [
 export function CreateReassessmentDialog({
   open,
   onOpenChange,
-  findingId
+  findingId,
+  actionId
 }: CreateReassessmentDialogProps) {
   const [formData, setFormData] = useState({
-    compliance_status: "COMPLIANT" as "COMPLIANT" | "NON_COMPLIANT" | "PARTIAL",
+    compliance_status: "Compliant" as "Compliant" | "Non-Compliant" | "Partial",
     auditor_comments: "",
     new_severity: "",
     new_recommendation: "",
@@ -62,8 +64,17 @@ export function CreateReassessmentDialog({
     if (!formData.auditor_comments.trim()) {
       newErrors.auditor_comments = "Auditor comments are required";
     }
+
+    // New recommendation required for non-compliant or partial
     if (
-      formData.compliance_status === "PARTIAL" &&
+      (formData.compliance_status === "Non-Compliant" || formData.compliance_status === "Partial") &&
+      !formData.new_recommendation.trim()
+    ) {
+      newErrors.new_recommendation = "Recommendation is required when non-compliant or partial";
+    }
+
+    if (
+      formData.compliance_status === "Partial" &&
       (!formData.compliance_percentage ||
         isNaN(Number(formData.compliance_percentage)) ||
         Number(formData.compliance_percentage) < 0 ||
@@ -96,6 +107,7 @@ export function CreateReassessmentDialog({
     createReassessmentMutation.mutate(
       {
         finding_id: findingId,
+        finding_action_id: actionId,
         compliance_status: formData.compliance_status,
         auditor_comments: formData.auditor_comments,
         new_severity: formData.new_severity || undefined,
@@ -108,7 +120,7 @@ export function CreateReassessmentDialog({
         onSuccess: () => {
           // Reset form
           setFormData({
-            compliance_status: "COMPLIANT",
+            compliance_status: "Compliant",
             auditor_comments: "",
             new_severity: "",
             new_recommendation: "",
@@ -144,19 +156,19 @@ export function CreateReassessmentDialog({
               }
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="COMPLIANT" id="compliant" />
+                <RadioGroupItem value="Compliant" id="compliant" />
                 <Label htmlFor="compliant" className="font-normal cursor-pointer">
                   Compliant
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="NON_COMPLIANT" id="non-compliant" />
+                <RadioGroupItem value="Non-Compliant" id="non-compliant" />
                 <Label htmlFor="non-compliant" className="font-normal cursor-pointer">
                   Non-Compliant
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="PARTIAL" id="partial" />
+                <RadioGroupItem value="Partial" id="partial" />
                 <Label htmlFor="partial" className="font-normal cursor-pointer">
                   Partially Compliant
                 </Label>
@@ -186,7 +198,7 @@ export function CreateReassessmentDialog({
           </div>
 
           {/* New Severity (if non-compliant) */}
-          {formData.compliance_status === "NON_COMPLIANT" && (
+          {formData.compliance_status === "Non-Compliant" && (
             <div className="space-y-2">
               <Label htmlFor="new_severity">New Severity</Label>
               <Select
@@ -210,22 +222,28 @@ export function CreateReassessmentDialog({
             </div>
           )}
 
-          {/* New Recommendation (if non-compliant) */}
-          {formData.compliance_status === "NON_COMPLIANT" && (
+          {/* New Recommendation (if non-compliant or partial) */}
+          {(formData.compliance_status === "Non-Compliant" || formData.compliance_status === "Partial") && (
             <div className="space-y-2">
-              <Label htmlFor="new_recommendation">New Recommendation</Label>
+              <Label htmlFor="new_recommendation" className={errors.new_recommendation ? "text-red-500" : ""}>
+                New Recommendation <span className="text-red-500">*</span>
+              </Label>
               <Textarea
                 id="new_recommendation"
                 placeholder="Provide new recommendations for remediation..."
                 value={formData.new_recommendation}
                 onChange={(e) => handleInputChange("new_recommendation", e.target.value)}
                 rows={3}
+                className={errors.new_recommendation ? "border-red-500" : ""}
               />
+              {errors.new_recommendation && (
+                <p className="text-sm text-red-500">{errors.new_recommendation}</p>
+              )}
             </div>
           )}
 
           {/* Compliance Percentage (if partial) */}
-          {formData.compliance_status === "PARTIAL" && (
+          {formData.compliance_status === "Partial" && (
             <div className="space-y-2">
               <Label htmlFor="compliance_percentage">
                 Compliance Percentage <span className="text-red-500">*</span>

@@ -129,6 +129,9 @@ export function FindingActionDetailsDialog({
   // Can only create reassessment if user is the assigned reviewer (auditor)
   const isAssignedReviewer = currentUserId === action.auditor_id;
 
+  // Hide reassessment button if finding is already compliant
+  const isCompliant = findingData?.compliance_status?.toLowerCase() === "compliant";
+
   const allActionEvidenceApproved = evidence?.every(
     (item) => item.status?.toUpperCase() === "APPROVED"
   );
@@ -146,10 +149,6 @@ export function FindingActionDetailsDialog({
         <DialogContent className="flex! h-[90vh] w-full! max-w-3xl! flex-col overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Finding Action Details</DialogTitle>
-            <DialogDescription>
-              Action for {action.finding?.finding_number || "Unknown"} -{" "}
-              {action.finding?.category_name || "Unknown"}
-            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -647,7 +646,7 @@ export function FindingActionDetailsDialog({
             </Tabs>
 
             {/* Create Reassessment Button */}
-            {hasEvidence && isAssignedReviewer && (
+            {hasEvidence && isAssignedReviewer && !isCompliant && (
               <Button
                 onClick={() => setCreateReassessmentOpen(true)}
                 // variant="outline"
@@ -679,6 +678,7 @@ export function FindingActionDetailsDialog({
         open={createReassessmentOpen}
         onOpenChange={setCreateReassessmentOpen}
         findingId={action.finding_id}
+        actionId={action.id}
       />
     </>
   );
