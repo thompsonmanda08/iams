@@ -7,14 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { SelectField } from "@/components/ui/select-field";
 import { Save, FileText, Banknote } from "lucide-react";
-import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { CURRENCIES } from "@/lib/constants";
-import { createBudget, createBudgetLine } from "@/app/_actions/audit-module-actions";
 import { useDepartments } from "@/hooks/use-query-data";
 import { useBudgets } from "@/hooks/use-audit-settings-query-data";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCreateBudgetMutation, useCreateBudgetLineMutation } from "@/hooks/use-budget-mutations";
 import { Budget } from "@/lib/types/audit-types";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +88,6 @@ const BudgetForm = ({
   onBudgetCreated?: (budgetId: string) => void;
 }) => {
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [budgetData, setBudgetData] = useState<BudgetFormData>({
     ...INIT_BUDGET_DATA,
@@ -100,7 +97,27 @@ const BudgetForm = ({
     ...INIT_LINE_DATA,
     budget_id: budgetId || ""
   });
-  const [isCreating, setIsCreating] = useState(false);
+
+  const { mutate: createBudgetMutation, isPending: isCreatingBudget } = useCreateBudgetMutation({
+    onSuccess: (response) => {
+      const createdBudgetId = response?.data?.id;
+      setBudgetData(INIT_BUDGET_DATA);
+      if (onBudgetCreated && createdBudgetId) {
+        onBudgetCreated(createdBudgetId);
+      }
+    }
+  });
+
+  const { mutate: createBudgetLineMutation, isPending: isCreatingLine } = useCreateBudgetLineMutation({
+    onSuccess: () => {
+      setLineData({
+        ...INIT_LINE_DATA,
+        budget_id: budgetId as string
+      });
+    }
+  });
+
+  const isCreating = isCreatingBudget || isCreatingLine;
 
   const totalAmountRef = useRef<HTMLInputElement>(null);
   const allocatedAmountRef = useRef<HTMLInputElement>(null);
@@ -125,119 +142,66 @@ const BudgetForm = ({
     setLineData((prev) => ({ ...prev, ...fields }));
   };
 
-  const createBudgetHandler = async () => {
+  const createBudgetHandler = () => {
     // Validate date range
     const startDate = new Date(budgetData.start_date);
     const endDate = new Date(budgetData.end_date);
 
     if (endDate <= startDate) {
-      toast.error("End date must be after start date");
       return;
     }
 
     // Validate total amount
     if (budgetData.total_amount <= 0) {
-      toast.error("Total amount must be greater than 0");
       return;
     }
 
     // Validate required fields
     if (!budgetData.department_id) {
-      toast.error("Please select a department");
       return;
     }
 
     if (!budgetData.title.trim()) {
-      toast.error("Please enter a budget title");
       return;
     }
 
-    setIsCreating(true);
-    try {
-      const budgetPayload = {
-        department_id: budgetData.department_id,
-        year: budgetData.year,
-        title: budgetData.title,
-        total_amount: budgetData.total_amount,
-        currency: budgetData.currency,
-        start_date: new Date(budgetData.start_date).toISOString(),
-        end_date: new Date(budgetData.end_date).toISOString(),
-        description: budgetData.description
-      };
+    const budgetPayload = {
+      department_id: budgetData.department_id,
+      year: budgetData.year,
+      title: budgetData.title,
+      total_amount: budgetData.total_amount,
+      currency: budgetData.currency,
+      start_date: new Date(budgetData.start_date).toISOString(),
+      end_date: new Date(budgetData.end_date).toISOString(),
+      description: budgetData.description
+    };
 
-      const response = await createBudget(budgetPayload);
-
-      if (response.success) {
-        toast.success(response.message || "Budget created successfully");
-        // Extract the created budget ID from response
-        const createdBudgetId = response.data?.id;
-
-        // Reset form
-        setBudgetData(INIT_BUDGET_DATA);
-
-        // Invalidate budgets query to reflect new budget
-        queryClient.invalidateQueries({ queryKey: ["budgets"] });
-
-        // Call optional callback for parent component
-        if (onBudgetCreated && createdBudgetId) {
-          onBudgetCreated(createdBudgetId);
-        }
-      } else {
-        toast.error(response.message || "Failed to create budget");
-        throw new Error(response.message);
-      }
-    } catch (error) {
-      toast.error("Failed to create budget. Please try again");
-    } finally {
-      setIsCreating(false);
-    }
+    createBudgetMutation(budgetPayload);
   };
 
-  const createBudgetLineHandler = async () => {
-    setIsCreating(true);
-    try {
-      const linePayload = {
-        name: lineData.name,
-        description: lineData.description,
-        allocated_amount: lineData.allocated_amount,
-        spent_amount: lineData.spent_amount,
-        currency: lineData.currency,
-        start_date: new Date(lineData.start_date).toISOString(),
-        end_date: new Date(lineData.end_date).toISOString(),
-        category: lineData.category
-      };
+  const createBudgetLineHandler = () => {
+    const linePayload = {
+      budget_id: lineData.budget_id,
+      name: lineData.name,
+      description: lineData.description,
+      allocated_amount: lineData.allocated_amount,
+      spent_amount: lineData.spent_amount,
+      currency: lineData.currency,
+      start_date: new Date(lineData.start_date).toISOString(),
+      end_date: new Date(lineData.end_date).toISOString(),
+      category: lineData.category
+    };
 
-      const response = await createBudgetLine(lineData.budget_id, linePayload);
-
-      if (response.success) {
-        toast.success(response.message || "Budget line created successfully");
-        setLineData({
-          ...INIT_LINE_DATA,
-          budget_id: budgetId as string
-        });
-      } else {
-        toast.error(response.message || "Failed to create budget line");
-        throw new Error(response.message);
-      }
-    } catch (error) {
-      toast.error("Failed to create budget line. Please try again.");
-      throw error;
-    } finally {
-      setIsCreating(false);
-    }
+    createBudgetLineMutation(linePayload);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      if (mode === "budget") {
-        await createBudgetHandler();
-      } else {
-        await createBudgetLineHandler();
-      }
-    } catch (error) {
-      // Error handling is done via toast notifications
+    if (mode === "budget") {
+      createBudgetHandler();
+    } else {
+      createBudgetLineHandler();
     }
   };
 

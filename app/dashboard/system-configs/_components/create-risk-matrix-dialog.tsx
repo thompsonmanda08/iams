@@ -14,8 +14,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { createRiskMatrix } from "@/app/_actions/config-actions";
+import { useCreateRiskMatrixMutation } from "@/hooks/use-config-mutations";
 
 
 type CreateRiskMatrixDialogProps = {
@@ -29,37 +28,28 @@ export function CreateRiskMatrixDialog({
   onOpenChange,
   onSuccess
 }: CreateRiskMatrixDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     is_default: false
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { mutate: createMatrix, isPending } = useCreateRiskMatrixMutation({
+    onSuccess: () => {
+      setFormData({ name: "", description: "", is_default: false });
+      onOpenChange(false);
+      onSuccess();
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Matrix name is required");
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await createRiskMatrix(formData);
-      if (response.success) {
-        toast.success(response.message  || "Risk matrix created successfully");
-        setFormData({ name: "", description: "", is_default: false });
-        onOpenChange(false);
-        onSuccess();
-      } else {
-        toast.error(response.message || "Failed to create risk matrix");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
-    }
+    createMatrix(formData);
   };
 
   return (
@@ -81,7 +71,7 @@ export function CreateRiskMatrixDialog({
                 placeholder="e.g., Financial Risk Matrix"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
 
@@ -93,7 +83,7 @@ export function CreateRiskMatrixDialog({
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
 
@@ -104,7 +94,7 @@ export function CreateRiskMatrixDialog({
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, is_default: checked as boolean })
                 }
-                disabled={isLoading}
+                disabled={isPending}
               />
               <Label htmlFor="is_default" className="text-sm font-normal">
                 Set as default matrix
@@ -117,11 +107,11 @@ export function CreateRiskMatrixDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}>
+              disabled={isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Matrix"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Creating..." : "Create Matrix"}
             </Button>
           </DialogFooter>
         </form>

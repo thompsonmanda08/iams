@@ -1,5 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   CheckCircle2,
   XCircle,
@@ -35,17 +38,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/page-header";
 import Search from "@/components/ui/search-field";
-import {
-  getRiskAcceptances,
-  updateRiskAcceptance,
-  submitRiskAcceptanceForApproval
-} from "@/app/_actions/risk-module-actions";
-import { toast } from "sonner";
+import { getRiskAcceptances } from "@/app/_actions/risk-module-actions";
 import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
-import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
+import { useRiskAcceptances, useUpdateRiskAcceptanceMutation, useSubmitRiskAcceptanceMutation } from "@/hooks/use-risk-acceptance-mutations";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -210,37 +208,37 @@ const AcceptanceCard = ({ acceptance, onAcceptanceClick, onViewRisk }: Acceptanc
 
 export default function RiskAcceptanceList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Status>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAcceptance, setSelectedAcceptance] = useState<Acceptance | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalStatus, setModalStatus] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [acceptances, setAcceptances] = useState<Acceptance[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
-  const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
 
-  useEffect(() => {
-    fetchAcceptances();
-  }, []);
-
-  const fetchAcceptances = async () => {
-    try {
-      setIsLoading(true);
-      const response = await getRiskAcceptances();
-
-      if (response.status && response.data?.acceptances) {
-        setAcceptances(response.data.acceptances);
-      }
-    } catch (err) {
-      console.error("Error fetching acceptances:", err);
-      toast.error("An error occurred while loading data");
-    } finally {
-      setIsLoading(false);
-    }
+  // Fetch acceptances using query hook
+  const { data: acceptances = [], isLoading, isError } = useRiskAcceptances() as {
+    data: Acceptance[];
+    isLoading: boolean;
+    isError: boolean;
   };
+
+  const { mutate: updateAcceptance, isPending: isSubmitting } = useUpdateRiskAcceptanceMutation({
+    onSuccess: () => {
+      setShowModal(false);
+      setSelectedAcceptance(null);
+      setRemarks("");
+    }
+  });
+
+  const { mutate: submitAcceptance, isPending: isSubmittingForApproval } = useSubmitRiskAcceptanceMutation({
+    onSuccess: () => {
+      setSubmitConfirmationOpen(false);
+      setShowModal(false);
+      setSelectedAcceptance(null);
+    }
+  });
 
   const filteredAcceptances = acceptances.filter((acceptance) => {
     const matchesTab =
@@ -274,51 +272,17 @@ export default function RiskAcceptanceList() {
   const handleStatusUpdate = async () => {
     if (!selectedAcceptance || !modalStatus || !remarks.trim()) return;
 
-    setIsSubmitting(true);
-    try {
-      const updatedData = {
-        ...selectedAcceptance,
-        acceptance_status: modalStatus as "PENDING" | "APPROVED" | "REJECTED",
-        additional_remarks: remarks
-      };
-      const response = await updateRiskAcceptance(selectedAcceptance.id, updatedData as any);
-      if (response.success) {
-        toast.success(response.message || "Successfully updated risk acceptance");
-        await fetchAcceptances();
-        setShowModal(false);
-        setSelectedAcceptance(null);
-        setRemarks("");
-      } else {
-        toast.error(response.message || "Failed to update acceptance");
-      }
-    } catch (err) {
-      console.error("Error updating acceptance:", err);
-      toast.error("An error occurred while updating acceptance");
-    } finally {
-      setIsSubmitting(false);
-    }
+    const updatedData = {
+      ...selectedAcceptance,
+      acceptance_status: modalStatus as "PENDING" | "APPROVED" | "REJECTED",
+      additional_remarks: remarks
+    };
+    updateAcceptance({ id: selectedAcceptance.id, data: updatedData });
   };
 
   const handleSubmitAcceptance = async () => {
     if (!selectedAcceptance) return;
-
-    setIsSubmittingForApproval(true);
-    try {
-      const response = await submitRiskAcceptanceForApproval(selectedAcceptance.id);
-      if (response.success) {
-        toast.success(response.message || "Risk acceptance submitted for approval successfully");
-        setSubmitConfirmationOpen(false);
-        setShowModal(false);
-        setSelectedAcceptance(null);
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to submit risk acceptance for approval");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred while submitting risk acceptance");
-    } finally {
-      setIsSubmittingForApproval(false);
-    }
+    submitAcceptance(selectedAcceptance.id);
   };
 
   if (isLoading) {

@@ -84,11 +84,11 @@ const REVIEW_STATUS_COLORS: Record<string, { badge: string; text: string }> = {
 
 // Helper function to get review status for evidence
 const getEvidenceReviewStatus = (item: any) => {
-  if (!item.reviews || item.reviews.length === 0) {
+  if (!item.reviews || item.reviews?.length === 0) {
     return "PENDING";
   }
   // Return the status of the most recent review
-  return item.reviews[item.reviews.length - 1]?.review_status || "PENDING";
+  return item.reviews[item.reviews?.length - 1]?.review_status || "PENDING";
 };
 
 export function FindingActionDetailsDialog({
@@ -123,10 +123,12 @@ export function FindingActionDetailsDialog({
   } = useFindingEvidence(action.finding_id);
 
   // Can only create reassessment if evidence exists
-  const hasEvidence = evidence && evidence.length > 0;
+  const hasEvidence = evidence && evidence?.length > 0;
 
   // Can only create reassessment if user is the assigned reviewer (auditor)
   const isAssignedReviewer = currentUserId === action.auditor_id;
+
+  console.log("Finding Action Evidence:", findingEvidenceData);
 
   return (
     <>
@@ -149,14 +151,14 @@ export function FindingActionDetailsDialog({
                 <TabsTrigger value="overview">Action Overview</TabsTrigger>
                 <TabsTrigger value="finding-evidence">
                   Finding Evidence{" "}
-                  {findingEvidenceData.evidence.length > 0 &&
-                    `(${findingEvidenceData.evidence.length})`}
+                  {Number(findingEvidenceData?.evidence?.length) > 0 &&
+                    `(${findingEvidenceData?.evidence?.length || 0})`}
                 </TabsTrigger>
                 <TabsTrigger value="evidence">
-                  Action Evidence {evidence.length > 0 && `(${evidence.length})`}
+                  Action Evidence {evidence?.length > 0 && `(${evidence?.length})`}
                 </TabsTrigger>
                 <TabsTrigger value="reviews">
-                  Reviews {reviews.length > 0 && `(${reviews.length})`}
+                  Reviews {reviews?.length > 0 && `(${reviews?.length})`}
                 </TabsTrigger>
               </TabsList>
               {/* Action Overview */}
@@ -165,201 +167,209 @@ export function FindingActionDetailsDialog({
                 {isLoadingFinding ? (
                   <FindingInformationCardSkeleton />
                 ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Finding Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">
-                          Finding Number
-                        </p>
-                        <p className="text-sm font-medium">
-                          {findingData?.finding_number || "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">
-                          Clause Number
-                        </p>
-                        <p className="text-sm font-medium">
-                          {findingData?.clause_number || action.clause_number || "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Framework</p>
-                        <Badge className="text-sm font-medium">
-                          {findingData?.framework || "N/A"}
-                        </Badge>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Severity</p>
-                        <p className="text-sm font-medium">{findingData?.severity || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Status</p>
-                        <StatusBadge
-                          status={findingData?.status_code || findingData?.status || "N/A"}
-                        />
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">
-                          Compliance Status
-                        </p>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Finding Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Finding Number
+                          </p>
+                          <p className="text-sm font-medium">
+                            {findingData?.finding_number || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Clause Number
+                          </p>
+                          <p className="text-sm font-medium">
+                            {findingData?.clause_number || action.clause_number || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Framework
+                          </p>
+                          <Badge className="text-sm font-medium">
+                            {findingData?.framework || "N/A"}
+                          </Badge>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Severity</p>
+                          <p className="text-sm font-medium">{findingData?.severity || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Status</p>
+                          <StatusBadge
+                            status={findingData?.status_code || findingData?.status || "N/A"}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Compliance Status
+                          </p>
 
-                        <Badge
-                          variant={
-                            findingData?.compliance_status?.toLowerCase() == "compliant"
-                              ? "success"
+                          <Badge
+                            variant={
+                              findingData?.compliance_status?.toLowerCase() == "compliant"
+                                ? "success"
+                                : findingData?.compliance_status?.toLowerCase() == "partial"
+                                  ? "info"
+                                  : "destructive"
+                            }
+                            className="ml-auto shrink-0 text-xs">
+                            {findingData?.compliance_status?.toLowerCase() == "compliant"
+                              ? "✓ Compliant"
                               : findingData?.compliance_status?.toLowerCase() == "partial"
-                                ? "info"
-                                : "destructive"
-                          }
-                          className="ml-auto shrink-0 text-xs">
-                          {findingData?.compliance_status?.toLowerCase() == "compliant"
-                            ? "✓ Compliant"
-                            : findingData?.compliance_status?.toLowerCase() == "partial"
-                              ? "◬ Partial Compliance"
-                              : "✗ Non-Compliant"}
-                        </Badge>
+                                ? "◬ Partial Compliance"
+                                : "✗ Non-Compliant"}
+                          </Badge>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Compliance %
+                          </p>
+                          <p className="text-sm font-medium">
+                            {findingData?.compliance_percentage || 0}%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Category</p>
+                          <p className="text-sm font-medium">{findingData?.category_name || ""}</p>
+                        </div>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1 text-xs font-medium">
-                          Compliance %
-                        </p>
-                        <p className="text-sm font-medium">
-                          {findingData?.compliance_percentage || 0}%
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Category</p>
-                        <p className="text-sm font-medium">{findingData?.category_name || ""}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-xs font-medium">
-                        Clause Description
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {findingData?.clause_description ||
-                          action.clause_description ||
-                          "No description"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-xs font-medium">
-                        Recommendation
-                      </p>
-                      <p className="text-sm">
-                        {findingData?.recommendation || "No recommendation"}
-                      </p>
-                    </div>
-                    {findingData?.workings_and_test_results && (
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">
-                          Workings & Test Results
+                          Clause Description
                         </p>
                         <p className="text-muted-foreground text-sm">
-                          {findingData.workings_and_test_results}
+                          {findingData?.clause_description ||
+                            action.clause_description ||
+                            "No description"}
                         </p>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-xs font-medium">
+                          Recommendation
+                        </p>
+                        <p className="text-sm">
+                          {findingData?.recommendation || "No recommendation"}
+                        </p>
+                      </div>
+                      {findingData?.workings_and_test_results && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Workings & Test Results
+                          </p>
+                          <p className="text-muted-foreground text-sm">
+                            {findingData.workings_and_test_results}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 )}
                 {isLoadingFinding ? (
                   <ActionOverviewCardSkeleton />
                 ) : (
-                <Card>
-                  <CardHeader className="">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <CardTitle className="text-base">Action Overview</CardTitle>
+                  <Card>
+                    <CardHeader className="">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <CardTitle className="text-base">Action Overview</CardTitle>
+                        </div>
+                        {action.status && STATUS_COLORS[action.status] && (
+                          <StatusBadge status={STATUS_COLORS[action.status].text} />
+                        )}
                       </div>
-                      {action.status && STATUS_COLORS[action.status] && (
-                        <StatusBadge status={STATUS_COLORS[action.status].text} />
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {/* Description */}
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-xs font-medium">Description</p>
-                      <p className="text-sm whitespace-pre-wrap">{action.action_description}</p>
-                    </div>
-
-                    <Separator />
-
-                    {/* Details Grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {/* Description */}
                       <div>
                         <p className="text-muted-foreground mb-1 text-xs font-medium">
-                          Assigned To
+                          Description
                         </p>
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-medium">
-                            {action.assigned_to_name ||
-                              action.assigned_to_user?.last_name ||
-                              "Unassigned"}
+                        <p className="text-sm whitespace-pre-wrap">{action.action_description}</p>
+                      </div>
+
+                      <Separator />
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Assigned To
                           </p>
-                          <p className="text-muted-foreground text-xs">
-                            {action.assigned_to_user?.email || ""}
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-medium">
+                              {action.assigned_to_name ||
+                                action.assigned_to_user?.last_name ||
+                                "Unassigned"}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {action.assigned_to_user?.email || ""}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Reviewer</p>
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-medium">
+                              {action.reviewer_name ||
+                                action.reviewer_user?.last_name ||
+                                "Unassigned"}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {action.reviewer_user?.email || ""}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Auditor</p>
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-medium">
+                              {action.auditor_name ||
+                                action.auditor_user?.last_name ||
+                                "Unassigned"}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {action.auditor_user?.email || ""}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Iteration
+                          </p>
+                          <p className="text-sm font-medium">{action.iteration_number || 1}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Due Date</p>
+                          <p className="text-sm">
+                            {action.due_date
+                              ? format(new Date(action.due_date), "MMM d, yyyy")
+                              : "Not set"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Created</p>
+                          <p className="text-sm">
+                            {action.created_at
+                              ? format(new Date(action.created_at), "MMM d, yyyy")
+                              : "Unknown"}
                           </p>
                         </div>
                       </div>
-
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Reviewer</p>
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-medium">
-                            {action.reviewer_name ||
-                              action.reviewer_user?.last_name ||
-                              "Unassigned"}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {action.reviewer_user?.email || ""}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Auditor</p>
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-medium">
-                            {action.auditor_name || action.auditor_user?.last_name || "Unassigned"}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {action.auditor_user?.email || ""}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Iteration</p>
-                        <p className="text-sm font-medium">{action.iteration_number || 1}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Due Date</p>
-                        <p className="text-sm">
-                          {action.due_date
-                            ? format(new Date(action.due_date), "MMM d, yyyy")
-                            : "Not set"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">Created</p>
-                        <p className="text-sm">
-                          {action.created_at
-                            ? format(new Date(action.created_at), "MMM d, yyyy")
-                            : "Unknown"}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
                 )}
               </TabsContent>
 
@@ -368,98 +378,99 @@ export function FindingActionDetailsDialog({
                 {isLoadingFindingEvidence ? (
                   <FindingEvidenceTabSkeleton />
                 ) : (
-                <>
-                <div>
-                  <div>
-                    <p className="text-sm font-semibold">Finding Evidence</p>
-                    <p className="text-muted-foreground text-xs">
-                      {findingEvidenceData.evidence.length} evidence
-                      {findingEvidenceData.evidence.length !== 1 ? "s" : ""} attached to this
-                      finding
-                    </p>
-                  </div>
-                </div>
+                  <>
+                    <div>
+                      <div>
+                        <p className="text-sm font-semibold">Finding Evidence</p>
+                        <p className="text-muted-foreground text-xs">
+                          {findingEvidenceData?.evidence?.length || 0} evidence
+                          {findingEvidenceData?.evidence?.length !== 1 ? "s" : ""} attached to this
+                          finding
+                        </p>
+                      </div>
+                    </div>
 
-                {findingEvidenceData.evidence.length > 0 ? (
-                  <div className="space-y-3">
-                    {findingEvidenceData.evidence.map((item, index) => (
-                      <Card key={item.id} className="bg-muted/30">
-                        <CardContent className="">
-                          <div className="space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium">
-                                  {item.title || `Evidence #${index + 1}`}
+                    {findingEvidenceData.evidence?.length > 0 ? (
+                      <div className="space-y-3">
+                        {findingEvidenceData.evidence.map((item, index) => (
+                          <Card key={item.id} className="bg-muted/30">
+                            <CardContent className="">
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">
+                                      {item.title || `Evidence #${index + 1}`}
+                                    </p>
+                                    <p className="text-muted-foreground mt-1 text-xs">
+                                      Type:{" "}
+                                      <span className="font-medium">{item.evidence_type}</span>
+                                    </p>
+                                    {item.description && (
+                                      <p className="text-muted-foreground mt-2 text-xs">
+                                        {item.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-end justify-end gap-1">
+                                    {item.file_link && (
+                                      <Button
+                                        size="sm"
+                                        variant="link"
+                                        className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
+                                        asChild>
+                                        <Link
+                                          href={item.file_link || "#"}
+                                          target="_blank"
+                                          rel="noopener noreferrer">
+                                          Attached File
+                                          <FileText className="ml-1 h-4 w-4" />
+                                        </Link>
+                                      </Button>
+                                    )}
+                                    {item.external_link && (
+                                      <Button
+                                        size="sm"
+                                        variant="link"
+                                        className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
+                                        asChild>
+                                        <Link
+                                          href={item.external_link || "#"}
+                                          target="_blank"
+                                          rel="noopener noreferrer">
+                                          External Link
+                                          <SquareArrowOutUpRight className="ml-1 h-4 w-4" />
+                                        </Link>
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <p className="text-muted-foreground text-xs">
+                                  Collected{" "}
+                                  {item.collection_date
+                                    ? format(new Date(item.collection_date), "MMM d, yyyy")
+                                    : "Unknown"}
                                 </p>
-                                <p className="text-muted-foreground mt-1 text-xs">
-                                  Type: <span className="font-medium">{item.evidence_type}</span>
-                                </p>
-                                {item.description && (
+                                {item.notes && (
                                   <p className="text-muted-foreground mt-2 text-xs">
-                                    {item.description}
+                                    Notes: {item.notes}
                                   </p>
                                 )}
                               </div>
-                              <div className="flex items-end justify-end gap-1">
-                                {item.file_link && (
-                                  <Button
-                                    size="sm"
-                                    variant="link"
-                                    className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
-                                    asChild>
-                                    <Link
-                                      href={item.file_link || "#"}
-                                      target="_blank"
-                                      rel="noopener noreferrer">
-                                      Attached File
-                                      <FileText className="ml-1 h-4 w-4" />
-                                    </Link>
-                                  </Button>
-                                )}
-                                {item.external_link && (
-                                  <Button
-                                    size="sm"
-                                    variant="link"
-                                    className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
-                                    asChild>
-                                    <Link
-                                      href={item.external_link || "#"}
-                                      target="_blank"
-                                      rel="noopener noreferrer">
-                                      External Link
-                                      <SquareArrowOutUpRight className="ml-1 h-4 w-4" />
-                                    </Link>
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-
-                            <p className="text-muted-foreground text-xs">
-                              Collected{" "}
-                              {item.collection_date
-                                ? format(new Date(item.collection_date), "MMM d, yyyy")
-                                : "Unknown"}
-                            </p>
-                            {item.notes && (
-                              <p className="text-muted-foreground mt-2 text-xs">
-                                Notes: {item.notes}
-                              </p>
-                            )}
-                          </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card className="bg-muted/50 border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center px-8 py-12">
+                          <p className="text-muted-foreground text-center text-sm">
+                            No evidence attached to this finding yet.
+                          </p>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="bg-muted/50 border-dashed">
-                    <CardContent className="flex flex-col items-center justify-center px-8 py-12">
-                      <p className="text-muted-foreground text-center text-sm">
-                        No evidence attached to this finding yet.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-                </>
+                    )}
+                  </>
                 )}
               </TabsContent>
 
@@ -468,96 +479,100 @@ export function FindingActionDetailsDialog({
                 {isLoadingEvidence ? (
                   <ActionEvidenceTabSkeleton />
                 ) : (
-                <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">Action Evidence Submitted</p>
-                    <p className="text-muted-foreground text-xs">
-                      {evidence.length} evidence{evidence.length !== 1 ? "s" : ""} submitted
-                    </p>
-                  </div>
-                  <Button size="sm" onClick={() => setSubmitEvidenceOpen(true)} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Submit Action Evidence
-                  </Button>
-                </div>
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">Action Evidence Submitted</p>
+                        <p className="text-muted-foreground text-xs">
+                          {evidence?.length} evidence{evidence?.length !== 1 ? "s" : ""} submitted
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => setSubmitEvidenceOpen(true)}
+                        className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Submit Action Evidence
+                      </Button>
+                    </div>
 
-                {evidence.length > 0 ? (
-                  <div className="space-y-3">
-                    {evidence.map((item, index) => (
-                      <Card key={item.id} className="bg-muted/50">
-                        <CardContent className="">
-                          <div className="space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium">
-                                  {item.evidence_file_name || `Evidence File #${index}`}
+                    {evidence?.length > 0 ? (
+                      <div className="space-y-3">
+                        {evidence.map((item, index) => (
+                          <Card key={item.id} className="bg-muted/50">
+                            <CardContent className="">
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">
+                                      {item.evidence_file_name || `Evidence File #${index}`}
+                                    </p>
+                                    {item.evidence_summary && (
+                                      <p className="text-muted-foreground mt-1 text-xs">
+                                        {item.evidence_summary}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col items-end justify-end space-y-2">
+                                    {item.status && (
+                                      <Badge
+                                        className={cn("text-xs", STATUS_COLORS[item.status].badge)}>
+                                        {STATUS_COLORS[item.status].text}
+                                      </Badge>
+                                    )}
+
+                                    {(() => {
+                                      const reviewStatus = getEvidenceReviewStatus(item);
+                                      return (
+                                        <Badge
+                                          className={cn(
+                                            "text-xs",
+                                            REVIEW_STATUS_COLORS[reviewStatus].badge
+                                          )}>
+                                          {REVIEW_STATUS_COLORS[reviewStatus].text}
+                                        </Badge>
+                                      );
+                                    })()}
+                                    {item.evidence_file_url && (
+                                      <Button
+                                        size="sm"
+                                        variant="link"
+                                        className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
+                                        asChild>
+                                        <Link
+                                          href={item.evidence_file_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer">
+                                          View File
+                                          <SquareArrowOutUpRight className="h-4 w-4" />
+                                        </Link>
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <p className="text-muted-foreground text-xs">
+                                  Submitted{" "}
+                                  {item.submitted_at
+                                    ? format(new Date(item.submitted_at), "MMM d, yyyy")
+                                    : "Unknown"}
                                 </p>
-                                {item.evidence_summary && (
-                                  <p className="text-muted-foreground mt-1 text-xs">
-                                    {item.evidence_summary}
-                                  </p>
-                                )}
                               </div>
-                              <div className="flex flex-col items-end justify-end space-y-2">
-                                {item.status && (
-                                  <Badge
-                                    className={cn("text-xs", STATUS_COLORS[item.status].badge)}>
-                                    {STATUS_COLORS[item.status].text}
-                                  </Badge>
-                                )}
-
-                                {(() => {
-                                  const reviewStatus = getEvidenceReviewStatus(item);
-                                  return (
-                                    <Badge
-                                      className={cn(
-                                        "text-xs",
-                                        REVIEW_STATUS_COLORS[reviewStatus].badge
-                                      )}>
-                                      {REVIEW_STATUS_COLORS[reviewStatus].text}
-                                    </Badge>
-                                  );
-                                })()}
-                                {item.evidence_file_url && (
-                                  <Button
-                                    size="sm"
-                                    variant="link"
-                                    className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
-                                    asChild>
-                                    <Link
-                                      href={item.evidence_file_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer">
-                                      View File
-                                      <SquareArrowOutUpRight className="h-4 w-4" />
-                                    </Link>
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-
-                            <p className="text-muted-foreground text-xs">
-                              Submitted{" "}
-                              {item.submitted_at
-                                ? format(new Date(item.submitted_at), "MMM d, yyyy")
-                                : "Unknown"}
-                            </p>
-                          </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card className="bg-muted/50 border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center px-8 py-12">
+                          <p className="text-muted-foreground text-center text-sm">
+                            No evidence submitted yet. Submit evidence to track progress on this
+                            action.
+                          </p>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="bg-muted/50 border-dashed">
-                    <CardContent className="flex flex-col items-center justify-center px-8 py-12">
-                      <p className="text-muted-foreground text-center text-sm">
-                        No evidence submitted yet. Submit evidence to track progress on this action.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-                </>
+                    )}
+                  </>
                 )}
               </TabsContent>
 
@@ -566,67 +581,69 @@ export function FindingActionDetailsDialog({
                 {isLoadingReviews ? (
                   <ReviewsTabSkeleton />
                 ) : (
-                <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">Evidence Reviews</p>
-                    <p className="text-muted-foreground text-xs">
-                      {reviews.length} review{reviews.length !== 1 ? "s" : ""} recorded
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setReviewEvidenceOpen(true)}
-                    className="gap-2"
-                    disabled={!hasEvidence}>
-                    <Plus className="h-4 w-4" />
-                    Add Review
-                  </Button>
-                </div>
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">Evidence Reviews</p>
+                        <p className="text-muted-foreground text-xs">
+                          {reviews.length} review{reviews.length !== 1 ? "s" : ""} recorded
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => setReviewEvidenceOpen(true)}
+                        className="gap-2"
+                        disabled={!hasEvidence}>
+                        <Plus className="h-4 w-4" />
+                        Add Review
+                      </Button>
+                    </div>
 
-                {reviews.length > 0 ? (
-                  <div className="space-y-3">
-                    {reviews.map((review) => (
-                      <Card key={review.id} className="bg-muted/50">
-                        <CardContent className="pt-6">
-                          <div className="space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="space-y-1">
-                                <p className="text-sm font-medium">
-                                  Review by {review.reviewer?.name || "Unknown"}
-                                </p>
+                    {reviews?.length > 0 ? (
+                      <div className="space-y-3">
+                        {reviews.map((review) => (
+                          <Card key={review.id} className="bg-muted/50">
+                            <CardContent className="pt-6">
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="space-y-1">
+                                    <p className="text-sm font-medium">
+                                      Review by {review.reviewer?.name || "Unknown"}
+                                    </p>
+                                    <p className="text-muted-foreground text-xs">
+                                      {review.reviewer?.email || ""}
+                                    </p>
+                                  </div>
+                                  {review.status && STATUS_COLORS[review.status] && (
+                                    <Badge className={cn("text-xs", STATUS_COLORS[review.status])}>
+                                      {review.status}
+                                    </Badge>
+                                  )}
+                                </div>
+                                {review.comments && (
+                                  <p className="mt-2 text-sm">{review.comments}</p>
+                                )}
                                 <p className="text-muted-foreground text-xs">
-                                  {review.reviewer?.email || ""}
+                                  {review.created_at
+                                    ? format(new Date(review.created_at), "MMM d, yyyy")
+                                    : "Unknown"}
                                 </p>
                               </div>
-                              {review.status && STATUS_COLORS[review.status] && (
-                                <Badge className={cn("text-xs", STATUS_COLORS[review.status])}>
-                                  {review.status}
-                                </Badge>
-                              )}
-                            </div>
-                            {review.comments && <p className="mt-2 text-sm">{review.comments}</p>}
-                            <p className="text-muted-foreground text-xs">
-                              {review.created_at
-                                ? format(new Date(review.created_at), "MMM d, yyyy")
-                                : "Unknown"}
-                            </p>
-                          </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card className="bg-muted/50 border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center px-8 py-12">
+                          <p className="text-muted-foreground text-center text-sm">
+                            No reviews yet. Reviews will appear here once evidence is submitted and
+                            reviewed.
+                          </p>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="bg-muted/50 border-dashed">
-                    <CardContent className="flex flex-col items-center justify-center px-8 py-12">
-                      <p className="text-muted-foreground text-center text-sm">
-                        No reviews yet. Reviews will appear here once evidence is submitted and
-                        reviewed.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-                </>
+                    )}
+                  </>
                 )}
               </TabsContent>
             </Tabs>

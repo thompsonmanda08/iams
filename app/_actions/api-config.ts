@@ -1,9 +1,7 @@
 import { AUTH_SESSION } from "@/lib/constants";
-import { deleteSession, verifySession } from "@/lib/session";
+import { verifySession } from "@/lib/session";
 import { APIResponse } from "@/lib/types";
 import axiosClient, { AxiosRequestConfig, AxiosRequestHeaders } from "axios";
-import { logUserOut } from "./auth-actions";
-import { redirect } from "next/navigation";
 
 export const axios = axiosClient.create({
   baseURL: process.env.BASE_URL || "http://localhost:8080"
@@ -39,19 +37,6 @@ const createErrorHandler = () => async (error: Error | any) => {
   }
 
   const { status, data } = error.response;
-
-  // Handle token expiration (403 with "token has expired" message)
-  // if (
-  //   status === 403 &&
-  //   (data?.error === "token has expired" || data?.message === "token has expired")
-  // ) {
-  //   console.log("[AUTH] Token expired - logging out user");
-  //   const response = await logUserOut("expired token");
-
-  //   if (response.success) {
-  //     redirect("/auth/login");
-  //   }
-  // }
 
   // Handle specific error codes
   const errorMap: { [x: string]: string } = {

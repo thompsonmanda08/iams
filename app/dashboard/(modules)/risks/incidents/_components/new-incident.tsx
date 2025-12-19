@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +15,16 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { Department, User } from "@/lib/types/risk-type";
-import { getDepartments, getRiskCausesHierarchy } from "@/app/_actions/config-actions";
-import { toast } from "sonner";
-import { getUsers } from "@/app/_actions/user-actions";
-import { createIncident } from "@/app/_actions/incident-actions";
-import { getKRIs } from "@/app/_actions/risk-module-actions";
+import {
+  useDepartmentsForIncident,
+  useCausesHierarchyForIncident,
+  useDepartmentUsersForIncident,
+  useIncidentKRIs,
+  useCreateIncidentMutation
+} from "@/hooks/use-incident-mutations";
 
 export function NewIncident() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     department_id: "",
     primary_cause_id: "",
@@ -39,83 +43,35 @@ export function NewIncident() {
     measured_value: 0
   });
 
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [causes, setCauses] = useState<any[]>([]);
-  const [kris, setKris] = useState<any[]>([]);
+  // Fetch data using query hooks
+  const { data: departments = [], isLoading: loadingDepartments } = useDepartmentsForIncident();
+  const { data: causes = [], isLoading: loadingCauses } = useCausesHierarchyForIncident();
+  const { data: users = [], isLoading: loadingUsers } = useDepartmentUsersForIncident(formData.department_id);
+  const { data: kris = [], isLoading: loadingKRIs } = useIncidentKRIs(formData.department_id);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingDepartments, setLoadingDepartments] = useState(false);
-  const [loadingCauses, setLoadingCauses] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [loadingKRIs, setLoadingKRIs] = useState(false);
-
-  // Load functions
-  const loadDepartments = async () => {
-    setLoadingDepartments(true);
-    try {
-      const response = await getDepartments({ isActive: true });
-      if (response.success && response.data?.data) {
-        setDepartments(response.data.data);
-      }
-    } catch (error) {
-      toast.error("Error loading departments");
-    } finally {
-      setLoadingDepartments(false);
-    }
-  };
-
-  const loadUsers = async (departmentId: string) => {
-    setLoadingUsers(true);
-    try {
-      const response = await getUsers({
-        departmentId: departmentId,
-        isActive: true
+  // Mutation hook for creating incident
+  const { mutate: createNewIncident, isPending: isLoading } = useCreateIncidentMutation({
+    onSuccess: () => {
+      setFormData({
+        department_id: "",
+        primary_cause_id: "",
+        specific_cause_id: "",
+        kri_id: "",
+        materiality: "",
+        incident_date: undefined,
+        discovery_date: undefined,
+        location: "",
+        details: "",
+        root_cause: "",
+        action_plan: "",
+        due_date: undefined,
+        responsible_person_id: "",
+        financial_loss_implications: "",
+        measured_value: 0
       });
-      if (response.success && response.data.data) {
-        setUsers(response.data.data);
-      }
-    } catch (error) {
-      toast.error("Error loading users");
-    } finally {
-      setLoadingUsers(false);
+      router.refresh();
     }
-  };
-
-  const loadCauses = async () => {
-    setLoadingCauses(true);
-    try {
-      const response = await getRiskCausesHierarchy();
-
-      if (response.success && response.data) {
-        setCauses(response.data);
-      }
-    } catch (error) {
-      toast.error("Error loading causes");
-    } finally {
-      setLoadingCauses(false);
-    }
-  };
-
-  const loadKRIs = async (departmentId: string) => {
-    setLoadingKRIs(true);
-    try {
-      const response = await getKRIs({
-        department_id: departmentId
-      });
-
-      if (response.success && response.data?.data) {
-        setKris(response.data.data);
-      } else {
-        setKris([]);
-      }
-    } catch (error) {
-      toast.error("Error loading KRIs");
-      setKris([]);
-    } finally {
-      setLoadingKRIs(false);
-    }
-  };
+  });
 
   const materiality = [
     { name: "LOW", id: "LOW" },
@@ -135,55 +91,10 @@ export function NewIncident() {
     return selectedCause?.sub_causes || [];
   }, [formData.primary_cause_id, causes]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    try {
-      const response = await createIncident(formData);
-      if (response.success) {
-        toast.success(response.message || "Incident created successfully");
-        setFormData({
-          department_id: "",
-          primary_cause_id: "",
-          specific_cause_id: "",
-          kri_id: "",
-          materiality: "",
-          incident_date: undefined as Date | undefined,
-          discovery_date: undefined as Date | undefined,
-          location: "",
-          details: "",
-          root_cause: "",
-          action_plan: "",
-          due_date: undefined as Date | undefined,
-          responsible_person_id: "",
-          financial_loss_implications: "",
-          measured_value: 0
-        });
-      } else {
-        toast.error(response.message || "Failed to create incident");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
-    }
+    createNewIncident(formData);
   };
-
-  useEffect(() => {
-    loadDepartments();
-    loadCauses();
-  }, []);
-
-  useEffect(() => {
-    if (formData.department_id) {
-      loadUsers(formData.department_id);
-      loadKRIs(formData.department_id);
-    } else {
-      setUsers([]);
-      setKris([]);
-      setFormData((prev) => ({ ...prev, kri_id: "" }));
-    }
-  }, [formData.department_id]);
 
   const departmentUser = users.map((user) => ({
     name: `${user.first_name} ${user.last_name}`,

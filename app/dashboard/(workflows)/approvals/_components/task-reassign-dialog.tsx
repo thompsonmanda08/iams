@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,12 +20,9 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import type { Task } from "@/lib/types/task";
-import { toast } from "sonner";
 import { UserCog, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { reassignTask } from "@/app/_actions/task-actions";
-import { getUsers } from "@/app/_actions/user-actions";
-import { useRouter } from "next/navigation";
+import { useUsersWithRole, useReassignTaskMutation } from "@/hooks/use-task-mutations";
 
 interface TaskReassignDialogProps {
   task: Task;
@@ -36,59 +33,31 @@ interface TaskReassignDialogProps {
 export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDialogProps) {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [comment, setComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const router = useRouter();
 
-  useEffect(() => {
-    if (open) {
-      // Load users from API
-      loadUsers();
+  // Query hook for fetching users
+  const { data: users = [], isLoading: isLoadingUsers } = useUsersWithRole(
+    open ? task.requiredRole : undefined
+  );
+
+  // Mutation hook for reassigning task
+  const { mutate: reassign, isPending: isSubmitting } = useReassignTaskMutation({
+    onSuccess: () => {
+      onOpenChange(false);
+      setSelectedUserId("");
+      setComment("");
     }
-  }, [open]);
+  });
 
-  const loadUsers = async () => {
-    setIsLoadingUsers(true);
-    try {
-      const response = await getUsers({ role: task.requiredRole });
-      if (response.success) {
-        setUsers(response.data || []);
-      } else {
-        toast.error("Failed to load users");
-      }
-    } catch (error) {
-      toast.error("Error loading users");
-    } finally {
-      setIsLoadingUsers(false);
-    }
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedUserId) {
-      toast.error("Please select a user to reassign the task to");
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      const response = await reassignTask(task.instance.id, selectedUserId, comment);
-
-      if (response.success) {
-        toast.success(response.message || "Task reassigned successfully");
-        onOpenChange(false);
-        setSelectedUserId("");
-        setComment("");
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to reassign task");
-      }
-    } catch (error: any) {
-      toast.error(error?.message || "An error occurred while reassigning the task");
-    } finally {
-      setIsSubmitting(false);
-    }
+    reassign({
+      taskId: task.instance.id,
+      userId: selectedUserId,
+      comment: comment || undefined
+    });
   };
 
   return (

@@ -13,8 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { createEffectivenessLevel, updateEffectivenessLevel } from "@/app/_actions/config-actions";
+import { useCreateEffectivenessLevelMutation, useUpdateEffectivenessLevelMutation } from "@/hooks/use-config-mutations";
 
 type ControlEffectiveness = {
   id: string;
@@ -38,7 +37,6 @@ export function ControlEffectivenessDialog({
   onSuccess,
   control
 }: ControlEffectivenessDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -50,6 +48,24 @@ export function ControlEffectivenessDialog({
   });
 
   const isEditMode = !!control;
+
+  const { mutate: createEffectiveness, isPending: isCreatePending } = useCreateEffectivenessLevelMutation({
+    onSuccess: () => {
+      setFormData({ name: "", description: "", value: 1 });
+      onOpenChange(false);
+      onSuccess();
+    }
+  });
+
+  const { mutate: updateEffectiveness, isPending: isUpdatePending } = useUpdateEffectivenessLevelMutation({
+    onSuccess: () => {
+      setFormData({ name: "", description: "", value: 1 });
+      onOpenChange(false);
+      onSuccess();
+    }
+  });
+
+  const isPending = isCreatePending || isUpdatePending;
 
   useEffect(() => {
     if (open && control) {
@@ -63,34 +79,17 @@ export function ControlEffectivenessDialog({
     }
   }, [open, control]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Control effectiveness name is required");
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const result = isEditMode
-        ? await updateEffectivenessLevel(control.id, formData)
-        : await createEffectivenessLevel(formData);
-
-      if (result.success) {
-        toast.success(`Control effectiveness ${isEditMode ? "updated" : "created"} successfully`);
-        setFormData({ name: "", description: "", value: 1 });
-        onOpenChange(false);
-        onSuccess();
-      } else {
-        toast.error(
-          result.message || `Failed to ${isEditMode ? "update" : "create"} control effectiveness`
-        );
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
+    if (isEditMode) {
+      updateEffectiveness({ id: control.id, data: formData });
+    } else {
+      createEffectiveness(formData);
     }
   };
 
@@ -119,7 +118,7 @@ export function ControlEffectivenessDialog({
                 placeholder="e.g., Highly Effective, Effective, Partially Effective"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
             <div className="grid gap-2">
@@ -133,7 +132,7 @@ export function ControlEffectivenessDialog({
                 placeholder="e.g., 1, 2, 3..."
                 value={formData.value}
                 onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
 
@@ -145,7 +144,7 @@ export function ControlEffectivenessDialog({
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
           </div>
@@ -155,11 +154,11 @@ export function ControlEffectivenessDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}>
+              disabled={isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading
+            <Button type="submit" disabled={isPending}>
+              {isPending
                 ? `${isEditMode ? "Updating" : "Creating"}...`
                 : `${isEditMode ? "Update" : "Create"} Control Effectiveness`}
             </Button>

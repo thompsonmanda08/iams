@@ -36,7 +36,6 @@ interface EvidencePayload {
 export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvidenceDialogProps) {
   const [submissionType, setSubmissionType] = useState<EvidenceSubmissionType>("file");
   const [uploadedFile, setUploadedFile] = useState<{ file: File; url: string } | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [payload, setPayload] = useState<EvidencePayload>({
     finding_action_id: actionId,
@@ -47,6 +46,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
   });
 
   const createEvidenceMutation = useCreateFindingActionEvidenceMutation();
+  const uploading = createEvidenceMutation.isPending;
 
   const updatePayload = (field: keyof EvidencePayload, value: string) => {
     setPayload((prev) => {
@@ -90,7 +90,6 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
   const handleFileUpload = async (file: File | undefined) => {
     if (file) {
       try {
-        setUploading(true);
         // Upload file to PocketBase
         const response = await uploadFile(file);
 
@@ -110,8 +109,6 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
         setErrors({
           file: "Failed to upload file. Please try again."
         });
-      } finally {
-        setUploading(false);
       }
     } else {
       setUploadedFile(null);
@@ -130,7 +127,6 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
     setUploadedFile(null);
     setSubmissionType("file");
     setErrors({});
-    setUploading(false);
   };
 
   const handleSubmit = async () => {

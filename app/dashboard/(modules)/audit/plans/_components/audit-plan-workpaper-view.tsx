@@ -42,7 +42,7 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { StatusBadge } from "@/components/status-badge";
 import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 import Link from "next/link";
-import { useDeleteAuditPlan, useSubmitAuditPlanForApproval } from "@/hooks/use-audit-query-data";
+import { useSubmitAuditPlanMutation, useDeleteAuditPlanMutation } from "@/hooks/use-audit-mutations";
 import { AuditClosureReview } from "./audit-closure-review";
 import { AuditPlanTasksPanel } from "./audit-plan-tasks-panel";
 
@@ -79,8 +79,17 @@ export function AuditPlanWorkpaperView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
 
-  const submitMutation = useSubmitAuditPlanForApproval({ auditPlan, setAuditPlanData });
-  const deleteMutation = useDeleteAuditPlan({ planId: auditPlan.id, setDeleteDialogOpen });
+  const { mutate: submitPlan, isPending: isSubmitting } = useSubmitAuditPlanMutation({
+    onSuccess: () => {
+      // Update local state to reflect the submission
+      setAuditPlanData((prev) => ({ ...prev, status: "SUBMITTED" }));
+    }
+  });
+  const { mutate: deletePlan, isPending: isDeleting } = useDeleteAuditPlanMutation({
+    onSuccess: () => {
+      setDeleteDialogOpen(false);
+    }
+  });
 
   const handleEditFinding = (finding: any) => {
     // Use the category object from the finding if available, otherwise find matching category
@@ -233,8 +242,8 @@ export function AuditPlanWorkpaperView({
                       size="sm"
                       className="gap-2"
                       onClick={() => setSubmitConfirmationOpen(true)}
-                      disabled={submitMutation.isPending}
-                      isLoading={submitMutation.isPending}
+                      disabled={isSubmitting}
+                      isLoading={isSubmitting}
                       loadingText="Submitting...">
                       <Send className="h-4 w-4" />
                       Submit for Approval
@@ -250,7 +259,7 @@ export function AuditPlanWorkpaperView({
                       size="sm"
                       className="gap-2"
                       onClick={() => setDeleteDialogOpen(true)}
-                      disabled={deleteMutation.isPending}>
+                      disabled={isDeleting}>
                       <Trash2 className="h-4 w-4" />
                       Delete Plan
                     </Button>
@@ -956,7 +965,7 @@ export function AuditPlanWorkpaperView({
                     <RequiresApprovalState
                       auditPlan={auditPlan}
                       onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
-                      isSubmitting={submitMutation.isPending}
+                      isSubmitting={isSubmitting}
                     />
                   )}
                 </>
@@ -1091,10 +1100,10 @@ export function AuditPlanWorkpaperView({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
+              onClick={() => deletePlan(auditPlan.id)}
+              disabled={isDeleting}
               className="flex-1">
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </div>
         </DialogContent>
@@ -1105,14 +1114,14 @@ export function AuditPlanWorkpaperView({
         open={submitConfirmationOpen}
         onOpenChange={setSubmitConfirmationOpen}
         onConfirm={() => {
-          submitMutation.mutate();
+          submitPlan(auditPlan.id);
           setSubmitConfirmationOpen(false);
         }}
         title="Submit for Approval?"
         description="Are you sure you want to submit this audit plan for approval? This will send it to HIAR for review."
         confirmText="Submit"
         type="default"
-        isLoading={submitMutation.isPending}
+        isLoading={isSubmitting}
       />
     </div>
   );

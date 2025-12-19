@@ -13,8 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { createRiskResponse } from "@/app/_actions/config-actions";
+import { useCreateRiskResponseMutation } from "@/hooks/use-risk-response-mutations";
 
 type CreateRiskResponseDialogProps = {
   open: boolean;
@@ -27,36 +26,27 @@ export function CreateRiskResponseDialog({
   onOpenChange,
   onSuccess
 }: CreateRiskResponseDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: ""
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { mutate: createResponse, isPending } = useCreateRiskResponseMutation({
+    onSuccess: () => {
+      setFormData({ name: "", description: "" });
+      onOpenChange(false);
+      onSuccess();
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Response name is required");
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await createRiskResponse(formData);
-      if (response.success) {
-        toast.success("Risk response created successfully");
-        setFormData({ name: "", description: "" });
-        onOpenChange(false);
-        onSuccess();
-      } else {
-        toast.error(response.message || "Failed to create risk response");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
-    }
+    createResponse(formData);
   };
 
   return (
@@ -78,7 +68,7 @@ export function CreateRiskResponseDialog({
                 placeholder="e.g., Enhance, Exploit"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
 
@@ -90,7 +80,7 @@ export function CreateRiskResponseDialog({
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
           </div>
@@ -100,11 +90,11 @@ export function CreateRiskResponseDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}>
+              disabled={isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Response"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Creating..." : "Create Response"}
             </Button>
           </DialogFooter>
         </form>

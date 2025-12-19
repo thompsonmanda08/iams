@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { CheckCircle, XCircle, Info } from "lucide-react";
-import { completeWorkflowTask } from "@/app/_actions/task-actions";
-import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -24,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
+import { useCompleteWorkflowTaskMutation } from "@/hooks/use-task-mutations";
 
 interface WorkflowTask {
   id: string;
@@ -65,8 +64,13 @@ interface TaskActionDialogProps {
 
 export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActionDialogProps) {
   const [comment, setComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+
+  const { mutate: completeTask, isPending: isSubmitting } = useCompleteWorkflowTaskMutation({
+    onSuccess: () => {
+      onOpenChange(false);
+      setComment("");
+    }
+  });
 
   if (!task || !action) return null;
 
@@ -76,30 +80,17 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
   const buttonVariant = isApproving ? "default" : "destructive" as const;
   const actionLabel = isApproving ? "Approve" : "Reject";
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (action === "REJECTED" && !comment.trim()) {
       toast.error("Comment is required when rejecting a task");
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      const response = await completeWorkflowTask(task.id, action, comment || undefined);
-
-      if (response?.success) {
-        toast.success(response.message || `Task ${actionLabel.toLowerCase()}ed successfully!`);
-        onOpenChange(false);
-        setComment("");
-        router.refresh();
-      } else {
-        toast.error(response?.message || `Failed to ${actionLabel.toLowerCase()} task`);
-      }
-    } catch (error: any) {
-      toast.error(error?.message || `An error occurred while ${actionLabel.toLowerCase()}ing the task`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    completeTask({
+      taskId: task.id,
+      action,
+      comment: comment || undefined
+    });
   };
 
   return (

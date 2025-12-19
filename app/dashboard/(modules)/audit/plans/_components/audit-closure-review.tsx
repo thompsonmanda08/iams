@@ -26,11 +26,8 @@ import {
   ClipboardList
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
-import {
-  validateAuditClosure,
-  requestAuditClosure,
-  type ClosureChecklistResult
-} from "@/app/_actions/audit-closure-actions";
+import { useAuditClosureValidation, useRequestAuditClosureMutation } from "@/hooks/use-audit-closure-mutations";
+import type { ClosureChecklistResult } from "@/app/_actions/audit-closure-actions";
 import { cn } from "@/lib/utils";
 import { notify } from "@/lib/utils";
 
@@ -43,40 +40,19 @@ export function AuditClosureReview({
   auditPlan,
   onClosureRequested
 }: AuditClosureReviewProps) {
-  const [closureData, setClosureData] = useState<ClosureChecklistResult | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isValidating, setIsValidating] = useState(false);
   const [showClosureDialog, setShowClosureDialog] = useState(false);
   const [closureNotes, setClosureNotes] = useState("");
   const [teamLeadSignOff, setTeamLeadSignOff] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load closure checklist on mount
-  const loadClosureData = async () => {
-    setIsLoading(true);
-    try {
-      const result = await validateAuditClosure(auditPlan.id);
-      if (result.success && result.data) {
-        setClosureData(result.data);
-      }
-    } catch (error) {
-      notify({
-        title: "Error",
-        description: "Failed to load closure checklist",
-        type: "error"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Load closure validation using query hook
+  const { data: closureData, isLoading } = useAuditClosureValidation(
+    (auditPlan.status === "APPROVED" || auditPlan.status === "COMPLETED") ? auditPlan.id : ""
+  );
 
-  useEffect(() => {
-    if (auditPlan.status === "APPROVED" || auditPlan.status === "COMPLETED") {
-      loadClosureData();
-    }
-  }, [auditPlan]);
+  // Request closure mutation
+  const { mutate: requestClosure, isPending: isSubmitting } = useRequestAuditClosureMutation();
 
-  const handleRequestClosure = async () => {
+  const handleRequestClosure = () => {
     if (!closureNotes.trim()) {
       notify({
         title: "Validation Error",
@@ -95,40 +71,18 @@ export function AuditClosureReview({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const result = await requestAuditClosure({
-        auditPlanId: auditPlan.id,
-        closureNotes,
-        teamLeadSignOff
-      });
-
-      if (result.success) {
+    requestClosure({
+      auditPlanId: auditPlan.id,
+      closureNotes,
+      teamLeadSignOff
+    }, {
+      onSuccess: () => {
         setShowClosureDialog(false);
         setClosureNotes("");
         setTeamLeadSignOff(false);
-        notify({
-          title: "Success",
-          description: "Closure request submitted for approval",
-          type: "success"
-        });
         onClosureRequested?.();
-      } else {
-        notify({
-          title: "Error",
-          description: result.error || "Failed to request closure",
-          type: "error"
-        });
       }
-    } catch (error) {
-      notify({
-        title: "Error",
-        description: "An error occurred while submitting closure",
-        type: "error"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   if (isLoading) {

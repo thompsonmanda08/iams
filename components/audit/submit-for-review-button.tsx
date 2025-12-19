@@ -9,12 +9,10 @@
 
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { submitAuditPlanForApproval } from "@/app/_actions/audit-module-actions";
+import { useSubmitAuditPlanMutation } from "@/hooks/use-audit-mutations";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,40 +31,17 @@ interface SubmitForReviewButtonProps {
 }
 
 export function SubmitForReviewButton({ auditPlanId, categoryCount }: SubmitForReviewButtonProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-
-    try {
-      const result = await submitAuditPlanForApproval(auditPlanId);
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: result.message || "Audit plan submitted for review"
-        });
-
-        // Refresh the page to show updated status and workpapers
-        router.refresh();
-      } else {
-        toast({
-          title: "Error",
-          description: result.message || "Failed to submit audit plan for review",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+  const { mutate: submitPlan, isPending: isSubmitting } = useSubmitAuditPlanMutation({
+    onSuccess: () => {
+      // Refresh the page to show updated status and workpapers
+      router.refresh();
     }
+  });
+
+  const handleSubmit = () => {
+    submitPlan(auditPlanId);
   };
 
   return (

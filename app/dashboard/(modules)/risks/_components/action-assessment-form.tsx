@@ -15,9 +15,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { toast } from "sonner";
-import { assessActionFindings } from "@/app/_actions/risk-module-actions";
-import type { ActionFindings, AssessActionFindingsInput } from "@/app/_actions/risk-module-actions";
+import { useAssessActionFindingsMutation } from "@/hooks/use-action-mutations";
+import type { ActionFindings } from "@/app/_actions/risk-module-actions";
 
 interface ActionAssessmentFormProps {
   findings: ActionFindings;
@@ -31,52 +30,37 @@ export function ActionAssessmentForm({
   onAssessmentComplete
 }: ActionAssessmentFormProps) {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     assessment_score: [5],
     reviewer_feedback: "",
     decision: "APPROVE" as "APPROVE" | "REQUEST_CHANGES"
   });
 
-  const handleSubmit = async () => {
+  const { mutate: assessFindings, isPending } = useAssessActionFindingsMutation({
+    onSuccess: () => {
+      setFormData({
+        assessment_score: [5],
+        reviewer_feedback: "",
+        decision: "APPROVE"
+      });
+      router.refresh();
+      onAssessmentComplete?.();
+    }
+  });
+
+  const handleSubmit = () => {
     // Validation
     if (!formData.reviewer_feedback.trim()) {
-      toast.error("Please provide feedback for your assessment");
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const input: AssessActionFindingsInput = {
-        reviewer_id: reviewerId,
-        assessment_score: formData.assessment_score[0],
-        reviewer_feedback: formData.reviewer_feedback,
-        decision: formData.decision
-      };
-
-      const response = await assessActionFindings(findings.id, input);
-
-      if (response.success) {
-        toast.success(
-          response.message ||
-            `Action assessment completed - ${formData.decision === "APPROVE" ? "Approved" : "Revision requested"}`
-        );
-        setFormData({
-          assessment_score: [5],
-          reviewer_feedback: "",
-          decision: "APPROVE"
-        });
-        router.refresh();
-        onAssessmentComplete?.();
-      } else {
-        toast.error(response.message || "Failed to submit assessment");
-      }
-    } catch (error) {
-      toast.error("An error occurred while submitting assessment");
-      console.error("Error submitting assessment:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    assessFindings({
+      findingsId: findings.id,
+      reviewer_id: reviewerId,
+      assessment_score: formData.assessment_score[0],
+      reviewer_feedback: formData.reviewer_feedback,
+      decision: formData.decision
+    });
   };
 
   return (
@@ -95,7 +79,7 @@ export function ActionAssessmentForm({
           step={1}
           value={formData.assessment_score}
           onValueChange={(value) => setFormData({ ...formData, assessment_score: value })}
-          disabled={isSubmitting}
+          disabled={isPending}
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-600">
@@ -114,7 +98,7 @@ export function ActionAssessmentForm({
           onValueChange={(value) =>
             setFormData({ ...formData, decision: value as "APPROVE" | "REQUEST_CHANGES" })
           }
-          disabled={isSubmitting}
+          disabled={isPending}
         >
           <SelectTrigger id="decision">
             <SelectValue placeholder="Select decision" />
@@ -148,7 +132,7 @@ export function ActionAssessmentForm({
           onChange={(e) => setFormData({ ...formData, reviewer_feedback: e.target.value })}
           rows={5}
           className="resize-none"
-          disabled={isSubmitting}
+          disabled={isPending}
         />
         <p className="text-xs text-gray-500">
           {formData.reviewer_feedback.length}/500 characters
@@ -183,27 +167,20 @@ export function ActionAssessmentForm({
           type="button"
           variant="outline"
           onClick={() => window.location.reload()}
-          disabled={isSubmitting}
+          disabled={isPending}
         >
           Cancel
         </Button>
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={isSubmitting || !formData.reviewer_feedback.trim()}
+          disabled={isPending || !formData.reviewer_feedback.trim()}
           className="gap-2 flex-1"
+          loading={isPending}
+          loadingText="Submitting Assessment..."
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Submitting Assessment...
-            </>
-          ) : (
-            <>
-              <CheckCircle className="h-4 w-4" />
-              Submit Assessment
-            </>
-          )}
+          <CheckCircle className="h-4 w-4" />
+          Submit Assessment
         </Button>
       </div>
     </Card>
