@@ -453,7 +453,8 @@ function CreateOrUpdate({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-md">
+
+      <DialogContent className="flex flex-col sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Update Process/Activity" : "Add Process/Activity"}
