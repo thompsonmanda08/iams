@@ -101,7 +101,7 @@ export function FindingActionDetailsDialog({
   const [createReassessmentOpen, setCreateReassessmentOpen] = useState(false);
 
   // Get current user session
-  const session = useSession();
+  const { session } = useSession();
   const currentUserId = session?.user?.id;
 
   // Fetch evidence and reviews for this action
@@ -133,7 +133,12 @@ export function FindingActionDetailsDialog({
     (item) => item.status?.toUpperCase() === "APPROVED"
   );
 
-  console.log("Finding Action Evidence:", { action, reviews });
+  // console.log("Finding Action Evidence:", {
+  //   action,
+  //   reviews,
+  //   auditor: action.auditor_id,
+  //   currentUserId
+  // });
 
   return (
     <>
@@ -526,18 +531,6 @@ export function FindingActionDetailsDialog({
                                       </Badge>
                                     )}
 
-                                    {(() => {
-                                      const reviewStatus = getEvidenceReviewStatus(item);
-                                      return (
-                                        <Badge
-                                          className={cn(
-                                            "text-xs",
-                                            REVIEW_STATUS_COLORS[reviewStatus].badge
-                                          )}>
-                                          {REVIEW_STATUS_COLORS[reviewStatus].text}
-                                        </Badge>
-                                      );
-                                    })()}
                                     {item.evidence_file_url && (
                                       <Button
                                         size="sm"
@@ -654,7 +647,7 @@ export function FindingActionDetailsDialog({
             </Tabs>
 
             {/* Create Reassessment Button */}
-            {hasEvidence && hasReviews && allActionEvidenceApproved && isAssignedReviewer && (
+            {hasEvidence && isAssignedReviewer && (
               <Button
                 onClick={() => setCreateReassessmentOpen(true)}
                 // variant="outline"

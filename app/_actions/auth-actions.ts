@@ -427,13 +427,17 @@ export async function getRefreshToken(): Promise<APIResponse> {
 
       return successResponse({ access_token }, response.data?.message);
     } catch (error: Error | any) {
-      logger.error("❌ Token refresh failed - user will experience auth failure on next request", error, {
-        function: "getRefreshToken",
-        endpoint: url,
-        errorCode: (error as any)?.code,
-        errorMessage: (error as Error)?.message,
-        status: (error as any)?.response?.status
-      });
+      logger.error(
+        "❌ Token refresh failed - user will experience auth failure on next request",
+        error,
+        {
+          function: "getRefreshToken",
+          endpoint: url,
+          errorCode: (error as any)?.code,
+          errorMessage: (error as Error)?.message,
+          status: (error as any)?.response?.status
+        }
+      );
       return handleError(error, "GET | REFRESH TOKEN", url);
     }
   });
@@ -535,11 +539,15 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
       const updateResult = await updateAuthSession({ screen_locked: state });
 
       if (!updateResult) {
-        logger.error("Failed to update session lock state - updateAuthSession returned falsy", undefined, {
-          function: "lockScreenOnUserIdle",
-          state,
-          updateResult
-        });
+        logger.error(
+          "Failed to update session lock state - updateAuthSession returned falsy",
+          undefined,
+          {
+            function: "lockScreenOnUserIdle",
+            state,
+            updateResult
+          }
+        );
         // Don't return false - still try to set the lock cookie
       } else {
         logger.debug("✅ Session updated successfully for lock", {
@@ -600,3 +608,6 @@ export async function checkScreenLockState(): Promise<boolean> {
     return false;
   }
 }
+
+// ✅ Server action wrapper for getting server session
+export const getServerSession = async () => await verifySession();
