@@ -11,13 +11,17 @@ import { WorkflowInstancesPanel } from "./_components/workflow-instances-panel";
 export default async function TasksPage() {
   // Fetch workflow instances (SSR)
   const instancesResponse = await getWorkflowInstances({ page: "1", page_size: "20" });
-  const instances = instancesResponse.success ? instancesResponse.data : [];
+  const instances = instancesResponse.success
+    ? instancesResponse?.data?.data || instancesResponse.data
+    : [];
+  const instancesPagination: any = instancesResponse?.data?.pagination || {};
 
   // Fetch user-assigned workflow tasks (SSR)
   const tasksResponse = await getUserAssignedWorkflowTasks();
-  const tasks = tasksResponse.success ? tasksResponse.data : [];
+  const tasks = tasksResponse.success ? tasksResponse.data?.data || tasksResponse.data : [];
+  const tasksPagination: any = tasksResponse?.data?.pagination || {};
 
-  console.log({ tasks });
+  console.log({ tasksResponse });
 
   return (
     <div className="bg-background min-h-screen">
@@ -80,7 +84,7 @@ export default async function TasksPage() {
 
             {/* TABS */}
             <Tabs defaultValue="tasks" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid h-12 w-full grid-cols-2">
                 <TabsTrigger value="tasks" className="gap-2">
                   <CheckCircle2 className="h-4 w-4" />
                   <span>Your Tasks</span>
@@ -98,7 +102,7 @@ export default async function TasksPage() {
 
               {/* TAB 2: WORKFLOW INSTANCES */}
               <TabsContent value="instances" className="space-y-4">
-                <WorkflowInstancesPanel instances={instances} />
+                <WorkflowInstancesPanel initialInstances={instances} />
               </TabsContent>
             </Tabs>
           </div>

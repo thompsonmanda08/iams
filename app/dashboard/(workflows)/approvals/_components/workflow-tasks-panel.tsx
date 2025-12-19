@@ -61,13 +61,20 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
 
   // Use initial server-side fetched tasks, with React Query for pagination and updates
-  const { data: tasksData, isLoading, error } = useUserAssignedWorkflowTasks({
+  const {
+    data: tasksResponse,
+    isLoading,
+    error
+  } = useUserAssignedWorkflowTasks({
     page: currentPage,
     page_size: pageSize
   });
 
   // Prefer server-side data on first load, then use React Query data for updates
-  const tasks = (tasksData && tasksData.length > 0) ? tasksData : initialTasks;
+  const tasks =
+    tasksResponse && tasksResponse?.length > 0
+      ? tasksResponse?.data || tasksResponse
+      : initialTasks;
 
   // Calculate pagination info
   const pagination: Pagination = {
@@ -76,7 +83,8 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
     total_pages: Math.ceil((tasks?.length || 0) / pageSize),
     has_next: currentPage < Math.ceil((tasks?.length || 0) / pageSize),
     has_prev: currentPage > 1,
-    totalCount: tasks?.length || 0
+    totalCount: tasks?.length || 0,
+    ...(tasksResponse?.data?.pagination || tasksResponse?.pagination || {})
   };
 
   const handleTaskSelect = (task: WorkflowTask) => {
@@ -111,21 +119,21 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
 
           {/* TASK STATISTICS */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded-lg border bg-muted/30 p-3 text-center">
+            <div className="bg-muted/30 rounded-lg border p-3 text-center">
               <p className="text-muted-foreground text-xs font-medium">PENDING</p>
-              <p className="mt-1 text-2xl font-bold">{taskStats.pending}</p>
+              <p className="mt-1 text-2xl font-bold">{taskStats?.pending}</p>
             </div>
-            <div className="rounded-lg border bg-muted/30 p-3 text-center">
+            <div className="bg-muted/30 rounded-lg border p-3 text-center">
               <p className="text-muted-foreground text-xs font-medium">COMPLETED</p>
-              <p className="mt-1 text-2xl font-bold text-green-600">{taskStats.completed}</p>
+              <p className="mt-1 text-2xl font-bold text-green-600">{taskStats?.completed}</p>
             </div>
-            <div className="rounded-lg border bg-muted/30 p-3 text-center">
+            <div className="bg-muted/30 rounded-lg border p-3 text-center">
               <p className="text-muted-foreground text-xs font-medium">REJECTED</p>
-              <p className="mt-1 text-2xl font-bold text-red-600">{taskStats.rejected}</p>
+              <p className="mt-1 text-2xl font-bold text-red-600">{taskStats?.rejected}</p>
             </div>
-            <div className="rounded-lg border bg-muted/30 p-3 text-center">
+            <div className="bg-muted/30 rounded-lg border p-3 text-center">
               <p className="text-muted-foreground text-xs font-medium">REASSIGNED</p>
-              <p className="mt-1 text-2xl font-bold text-blue-600">{taskStats.reassigned}</p>
+              <p className="mt-1 text-2xl font-bold text-blue-600">{taskStats?.reassigned}</p>
             </div>
           </div>
         </div>

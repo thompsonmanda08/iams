@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { CustomPagination } from "@/components/ui/pagination";
 import { WorkflowInstancesTable } from "./workflow-instances-table";
 import { ApprovalHistorySlide } from "./approval-history-slide";
+import { useWorkflowInstances } from "@/hooks/use-workflow-tasks";
 import type { Task } from "@/lib/types/task";
 import type { Pagination } from "@/lib/types";
 import { getApprovalsLog } from "@/app/_actions/task-actions";
@@ -20,24 +22,26 @@ interface ApprovalRecord {
 }
 
 interface WorkflowInstancesPanelProps {
-  instances: Task[];
-  isLoading?: boolean;
+  initialInstances?: Task[];
 }
 
 /**
  * WorkflowInstancesPanel
  *
  * Container component for displaying and managing workflow instances
- * Shows all active/pending workflow instances in a table
+ * Shows all active/pending workflow instances in a table with pagination
  * Provides approval history drawer when instance is selected
- * Handles pagination and data fetching for approval history
+ * Handles pagination and data fetching for both instances list and approval history
  *
  * Naming: Clear indication this is for WORKFLOW INSTANCES
  */
 export function WorkflowInstancesPanel({
-  instances,
-  isLoading
+  initialInstances = []
 }: WorkflowInstancesPanelProps) {
+  // Instances list pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
   // Drawer state for instance details
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedInstance, setSelectedInstance] = useState<Task | null>(null);
@@ -52,6 +56,36 @@ export function WorkflowInstancesPanel({
       has_prev: false
     });
   const [isDrawerLoading, setIsDrawerLoading] = useState(false);
+
+  // Use query hook for instances with pagination
+  const { data: instancesResponse, isLoading, error } = useWorkflowInstances({
+    page: currentPage,
+    page_size: pageSize
+  });
+
+  // Prefer server-side data on first load, then use React Query data for updates
+  const instances =
+    instancesResponse && instancesResponse.length > 0
+      ? instancesResponse?.data || instancesResponse
+      : initialInstances;
+
+  // Calculate pagination info
+  const pagination: Pagination = {
+    page: currentPage,
+    page_size: pageSize,
+    total_pages: Math.ceil((instances?.length || 0) / pageSize),
+    has_next: currentPage < Math.ceil((instances?.length || 0) / pageSize),
+    has_prev: currentPage > 1,
+    totalCount: instances?.length || 0,
+    ...(instancesResponse?.data?.pagination || instancesResponse?.pagination || {})
+  };
+
+  const handlePageChange = (params: { page: number; page_size?: number }) => {
+    setCurrentPage(params.page);
+    if (params.page_size) {
+      setPageSize(params.page_size);
+    }
+  };
 
   const handleInstanceSelect = async (instance: Task) => {
     setSelectedInstance(instance);
@@ -101,14 +135,14 @@ export function WorkflowInstancesPanel({
     <>
       <Card className="overflow-hidden">
         <div className="p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
+          <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex-1">
               <h3 className="text-lg font-semibold">Workflow Instances</h3>
               <p className="text-muted-foreground text-sm">
                 All active and pending workflow instances awaiting approval
               </p>
             </div>
-            {instances.length > 0 && (
+            {instances && instances.length > 0 && (
               <div className="text-right">
                 <p className="text-muted-foreground text-sm">
                   Total: <span className="font-semibold text-foreground">{instances.length}</span>
@@ -117,12 +151,33 @@ export function WorkflowInstancesPanel({
             )}
           </div>
 
+          {/* ERROR STATE */}
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="text-sm text-red-800">
+                Failed to load workflow instances. Please try again later.
+              </p>
+            </div>
+          )}
+
           {/* INSTANCES TABLE */}
           <WorkflowInstancesTable
-            instances={instances}
+            instances={instances || []}
             onInstanceSelect={handleInstanceSelect}
             isLoading={isLoading}
           />
+
+          {/* PAGINATION */}
+          {instances && instances.length > 0 && (
+            <div className="border-t">
+              <CustomPagination
+                pagination={pagination}
+                updatePagination={handlePageChange}
+                allowSetPageSize={true}
+                showDetails={true}
+              />
+            </div>
+          )}
         </div>
       </Card>
 

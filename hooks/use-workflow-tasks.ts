@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import {
   getUserAssignedWorkflowTasks,
   getWorkflowInstanceTasks,
+  getWorkflowInstances,
   completeWorkflowTask,
   reassignTask
 } from "@/app/_actions/task-actions";
@@ -39,6 +40,39 @@ export function useUserAssignedWorkflowTasks(params?: {
 
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch user workflow tasks");
+      }
+
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (previously cacheTime)
+    refetchOnWindowFocus: false
+  });
+}
+
+/**
+ * Hook to fetch all workflow instances with pagination
+ * Instances are active/pending workflow executions available to all authorized users
+ *
+ * @param params - Pagination and filter parameters
+ * @returns Query result with instances data, loading state, and error
+ */
+export function useWorkflowInstances(params?: {
+  page?: number;
+  page_size?: number;
+  status?: string;
+}) {
+  return useQuery({
+    queryKey: ["workflow-instances", params?.page, params?.page_size, params?.status],
+    queryFn: async () => {
+      const response = await getWorkflowInstances({
+        page: String(params?.page || 1),
+        page_size: String(params?.page_size || 20),
+        status: params?.status
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch workflow instances");
       }
 
       return response.data;
