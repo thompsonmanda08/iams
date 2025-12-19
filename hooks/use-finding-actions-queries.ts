@@ -671,6 +671,10 @@ export function useCreateFindingReassessmentMutation() {
       queryClient.invalidateQueries({
         queryKey: FINDING_ACTION_QUERY_KEYS.latestReassessment(variables.finding_id)
       });
+      // Invalidate finding query to update compliance status in modal
+      queryClient.invalidateQueries({
+        queryKey: FINDING_QUERY_KEYS.byId(variables.finding_id)
+      });
 
       notify({
         title: "Success",
