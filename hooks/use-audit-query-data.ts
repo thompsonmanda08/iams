@@ -40,6 +40,7 @@ import {
 } from "@/app/_actions/audit-module-actions";
 import type { WorkpaperInput, TemplateCategory, AuditPlan } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
+import { useRouter } from "next/navigation";
 import { Pagination } from "@/lib/types";
 import { capitalize, notify } from "@/lib/utils";
 import { Dispatch, SetStateAction } from "react";
@@ -887,66 +888,6 @@ export const useUpdateAnnualAuditPlanItem = () => {
 };
 
 /**
- * Hook to generate audit plan from annual audit plan item
- */
-export const useGenerateAuditPlanFromItem = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      registerId: string;
-      itemId: string;
-      data: {
-        title: string;
-        description?: string;
-        ref_no: string;
-        end_date: string;
-        audit_plan_date: string;
-        audit_area: string;
-        audit_scope: string;
-        audit_criteria: string;
-        audit_objective: string;
-        management_standard: string;
-        audit_team_members?: string[];
-        client_representative: string;
-        budget_item_ids?: string[];
-        [key: string]: any;
-      };
-    }) => {
-      const response = await generateAuditPlanFromItem(
-        params.registerId,
-        params.itemId,
-        params.data
-      );
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLANS, variables.registerId, "items"]
-      });
-      queryClient.invalidateQueries({
-        queryKey: [AUDIT_QUERY_KEYS.AUDIT_PLANS]
-      });
-      notify({
-        title: "Success",
-        description: "Audit plan generated successfully from annual plan item",
-        type: "success"
-      });
-    },
-    onError: (error: Error) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to generate audit plan from item",
-        type: "error"
-      });
-    }
-  });
-};
-
-/**
  * Hook to delete annual audit plan item
  */
 export const useDeleteAnnualAuditPlanItem = () => {
@@ -974,6 +915,89 @@ export const useDeleteAnnualAuditPlanItem = () => {
       notify({
         title: "Error",
         description: error.message || "Failed to delete annual audit plan item",
+        type: "error"
+      });
+    }
+  });
+};
+
+/**
+ * Hook to create or update annual audit plan item
+ */
+export const useCreateOrUpdateAnnualAuditPlanItem = (
+  planId: string | null,
+  selectedItemId?: string | null
+) => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (data: any) => {
+      if (selectedItemId) {
+        return updateAnnualAuditPlan(String(planId), { ...data, id: String(selectedItemId) });
+      } else {
+        return createAnnualAuditPlanItem(String(planId), data);
+      }
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        notify({
+          description: `Plan item ${selectedItemId ? "updated" : "created"} successfully`
+        });
+        queryClient.invalidateQueries({
+          queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, planId, "items"]
+        });
+        router.refresh();
+      } else {
+        notify({
+          description: response.message,
+          type: "error"
+        });
+      }
+    },
+    onError: (error: Error) => {
+      notify({
+        description: "Oops! Something went wrong.",
+        type: "error"
+      });
+      console.error("Error saving:", error);
+    }
+  });
+};
+
+/**
+ * Hook to generate audit plan from annual plan item
+ */
+export const useGenerateAuditPlanFromItem = () => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (params: { registerId: string; itemId: string; data: any }) => {
+      const response = await generateAuditPlanFromItem(
+        params.registerId,
+        params.itemId,
+        params.data
+      );
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, variables.registerId, "items"]
+      });
+      notify({
+        title: "Success",
+        description: "Engagement plan generated successfully",
+        type: "success"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to generate engagement plan",
         type: "error"
       });
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -11,7 +11,16 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, ClipboardListIcon, PencilLine, ShieldAlert, Pencil } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  ClipboardListIcon,
+  PencilLine,
+  ShieldAlert,
+  Pencil,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 import type { AnnualPlanItemWithDetails, UniverseItem, KRIColor } from "@/lib/types/audit-types";
 import { format, formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -27,19 +36,18 @@ import {
 } from "@/components/ui/empty";
 import { useToast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/status-badge";
-import { AUDIT_QUERY_KEYS, useDeleteAnnualAuditPlanItem } from "@/hooks/use-audit-query-data";
+import {
+  AUDIT_QUERY_KEYS,
+  useDeleteAnnualAuditPlanItem,
+  useCreateOrUpdateAnnualAuditPlanItem
+} from "@/hooks/use-audit-query-data";
 import { Department, ErrorState } from "@/lib/types";
 import { useDepartments } from "@/hooks/use-query-data";
 import { useUniverseItems } from "@/hooks/use-audit-settings-query-data";
 import { MultiSelectModal } from "@/components/ui/multi-select-modal";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createAnnualAuditPlanItem,
-  updateAnnualAuditPlan
-} from "@/app/_actions/audit-module-actions";
-import { notify } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogClose,
@@ -60,6 +68,7 @@ import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_
 import { useGenerateAuditPlanFromItem } from "@/hooks/use-audit-query-data";
 import { DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { TemplateSelectorSimple } from "./template-selector-simple";
+import { Badge } from "@/components/ui/badge";
 
 type AnnualPlanItem = {
   id?: string;
@@ -390,11 +399,15 @@ export function AnnualPlanItems({
                         </Button>
                       </>
                     )}
-                    {annualPlan.status === "APPROVED" && (
+                    {annualPlan.status === "APPROVED" && !item.is_generated ? (
                       // THIS GENERATES AN ENGAGEMENT PLAN
                       <>
                         <GenerateAuditPlanModal item={item} planId={planId} />
                       </>
+                    ) : (
+                      <Badge className="p-2" variant={"success"}>
+                        Plan Generated
+                      </Badge>
                     )}
                   </div>
                 </TableCell>
@@ -445,8 +458,6 @@ export function CreateOrUpdatePlanItem({
   setInitialData?: React.Dispatch<React.SetStateAction<AnnualPlanItem | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const queryClient = useQueryClient();
-  const router = useRouter();
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
@@ -511,47 +522,22 @@ export function CreateOrUpdatePlanItem({
     }
   }, [openModal, setOpenModal, setInitialData]);
 
-  const saveMutation = useMutation({
-    mutationFn: (data: any) => {
-      return initialData && selectedItemId
-        ? updateAnnualAuditPlan(String(planId), { ...data, id: String(selectedItemId) })
-        : createAnnualAuditPlanItem(String(planId), data);
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        notify({
-          description: `Plan item ${initialData && selectedItemId ? "updated" : "created"} successfully`
-        });
-        queryClient.invalidateQueries({
-          queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, planId, "items"]
-        });
-        router.refresh();
-        setOpenModal?.(false);
-        setInitialData?.(null);
-        setFormData(INIT_FORM_DATA);
-        setError({ status: false, message: "" });
-      } else {
-        notify({
-          description: response.message,
-          type: "error"
-        });
-        setError({ status: true, message: response.message });
-      }
-    },
-    onError: (error) => {
-      notify({
-        description: "Oops! Something went wrong.",
-        type: "error"
-      });
-      setError({ status: true, message: "An unexpected error occurred" });
-      console.error("Error saving:", error);
-    }
-  });
+  const saveMutation = useCreateOrUpdateAnnualAuditPlanItem(planId, selectedItemId);
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
 
-    saveMutation.mutate(formData);
+    saveMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpenModal?.(false);
+        setInitialData?.(null);
+        setFormData(INIT_FORM_DATA);
+        setError({ status: false, message: "" });
+      },
+      onError: (error: any) => {
+        setError({ status: true, message: error.message || "An unexpected error occurred" });
+      }
+    });
   }
 
   const departmentOptions = useMemo(() => {
@@ -588,8 +574,6 @@ export function CreateOrUpdatePlanItem({
       label: `${item.kri_name} [ ${item.kri_color} ]`
     }));
   }, [universeItemsData]);
-
-  console.log({ universeItemsData });
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -882,11 +866,17 @@ interface GenerateAuditPlanModalProps {
   planId: string;
 }
 
+type FieldErrors = Partial<Record<keyof GenerateAuditPlanFormData, string>>;
+
 export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalProps) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<GenerateAuditPlanFormData>(INIT_GENERATE_FORM_DATA);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const queryClient = useQueryClient();
+
+  const TOTAL_STEPS = 2;
 
   // Fetch team members for the department
   const { data: teamMemberResponse, isLoading: loadingTeamMembers } = useUsers({
@@ -928,17 +918,116 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
 
   const generateMutation = useGenerateAuditPlanFromItem();
 
+  const handleTemplateChange = useCallback((template: any) => {
+    setFormData((prev) => ({ ...prev, working_paper_template_id: template.id }));
+  }, []);
+
   const handleOpenModal = () => {
     setFormData({
       ...INIT_GENERATE_FORM_DATA,
-      title: `${item.title} - Engagement Plan`,
+      title: `${new Date().getFullYear()} - Engagement Plan`,
       audit_area: item.audit_area || "",
       audit_scope: item.audit_scope || "",
       audit_criteria: item.audit_criteria || "",
       audit_objective: item.audit_objective || "",
       management_standard: item.management_standard || FRAMEWORK_TYPES[0]?.id || ""
     });
+    setFieldErrors({});
+    setCurrentStep(1);
     setOpenModal(true);
+  };
+
+  const validateStep1 = (): boolean => {
+    const errors: FieldErrors = {};
+    let hasErrors = false;
+
+    if (!formData.title?.trim()) {
+      errors.title = "Audit plan title is required";
+      hasErrors = true;
+    }
+
+    if (!formData.ref_no?.trim()) {
+      errors.ref_no = "Reference number is required";
+      hasErrors = true;
+    }
+
+    if (!formData.management_standard) {
+      errors.management_standard = "Management standard is required";
+      hasErrors = true;
+    }
+
+    if (!formData.description?.trim()) {
+      errors.description = "Description is required";
+      hasErrors = true;
+    }
+
+    if (!formData.audit_area?.trim()) {
+      errors.audit_area = "Audit area is required";
+      hasErrors = true;
+    }
+
+    if (!formData.audit_scope?.trim()) {
+      errors.audit_scope = "Audit scope is required";
+      hasErrors = true;
+    }
+
+    if (!formData.audit_criteria?.trim()) {
+      errors.audit_criteria = "Audit criteria is required";
+      hasErrors = true;
+    }
+
+    if (!formData.audit_objective?.trim()) {
+      errors.audit_objective = "Audit objective is required";
+      hasErrors = true;
+    }
+
+    if (!formData.audit_plan_date) {
+      errors.audit_plan_date = "Audit plan date is required";
+      hasErrors = true;
+    }
+
+    if (!formData.end_date) {
+      errors.end_date = "Audit end date is required";
+      hasErrors = true;
+    }
+
+    if (
+      formData.audit_plan_date &&
+      formData.end_date &&
+      formData.audit_plan_date > formData.end_date
+    ) {
+      errors.audit_plan_date = "Start date must be before end date";
+      hasErrors = true;
+    }
+
+    if (!formData.client_representative) {
+      errors.client_representative = "Client representative is required";
+      hasErrors = true;
+    }
+
+    if (!formData.audit_team_members || formData.audit_team_members.length === 0) {
+      errors.audit_team_members = "At least one team member is required";
+      hasErrors = true;
+    }
+
+    if (!formData.budget_id) {
+      errors.budget_id = "Budget is required";
+      hasErrors = true;
+    }
+
+    setFieldErrors(errors);
+    return !hasErrors;
+  };
+
+  const handleNext = () => {
+    if (currentStep === 1 && !validateStep1()) {
+      return;
+    }
+    setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1024,168 +1113,240 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       </Button>
 
       <Dialog open={openModal} onOpenChange={setOpenModal}>
-        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-lg! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generate Audit Plan from Annual Item</DialogTitle>
-            <DialogDescription>
-              Create an engagement audit plan from the approved annual audit plan item
+            <DialogDescription className="text-sm">
+              Generate an engagement audit plan from the approved annual audit plan
             </DialogDescription>
           </DialogHeader>
 
+          <div className="text-sm">
+            <h4 className="text-foreground text-sm font-semibold">
+              Step {currentStep} of {TOTAL_STEPS}:{" "}
+              {currentStep === 1 ? "Engagement Plan Details" : "Workpaper Template"}
+            </h4>
+            <span className="text-muted-foreground text-xs">
+              {currentStep === 1
+                ? "Create an engagement audit plan from the approved annual audit plan item"
+                : " elect a workpaper template to generate the engagement audit plan"}
+            </span>
+          </div>
+
+          {/* Stepper */}
+          <div className="mb-6 flex gap-1">
+            {[1, 2].map((step) => {
+              const isCompleted = currentStep > step;
+              const isActive = currentStep === step;
+
+              return (
+                <div
+                  key={step}
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    isCompleted || isActive ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              );
+            })}
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Title and Ref No */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Input
-                id="title"
-                label="Audit Plan Title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g., Annual Audit Plan 2025"
-                required
-              />
-              <Input
-                id="ref_no"
-                label="Reference Number"
-                value={formData.ref_no}
-                onChange={(e) => setFormData({ ...formData, ref_no: e.target.value })}
-                placeholder="e.g., AP-2025-001"
-                required
-              />
-            </div>
+            {/* Step 1: Audit Details */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                {/* Title and Ref No */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Input
+                    id="title"
+                    label="Audit Plan Title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g., Annual Audit Plan 2025"
+                    required
+                    isInvalid={!!fieldErrors.title}
+                    errorText={fieldErrors.title}
+                  />
+                  <Input
+                    id="ref_no"
+                    label="Reference Number"
+                    value={formData.ref_no}
+                    onChange={(e) => setFormData({ ...formData, ref_no: e.target.value })}
+                    placeholder="e.g., AP-2025-001"
+                    required
+                    isInvalid={!!fieldErrors.ref_no}
+                    errorText={fieldErrors.ref_no}
+                  />
+                </div>
 
-            {/* Management Standard */}
-            <SelectField
-              id="management_standard"
-              label="Management Standard"
-              className="w-full"
-              value={formData.management_standard}
-              onValueChange={(value) => setFormData({ ...formData, management_standard: value })}
-              options={FRAMEWORK_TYPES}
-              placeholder="e.g., ISO 27001"
-              required
-            />
+                {/* Management Standard */}
+                <SelectField
+                  id="management_standard"
+                  label="Management Standard"
+                  className="w-full"
+                  value={formData.management_standard}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, management_standard: value })
+                  }
+                  options={FRAMEWORK_TYPES}
+                  placeholder="e.g., ISO 27001"
+                  required
+                  isInvalid={!!fieldErrors.management_standard}
+                  errorText={fieldErrors.management_standard}
+                />
 
-            {/* Working Paper Template */}
-            <TemplateSelectorSimple
-              value={formData.working_paper_template_id}
-              onChange={(template: any) =>
-                setFormData({ ...formData, working_paper_template_id: template.id })
-              }
-              frameworkType={formData.management_standard}
-            />
+                {/* Description */}
+                <Textarea
+                  id="description"
+                  label="Description"
+                  required
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Comprehensive audit plan..."
+                  rows={2}
+                  isInvalid={!!fieldErrors.description}
+                  errorText={fieldErrors.description}
+                />
 
-            {/* Description */}
-            <Textarea
-              id="description"
-              label="Description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Comprehensive audit plan..."
-              rows={2}
-            />
+                {/* Audit Area, Scope, Criteria, Objective */}
+                <Textarea
+                  id="audit_area"
+                  label="Audit Area"
+                  value={formData.audit_area}
+                  onChange={(e) => setFormData({ ...formData, audit_area: e.target.value })}
+                  placeholder="e.g., ISMS based on ISO 27001:2022"
+                  rows={2}
+                  required
+                  isInvalid={!!fieldErrors.audit_area}
+                  errorText={fieldErrors.audit_area}
+                />
 
-            {/* Audit Area, Scope, Criteria, Objective */}
-            <Textarea
-              id="audit_area"
-              label="Audit Area"
-              value={formData.audit_area}
-              onChange={(e) => setFormData({ ...formData, audit_area: e.target.value })}
-              placeholder="e.g., ISMS based on ISO 27001:2022"
-              rows={2}
-              required
-            />
+                <Textarea
+                  id="audit_scope"
+                  label="Audit Scope"
+                  value={formData.audit_scope}
+                  onChange={(e) => setFormData({ ...formData, audit_scope: e.target.value })}
+                  placeholder="All information security controls across the organization..."
+                  rows={3}
+                  required
+                  isInvalid={!!fieldErrors.audit_scope}
+                  errorText={fieldErrors.audit_scope}
+                />
 
-            <Textarea
-              id="audit_scope"
-              label="Audit Scope"
-              value={formData.audit_scope}
-              onChange={(e) => setFormData({ ...formData, audit_scope: e.target.value })}
-              placeholder="All information security controls across the organization..."
-              rows={3}
-              required
-            />
+                <Input
+                  id="audit_criteria"
+                  label="Audit Criteria"
+                  value={formData.audit_criteria}
+                  onChange={(e) => setFormData({ ...formData, audit_criteria: e.target.value })}
+                  placeholder="e.g., ISO 27001:2022 requirements"
+                  required
+                  isInvalid={!!fieldErrors.audit_criteria}
+                  errorText={fieldErrors.audit_criteria}
+                />
 
-            <Input
-              id="audit_criteria"
-              label="Audit Criteria"
-              value={formData.audit_criteria}
-              onChange={(e) => setFormData({ ...formData, audit_criteria: e.target.value })}
-              placeholder="e.g., ISO 27001:2022 requirements"
-              required
-            />
+                <Textarea
+                  id="audit_objective"
+                  label="Audit Objective"
+                  value={formData.audit_objective}
+                  onChange={(e) => setFormData({ ...formData, audit_objective: e.target.value })}
+                  placeholder="Assess compliance with ISO 27001:2022..."
+                  rows={4}
+                  required
+                  isInvalid={!!fieldErrors.audit_objective}
+                  errorText={fieldErrors.audit_objective}
+                />
 
-            <Textarea
-              id="audit_objective"
-              label="Audit Objective"
-              value={formData.audit_objective}
-              onChange={(e) => setFormData({ ...formData, audit_objective: e.target.value })}
-              placeholder="Assess compliance with ISO 27001:2022..."
-              rows={4}
-              required
-            />
+                {/* Dates */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <DatePicker
+                    label="Audit Plan Date"
+                    value={(formData.audit_plan_date ?? undefined) as any}
+                    onValueChange={(date) =>
+                      setFormData({ ...formData, audit_plan_date: date || null })
+                    }
+                    isInvalid={!!fieldErrors.audit_plan_date}
+                    errorText={fieldErrors.audit_plan_date}
+                  />
+                  <DatePicker
+                    label="Audit End Date"
+                    value={(formData.end_date ?? undefined) as any}
+                    onValueChange={(date) => setFormData({ ...formData, end_date: date || null })}
+                    required
+                    isInvalid={!!fieldErrors.end_date}
+                    errorText={fieldErrors.end_date}
+                  />
+                </div>
 
-            {/* Dates */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <DatePicker
-                label="Audit Plan Date"
-                value={(formData.audit_plan_date ?? undefined) as any}
-                onValueChange={(date) =>
-                  setFormData({ ...formData, audit_plan_date: date || null })
-                }
-              />
-              <DatePicker
-                label="Audit End Date"
-                value={(formData.end_date ?? undefined) as any}
-                onValueChange={(date) => setFormData({ ...formData, end_date: date || null })}
-                required
-              />
-            </div>
+                {/* Team and Stakeholders */}
+                <SearchSelectField
+                  id="client_representative"
+                  label="Client Representative"
+                  value={formData.client_representative}
+                  onValueChange={(v) => setFormData({ ...formData, client_representative: v })}
+                  placeholder="Choose client representative"
+                  options={headsOptions}
+                  isLoading={loadingHeads}
+                  isInvalid={!!fieldErrors.client_representative}
+                  errorText={fieldErrors.client_representative}
+                />
 
-            {/* Team and Stakeholders */}
-            <SearchSelectField
-              id="client_representative"
-              label="Client Representative"
-              value={formData.client_representative}
-              onValueChange={(v) => setFormData({ ...formData, client_representative: v })}
-              placeholder="Choose client representative"
-              options={headsOptions}
-              isLoading={loadingHeads}
-            />
+                <div>
+                  <MultiSelectModal
+                    label="Audit Team Members"
+                    placeholder="Choose team members"
+                    value={formData.audit_team_members}
+                    onValueChange={(values: string[]) =>
+                      setFormData({ ...formData, audit_team_members: values })
+                    }
+                    options={teamMembersOptions}
+                    isLoading={loadingTeamMembers}
+                    isInvalid={!!fieldErrors.audit_team_members}
+                  />
+                  {fieldErrors.audit_team_members && (
+                    <p className="text-destructive mt-1 text-xs">
+                      {fieldErrors.audit_team_members}
+                    </p>
+                  )}
+                </div>
 
-            <MultiSelectModal
-              label="Audit Team Members"
-              placeholder="Choose team members"
-              value={formData.audit_team_members}
-              onValueChange={(values: string[]) =>
-                setFormData({ ...formData, audit_team_members: values })
-              }
-              options={teamMembersOptions}
-              isLoading={loadingTeamMembers}
-            />
+                <SearchSelectField
+                  label="Budget"
+                  placeholder="Select budget"
+                  value={formData.budget_id}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, budget_id: value, budget_item_ids: [] });
+                  }}
+                  options={budgetsOptions}
+                  isLoading={loadingBudgets}
+                  isInvalid={!!fieldErrors.budget_id}
+                  errorText={fieldErrors.budget_id}
+                />
 
-            <SearchSelectField
-              label="Budget"
-              placeholder="Select budget"
-              value={formData.budget_id}
-              onValueChange={(value) => {
-                setFormData({ ...formData, budget_id: value, budget_item_ids: [] });
-              }}
-              options={budgetsOptions}
-              isLoading={loadingBudgets}
-            />
+                <MultiSelectModal
+                  label="Budget Lines"
+                  placeholder="Select budget lines"
+                  value={formData.budget_item_ids}
+                  onValueChange={(values: string[]) =>
+                    setFormData({ ...formData, budget_item_ids: values })
+                  }
+                  options={budgetLinesOptions}
+                  disabled={loadingBudgetLines || !formData.budget_id}
+                  isLoading={loadingBudgetLines}
+                />
+              </div>
+            )}
 
-            <MultiSelectModal
-              label="Budget Lines"
-              placeholder="Select budget lines"
-              value={formData.budget_item_ids}
-              onValueChange={(values: string[]) =>
-                setFormData({ ...formData, budget_item_ids: values })
-              }
-              options={budgetLinesOptions}
-              disabled={loadingBudgetLines || !formData.budget_id}
-              isLoading={loadingBudgetLines}
-            />
+            {/* Step 2: Working Paper Template */}
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                <TemplateSelectorSimple
+                  value={formData.working_paper_template_id}
+                  onChange={handleTemplateChange}
+                  frameworkType={formData.management_standard}
+                />
+              </div>
+            )}
 
+            {/* Navigation Buttons */}
             <DialogFooter className="gap-2">
               <Button
                 type="button"
@@ -1193,16 +1354,32 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
                 onClick={() => {
                   setOpenModal(false);
                   setFormData(INIT_GENERATE_FORM_DATA);
+                  setCurrentStep(1);
                 }}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={generateMutation.isPending}
-                isLoading={generateMutation.isPending}
-                loadingText="Generating...">
-                Generate Plan
-              </Button>
+
+              {currentStep > 1 && (
+                <Button type="button" variant="outline" onClick={handlePrevious}>
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous
+                </Button>
+              )}
+
+              {currentStep < TOTAL_STEPS ? (
+                <Button type="button" onClick={handleNext}>
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={generateMutation.isPending}
+                  isLoading={generateMutation.isPending}
+                  loadingText="Generating...">
+                  Generate Plan
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>
