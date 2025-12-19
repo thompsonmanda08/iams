@@ -45,9 +45,7 @@ export interface ClosureChecklistResult {
  * Validate audit closure readiness
  * Checks workpapers, findings, actions, and approvals
  */
-export async function validateAuditClosure(
-  auditPlanId: string
-): Promise<APIResponse<ClosureChecklistResult>> {
+export async function validateAuditClosure(auditPlanId: string): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
   }
@@ -65,30 +63,48 @@ export async function validateAuditClosure(
 
     const auditPlan = auditResponse.data as AuditPlan;
 
-    // Fetch all related data in parallel
-    const [workpaperRes, findingsRes, actionsRes, tasksRes] = await Promise.all([
+    // Fetch workpaper and tasks in parallel
+    const [workpaperRes, tasksRes] = await Promise.all([
       authenticatedApiClient({
         method: "GET",
-        url: `/api/v1/workpapers?audit_plan_id=${auditPlanId}`
-      }).catch(() => ({ data: [] })),
-      authenticatedApiClient({
-        method: "GET",
-        url: `/api/v1/working-paper-findings?audit_plan_id=${auditPlanId}`
-      }).catch(() => ({ data: [] })),
-      authenticatedApiClient({
-        method: "GET",
-        url: `/api/v1/finding-actions?audit_plan_id=${auditPlanId}`
-      }).catch(() => ({ data: [] })),
+        url: `/api/v1/audit-plans/${auditPlanId}/working-paper`
+      }).catch(() => ({ data: null })),
       authenticatedApiClient({
         method: "GET",
         url: `/api/v1/simple-workflows/instances?entity_id=${auditPlanId}`
       }).catch(() => ({ data: [] }))
     ]);
 
-    const workpapers = (workpaperRes?.data || []) as any[];
-    const findings = (findingsRes?.data || []) as any[];
-    const actions = (actionsRes?.data || []) as any[];
-    const tasks = (tasksRes?.data || []) as any[];
+    // Extract data from responses
+    const workpaper = workpaperRes?.data?.data || workpaperRes?.data;
+    const workpapers = workpaper ? [workpaper] : [];
+    const findings = Array.isArray(workpaper?.findings) ? workpaper.findings : [];
+
+    // Fetch actions for all findings in parallel
+    const actionRequests = findings.map((finding: any) =>
+      authenticatedApiClient({
+        method: "GET",
+        url: `/api/v1/findings/${finding.id}/actions`
+      }).catch(() => ({ data: { data: [] } }))
+    );
+
+    const actionResponses = actionRequests.length > 0 ? await Promise.all(actionRequests) : [];
+
+    // Flatten all actions from all findings
+    let actions: any[] = [];
+    actionResponses.forEach((response: any) => {
+      const actionData = response?.data?.data || response?.data || [];
+      if (Array.isArray(actionData)) {
+        actions.push(...actionData);
+      }
+    });
+
+    let tasks: any[] = [];
+    if (Array.isArray(tasksRes?.data?.data)) {
+      tasks = tasksRes.data.data;
+    } else if (Array.isArray(tasksRes?.data)) {
+      tasks = tasksRes.data;
+    }
 
     // Calculate closure statistics
     const completedWorkpapers = workpapers.filter(
@@ -344,8 +360,7 @@ export async function approveAuditClosure(payload: ClosureApprovalPayload): Prom
       }
     });
 
-    // If this is CEO approval and status is APPROVED, complete the audit plan
-    if (approverRole === "CEO" && approvalStatus === "APPROVED") {
+    if (approvalStatus === "APPROVED") {
       await authenticatedApiClient({
         method: "POST",
         url: `/api/v1/audit-plans/${auditPlanId}/complete`
