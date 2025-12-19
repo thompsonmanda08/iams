@@ -124,11 +124,16 @@ export function FindingActionDetailsDialog({
 
   // Can only create reassessment if evidence exists
   const hasEvidence = evidence && evidence?.length > 0;
+  const hasReviews = reviews && reviews?.length > 0;
 
   // Can only create reassessment if user is the assigned reviewer (auditor)
   const isAssignedReviewer = currentUserId === action.auditor_id;
 
-  console.log("Finding Action Evidence:", findingEvidenceData);
+  const allActionEvidenceApproved = evidence?.every(
+    (item) => item.status?.toUpperCase() === "APPROVED"
+  );
+
+  console.log("Finding Action Evidence:", { action, reviews });
 
   return (
     <>
@@ -154,7 +159,7 @@ export function FindingActionDetailsDialog({
                   {Number(findingEvidenceData?.evidence?.length) > 0 &&
                     `(${findingEvidenceData?.evidence?.length || 0})`}
                 </TabsTrigger>
-                <TabsTrigger value="evidence">
+                <TabsTrigger value="action-evidence">
                   Action Evidence {evidence?.length > 0 && `(${evidence?.length})`}
                 </TabsTrigger>
                 <TabsTrigger value="reviews">
@@ -475,7 +480,7 @@ export function FindingActionDetailsDialog({
               </TabsContent>
 
               {/* Action Evidence Tab */}
-              <TabsContent value="evidence" className="space-y-4">
+              <TabsContent value="action-evidence" className="space-y-4">
                 {isLoadingEvidence ? (
                   <ActionEvidenceTabSkeleton />
                 ) : (
@@ -649,18 +654,14 @@ export function FindingActionDetailsDialog({
             </Tabs>
 
             {/* Create Reassessment Button */}
-            {hasEvidence &&
-              (action.status == "APPROVED" ||
-                action.status == "COMPLETED" ||
-                action.status == "REJECTED") &&
-              isAssignedReviewer && (
-                <Button
-                  onClick={() => setCreateReassessmentOpen(true)}
-                  // variant="outline"
-                  className="w-full">
-                  Create Reassessment
-                </Button>
-              )}
+            {hasEvidence && hasReviews && allActionEvidenceApproved && isAssignedReviewer && (
+              <Button
+                onClick={() => setCreateReassessmentOpen(true)}
+                // variant="outline"
+                className="w-full">
+                Create Reassessment
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

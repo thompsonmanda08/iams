@@ -52,9 +52,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
   const isEditable = ["OPEN", "IN_PROGRESS", "DRAFT"].includes(finding.status);
 
   // Check if can assign actions (only when audit is COMPLETED, APPROVED, or REJECTED)
-  const canAssignAction = ["COMPLETED", "APPROVED", "REJECTED", "CLOSED", "IN_REVIEW"].includes(
-    finding.status
-  );
+  const canAssignAction = ["COMPLETED", "APPROVED", "REJECTED", "CLOSED"].includes(finding.status);
 
   return (
     <Card className="gap-2 transition-shadow hover:shadow-md">
