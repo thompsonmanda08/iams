@@ -32,8 +32,6 @@ export default async function FindingActionsPage({
   const findingActions = actionsResponse.data?.data || [];
   const pagination: Pagination = actionsResponse.data?.pagination || {};
 
-  console.log({ findingActions });
-
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}

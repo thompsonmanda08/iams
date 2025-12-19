@@ -46,9 +46,6 @@ export function CategorySelector({
 
   const categories: TemplateCategory[] = selectedTemplate?.categories || [];
 
-  console.log("CategorySelector - selectedTemplate:", selectedTemplate);
-  console.log("CategorySelector - categories:", categories);
-
   useEffect(() => {
     setSelectAll(categories.length > 0 && selectedCategories.length === categories.length);
   }, [selectedCategories, categories]);
@@ -186,7 +183,8 @@ export function CategorySelector({
       )}
 
       {/* Show ungrouped categories */}
-      {categoriesWithoutGroups.length > 0 && (categoriesWithGroups.length > 0 ? <Separator /> : null)}
+      {categoriesWithoutGroups.length > 0 &&
+        (categoriesWithGroups.length > 0 ? <Separator /> : null)}
 
       {categoriesWithoutGroups.length > 0 && (
         <CategoryGroup
