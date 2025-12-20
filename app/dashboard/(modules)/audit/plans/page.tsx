@@ -45,7 +45,7 @@ export default async function AuditPlansPage({
   const annualPlans = annualPlansResponse.success ? annualPlansResponse.data?.data || [] : [];
   const annualPlansPagination = annualPlansResponse?.data.pagination;
 
-  console.log({ plans });
+  // console.log({ plans });
 
   return (
     <div className="bg-background min-h-screen">
@@ -69,18 +69,6 @@ export default async function AuditPlansPage({
                 </div>
               }
             />
-            <div className="flex gap-2">
-              {/* <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button> */}
-              {/* <Link href="/dashboard/audit/plans/engagement/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Audit Plan
-                </Button>
-              </Link> */}
-            </div>
           </div>
         </div>
       </div>

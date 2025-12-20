@@ -2227,3 +2227,147 @@ export async function deleteAnnualAuditPlanItem(
     );
   }
 }
+
+// ============================================================================
+// AUDIT MEMO ACTIONS
+// ============================================================================
+
+/**
+ * Get audit memo for a specific audit plan
+ */
+export async function getAuditMemo(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  const url = `/api/v1/audit-plans/${auditPlanId}/memo`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data?.data, "Memo fetched successfully");
+  } catch (error: any) {
+    // 404 is not an error for this endpoint - it just means no memo exists
+    if (error.response?.status === 404) {
+      return successResponse(null, "No memo found for this audit plan");
+    }
+    return handleError(error, "GET | AUDIT MEMO", url);
+  }
+}
+
+/**
+ * Create or update audit memo (upsert)
+ */
+export async function createOrUpdateAuditMemo(
+  auditPlanId: string,
+  data: any
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  if (!data.subject) {
+    return handleBadRequest("Memo subject is required");
+  }
+
+  if (!data.content) {
+    return handleBadRequest("Memo content is required");
+  }
+
+  const url = `/api/v1/audit-plans/${auditPlanId}/memo`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
+
+    return successResponse(response.data?.data, "Memo saved successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | CREATE/UPDATE MEMO", url);
+  }
+}
+
+/**
+ * Get memo template for a specific audit plan
+ * Returns pre-filled HTML template based on audit plan data
+ */
+export async function getMemoTemplate(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  const url = `/api/v1/audit-plans/${auditPlanId}/memo/template`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url
+    });
+
+    return successResponse(response.data?.data, "Template generated successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | MEMO TEMPLATE", url);
+  }
+}
+
+/**
+ * Send audit memo via email and mark as SENT
+ */
+export async function sendAuditMemo(
+  auditPlanId: string,
+  data: any
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  const url = `/api/v1/audit-plans/${auditPlanId}/memo/send`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url,
+      data
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
+
+    return successResponse(response.data?.data, "Memo sent successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | SEND MEMO", url);
+  }
+}
+
+/**
+ * Delete audit memo (only allowed for DRAFT status)
+ */
+export async function deleteAuditMemo(auditPlanId: string): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  const url = `/api/v1/audit-plans/${auditPlanId}/memo`;
+
+  try {
+    await authenticatedApiClient({
+      method: "DELETE",
+      url
+    });
+
+    revalidatePath("/dashboard/audit/plans");
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
+
+    return successResponse(null, "Memo deleted successfully");
+  } catch (error: any) {
+    return handleError(error, "DELETE | AUDIT MEMO", url);
+  }
+}

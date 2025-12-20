@@ -45,6 +45,8 @@ import Link from "next/link";
 import { useSubmitAuditPlanMutation, useDeleteAuditPlanMutation } from "@/hooks/use-audit-mutations";
 import { AuditClosureReview } from "./audit-closure-review";
 import { AuditPlanTasksPanel } from "./audit-plan-tasks-panel";
+import { CreateOrUpdateMemo } from "./create-a-memo";
+import { useAuditMemo } from "@/hooks/use-audit-queries";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -90,6 +92,9 @@ export function AuditPlanWorkpaperView({
       setDeleteDialogOpen(false);
     }
   });
+
+  // Fetch memo data
+  const { data: memo } = useAuditMemo(auditPlan.id);
 
   const handleEditFinding = (finding: any) => {
     // Use the category object from the finding if available, otherwise find matching category
@@ -508,6 +513,48 @@ export function AuditPlanWorkpaperView({
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">No budget items allocated</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Audit Notification Memo */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Audit Notification Memo
+                  </CardTitle>
+                  <CardDescription>
+                    Create and send a memo to notify the client about this audit
+                  </CardDescription>
+                </div>
+                <CreateOrUpdateMemo
+                  auditPlanId={auditPlan.id}
+                  showTrigger={true}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {memo ? (
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {memo.subject || "Untitled Memo"}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {memo.status === "SENT"
+                        ? `Sent on ${memo.sent_at ? format(new Date(memo.sent_at), "MMM d, yyyy") : "Unknown"}`
+                        : "Draft - Not sent yet"}
+                    </p>
+                  </div>
+                  <StatusBadge status={memo.status || "DRAFT"} />
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No memo created yet. Click the button above to create one.
+                </p>
               )}
             </CardContent>
           </Card>

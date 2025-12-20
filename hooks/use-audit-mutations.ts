@@ -7,7 +7,10 @@ import { QUERY_KEYS } from "@/lib/constants";
 import {
   updateFinding,
   submitAuditPlanForApproval,
-  deleteAuditPlan
+  deleteAuditPlan,
+  createOrUpdateAuditMemo,
+  sendAuditMemo,
+  deleteAuditMemo
 } from "@/app/_actions/audit-module-actions";
 
 // ============================================================================
@@ -321,6 +324,167 @@ export function useDeleteAuditPlanMutation(options?: {
       notify({
         title: "Error",
         description: error.message || "Failed to delete audit plan",
+        type: "error"
+      });
+      options?.onError?.(error);
+    }
+  });
+}
+
+// ============================================================================
+// AUDIT MEMO MUTATIONS
+// ============================================================================
+
+/**
+ * Hook to create or update an audit memo
+ * Used in: create-a-memo.tsx
+ *
+ * Usage:
+ * const { mutate: saveMemo, isPending } = useMemoCreateOrUpdateMutation({
+ *   auditPlanId: "plan-123",
+ *   onSuccess: () => {
+ *     // Handle success
+ *   }
+ * });
+ *
+ * saveMemo({
+ *   subject: "Audit Memo",
+ *   content: "<html>...</html>",
+ *   status: "DRAFT"
+ * });
+ */
+export function useMemoCreateOrUpdateMutation(options: {
+  auditPlanId: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const result = await createOrUpdateAuditMemo(options.auditPlanId, data);
+      if (!result.success) {
+        throw new Error(result.message || "Failed to save memo");
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+      notify({
+        title: "Success",
+        description: "Memo saved successfully",
+        type: "success"
+      });
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to save memo",
+        type: "error"
+      });
+      options?.onError?.(error);
+    }
+  });
+}
+
+/**
+ * Hook to send an audit memo via email
+ * Used in: create-a-memo.tsx
+ *
+ * Usage:
+ * const { mutate: sendMemo, isPending } = useSendMemoMutation({
+ *   auditPlanId: "plan-123",
+ *   onSuccess: () => {
+ *     // Handle success
+ *   }
+ * });
+ *
+ * sendMemo({
+ *   recipient_email: "client@example.com",
+ *   cc_emails: ["ceo@example.com"]
+ * });
+ */
+export function useSendMemoMutation(options: {
+  auditPlanId: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const result = await sendAuditMemo(options.auditPlanId, data);
+      if (!result.success) {
+        throw new Error(result.message || "Failed to send memo");
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+      notify({
+        title: "Success",
+        description: "Memo sent successfully",
+        type: "success"
+      });
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to send memo",
+        type: "error"
+      });
+      options?.onError?.(error);
+    }
+  });
+}
+
+/**
+ * Hook to delete an audit memo
+ * Used in: create-a-memo.tsx
+ *
+ * Usage:
+ * const { mutate: deleteMemo, isPending } = useDeleteMemoMutation({
+ *   auditPlanId: "plan-123",
+ *   onSuccess: () => {
+ *     // Handle success
+ *   }
+ * });
+ *
+ * deleteMemo();
+ */
+export function useDeleteMemoMutation(options: {
+  auditPlanId: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await deleteAuditMemo(options.auditPlanId);
+      if (!result.success) {
+        throw new Error(result.message || "Failed to delete memo");
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
+      notify({
+        title: "Success",
+        description: "Memo deleted successfully",
+        type: "success"
+      });
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to delete memo",
         type: "error"
       });
       options?.onError?.(error);

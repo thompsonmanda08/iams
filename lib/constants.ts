@@ -110,6 +110,7 @@ export const QUERY_KEYS = {
   ACTION_EXECUTIONS: "action-executions",
   ACTION_LOGS: "action-logs",
   AUDIT_PLANS: "audit-plans",
+  AUDIT_MEMOS: "audit-memos",
   WORKPAPER_FINDINGS: "workpaper-findings",
   WORKFLOWS: "workflows",
   WORKFLOW_INSTANCES: "workflow-instances",

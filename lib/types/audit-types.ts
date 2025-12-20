@@ -1602,3 +1602,84 @@ export interface UpdateFindingReassessmentInput {
   new_recommendation?: string;
   compliance_percentage?: number;
 }
+
+// ============================================================================
+// AUDIT MEMO TYPES
+// ============================================================================
+
+export type MemoStatus = "DRAFT" | "SENT";
+
+export interface AuditMemo {
+  id: string;
+  organization_id: string;
+  audit_plan_id: string;
+  memo_number?: string;
+  to_recipients?: string[];
+  cc_recipients?: string[];
+  from_sender?: string;
+  subject: string;
+  content: string; // HTML string from TipTap editor
+  audit_objectives?: string;
+  audit_scope_items?: string[];
+  key_contacts?: string[];
+  entrance_meeting_datetime?: string;
+  exit_meeting_datetime?: string;
+  field_audit_start_date?: string;
+  field_audit_end_date?: string;
+  audit_staff?: Array<{
+    name: string;
+    title: string;
+    role?: string;
+  }>;
+  requested_information?: string[];
+  signature_name?: string;
+  signature_title?: string;
+  acknowledged_by?: string | null;
+  acknowledged_title?: string | null;
+  acknowledged_date?: string | null;
+  use_template: boolean;
+  status: MemoStatus;
+  sent_at: string | null;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+  // Relationships
+  created_by_user?: User;
+  updated_by_user?: User;
+}
+
+export interface CreateOrUpdateAuditMemoInput {
+  memo_number?: string;
+  to_recipients?: string[];
+  cc_recipients?: string[];
+  from_sender?: string;
+  subject: string;
+  content: string; // HTML
+  audit_objectives?: string;
+  audit_scope_items?: string[];
+  key_contacts?: string[];
+  entrance_meeting_datetime?: string;
+  exit_meeting_datetime?: string;
+  field_audit_start_date?: string;
+  field_audit_end_date?: string;
+  audit_staff?: Array<{
+    name: string;
+    title: string;
+    role?: string;
+  }>;
+  requested_information?: string[];
+  signature_name?: string;
+  signature_title?: string;
+  acknowledged_by?: string;
+  acknowledged_title?: string;
+  acknowledged_date?: string;
+  use_template?: boolean;
+  status?: MemoStatus;
+}
+
+export interface SendMemoInput {
+  recipient_email?: string;
+  cc_emails?: string[];
+  subject?: string;
+}
