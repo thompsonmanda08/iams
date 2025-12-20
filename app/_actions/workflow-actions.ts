@@ -262,24 +262,11 @@ export async function createWorkflowTransition(data: {
   const url = `/api/v1/simple-workflow-transitions`;
 
   try {
-    console.log("=== CREATE WORKFLOW TRANSITION ===");
-    console.log("URL:", url);
-    console.log("Payload:", data);
-
     const response = await authenticatedApiClient({ method: "POST", url, data });
-
-    console.log("Response:", response.data);
-    console.log("==================================");
 
     revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow transition created successfully");
   } catch (error: any) {
-    console.error("=== ERROR CREATE WORKFLOW TRANSITION ===");
-    console.error("URL:", url);
-    console.error("Payload:", data);
-    console.error("Error:", error);
-    console.error("========================================");
-
     return handleError(error, "POST | CREATE WORKFLOW TRANSITION", url);
   }
 }

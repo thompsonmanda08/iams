@@ -344,7 +344,6 @@ export function ModuleSelection({
       setInitialModules(selectedModules);
     },
     onError: (error) => {
-      console.error("Error saving module assignments:", error);
       toast.error("Failed to save module assignments");
     }
   });
@@ -401,13 +400,6 @@ export function ModuleSelection({
         category = "System Configuration";
       }
 
-      console.log("🔍 Parent Module:", {
-        name: module.name,
-        module_code: module.module_code,
-        href: module.href,
-        category
-      });
-
       categorized[category].parent = module;
       categorized[category].parentId = module.id;
     });
@@ -440,14 +432,6 @@ export function ModuleSelection({
         }
       }
 
-      console.log("🔍 Child Module:", {
-        name: module.name,
-        module_code: module.module_code,
-        href: module.href,
-        parent_id: module.parent_module_id,
-        category
-      });
-
       categorized[category].children.push(module);
     });
 
@@ -472,41 +456,28 @@ export function ModuleSelection({
       // Find the parent of this module (if it's a child)
       const parentModuleId = clickedModule.parent_module_id;
 
-      console.log("🎯 Toggle Module:", {
-        module: clickedModule.name,
-        isParentModule,
-        isCurrentlySelected,
-        childModuleIds,
-        parentModuleId
-      });
-
       if (isCurrentlySelected) {
         // DESELECTING
         if (isParentModule) {
           // Deselecting a parent: remove parent and ALL its children
-          console.log("   → Deselecting parent and all children");
           return prev.filter((id) => id !== moduleId && !childModuleIds.includes(id));
         } else {
           // Deselecting a child: only remove this child (keep parent and other children)
-          console.log("   → Deselecting child only");
           return prev.filter((id) => id !== moduleId);
         }
       } else {
         // SELECTING
         if (isParentModule) {
           // Selecting a parent: add parent and ALL its children
-          console.log("   → Selecting parent and all children");
           const newSelection = [moduleId, ...childModuleIds.filter((id) => !prev.includes(id))];
           return [...prev, ...newSelection.filter((id) => !prev.includes(id))];
         } else {
           // Selecting a child: add child AND ensure parent is selected
-          console.log("   → Selecting child and ensuring parent is selected");
           const newSelection = [moduleId];
 
           // Always include the parent if not already selected
           if (parentModuleId && !prev.includes(parentModuleId)) {
             newSelection.push(parentModuleId);
-            console.log("   → Auto-selected parent:", parentModuleId);
           }
 
           return [...prev, ...newSelection.filter((id) => !prev.includes(id))];

@@ -41,8 +41,6 @@ export function CustomWorkpaperForm({ auditId, auditTitle, template, onSuccess, 
   const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
   const currentUser = teamMembers?.[0]?.id || "";
 
-  console.log("USERS: ", teamMembers);
-
   // Form state
   const [preparedBy, setPreparedBy] = useState(currentUser);
   const [preparedDate, setPreparedDate] = useState(new Date());

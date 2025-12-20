@@ -116,7 +116,6 @@ export default function ProcessActivityTab({
     },
     onError: (error) => {
       toast.error("Failed to delete process");
-      console.error("Error deleting process:", error);
     },
     onSettled: () => {
       setDeleteDialogOpen(false);
@@ -376,7 +375,6 @@ function CreateOrUpdate({
   const pillars = pillarsResponse?.data || [];
 
   useEffect(() => {
-    console.log({ initialData, selectedId, openModal });
     if (openModal) {
       if (initialData && selectedId) {
         setFormData({
@@ -403,7 +401,6 @@ function CreateOrUpdate({
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => {
-      console.log({ ...data });
       return initialData && selectedId
         ? updateProcessActivity({ ...data, id: String(selectedId) })
         : createProcessActivity(data);
@@ -425,7 +422,6 @@ function CreateOrUpdate({
     onError: (error) => {
       toast.error("An error occurred");
       setError({ status: true, message: "An unexpected error occurred" });
-      console.error("Error saving process:", error);
     }
   });
 
@@ -433,8 +429,6 @@ function CreateOrUpdate({
     e.preventDefault();
     saveMutation.mutate(formData);
   }
-
-  console.log({ formData });
 
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>

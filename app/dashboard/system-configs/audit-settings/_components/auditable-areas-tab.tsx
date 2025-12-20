@@ -110,7 +110,6 @@ export default function AuditableAreaConfig({
     },
     onError: (error) => {
       toast.error("Failed to delete item");
-      console.error("Error deleting item:", error);
     },
     onSettled: () => {
       setDeleteDialogOpen(false);
@@ -371,8 +370,6 @@ export function CreateOrUpdateArea({
 
   // Update form when initialData changes
   useEffect(() => {
-    console.log("🔄 Effect triggered:", { initialData, areaId, openModal });
-
     if (openModal) {
       if (initialData && areaId) {
         setFormData({
@@ -405,8 +402,6 @@ export function CreateOrUpdateArea({
     }
   }, [openModal, setOpenModal, setInitialData]);
 
-  console.log("🎯 formData:", initialData);
-
   // Create/Update mutation
   const router = useRouter();
   const saveMutation = useMutation({
@@ -431,7 +426,6 @@ export function CreateOrUpdateArea({
     onError: (error) => {
       toast.error("An error occurred");
       setError({ status: true, message: "An unexpected error occurred" });
-      console.error("Error saving item:", error);
     }
   });
 
