@@ -16,30 +16,6 @@ export const EVIDENCE_QUERY_KEYS = {
   byId: (evidenceId: string) => [...EVIDENCE_QUERY_KEYS.all, "id", evidenceId] as const
 };
 
-// /**
-//  * Hook to fetch all evidence for a specific finding with stats
-//  */
-// export function useFindingEvidence(findingId: string | null | undefined) {
-//   return useQuery({
-//     queryKey: findingId ? EVIDENCE_QUERY_KEYS.byFinding(findingId) : ["evidence-disabled"],
-//     queryFn: async () => {
-//       if (!findingId) return { evidence: [], total_count: 0, verified_count: 0, unverified_count: 0 };
-//       const response = await getFindingEvidence(findingId);
-//       if (response.success) {
-//         return response.data as {
-//           evidence: FindingEvidence[];
-//           total_count: number;
-//           verified_count: number;
-//           unverified_count: number;
-//         };
-//       }
-//       return { evidence: [], total_count: 0, verified_count: 0, unverified_count: 0 };
-//     },
-//     enabled: !!findingId,
-//     staleTime: 5 * 60 * 1000 // 5 minutes
-//   });
-// }
-
 /**
  * Hook to submit category with findings & evidence for approval
  */

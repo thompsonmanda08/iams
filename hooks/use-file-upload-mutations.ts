@@ -50,15 +50,6 @@ export function useFileUploadMutation(options?: {
           };
           reader.readAsDataURL(file);
         });
-
-        // Actual API call (when ready):
-        // const response = await fetch("/api/upload", {
-        //   method: "POST",
-        //   body: formData
-        // });
-        // const result = await response.json();
-        // if (!result.success) throw new Error(result.message);
-        // return result.fileUrl;
       } catch (error) {
         throw error instanceof Error ? error : new Error("File upload failed");
       }

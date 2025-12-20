@@ -3,8 +3,6 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PageHeader from "@/components/page-header";
 import { Building2 } from "lucide-react";
-// import { getOrganizations, getCountries } from "@/app/_actions/backoffice-actions";
-// import { getProvinces, getTowns } from "@/app/_actions/config-actions";
 
 function MappingSkeleton() {
   return (
@@ -25,31 +23,6 @@ function MappingSkeleton() {
 }
 
 async function CompanyMappingPage() {
-  // TODO: Replace with real API calls when backend endpoints are ready
-  // Endpoints needed:
-  // - GET /api/v1/backoffice/organizations (getOrganizations)
-  // - GET /api/v1/backoffice/countries (getCountries)
-  // - GET /api/v1/backoffice/provinces (already exists: getProvinces)
-  // - GET /api/v1/backoffice/towns (already exists: getTowns)
-  // - GET /api/v1/backoffice/company-locations?company_id=X (getCompanyLocations)
-  // - POST /api/v1/backoffice/company-locations (createCompanyLocation)
-  // - DELETE /api/v1/backoffice/company-locations/:id (deleteCompanyLocation)
-  //
-  // Uncomment below when backend is ready:
-  // const [companiesRes, countriesRes, provincesRes, townsRes] = await Promise.all([
-  //   getOrganizations(),
-  //   getCountries(),
-  //   getProvinces(),
-  //   getTowns({ page: 1, page_size: 1000 })
-  // ]);
-  //
-  // const companies = companiesRes.success ? companiesRes.data?.items || [] : [];
-  // const countries = countriesRes.success ? countriesRes.data?.items || [] : [];
-  // const provinces = provincesRes.success ? provincesRes.data?.data || [] : [];
-  // const towns = townsRes.success ? townsRes.data?.data || [] : [];
-  //
-  // return <CompanyMapping companies={companies} countries={countries} provinces={provinces} towns={towns} />;
-
   return (
     <div>
       {/* Header */}

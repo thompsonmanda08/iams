@@ -283,55 +283,6 @@ export async function getWorkpaper(id: string): Promise<APIResponse> {
     return handleError(error, "GET | WORKPAPER", `/api/v1/working-papers/${id}`);
   }
 }
-
-/**
- * Get working paper statistics
- */
-// export async function getWorkpaperStatistics(id: string): Promise<APIResponse> {
-//   if (!id) {
-//     return handleBadRequest("Working paper ID is required");
-//   }
-
-//   try {
-//     const response = await authenticatedApiClient({
-//       method: "GET",
-//       url: `/api/v1/working-papers/${id}/statistics`
-//     });
-
-//     return successResponse(response.data, "Working paper statistics fetched successfully");
-//   } catch (error: any) {
-//     return handleError(
-//       error,
-//       "GET | WORKPAPER STATISTICS",
-//       `/api/v1/working-papers/${id}/statistics`
-//     );
-//   }
-// }
-
-/**
- * Get audit plan working paper summary
- */
-// export async function getAuditPlanWorkpaperSummary(auditPlanId: string): Promise<APIResponse> {
-//   if (!auditPlanId) {
-//     return handleBadRequest("Audit plan ID is required");
-//   }
-
-//   try {
-//     const response = await authenticatedApiClient({
-//       method: "GET",
-//       url: `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
-//     });
-
-//     return successResponse(response.data, "Audit plan workpaper summary fetched successfully");
-//   } catch (error: any) {
-//     return handleError(
-//       error,
-//       "GET | AUDIT PLAN WP SUMMARY",
-//       `/api/v1/audit-plans/${auditPlanId}/working-papers/summary`
-//     );
-//   }
-// }
-
 /**
  * Create new workpaper
  */
@@ -425,34 +376,6 @@ export async function updateWorkpaper(
     return handleError(error, "PUT | UPDATE WORKPAPER", `/api/v1/working-papers/${id}`);
   }
 }
-
-/**
- * Update workpaper status only
- */
-// export async function updateWorkpaperStatus(id: string, status: string): Promise<APIResponse> {
-//   if (!id || !status) {
-//     return handleBadRequest("Working paper ID and status are required");
-//   }
-
-//   try {
-//     const response = await authenticatedApiClient({
-//       method: "PATCH",
-//       url: `/api/v1/working-papers/${id}/status`,
-//       data: { status }
-//     });
-
-//     revalidatePath("/dashboard/audit/workpapers");
-//     revalidatePath(`/dashboard/audit/workpapers/${id}`);
-
-//     return successResponse(response.data, "Workpaper status updated successfully");
-//   } catch (error: any) {
-//     return handleError(
-//       error,
-//       "PATCH | UPDATE WORKPAPER STATUS",
-//       `/api/v1/working-papers/${id}/status`
-//     );
-//   }
-// }
 
 /**
  * Delete workpaper

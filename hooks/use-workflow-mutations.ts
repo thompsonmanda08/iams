@@ -121,39 +121,6 @@ export function useWorkflowMutations() {
   };
 
   /**
-   * Delete a workflow
-   * DELETE /api/v1/workflows/delete
-   */
-  // const deleteWorkflow = async (workflowId: string): Promise<SaveWorkflowResult> => {
-  //   setState({ isLoading: true, error: null });
-
-  //   try {
-  //     const response = await deleteWorkflowAction(workflowId);
-
-  //     if (!response.success) {
-  //       throw new Error(response.message || "Failed to delete workflow");
-  //     }
-
-  //     setState({ isLoading: false, error: null });
-  //     toast.success("WorkflowItem deleted successfully!");
-  //     router.refresh();
-
-  //     return {
-  //       success: true
-  //     };
-  //   } catch (error: any) {
-  //     const errorMessage = error?.message || "Failed to delete workflow";
-  //     setState({ isLoading: false, error: errorMessage });
-  //     toast.error(errorMessage);
-
-  //     return {
-  //       success: false,
-  //       error: errorMessage
-  //     };
-  //   }
-  // };
-
-  /**
    * Create workflow states
    * Handles bulk creation of states with automatic display_order
    */
