@@ -291,7 +291,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 {/* Trigger Range */}
-                <div className="bg-muted/50 flex justify-between rounded-lg p-3">
+                <div className="bg-muted/50 dark:bg-muted/5 flex justify-between rounded-lg p-3">
                   <div>
                     <p className="text-muted-foreground mb-2 text-xs">
                       Trigger Range (Warning Zone)
