@@ -3,7 +3,7 @@ import { getAuditPlan, getWorkpaperByAuditPlanId } from "@/app/_actions/audit-mo
 import { getWorkflowInstances } from "@/app/_actions/task-actions";
 import { AuditPlan } from "@/lib/types/audit-types";
 import PageHeader from "@/components/page-header";
-import { ClipboardListIcon, ListCheck } from "lucide-react";
+import { ClipboardListIcon } from "lucide-react";
 import BackButton from "@/components/back-button";
 import { AuditPlanWorkpaperView } from "../../_components/audit-plan-workpaper-view";
 

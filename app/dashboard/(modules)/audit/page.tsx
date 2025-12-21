@@ -128,10 +128,10 @@ export default async function AuditDashboardPage() {
                       Audit Plans
                     </Button>
                   </Link>
-                  <Link href="/dashboard/audit/workpapers">
+                  <Link href="/dashboard/system-configs/audit-settings/templates">
                     <Button variant="outline" className="gap-2">
                       <FileText className="h-4 w-4" />
-                      Workpapers
+                      Workpaper Templates
                     </Button>
                   </Link>
                 </div>
