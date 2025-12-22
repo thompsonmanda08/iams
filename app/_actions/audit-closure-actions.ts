@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { notify } from "@/lib/utils";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import authenticatedApiClient, {
   successResponse,
@@ -138,17 +137,22 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
       // Workpaper is completed if it has findings AND all findings are completed (not OPEN)
       return (
         wpFindings.length > 0 &&
-        wpFindings.every((finding: any) =>
-          finding.status !== "OPEN" &&
-          finding.status !== "" &&
-          finding.status !== null &&
-          finding.status !== undefined
+        wpFindings.every(
+          (finding: any) =>
+            finding.status !== "OPEN" &&
+            finding.status !== "" &&
+            finding.status !== null &&
+            finding.status !== undefined
         )
       );
     }).length;
 
     const resolvedFindings = findings.filter(
-      (f: any) => f.status === "APPROVED" || f.status === "COMPLETED" || f.status === "RESOLVED" || f.status === "CLOSED"
+      (f: any) =>
+        f.status === "APPROVED" ||
+        f.status === "COMPLETED" ||
+        f.status === "RESOLVED" ||
+        f.status === "CLOSED"
     ).length;
 
     const approvedActions = actions.filter(
@@ -275,13 +279,6 @@ export interface ClosureRequestPayload {
   closureReportUrl?: string;
 }
 
-export interface ClosureApprovalPayload {
-  auditPlanId: string;
-  approvalStatus: "APPROVED" | "REJECTED";
-  approvalNotes?: string;
-  approverRole: "MANAGER" | "CEO";
-}
-
 /**
  * Request audit closure
  * Creates workflow for closure approvals (Manager -> CEO)
@@ -301,6 +298,8 @@ export async function requestAuditClosure(payload: ClosureRequestPayload): Promi
     return handleBadRequest("Closure notes are required");
   }
 
+  const url = `/api/v1/audit-plans/${auditPlanId}/close`;
+
   try {
     // Validate closure first
     const validationResult = await validateAuditClosure(auditPlanId);
@@ -314,117 +313,26 @@ export async function requestAuditClosure(payload: ClosureRequestPayload): Promi
       };
     }
 
-    // Create closure workflow instance
-    const workflowPayload = {
-      workflow_type: "AUDIT_CLOSURE",
-      entity_type: "AUDIT_PLAN",
-      entity_id: auditPlanId,
-      workflow_data: {
-        closure_notes: closureNotes,
-        team_lead_sign_off: teamLeadSignOff,
-        closure_request_date: new Date().toISOString(),
-        closure_report_url: payload.closureReportUrl
-      }
-    };
-
-    const workflowResponse = await authenticatedApiClient({
+    // Request closure via the correct endpoint
+    const closureResponse = await authenticatedApiClient({
       method: "POST",
-      url: "/api/v1/simple-workflows/instances",
-      data: workflowPayload
-    });
-
-    if (!workflowResponse.data) {
-      return handleBadRequest("Failed to create closure workflow");
-    }
-
-    revalidatePath("/dashboard/workflows/approvals");
-    revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
-
-    notify({
-      title: "Closure Requested",
-      description: "Audit closure has been requested and sent for approval",
-      type: "success"
-    });
-
-    return successResponse(workflowResponse.data, "Audit closure requested successfully");
-  } catch (error: any) {
-    return handleError(error, "POST | REQUEST AUDIT CLOSURE", `/api/v1/simple-workflows/instances`);
-  }
-}
-
-/**
- * Approve audit closure (Manager or CEO level)
- */
-export async function approveAuditClosure(payload: ClosureApprovalPayload): Promise<APIResponse> {
-  const { auditPlanId, approvalStatus, approvalNotes, approverRole } = payload;
-
-  if (!auditPlanId) {
-    return handleBadRequest("Audit plan ID is required");
-  }
-
-  if (!approverRole) {
-    return handleBadRequest("Approver role is required");
-  }
-
-  try {
-    // Fetch workflow instance for this audit
-    const workflowResponse = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/simple-workflows/instances?entity_id=${auditPlanId}&workflow_type=AUDIT_CLOSURE`
-    });
-
-    const workflows = (workflowResponse?.data || []) as any[];
-    const closureWorkflow = workflows.find(
-      (w: any) => w.workflow_type === "AUDIT_CLOSURE" && w.status === "PENDING"
-    );
-
-    if (!closureWorkflow) {
-      return handleBadRequest("No pending closure workflow found");
-    }
-
-    const workflowInstanceId = closureWorkflow.id;
-    const endpoint =
-      approvalStatus === "APPROVED"
-        ? `/api/v1/simple-workflows/instances/${workflowInstanceId}/approve`
-        : `/api/v1/simple-workflows/instances/${workflowInstanceId}/reject`;
-
-    const approvalResponse = await authenticatedApiClient({
-      method: "POST",
-      url: endpoint,
+      url,
       data: {
-        remarks: approvalNotes || `Closure ${approvalStatus.toLowerCase()} by ${approverRole}`,
-        approver_role: approverRole
+        closure_notes: closureNotes
       }
     });
 
-    if (approvalStatus === "APPROVED") {
-      await authenticatedApiClient({
-        method: "POST",
-        url: `/api/v1/audit-plans/${auditPlanId}/complete`
-      });
+    if (!closureResponse.data) {
+      return handleBadRequest("Failed to request audit closure");
     }
 
     revalidatePath("/dashboard/workflows/approvals");
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
 
-    notify({
-      title: `Closure ${approvalStatus}`,
-      description: `Audit closure has been ${approvalStatus.toLowerCase()}`,
-      type: "success"
-    });
-
-    return successResponse(
-      approvalResponse.data,
-      `Audit closure ${approvalStatus.toLowerCase()} successfully`
-    );
+    return successResponse(closureResponse.data, "Audit closure requested successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      `POST | ${approvalStatus} AUDIT CLOSURE`,
-      `/api/v1/simple-workflows/instances/{workflowInstanceId}/${approvalStatus.toLowerCase()}`
-    );
+    return handleError(error, "POST | REQUEST AUDIT CLOSURE", url);
   }
 }
 
@@ -448,57 +356,5 @@ export async function getAuditClosureStatus(auditPlanId: string): Promise<APIRes
     return successResponse(closureWorkflow || null, "Closure status retrieved successfully");
   } catch (error: any) {
     return handleError(error, "GET | AUDIT CLOSURE STATUS", `/api/v1/simple-workflows/instances`);
-  }
-}
-
-/**
- * Cancel audit closure request (can only be done before any approvals)
- */
-export async function cancelAuditClosureRequest(auditPlanId: string): Promise<APIResponse> {
-  if (!auditPlanId) {
-    return handleBadRequest("Audit plan ID is required");
-  }
-
-  try {
-    const workflowResponse = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/simple-workflows/instances?entity_id=${auditPlanId}&workflow_type=AUDIT_CLOSURE`
-    });
-
-    const workflows = (workflowResponse?.data || []) as any[];
-    const closureWorkflow = workflows.find(
-      (w: any) => w.workflow_type === "AUDIT_CLOSURE" && w.status === "PENDING"
-    );
-
-    if (!closureWorkflow) {
-      return handleBadRequest("No pending closure workflow to cancel");
-    }
-
-    // Cancel/reject the workflow
-    await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/simple-workflows/instances/${closureWorkflow.id}/reject`,
-      data: {
-        remarks: "Closure request cancelled by audit team"
-      }
-    });
-
-    revalidatePath("/dashboard/workflows/approvals");
-    revalidatePath("/dashboard/audit/plans");
-    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
-
-    notify({
-      title: "Closure Cancelled",
-      description: "Audit closure request has been cancelled",
-      type: "success"
-    });
-
-    return successResponse(null, "Closure request cancelled successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "POST | CANCEL AUDIT CLOSURE",
-      `/api/v1/simple-workflows/instances/{workflowInstanceId}/reject`
-    );
   }
 }

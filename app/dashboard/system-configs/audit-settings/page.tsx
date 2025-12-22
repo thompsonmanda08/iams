@@ -75,6 +75,8 @@ export default async function AuditSettingsPage() {
     ? indicativeTargetsResponse.data?.pagination || []
     : null;
 
+  console.log({ templatesResponse, areas });
+
   return (
     <div className="">
       {/* Header */}

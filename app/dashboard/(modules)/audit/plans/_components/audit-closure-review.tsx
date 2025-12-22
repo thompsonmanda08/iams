@@ -46,6 +46,7 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const [closureNotes, setClosureNotes] = useState("");
   const [teamLeadSignOff, setTeamLeadSignOff] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   // Check if current user is the audit team lead
   const isTeamLead =
@@ -84,6 +85,7 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
   };
 
   const handleRequestClosure = () => {
+    setRequestError(null);
     // Team Lead requesting closure implicitly signs off
     requestClosure(
       {
@@ -92,12 +94,20 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
         teamLeadSignOff: true
       },
       {
-        onSuccess: () => {
-          setShowClosureDialog(false);
-          setShowConfirmationDialog(false);
-          setClosureNotes("");
-          setTeamLeadSignOff(false);
-          onClosureRequested?.();
+        onSuccess: (response) => {
+          if (response.success) {
+            // Only close dialogs on success
+            setShowClosureDialog(false);
+            setShowConfirmationDialog(false);
+            setClosureNotes("");
+            setTeamLeadSignOff(false);
+            setRequestError(null);
+            onClosureRequested?.();
+          } else {
+            // Keep dialog open and show error alert
+            setRequestError(response.message || "Failed to request audit closure");
+            setShowConfirmationDialog(false);
+          }
         }
       }
     );
@@ -387,7 +397,15 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
       </div>
 
       {/* Closure Dialog */}
-      <Dialog open={showClosureDialog} onOpenChange={setShowClosureDialog}>
+      <Dialog
+        open={showClosureDialog}
+        onOpenChange={(open) => {
+          setShowClosureDialog(open);
+          if (open) {
+            setRequestError(null);
+          }
+        }}>
+
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Request Audit Closure</DialogTitle>
@@ -428,6 +446,14 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
                 </p>
               </div>
             </div>
+
+            {/* Error Alert */}
+            {requestError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{requestError}</AlertDescription>
+              </Alert>
+            )}
 
             {/* Submit Actions */}
             <div className="flex justify-end gap-2 pt-4">
