@@ -117,8 +117,8 @@ export const navItems: NavGroup[] = [
         icon: ClipboardCheck,
         items: [
           { title: "Overview", href: "/dashboard/audit" },
+          { title: "Universes", href: "/dashboard/audit/universe" },
           { title: "Budgets", href: "/dashboard/audit/budgets" },
-          { title: "Audit Universes", href: "/dashboard/audit/universe" },
           { title: "Plans & Executions", href: "/dashboard/audit/plans" }
         ]
       }
