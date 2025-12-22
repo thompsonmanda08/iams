@@ -103,7 +103,13 @@ export default function ProcessActivityTab() {
 
   const handleDeleteConfirm = async () => {
     if (!selectedId) return;
-    deleteProcessActivityMutation.mutate(selectedId);
+    deleteProcessActivityMutation.mutate({
+      id: selectedId,
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setSelectedId(null);
+      }
+    });
   };
 
   const { data: pillarsResponse } = useStrategicPillars(undefined, {
@@ -412,7 +418,15 @@ function CreateOrUpdate({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveProcessActivityMutation.mutate(formData);
+    saveProcessActivityMutation.mutate({
+      ...formData,
+      onSuccess: () => {
+        setOpenModal?.(false);
+      },
+      onError: (message: string) => {
+        setError({ status: true, message });
+      }
+    });
   }
 
   return (

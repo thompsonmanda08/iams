@@ -93,7 +93,13 @@ export default function StrategicPillarsTab() {
 
   const handleDeleteConfirm = async () => {
     if (!selectedId) return;
-    deleteStrategicPillarMutation.mutate(selectedId);
+    deleteStrategicPillarMutation.mutate({
+      id: selectedId,
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setSelectedId(null);
+      }
+    });
   };
 
   const getDepartmentName = useCallback(
@@ -349,7 +355,13 @@ function CreateOrUpdate({
     e.preventDefault();
     saveStrategicPillarMutation.mutate({
       ...formData,
-      ...(initialData && selectedId && { id: String(selectedId) })
+      ...(initialData && selectedId && { id: String(selectedId) }),
+      onSuccess: () => {
+        setOpenModal?.(false);
+      },
+      onError: (message: string) => {
+        setError({ status: true, message });
+      }
     });
   }
 

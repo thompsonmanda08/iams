@@ -95,7 +95,13 @@ export default function StrategicInitiativeTab() {
 
   const handleDeleteConfirm = async () => {
     if (!selectedId) return;
-    deleteStrategicInitiativeMutation.mutate(selectedId);
+    deleteStrategicInitiativeMutation.mutate({
+      id: selectedId,
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setSelectedId(null);
+      }
+    });
   };
   const [pillarId, setPillarId] = useState<string | null>(null);
 
@@ -404,7 +410,13 @@ function CreateOrUpdate({
     saveStrategicInitiativeMutation.mutate({
       data: formData,
       isUpdate: !!(initialData && selectedId),
-      id: selectedId || undefined
+      id: selectedId || undefined,
+      onSuccess: () => {
+        setOpenModal?.(false);
+      },
+      onError: (message: string) => {
+        setError({ status: true, message });
+      }
     });
   }
 

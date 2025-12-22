@@ -103,7 +103,13 @@ export default function IndicativeTargetsTab() {
     // if (true) {
     //   return toast.warning("This action currently is disabled");
     // }
-    deleteIndicativeTargetMutation.mutate(selectedId as any);
+    deleteIndicativeTargetMutation.mutate({
+      id: selectedId,
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setSelectedId(null);
+      }
+    });
   };
 
   const getDepartmentName = useCallback(
@@ -355,7 +361,15 @@ export function CreateOrUpdate({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveIndicativeTargetMutation.mutate(formData as any);
+    saveIndicativeTargetMutation.mutate({
+      ...formData,
+      onSuccess: () => {
+        setOpenModal(false);
+      },
+      onError: (message: string) => {
+        setError({ status: true, message });
+      }
+    } as any);
   }
 
   const departmentOptions = useMemo(() => {

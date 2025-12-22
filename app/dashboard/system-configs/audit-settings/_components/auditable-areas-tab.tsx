@@ -103,7 +103,13 @@ export default function AuditableAreaConfig() {
     // if (true) {
     //   return toast.warning("This action currently is disabled");
     // }
-    deleteAuditableAreaMutation.mutate(areaId as any);
+    deleteAuditableAreaMutation.mutate({
+      id: areaId,
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setAreaId(null);
+      }
+    });
   };
 
   return (
@@ -399,7 +405,15 @@ export function CreateOrUpdateArea({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveAuditableAreaMutation.mutate(formData as any);
+    saveAuditableAreaMutation.mutate({
+      ...formData,
+      onSuccess: () => {
+        setOpenModal?.(false);
+      },
+      onError: (message: string) => {
+        setError({ status: true, message });
+      }
+    } as any);
   }
 
   const departmentOptions = useMemo(() => {
