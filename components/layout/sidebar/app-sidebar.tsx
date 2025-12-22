@@ -46,7 +46,6 @@ export function AppSidebar({
     setOpen(!isTablet);
   }, [isTablet]);
 
-  console.log({ user, session, isLoadingUser });
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
