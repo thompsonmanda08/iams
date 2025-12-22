@@ -96,11 +96,11 @@ export const useSystemSetup = (enabled: boolean = false) =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.SYS_SETUP, enabled], // Add enabled to key to prevent cache collision
     queryFn: initializeSystemSetup,
-    retry: 0, // ✅ No retries - fail fast
+    retry: 2, // ✅ No retries - fail fast
     refetchInterval: false, // ✅ DISABLED: Prevents automatic refetch every 5 minutes
     refetchOnMount: false, // ✅ Don't refetch when component mounts
     refetchOnWindowFocus: false, // ✅ Don't refetch when window gains focus
-    refetchOnReconnect: false, // ✅ Don't refetch when network reconnects
+    refetchOnReconnect: true, // ✅ Refetch when network reconnects
     staleTime: Infinity, // ✅ Never go stale
     enabled // ✅ Disabled by default
   });

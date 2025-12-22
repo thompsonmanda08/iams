@@ -32,7 +32,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [payload, setPayload] = useState<CreateFindingActionEvidenceInput>({
     finding_action_id: actionId,
-    title: "",
+    title: "Evidence Title",
     evidence_summary: "",
     evidence_file_url: ""
   });
@@ -161,7 +161,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
 
         <div className="space-y-4">
           {/* Title */}
-          <Input
+          {/* <Input
             id="evidence_title"
             type="text"
             label="Title"
@@ -174,7 +174,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
             }`}
             isInvalid={!!errors.title}
             errorText={errors.title}
-          />
+          /> */}
 
           {/* Description */}
           <Textarea

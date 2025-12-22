@@ -524,10 +524,10 @@ export function FindingActionDetailsDialog({
                                   </div>
                                   <div className="flex flex-col items-end justify-end space-y-2">
                                     {item.status && (
-                                      <Badge
-                                        className={cn("text-xs", STATUS_COLORS[item.status].badge)}>
-                                        {STATUS_COLORS[item.status].text}
-                                      </Badge>
+                                      <StatusBadge
+                                        status={STATUS_COLORS[item.status].text.toUpperCase()}
+                                        // className={cn("text-xs", STATUS_COLORS[item.status].badge)}
+                                      />
                                     )}
 
                                     {item.evidence_file_url && (
@@ -610,22 +610,7 @@ export function FindingActionDetailsDialog({
                                   </div>
                                   {review.approval_status &&
                                     STATUS_COLORS[review.approval_status] && (
-                                      <Badge
-                                        variant={
-                                          String(review?.approval_status)?.toUpperCase() ==
-                                          "APPROVED"
-                                            ? "success"
-                                            : String(review?.approval_status)?.toUpperCase() ==
-                                                "REJECTED"
-                                              ? "destructive"
-                                              : "outline"
-                                        }
-                                        className={cn(
-                                          "text-xs",
-                                          STATUS_COLORS[review.approval_status]
-                                        )}>
-                                        {review.approval_status || "N/A"}
-                                      </Badge>
+                                      <StatusBadge status={review?.approval_status.toUpperCase()} />
                                     )}
                                 </div>
                                 {review.reviewer_comments && (

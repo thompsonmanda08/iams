@@ -23,7 +23,7 @@ import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function NavUser({ user }: { user: User }) {
+export function NavUser({ user, isLoadingUser }: { user: User; isLoadingUser: boolean }) {
   const { isMobile } = useSidebar();
 
   const fullName = `${user?.first_name} ${user?.last_name}`;
@@ -41,7 +41,7 @@ export function NavUser({ user }: { user: User }) {
   };
 
   // LOADING STATE
-  return !user?.email ? (
+  return isLoadingUser ? (
     <>
       <Skeleton className="h-10 w-full rounded-lg" />
     </>

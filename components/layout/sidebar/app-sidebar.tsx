@@ -2,33 +2,20 @@
 
 import * as React from "react";
 import { useEffect } from "react";
-import { ChevronsUpDown, HistoryIcon, ShoppingBagIcon, UserCircle2Icon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useIsTablet } from "@/hooks/use-mobile";
-import Link from "next/link";
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
 import { NavMain } from "@/components/layout/sidebar/nav-main";
 import { NavUser } from "@/components/layout/sidebar/nav-user";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Logo from "@/components/layout/logo";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 
 export function AppSidebar({
@@ -40,16 +27,16 @@ export function AppSidebar({
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
 
-  const isLoadingUser = !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
-
-  const { data: session } = useSystemSetup(isLoadingUser);
+  const { data: sessionResponse, isLoading } = useSystemSetup(isAuthenticated);
+  const session = sessionResponse?.data;
+  const isLoadingUser = isLoading || !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
 
   const user = React.useMemo(() => {
     return {
       ...userData,
-      ...session?.data?.user
+      ...session?.user
     };
-  }, [session?.data, userData, isLoadingUser]);
+  }, [session?.user, userData, isLoadingUser]);
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);
@@ -59,10 +46,11 @@ export function AppSidebar({
     setOpen(!isTablet);
   }, [isTablet]);
 
+  console.log({ user, session, isLoadingUser });
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <Logo />
+        <Logo src={session?.logo_url} />
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full">
@@ -71,7 +59,7 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         {/* NAV USER */}
-        <NavUser user={user} />
+        <NavUser user={user} isLoadingUser={isLoadingUser || Boolean(!userData.email)} />
       </SidebarFooter>
     </Sidebar>
   );
