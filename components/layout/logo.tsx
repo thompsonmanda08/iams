@@ -4,9 +4,9 @@ export default function Logo({ src = "/images/infratel-logo.png" }: { src?: stri
   return (
     <Image
       src={src}
-      width={100}
-      height={48}
-      className="me-1 w-24 rounded-[5px] transition-all"
+      width={180}
+      height={60}
+      className="w-full max-w-32 rounded-[5px] transition-all xl:max-w-48 xl:min-w-32"
       alt="infratel logo"
       unoptimized
     />
