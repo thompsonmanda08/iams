@@ -1041,10 +1041,20 @@ export async function deleteRiskCategory(id: string): Promise<APIResponse> {
 }
 
 // Risk Matrices
-export async function getRiskMatrices(): Promise<APIResponse> {
+export async function getRiskMatrices(params?:{
+   page?: number;
+   page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-configs/matrix-configs",
+      url: `/api/v1/risk-configs/matrix-configs${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       method: "GET"
     });
 
@@ -1119,10 +1129,18 @@ export async function deleteRiskMatrix(id: string): Promise<APIResponse> {
 }
 
 // Risk Responses
-export async function getRiskResponses(): Promise<APIResponse> {
+export async function getRiskResponses(params?:{
+   page?: number;
+   page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-responses",
+      url: `/api/v1/risk-responses${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       method: "GET"
     });
     return successResponse(response.data?.data);
@@ -1344,10 +1362,19 @@ export async function deleteRating(id: string): Promise<APIResponse> {
 }
 
 // Business Process Actions
-export async function getBusinessProcesses(): Promise<APIResponse> {
+export async function getBusinessProcesses(params?:{
+   page?: number;
+   page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
     const response = await authenticatedApiClient({
-      url: "/api/v1/business-processes",
+      url: `/api/v1/business-processes${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       method: "GET"
     });
     return successResponse(response.data.data);
@@ -1421,10 +1448,19 @@ export async function deleteBusinessProcess(id: string): Promise<APIResponse> {
 }
 
 // Risk Causes Actions
-export async function getRiskCauses(): Promise<APIResponse> {
+export async function getRiskCauses(params?:{
+   page?: number;
+   page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-causes",
+      url: `/api/v1/risk-causes${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       method: "GET"
     });
     return successResponse(response.data.data);
@@ -1500,10 +1536,19 @@ export async function deleteRiskCause(id: string): Promise<APIResponse> {
 }
 
 // Risk Appetite Status Actions
-export async function getRiskAppetiteStatuses(): Promise<APIResponse> {
+export async function getRiskAppetiteStatuses(params?:{
+   page?: number;
+   page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-configs/risk-appetite-statuses",
+      url: `/api/v1/risk-configs/risk-appetite-statuses${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       method: "GET"
     });
 
@@ -1588,10 +1633,19 @@ export async function deleteRiskAppetiteStatus(id: string): Promise<APIResponse>
 }
 
 // Control Effectiveness Levels Actions
-export async function getEffectivenessLevels(): Promise<APIResponse> {
+export async function getEffectivenessLevels(params?:{
+   page?: number;
+   page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-configs/effectiveness-levels",
+      url: `/api/v1/risk-configs/effectiveness-levels${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       method: "GET"
     });
 
@@ -1674,10 +1728,19 @@ export async function deleteEffectivenessLevel(id: string): Promise<APIResponse>
 }
 
 // Residual Risk Ratings Actions
-export async function getResidualRiskRatings(): Promise<APIResponse> {
+export async function getResidualRiskRatings(params?:{
+   page?: number;
+   page_size?: number;
+}): Promise<APIResponse> {
   try {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-configs/residual-risk-ratings",
+      url: `/api/v1/risk-configs/residual-risk-ratings${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       method: "GET"
     });
 

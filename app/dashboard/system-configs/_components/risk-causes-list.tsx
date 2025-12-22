@@ -27,6 +27,15 @@ type RiskCause = {
   updated_at: string;
 };
 
+type PaginationState = {
+  page: number;
+  page_size: number;
+  total_pages: number;
+  total: number;
+  has_prev: boolean;
+  has_next: boolean;
+};
+
 export function RiskCausesList() {
   const [causes, setCauses] = useState<RiskCause[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,11 +50,13 @@ export function RiskCausesList() {
   }>({ open: false, causeId: null, causeName: null });
 
   // Pagination state
-  const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     page_size: 10,
-    totalCount: 0,
-    total_pages: 0
+    total_pages: 0,
+    total: 0,
+    has_prev: false,
+    has_next: false
   });
 
   useEffect(() => {
@@ -55,14 +66,24 @@ export function RiskCausesList() {
   const fetchCauses = async () => {
     setIsLoading(true);
     try {
-      const response = await getRiskCauses();
+      const response = await getRiskCauses({
+        page: pagination.page,
+        page_size: pagination.page_size
+      });
       if (response.success && response.data?.data) {
         setCauses(response.data.data);
-        setPagination((prev) => ({
-          ...prev,
-          totalCount: response.data.data.length,
-          total_pages: Math.ceil(response.data.data.length / prev.page_size)
-        }));
+        // Update pagination from API response
+        if (response.data.pagination) {
+          setPagination((prev) => ({
+            ...prev,
+            page: response.data.pagination.page || prev.page,
+            page_size: response.data.pagination.page_size || prev.page_size,
+            total: response.data.pagination.total || 0,
+            total_pages: response.data.pagination.total_pages || 0,
+            has_prev: response.data.pagination.has_prev || false,
+            has_next: response.data.pagination.has_next || false
+          }));
+        }
       } else {
         setCauses([]);
       }
@@ -75,14 +96,12 @@ export function RiskCausesList() {
     }
   };
 
-  const updatePagination = (updates: Partial<typeof pagination>) => {
-    setPagination((prev) => ({ ...prev, ...updates }));
-  };
-
-  const getPaginatedData = () => {
-    const startIndex = (pagination.page - 1) * pagination.page_size;
-    const endIndex = startIndex + pagination.page_size;
-    return causes.slice(startIndex, endIndex);
+  const updatePagination = (updates: { page?: number; page_size?: number }) => {
+    setPagination((prev) => ({
+      ...prev,
+      page: updates.page || prev.page,
+      page_size: updates.page_size || prev.page_size
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -192,7 +211,7 @@ export function RiskCausesList() {
                 </TableCell>
               </TableRow>
             ) : (
-              getPaginatedData().map((cause) => {
+              causes.map((cause) => {
                 const parentName = getParentCauseName(cause.parent_id);
 
                 return (

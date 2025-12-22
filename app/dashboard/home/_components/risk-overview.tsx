@@ -16,7 +16,7 @@ interface RiskSummary {
   risks_by_rating: {
     High: number;
     Low: number;
-    Normal: number;
+    Medium: number;
   };
   risks_by_status: {
     DRAFT: number;
@@ -61,7 +61,7 @@ export default function RiskOverview({ riskSummary }: RiskOverviewProps) {
     },
     {
       name: "Medium",
-      value: riskSummary.risks_by_rating.Normal || 0,
+      value: riskSummary.risks_by_rating.Medium || 0,
       fill: "var(--amber-active)"
     },
     {

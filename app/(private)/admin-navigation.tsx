@@ -53,7 +53,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 import Logo from "@/components/layout/logo";
-import Notifications from "@/components/layout/header/notifications";
+// import Notifications from "@/components/layout/header/notifications";
 import Search from "@/components/layout/header/search";
 import ThemeSwitch from "@/components/layout/header/theme-switch";
 import UserMenu from "@/components/layout/header/user-menu";
@@ -257,7 +257,7 @@ export function SiteHeader({ user }: { user: User }) {
         <Search />
 
         <div className="ml-auto flex items-center gap-2">
-          <Notifications />
+          {/* <Notifications /> */}
           <ThemeSwitch />
           {/* <ThemeCustomizerPanel /> */}
           <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />

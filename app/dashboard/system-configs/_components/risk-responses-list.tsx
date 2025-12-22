@@ -27,6 +27,15 @@ type RiskResponse = {
   updated_at: string;
 };
 
+type PaginationState = {
+  page: number;
+  page_size: number;
+  total_pages: number;
+  total: number;
+  has_prev: boolean;
+  has_next: boolean;
+};
+
 export function RiskResponsesList() {
   const [responses, setResponses] = useState<RiskResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,11 +51,13 @@ export function RiskResponsesList() {
   }>({ open: false, responseId: null, responseName: null });
 
   // Pagination state
-  const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     page_size: 10,
-    totalCount: 0,
-    total_pages: 0
+    total_pages: 0,
+    total: 0,
+    has_prev: false,
+    has_next: false
   });
 
   useEffect(() => {
@@ -56,14 +67,25 @@ export function RiskResponsesList() {
   const fetchResponses = async () => {
     setIsLoading(true);
     try {
-      const response = await getRiskResponses();
+      const response = await getRiskResponses({
+        page: pagination.page,
+        page_size: pagination.page_size
+      });
       if (response.success && response.data?.data) {
         setResponses(response.data?.data);
-        setPagination((prev) => ({
-          ...prev,
-          totalCount: response.data?.data.length,
-          total_pages: Math.ceil(response.data?.data.length / prev.page_size)
-        }));
+
+        // Update pagination from API response
+        if (response.data.pagination) {
+          setPagination((prev) => ({
+            ...prev,
+            page: response.data.pagination.page || prev.page,
+            page_size: response.data.pagination.page_size || prev.page_size,
+            total: response.data.pagination.total || 0,
+            total_pages: response.data.pagination.total_pages || 0,
+            has_prev: response.data.pagination.has_prev || false,
+            has_next: response.data.pagination.has_next || false
+          }));
+        }
       }
     } catch (error) {
       toast.error("Failed to load risk responses");
@@ -72,14 +94,12 @@ export function RiskResponsesList() {
     }
   };
 
-  const updatePagination = (updates: Partial<typeof pagination>) => {
-    setPagination((prev) => ({ ...prev, ...updates }));
-  };
-
-  const getPaginatedData = () => {
-    const startIndex = (pagination.page - 1) * pagination.page_size;
-    const endIndex = startIndex + pagination.page_size;
-    return responses.slice(startIndex, endIndex);
+  const updatePagination = (updates: { page?: number; page_size?: number }) => {
+    setPagination((prev) => ({
+      ...prev,
+      page: updates.page || prev.page,
+      page_size: updates.page_size || prev.page_size
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -176,7 +196,7 @@ export function RiskResponsesList() {
                 </TableCell>
               </TableRow>
             ) : (
-              getPaginatedData().map((response) => (
+              responses?.map((response) => (
                 <TableRow key={response.id}>
                   <TableCell>
                     <p className="text-foreground font-medium">{response.name}</p>

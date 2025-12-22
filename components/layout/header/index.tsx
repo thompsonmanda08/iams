@@ -3,7 +3,7 @@
 import { PanelLeftIcon } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
-import Notifications from "@/components/layout/header/notifications";
+// import Notifications from "@/components/layout/header/notifications";
 import Search from "@/components/layout/header/search";
 import ThemeSwitch from "@/components/layout/header/theme-switch";
 import UserMenu from "@/components/layout/header/user-menu";
@@ -12,7 +12,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { User } from "@/lib/types/account";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 import { useMemo } from "react";
-import { ThemeCustomizerPanel } from "@/components/theme-customizer";
+// import { ThemeCustomizerPanel } from "@/components/theme-customizer";
 
 export function SiteHeader({ user: userData }: { user: User }) {
   const { toggleSidebar } = useSidebar();
@@ -38,9 +38,9 @@ export function SiteHeader({ user: userData }: { user: User }) {
         <Search />
 
         <div className="ml-auto flex items-center gap-2">
-          <Notifications />
+          {/* <Notifications /> */}
           <ThemeSwitch />
-          <ThemeCustomizerPanel />
+          {/* <ThemeCustomizerPanel /> */}
           <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
           <UserMenu user={user} />
         </div>
