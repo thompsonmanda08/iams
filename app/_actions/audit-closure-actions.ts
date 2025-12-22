@@ -75,10 +75,20 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
       }).catch(() => ({ data: [] }))
     ]);
 
-    // Extract data from responses
+    // Extract workpaper data
     const workpaper = workpaperRes?.data?.data || workpaperRes?.data;
     const workpapers = workpaper ? [workpaper] : [];
-    const findings = Array.isArray(workpaper?.findings) ? workpaper.findings : [];
+
+    // Extract findings - check both nested format and direct array format
+    let findings: any[] = [];
+    if (Array.isArray(workpaper?.findings)) {
+      findings = workpaper.findings;
+    } else if (Array.isArray(workpaper?.categories)) {
+      // If findings are nested in categories, flatten them
+      findings = workpaper.categories.flatMap((cat: any) =>
+        Array.isArray(cat.findings) ? cat.findings : []
+      );
+    }
 
     // Fetch actions for all findings in parallel
     const actionRequests = findings.map((finding: any) =>
@@ -107,12 +117,38 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
     }
 
     // Calculate closure statistics
-    const completedWorkpapers = workpapers.filter(
-      (wp: any) => wp.status === "COMPLETED" || wp.status === "CLOSED"
-    ).length;
+    // A workpaper is considered completed if all its related findings are completed
+    const completedWorkpapers = workpapers.filter((wp: any) => {
+      // Check if workpaper has explicit status
+      if (wp.status === "COMPLETED" || wp.status === "CLOSED") {
+        return true;
+      }
+
+      // Get all findings for this workpaper (from either direct array or categories)
+      let wpFindings: any[] = [];
+      if (Array.isArray(wp.findings)) {
+        wpFindings = wp.findings;
+      } else if (Array.isArray(wp.categories)) {
+        // Flatten findings from categories
+        wpFindings = wp.categories.flatMap((cat: any) =>
+          Array.isArray(cat.findings) ? cat.findings : []
+        );
+      }
+
+      // Workpaper is completed if it has findings AND all findings are completed (not OPEN)
+      return (
+        wpFindings.length > 0 &&
+        wpFindings.every((finding: any) =>
+          finding.status !== "OPEN" &&
+          finding.status !== "" &&
+          finding.status !== null &&
+          finding.status !== undefined
+        )
+      );
+    }).length;
 
     const resolvedFindings = findings.filter(
-      (f: any) => f.status === "COMPLETED" || f.status === "CLOSED"
+      (f: any) => f.status === "APPROVED" || f.status === "COMPLETED" || f.status === "RESOLVED" || f.status === "CLOSED"
     ).length;
 
     const approvedActions = actions.filter(
@@ -147,7 +183,9 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
         description: "All critical findings must be resolved before closure",
         completed: !findings.some(
           (f: any) =>
-            (f.severity?.toUpperCase() === "CRITICAL" || f.status?.toUpperCase() === "HIGH") &&
+            (f.severity?.toUpperCase() === "CRITICAL" || f.severity?.toUpperCase() === "HIGH") &&
+            f.status !== "APPROVED" &&
+            f.status !== "RESOLVED" &&
             f.status !== "COMPLETED" &&
             f.status !== "CLOSED"
         ),
@@ -174,16 +212,16 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
         id: "team-sign-off",
         name: "Team Lead Sign-Off",
         description: "Audit team lead has reviewed and approved closure",
-        completed: false, // This will be set when user explicitly signs off
-        required: true,
+        completed: auditPlan.status === "COMPLETED" || auditPlan.status === "CLOSED", // Only complete after closure request is approved
+        required: false, // Not a blocker - will be completed after request submission
         category: "approvals"
       },
       {
         id: "closure-documentation",
         name: "Closure Documentation",
         description: "Audit closure report and summary prepared",
-        completed: false, // This will be checked before submission
-        required: true,
+        completed: auditPlan.status === "CLOSED" || auditPlan.status === "COMPLETED", // Only complete when audit is closed
+        required: false, // Can be prepared after closure request
         category: "documentation"
       }
     ];
