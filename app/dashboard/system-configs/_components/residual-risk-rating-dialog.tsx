@@ -133,10 +133,6 @@ export function ResidualRiskRatingDialog({
     {
       name: "High",
       value: "High"
-    },
-    {
-      name: "Critical",
-      value: "Critical"
     }
   ];
 
