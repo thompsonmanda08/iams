@@ -337,6 +337,7 @@ export function useDeleteAuditPlanMutation(options?: {
 
 /**
  * Hook to create or update an audit memo
+ * Implements POST for create (new memo) and PUT for update (existing memo)
  * Used in: create-a-memo.tsx
  *
  * Usage:
@@ -344,19 +345,23 @@ export function useDeleteAuditPlanMutation(options?: {
  *   auditPlanId: "plan-123",
  *   onSuccess: () => {
  *     // Handle success
+ *   },
+ *   onError: (message) => {
+ *     // Handle error - show in modal alert
  *   }
  * });
  *
  * saveMemo({
  *   subject: "Audit Memo",
  *   content: "<html>...</html>",
- *   status: "DRAFT"
+ *   status: "DRAFT",
+ *   memoExists: false  // Pass false for POST (create), true for PUT (update)
  * });
  */
 export function useMemoCreateOrUpdateMutation(options: {
   auditPlanId: string;
   onSuccess?: () => void;
-  onError?: (error: Error) => void;
+  onError?: (errorMessage: string) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -370,6 +375,7 @@ export function useMemoCreateOrUpdateMutation(options: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId, "history"] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
       notify({
         title: "Success",
@@ -379,12 +385,16 @@ export function useMemoCreateOrUpdateMutation(options: {
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to save memo",
-        type: "error"
-      });
-      options?.onError?.(error);
+      // Extract user-friendly error messages for common scenarios
+      let errorMessage = error.message || "Failed to save memo";
+
+      // Handle status conflict errors
+      if (errorMessage.includes("not in DRAFT status")) {
+        errorMessage = "Cannot edit memo - only memos in DRAFT status can be edited";
+      }
+
+      // Pass error to component for modal display
+      options?.onError?.(errorMessage);
     }
   });
 }
@@ -398,6 +408,9 @@ export function useMemoCreateOrUpdateMutation(options: {
  *   auditPlanId: "plan-123",
  *   onSuccess: () => {
  *     // Handle success
+ *   },
+ *   onError: (message) => {
+ *     // Handle error - show in modal alert
  *   }
  * });
  *
@@ -409,7 +422,7 @@ export function useMemoCreateOrUpdateMutation(options: {
 export function useSendMemoMutation(options: {
   auditPlanId: string;
   onSuccess?: () => void;
-  onError?: (error: Error) => void;
+  onError?: (errorMessage: string) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -432,12 +445,9 @@ export function useSendMemoMutation(options: {
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to send memo",
-        type: "error"
-      });
-      options?.onError?.(error);
+      const errorMessage = error.message || "Failed to send memo";
+      // Pass error to component for modal display
+      options?.onError?.(errorMessage);
     }
   });
 }
@@ -451,6 +461,9 @@ export function useSendMemoMutation(options: {
  *   auditPlanId: "plan-123",
  *   onSuccess: () => {
  *     // Handle success
+ *   },
+ *   onError: (message) => {
+ *     // Handle error - show in modal alert
  *   }
  * });
  *
@@ -459,7 +472,7 @@ export function useSendMemoMutation(options: {
 export function useDeleteMemoMutation(options: {
   auditPlanId: string;
   onSuccess?: () => void;
-  onError?: (error: Error) => void;
+  onError?: (errorMessage: string) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -473,6 +486,7 @@ export function useDeleteMemoMutation(options: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId, "history"] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
       notify({
         title: "Success",
@@ -482,12 +496,9 @@ export function useDeleteMemoMutation(options: {
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
-      notify({
-        title: "Error",
-        description: error.message || "Failed to delete memo",
-        type: "error"
-      });
-      options?.onError?.(error);
+      const errorMessage = error.message || "Failed to delete memo";
+      // Pass error to component for modal display
+      options?.onError?.(errorMessage);
     }
   });
 }

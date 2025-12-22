@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,13 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import {
   Calendar,
@@ -29,7 +37,15 @@ import {
   Trash2,
   ClipboardXIcon,
   Plus,
-  PencilLineIcon
+  PencilLineIcon,
+  Target,
+  Grid3X3,
+  Briefcase,
+  Wallet,
+  Copy,
+  ChevronDown,
+  FileEditIcon,
+  FileCode
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import type { Task } from "@/lib/types/task";
@@ -42,11 +58,15 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { StatusBadge } from "@/components/status-badge";
 import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 import Link from "next/link";
-import { useSubmitAuditPlanMutation, useDeleteAuditPlanMutation } from "@/hooks/use-audit-mutations";
+import {
+  useSubmitAuditPlanMutation,
+  useDeleteAuditPlanMutation
+} from "@/hooks/use-audit-mutations";
 import { AuditClosureReview } from "./audit-closure-review";
 import { AuditPlanTasksPanel } from "./audit-plan-tasks-panel";
-import { CreateOrUpdateMemo } from "./create-a-memo";
+import { CreateOrUpdateMemo, type CreateOrUpdateMemoRef } from "./create-a-memo";
 import { useAuditMemo } from "@/hooks/use-audit-queries";
+import Loader from "@/components/ui/loader";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -65,6 +85,104 @@ const isCompletedFinding = (finding: any): boolean => {
   return finding.status !== "OPEN";
 };
 
+// KRI Color Badge Component
+const KRIColorBadge = ({ color }: { color: "Red" | "Amber" | "Green" | string }) => {
+  const colorClasses: Record<string, string> = {
+    Red: "bg-red-500",
+    Amber: "bg-amber-500",
+    Green: "bg-green-500"
+  };
+
+  return (
+    <span
+      className={`rounded px-2 py-0.5 text-xs font-medium text-white ${colorClasses[color] || "bg-gray-500"}`}>
+      {color}
+    </span>
+  );
+};
+
+// Universe Item Tooltip Component
+const UniverseItemTooltip = ({ item }: { item: any }) => {
+  return (
+    <div className="max-w-xs space-y-2 text-xs">
+      <div>
+        <p className="text-foreground text-sm font-semibold">{item.kri_name || item.name}</p>
+      </div>
+
+      {item.kri_color && (
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">Status:</span>
+          <KRIColorBadge color={item.kri_color} />
+        </div>
+      )}
+
+      {item.kri_average_score && (
+        <div>
+          <p className="text-muted-foreground">
+            Score: <span className="font-semibold">{item.kri_average_score}</span>
+          </p>
+        </div>
+      )}
+
+      {item.kri_measurement_type && (
+        <div>
+          <p className="text-muted-foreground">
+            Type: <span className="font-semibold">{item.kri_measurement_type}</span>
+          </p>
+        </div>
+      )}
+
+      {item.department_name && (
+        <div>
+          <p className="text-muted-foreground">
+            Department: <span className="font-semibold">{item.department_name}</span>
+          </p>
+        </div>
+      )}
+
+      {item.auditable_area_name && (
+        <div>
+          <p className="text-muted-foreground">
+            Area: <span className="font-semibold">{item.auditable_area_name}</span>
+          </p>
+        </div>
+      )}
+
+      {item.process_activity_name && (
+        <div>
+          <p className="text-muted-foreground">
+            Activity: <span className="font-semibold">{item.process_activity_name}</span>
+          </p>
+        </div>
+      )}
+
+      {item.strategic_pillar_name && (
+        <div>
+          <p className="text-muted-foreground">
+            Pillar: <span className="font-semibold">{item.strategic_pillar_name}</span>
+          </p>
+        </div>
+      )}
+
+      {item.indicative_target_name && (
+        <div>
+          <p className="text-muted-foreground">
+            Target: <span className="font-semibold">{item.indicative_target_name}</span>
+          </p>
+        </div>
+      )}
+
+      {item.audit_frequency && (
+        <div>
+          <p className="text-muted-foreground">
+            Frequency: <span className="font-semibold">{item.audit_frequency}</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export function AuditPlanWorkpaperView({
   auditPlan,
   workpaperCategories,
@@ -73,6 +191,7 @@ export function AuditPlanWorkpaperView({
   auditPlanStatus
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
+  const memoRef = useRef<CreateOrUpdateMemoRef>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("plan-details");
   const [findingsRefreshKey, setFindingsRefreshKey] = useState(0);
@@ -94,7 +213,8 @@ export function AuditPlanWorkpaperView({
   });
 
   // Fetch memo data
-  const { data: memo } = useAuditMemo(auditPlan.id);
+  const { data: memo, isLoading, isFetching, isRefetching } = useAuditMemo(auditPlan.id);
+  const isLoadingMemo = isLoading || isFetching || isRefetching;
 
   const handleEditFinding = (finding: any) => {
     // Use the category object from the finding if available, otherwise find matching category
@@ -215,8 +335,6 @@ export function AuditPlanWorkpaperView({
   const auditTeamLeaderId = auditPlan?.audit_team_leader;
   const teamMembersCount = auditPlan?.audit_team_members?.length || 0;
 
-  // console.log("CATEGORY FINDINGS", { categoryFindings });
-
   return (
     <div className="space-y-6">
       {/* Audit Plan Header */}
@@ -237,7 +355,7 @@ export function AuditPlanWorkpaperView({
               <div className="flex gap-2">
                 {auditPlanData.status.toUpperCase() === "COMPLETED" && (
                   <Button variant="outline" size="sm" className="gap-2">
-                    <Download className="h-4 w-4" />
+                    <Download className="h-6 w-6" />
                     Export
                   </Button>
                 )}
@@ -250,12 +368,12 @@ export function AuditPlanWorkpaperView({
                       disabled={isSubmitting}
                       isLoading={isSubmitting}
                       loadingText="Submitting...">
-                      <Send className="h-4 w-4" />
+                      <Send className="h-6 w-6" />
                       Submit for Approval
                     </Button>
                     <Button asChild variant="secondary" size="sm" className="gap-2">
                       <Link href={`/dashboard/audit/plans/engagement/${auditPlan.id}/edit`}>
-                        <PencilLineIcon className="h-4 w-4" />
+                        <PencilLineIcon className="h-6 w-6" />
                         Edit Plan
                       </Link>
                     </Button>
@@ -265,7 +383,7 @@ export function AuditPlanWorkpaperView({
                       className="gap-2"
                       onClick={() => setDeleteDialogOpen(true)}
                       disabled={isDeleting}>
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-6 w-6" />
                       Delete Plan
                     </Button>
                   </>
@@ -361,13 +479,13 @@ export function AuditPlanWorkpaperView({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid h-12 w-full grid-cols-5">
+        <TabsList className="grid h-14 w-full grid-cols-5">
           <TabsTrigger value="plan-details">
-            <FileText className="mr-2 h-5 w-5" />
+            <FileText className="h-6 w-6 text-slate-700 dark:text-slate-300" />
             Plan Details
           </TabsTrigger>
           <TabsTrigger value="workpaper">
-            <FileArchive className="mr-2 h-5 w-5" />
+            <FileArchive className="h-6 w-6 text-slate-700 dark:text-slate-300" />
             Workpaper
             <Badge
               variant={activeTab === "workpaper" ? "default" : "info"}
@@ -378,71 +496,346 @@ export function AuditPlanWorkpaperView({
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="findings">
-            <CircleAlertIcon className="mr-2 h-5 w-5 text-orange-400" />
+            <CircleAlertIcon className="h-6 w-6 text-orange-500" />
             Audit Execution
           </TabsTrigger>
           <TabsTrigger value="approvals">
-            <CircleCheckBig className="mr-2 h-5 w-5 text-green-500" />
+            <CircleCheckBig className="h-6 w-6 text-green-600" />
             Audit Approvals
           </TabsTrigger>
           <TabsTrigger value="closure">
-            <CheckCircle2 className="mr-2 h-5 w-5 text-blue-500" />
+            <CheckCircle2 className="h-6 w-6 text-blue-600" />
             Closure
           </TabsTrigger>
         </TabsList>
 
         {/* Plan Details Tab */}
         <TabsContent value="plan-details" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Audit Scope</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {auditPlan.audit_scope || "No scope defined"}
-                </p>
-              </CardContent>
-            </Card>
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Column 1: Audit Details Cards */}
+            <div className="grid grid-cols-1 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    Audit Scope
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {auditPlan.audit_scope || "No scope defined"}
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Audit Objective</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {auditPlan.audit_objective || "No objective defined"}
-                </p>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    Audit Objective
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {auditPlan.audit_objective || "No objective defined"}
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Audit Criteria</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {auditPlan.audit_criteria || "No criteria defined"}
-                </p>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Grid3X3 className="h-5 w-5 text-purple-600" />
+                    Audit Criteria
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {auditPlan.audit_criteria || "No criteria defined"}
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Audit Area</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {auditPlan.audit_area || "No area defined"}
-                </p>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Briefcase className="h-5 w-5 text-amber-600" />
+                    Audit Area
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {auditPlan.audit_area || "No area defined"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Column 2: Memo, Team, Universe Items */}
+            <div className="grid grid-cols-1 gap-4">
+              {/* Audit Notification Memo */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-cyan-600" />
+                        Audit Notification Memo
+                      </CardTitle>
+                      <CardDescription>
+                        Create and send a memo to notify the client about this audit
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {memo ? (
+                    <div className="border-border/50 hover:bg-primary/5 space-y-3 rounded-lg border p-4">
+                      <div
+                        className="-m-2 cursor-pointer rounded p-2 transition-colors"
+                        onClick={() => memoRef.current?.openView()}>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{memo.subject || "Untitled Memo"}</p>
+                            <p className="text-muted-foreground text-xs">
+                              {memo.status === "SENT"
+                                ? `Sent on ${memo.sent_at ? format(new Date(memo.sent_at), "MMM d, yyyy") : "Unknown"}`
+                                : "Draft - Not sent yet"}
+                            </p>
+                          </div>
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2">
+                            {memo.status === "DRAFT" && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        memoRef.current?.openEdit();
+                                      }}
+                                      className="gap-2">
+                                      <PencilLineIcon className="h-6 w-6" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit Memo</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+
+                            {memo.status === "DRAFT" && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="destructive"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        memoRef.current?.openDelete();
+                                      }}
+                                      className="gap-2">
+                                      <Trash2 className="h-6 w-6" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete Memo</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                {/* <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild> */}
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="gap-2"
+                                  onClick={(e) => e.stopPropagation()}>
+                                  <Download className="h-6 w-6" />
+                                </Button>
+                                {/* </TooltipTrigger>
+                                    <TooltipContent>Export Memo</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider> */}
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => memoRef.current?.handleCopyHtml()}>
+                                  <Copy className="h-6 w-6" />
+                                  Copy HTML
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => memoRef.current?.handleDownloadHtml()}>
+                                  <FileCode className="h-6 w-6" />
+                                  Download HTML
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => memoRef.current?.handleDownloadPdf()}>
+                                  <FileText className="h-6 w-6" />
+                                  Download PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => memoRef.current?.handleDownloadDocx()}>
+                                  <FileEditIcon className="h-6 w-6" />
+                                  Download Word
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <StatusBadge size="md" status={memo.status} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : isLoadingMemo ? (
+                    <Loader
+                      classNames={{
+                        spinner: "size-8",
+                        wrapper: " min-h-full"
+                      }}
+                    />
+                  ) : (
+                    <div className="space-y-3 p-4">
+                      <p className="text-muted-foreground bg-muted/50 border-border/50 rounded-lg border p-4 text-sm">
+                        No memo created yet. Create a new memo to get started.
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => memoRef.current?.setOpenModal(true)}
+                        className="w-full gap-2">
+                        <Plus className="h-6 w-6" />
+                        Create Memo
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Hidden CreateOrUpdateMemo component - accessed via ref */}
+              <CreateOrUpdateMemo ref={memoRef} auditPlanId={auditPlan.id} directEdit={true} />
+
+              {/* Audit Team */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-indigo-600" />
+                    Audit Team
+                  </CardTitle>
+                  <CardDescription>Team leader and involved members</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Team Leader */}
+                  {auditPlan?.team_leader && (
+                    <div className="mb-4 rounded-lg border p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">Team Leader</p>
+                          <p className="text-foreground font-medium">
+                            {auditPlan.team_leader.name}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {auditPlan.team_leader.email}
+                          </p>
+                        </div>
+                        <Badge variant="info" className="w-fit text-xs">
+                          {auditPlan.team_leader.role}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Team Members */}
+                  {auditPlan?.team_members && auditPlan.team_members.length > 0 ? (
+                    <div>
+                      <p className="mb-3 text-sm font-semibold">
+                        Team Members ({auditPlan.team_members.length})
+                      </p>
+                      <div
+                        className="grid gap-3"
+                        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+                        {auditPlan.team_members.map((member: any, index: number) => (
+                          <div key={index} className="rounded-lg border p-3">
+                            <div className="flex flex-col gap-2">
+                              <div className="min-w-0">
+                                <p className="text-foreground truncate font-medium">
+                                  {member.name}
+                                </p>
+                                <p className="text-muted-foreground truncate text-xs">
+                                  {member.email}
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="w-fit text-xs">
+                                {member.role}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No team members assigned</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Audit Universe Items */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Grid3X3 className="h-5 w-5 text-cyan-600" />
+                    Audit Universe Items
+                  </CardTitle>
+                  <CardDescription>
+                    {auditPlan?.audit_universe_items?.length || 0} item(s) selected
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {auditPlan?.audit_universe_items && auditPlan.audit_universe_items.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {auditPlan.audit_universe_items.map((item: any) => (
+                        <div key={item.id}>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="border-border bg-muted/50 flex cursor-help items-center gap-1 rounded border px-2 py-1">
+                                  {item.kri_color && <KRIColorBadge color={item.kri_color} />}
+                                  <span className="max-w-[280px] truncate text-xs font-medium">
+                                    {item.kri_name || item.name}
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="right"
+                                className="bg-card border-border max-w-sm border p-4 shadow">
+                                <UniverseItemTooltip item={item} />
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      No audit universe items selected
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          {/* Budget Items */}
+          {/* Budget Items - Full Width */}
           <Card>
             <CardHeader>
-              <CardTitle>Budget Items</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-emerald-600" />
+                Budget Items
+              </CardTitle>
               <CardDescription>
                 {auditPlan?.budget_items?.length || 0} budget line(s) allocated
               </CardDescription>
@@ -516,148 +909,10 @@ export function AuditPlanWorkpaperView({
               )}
             </CardContent>
           </Card>
-
-          {/* Audit Notification Memo */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Audit Notification Memo
-                  </CardTitle>
-                  <CardDescription>
-                    Create and send a memo to notify the client about this audit
-                  </CardDescription>
-                </div>
-                <CreateOrUpdateMemo
-                  auditPlanId={auditPlan.id}
-                  showTrigger={true}
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {memo ? (
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {memo.subject || "Untitled Memo"}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {memo.status === "SENT"
-                        ? `Sent on ${memo.sent_at ? format(new Date(memo.sent_at), "MMM d, yyyy") : "Unknown"}`
-                        : "Draft - Not sent yet"}
-                    </p>
-                  </div>
-                  <StatusBadge status={memo.status || "DRAFT"} />
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  No memo created yet. Click the button above to create one.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* Audit Team */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Audit Team</CardTitle>
-                <CardDescription>Team leader and involved members</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Team Leader */}
-                {auditPlan?.team_leader && (
-                  <div className="rounded-lg border p-4">
-                    <div className="mb-2 flex items-start justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">Team Leader</p>
-                        <p className="text-foreground font-medium">{auditPlan.team_leader.name}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {auditPlan.team_leader.email}
-                        </p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                        {auditPlan.team_leader.role}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                {/* Team Members */}
-                {auditPlan?.team_members && auditPlan.team_members.length > 0 ? (
-                  <div className="space-y-3">
-                    <p className="text-sm font-semibold">
-                      Team Members ({auditPlan.team_members.length})
-                    </p>
-                    {auditPlan.team_members.map((member: any, index: number) => (
-                      <div key={index} className="rounded-lg border p-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-foreground font-medium">{member.name}</p>
-                            <p className="text-muted-foreground text-xs">{member.email}</p>
-                          </div>
-                          <Badge variant="outline">{member.role}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No team members assigned</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Audit Universe Items */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Audit Universe Items</CardTitle>
-                <CardDescription>
-                  {auditPlan?.audit_universe_items?.length || 0} item(s) selected
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {auditPlan?.audit_universe_items && auditPlan.audit_universe_items.length > 0 ? (
-                  <div className="space-y-3">
-                    {auditPlan.audit_universe_items.map((item: any) => (
-                      <div key={item.id} className="rounded-lg border p-4">
-                        <div className="mb-2 flex items-start justify-between">
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-muted-foreground text-xs">ID: {item.id}</p>
-                          </div>
-                          <Badge variant={item.is_active ? "default" : "secondary"}>
-                            {item.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <p className="text-muted-foreground text-xs">Audit Frequency</p>
-                            <p className="font-medium">{item.audit_frequency}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground text-xs">Department</p>
-                            {item?.department_name ? (
-                              <p className="font-medium">{item.department_name}</p>
-                            ) : (
-                              <p className="font-medium">{item.department_id.slice(0, 8)}...</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No audit universe items selected</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
 
         {/* Workpaper Tab */}
-        <TabsContent value="workpaper" className="h-">
+        <TabsContent value="workpaper" className="space-y-4">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-6">
             {/* Left Sidebar - Categories */}
             <div className="flex h-full max-h-[calc(100vh-16rem)] flex-col lg:col-span-2">
@@ -711,13 +966,13 @@ export function AuditPlanWorkpaperView({
                             }`}>
                             <div className="flex items-start gap-2">
                               {isCompleted ? (
-                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                                <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-green-600" />
                               ) : catFindings.length > 0 ? (
                                 // Show partial completion if some findings are in progress
-                                <div className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-amber-600" />
+                                <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full border-2 border-amber-600" />
                               ) : (
                                 // Empty circle if no findings
-                                <div className="border-muted-foreground mt-0.5 h-4 w-4 shrink-0 rounded-full border" />
+                                <div className="border-muted-foreground mt-0.5 h-6 w-6 shrink-0 rounded-full border" />
                               )}
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-xs font-medium">
@@ -905,20 +1160,17 @@ export function AuditPlanWorkpaperView({
                                         </div>
 
                                         {/* Conformity Badge */}
-                                        {
-                                          <Badge
-                                            variant={
-                                              finding.compliance_status?.toLowerCase() ==
-                                              "compliant"
-                                                ? "success"
-                                                : "destructive"
-                                            }
-                                            className="ml-auto shrink-0 text-xs">
-                                            {finding.compliance_status?.toLowerCase() == "compliant"
-                                              ? "✓ Conformity"
-                                              : "✗ Non-Conformity"}
-                                          </Badge>
-                                        }
+                                        <Badge
+                                          variant={
+                                            finding.compliance_status?.toLowerCase() == "compliant"
+                                              ? "success"
+                                              : "destructive"
+                                          }
+                                          className="ml-auto shrink-0 text-xs">
+                                          {finding.compliance_status?.toLowerCase() == "compliant"
+                                            ? "✓ Conformity"
+                                            : "✗ Non-Conformity"}
+                                        </Badge>
                                       </div>
                                     </div>
 
@@ -935,7 +1187,7 @@ export function AuditPlanWorkpaperView({
                                         size="sm"
                                         onClick={() => setEditingFinding(finding)}
                                         className="shrink-0">
-                                        <PencilLineIcon className="h-4 w-4" />
+                                        <PencilLineIcon className="h-6 w-6" />
                                         Edit
                                       </Button>
                                     )}
@@ -989,7 +1241,7 @@ export function AuditPlanWorkpaperView({
 
                             <Button size="lg" className="gap-2" asChild>
                               <Link href="/dashboard/audit/plans/engagement/new">
-                                <Plus className="h-4 w-4" />
+                                <Plus className="h-6 w-6" />
                                 Create Audit Plan
                               </Link>
                             </Button>
@@ -1051,7 +1303,7 @@ export function AuditPlanWorkpaperView({
 
                     {/* <Button onClick={handleCategoryClick}  size="lg" className="gap-2" asChild>
                       <Link href="/dashboard/audit/plans/engagement/new">
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-6 w-6" />
                         Create Audit Plan
                       </Link>
                     </Button> */}
@@ -1133,7 +1385,7 @@ export function AuditPlanWorkpaperView({
           <DialogHeader>
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50">
-                <Trash2 className="h-4 w-4 text-red-600" />
+                <Trash2 className="h-6 w-6 text-red-600" />
               </div>
               <DialogTitle className="tracking-tight">Delete Audit Plan</DialogTitle>
             </div>
@@ -1149,8 +1401,9 @@ export function AuditPlanWorkpaperView({
               variant="destructive"
               onClick={() => deletePlan(auditPlan.id)}
               disabled={isDeleting}
+              isLoading={isDeleting}
               className="flex-1">
-              {isDeleting ? "Deleting..." : "Delete"}
+              Delete
             </Button>
           </div>
         </DialogContent>

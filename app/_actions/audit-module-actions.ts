@@ -2259,7 +2259,8 @@ export async function getAuditMemo(auditPlanId: string): Promise<APIResponse> {
 }
 
 /**
- * Create or update audit memo (upsert)
+ * Create or update an audit memo
+ * Uses POST for new memos, PUT for updates (as per MEMO_ENDPOINTS.md)
  */
 export async function createOrUpdateAuditMemo(
   auditPlanId: string,
@@ -2278,12 +2279,17 @@ export async function createOrUpdateAuditMemo(
   }
 
   const url = `/api/v1/audit-plans/${auditPlanId}/memo`;
+  const isUpdate = data.id || data.isExisting;
+  const method = isUpdate ? "PUT" : "POST";
 
   try {
     const response = await authenticatedApiClient({
-      method: "POST",
+      method,
       url,
-      data
+      data: {
+        ...data,
+        audit_plan_id: auditPlanId // Include audit plan ID in request body for backend validation
+      }
     });
 
     revalidatePath("/dashboard/audit/plans");
@@ -2291,7 +2297,37 @@ export async function createOrUpdateAuditMemo(
 
     return successResponse(response.data?.data, "Memo saved successfully");
   } catch (error: any) {
-    return handleError(error, "POST | CREATE/UPDATE MEMO", url);
+    return handleError(error, `${method} | CREATE/UPDATE MEMO`, url);
+  }
+}
+
+/**
+ * Get memo edit history
+ * Implements GET /api/audit-plans/{auditPlanId}/memo/history from MEMO_ENDPOINTS.md
+ */
+export async function getMemoHistory(
+  auditPlanId: string,
+  options?: { limit?: number; offset?: number }
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  const url = `/api/v1/audit-plans/${auditPlanId}/memo/history`;
+  const params = new URLSearchParams();
+
+  if (options?.limit) params.append("limit", String(options.limit));
+  if (options?.offset) params.append("offset", String(options.offset));
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "GET",
+      url: params.toString() ? `${url}?${params.toString()}` : url
+    });
+
+    return successResponse(response.data?.data, "Memo history retrieved successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | MEMO HISTORY", url);
   }
 }
 
@@ -2360,7 +2396,10 @@ export async function deleteAuditMemo(auditPlanId: string): Promise<APIResponse>
   try {
     await authenticatedApiClient({
       method: "DELETE",
-      url
+      url,
+      data: {
+        audit_plan_id: auditPlanId // Include audit plan ID in request body for backend validation
+      }
     });
 
     revalidatePath("/dashboard/audit/plans");
