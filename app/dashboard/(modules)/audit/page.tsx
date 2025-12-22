@@ -17,30 +17,30 @@ export default async function AuditDashboardPage() {
   const summary = await getAuditMetrics();
 
   const overviewChartData = [
-    { name: "Approved", value: summary.data.overview_stats.approved_audit_count },
-    { name: "In Progress", value: summary.data.overview_stats.in_progress_audit_count },
-    { name: "Upcoming", value: summary.data.overview_stats.upcoming_audit_count }
-  ].filter((item) => item.value > 0);
+    { name: "Approved", value: summary?.data?.overview_stats?.approved_audit_count || 0 },
+    { name: "In Progress", value: summary?.data?.overview_stats?.in_progress_audit_count || 0 },
+    { name: "Upcoming", value: summary?.data?.overview_stats?.upcoming_audit_count || 0 }
+  ].filter((item) => item.value > 0) || [];
 
   const planTypeChartData = [
-    { name: "Annual", value: summary.data.audit_plan_stats.annual_count },
-    { name: "Monthly", value: summary.data.audit_plan_stats.monthly_count },
-    { name: "Weekly", value: summary.data.audit_plan_stats.weekly_count }
-  ];
+    { name: "Annual", value: summary?.data?.audit_plan_stats?.annual_count || 0 },
+    { name: "Monthly", value: summary?.data?.audit_plan_stats?.monthly_count || 0 },
+    { name: "Weekly", value: summary?.data?.audit_plan_stats?.weekly_count || 0 }
+  ] .filter((item) => item.value > 0) || [];
 
-  const planQuarterlyData = Object.entries(summary.data.audit_plan_stats.quarterly_count).map(
+  const planQuarterlyData = Object?.entries(summary?.data?.audit_plan_stats?.quarterly_count)?.map(
     ([quarter, count]) => ({
       name: quarter,
       value: count
     })
-  );
+  ) || [];
 
-  const activitiesQuarterlyData = Object.entries(
-    summary.data.audit_activities_stats.quarterly_count
-  ).map(([quarter, count]) => ({
+  const activitiesQuarterlyData = Object?.entries(
+    summary?.data?.audit_activities_stats?.quarterly_count
+  )?.map(([quarter, count]) => ({
     name: quarter,
     value: count
-  }));
+  })) || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
@@ -89,26 +89,26 @@ export default async function AuditDashboardPage() {
         <div className="space-y-8">
           {/* Metrics Cards */}
           <Suspense fallback={<MetricsLoading />}>
-            <AuditMetricsCards metrics={summary.data.overview_stats as any} />
+            <AuditMetricsCards metrics={summary?.data?.overview_stats as any} />
           </Suspense>
 
           {/* Charts Section */}
           <div className="space-y-8">
-            <BudgetAnalytics stats={summary.data.budget_stats} />
+            <BudgetAnalytics stats={summary?.data?.budget_stats} />
 
-            <AuditStatusDistribution data={overviewChartData} stats={summary.data.overview_stats} />
+            <AuditStatusDistribution data={overviewChartData} stats={summary?.data?.overview_stats} />
 
             <AuditPlanAnalytics
               planTypeData={planTypeChartData}
               quarterlyData={planQuarterlyData as any}
-              quarterlyStats={summary.data.audit_plan_stats.quarterly_count}
+              quarterlyStats={summary?.data?.audit_plan_stats?.quarterly_count}
             />
 
-            <UniverseAnalytics stats={summary.data.universe_stats} />
+            <UniverseAnalytics stats={summary?.data?.universe_stats} />
 
             <AuditActivitiesDistribution
               quarterlyData={activitiesQuarterlyData as any}
-              stats={summary.data.audit_activities_stats}
+              stats={summary?.data?.audit_activities_stats}
             />
           </div>
 
