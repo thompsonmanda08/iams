@@ -54,10 +54,6 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!payload.title.trim()) {
-      newErrors.title = "Title is required";
-    }
-
     if (submissionType === "file") {
       if (!uploadedFile) {
         newErrors.file = "Please upload a file";

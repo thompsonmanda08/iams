@@ -414,8 +414,8 @@ export async function getFindingActionEvidenceById(evidence_id: string): Promise
 export async function createFindingActionEvidence(
   data: CreateFindingActionEvidenceInput
 ): Promise<APIResponse> {
-  if (!data.finding_action_id || !data.title) {
-    return handleBadRequest("Action ID and title are required");
+  if (!data.finding_action_id) {
+    return handleBadRequest("Action ID is required");
   }
 
   console.log({ data });
