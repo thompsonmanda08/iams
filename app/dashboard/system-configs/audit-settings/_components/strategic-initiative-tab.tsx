@@ -25,13 +25,8 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  createStrategicInitiative,
-  updateStrategicInitiative,
-  deleteStrategicInitiative
-} from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useStrategicInitiativesMutations } from "@/hooks/use-audit-settings-mutations";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -66,21 +61,13 @@ const INIT_FORM_DATA: InitiativeFormData = {
   end_date: new Date().toISOString()
 };
 
-export default function StrategicInitiativeTab(
-  {
-    // initiatives = [],
-    // pagination
-    // departments
-  }: {
-    initiatives: AuditConfigurableItem[];
-    pagination?: Pagination;
-    departments: Department[];
-  }
-) {
+export default function StrategicInitiativeTab() {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<InitiativeFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
   const { data } = useDepartments({
     is_active: true,
@@ -91,33 +78,15 @@ export default function StrategicInitiativeTab(
   const departments = (data?.data?.data || []) as Department[];
 
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
-    router.push(`?initiatives_page=${pageConfig.page}&initiatives_page_size=${pageSize}`);
+    setPage(pageConfig.page);
+    if (pageConfig.page_size) {
+      setPageSize(pageConfig.page_size);
+    }
   };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteStrategicInitiative(id),
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success("Strategic Initiative deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES] });
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to delete initiative");
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to delete initiative");
-      console.error("Error deleting initiative:", error);
-    },
-    onSettled: () => {
-      setDeleteDialogOpen(false);
-      setSelectedId(null);
-    }
-  });
+  const { deleteStrategicInitiativeMutation } = useStrategicInitiativesMutations();
 
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
@@ -126,13 +95,13 @@ export default function StrategicInitiativeTab(
 
   const handleDeleteConfirm = async () => {
     if (!selectedId) return;
-    deleteMutation.mutate(selectedId);
+    deleteStrategicInitiativeMutation.mutate(selectedId);
   };
   const [pillarId, setPillarId] = useState<string | null>(null);
 
-  const { data: initiativesResponse, isLoading: loadingInitiatives } = useStrategicInitiatives(
+  const { data: initiativesResponse, isFetching: loadingInitiatives } = useStrategicInitiatives(
     pillarId || "",
-    { page: 1, page_size: 100 }
+    { page, page_size: pageSize }
   );
 
   const initiatives = initiativesResponse?.data || [];
@@ -344,7 +313,7 @@ export default function StrategicInitiativeTab(
         title="Delete Strategic Initiative"
         description="Are you sure you want to delete this strategic initiative? This action cannot be undone."
         onConfirm={handleDeleteConfirm}
-        isLoading={deleteMutation.isPending}
+        isLoading={deleteStrategicInitiativeMutation.isPending}
       />
     </>
   );
@@ -365,7 +334,6 @@ function CreateOrUpdate({
   setInitialData?: React.Dispatch<React.SetStateAction<InitiativeFormData | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const queryClient = useQueryClient();
   const router = useRouter();
   const [error, setError] = useState<ErrorState>({
     status: false,
@@ -428,37 +396,16 @@ function CreateOrUpdate({
     }
   }, [openModal, setOpenModal, setInitialData]);
 
-  const saveMutation = useMutation({
-    mutationFn: (data: any) => {
-      return initialData && selectedId
-        ? updateStrategicInitiative({ ...data, id: String(selectedId) })
-        : createStrategicInitiative(data);
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success(`Strategic Initiative ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES] });
-        router.refresh();
-        setOpenModal?.(false);
-        setInitialData?.(null);
-        setFormData(INIT_FORM_DATA);
-        setError({ status: false, message: "" });
-      } else {
-        toast.error(response.message);
-        setError({ status: true, message: response.message });
-      }
-    },
-    onError: (error) => {
-      toast.error("An error occurred");
-      setError({ status: true, message: "An unexpected error occurred" });
-      console.error("Error saving initiative:", error);
-    }
-  });
+  const { saveStrategicInitiativeMutation } = useStrategicInitiativesMutations();
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
 
-    saveMutation.mutate(formData);
+    saveStrategicInitiativeMutation.mutate({
+      data: formData,
+      isUpdate: !!(initialData && selectedId),
+      id: selectedId || undefined
+    });
   }
 
   const departmentOptions = useMemo(() => {
@@ -594,8 +541,8 @@ function CreateOrUpdate({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.title.trim()}
-              isLoading={saveMutation.isPending}
+              disabled={saveStrategicInitiativeMutation.isPending || !formData.title.trim()}
+              isLoading={saveStrategicInitiativeMutation.isPending}
               loadingText="Saving...">
               Save changes
             </Button>

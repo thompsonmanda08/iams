@@ -1489,19 +1489,14 @@ export interface FindingActionEvidence {
 export interface CreateFindingActionEvidenceInput {
   finding_action_id: string;
   title: string;
-  description?: string;
-  evidence_summary?: string;
-  file_link?: string;
+  evidence_summary: string;
+  evidence_file_url: string;
 }
 
 /**
  * Input type for updating finding action evidence
  */
-export interface UpdateFindingActionEvidenceInput {
-  title?: string;
-  description?: string;
-  file_link?: string;
-}
+export type UpdateFindingActionEvidenceInput = Partial<CreateFindingActionEvidenceInput>;
 
 // ============================================================================
 // FINDING ACTION REVIEW TYPES

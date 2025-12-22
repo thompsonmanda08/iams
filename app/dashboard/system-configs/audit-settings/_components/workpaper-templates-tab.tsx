@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Pagination } from "@/lib/types";
-import type { CustomTemplate } from "@/lib/types/audit-types";
 import { WorkpaperTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-template-dialog";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
 import { Card } from "@/components/ui/card";
 import { CustomPagination } from "@/components/ui/pagination";
+import { useWorkpaperTemplates } from "@/hooks/use-audit-query-data";
+import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -23,23 +23,24 @@ interface WorkpapersPageClientProps {
   templates?: WorkingPaperTemplate[];
 }
 
-export default function WorkpaperTemplatesTab({
-  templates,
-  pagination
-}: {
-  templates: WorkingPaperTemplate[];
-  pagination?: Pagination;
-}) {
-  const router = useRouter();
+export default function WorkpaperTemplatesTab() {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  const { data: response, isFetching } = useWorkpaperTemplates({ page, page_size: pageSize });
+  const templates = (response?.data?.data as WorkingPaperTemplate[]) || [];
+  const paginationData = response?.data?.pagination as Pagination;
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
   };
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
-    router.push(`?templates_page=${pageConfig.page}&templates_page_size=${pageSize}`);
+    setPage(pageConfig.page);
+    if (pageConfig.page_size) {
+      setPageSize(pageConfig.page_size);
+    }
   };
 
   return (
@@ -59,15 +60,21 @@ export default function WorkpaperTemplatesTab({
         </div>
 
         {/* Main Content */}
-        <WorkpaperTemplatesTable
-          templates={templates || []}
-          onCreateClick={handleOpenCreateDialog}
-        />
+        {isFetching && templates.length === 0 ? (
+          <div className="text-muted-foreground py-8 text-center">
+            Loading workpaper templates...
+          </div>
+        ) : (
+          <WorkpaperTemplatesTable
+            templates={templates || []}
+            onCreateClick={handleOpenCreateDialog}
+          />
+        )}
 
         {/* Pagination */}
-        {pagination && (
+        {paginationData && (
           <CustomPagination
-            pagination={pagination}
+            pagination={paginationData}
             updatePagination={handlePaginationChange}
             showDetails={true}
             allowSetPageSize={true}

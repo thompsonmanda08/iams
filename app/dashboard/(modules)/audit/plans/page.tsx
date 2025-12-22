@@ -45,8 +45,6 @@ export default async function AuditPlansPage({
   const annualPlans = annualPlansResponse.success ? annualPlansResponse.data?.data || [] : [];
   const annualPlansPagination = annualPlansResponse?.data.pagination;
 
-  console.log({ plans });
-
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}

@@ -3,7 +3,7 @@ import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-re
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Pagination as PaginationType} from "@/lib/types";
+import { Pagination as PaginationType } from "@/lib/types";
 import { SelectField } from "./select-field";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
@@ -133,18 +133,21 @@ const CustomPagination = ({
             onValueChange={(value) =>
               updatePagination({ page_size: Number(value), page: Number(pagination?.page) })
             }
-            options={Array.from({ length: 5 }).map((_, index: number) => ({
-              id: `${(index + 1) * 10}`,
-              name: `${(index + 1) * 10}`
-            }))}
+            options={Array.from({ length: 10 }).map((_, index: number) => {
+              const value = (index + 1) * 5;
+              return {
+                id: `${value}`,
+                name: `${value}`
+              };
+            })}
           />
           <span className="text-sm text-gray-500">Per Page</span>
         </div>
       )}
       {showDetails && (
         <div className="text-foreground/80 order-2 text-sm font-medium sm:order-1">
-          Showing page {pagination.page} of {pagination?.total_pages} ({pagination.totalCount || pagination.total} total
-          results)
+          Showing page {pagination.page} of {pagination?.total_pages} (
+          {pagination.totalCount || pagination.total} total results)
         </div>
       )}
       <div className="order-1 flex items-center space-x-1 sm:order-2 sm:space-x-2">

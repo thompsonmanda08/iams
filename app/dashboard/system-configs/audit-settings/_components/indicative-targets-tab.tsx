@@ -25,13 +25,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  createIndicativeTarget,
-  updateIndicativeTarget,
-  deleteIndicativeTarget
-} from "@/app/_actions/audit-settings-actions";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useIndicativeTargetsMutations } from "@/hooks/use-audit-settings-mutations";
 import {
   Empty,
   EmptyContent,
@@ -43,7 +37,9 @@ import {
 import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
+import { useIndicativeTargets } from "@/hooks/use-audit-settings-query-data";
 import { Textarea } from "@/components/ui/textarea";
+import { QUERY_KEYS } from "@/lib/constants";
 
 interface TargetFormData {
   id: string;
@@ -60,59 +56,42 @@ const INIT_FORM_DATA: Omit<TargetFormData, "id"> = {
   // is_active: true
 };
 
-export default function IndicativeTargetsTab({
-  targets = [],
-  pagination
-}: {
-  targets: any[];
-  pagination?: Pagination;
-}) {
+export default function IndicativeTargetsTab() {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<Omit<TargetFormData, "id"> | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
-  const [items, setItems] = useState<TargetFormData[]>(targets);
+  const { data: indicativeTargetsData, isFetching } = useIndicativeTargets({
+    page,
+    page_size: pageSize
+  });
 
-  const { data } = useDepartments({
+  const { data: departmentsData } = useDepartments({
     is_active: true,
     page_size: 100,
     page: 1
   });
 
-  const departments = (data?.data?.data || []) as Department[];
-
-  useEffect(() => {
-    setItems(targets);
-  }, [targets]);
-
-  const router = useRouter();
+  const departments = (departmentsData?.data?.data || []) as Department[];
+  const items = indicativeTargetsData?.data || [];
+  const pagination = indicativeTargetsData?.pagination;
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
-    router.push(`?targets_page=${pageConfig.page}&targets_page_size=${pageSize}`);
+    setPage(pageConfig.page);
+    if (pageConfig.page_size) {
+      setPageSize(pageConfig.page_size);
+    }
   };
 
-  // Delete item mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteIndicativeTarget(id),
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success("Indicative Target deleted successfully");
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to delete item");
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to delete item");
-      console.error("Error deleting item:", error);
-    },
-    onSettled: () => {
-      setDeleteDialogOpen(false);
-      setSelectedId(null);
-    }
-  });
+  const { deleteIndicativeTargetMutation } = useIndicativeTargetsMutations();
+
+  const handleDeleteSettled = () => {
+    setDeleteDialogOpen(false);
+    setSelectedId(null);
+  };
 
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
@@ -124,7 +103,7 @@ export default function IndicativeTargetsTab({
     // if (true) {
     //   return toast.warning("This action currently is disabled");
     // }
-    deleteMutation.mutate(selectedId as any);
+    deleteIndicativeTargetMutation.mutate(selectedId as any);
   };
 
   const getDepartmentName = useCallback(
@@ -169,7 +148,17 @@ export default function IndicativeTargetsTab({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.length === 0 ? (
+              {isFetching && items.length === 0 ? (
+                // Show skeleton rows during initial loading
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={`skeleton-${index}`}>
+                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
+                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
+                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
+                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
+                  </TableRow>
+                ))
+              ) : items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     <Empty>
@@ -199,7 +188,7 @@ export default function IndicativeTargetsTab({
                   </TableCell>
                 </TableRow>
               ) : (
-                items.map((item) => {
+                items.map((item: any) => {
                   return (
                     <TableRow key={item.id} className="cursor-pointer">
                       <TableCell>
@@ -280,7 +269,7 @@ export default function IndicativeTargetsTab({
         title="Delete Indicative Target"
         description="Are you sure you want to delete this item? This action cannot be undone and may affect related data."
         onConfirm={handleDeleteConfirm}
-        isLoading={deleteMutation.isPending}
+        isLoading={deleteIndicativeTargetMutation.isPending}
       />
     </>
   );
@@ -301,7 +290,6 @@ export function CreateOrUpdate({
   setInitialData?: React.Dispatch<React.SetStateAction<Omit<TargetFormData, "id"> | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const queryClient = useQueryClient();
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
@@ -363,37 +351,11 @@ export function CreateOrUpdate({
     }
   }, [openModal, setOpenModal, setInitialData]);
 
-  // Create/Update mutation
-  const router = useRouter();
-  const saveMutation = useMutation({
-    mutationFn: (data: TargetFormData) => {
-      return initialData && selectedId
-        ? updateIndicativeTarget({ ...data, id: String(selectedId) })
-        : createIndicativeTarget(data);
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success(`Indicative Target ${initialData ? "updated" : "created"} successfully`);
-        router.refresh();
-        setOpenModal?.(false);
-        setInitialData?.(null);
-        setFormData(INIT_FORM_DATA);
-        setError({ status: false, message: "" });
-      } else {
-        toast.error(response.message);
-        setError({ status: true, message: response.message });
-      }
-    },
-    onError: (error) => {
-      toast.error("An error occurred");
-      setError({ status: true, message: "An unexpected error occurred" });
-      console.error("Error saving item:", error);
-    }
-  });
+  const { saveIndicativeTargetMutation } = useIndicativeTargetsMutations();
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveMutation.mutate(formData as any);
+    saveIndicativeTargetMutation.mutate(formData as any);
   }
 
   const departmentOptions = useMemo(() => {
@@ -478,12 +440,12 @@ export function CreateOrUpdate({
               type="submit"
               size="sm"
               disabled={
-                saveMutation.isPending ||
+                saveIndicativeTargetMutation.isPending ||
                 !formData.name.trim() ||
                 !formData.department_id.trim() ||
                 !formData.description.trim()
               }
-              isLoading={saveMutation.isPending}
+              isLoading={saveIndicativeTargetMutation.isPending}
               loadingText="Saving...">
               {initialData ? "Update" : "Create"}
             </Button>

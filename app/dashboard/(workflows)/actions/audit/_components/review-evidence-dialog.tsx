@@ -125,12 +125,9 @@ export function ReviewEvidenceDialog({
             label="Select Evidence"
             value={formData.evidence_id}
             onValueChange={(value) => handleInputChange("evidence_id", value)}
-            options={evidence.map((item) => ({
+            options={evidence.map((item, index) => ({
               id: item.id,
-              name:
-                item.evidence_file_name ||
-                item.evidence_summary ||
-                `Evidence #${item.id.slice(0, 8)}`
+              name: item?.title || `Evidence #${index + 1}`
             }))}
             placeholder="-- Select Evidence --"
             isInvalid={!!errors.evidence_id}

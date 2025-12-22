@@ -418,16 +418,13 @@ export async function createFindingActionEvidence(
     return handleBadRequest("Action ID and title are required");
   }
 
+  console.log({ data });
+
   try {
     const response = await authenticatedApiClient({
       method: "POST",
       url: `/api/v1/finding-actions/${data.finding_action_id}/evidence`,
-      data: {
-        title: data.title,
-        description: data.description,
-        evidence_summary: data.evidence_summary,
-        file_link: data.file_link
-      }
+      data
     });
 
     revalidatePath("/dashboard/actions/audit");
@@ -631,11 +628,7 @@ export async function updateFindingActionReview({
 
     return successResponse(response.data?.data, "Review updated successfully");
   } catch (error: any) {
-    return handleError(
-      error,
-      "PUT | UPDATE FINDING ACTION REVIEW",
-      url
-    );
+    return handleError(error, "PUT | UPDATE FINDING ACTION REVIEW", url);
   }
 }
 

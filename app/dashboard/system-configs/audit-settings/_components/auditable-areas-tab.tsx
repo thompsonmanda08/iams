@@ -26,12 +26,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  createAuditableArea,
-  updateAuditableArea,
-  deleteAuditableArea
-} from "@/app/_actions/audit-settings-actions";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuditableAreasMutations } from "@/hooks/use-audit-settings-mutations";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -44,10 +39,12 @@ import {
 import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
+import { useAuditableAreas } from "@/hooks/use-audit-settings-query-data";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { set } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AreaFormData {
   name: string;
@@ -61,19 +58,15 @@ const INIT_FORM_DATA: AreaFormData = {
   description: ""
 };
 
-export default function AuditableAreaConfig({
-  areas = [],
-  pagination
-}: {
-  areas: AuditConfigurableItem[];
-  pagination?: Pagination;
-}) {
+export default function AuditableAreaConfig() {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id"> | null>(
     INIT_FORM_DATA
   );
   const [areaId, setAreaId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
   const { data } = useDepartments({
     is_active: true,
@@ -83,46 +76,23 @@ export default function AuditableAreaConfig({
 
   const departments = (data?.data?.data || []) as Department[];
 
-  const [items, setItems] = useState<AuditConfigurableItem[]>([...areas]);
+  const { data: areasData, isFetching } = useAuditableAreas({ page, page_size: pageSize });
 
-  useEffect(() => {
-    setItems(areas);
-  }, [areas]);
+  const items = areasData?.data || [];
+  const paginationData = areasData?.pagination;
 
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
-    router.push(`?areas_page=${pageConfig.page}&areas_page_size=${pageSize}`);
+    setPage(pageConfig.page);
+    if (pageConfig.page_size) {
+      setPageSize(pageConfig.page_size);
+    }
   };
 
   // Delete item mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteAuditableArea(id),
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success("Auditable AuditConfigurableItem deleted successfully");
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to delete item");
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to delete item");
-    },
-    onSettled: () => {
-      setDeleteDialogOpen(false);
-      setAreaId(null);
-    }
-  });
+  const { deleteAuditableAreaMutation } = useAuditableAreasMutations();
 
-  /*************  ✨ Windsurf Command ⭐  *************/
-  /**
-   * Opens the delete item dialog for the item with the given id.
-   * @param {string} id - The id of the item to delete.
-   */
-  /*******  7df535e1-228a-4281-91c5-50dc0fe4cb5b  *******/
   const handleDeleteClick = (id: string) => {
     setAreaId(id);
     setDeleteDialogOpen(true);
@@ -133,7 +103,7 @@ export default function AuditableAreaConfig({
     // if (true) {
     //   return toast.warning("This action currently is disabled");
     // }
-    deleteMutation.mutate(areaId as any);
+    deleteAuditableAreaMutation.mutate(areaId as any);
   };
 
   return (
@@ -170,7 +140,29 @@ export default function AuditableAreaConfig({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!items || items?.length === 0 ? (
+              {isFetching && items?.length === 0 ? (
+                <>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={`skeleton-${index}`}>
+                      <TableCell className="p-3 align-top">
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                      <TableCell className="p-3 align-top">
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell className="p-3 align-top">
+                        <Skeleton className="h-4 w-28" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <div className="flex justify-end gap-2">
+                          <Skeleton className="h-8 w-16" />
+                          <Skeleton className="h-8 w-16" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </>
+              ) : !items || items?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     <Empty>
@@ -281,9 +273,9 @@ export default function AuditableAreaConfig({
       </Card>
 
       {/* Pagination */}
-      {pagination && (
+      {paginationData && (
         <CustomPagination
-          pagination={pagination}
+          pagination={paginationData}
           updatePagination={handlePaginationChange}
           showDetails={true}
           allowSetPageSize={true}
@@ -304,7 +296,7 @@ export default function AuditableAreaConfig({
         title="Delete Area"
         description="Are you sure you want to delete this item? This action cannot be undone and may affect related data."
         onConfirm={handleDeleteConfirm}
-        isLoading={deleteMutation.isPending}
+        isLoading={deleteAuditableAreaMutation.isPending}
       />
     </>
   );
@@ -339,7 +331,6 @@ export function CreateOrUpdateArea({
   setInitialData?: React.Dispatch<React.SetStateAction<Omit<AuditConfigurableItem, "id"> | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const queryClient = useQueryClient();
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
@@ -404,34 +395,11 @@ export function CreateOrUpdateArea({
 
   // Create/Update mutation
   const router = useRouter();
-  const saveMutation = useMutation({
-    mutationFn: (data: AuditConfigurableItem) => {
-      return initialData && areaId
-        ? updateAuditableArea({ ...initialData, ...data })
-        : createAuditableArea(data);
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success(`Auditable Area ${initialData ? "updated" : "created"} successfully`);
-        router.refresh();
-        setOpenModal?.(false);
-        setInitialData?.(null);
-        setFormData(INIT_AREA);
-        setError({ status: false, message: "" });
-      } else {
-        toast.error(response.message);
-        setError({ status: true, message: response.message });
-      }
-    },
-    onError: (error) => {
-      toast.error("An error occurred");
-      setError({ status: true, message: "An unexpected error occurred" });
-    }
-  });
+  const { saveAuditableAreaMutation } = useAuditableAreasMutations();
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveMutation.mutate(formData as any);
+    saveAuditableAreaMutation.mutate(formData as any);
   }
 
   const departmentOptions = useMemo(() => {
@@ -529,8 +497,8 @@ export function CreateOrUpdateArea({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name.trim()}
-              isLoading={saveMutation.isPending}
+              disabled={saveAuditableAreaMutation.isPending || !formData.name.trim()}
+              isLoading={saveAuditableAreaMutation.isPending}
               loadingText="Saving...">
               {initialData ? "Update" : "Create"}
             </Button>

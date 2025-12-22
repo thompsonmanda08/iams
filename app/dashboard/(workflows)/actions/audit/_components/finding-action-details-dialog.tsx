@@ -514,7 +514,7 @@ export function FindingActionDetailsDialog({
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1">
                                     <p className="text-sm font-medium">
-                                      {item.evidence_file_name || `Evidence File #${index}`}
+                                      {item?.title || `Evidence File #${index + 1}`}
                                     </p>
                                     {item.evidence_summary && (
                                       <p className="text-muted-foreground mt-1 text-xs">

@@ -16,6 +16,7 @@ import { Loader2, Link2 } from "lucide-react";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useCreateFindingActionEvidenceMutation } from "@/hooks/use-finding-actions-queries";
 import { Input } from "@/components/ui/input";
+import { CreateFindingActionEvidenceInput } from "@/lib/types/audit-types";
 
 interface SubmitEvidenceDialogProps {
   open: boolean;
@@ -25,34 +26,25 @@ interface SubmitEvidenceDialogProps {
 
 type EvidenceSubmissionType = "file" | "link";
 
-interface EvidencePayload {
-  finding_action_id: string;
-  title: string;
-  description: string;
-  evidence_summary: string;
-  file_link: string;
-}
-
 export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvidenceDialogProps) {
   const [submissionType, setSubmissionType] = useState<EvidenceSubmissionType>("file");
   const [uploadedFile, setUploadedFile] = useState<{ file: File; url: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [payload, setPayload] = useState<EvidencePayload>({
+  const [payload, setPayload] = useState<CreateFindingActionEvidenceInput>({
     finding_action_id: actionId,
     title: "",
-    description: "",
     evidence_summary: "",
-    file_link: ""
+    evidence_file_url: ""
   });
 
   const createEvidenceMutation = useCreateFindingActionEvidenceMutation();
   const uploading = createEvidenceMutation.isPending;
 
-  const updatePayload = (field: keyof EvidencePayload, value: string) => {
+  const updatePayload = (field: keyof CreateFindingActionEvidenceInput, value: string) => {
     setPayload((prev) => {
       const updated = { ...prev, [field]: value };
       // Keep evidence_summary in sync with description
-      if (field === "description") {
+      if (field === "evidence_summary") {
         updated.evidence_summary = value || updated.title;
       }
       return updated;
@@ -71,14 +63,14 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
         newErrors.file = "Please upload a file";
       }
     } else {
-      if (!payload.file_link.trim()) {
+      if (!payload?.evidence_file_url?.trim()) {
         newErrors.fileLink = "Please provide a link";
       } else {
         // Basic URL validation
         try {
-          new URL(payload.file_link);
+          new URL(payload.evidence_file_url);
         } catch {
-          newErrors.fileLink = "Please provide a valid URL";
+          newErrors.evidence_file_url = "Please provide a valid URL";
         }
       }
     }
@@ -95,7 +87,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
 
         if (response.success && response.data?.file_url) {
           setUploadedFile({ file, url: response.data.file_url });
-          updatePayload("file_link", response.data.file_url);
+          updatePayload("evidence_file_url", response.data.file_url);
 
           // Clear file error when file is added
           const newErrors = { ...errors };
@@ -112,7 +104,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
       }
     } else {
       setUploadedFile(null);
-      updatePayload("file_link", "");
+      updatePayload("evidence_file_url", "");
     }
   };
 
@@ -120,9 +112,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
     setPayload({
       finding_action_id: actionId,
       title: "",
-      description: "",
       evidence_summary: "",
-      file_link: ""
+      evidence_file_url: ""
     });
     setUploadedFile(null);
     setSubmissionType("file");
@@ -137,7 +128,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
     // Ensure evidence_summary is set
     const finalPayload = {
       ...payload,
-      evidence_summary: payload.description.trim() || payload.title
+      evidence_file_url: payload.evidence_file_url,
+      evidence_summary: payload.evidence_summary.trim()
     };
 
     createEvidenceMutation.mutate(finalPayload, {
@@ -154,6 +146,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
       resetForm();
     }
   }, [open]);
+
+  console.log({ payload, uploadedFile });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -187,8 +181,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
             id="evidence_description"
             label="Description"
             placeholder="Describe the evidence or findings..."
-            value={payload.description}
-            onChange={(e) => updatePayload("description", e.target.value)}
+            value={payload.evidence_summary}
+            onChange={(e) => updatePayload("evidence_summary", e.target.value)}
             rows={3}
           />
 
@@ -205,7 +199,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
                 onClick={() => {
                   setSubmissionType("file");
                   const newErrors = { ...errors };
-                  delete newErrors.fileLink;
+                  delete newErrors.evidence_file_url;
                   delete newErrors.file;
                   setErrors(newErrors);
                 }}
@@ -228,7 +222,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
                   setSubmissionType("link");
                   const newErrors = { ...errors };
                   delete newErrors.file;
-                  delete newErrors.fileLink;
+                  delete newErrors.evidence_file_url;
                   setErrors(newErrors);
                 }}
                 className="gap-2">
@@ -317,8 +311,8 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
                 id="evidence_link"
                 type="url"
                 placeholder="e.g., https://example.com/evidence or https://drive.google.com/file/..."
-                value={payload.file_link}
-                onChange={(e) => updatePayload("file_link", e.target.value)}
+                value={payload.evidence_file_url}
+                onChange={(e) => updatePayload("evidence_file_url", e.target.value)}
                 className={`w-full rounded-md border px-3 py-2 text-sm ${
                   errors.fileLink ? "border-red-500" : "border-input"
                 }`}

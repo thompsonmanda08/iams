@@ -25,14 +25,9 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  createStrategicPillar,
-  updateStrategicPillar,
-  deleteStrategicPillar
-} from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
+import { useStrategicPillarsMutations } from "@/hooks/use-audit-settings-mutations";
 import {
   Empty,
   EmptyContent,
@@ -44,6 +39,7 @@ import {
 import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
+import { useStrategicPillars } from "@/hooks/use-audit-settings-query-data";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 
@@ -60,19 +56,17 @@ const INIT_FORM_DATA: PillarFormData = {
   end_date: ""
 };
 
-export default function StrategicPillarsTab({
-  pillars = [],
-  pagination
-}: {
-  pillars: AuditConfigurableItem[];
-  pagination?: Pagination;
-}) {
+export default function StrategicPillarsTab() {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<PillarFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
-  const [items, setItems] = useState<AuditConfigurableItem[]>(pillars);
+  const { data: pillarsData, isFetching } = useStrategicPillars(undefined, { page, page_size: pageSize });
+  const items = pillarsData?.data || [];
+  const paginationData = pillarsData?.pagination;
 
   const { data } = useDepartments({
     is_active: true,
@@ -82,38 +76,15 @@ export default function StrategicPillarsTab({
 
   const departments = (data?.data?.data || []) as Department[];
 
-  useEffect(() => {
-    setItems(pillars);
-  }, [pillars]);
-
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
-    router.push(`?pillars_page=${pageConfig.page}&pillars_page_size=${pageSize}`);
+    const newPageSize = pageConfig.page_size || pageSize || 15;
+    setPage(pageConfig.page);
+    setPageSize(newPageSize);
   };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteStrategicPillar(id),
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success("Strategic Pillar deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to delete pillar");
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to delete pillar");
-      console.error("Error deleting pillar:", error);
-    },
-    onSettled: () => {
-      setDeleteDialogOpen(false);
-      setSelectedId(null);
-    }
-  });
+  const { deleteStrategicPillarMutation } = useStrategicPillarsMutations();
 
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
@@ -122,7 +93,7 @@ export default function StrategicPillarsTab({
 
   const handleDeleteConfirm = async () => {
     if (!selectedId) return;
-    deleteMutation.mutate(selectedId);
+    deleteStrategicPillarMutation.mutate(selectedId);
   };
 
   const getDepartmentName = useCallback(
@@ -168,7 +139,17 @@ export default function StrategicPillarsTab({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.length === 0 ? (
+              {isFetching && items.length === 0 ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={`skeleton-${index}`}>
+                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" /></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-4/5" /></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" /></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" /></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-1/3" /></TableCell>
+                  </TableRow>
+                ))
+              ) : items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} align="center">
                     <Empty>
@@ -262,9 +243,9 @@ export default function StrategicPillarsTab({
       </Card>
 
       {/* Pagination */}
-      {pagination && (
+      {paginationData && (
         <CustomPagination
-          pagination={pagination}
+          pagination={paginationData}
           updatePagination={handlePaginationChange}
           showDetails={true}
           allowSetPageSize={true}
@@ -285,7 +266,7 @@ export default function StrategicPillarsTab({
         title="Delete Strategic Pillar"
         description="Are you sure you want to delete this strategic pillar? This action cannot be undone."
         onConfirm={handleDeleteConfirm}
-        isLoading={deleteMutation.isPending}
+        isLoading={deleteStrategicPillarMutation.isPending}
       />
     </>
   );
@@ -306,7 +287,6 @@ function CreateOrUpdate({
   setInitialData?: React.Dispatch<React.SetStateAction<PillarFormData | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const queryClient = useQueryClient();
   const router = useRouter();
   const [error, setError] = useState<ErrorState>({
     status: false,
@@ -363,36 +343,14 @@ function CreateOrUpdate({
     }
   }, [openModal, setOpenModal, setInitialData]);
 
-  const saveMutation = useMutation({
-    mutationFn: (data: any) => {
-      return initialData && selectedId
-        ? updateStrategicPillar({ ...data, id: String(selectedId) })
-        : createStrategicPillar(data);
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success(`Strategic Pillar ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
-        router.refresh();
-        setOpenModal?.(false);
-        setInitialData?.(null);
-        setFormData(INIT_FORM_DATA);
-        setError({ status: false, message: "" });
-      } else {
-        toast.error(response.message);
-        setError({ status: true, message: response.message });
-      }
-    },
-    onError: (error) => {
-      toast.error("An error occurred");
-      setError({ status: true, message: "An unexpected error occurred" });
-      console.error("Error saving pillar:", error);
-    }
-  });
+  const { saveStrategicPillarMutation } = useStrategicPillarsMutations();
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveMutation.mutate(formData);
+    saveStrategicPillarMutation.mutate({
+      ...formData,
+      ...(initialData && selectedId && { id: String(selectedId) })
+    });
   }
 
   return (
@@ -506,8 +464,8 @@ function CreateOrUpdate({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.title.trim()}
-              isLoading={saveMutation.isPending}
+              disabled={saveStrategicPillarMutation.isPending || !formData.title.trim()}
+              isLoading={saveStrategicPillarMutation.isPending}
               loadingText="Saving...">
               Save changes
             </Button>

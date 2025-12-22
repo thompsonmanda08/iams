@@ -25,13 +25,8 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  createProcessActivity,
-  updateProcessActivity,
-  deleteProcessActivity
-} from "@/app/_actions/audit-settings-actions";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useProcessActivitiesMutations } from "@/hooks/use-audit-settings-mutations";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
   Empty,
@@ -45,8 +40,9 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuditableAreas, useStrategicPillars } from "@/hooks/use-audit-settings-query-data";
+import { useAuditableAreas, useStrategicPillars, useProcessActivities } from "@/hooks/use-audit-settings-query-data";
 import { de } from "zod/v4/locales";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProcessFormData {
   id?: string;
@@ -65,23 +61,23 @@ const INIT_FORM_DATA: ProcessFormData = {
   auditable_area_id: ""
 };
 
-export default function ProcessActivityTab({
-  processes = [],
-  pillars = [],
-  areas = [],
-  pagination
-}: {
-  processes: ProcessFormData[];
-  pillars: any[];
-  areas: any[];
-  pagination?: Pagination;
-}) {
+export default function ProcessActivityTab() {
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<ProcessFormData | null>(INIT_FORM_DATA);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
-  const [items, setItems] = useState<ProcessFormData[]>(processes);
+  const router = useRouter();
+
+  const { data: processesData, isFetching } = useProcessActivities({
+    page,
+    page_size: pageSize
+  });
+
+  const items = processesData?.data || [];
+  const paginationData = processesData?.pagination;
 
   const { data } = useDepartments({
     is_active: true,
@@ -91,37 +87,14 @@ export default function ProcessActivityTab({
 
   const departments = (data?.data?.data || []) as Department[];
 
-  useEffect(() => {
-    setItems(processes);
-  }, [processes]);
-
-  const router = useRouter();
-  const queryClient = useQueryClient();
-
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
-    router.push(`?process_page=${pageConfig.page}&process_page_size=${pageSize}`);
+    setPage(pageConfig.page);
+    if (pageConfig.page_size) {
+      setPageSize(pageConfig.page_size);
+    }
   };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteProcessActivity(id),
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success("Process/Activity deleted successfully");
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROCESS_ACTIVITIES] });
-        router.refresh();
-      } else {
-        toast.error(response.message || "Failed to delete process");
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to delete process");
-    },
-    onSettled: () => {
-      setDeleteDialogOpen(false);
-      setSelectedId(null);
-    }
-  });
+  const { deleteProcessActivityMutation } = useProcessActivitiesMutations();
 
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
@@ -130,8 +103,17 @@ export default function ProcessActivityTab({
 
   const handleDeleteConfirm = async () => {
     if (!selectedId) return;
-    deleteMutation.mutate(selectedId);
+    deleteProcessActivityMutation.mutate(selectedId);
   };
+
+  const { data: pillarsResponse } = useStrategicPillars(undefined, {
+    page: 1,
+    page_size: 100
+  });
+  const pillars = pillarsResponse?.data || [];
+
+  const { data: areasResponse } = useAuditableAreas({ page: 1, page_size: 100 });
+  const areas = areasResponse?.data || [];
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
@@ -182,7 +164,35 @@ export default function ProcessActivityTab({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.length === 0 ? (
+              {isFetching && items.length === 0 ? (
+                <>
+                  {[...Array(5)].map((_, idx) => (
+                    <TableRow key={`skeleton-${idx}`}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded-full" />
+                          <Skeleton className="h-4 w-40" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-28" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-36" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <div className="flex justify-end gap-2">
+                          <Skeleton className="h-8 w-16 rounded-md" />
+                          <Skeleton className="h-8 w-16 rounded-md" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </>
+              ) : items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     <Empty>
@@ -290,9 +300,9 @@ export default function ProcessActivityTab({
       </Card>
 
       {/* Pagination */}
-      {pagination && (
+      {paginationData && (
         <CustomPagination
-          pagination={pagination}
+          pagination={paginationData}
           updatePagination={handlePaginationChange}
           showDetails={true}
           allowSetPageSize={true}
@@ -313,7 +323,7 @@ export default function ProcessActivityTab({
         title="Delete Process/Activity"
         description="Are you sure you want to delete this process? This action cannot be undone."
         onConfirm={handleDeleteConfirm}
-        isLoading={deleteMutation.isPending}
+        isLoading={deleteProcessActivityMutation.isPending}
       />
     </>
   );
@@ -334,7 +344,6 @@ function CreateOrUpdate({
   setInitialData?: React.Dispatch<React.SetStateAction<ProcessFormData | null>>;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const queryClient = useQueryClient();
   const router = useRouter();
 
   const [error, setError] = useState<ErrorState>({
@@ -399,35 +408,11 @@ function CreateOrUpdate({
     }
   }, [openModal, setOpenModal, setInitialData]);
 
-  const saveMutation = useMutation({
-    mutationFn: (data: any) => {
-      return initialData && selectedId
-        ? updateProcessActivity({ ...data, id: String(selectedId) })
-        : createProcessActivity(data);
-    },
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success(`Process/Activity ${initialData ? "updated" : "created"} successfully`);
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
-        router.refresh();
-        setOpenModal?.(false);
-        setInitialData?.(null);
-        setFormData(INIT_FORM_DATA);
-        setError({ status: false, message: "" });
-      } else {
-        toast.error(response.message);
-        setError({ status: true, message: response.message });
-      }
-    },
-    onError: (error) => {
-      toast.error("An error occurred");
-      setError({ status: true, message: "An unexpected error occurred" });
-    }
-  });
+  const { saveProcessActivityMutation } = useProcessActivitiesMutations();
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    saveMutation.mutate(formData);
+    saveProcessActivityMutation.mutate(formData);
   }
 
   return (
@@ -532,14 +517,14 @@ function CreateOrUpdate({
               type="submit"
               size="sm"
               disabled={
-                saveMutation.isPending ||
+                saveProcessActivityMutation.isPending ||
                 !formData.title ||
                 !formData.description ||
                 !formData.department_id ||
                 !formData.strategic_pillar_id ||
                 !formData.auditable_area_id
               }
-              isLoading={saveMutation.isPending}
+              isLoading={saveProcessActivityMutation.isPending}
               loadingText="Saving...">
               Save changes
             </Button>

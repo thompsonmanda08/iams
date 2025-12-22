@@ -272,11 +272,14 @@ export const useDeleteAuditPlan = ({
  * Hook to fetch workpaper templates
  * Supports filtering by framework_type (e.g., 'ISO27001', 'COSO', 'COBIT', 'NIST')
  */
-export const useWorkpaperTemplates = (params?: {
-  page?: number;
-  page_size?: number;
-  framework_type?: string;
-}) => {
+export const useWorkpaperTemplates = (
+  params?: {
+    page?: number;
+    page_size?: number;
+    framework_type?: string;
+  },
+  initialData?: any
+) => {
   return useQuery({
     queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES, params],
     queryFn: async () => {
@@ -286,6 +289,7 @@ export const useWorkpaperTemplates = (params?: {
       }
       return response;
     },
+    initialData,
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });
 };

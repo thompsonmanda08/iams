@@ -24,7 +24,6 @@ import {
   getBudgetLines
 } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
-import { UserQueryParams } from "@/lib/types/account";
 
 // ============================================================================
 // AUDITABLE AREAS HOOKS
@@ -65,7 +64,7 @@ export const useStrategicPillars = (
     page?: number;
     page_size?: number;
     department_id?: string;
-    is_active?: boolean;
+    // is_active?: boolean;
   }
 ) => {
   return useQuery({
@@ -113,28 +112,6 @@ export const useStrategicInitiatives = (
 };
 
 // ============================================================================
-// FINDINGS CATEGORIES HOOKS
-// ============================================================================
-
-/**
- * Hook to fetch all findings categories
- * @returns Query result with findings categories data
- */
-export const useFindingsCategories = () => {
-  return useQuery({
-    queryKey: [QUERY_KEYS.FINDINGS_CATEGORIES],
-    queryFn: async () => {
-      const response = await getFindingsCategories();
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-      return response.data;
-    },
-    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
-  });
-};
-
-// ============================================================================
 // PROCESS ACTIVITIES HOOKS
 // ============================================================================
 
@@ -165,14 +142,19 @@ export const useProcessActivities = (params?: {
 // ============================================================================
 
 /**
- * Hook to fetch all indicative targets
+ * Hook to fetch all indicative targets with optional pagination
+ * @param params - Optional parameters for filtering and pagination
  * @returns Query result with indicative targets data
  */
-export const useIndicativeTargets = () => {
+export const useIndicativeTargets = (params?: {
+  page?: number;
+  page_size?: number;
+  department_id?: string;
+}) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.INDICATIVE_TARGETS],
+    queryKey: [QUERY_KEYS.INDICATIVE_TARGETS, params],
     queryFn: async () => {
-      const response = await getIndicativeTargets();
+      const response = await getIndicativeTargets(params);
       if (!response.success) {
         throw new Error(response.message);
       }
