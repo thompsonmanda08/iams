@@ -42,6 +42,15 @@ type Department = {
   code: string;
 };
 
+type PaginationState = {
+  page: number;
+  page_size: number;
+  total_pages: number;
+  total: number;
+  has_prev: boolean;
+  has_next: boolean;
+};
+
 export function RiskCategoriesConfig() {
   const [categories, setCategories] = useState<RiskCategory[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -49,11 +58,13 @@ export function RiskCategoriesConfig() {
   const [loadingDepartments, setLoadingDepartments] = useState(true);
 
   // Pagination state
-  const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     page_size: 10,
-    totalCount: 0,
-    total_pages: 0
+    total_pages: 0,
+    total: 0,
+    has_prev: false,
+    has_next: false
   });
 
   // Modal states
@@ -79,23 +90,39 @@ export function RiskCategoriesConfig() {
 
   const router = useRouter();
 
-  // Fetch initial data
+  // Fetch categories when pagination changes
   useEffect(() => {
     fetchCategories();
-    fetchDepartments();
   }, [pagination.page, pagination.page_size]);
+
+  // Fetch departments only once
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const response = await getRiskCategories();
+      const response = await getRiskCategories({
+        page: pagination.page,
+        page_size: pagination.page_size
+      });
+
       if (response.success && response.data?.data) {
         setCategories(response.data.data);
-        setPagination((prev) => ({
-          ...prev,
-          totalCount: response.data.data.length,
-          total_pages: Math.ceil(response.data.data.length / prev.page_size)
-        }));
+
+        // Update pagination from API response
+        if (response.data.pagination) {
+          setPagination((prev) => ({
+            ...prev,
+            page: response.data.pagination.page || prev.page,
+            page_size: response.data.pagination.page_size || prev.page_size,
+            total: response.data.pagination.total || 0,
+            total_pages: response.data.pagination.total_pages || 0,
+            has_prev: response.data.pagination.has_prev || false,
+            has_next: response.data.pagination.has_next || false
+          }));
+        }
       } else {
         setCategories([]);
       }
@@ -111,7 +138,10 @@ export function RiskCategoriesConfig() {
   const fetchDepartments = async () => {
     try {
       setLoadingDepartments(true);
-      const response = await getDepartments();
+      const response = await getDepartments({
+        page: 1,
+        page_size: 100 // Get all departments for dropdown
+      });
       if (response.success && response.data?.data) {
         setDepartments(response.data.data);
       } else {
@@ -126,14 +156,12 @@ export function RiskCategoriesConfig() {
     }
   };
 
-  const updatePagination = (updates: Partial<typeof pagination>) => {
-    setPagination((prev) => ({ ...prev, ...updates }));
-  };
-
-  const getPaginatedData = () => {
-    const startIndex = (pagination.page - 1) * pagination.page_size;
-    const endIndex = startIndex + pagination.page_size;
-    return categories.slice(startIndex, endIndex);
+  const updatePagination = (updates: { page?: number; page_size?: number }) => {
+    setPagination((prev) => ({
+      ...prev,
+      page: updates.page || prev.page,
+      page_size: updates.page_size || prev.page_size
+    }));
   };
 
   const handleAddCategory = () => {
@@ -184,12 +212,6 @@ export function RiskCategoriesConfig() {
     router.refresh();
   };
 
-  // Get department name for display
-  const getDepartmentName = (departmentId: string) => {
-    const dept = departments.find((d) => d.id === departmentId);
-    return dept ? `${dept.name} | ${dept.code}` : "Unknown Department";
-  };
-
   if (isLoading || loadingDepartments) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -200,7 +222,7 @@ export function RiskCategoriesConfig() {
 
   return (
     <Card className="p-4">
-      <div className="flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-foreground text-2xl font-bold">Risk Categories</h2>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -227,7 +249,7 @@ export function RiskCategoriesConfig() {
           <TableBody>
             {categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center">
+                <TableCell colSpan={5} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center">
                     <div className="bg-muted mb-4 rounded-full p-4">
                       <FolderTree className="text-muted-foreground h-8 w-8" />
@@ -247,7 +269,7 @@ export function RiskCategoriesConfig() {
                 </TableCell>
               </TableRow>
             ) : (
-              getPaginatedData().map((category) => (
+              categories.map((category) => (
                 <TableRow key={category.id}>
                   <TableCell>
                     <p className="text-foreground font-medium">{category.name}</p>
@@ -295,6 +317,7 @@ export function RiskCategoriesConfig() {
             )}
           </TableBody>
         </Table>
+
         {categories.length > 0 && (
           <CustomPagination
             pagination={pagination}

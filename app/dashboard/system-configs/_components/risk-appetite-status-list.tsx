@@ -28,8 +28,17 @@ type RiskAppetiteStatus = {
   updated_at: string;
 };
 
+type PaginationState = {
+  page: number;
+  page_size: number;
+  total_pages: number;
+  total: number;
+  has_prev: boolean;
+  has_next: boolean;
+};
+
 export function RiskAppetiteStatusList() {
-  const [causes, setCauses] = useState<RiskAppetiteStatus[]>([]);
+  const [appetites, setAppetites] = useState<RiskAppetiteStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{
     open: boolean;
@@ -42,11 +51,13 @@ export function RiskAppetiteStatusList() {
   }>({ open: false, appetiteId: null, appetiteName: null });
 
   // Pagination state
-  const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     page_size: 10,
-    totalCount: 0,
-    total_pages: 0
+    total_pages: 0,
+    total: 0,
+    has_prev: false,
+    has_next: false
   });
 
   useEffect(() => {
@@ -56,34 +67,42 @@ export function RiskAppetiteStatusList() {
   const fetchAppetites = async () => {
     setIsLoading(true);
     try {
-      const response = await getRiskAppetiteStatuses();
+      const response = await getRiskAppetiteStatuses({
+        page: pagination.page,
+        page_size: pagination.page_size
+      });
       if (response.success && response.data?.data) {
-        setCauses(response.data.data);
-        setPagination((prev) => ({
-          ...prev,
-          totalCount: response.data.data.length,
-          total_pages: Math.ceil(response.data.data.length / prev.page_size)
-        }));
+        setAppetites(response.data.data);
+        // Update pagination from API response
+        if (response.data.pagination) {
+          setPagination((prev) => ({
+            ...prev,
+            page: response.data.pagination.page || prev.page,
+            page_size: response.data.pagination.page_size || prev.page_size,
+            total: response.data.pagination.total || 0,
+            total_pages: response.data.pagination.total_pages || 0,
+            has_prev: response.data.pagination.has_prev || false,
+            has_next: response.data.pagination.has_next || false
+          }));
+        }
       } else {
-        setCauses([]);
+        setAppetites([]);
       }
     } catch (error) {
       console.error("Error fetching risk appetite status:", error);
       toast.error("Failed to load risk appetite status");
-      setCauses([]);
+      setAppetites([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updatePagination = (updates: Partial<typeof pagination>) => {
-    setPagination((prev) => ({ ...prev, ...updates }));
-  };
-
-  const getPaginatedData = () => {
-    const startIndex = (pagination.page - 1) * pagination.page_size;
-    const endIndex = startIndex + pagination.page_size;
-    return causes.slice(startIndex, endIndex);
+  const updatePagination = (updates: { page?: number; page_size?: number }) => {
+    setPagination((prev) => ({
+      ...prev,
+      page: updates.page || prev.page,
+      page_size: updates.page_size || prev.page_size
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -165,7 +184,7 @@ export function RiskAppetiteStatusList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {causes.length === 0 ? (
+            {appetites.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center">
@@ -187,7 +206,7 @@ export function RiskAppetiteStatusList() {
                 </TableCell>
               </TableRow>
             ) : (
-              getPaginatedData().map((appetite) => (
+              appetites.map((appetite) => (
                 <TableRow key={appetite.id}>
                   <TableCell>
                     <p className="text-foreground font-medium">{appetite.name}</p>
@@ -240,7 +259,7 @@ export function RiskAppetiteStatusList() {
             )}
           </TableBody>
         </Table>
-        {causes.length > 0 && (
+        {appetites.length > 0 && (
           <CustomPagination
             pagination={pagination}
             updatePagination={updatePagination}

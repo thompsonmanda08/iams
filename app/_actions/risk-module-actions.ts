@@ -628,10 +628,18 @@ const mockActionFindings: ActionFindings[] = [
 export async function getRiskCategories(params?: {
   department_id?: string;
   is_active?: boolean;
+  page?: number;
+  page_size?: number;
 }): Promise<APIResponse> {
   try {
+     const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", String(params.page));
+    if (params?.page_size) queryParams.append("page_size", String(params.page_size));
+    
     const response = await authenticatedApiClient({
-      url: "/api/v1/risk-categories",
+      url: `/api/v1/risk-categories${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`,
       params,
       method: "GET"
     });
