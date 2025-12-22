@@ -599,26 +599,37 @@ export function FindingActionDetailsDialog({
                     {reviews?.length > 0 ? (
                       <div className="space-y-3">
                         {reviews.map((review) => (
-                          <Card key={review.id} className="bg-muted/50">
-                            <CardContent className="pt-6">
+                          <Card key={review.id} className="bg-muted/50 border-border/50">
+                            <CardContent className="">
                               <div className="space-y-2">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="space-y-1">
                                     <p className="text-sm font-medium">
-                                      Review by {review.reviewer?.name || "Unknown"}
-                                    </p>
-                                    <p className="text-muted-foreground text-xs">
-                                      {review.reviewer?.email || ""}
+                                      Reviewed by: {review.reviewer_name || "Unknown"}
                                     </p>
                                   </div>
-                                  {review.status && STATUS_COLORS[review.status] && (
-                                    <Badge className={cn("text-xs", STATUS_COLORS[review.status])}>
-                                      {review.status}
-                                    </Badge>
-                                  )}
+                                  {review.approval_status &&
+                                    STATUS_COLORS[review.approval_status] && (
+                                      <Badge
+                                        variant={
+                                          String(review?.approval_status)?.toUpperCase() ==
+                                          "APPROVED"
+                                            ? "success"
+                                            : String(review?.approval_status)?.toUpperCase() ==
+                                                "REJECTED"
+                                              ? "destructive"
+                                              : "outline"
+                                        }
+                                        className={cn(
+                                          "text-xs",
+                                          STATUS_COLORS[review.approval_status]
+                                        )}>
+                                        {review.approval_status || "N/A"}
+                                      </Badge>
+                                    )}
                                 </div>
-                                {review.comments && (
-                                  <p className="mt-2 text-sm">{review.comments}</p>
+                                {review.reviewer_comments && (
+                                  <p className="mt-2 text-sm">{review.reviewer_comments}</p>
                                 )}
                                 <p className="text-muted-foreground text-xs">
                                   {review.created_at

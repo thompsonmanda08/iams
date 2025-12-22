@@ -158,12 +158,16 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="text-foreground/70 font-bold">AUDIT TITLE</TableHead>
-              <TableHead className="text-foreground/70 font-bold">STANDARD/FRAMEWORK TYPE</TableHead>
+              <TableHead className="text-foreground/70 font-bold">
+                STANDARD/FRAMEWORK TYPE
+              </TableHead>
               <TableHead className="text-foreground/70 font-bold">TEAM LEADER</TableHead>
               <TableHead className="text-foreground/70 font-bold">PERIOD</TableHead>
               <TableHead className="text-foreground/70 font-bold">PROGRESS</TableHead>
               <TableHead className="text-foreground/70 font-bold">STATUS</TableHead>
-              <TableHead className="text-foreground/70 w-20 text-center font-bold">ACTIONS</TableHead>
+              <TableHead className="text-foreground/70 w-20 text-center font-bold">
+                ACTIONS
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -178,12 +182,14 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                           <ClipboardListIcon className="text-primary h-16 w-16" strokeWidth={1.5} />
                         </div>
                       </div>
-      
-                      <h3 className="text-foreground mb-2 text-2xl font-semibold">No Audit items</h3>
+
+                      <h3 className="text-foreground mb-2 text-2xl font-semibold">
+                        No Audit items
+                      </h3>
                       <p className="text-muted-foreground mb-8 max-w-md text-center">
                         Create your first audit item to get started
                       </p>
-      
+
                       <div className="mb-8 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
                         <div className="bg-canvas border-border rounded-lg border p-4 text-center">
                           <div className="text-primary mb-1 font-mono">CONFIGURE TEMPLATES</div>
@@ -198,7 +204,7 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                           <div className="text-muted-foreground">Collect Findings & Evidence</div>
                         </div>
                       </div>
-      
+
                       <Button size="lg" className="gap-2" asChild>
                         <Link href="/dashboard/audit/items/engagement/new">
                           <Plus className="h-4 w-4" />
@@ -253,14 +259,11 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                   <TableCell>
                     <div className="w-32 space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">{(plan as any).progress || 0}%</span>
-                        {(plan as any).conformityRate && (
-                          <span className="text-green-600">
-                            {(plan as any).conformityRate}% conform
-                          </span>
-                        )}
+                        <span className="text-muted-foreground">
+                          {(plan as any).progress_percentage || 0}%
+                        </span>
                       </div>
-                      <Progress value={(plan as any).progress || 0} className="h-2" />
+                      <Progress value={(plan as any).progress_percentage || 0} className="h-2" />
                     </div>
                   </TableCell>
                   <TableCell>
@@ -307,37 +310,7 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
             )}
           </TableBody>
         </Table>
-      
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Audit Plan</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete &quot;{planToDelete?.title}&quot;? This action cannot
-                be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
-
 
       {/* Pagination */}
       {pagination && (
@@ -348,6 +321,35 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
           allowSetPageSize={true}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Audit Plan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{planToDelete?.title}&quot;? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
