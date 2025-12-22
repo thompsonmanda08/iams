@@ -32,7 +32,7 @@ export const WorkflowHeader = ({
     () =>
       WORKFLOW_TRIGGER_TYPES.map((trigger) => ({
         id: trigger,
-        name: trigger.replace(/_/g, " "),
+        name: trigger == "AUDIT_PLAN" ? "ENGAGEMENT AUDIT PLAN" : trigger.replace(/_/g, " "),
         value: trigger
       })),
     []
