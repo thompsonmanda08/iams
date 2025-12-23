@@ -481,8 +481,6 @@ export default function AuditUniverseForm({
       is_active: itemData.is_active || true
     };
 
-    console.log("payload", payload, "editingItemId", editingItemId);
-
     itemSubmitMutation.mutate(payload);
   };
 

@@ -31,8 +31,6 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
     planItems = response?.data?.data || response?.data || [];
   }
 
-  console.log({ auditPlan });
-
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}

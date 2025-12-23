@@ -3,7 +3,6 @@ import BudgetForm from "../../_components/budget-form";
 
 const BudgetsUpdatePage = async ({ params }: { params: Promise<{ budgetId: string }> }) => {
   const { budgetId } = await params;
-  console.log("PARAM", budgetId);
 
   return (
     <div className="bg-background min-h-screen">

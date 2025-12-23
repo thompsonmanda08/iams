@@ -323,7 +323,6 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
   const url = `/api/v1/auth/setup`;
 
   try {
-    console.log("🔧 [System Setup] Starting...");
     const response = await authenticatedApiClient({ url });
     const session = response?.data;
     const userData = session?.user;
@@ -348,12 +347,9 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       mfa_enabled: userData?.mfa_enabled
     };
 
-    console.log("🔧 [System Setup] User data fetched:", session?.logo_url);
-
     await updateAuthSession({ user, logo_url: session?.logo_url || null });
     // await createUserSession(user as any);
 
-    console.log("🔧 [System Setup] Completed", "user");
     return successResponse(session, response?.data?.message);
   } catch (error: Error | any) {
     console.error("❌ [System Setup] Error:", error?.message);

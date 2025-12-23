@@ -418,8 +418,6 @@ export async function createFindingActionEvidence(
     return handleBadRequest("Action ID is required");
   }
 
-  console.log({ data });
-
   try {
     const response = await authenticatedApiClient({
       method: "POST",

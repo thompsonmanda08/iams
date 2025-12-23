@@ -46,8 +46,7 @@ export function WorkpaperCategoryPanel({ category, auditPlan }: WorkpaperCategor
 
   // Extract framework-specific fields from category metadata
   const frameworkMetadata = category.metadata?.[framework] || {};
-
-  console.log({ auditPlan, config, frameworkMetadata });
+ 
 
   const submitMutation = useSubmitCategoryFindingsForApproval({
     onSuccess: () => {

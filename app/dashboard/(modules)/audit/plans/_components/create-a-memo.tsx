@@ -115,12 +115,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
       offset: 0
     });
 
-    console.log({
-      memo,
-      isMemoLoading,
-      historyData,
-      isHistoryLoading
-    });
+   
 
     const createOrUpdateMutation = useMemoCreateOrUpdateMutation({
       auditPlanId,
@@ -354,8 +349,6 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
       }),
       [memo]
     );
-
-    console.log({ "NEW-MEMO-CONTENT": memoContent });
 
     return (
       <>
@@ -608,20 +601,20 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                               </p>
                               <div className="space-y-2">
                                 <div>
-                                  <p className="text-muted-foreground text-xs mb-1">Previous:</p>
+                                  <p className="text-muted-foreground mb-1 text-xs">Previous:</p>
                                   <div className="prose prose-sm dark:prose-invert max-w-none rounded bg-red-50 p-2 dark:bg-red-950/20">
-                                    <div 
-                                      dangerouslySetInnerHTML={{ __html: entry.previous_content }} 
-                                      className="text-red-900 dark:text-red-100 text-xs line-clamp-3"
+                                    <div
+                                      dangerouslySetInnerHTML={{ __html: entry.previous_content }}
+                                      className="line-clamp-3 text-xs text-red-900 dark:text-red-100"
                                     />
                                   </div>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs mb-1">Current:</p>
+                                  <p className="text-muted-foreground mb-1 text-xs">Current:</p>
                                   <div className="prose prose-sm dark:prose-invert max-w-none rounded bg-green-50 p-2 dark:bg-green-950/20">
-                                    <div 
-                                      dangerouslySetInnerHTML={{ __html: entry.current_content }} 
-                                      className="text-green-900 dark:text-green-100 text-xs line-clamp-3"
+                                    <div
+                                      dangerouslySetInnerHTML={{ __html: entry.current_content }}
+                                      className="line-clamp-3 text-xs text-green-900 dark:text-green-100"
                                     />
                                   </div>
                                 </div>

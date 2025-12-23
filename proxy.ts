@@ -69,8 +69,6 @@ export async function proxy(request: NextRequest) {
     try {
       const { session, isAuthenticated, user_type } = await verifySession();
 
-      console.log("[Proxy] Admin route check:", "session");
-
       // If not authenticated or not a BACKOFFICE_ADMIN, redirect to regular dashboard
       if (!isAuthenticated || user_type !== "BACKOFFICE_ADMIN") {
         console.log(

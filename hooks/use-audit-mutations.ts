@@ -367,7 +367,6 @@ export function useMemoCreateOrUpdateMutation(options: {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      console.log("Memo data:----------------", data);
       const result = await createOrUpdateAuditMemo(options.auditPlanId, data);
       if (!result.success) {
         throw new Error(result.message || "Failed to save memo");

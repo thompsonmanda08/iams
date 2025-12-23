@@ -31,8 +31,7 @@ export default async function DashLayout({
 
   if (!isAuthenticated) return redirect("/login");
 
-  if (user_type !== "BACKOFFICE_ADMIN") {
-    // console.log("[PRIVATE LAYOUT] Redirecting to /dashboard/home - user_type:", user_type);
+  if (user_type !== "BACKOFFICE_ADMIN") { 
     return redirect("/dashboard/home");
   }
 
