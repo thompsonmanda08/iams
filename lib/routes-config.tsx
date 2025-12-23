@@ -13,7 +13,11 @@ import {
   Workflow,
   Home,
   ShieldCheck,
-  FileUserIcon
+  FileUserIcon,
+  ShieldQuestion,
+  ClipboardListIcon,
+  BriefcaseBusiness,
+  MailCheck
 } from "lucide-react";
 
 export type NavGroup = {
@@ -150,51 +154,42 @@ export const navItems: NavGroup[] = [
     ]
   },
   {
+    title: "Module Configurations",
+    items: [
+      {
+        title: "Risk Module Settings",
+        href: "/dashboard/system-configs/risk-settings",
+        icon: ShieldQuestion
+      },
+      {
+        title: "Audit Module Settings",
+        href: "/dashboard/system-configs/audit-settings",
+        icon: ClipboardListIcon
+      }
+    ]
+  },
+  {
     title: "System Configuration",
     items: [
       {
-        title: "Core Settings",
-        href: "/dashboard/system-configs",
-        icon: Settings,
-        items: [
-          {
-            title: "Branches",
-            href: "/dashboard/system-configs/branches",
-            icon: MapPin
-          },
-          {
-            title: "Departments",
-            href: "/dashboard/system-configs/departments",
-            icon: Building
-          },
-          {
-            title: "Users",
-            href: "/dashboard/system-configs/users",
-            icon: Users
-          },
-          {
-            title: "Mail Settings",
-            href: "/dashboard/system-configs/mail-settings",
-            icon: Users
-          }
-        ]
+        title: "Branches",
+        href: "/dashboard/system-configs/branches",
+        icon: MapPin
       },
       {
-        title: "Module Settings",
-        href: "/dashboard/system-configs",
-        icon: Sliders,
-        items: [
-          {
-            title: "Audit Module Configs",
-            href: "/dashboard/system-configs/audit-settings",
-            icon: BookTemplate
-          },
-          {
-            title: "Risk Module Configs",
-            href: "/dashboard/system-configs/risk-settings",
-            icon: Package
-          }
-        ]
+        title: "Departments",
+        href: "/dashboard/system-configs/departments",
+        icon: BriefcaseBusiness
+      },
+      {
+        title: "Users",
+        href: "/dashboard/system-configs/users",
+        icon: Users
+      },
+      {
+        title: "Mail Settings",
+        href: "/dashboard/system-configs/mail-settings",
+        icon: MailCheck
       }
     ]
   }

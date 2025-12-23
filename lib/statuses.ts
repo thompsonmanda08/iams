@@ -20,6 +20,7 @@ export const STATUS_VALUES = {
   PENDING: "PENDING",
   SUBMITTED: "SUBMITTED",
   IN_REVIEW: "IN_REVIEW",
+  CLOSURE_REVIEW: "CLOSURE_REVIEW",
   IN_PROGRESS: "IN_PROGRESS",
   UNDER_REVIEW: "UNDER_REVIEW",
   APPROVED: "APPROVED",
@@ -107,6 +108,15 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     id: "UNDER_REVIEW",
     label: "Under Review",
     description: "Evidence is under review by the reviewer",
+    color: "warning",
+    style: "outline",
+    hexColor: "#FFC107",
+    sortOrder: 6
+  },
+  CLOSURE_REVIEW: {
+    id: "CLOSURE_REVIEW",
+    label: "Closure Review",
+    description: "Is under review for closure by the reviewer",
     color: "warning",
     style: "outline",
     hexColor: "#FFC107",
@@ -262,6 +272,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       IN_REVIEW: ["APPROVED", "REJECTED"],
       APPROVED: ["COMPLETED", "ARCHIVED"],
       REJECTED: ["DRAFT"],
+      CLOSURE_REVIEW: [],
       ON_HOLD: [],
       OPEN: [],
       COMPLETED: ["ARCHIVED"],
@@ -272,7 +283,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: []
     }
   },
 
@@ -291,6 +304,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
     transitions: {
       DRAFT: ["SUBMITTED", "REJECTED"],
       PENDING: ["SUBMITTED"],
+      CLOSURE_REVIEW: [],
       SUBMITTED: ["IN_REVIEW", "DRAFT"],
       IN_REVIEW: ["APPROVED", "REJECTED"],
       APPROVED: ["COMPLETED", "ARCHIVED"],
@@ -305,7 +319,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: []
     }
   },
 
@@ -330,7 +346,10 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: []
     }
   },
 
@@ -355,6 +374,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: [],
       CRITICAL: []
     }
   },
@@ -388,6 +410,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: [],
       CRITICAL: []
     }
   },
@@ -412,6 +437,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: [],
       BELOW: [],
       CRITICAL: []
     }
@@ -438,6 +466,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: [],
       CRITICAL: []
     }
   },
@@ -463,6 +494,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: [],
       CRITICAL: []
     }
   },
@@ -487,6 +521,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       LOW: [],
       ABOVE: [],
       BELOW: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: [],
       CRITICAL: []
     }
   },
@@ -518,6 +555,9 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
+      CLOSURE_REVIEW: [],
+      IN_PROGRESS: [],
+      UNDER_REVIEW: [],
       BELOW: [],
       CRITICAL: []
     }

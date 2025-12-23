@@ -354,47 +354,49 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
       </Card>
 
       {/* Request Closure Button */}
-      <div className="space-y-2">
-        <Button
-          onClick={() => {
-            if (!isTeamLead) {
-              notify({
-                title: "Authorization Error",
-                description: "Only the audit team lead can request closure",
-                type: "error"
-              });
-              return;
-            }
-            setShowClosureDialog(true);
-          }}
-          disabled={!canRequestClosure || !isTeamLead}
-          className="w-full gap-2"
-          size="lg">
-          {!isTeamLead ? (
-            <>
-              <Lock className="h-5 w-5" />
-              Only Team Lead Can Request Closure
-            </>
-          ) : (
-            <>
-              <FileCheck className="h-5 w-5" />
-              Request Audit Closure
-            </>
+      {auditPlan?.status != "CLOSURE_REVIEW" && (
+        <div className="space-y-2">
+          <Button
+            onClick={() => {
+              if (!isTeamLead) {
+                notify({
+                  title: "Authorization Error",
+                  description: "Only the audit team lead can request closure",
+                  type: "error"
+                });
+                return;
+              }
+              setShowClosureDialog(true);
+            }}
+            disabled={!canRequestClosure || !isTeamLead}
+            className="w-full gap-2"
+            size="lg">
+            {!isTeamLead ? (
+              <>
+                <Lock className="h-5 w-5" />
+                Only Team Lead Can Request Closure
+              </>
+            ) : (
+              <>
+                <FileCheck className="h-5 w-5" />
+                Request Audit Closure
+              </>
+            )}
+          </Button>
+          {!isTeamLead && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Only the audit team lead (
+                {auditPlan?.team_leader?.name ||
+                  auditPlan?.audit_team_leader_user?.name ||
+                  auditPlan?.audit_team_leader}
+                ) can request closure.
+              </AlertDescription>
+            </Alert>
           )}
-        </Button>
-        {!isTeamLead && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Only the audit team lead (
-              {auditPlan?.team_leader?.name ||
-               auditPlan?.audit_team_leader_user?.name ||
-               auditPlan?.audit_team_leader})
-              can request closure.
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Closure Dialog */}
       <Dialog
@@ -405,7 +407,6 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
             setRequestError(null);
           }
         }}>
-
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Request Audit Closure</DialogTitle>

@@ -40,7 +40,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
 
   const tasks = tasksResponse.success ? tasksResponse.data : [];
 
-  // console.log("Audit Plan:", auditPlan);
+  console.log("Audit Plan:", auditPlan);
   // console.log("Workpaper:", workpaper);
   // console.log("Findings:", allFindings);
 
