@@ -62,9 +62,9 @@ interface RiskAction {
   category: Category;
   department: Department;
   risk_owner: RiskOwner;
-  macro_process: string;
-  sub_process: string;
-  strategic_objective: string;
+  macro_process: any;
+  sub_process: any;
+  strategic_objective: any;
   root_cause: string;
   recurrence: string;
   step: number;
@@ -104,11 +104,6 @@ export function ActionDetails({ action }: ActionDetailsProps) {
 
   const handleMitigationSelect = (option: string) => {
     toast.success(`Risk response changed to: ${option}`);
-  };
-
-  // Safe accessors with fallbacks
-  const safeGet = <T,>(value: T | undefined | null, fallback: T): T => {
-    return value ?? fallback;
   };
 
   // Calculate risk scores
@@ -338,11 +333,11 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">Likelihood</p>
-                    <p className="text-2xl font-bold">{action?.residual_likelihood || 0}</p>
+                    <p className="text-2xl font-bold">{action?.residual_likelihood || "--"}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">Impact</p>
-                    <p className="text-2xl font-bold">{action?.residual_impact || 0}</p>
+                    <p className="text-2xl font-bold">{action?.residual_impact || "--"}</p>
                   </div>
                 </div>
                 <div className="border-t pt-2">
@@ -407,7 +402,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                   <div>
                     <p className="text-muted-foreground text-sm">Strategic Objective</p>
                     <p className="mt-1 font-semibold">
-                      {action?.strategic_objective || "Not specified"}
+                      {action?.strategic_objective?.name || "Not specified"}
                     </p>
                   </div>
 
@@ -430,12 +425,16 @@ export function ActionDetails({ action }: ActionDetailsProps) {
                 <div className="space-y-3">
                   <div>
                     <p className="text-muted-foreground text-sm">Macro Process</p>
-                    <p className="mt-1 font-semibold">{action?.macro_process || "Not specified"}</p>
+                    <p className="mt-1 font-semibold">
+                      {action?.macro_process?.name || "Not specified"}
+                    </p>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground text-sm">Sub Process</p>
-                    <p className="mt-1 font-semibold">{action?.sub_process || "Not specified"}</p>
+                    <p className="mt-1 font-semibold">
+                      {action?.sub_process?.name || "Not specified"}
+                    </p>
                   </div>
 
                   <div>
