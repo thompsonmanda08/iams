@@ -403,7 +403,6 @@ export async function deleteWorkpaper(id: string): Promise<APIResponse> {
 // FINDING ACTIONS
 // ============================================================================
 
-
 /**
  * Get findings by category within a working paper
  */
@@ -2264,7 +2263,11 @@ export async function getAuditMemo(auditPlanId: string): Promise<APIResponse> {
  */
 export async function createOrUpdateAuditMemo(
   auditPlanId: string,
-  data: any
+  data: {
+    id?: string;
+    subject?: string;
+    content?: string;
+  }
 ): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
@@ -2279,7 +2282,7 @@ export async function createOrUpdateAuditMemo(
   }
 
   const url = `/api/v1/audit-plans/${auditPlanId}/memo`;
-  const isUpdate = data.id || data.isExisting;
+  const isUpdate = !!data.id;
   const method = isUpdate ? "PUT" : "POST";
 
   try {
@@ -2357,10 +2360,7 @@ export async function getMemoTemplate(auditPlanId: string): Promise<APIResponse>
 /**
  * Send audit memo via email and mark as SENT
  */
-export async function sendAuditMemo(
-  auditPlanId: string,
-  data: any
-): Promise<APIResponse> {
+export async function sendAuditMemo(auditPlanId: string, data: any): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
   }

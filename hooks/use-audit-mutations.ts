@@ -367,6 +367,7 @@ export function useMemoCreateOrUpdateMutation(options: {
 
   return useMutation({
     mutationFn: async (data: any) => {
+      console.log("Memo data:----------------", data);
       const result = await createOrUpdateAuditMemo(options.auditPlanId, data);
       if (!result.success) {
         throw new Error(result.message || "Failed to save memo");
@@ -375,7 +376,9 @@ export function useMemoCreateOrUpdateMutation(options: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId, "history"] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId, "history"]
+      });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
       notify({
         title: "Success",
@@ -486,7 +489,9 @@ export function useDeleteMemoMutation(options: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId, "history"] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.AUDIT_MEMOS, options.auditPlanId, "history"]
+      });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
       notify({
         title: "Success",

@@ -211,7 +211,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
       }
     };
 
-    const handleSave = async () => {
+    const handleSave = async (contentToSave?: string) => {
       setShowValidation(true);
 
       if (!memoTitle.trim()) {
@@ -223,7 +223,9 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
         return;
       }
 
-      if (!memoContent.trim()) {
+      const finalContent = contentToSave !== undefined ? contentToSave : memoContent;
+
+      if (!finalContent.trim()) {
         notify({
           title: "Validation Error",
           description: "Please write some content",
@@ -234,7 +236,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
 
       createOrUpdateMutation.mutate({
         subject: memoTitle,
-        content: memoContent,
+        content: finalContent,
         status: memo?.status || "DRAFT",
         use_template: false,
         ...(memo?.id && { id: memo.id }) // Include ID if updating existing memo
@@ -353,6 +355,8 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
       [memo]
     );
 
+    console.log({ "NEW-MEMO-CONTENT": memoContent });
+
     return (
       <>
         <Dialog open={openModal} onOpenChange={setOpenModal}>
@@ -470,7 +474,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                     initialContent={memoContent}
                     onSave={async (html) => {
                       setMemoContent(html);
-                      await handleSave();
+                      await handleSave(html);
                     }}
                     onCancel={() => {
                       setIsEditing(false);
@@ -562,7 +566,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                             <p className="text-muted-foreground text-sm">
                               Edited by:{" "}
                               <span className="text-foreground font-medium">
-                                {entry.edited_by || "Unknown"}
+                                {entry.edited_by_name || "Unknown"}
                               </span>
                             </p>
                           </div>
@@ -602,7 +606,35 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                               <p className="text-muted-foreground mb-2 text-xs font-medium">
                                 Content Modified
                               </p>
-                              <p className="text-muted-foreground text-sm">Content was updated</p>
+                              <div className="space-y-2">
+                                <div>
+                                  <p className="text-muted-foreground text-xs mb-1">Previous:</p>
+                                  <div className="prose prose-sm dark:prose-invert max-w-none rounded bg-red-50 p-2 dark:bg-red-950/20">
+                                    <div 
+                                      dangerouslySetInnerHTML={{ __html: entry.previous_content }} 
+                                      className="text-red-900 dark:text-red-100 text-xs line-clamp-3"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground text-xs mb-1">Current:</p>
+                                  <div className="prose prose-sm dark:prose-invert max-w-none rounded bg-green-50 p-2 dark:bg-green-950/20">
+                                    <div 
+                                      dangerouslySetInnerHTML={{ __html: entry.current_content }} 
+                                      className="text-green-900 dark:text-green-100 text-xs line-clamp-3"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {entry.change_description && (
+                            <div className="bg-muted/50 rounded p-3">
+                              <p className="text-muted-foreground mb-2 text-xs font-medium">
+                                Change Summary
+                              </p>
+                              <p className="text-foreground text-sm">{entry.change_description}</p>
                             </div>
                           )}
                         </div>
