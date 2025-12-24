@@ -117,8 +117,6 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
       offset: 0
     });
 
-   
-
     const createOrUpdateMutation = useMemoCreateOrUpdateMutation({
       auditPlanId,
       onSuccess: () => {
@@ -496,7 +494,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                     }}
                     isSaving={createOrUpdateMutation.isPending}
                     placeholder="Write your memo content here..."
-                    readOnly={!isDraft && !isEditing || !isPlanDraft}
+                    readOnly={(!isDraft && !isEditing) || !isPlanDraft}
                   />
                 </div>
               </div>
