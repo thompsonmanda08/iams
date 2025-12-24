@@ -31,7 +31,7 @@ interface WorkflowTask {
   assigned_to_user_id: string;
   assigned_to_name?: string;
   assigned_to_email?: string;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED" | "APPROVED";
   created_at: string;
   updated_at: string;
   instance: {
@@ -364,7 +364,7 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                     )}
 
                     {/* Reassign button - for any status except REASSIGNED */}
-                    {task.status !== "REASSIGNED" && (
+                    {task.status !== "REASSIGNED" && task.status !== "APPROVED" && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -374,19 +374,6 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                         <Repeat2 className="h-4 w-4" />
                         Reassign
                       </Button>
-                    )}
-
-                    {/* Status messages for completed/final states */}
-                    {task.status === "COMPLETED" && (
-                      <span className="text-muted-foreground text-sm">Completed</span>
-                    )}
-
-                    {task.status === "REJECTED" && (
-                      <span className="text-muted-foreground text-sm">Rejected</span>
-                    )}
-
-                    {task.status === "REASSIGNED" && (
-                      <span className="text-muted-foreground text-sm">Reassigned</span>
                     )}
                   </div>
                 </TableCell>
