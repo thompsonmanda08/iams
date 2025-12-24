@@ -60,6 +60,7 @@ interface CreateOrUpdateMemoProps {
   setOpenModal?: (open: boolean) => void;
   auditPlanId: string;
   directEdit?: boolean; // Open modal directly in edit mode
+  auditPlanStatus?: string; // Status of the parent audit plan (e.g., "DRAFT", "IN_PROGRESS", "CLOSED")
 }
 
 export interface CreateOrUpdateMemoRef {
@@ -80,7 +81,8 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
       openModal: externalOpenModal,
       setOpenModal: setExternalOpenModal,
       auditPlanId,
-      directEdit = false
+      directEdit = false,
+      auditPlanStatus = "DRAFT"
     }: CreateOrUpdateMemoProps,
     ref
   ) => {
@@ -328,32 +330,51 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
     };
 
     const isDraft = memo?.status === "DRAFT";
+    const isPlanDraft = auditPlanStatus === "DRAFT";
 
     // Expose memo actions to parent component via ref
     useImperativeHandle(
       ref,
       () => ({
         openEdit: () => {
+          if (!isPlanDraft) {
+            notify({
+              title: "Cannot Edit",
+              description: "Memos can only be edited when the audit plan is in DRAFT status.",
+              type: "error"
+            });
+            return;
+          }
           setOpenModal(true);
           setIsEditing(true);
         },
         openView: () => {
           setInternalViewModal(true);
         },
-        openDelete: handleDeleteMemo,
+        openDelete: () => {
+          if (!isPlanDraft) {
+            notify({
+              title: "Cannot Delete",
+              description: "Memos can only be deleted when the audit plan is in DRAFT status.",
+              type: "error"
+            });
+            return;
+          }
+          handleDeleteMemo();
+        },
         handleCopyHtml,
         handleDownloadHtml,
         handleDownloadPdf,
         handleDownloadDocx,
         setOpenModal
       }),
-      [memo]
+      [memo, isPlanDraft]
     );
 
     return (
       <>
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          {showTrigger && (
+          {showTrigger && isPlanDraft && (
             <DialogTrigger asChild>
               <Button size="sm" variant="outline">
                 {memo ? (
@@ -410,7 +431,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                 </div>
 
                 {/* Use Template Button (only for new/draft memos) */}
-                {!memo && !memoContent && !showTemplateSelector && (
+                {!memo && !memoContent && !showTemplateSelector && isPlanDraft && (
                   <Button
                     type="button"
                     variant="outline"
@@ -421,7 +442,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                 )}
 
                 {/* Template Selector (shown when template loading fails or is unavailable) */}
-                {!memo && !memoContent && showTemplateSelector && (
+                {!memo && !memoContent && showTemplateSelector && isPlanDraft && (
                   <div className="bg-muted/50 space-y-3 rounded-lg border p-4">
                     {templateLoadError && (
                       <div className="flex items-start gap-2 rounded bg-amber-50 p-3 text-sm text-amber-700">
@@ -475,7 +496,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                     }}
                     isSaving={createOrUpdateMutation.isPending}
                     placeholder="Write your memo content here..."
-                    readOnly={!isDraft && !isEditing}
+                    readOnly={!isDraft && !isEditing || !isPlanDraft}
                   />
                 </div>
               </div>

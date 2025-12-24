@@ -606,7 +606,7 @@ export function AuditPlanWorkpaperView({
                           </div>
                           {/* Action Buttons */}
                           <div className="flex items-center gap-2">
-                            {memo.status === "DRAFT" && (
+                            {memo.status === "DRAFT" && auditPlan.status === "DRAFT" && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -626,7 +626,7 @@ export function AuditPlanWorkpaperView({
                               </TooltipProvider>
                             )}
 
-                            {memo.status === "DRAFT" && (
+                            {memo.status === "DRAFT" && auditPlan.status === "DRAFT" && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
