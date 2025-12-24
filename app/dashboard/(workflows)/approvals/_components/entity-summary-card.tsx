@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/status-badge";
 import { Download, Loader2 } from "lucide-react";
 import type { EntityType, EntityPreviewData } from "@/lib/types/entity-preview-types";
 import {
@@ -73,16 +74,6 @@ function RiskScoreBadge({ score }: { score: number | undefined }) {
   );
 }
 
-/**
- * Status badge component
- */
-function StatusBadge({ status }: { status: string | undefined }) {
-  if (!status) {
-    return <span className="text-muted-foreground">N/A</span>;
-  }
-
-  return <Badge variant="outline">{getStatusLabel(status)}</Badge>;
-}
 
 /**
  * Severity badge component (for findings)
@@ -106,7 +97,7 @@ function RiskSummaryContent({ data }: { data: EntityPreviewData }) {
       <SummaryField label="Title" value={data.title} />
       <SummaryField label="Category" value={data.category} />
       <SummaryField label="Risk Owner" value={data.risk_owner || data.owner} />
-      <SummaryField label="Status" value={<StatusBadge status={data.status} />} />
+      <SummaryField label="Status" value={data.status ? <StatusBadge status={data.status} size="sm" /> : "N/A"} />
       {data.treatment_status && (
         <SummaryField label="Treatment Status" value={data.treatment_status} />
       )}
@@ -138,11 +129,13 @@ function AuditPlanSummaryContent({ data }: { data: EntityPreviewData }) {
   return (
     <>
       <SummaryField label="Title" value={data.title} />
-      <SummaryField label="Reference Number" value={data.ref_no} />
-      <SummaryField label="Year" value={data.year} />
-      <SummaryField label="Audit Area" value={data.audit_area} />
-      <SummaryField label="Framework/Standard" value={data.management_standard} />
-      <SummaryField label="Status" value={<StatusBadge status={data.status} />} />
+      {data.ref_no && <SummaryField label="Reference Number" value={data.ref_no} />}
+      {data.year && <SummaryField label="Year" value={data.year} />}
+      {data.audit_area && <SummaryField label="Audit Area" value={data.audit_area} />}
+      {data.management_standard && (
+        <SummaryField label="Framework/Standard" value={data.management_standard} />
+      )}
+      <SummaryField label="Status" value={data.status ? <StatusBadge status={data.status} size="sm" /> : "N/A"} />
 
       {/* Audit Scope */}
       {data.audit_scope && (
@@ -182,44 +175,59 @@ function AuditPlanSummaryContent({ data }: { data: EntityPreviewData }) {
  * Budget entity summary content
  */
 function BudgetSummaryContent({ data }: { data: EntityPreviewData }) {
+  // Parse total_amount if it's a string, handle nested data structure
+  let totalAmount = 0;
+
+  if (data.total_amount) {
+    totalAmount = typeof data.total_amount === "string"
+      ? parseFloat(data.total_amount)
+      : data.total_amount;
+  }
+
   const percentageSpent =
-    data.spent_amount && data.total_amount ? (data.spent_amount / data.total_amount) * 100 : 0;
+    data.spent_amount && totalAmount ? (data.spent_amount / totalAmount) * 100 : 0;
 
   return (
     <>
-      <SummaryField label="Title" value={data.title} />
-      <SummaryField label="Year" value={data.year} />
-      <SummaryField label="Currency" value={data.currency} />
-      <SummaryField label="Status" value={<StatusBadge status={data.status} />} />
+      <SummaryField label="Title" value={data.title || data.name} />
+      {data.year && <SummaryField label="Year" value={data.year} />}
+      {data.currency && <SummaryField label="Currency" value={data.currency} />}
+      {data.status && <SummaryField label="Status" value={<StatusBadge status={data.status} size="sm" />} />}
 
-      {/* Budget Amount Box */}
+      {/* Budget Amount Box - Always show if we have any data */}
       <div className="border rounded-lg p-3 bg-card space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground font-medium uppercase">Total Budget</p>
-          <p className="text-lg font-bold">
-            {formatCurrency(data.total_amount, data.currency)}
-          </p>
-        </div>
-
-        {data.spent_amount !== undefined && (
+        {totalAmount > 0 ? (
           <>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Spent</span>
-              <span className="font-medium">{formatCurrency(data.spent_amount, data.currency)}</span>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground font-medium uppercase">Total Budget</p>
+              <p className="text-lg font-bold">
+                {formatCurrency(totalAmount, data.currency || "USD")}
+              </p>
             </div>
 
-            {/* Utilization Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-blue-500 h-full transition-all"
-                style={{ width: `${Math.min(percentageSpent, 100)}%` }}
-              />
-            </div>
+            {data.spent_amount !== undefined && data.spent_amount > 0 && (
+              <>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Spent</span>
+                  <span className="font-medium">{formatCurrency(data.spent_amount, data.currency || "USD")}</span>
+                </div>
 
-            <p className="text-xs text-muted-foreground">
-              {percentageSpent.toFixed(1)}% utilized
-            </p>
+                {/* Utilization Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-blue-500 h-full transition-all"
+                    style={{ width: `${Math.min(percentageSpent, 100)}%` }}
+                  />
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {percentageSpent.toFixed(1)}% utilized
+                </p>
+              </>
+            )}
           </>
+        ) : (
+          <p className="text-sm text-muted-foreground">No budget amount information available</p>
         )}
       </div>
 
@@ -287,7 +295,7 @@ function FindingSummaryContent({ data }: { data: EntityPreviewData }) {
         {/* Severity and Status */}
         <div className="grid grid-cols-2 gap-3">
           <SummaryField label="Severity" value={<SeverityBadge severity={data.severity} />} />
-          <SummaryField label="Status" value={<StatusBadge status={data.status} />} />
+          <SummaryField label="Status" value={data.status ? <StatusBadge status={data.status} size="sm" /> : "N/A"} />
         </div>
 
         {/* Details about the finding */}
@@ -391,14 +399,92 @@ function FindingSummaryContent({ data }: { data: EntityPreviewData }) {
 }
 
 /**
+ * Universe entity summary content
+ */
+function UniverseSummaryContent({ data }: { data: EntityPreviewData }) {
+  return (
+    <>
+      <SummaryField label="Universe Name" value={data.universe_name || data.title} />
+      <SummaryField label="Description" value={truncateText(data.description, 200)} />
+      <SummaryField
+        label="Active Status"
+        value={
+          data.is_active ? (
+            <Badge>Active</Badge>
+          ) : (
+            <Badge variant="secondary">Inactive</Badge>
+          )
+        }
+      />
+      <SummaryField label="Status" value={data.status ? <StatusBadge status={data.status} size="sm" /> : "N/A"} />
+
+      {/* Date Range */}
+      {(data.start_date || data.end_date) && (
+        <SummaryField
+          label="Period"
+          value={
+            data.start_date && data.end_date
+              ? `${format(new Date(data.start_date), "MMM d, yyyy")} - ${format(
+                  new Date(data.end_date),
+                  "MMM d, yyyy"
+                )}`
+              : data.start_date
+              ? format(new Date(data.start_date), "MMM d, yyyy")
+              : data.end_date
+              ? format(new Date(data.end_date), "MMM d, yyyy")
+              : "N/A"
+          }
+        />
+      )}
+
+      {/* Items Count */}
+      {data.items_count !== undefined && (
+        <SummaryField label="Total Items" value={data.items_count} />
+      )}
+    </>
+  );
+}
+
+/**
+ * Annual Audit Plan entity summary content
+ */
+function AnnualAuditPlanSummaryContent({ data }: { data: EntityPreviewData }) {
+  const itemsCount = data.items?.length || 0;
+
+  return (
+    <>
+      {data.year && <SummaryField label="Year" value={data.year} />}
+      <SummaryField label="Status" value={data.status ? <StatusBadge status={data.status} size="sm" /> : "N/A"} />
+      {(data.register_id || data.id) && (
+        <SummaryField label="Register ID" value={data.register_id || data.id} />
+      )}
+
+      {/* Items Summary */}
+      {itemsCount > 0 && (
+        <div className="border rounded-lg p-3 bg-card">
+          <p className="text-xs text-muted-foreground font-medium uppercase mb-1">Plan Items</p>
+          <p className="text-2xl font-bold">{itemsCount}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {itemsCount === 1 ? "audit item" : "audit items"} planned for this year
+          </p>
+        </div>
+      )}
+
+      {data.description && (
+        <SummaryField label="Description" value={truncateText(data.description, 200)} />
+      )}
+    </>
+  );
+}
+
+/**
  * Generic/fallback summary content for unknown entity types
  */
 function GenericSummaryContent({ data }: { data: EntityPreviewData }) {
   const displayFields = [
-    { label: "ID", value: data.id },
     { label: "Title", value: data.title || data.name },
     { label: "Description", value: truncateText(data.description, 200) },
-    { label: "Status", value: <StatusBadge status={data.status} /> }
+    { label: "Status", value: data.status ? <StatusBadge status={data.status} size="sm" /> : null }
   ];
 
   return (
@@ -430,6 +516,10 @@ export function EntitySummaryCard({ entityType, entityData }: EntitySummaryCardP
         return <BudgetSummaryContent data={entityData} />;
       case "FINDING":
         return <FindingSummaryContent data={entityData} />;
+      case "UNIVERSE":
+        return <UniverseSummaryContent data={entityData} />;
+      case "ANNUAL_AUDIT_PLAN":
+        return <AnnualAuditPlanSummaryContent data={entityData} />;
       default:
         return <GenericSummaryContent data={entityData} />;
     }

@@ -27,27 +27,28 @@ export function getEntityDetailRoute(
       return `/dashboard/risks/risk-registers/${entityId}`;
 
     case "AUDIT_PLAN":
-      return `/dashboard/audit/plans/engagement/${entityId}`;
+      // Check if this is from an AUDIT_CLOSURE workflow
+      const isClosureFlow = entityData?.original_entity_type === "AUDIT_CLOSURE";
+      const baseRoute = `/dashboard/audit/plans/engagement/${entityId}`;
+      return isClosureFlow ? `${baseRoute}?tab=closure` : baseRoute;
 
     case "BUDGET":
       return `/dashboard/audit/budgets/${entityId}`;
 
     case "FINDING":
-      // Findings are displayed within the parent audit plan
-      // Navigate to the audit plan where user can see all findings in the category
+      // Findings are displayed on the findings tab of the audit plan engagement page
       const auditPlanId = entityData?.audit_plan_id;
       if (auditPlanId) {
-        // Route to audit plan detail page where findings are displayed
-        // Add category context in URL hash for future enhancement
-        const categoryName = entityData?.category_name;
-        const baseRoute = `/dashboard/audit/plans/engagement/${auditPlanId}`;
-        // URL encode the category name for navigation context
-        if (categoryName) {
-          return `${baseRoute}?category=${encodeURIComponent(categoryName)}`;
-        }
-        return baseRoute;
+        // Route directly to the findings tab on the audit plan engagement page
+        return `/dashboard/audit/plans/engagement/${auditPlanId}?tab=findings`;
       }
       return null;
+
+    case "UNIVERSE":
+      return `/dashboard/audit/universe/${entityId}`;
+
+    case "ANNUAL_AUDIT_PLAN":
+      return `/dashboard/audit/plans/annual/${entityId}`;
 
     default:
       return null;
@@ -72,6 +73,15 @@ export function normalizeEntityType(entityType: string): EntityType {
   }
   if (entityType.includes("FINDING")) {
     return "FINDING";
+  }
+  if (entityType.includes("UNIVERSE")) {
+    return "UNIVERSE";
+  }
+  if (entityType.includes("ANNUAL_AUDIT_PLAN")) {
+    return "ANNUAL_AUDIT_PLAN";
+  }
+  if (entityType === "AUDIT_CLOSURE") {
+    return "AUDIT_PLAN";
   }
 
   // Fallback for unknown types
@@ -151,7 +161,9 @@ export function getEntityTypeLabel(entityType: EntityType): string {
     RISK: "Risk",
     AUDIT_PLAN: "Audit Plan",
     BUDGET: "Budget",
-    FINDING: "Finding"
+    FINDING: "Finding",
+    UNIVERSE: "Audit Universe",
+    ANNUAL_AUDIT_PLAN: "Annual Audit Plan"
   };
 
   return labels[entityType] || entityType;

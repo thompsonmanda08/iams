@@ -42,8 +42,9 @@ export function useEntityPreview(
         }
 
         // Return the data from response
-        // The response.data could be the entity object directly
-        return response.data || response;
+        // The response.data could be the entity object directly or nested as response.data.data
+        const entityData = response.data?.data || response.data || response;
+        return entityData;
       } catch (error: any) {
         throw new Error(error?.message || "Failed to fetch entity details");
       }

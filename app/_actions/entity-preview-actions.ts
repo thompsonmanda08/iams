@@ -12,7 +12,14 @@
 import type { APIResponse } from "@/lib/types";
 import type { EntityType } from "@/lib/types/entity-preview-types";
 import { getRisk } from "./risk-module-actions";
-import { getAuditPlan, getFinding, getBudgetById, getFindingsByCategory } from "./audit-module-actions";
+import {
+  getAuditPlan,
+  getFinding,
+  getBudgetById,
+  getFindingsByCategory,
+  getUniverseById,
+  getAnnualAuditPlan
+} from "./audit-module-actions";
 
 /**
  * Fetch entity details by type and ID
@@ -64,6 +71,16 @@ export async function getEntityDetails(
         // For findings, fetch the single finding to get category context
         // The finding will include audit_plan_id and working_paper_id
         const response = await getFinding(entityId);
+        return response;
+      }
+
+      case "UNIVERSE": {
+        const response = await getUniverseById(entityId);
+        return response;
+      }
+
+      case "ANNUAL_AUDIT_PLAN": {
+        const response = await getAnnualAuditPlan({ register_id: entityId });
         return response;
       }
 

@@ -21,7 +21,7 @@ export default async function TasksPage() {
   const tasks = tasksResponse.success ? tasksResponse.data?.data || tasksResponse.data : [];
   const tasksPagination: any = tasksResponse?.data?.pagination || {};
 
-  console.log({ tasksResponse });
+  console.log({ tasks });
 
   return (
     <div className="bg-background min-h-screen">

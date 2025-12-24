@@ -28,6 +28,7 @@ import {
 } from "@/lib/utils/entity-preview-utils";
 import { useEntityPreview } from "./entity-preview-hooks";
 import { EntitySummaryCard } from "./entity-summary-card";
+import type { WorkflowEntityType } from "@/lib/types/entity-preview-types";
 
 /**
  * Entity Preview Dialog Component
@@ -42,13 +43,38 @@ export function EntityPreviewDialog({
   entityType,
   entityName,
   action,
-  onProceed
+  onProceed,
+  initialData
 }: EntityPreviewDialogProps) {
-  // Fetch entity details
-  const { data: entityData, isLoading, error } = useEntityPreview(entityType, entityId, open);
+  // Normalize entity type to handle workflow variations (FINDINGS -> FINDING, AUDIT_CLOSURE -> AUDIT_PLAN, etc.)
+  const normalizedType = normalizeEntityType(entityType as WorkflowEntityType);
 
-  // Get the route to view full details
-  const detailRoute = getEntityDetailRoute(entityType, entityId, entityData);
+  // Check if initialData has the essential finding fields
+  const hasFindingDetails = initialData && (
+    initialData.finding_number ||
+    initialData.recommendation ||
+    initialData.severity
+  );
+
+  // Fetch entity details using normalized type
+  // For findings without details in initialData, attempt to fetch from API
+  // Skip fetch if we already have the necessary data in initialData
+  const shouldFetch = open && (!initialData || !hasFindingDetails);
+  const { data: fetchedData, isLoading, error } = useEntityPreview(
+    normalizedType,
+    entityId,
+    shouldFetch
+  );
+
+  // Use initialData if provided (task row data), otherwise use fetched data
+  // Prefer initialData as it's already available and current
+  const entityData = initialData || fetchedData;
+
+  // Get the route to view full details, passing original entity type for proper routing
+  const detailRoute = getEntityDetailRoute(normalizedType, entityId, {
+    ...entityData,
+    original_entity_type: entityType
+  });
 
   // Determine button styling based on action
   const isReject = action === "REJECT" || action === "REJECTED";
@@ -78,7 +104,6 @@ export function EntityPreviewDialog({
           {/* Entity identification */}
           <div className="border-b pb-3">
             <h3 className="font-semibold text-sm">{entityName}</h3>
-            <p className="text-xs text-muted-foreground">ID: {entityId}</p>
           </div>
 
           {/* Loading State */}

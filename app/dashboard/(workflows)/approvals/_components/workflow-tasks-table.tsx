@@ -139,6 +139,10 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
         label: "Finding",
         className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
       },
+      FINDINGS: {
+        label: "Finding",
+        className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+      },
       RECOMMENDATION: {
         label: "Recommendation",
         className: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
@@ -150,6 +154,18 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
       UNIVERSE: {
         label: "Audit Universe",
         className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400"
+      },
+      AUDIT_UNIVERSE: {
+        label: "Audit Universe",
+        className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400"
+      },
+      AUDIT_CLOSURE: {
+        label: "Audit Closure",
+        className: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+      },
+      ANNUAL_AUDIT_PLAN: {
+        label: "Annual Audit Plan",
+        className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400"
       }
     };
 
@@ -267,16 +283,9 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                 className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* ENTITY NAME */}
                 <TableCell>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1">
-                      <p className="text-base font-semibold">
-                        {task.entity?.entity_name || task.entity?.title || "Unknown"}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        ID: {task.entity?.entity_id || task.instance?.entity_id || "N/A"}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-base font-semibold">
+                    {task.entity?.entity_name || task.entity?.title || "Unknown"}
+                  </p>
                 </TableCell>
                 {/* ENTITY TYPE */}
                 <TableCell>{getEntityTypeBadge(task.instance?.entity_type || "")}</TableCell>
@@ -395,6 +404,7 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
             entityId={selectedTask.instance?.entity_id || selectedTask.entity?.entity_id || ""}
             entityType={(selectedTask.instance?.entity_type || "") as EntityType}
             entityName={selectedTask.entity?.entity_name || selectedTask.entity?.title || "Unknown"}
+            initialData={selectedTask.entity as any}
             action={selectedAction}
             onProceed={handleProceedToAction}
           />

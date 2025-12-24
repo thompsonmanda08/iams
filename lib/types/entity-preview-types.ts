@@ -10,13 +10,13 @@
 /**
  * Supported entity types for workflow approvals
  */
-export type EntityType = "RISK" | "AUDIT_PLAN" | "BUDGET" | "FINDING";
+export type EntityType = "RISK" | "AUDIT_PLAN" | "BUDGET" | "FINDING" | "UNIVERSE" | "ANNUAL_AUDIT_PLAN";
 
 /**
  * Extended entity type that includes workflow variations
  * Used for normalization from backend values
  */
-export type WorkflowEntityType = EntityType | "RISK_ACCEPTANCE";
+export type WorkflowEntityType = EntityType | "RISK_ACCEPTANCE" | "FINDINGS" | "AUDIT_CLOSURE" | "AUDIT_UNIVERSE";
 
 /**
  * Entity preview data with type-specific fields
@@ -62,6 +62,15 @@ export interface EntityPreviewData {
   working_paper_id?: string;
   management_response?: string;
 
+  // Universe-specific fields
+  universe_name?: string;
+  is_active?: boolean;
+  items_count?: number;
+
+  // Annual Audit Plan-specific fields
+  register_id?: string;
+  items?: any[];
+
   // Allow additional fields
   [key: string]: any;
 }
@@ -86,6 +95,7 @@ export interface EntityPreviewDialogProps {
   entityName: string;
   action?: "APPROVE" | "REJECT" | "APPROVED" | "REJECTED" | null;
   onProceed?: () => void;
+  initialData?: EntityPreviewData;
 }
 
 /**
