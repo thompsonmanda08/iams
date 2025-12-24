@@ -298,11 +298,29 @@ function FindingSummaryContent({ data }: { data: EntityPreviewData }) {
           <SummaryField label="Status" value={data.status ? <StatusBadge status={data.status} size="sm" /> : "N/A"} />
         </div>
 
+        {/* Objectives if available (from task row data) */}
+        {data.objectives && (
+          <SummaryField
+            label="Objectives"
+            value={truncateText(data.objectives, 200)}
+          />
+        )}
+
         {/* Details about the finding */}
-        <SummaryField
-          label="Recommendation"
-          value={truncateText(data.recommendation, 200)}
-        />
+        {data.recommendation && (
+          <SummaryField
+            label="Recommendation"
+            value={truncateText(data.recommendation, 200)}
+          />
+        )}
+
+        {/* Conclusion if available (from task row data) */}
+        {data.conclusion && (
+          <SummaryField
+            label="Conclusion"
+            value={truncateText(data.conclusion, 200)}
+          />
+        )}
 
         {/* Management response if available */}
         {data.management_response && (
@@ -484,6 +502,8 @@ function GenericSummaryContent({ data }: { data: EntityPreviewData }) {
   const displayFields = [
     { label: "Title", value: data.title || data.name },
     { label: "Description", value: truncateText(data.description, 200) },
+    { label: "Objectives", value: truncateText(data.objectives, 200) },
+    { label: "Conclusion", value: truncateText(data.conclusion, 200) },
     { label: "Status", value: data.status ? <StatusBadge status={data.status} size="sm" /> : null }
   ];
 

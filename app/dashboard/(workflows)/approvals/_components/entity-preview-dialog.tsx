@@ -49,17 +49,24 @@ export function EntityPreviewDialog({
   // Normalize entity type to handle workflow variations (FINDINGS -> FINDING, AUDIT_CLOSURE -> AUDIT_PLAN, etc.)
   const normalizedType = normalizeEntityType(entityType as WorkflowEntityType);
 
-  // Check if initialData has the essential finding fields
-  const hasFindingDetails = initialData && (
+  // Check if initialData has useful information we can display
+  // For findings, we look for any meaningful content (objectives, conclusion, etc.)
+  // Even if we don't have all fields, we can show what we have from the task row
+  const hasUsefulData = initialData && (
     initialData.finding_number ||
     initialData.recommendation ||
-    initialData.severity
+    initialData.severity ||
+    initialData.objectives ||
+    initialData.conclusion ||
+    initialData.title ||
+    initialData.name ||
+    initialData.total_amount ||
+    initialData.universe_name
   );
 
-  // Fetch entity details using normalized type
-  // For findings without details in initialData, attempt to fetch from API
-  // Skip fetch if we already have the necessary data in initialData
-  const shouldFetch = open && (!initialData || !hasFindingDetails);
+  // Only fetch if dialog is open AND we have NO useful data from initialData
+  // This way we display task row data immediately, then optionally fetch for enrichment
+  const shouldFetch = open && !hasUsefulData;
   const { data: fetchedData, isLoading, error } = useEntityPreview(
     normalizedType,
     entityId,

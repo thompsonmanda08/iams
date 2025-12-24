@@ -61,6 +61,11 @@ export interface EntityPreviewData {
   audit_plan_id?: string;
   working_paper_id?: string;
   management_response?: string;
+  objectives?: string;
+  conclusion?: string;
+  conformity_status?: string;
+  framework?: string;
+  clause_number?: string;
 
   // Universe-specific fields
   universe_name?: string;
