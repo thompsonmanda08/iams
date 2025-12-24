@@ -2,14 +2,14 @@
  * Entity Preview Dialog Component
  *
  * Modal dialog that displays entity summary before approval/rejection.
- * Shows loading and error states, and provides link to view full details.
+ * Uses data from workflow task row and provides link to view full details.
  *
  * @module entity-preview-dialog
  */
 
 "use client";
 
-import { AlertCircle, ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import {
   Dialog,
@@ -49,33 +49,18 @@ export function EntityPreviewDialog({
   // Normalize entity type to handle workflow variations (FINDINGS -> FINDING, AUDIT_CLOSURE -> AUDIT_PLAN, etc.)
   const normalizedType = normalizeEntityType(entityType as WorkflowEntityType);
 
-  // Check if initialData has useful information we can display
-  // For findings, we look for any meaningful content (objectives, conclusion, etc.)
-  // Even if we don't have all fields, we can show what we have from the task row
-  const hasUsefulData = initialData && (
-    initialData.finding_number ||
-    initialData.recommendation ||
-    initialData.severity ||
-    initialData.objectives ||
-    initialData.conclusion ||
-    initialData.title ||
-    initialData.name ||
-    initialData.total_amount ||
-    initialData.universe_name
-  );
+  // Task row data is always sufficient for preview display
+  // We have objectives, conclusion, and other details from the workflow task
+  // No need to fetch additional data from API - use what we already have
+  const entityData = initialData;
 
-  // Only fetch if dialog is open AND we have NO useful data from initialData
-  // This way we display task row data immediately, then optionally fetch for enrichment
-  const shouldFetch = open && !hasUsefulData;
+  // Disable API fetching completely - task row data is complete enough for preview
+  // Users can click "View Full Details" to see complete information from detail pages
   const { data: fetchedData, isLoading, error } = useEntityPreview(
     normalizedType,
     entityId,
-    shouldFetch
+    false  // Never fetch - we have everything we need from task row
   );
-
-  // Use initialData if provided (task row data), otherwise use fetched data
-  // Prefer initialData as it's already available and current
-  const entityData = initialData || fetchedData;
 
   // Get the route to view full details, passing original entity type for proper routing
   const detailRoute = getEntityDetailRoute(normalizedType, entityId, {
@@ -113,33 +98,8 @@ export function EntityPreviewDialog({
             <h3 className="font-semibold text-sm">{entityName}</h3>
           </div>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="mr-3 h-5 w-5 animate-spin text-primary" />
-              <span className="text-muted-foreground">Loading entity details...</span>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && !isLoading && (
-            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-destructive text-sm">Failed to Load Details</h4>
-                  <p className="text-xs text-destructive/80 mt-1">{error.message}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    You can still proceed with your {actionLabel.toLowerCase()}, but we recommend
-                    viewing the full details first.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Success State - Entity Summary */}
-          {entityData && !isLoading && (
+          {/* Entity Summary - Always shown since we use task row data */}
+          {entityData ? (
             <>
               <EntitySummaryCard entityType={entityType} entityData={entityData} />
 
@@ -163,10 +123,7 @@ export function EntityPreviewDialog({
                 </p>
               )}
             </>
-          )}
-
-          {/* Empty State - No data available */}
-          {!entityData && !isLoading && !error && (
+          ) : (
             <div className="bg-muted/50 rounded-lg p-6 text-center">
               <p className="text-muted-foreground text-sm">
                 Entity details are not available at this time.
@@ -186,7 +143,6 @@ export function EntityPreviewDialog({
             <Button
               variant={buttonVariant}
               onClick={handleProceed}
-              disabled={isLoading}
               className="gap-2"
             >
               Proceed to {actionLabel}
