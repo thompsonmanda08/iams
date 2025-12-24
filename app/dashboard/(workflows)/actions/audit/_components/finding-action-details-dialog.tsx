@@ -328,12 +328,7 @@ export function FindingActionDetailsDialog({
                           <p className="text-muted-foreground mb-1 text-xs font-medium">Reviewer</p>
                           <div className="space-y-0.5">
                             <p className="text-sm font-medium">
-                              {action.reviewer_name ||
-                                action.reviewer_user?.last_name ||
-                                "Unassigned"}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {action.reviewer_user?.email || ""}
+                              {action.reviewer_name || "Unassigned"}
                             </p>
                           </div>
                         </div>
@@ -342,12 +337,7 @@ export function FindingActionDetailsDialog({
                           <p className="text-muted-foreground mb-1 text-xs font-medium">Auditor</p>
                           <div className="space-y-0.5">
                             <p className="text-sm font-medium">
-                              {action.auditor_name ||
-                                action.auditor_user?.last_name ||
-                                "Unassigned"}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {action.auditor_user?.email || ""}
+                              {action.auditor_name || "Unassigned"}
                             </p>
                           </div>
                         </div>

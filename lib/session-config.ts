@@ -8,19 +8,19 @@
  * - This prevents "token has expired" errors during active use
  */
 export const SESSION_CONFIG = {
-  // Idle detection: User must interact within 5 minutes or screen locks
-  IDLE_TIMEOUT: 5 * 60 * 1000,
+  // Idle detection: User must interact within 10 minutes or screen locks
+  IDLE_TIMEOUT: 10 * 60 * 1000,
 
   // Screen lock countdown: User has 90 seconds to click "I'm still here"
   SCREEN_LOCK_COUNTDOWN: 90 * 1000,
 
-  // Session TTL: Maximum session duration is 30 minutes
+  // Session TTL: Maximum session duration is 60 minutes
   // Note: Both JWT and cookie expirations are synchronized to this value
-  SESSION_TTL: 30 * 60 * 1000,
+  SESSION_TTL: 60 * 60 * 1000,
 
-  // Token refresh: Refresh at 25 minutes (before 30-minute expiry)
+  // Token refresh: Refresh at 30 minutes (before 60-minute expiry)
   // This ensures tokens are refreshed before they expire
-  TOKEN_REFRESH_INTERVAL: 25 * 60 * 1000
+  TOKEN_REFRESH_INTERVAL: 30 * 60 * 1000
 } as const;
 
 /**
