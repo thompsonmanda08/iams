@@ -283,16 +283,16 @@ export async function deleteCompanyLocation(locationId: string): Promise<APIResp
 export async function getBackofficeStats(): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/backoffice/organizations/stats",
+      url: "/api/v1/backoffice/dashboard",
       method: "GET"
     });
 
-    return successResponse(response.data.data, "Stats fetched successfully");
+    return successResponse(response.data.data);
   } catch (error) {
     return handleError(
       error,
       "GET | GET BACKOFFICE STATS",
-      "/api/v1/backoffice/organizations/stats"
+      "/api/v1/backoffice/dashboard"
     );
   }
 }

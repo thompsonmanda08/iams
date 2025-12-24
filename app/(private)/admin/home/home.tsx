@@ -5,22 +5,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default async function AdminDashboardHome() {
   // Fetch stats from backend
-  // const statsResponse = await getBackofficeStats();
-  // const stats = statsResponse.success
-  //   ? statsResponse.data
-  //   : { companies: 0, users: 0, countries: 0, locations: 0 };
-
-  const stats = { companies: 0, users: 0, countries: 0, locations: 0 };
+  const statsResponse = await getBackofficeStats();
+  const stats = statsResponse.success
+    ? statsResponse.data
+    : { company_count: 0, user_count: 0, country_count: 0, location_count: 0 };
 
   const statCards = [
-    { label: "Countries", value: stats.countries, icon: Globe, color: "bg-purple-500" },
-    { label: "Companies", value: stats.companies, icon: Building2, color: "bg-blue-500" },
-    { label: "Users", value: stats.users, icon: Users, color: "bg-green-500" }
+    { label: "Countries", value: stats.country_count || 0, icon: Globe, color: "bg-purple-500" },
+    { label: "Companies", value: stats.company_count || 0, icon: Building2, color: "bg-blue-500" },
+    { label: "Users", value: stats.user_count || 0, icon: Users, color: "bg-green-500" }
   ];
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
