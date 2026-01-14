@@ -43,7 +43,7 @@ export function AppSidebar({
   }, [pathname]);
 
   useEffect(() => {
-    setOpen(!isTablet);
+    setOpen(!isTablet); 
   }, [isTablet]);
 
   return (
@@ -57,7 +57,6 @@ export function AppSidebar({
         </ScrollArea>
       </SidebarContent>
       <SidebarFooter>
-        {/* NAV USER */}
         <NavUser user={user} isLoadingUser={isLoadingUser || Boolean(!userData.email)} />
       </SidebarFooter>
     </Sidebar>

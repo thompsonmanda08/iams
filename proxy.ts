@@ -36,7 +36,8 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.startsWith("/public") ||
-    pathname.startsWith("/manifest.json")
+    pathname.startsWith("/manifest.json") ||
+    pathname.startsWith("/reports") // TEMP
   ) {
     return response;
   }

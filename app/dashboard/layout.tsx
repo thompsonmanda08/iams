@@ -50,7 +50,7 @@ export default async function DashLayout({
       <SidebarInset>
         <SiteHeader user={enrichedUser} />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
+          <div className="@container/main px-6 xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
             {children}
           </div>
         </div>
