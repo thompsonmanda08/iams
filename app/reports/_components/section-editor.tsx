@@ -370,8 +370,8 @@ export const SectionEditor = ({
                     // Display labels
                     const getDisplayLabel = () => {
                       if (isConformity) return "Conformity";
-                      if (isPartialConformity) return "Partial Conformity";
-                      if (isNonConformity) return "Non-Conformity";
+                      if (isPartialConformity) return "Minor Non-Conformity";
+                      if (isNonConformity) return "Major Non-Conformity";
                       return conformityStatus;
                     };
 
