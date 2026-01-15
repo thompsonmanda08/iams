@@ -250,9 +250,8 @@ export const MOCK_FINDINGS: FindingSummary[] = [
     category_name: "A.12 Operations Security",
     is_selected: true,
     clause_number: "12.3.1",
-    clause: "12.3.1", // Alias for backward compatibility
+    clause: "A.12.3.1 Information backup",
     clause_description: "Information backup",
-    finding_type: "Minor Non-Conformity",
     observation: "Employees are using unsanctioned Dropbox accounts for storing sensitive data.",
     recommendation:
       "Implement a policy to restrict the use of unauthorized cloud storage services and provide approved alternatives.",
@@ -288,9 +287,8 @@ export const MOCK_FINDINGS: FindingSummary[] = [
     category_name: "A.9 Access Control",
     is_selected: true,
     clause_number: "9.2.1",
-    clause: "9.2.1", // Alias for backward compatibility
+    clause: "A.9.2.1 User registration and de-registration",
     clause_description: "User registration and de-registration",
-    finding_type: "Conformity",
     observation: "Password complexity is adequate, but rotation intervals are not enforced.",
     recommendation: "Implement automated password expiration and rotation policies.",
     management_response: "In progress - technical implementation underway.",
@@ -324,9 +322,8 @@ export const MOCK_FINDINGS: FindingSummary[] = [
     category_name: "A.11 Physical and Environmental Security",
     is_selected: false,
     clause_number: "11.1.2",
-    clause: "11.1.2", // Alias for backward compatibility
+    clause: "A.11.1.2 Physical entry controls",
     clause_description: "Physical entry controls",
-    finding_type: "Major Non-Conformity",
     observation: "Server room access logs are not maintained for the secondary data center.",
     recommendation: "Implement access logging system for all data center facilities.",
     management_response: "Management acknowledges the finding and will address it urgently.",
@@ -361,9 +358,8 @@ export const MOCK_FINDINGS: FindingSummary[] = [
     category_name: "A.7 Human Resource Security",
     is_selected: true,
     clause_number: "7.2.2",
-    clause: "7.2.2", // Alias for backward compatibility
+    clause: "A.7.2.2 Termination and change of employment",
     clause_description: "Termination and change of employment",
-    finding_type: "Conformity",
     observation: "The organization has a well-defined and executed exit procedure for employees.",
     recommendation: "Continue current practices and conduct annual reviews.",
     management_response: "Acknowledged. Will maintain current standards.",
@@ -397,9 +393,8 @@ export const MOCK_FINDINGS: FindingSummary[] = [
     category_name: "A.8 Asset Management",
     is_selected: false,
     clause_number: "8.1.1",
-    clause: "8.1.1", // Alias for backward compatibility
+    clause: "A.8.1.1 Inventory of assets",
     clause_description: "Inventory of assets",
-    finding_type: "Minor Non-Conformity",
     observation: "Software assets are not consistently tracked in the central inventory.",
     recommendation: "Implement automated asset discovery and inventory management system.",
     management_response: "Management agrees. Budget approved for asset management tool.",

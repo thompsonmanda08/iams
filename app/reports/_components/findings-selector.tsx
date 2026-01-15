@@ -228,9 +228,9 @@ export const FindingsSelector = ({
                               {finding.conformity_status === "CONFORMITY"
                                 ? "Conformity"
                                 : finding.conformity_status === "NON_CONFORMITY"
-                                  ? "Non-Conformity"
+                                  ? "Major Non-Conformity"
                                   : finding.conformity_status === "PARTIAL_CONFORMITY"
-                                    ? "Partial Conformity"
+                                    ? "Minor Non-Conformity"
                                     : finding.conformity_status}
                             </p>
                           )}

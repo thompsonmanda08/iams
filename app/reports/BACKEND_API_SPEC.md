@@ -66,9 +66,10 @@ This document provides comprehensive sample response objects that the backend sh
     "status": "OPEN",
     "category_name": "A.12 Operations Security",
     "is_selected": false,
-    "clause": "12.3.1",
-    "finding_type": "Minor Non-Conformity",
-    "observation": "Employees are using unsanctioned Dropbox accounts for storing sensitive data."
+    "clause_number": "12.3.1",
+    "clause": "A.12.3.1 Information backup",
+    "clause_description": "Information backup",
+    "observation": "Employees are using unsanctioned Dropbox accounts for storing sensitive data.",
   },
   {
     "id": "F-002",
@@ -78,8 +79,10 @@ This document provides comprehensive sample response objects that the backend sh
     "status": "IN_PROGRESS",
     "category_name": "A.9 Access Control",
     "is_selected": false,
+    "clause_number": "9.2.1",
     "clause": "9.2.1",
-    "finding_type": "Conformity",
+    "clause_description": "User registration and de-registration",
+    "observation": "Password complexity is adequate, but rotation intervals are not enforced."
 ```
 
     "observation": "Password complexity is adequate, but rotation intervals are not enforced."
@@ -93,9 +96,10 @@ This document provides comprehensive sample response objects that the backend sh
 "status": "OPEN",
 "category_name": "A.11 Physical and Environmental Security",
 "is_selected": false,
+"clause_number": "11.1.2",
 "clause": "11.1.2",
-"finding_type": "Major Non-Conformity",
-"observation": "Server room access logs are not maintained for the secondary data center."
+"clause_description": "Physical entry controls",
+"observation": "Server room access logs are not maintained for the secondary data center.",
 }
 ]
 
@@ -109,8 +113,10 @@ This document provides comprehensive sample response objects that the backend sh
 - `status`: Finding status (e.g., "OPEN", "IN_PROGRESS", "CLOSED")
 - `category_name`: ISO clause or category (e.g., "A.9 Access Control")
 - `is_selected`: Whether finding is selected in report (managed by frontend)
-- `clause`: Specific clause number (e.g., "9.2.1")
-- `finding_type`: "Conformity" | "Minor Non-Conformity" | "Major Non-Conformity" | "OFI"
+- `clause_number`: Just the number (e.g., "9.2.1", "12.3.1")
+- `clause`: Full clause text (e.g., "A.9.2.1 User registration and de-registration")
+- `clause_description`: Description of the clause
+- `conformity_status`: "CONFORMITY" | "NON_CONFORMITY" | "PARTIAL_CONFORMITY"
 - `observation`: Detailed observation text
 
 ---
@@ -324,7 +330,7 @@ This document provides comprehensive sample response objects that the backend sh
 
 **Note:** The `selected_finding_ids` array contains IDs of findings selected for this report. The frontend will:
 1. Display a findings selector UI
-2. Auto-generate separate tables for each finding_type (Conformity, Minor Non-Conformity, etc.)
+2. Auto-generate separate tables for each conformity_status (CONFORMITY, NON_CONFORMITY, PARTIAL_CONFORMITY)
 3. Populate widget tables with selected findings data
 
 ### 4.5 Compliance Findings Section
@@ -347,7 +353,7 @@ This document provides comprehensive sample response objects that the backend sh
 
 ````
 
-**Note:** Similar to findings_selector but specifically for compliance audits. Auto-generates styled tables by finding_type.
+**Note:** Similar to findings_selector but specifically for compliance audits. Auto-generates styled tables by conformity_status.
 
 ### 4.6 Dynamic Form Section
 
@@ -640,16 +646,17 @@ Here's a complete example of what the backend should return for an ISO 27001 com
 "section_id": "sec-recommendations",
 "section_type": "text_only",
 "order": 5,
-      "header": "Recommendations",
-      "sub_header": "Corrective Actions",
-      "include_in_toc": true,
-      "toc_level": 1,
-      "content": "Management should address identified non-conformities within the committed timelines. A follow-up audit is scheduled for Q2 2025.",
-      "widgets": []
-    }
-  ]
+"header": "Recommendations",
+"sub_header": "Corrective Actions",
+"include_in_toc": true,
+"toc_level": 1,
+"content": "Management should address identified non-conformities within the committed timelines. A follow-up audit is scheduled for Q2 2025.",
+"widgets": []
 }
-```
+]
+}
+
+````
 
 ---
 
@@ -673,7 +680,7 @@ Here's a complete example of what the backend should return for an ISO 27001 com
     "data_source_id": "risks_by_rating"
   }
 }
-```
+````
 
 ### 7.2 Table Widget
 
@@ -700,7 +707,8 @@ Here's a complete example of what the backend should return for an ISO 27001 com
 }
 ```
 
-**Note:** 
+**Note:**
+
 - If `data_source_id` is present, the widget is connected to a dynamic data source
 - If `is_configurable` is true, users can add/edit columns and rows
 - `width` in columns is optional
@@ -710,37 +718,44 @@ Here's a complete example of what the backend should return for an ISO 27001 com
 ## 8. Important Notes for Backend Implementation
 
 ### 8.1 Section Ordering
+
 - Sections should be ordered by the `order` field
 - Frontend will display sections in ascending order
 - Order values don't need to be sequential (0, 1, 2... or 10, 20, 30... both work)
 
 ### 8.2 Finding Selection
+
 - `selected_finding_ids` in findings_selector/compliance_findings sections
 - Frontend manages selection state but backend should persist it
-- When findings are selected, frontend auto-generates tables by `finding_type`
+- When findings are selected, frontend auto-generates tables by `conformity_status`
 
 ### 8.3 Widget Data Sources
+
 - If `data_source_id` is present, widget data comes from that source
 - Backend should populate widget data based on the data source
 - For findings_list data source, populate with actual findings data
 
 ### 8.4 Cover Page Content
+
 - Stored as JSON string in `content` field
 - Must be valid JSON that can be parsed
 - Should include organization logo URL from session/database
 
 ### 8.5 Dynamic Form Fields
+
 - `fields` array defines the form schema
 - `field_values` object stores user input (key = field.id, value = user input)
 - Backend should validate field values against field schema
 
 ### 8.6 Table of Contents
+
 - Generated automatically by frontend based on:
   - `include_in_toc`: Whether section appears in TOC
   - `toc_level`: Indentation level (1, 2, or 3)
   - `order`: Display order
 
 ### 8.7 Branding
+
 - Colors should be valid hex codes
 - Font family should be web-safe or available font
 - Frontend applies branding to report preview/export
@@ -750,6 +765,7 @@ Here's a complete example of what the backend should return for an ISO 27001 com
 ## 9. Database Schema Recommendations
 
 ### 9.1 Reports Table
+
 ```sql
 CREATE TABLE reports (
   report_id VARCHAR(50) PRIMARY KEY,
@@ -768,6 +784,7 @@ CREATE TABLE reports (
 ```
 
 ### 9.2 Report Sections Table
+
 ```sql
 CREATE TABLE report_sections (
   section_id VARCHAR(50) PRIMARY KEY,
@@ -785,6 +802,7 @@ CREATE TABLE report_sections (
 ```
 
 ### 9.3 Report Widgets Table
+
 ```sql
 CREATE TABLE report_widgets (
   instance_id VARCHAR(50) PRIMARY KEY,
@@ -797,6 +815,7 @@ CREATE TABLE report_widgets (
 ```
 
 ### 9.4 Report Findings Table (Junction)
+
 ```sql
 CREATE TABLE report_findings (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -817,12 +836,13 @@ This specification provides all the data structures needed for the backend to su
 1. **Three main endpoints**: Get report, get findings, get data sources
 2. **Six section types**: cover_page, text_only, text_with_widgets, findings_selector, compliance_findings, dynamic_form
 3. **Two widget types**: pie_chart, table
-4. **Findings with metadata**: Include clause, finding_type, observation for compliance audits
-5. **Auto-generated tables**: Frontend creates tables by finding_type automatically
+4. **Findings with metadata**: Include clause_number, conformity_status, observation for compliance audits
+5. **Auto-generated tables**: Frontend creates tables by conformity_status automatically
 6. **Flexible data sources**: Widgets can connect to dynamic data sources
 7. **Persistent state**: Backend should save section order, selected findings, widget configurations
 
 The frontend handles:
+
 - Report editing and section management
 - Findings selection and grouping
 - Widget configuration
@@ -831,6 +851,7 @@ The frontend handles:
 - Report preview and export
 
 The backend should:
+
 - Store and retrieve report data
 - Provide findings data with all metadata
 - Populate widget data from data sources

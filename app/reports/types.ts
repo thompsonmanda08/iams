@@ -52,10 +52,9 @@ export interface FindingSummary {
   is_selected: boolean; // Frontend state for report selection
 
   // ISO 27001 / Compliance fields
-  clause_number?: string; // Primary field from workpapers (e.g., "9.2.1")
-  clause?: string; // Alias for clause_number for backward compatibility
+  clause_number?: string; // Just the number (e.g., "12.3.1")
+  clause?: string; // Full clause text (e.g., "A.12.3.1 Information backup")
   clause_description?: string;
-  finding_type?: "Conformity" | "Minor Non-Conformity" | "Major Non-Conformity" | "OFI";
   observation?: string; // Maps to workings_and_test_results or conclusion
 
   // Additional workpaper fields
