@@ -28,6 +28,7 @@ import { PieChartWidget } from "./pie-chart-widget";
 import { ConfigurableTable } from "./configurable-table";
 import { DynamicSection } from "./dynamic-section";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
+import { BarChartWidget } from "./bar-chart-widget";
 
 interface SectionEditorProps {
   section: ReportSection;
@@ -284,6 +285,25 @@ export const SectionEditor = ({
                       if (widget.widget_type === "pie_chart") {
                         return (
                           <PieChartWidget
+                            key={widget.instance_id}
+                            data={widget.data as any}
+                            dataSourceId={widget.data.data_source_id}
+                            onDataSourceChange={
+                              onWidgetDataSourceChange
+                                ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
+                                : undefined
+                            }
+                            onDataChange={
+                              onWidgetDataChange
+                                ? (data) => onWidgetDataChange(widget.instance_id, data)
+                                : undefined
+                            }
+                          />
+                        );
+                      }
+                      if (widget.widget_type === "bar_chart") {
+                        return (
+                          <BarChartWidget
                             key={widget.instance_id}
                             data={widget.data as any}
                             dataSourceId={widget.data.data_source_id}

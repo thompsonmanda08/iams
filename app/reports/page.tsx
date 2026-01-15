@@ -16,6 +16,7 @@ import { ReportHeader } from "./_components/report-header";
 import { ReportSidebar } from "./_components/report-sidebar";
 import { AddSectionButton } from "./_components/add-section-button";
 import Loader from "@/components/ui/loader";
+import { log } from "console";
 
 // ============================================================================
 // MAIN COMPONENT
@@ -78,7 +79,7 @@ export default function AuditReportSystem() {
       />
     );
   }
-
+  console.log("Rendering report editor with report:", report);
   return (
     <div className="min-h-screen bg-gray-50">
       <ReportHeader />

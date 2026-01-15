@@ -1,4 +1,3 @@
-import { LucideIcon } from "lucide-react";
 
 export type ReportType = "general_audit" | "compliance_audit" | "risk" | "followup";
 export type SectionType =
@@ -8,7 +7,7 @@ export type SectionType =
   | "findings_selector"
   | "compliance_findings"
   | "dynamic_form";
-export type WidgetType = "table" | "pie_chart";
+export type WidgetType = "table" | "pie_chart" | "bar_chart" | "line_chart" | "text_block";
 
 export interface TableColumn {
   key: string;

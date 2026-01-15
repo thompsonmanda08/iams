@@ -112,22 +112,158 @@ export const RISK_REPORT_TEMPLATE: ReportTemplate = {
   description: "Report focusing on risk profiles, ratings, and treatment plans.",
   default_sections: [
     createSection("cover", "cover_page", 1, "Risk Report"),
-    createSection("exec_summary", "text_only", 2, "Executive Summary", "Risk Profile Overview"),
+    // In your template file (templates.ts or similar), update the section creation:
+
+createSection("exec_summary", "text_with_widgets",
+   2, "Executive Summary",
+    "Risk Profile Overview", "",
+[
+  {
+    instance_id: "risk_dashboard_appetite_bar",
+    widget_type: "bar_chart",
+    data: {
+      title: "Risk Dashboard - Against Appetite",
+      categories: [
+        { label: "STRATEGIC", series: [
+          { label: "Within", value: 10, color: "#3b82f6" },
+          { label: "Above (Open)", value: 40, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 4, color: "#10b981" }
+        ]},
+        { label: "OPERATIONAL", series: [
+          { label: "Within", value: 3, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]},
+        { label: "GEOPOLITICAL", series: [
+          { label: "Within", value: 10, color: "#3b82f6" },
+          { label: "Above (Open)", value: 1, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]},
+        { label: "LEGAL, COMPLIANCE & REGULATIONS", series: [
+          { label: "Within", value: 4, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 1, color: "#10b981" }
+        ]},
+        { label: "ADMINISTRATION", series: [
+          { label: "Within", value: 5, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]},
+        { label: "HUMAN RESOURCES", series: [
+          { label: "Within", value: 2, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]},
+        { label: "HEALTH & SAFETY", series: [
+          { label: "Within", value: 7, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]},
+        { label: "FINANCIAL", series: [
+          { label: "Within", value: 3, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]},
+        { label: "CORPORATE GOVERNANCE", series: [
+          { label: "Within", value: 2, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]},
+        { label: "3RD PARTY / COUNTER PARTY", series: [
+          { label: "Within", value: 2, color: "#3b82f6" },
+          { label: "Above (Open)", value: 0, color: "#f59e0b" },
+          { label: "Above (Closed)", value: 0, color: "#10b981" }
+        ]}
+      ],
+      orientation: "horizontal",
+      show_values: true
+    }
+  },
+  {
+    instance_id: "risk_distribution_by_department_bar",
+    widget_type: "bar_chart",
+    data: {
+      title: "Risk Distribution by Department",
+      categories: [
+        { label: "IT Department", series: [
+          { label: "Risks", value: 30, color: "#3b82f6" }
+        ]},
+        { label: "Finance", series: [
+          { label: "Risks", value: 25, color: "#10b981" }
+        ]},
+        { label: "Operations", series: [
+          { label: "Risks", value: 20, color: "#f59e0b" }
+        ]},
+        { label: "HR", series: [
+          { label: "Risks", value: 15, color: "#ef4444" }
+        ]},
+        { label: "Legal", series: [
+          { label: "Risks", value: 10, color: "#7c3aed" }
+        ]},
+        { label: "Marketing", series: [
+          { label: "Risks", value: 8, color: "#ec4899" }
+        ]},
+        { label: "Sales", series: [
+          { label: "Risks", value: 12, color: "#8b5cf6" }
+        ]}
+      ],
+      orientation: "vertical",
+      show_values: true
+    }
+  }
+] as any
+),
+    createSection("strategic_objective", "text_only", 3, "INFRATEL Strategic Objective", "Risk Strategic Objective"),
+ createSection("mapping_strategic_objective", "text_with_widgets",
+   4, "Mapping Of Key Risks Against Strategic Objectives",
+    "Strategic risks and Objectives", "", 
+[
+  {
+    instance_id: "map_risks_table_to_strategic_objective",
+    widget_type: "table",
+    data: {
+      title: "Mapping Of Key Risks Against Strategic Objectives",
+      columns: [
+        { key: "risk_title", header: "Risk" },
+        { key: "residual_score", header: "Score" },
+        { key: "risk_owner", header: "Owner" },
+        { key: "treatment_status", header: "Treatment" }
+      ],
+      rows: [],
+      data_source_id: "map_risks_table_to_strategic_objective"
+    }
+  }
+] as any
+),
     createSection(
       "risk_charts",
       "text_with_widgets",
-      3,
-      "Risk Analysis",
-      "Visual Distribution",
+      5,
+      "Risks Dashboard",
+      "Shows a summary of the risk profile above the set risk appetite of INFRATEL Corporation.",
       "Breakdown of risks by severity and category.",
       [
-        {
-          instance_id: "risk_severity_chart",
-          widget_type: "pie_chart",
+         {
+          instance_id: "top_risks_table",
+          widget_type: "table",
           data: {
-            title: "Risks by Severity",
-            slices: [],
-            data_source_id: "risks_by_rating"
+            title: "Risks Above Appetite",
+            columns: [
+              { key: "Risk Category", header: "Risk" },
+              { key: "SN", header: "SN" },
+              { key: "Key Risk", header: "Key" },
+              { key: "Mitigation", header: "Mitigation" },
+              { key: "Dept's Risk Register", header: "Register" },
+              { key: "Status", header: "Status" },
+              { key: "Inherent Risk", header: "Inherent" },
+              { key: "Residual Risk", header: "Residual" },
+              { key: "Risk Magnitude Rating", header: "Rating" },
+              { key: "Risk Appetite", header: "Appetite" },
+              { key: "Implementation Timeline", header: "Timeline" },
+              { key: "Executive Ownership", header: "Owner" },
+            ],
+            rows: [],
+            data_source_id: "risks_above_appetite"
           }
         }
       ]
@@ -135,9 +271,9 @@ export const RISK_REPORT_TEMPLATE: ReportTemplate = {
     createSection(
       "risk_register",
       "text_with_widgets",
-      4,
-      "Key Risks",
-      "Above Appetite",
+      6,
+      "Summary Of Detailed Risk Registers",
+      "Detailed Risk Register",
       "Risks requiring immediate management attention.",
       [
         {
@@ -157,7 +293,7 @@ export const RISK_REPORT_TEMPLATE: ReportTemplate = {
         }
       ]
     ),
-    createSection("mitigation", "text_only", 5, "Mitigation Strategy", "Treatment Plan")
+    createSection("conclusion", "text_only", 7, "Conclusion", "Final Remarks")
   ]
 };
 

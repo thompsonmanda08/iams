@@ -56,7 +56,7 @@ export const AVAILABLE_DATA_SOURCES: DataSource[] = [
     name: "Risks by Rating",
     description: "Distribution of risks by inherent risk rating",
     category: "risk",
-    compatible_widgets: ["pie_chart", "table"],
+    compatible_widgets: ["pie_chart", "table", "bar_chart"],
     requires_entity: true,
     sample_data: {
       pie_chart: [
@@ -77,6 +77,109 @@ export const AVAILABLE_DATA_SOURCES: DataSource[] = [
     sample_data: {
       columns: ["Risk Title", "Category", "Residual Score", "Risk Owner", "Treatment Status"],
       rows: []
+    }
+  },
+   {
+    id: "risk_dashboard_appetite_bar",
+    name: "Risk Dashboard - Against Appetite",
+    description: "Bar chart showing risks within and above appetite levels",
+    category: "risk",
+    compatible_widgets: ["bar_chart"],
+    requires_entity: true,
+    sample_data: {
+      bar_chart: {
+        categories: [
+          { label: "STRATEGIC", series: [
+            { label: "Within", value: 10, color: "#3b82f6" },
+            { label: "Above (Open)", value: 40, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 4, color: "#10b981" }
+          ]},
+          { label: "OPERATIONAL", series: [
+            { label: "Within", value: 3, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]},
+          { label: "GEOPOLITICAL", series: [
+            { label: "Within", value: 10, color: "#3b82f6" },
+            { label: "Above (Open)", value: 1, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]},
+          { label: "LEGAL, COMPLIANCE & REGULATIONS", series: [
+            { label: "Within", value: 4, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 1, color: "#10b981" }
+          ]},
+          { label: "ADMINISTRATION", series: [
+            { label: "Within", value: 5, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]},
+          { label: "HUMAN RESOURCES", series: [
+            { label: "Within", value: 2, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]},
+          { label: "HEALTH & SAFETY", series: [
+            { label: "Within", value: 7, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]},
+          { label: "FINANCIAL", series: [
+            { label: "Within", value: 3, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]},
+          { label: "CORPORATE GOVERNANCE", series: [
+            { label: "Within", value: 2, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]},
+          { label: "3RD PARTY / COUNTER PARTY", series: [
+            { label: "Within", value: 2, color: "#3b82f6" },
+            { label: "Above (Open)", value: 0, color: "#f59e0b" },
+            { label: "Above (Closed)", value: 0, color: "#10b981" }
+          ]}
+        ],
+        orientation: "vertical",
+        show_values: true
+      }
+    }
+  },
+  {
+    id: "risk_distribution_by_department_bar",
+    name: "Risk Distribution by Department",
+    description: "Bar chart showing risk distribution across departments",
+    category: "risk",
+    compatible_widgets: ["bar_chart"],
+    requires_entity: true,
+    sample_data: {
+      bar_chart: {
+        categories: [
+          { label: "IT Department", series: [
+            { label: "Risks", value: 30, color: "#3b82f6" }
+          ]},
+          { label: "Finance", series: [
+            { label: "Risks", value: 25, color: "#10b981" }
+          ]},
+          { label: "Operations", series: [
+            { label: "Risks", value: 20, color: "#f59e0b" }
+          ]},
+          { label: "HR", series: [
+            { label: "Risks", value: 15, color: "#ef4444" }
+          ]},
+          { label: "Legal", series: [
+            { label: "Risks", value: 10, color: "#7c3aed" }
+          ]},
+          { label: "Marketing", series: [
+            { label: "Risks", value: 8, color: "#ec4899" }
+          ]},
+          { label: "Sales", series: [
+            { label: "Risks", value: 12, color: "#8b5cf6" }
+          ]}
+        ],
+        orientation: "vertical",
+        show_values: true
+      }
     }
   },
   {
