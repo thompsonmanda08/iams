@@ -16,7 +16,6 @@ import { ReportHeader } from "./_components/report-header";
 import { ReportSidebar } from "./_components/report-sidebar";
 import { AddSectionButton } from "./_components/add-section-button";
 import Loader from "@/components/ui/loader";
-import { log } from "console";
 
 // ============================================================================
 // MAIN COMPONENT

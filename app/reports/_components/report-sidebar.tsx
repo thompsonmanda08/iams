@@ -1,11 +1,14 @@
-import React from "react";
-import { Plus } from "lucide-react";
 import { useReportStore } from "../store";
 import { TableOfContents } from "./table-of-contents";
 import { AddSectionButton } from "./add-section-button";
+import { SelectField } from "@/components/ui/select-field";
+import { ConfirmationModal } from "@/components/confirmation-modal";
+import { useState } from "react";
 
 export const ReportSidebar = () => {
   const { report, setAddSectionModalOpen, changeManagementStandard } = useReportStore();
+  const [pendingReportType, setPendingReportType] = useState<string | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   if (!report) return null;
 
@@ -16,6 +19,39 @@ export const ReportSidebar = () => {
     }
   };
 
+  const handleConfirmChangeReportType = () => {
+    if (!pendingReportType) return;
+    changeManagementStandard(pendingReportType);
+    setPendingReportType(null);
+    setConfirmDialogOpen(false);
+  };
+
+  const handleCancelChangeReportType = () => {
+    setPendingReportType(null);
+    setConfirmDialogOpen(false);
+  };
+
+  const getReportTypeValue = () => {
+    switch (report.report_type) {
+      case "compliance_audit":
+        return "ISO 27001";
+      case "risk":
+        return "Risk Assessment";
+      case "followup":
+        return "Follow-up";
+      case "general_audit":
+      default:
+        return "General";
+    }
+  };
+
+  const reportTypeOptions = [
+    { value: "General", label: "General Internal Audit" },
+    { value: "ISO 27001", label: "ISO 27001 Compliance" },
+    { value: "Risk Assessment", label: "Risk Assessment" },
+    { value: "Follow-up", label: "Audit Follow-up" }
+  ];
+
   return (
     <div className="col-span-12 space-y-4 lg:col-span-3">
       <TableOfContents sections={report.sections} onItemClick={scrollToSection} />
@@ -24,34 +60,18 @@ export const ReportSidebar = () => {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className="mb-3 text-sm font-semibold text-gray-900">Report Details</h3>
         <div className="space-y-3 text-sm">
-          <div>
-            <span className="block text-xs text-gray-400 uppercase">Type</span>
-            <select
-              className="mt-1 w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm font-medium text-gray-700 focus:border-blue-500 focus:outline-none"
-              value={
-                report.report_type === "compliance_audit"
-                  ? "ISO 27001"
-                  : report.report_type === "risk"
-                    ? "Risk Assessment"
-                    : report.report_type === "followup"
-                      ? "Follow-up"
-                      : "General"
-              }
-              onChange={(e) => {
-                if (
-                  window.confirm(
-                    "Changing the report type will reset the sections to the default template. Continue?"
-                  )
-                ) {
-                  changeManagementStandard(e.target.value);
-                }
-              }}>
-              <option value="General">General Internal Audit</option>
-              <option value="ISO 27001">ISO 27001 Compliance</option>
-              <option value="Risk Assessment">Risk Assessment</option>
-              <option value="Follow-up">Audit Follow-up</option>
-            </select>
-          </div>
+          <SelectField
+            label="Type"
+            value={getReportTypeValue()}
+            placeholder="Select report type..."
+            onValueChange={(value) => {
+              if (value === getReportTypeValue()) return;
+              setPendingReportType(value);
+              setConfirmDialogOpen(true);
+            }}
+            options={reportTypeOptions as any}
+            className="min-w-full"
+          />
           <div>
             <span className="text-gray-500">Created:</span>
             <p className="font-medium text-gray-900">{report.created_at}</p>
@@ -88,6 +108,17 @@ export const ReportSidebar = () => {
 
       {/* Add Section Button moved to Sidebar */}
       <AddSectionButton variant="sidebar" />
+
+      <ConfirmationModal
+        open={confirmDialogOpen}
+        title="Change Report Type"
+        description="Changing the report type will reset the sections to the default template. Continue?"
+        onOpenChange={(open) => {
+          if (!open) handleCancelChangeReportType();
+        }}
+        onConfirm={handleConfirmChangeReportType}
+        type="close"
+      />
     </div>
   );
 };

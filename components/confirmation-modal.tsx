@@ -43,7 +43,7 @@ const typeConfig = {
     description: "Are you sure you want to close? Any unsaved changes will be lost.",
     confirmText: "Close",
     variant: "destructive" as const,
-    iconColor: "text-destructive"
+    iconColor: "text-destructive bg-red-50 p-1"
   },
   edit: {
     icon: Edit,
