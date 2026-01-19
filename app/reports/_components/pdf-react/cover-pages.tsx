@@ -34,6 +34,17 @@ const sharedStyles = StyleSheet.create({
     fontSize: 12,
     fontStyle: "italic",
     marginBottom: 40
+  },
+  watermark: {
+    position: "absolute",
+    fontSize: 48,
+    color: "rgba(200, 200, 200, 0.5)",
+    transform: "rotate(-45deg)",
+    top: "50%",
+    left: "50%",
+    marginLeft: -200,
+    marginTop: -100,
+    zIndex: -1
   }
 });
 
@@ -42,9 +53,21 @@ interface CoverPageProps {
   reportTypeLabel: string;
 }
 
+{
+  /* Confidential Watermark */
+}
+const Watermark = () => {
+  return (
+    <View style={sharedStyles.watermark}>
+      <Text>Confidential</Text>
+    </View>
+  );
+};
+
 // Style 1: Standard (Blue background with yellow highlights) - General Audit
 export const StandardCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
   <Page size="A4" style={sharedStyles.bluePage}>
+    <Watermark />
     {/* Logo */}
     <View style={{ marginBottom: 40, alignItems: "center" }}>
       <Text style={{ ...sharedStyles.logo, color: "white" }}>INFRATEL</Text>
@@ -210,15 +233,13 @@ export const StandardCoverPage: React.FC<CoverPageProps> = ({ report, reportType
         Quarter II, 30th June {new Date().getFullYear()}
       </Text>
     </View>
-
-    {/* Confidential */}
-    <Text style={{ fontSize: 12, fontWeight: "bold", color: "#ef4444" }}>Confidential</Text>
   </Page>
 );
 
 // Style 2: Simple (White background, minimal) - Follow-up Log
 export const SimpleCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
   <Page size="A4" style={sharedStyles.whitePage}>
+    <Watermark />
     {/* Logo */}
     <View style={{ marginBottom: 60, alignItems: "center" }}>
       <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>INFRATEL</Text>
@@ -281,6 +302,7 @@ export const SimpleCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLa
 // Style 3: Detailed (White background with version and author) - Compliance Audit
 export const DetailedCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
   <Page size="A4" style={sharedStyles.whitePage}>
+    <Watermark />
     {/* Logo */}
     <View style={{ marginBottom: 80, alignItems: "center" }}>
       <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>INFRATEL</Text>
@@ -368,6 +390,7 @@ export const DetailedCoverPage: React.FC<CoverPageProps> = ({ report, reportType
 // Style 4: Signature (White background with approval table) - Risk Report
 export const SignatureCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
   <Page size="A4" style={{ ...sharedStyles.whitePage, justifyContent: "flex-start", padding: 40 }}>
+    <Watermark />
     {/* Logo */}
     <View style={{ marginBottom: 40, alignItems: "center", width: "100%" }}>
       <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>INFRATEL</Text>

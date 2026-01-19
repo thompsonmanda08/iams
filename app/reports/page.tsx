@@ -78,7 +78,6 @@ export default function AuditReportSystem() {
       />
     );
   }
-  console.log("Rendering report editor with report:", report);
   return (
     <div className="min-h-screen bg-gray-50">
       <ReportHeader />

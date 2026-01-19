@@ -183,6 +183,37 @@ export const AVAILABLE_DATA_SOURCES: DataSource[] = [
     }
   },
   {
+    id: "corporate_risk",
+    name: "Corporate Risk Profile",
+    description: "Distribution of corporate risk profile",
+    category: "risk",
+    compatible_widgets: ["pie_chart"],
+    requires_entity: true,
+    sample_data: {
+      pie_chart: [
+        { label: "High", value: 2, color: "#ef4444" },
+        { label: "Medium", value: 3, color: "#f59e0b" },
+        { label: "Low", value: 1, color: "#22c55e" } 
+      ],
+      
+    }
+  },
+  {
+    id: "closure_status",
+    name: "Closure Status",
+    description: "Distribution of closure status",
+    category: "risk",
+    compatible_widgets: ["pie_chart"],
+    requires_entity: true,
+    sample_data: {
+      pie_chart: [
+        { label: "Closed", value: 2, color: "#ef4444" },
+        { label: "Open", value: 3, color: "#22c55e" },
+      ],
+      
+    }
+  },
+  {
     id: "control_compliance",
     name: "Control Compliance Status",
     description: "Compliance status of controls against framework",

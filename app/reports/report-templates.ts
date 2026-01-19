@@ -179,6 +179,24 @@ createSection("exec_summary", "text_with_widgets",
       show_values: true
     }
   },
+   {
+          instance_id: "corporate_risk",
+          widget_type: "pie_chart",
+          data: {
+            title: "Corporate Risk Profile - April 2025",
+            slices: [],
+            data_source_id: "corporate_risk_profile"
+          }
+        },
+   {
+          instance_id: "closure_status",
+          widget_type: "pie_chart",
+          data: {
+            title: "Closure Status",
+            slices: [],
+            data_source_id: "closure_status"
+          }
+        },
   {
     instance_id: "risk_distribution_by_department_bar",
     widget_type: "bar_chart",
