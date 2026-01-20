@@ -18,7 +18,7 @@ import type {
   EvidenceRow
 } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
-import { TICK_MARKS } from "@/lib/data/tick-marks";
+import { TICK_MARKS } from "@/lib/config/tick-marks";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { SelectField } from "@/components/ui/select-field";
 import { DatePicker } from "@/components/ui/date-picker";

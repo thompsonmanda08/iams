@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Save, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
-import { getClauseByNumber } from "@/lib/data/iso27001-clauses";
+import { getClauseByNumber } from "@/lib/config/iso27001-clauses";
 import type { TestResult, Workpaper } from "@/lib/types/audit-types";
 import { useToast } from "@/hooks/use-toast";
 import { createWorkpaper, updateWorkpaper } from "@/app/_actions/audit-module-actions";
@@ -25,7 +25,7 @@ export function WorkpaperForm({
   auditPlanId,
   clauseNumber,
   existingWorkpaper,
-  onSuccess,
+  onSuccess
 }: WorkpaperFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -46,7 +46,7 @@ export function WorkpaperForm({
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -62,7 +62,7 @@ export function WorkpaperForm({
         testResults,
         testResult,
         preparedBy,
-        preparedDate: new Date(),
+        preparedDate: new Date()
       };
 
       const result = existingWorkpaper
@@ -74,7 +74,7 @@ export function WorkpaperForm({
           title: "Success",
           description: existingWorkpaper
             ? "Workpaper updated successfully"
-            : "Workpaper created successfully",
+            : "Workpaper created successfully"
         });
         router.refresh();
         onSuccess?.();
@@ -82,14 +82,14 @@ export function WorkpaperForm({
         toast({
           title: "Error",
           description: result.message || "Failed to save workpaper",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
@@ -131,7 +131,7 @@ export function WorkpaperForm({
       <div className="space-y-6">
         {/* Clause Header */}
         <div className="border-b pb-4">
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <h3 className="text-lg font-semibold">
               {clause.number} - {clause.title}
             </h3>
@@ -139,7 +139,7 @@ export function WorkpaperForm({
               {clause.category}
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">{clause.description}</p>
+          <p className="text-muted-foreground text-sm">{clause.description}</p>
         </div>
 
         {/* Objectives */}
@@ -184,17 +184,23 @@ export function WorkpaperForm({
         {/* Test Result Selection */}
         <div className="space-y-3">
           <Label>Test Result *</Label>
-          <RadioGroup value={testResult} onValueChange={(value) => setTestResult(value as TestResult)}>
+          <RadioGroup
+            value={testResult}
+            onValueChange={(value) => setTestResult(value as TestResult)}>
             <div className="grid grid-cols-3 gap-3">
-              {(["conformity", "partial-conformity", "non-conformity"] as TestResult[]).map((result) => (
-                <div key={result} className="flex items-center space-x-2">
-                  <RadioGroupItem value={result} id={result} />
-                  <Label htmlFor={result} className="flex items-center gap-2 cursor-pointer font-normal">
-                    {getResultIcon(result)}
-                    {getResultLabel(result)}
-                  </Label>
-                </div>
-              ))}
+              {(["conformity", "partial-conformity", "non-conformity"] as TestResult[]).map(
+                (result) => (
+                  <div key={result} className="flex items-center space-x-2">
+                    <RadioGroupItem value={result} id={result} />
+                    <Label
+                      htmlFor={result}
+                      className="flex cursor-pointer items-center gap-2 font-normal">
+                      {getResultIcon(result)}
+                      {getResultLabel(result)}
+                    </Label>
+                  </div>
+                )
+              )}
             </div>
           </RadioGroup>
         </div>
@@ -208,17 +214,17 @@ export function WorkpaperForm({
             value={preparedBy}
             onChange={(e) => setPreparedBy(e.target.value)}
             placeholder="e.g., John Doe"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end pt-4 border-t gap-3">
+        <div className="flex items-center justify-end gap-3 border-t pt-4">
           <Button variant="outline" onClick={() => onSuccess?.()} disabled={isSaving}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="mr-2 h-4 w-4" />
             {existingWorkpaper ? "Update Workpaper" : "Save Workpaper"}
           </Button>
         </div>

@@ -13,24 +13,19 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Settings, Paperclip, Copy } from "lucide-react";
 import type { EvidenceRow, TickMark } from "@/lib/types/audit-types";
-import { getTickMarkByCode } from "@/lib/data/tick-marks";
+import { getTickMarkByCode } from "@/lib/config/tick-marks";
 import { formatBytes } from "@/hooks/use-file-upload";
 
 interface EvidenceGridProps {
@@ -46,7 +41,7 @@ export function EvidenceGrid({
   onRowsChange,
   selectedTickMarks,
   onTickMarksChange,
-  availableTickMarks,
+  availableTickMarks
 }: EvidenceGridProps) {
   const [editingCell, setEditingCell] = useState<{ rowId: string; field: string } | null>(null);
 
@@ -56,7 +51,7 @@ export function EvidenceGrid({
       id: `row-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       source: "",
       description: "",
-      tickMarks: selectedTickMarks.reduce((acc, code) => ({ ...acc, [code]: false }), {}),
+      tickMarks: selectedTickMarks.reduce((acc, code) => ({ ...acc, [code]: false }), {})
     };
     onRowsChange([...rows, newRow]);
   };
@@ -69,7 +64,7 @@ export function EvidenceGrid({
     const duplicatedRow: EvidenceRow = {
       ...rowToDuplicate,
       id: `row-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      tickMarks: { ...rowToDuplicate.tickMarks },
+      tickMarks: { ...rowToDuplicate.tickMarks }
     };
     onRowsChange([...rows, duplicatedRow]);
   };
@@ -81,9 +76,7 @@ export function EvidenceGrid({
 
   // Update row field
   const updateRow = (rowId: string, field: keyof EvidenceRow, value: any) => {
-    onRowsChange(
-      rows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row))
-    );
+    onRowsChange(rows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row)));
   };
 
   // Toggle tick mark
@@ -95,8 +88,8 @@ export function EvidenceGrid({
               ...row,
               tickMarks: {
                 ...row.tickMarks,
-                [tickMarkCode]: !row.tickMarks[tickMarkCode],
-              },
+                [tickMarkCode]: !row.tickMarks[tickMarkCode]
+              }
             }
           : row
       )
@@ -118,10 +111,10 @@ export function EvidenceGrid({
         tickMarks: codes.reduce(
           (acc, code) => ({
             ...acc,
-            [code]: row.tickMarks[code] || false,
+            [code]: row.tickMarks[code] || false
           }),
           {}
-        ),
+        )
       }))
     );
   };
@@ -141,7 +134,7 @@ export function EvidenceGrid({
             onSelectionChange={handleTickMarkSelection}
           />
           <Button size="sm" onClick={addRow} variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Row
           </Button>
         </div>
@@ -204,8 +197,16 @@ export function EvidenceGrid({
                 <TableCell>
                   <Input
                     type="date"
-                    value={row.documentDate ? new Date(row.documentDate).toISOString().split('T')[0] : ""}
-                    onChange={(e) => updateRow(row.id, "documentDate", e.target.value ? new Date(e.target.value) : undefined)}
+                    value={
+                      row.documentDate ? new Date(row.documentDate).toISOString().split("T")[0] : ""
+                    }
+                    onChange={(e) =>
+                      updateRow(
+                        row.id,
+                        "documentDate",
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
                     className="h-8 text-sm"
                   />
                 </TableCell>
@@ -244,9 +245,15 @@ export function EvidenceGrid({
                     type="number"
                     step="0.01"
                     value={row.debits || ""}
-                    onChange={(e) => updateRow(row.id, "debits", e.target.value ? parseFloat(e.target.value) : undefined)}
+                    onChange={(e) =>
+                      updateRow(
+                        row.id,
+                        "debits",
+                        e.target.value ? parseFloat(e.target.value) : undefined
+                      )
+                    }
                     placeholder="0.00"
-                    className="h-8 text-sm text-right"
+                    className="h-8 text-right text-sm"
                   />
                 </TableCell>
 
@@ -256,9 +263,15 @@ export function EvidenceGrid({
                     type="number"
                     step="0.01"
                     value={row.credits || ""}
-                    onChange={(e) => updateRow(row.id, "credits", e.target.value ? parseFloat(e.target.value) : undefined)}
+                    onChange={(e) =>
+                      updateRow(
+                        row.id,
+                        "credits",
+                        e.target.value ? parseFloat(e.target.value) : undefined
+                      )
+                    }
                     placeholder="0.00"
-                    className="h-8 text-sm text-right"
+                    className="h-8 text-right text-sm"
                   />
                 </TableCell>
 
@@ -300,17 +313,15 @@ export function EvidenceGrid({
                       variant="ghost"
                       className="h-7 w-7 p-0"
                       onClick={() => duplicateRow(row.id)}
-                      title="Duplicate row"
-                    >
+                      title="Duplicate row">
                       <Copy className="h-3 w-3" />
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 w-7 p-0 text-destructive"
+                      className="text-destructive h-7 w-7 p-0"
                       onClick={() => deleteRow(row.id)}
-                      title="Delete row"
-                    >
+                      title="Delete row">
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
@@ -321,10 +332,10 @@ export function EvidenceGrid({
             {/* Empty state */}
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={12 + selectedTickMarks.length} className="text-center py-8">
-                  <p className="text-sm text-muted-foreground">No evidence rows added yet</p>
+                <TableCell colSpan={12 + selectedTickMarks.length} className="py-8 text-center">
+                  <p className="text-muted-foreground text-sm">No evidence rows added yet</p>
                   <Button size="sm" variant="outline" onClick={addRow} className="mt-2">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Add First Row
                   </Button>
                 </TableCell>
@@ -336,20 +347,33 @@ export function EvidenceGrid({
 
       {/* Totals */}
       {rows.length > 0 && (
-        <Card className="p-4 bg-slate-50">
+        <Card className="bg-slate-50 p-4">
           <div className="flex items-center justify-end gap-6 text-sm font-medium">
             <div>
               <span className="text-muted-foreground">Total Debits: </span>
-              <span className="text-green-600">{totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-green-600">
+                {totalDebits.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground">Total Credits: </span>
-              <span className="text-red-600">{totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-red-600">
+                {totalCredits.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground">Difference: </span>
               <span className={difference >= 0 ? "text-green-600" : "text-red-600"}>
-                {difference.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {difference.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
               </span>
             </div>
           </div>
@@ -363,7 +387,7 @@ export function EvidenceGrid({
 function TickMarkConfigDialog({
   availableTickMarks,
   selectedTickMarks,
-  onSelectionChange,
+  onSelectionChange
 }: {
   availableTickMarks: TickMark[];
   selectedTickMarks: string[];
@@ -384,49 +408,48 @@ function TickMarkConfigDialog({
   };
 
   // Group by category
-  const groupedTickMarks = availableTickMarks.reduce((acc, tm) => {
-    const category = tm.category || "Other";
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(tm);
-    return acc;
-  }, {} as Record<string, TickMark[]>);
+  const groupedTickMarks = availableTickMarks.reduce(
+    (acc, tm) => {
+      const category = tm.category || "Other";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(tm);
+      return acc;
+    },
+    {} as Record<string, TickMark[]>
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
-          <Settings className="h-4 w-4 mr-2" />
+          <Settings className="mr-2 h-4 w-4" />
           Configure Tick Marks ({selectedTickMarks.length})
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Configure Tick Marks</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Select which tick marks to display in the evidence grid
           </p>
 
           {Object.entries(groupedTickMarks).map(([category, tickMarks]) => (
             <div key={category} className="space-y-2">
-              <h4 className="font-medium text-sm">{category}</h4>
+              <h4 className="text-sm font-medium">{category}</h4>
               <div className="grid grid-cols-1 gap-2">
                 {tickMarks.map((tm) => (
                   <div
                     key={tm.code}
-                    className="flex items-start gap-3 p-2 rounded-lg border hover:bg-slate-50"
-                  >
+                    className="flex items-start gap-3 rounded-lg border p-2 hover:bg-slate-50">
                     <Checkbox
                       id={`tm-${tm.code}`}
                       checked={tempSelection.includes(tm.code)}
                       onCheckedChange={() => toggleTickMark(tm.code)}
                     />
-                    <label
-                      htmlFor={`tm-${tm.code}`}
-                      className="flex-1 cursor-pointer"
-                    >
+                    <label htmlFor={`tm-${tm.code}`} className="flex-1 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="font-mono">
                           {tm.code}
@@ -440,8 +463,8 @@ function TickMarkConfigDialog({
             </div>
           ))}
 
-          <div className="pt-4 border-t">
-            <p className="text-sm text-muted-foreground">
+          <div className="border-t pt-4">
+            <p className="text-muted-foreground text-sm">
               Selected: {tempSelection.length} tick mark{tempSelection.length !== 1 ? "s" : ""}
             </p>
           </div>

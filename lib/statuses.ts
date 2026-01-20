@@ -30,6 +30,7 @@ export const STATUS_VALUES = {
   COMPLETED: "COMPLETED",
   CLOSED: "CLOSED",
   ARCHIVED: "ARCHIVED",
+  PUBLISHED: "PUBLISHED",
   HIGH: "HIGH",
   MEDIUM: "MEDIUM",
   LOW: "LOW",
@@ -185,6 +186,15 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     hexColor: "#495057",
     sortOrder: 11
   },
+  PUBLISHED: {
+    id: "PUBLISHED",
+    label: "Published",
+    description: "Report has been published and is available for viewing",
+    color: "success",
+    style: "solid",
+    hexColor: "#198754",
+    sortOrder: 12
+  },
   HIGH: {
     id: "HIGH",
     label: "High",
@@ -192,7 +202,7 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     color: "danger",
     style: "solid",
     hexColor: "#DC3545",
-    sortOrder: 12
+    sortOrder: 13
   },
   MEDIUM: {
     id: "MEDIUM",
@@ -201,7 +211,7 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     color: "warning",
     style: "solid",
     hexColor: "#FFC107",
-    sortOrder: 13
+    sortOrder: 14
   },
   LOW: {
     id: "LOW",
@@ -210,7 +220,7 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     color: "success",
     style: "solid",
     hexColor: "#28A745",
-    sortOrder: 14
+    sortOrder: 15
   },
   BELOW: {
     id: "BELOW",
@@ -219,7 +229,7 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     color: "success",
     style: "solid",
     hexColor: "#28A745",
-    sortOrder: 14
+    sortOrder: 15
   },
   ABOVE: {
     id: "ABOVE",
@@ -228,7 +238,7 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     color: "danger",
     style: "solid",
     hexColor: "#DC3545",
-    sortOrder: 12
+    sortOrder: 13
   },
   CRITICAL: {
     id: "CRITICAL",
@@ -237,7 +247,7 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     color: "danger",
     style: "solid",
     hexColor: "#DC3545",
-    sortOrder: 13
+    sortOrder: 14
   }
 };
 
@@ -278,6 +288,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["ARCHIVED"],
       CLOSED: [],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -314,6 +325,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["ARCHIVED"],
       CLOSED: [],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -405,6 +417,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["CLOSED", "ARCHIVED"],
       CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -461,6 +474,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["CLOSED", "ARCHIVED"],
       CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -489,6 +503,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["CLOSED", "ARCHIVED"],
       CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -516,6 +531,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["CLOSED", "ARCHIVED"],
       CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -551,6 +567,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: [],
       CLOSED: [],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],

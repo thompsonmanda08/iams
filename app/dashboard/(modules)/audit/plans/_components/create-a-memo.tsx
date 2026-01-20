@@ -3,16 +3,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { format } from "date-fns";
 import { Clock } from "lucide-react";
-import {
-  Plus,
-  PencilLine,
-  Download,
-  Copy,
-  Trash2,
-  ChevronDown,
-  Loader2,
-  AlertCircle
-} from "lucide-react";
+import { Plus, PencilLine, Loader2, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,13 +11,6 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import {
   Select,
@@ -51,7 +35,7 @@ import {
   generateMemoDocx
 } from "@/lib/utils/memo-export";
 import { notify } from "@/lib/utils";
-import { getTemplateById, getTemplateOptionsGrouped } from "@/lib/memo-templates";
+import { getTemplateById, getTemplateOptionsGrouped } from "@/lib/templates/memo-templates";
 import { StatusBadge } from "@/components/status-badge";
 
 interface CreateOrUpdateMemoProps {

@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TemplateService } from "@/lib/services/template-service";
+import { TemplateService } from "@/lib/templates/template-service";
 import { useWorkpaperTemplateCategories } from "@/hooks/use-audit-query-data";
 import type { TemplateCategory } from "@/lib/types/audit-types";
 

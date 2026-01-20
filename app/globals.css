@@ -3,8 +3,7 @@
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
-
-@import "./themes.css";
+ 
 
 :root {
   --base-50: oklch(0.985 0.0013 286.84);

@@ -120,51 +120,10 @@ export const QUERY_KEYS = {
 };
 
 // ANIMATION_VARIANTS
-export const containerVariants = {
-  hidden: { opacity: 1 },
-  show: {
-    opacity: 1,
-    transition: {
-      // staggerChildren: 0.25,
-    }
-  },
-  exit: { opacity: 0 }
-};
-
-export const staggerContainerVariants = {
-  hidden: { opacity: 1 },
-  show: {
-    opacity: 1,
-    transition: {
-      // staggerChildren: 0.25,
-    }
-  },
-  exit: { opacity: 0 }
-};
-
 export const staggerContainerItemVariants = {
   hidden: { opacity: 0, y: -60 },
   show: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: 60 }
-};
-
-export const slideDownInView = {
-  hidden: {
-    opacity: 0,
-    y: -100,
-    transition: {
-      duration: 0.5,
-      ease: "easeInOut"
-    }
-  },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: "easeInOut"
-    }
-  }
 };
 // const NRC_PASSPORT = /^(ZN[0-9]{6}|[0-9]{6}/[0-9]{2}/[1]{1})$/
 

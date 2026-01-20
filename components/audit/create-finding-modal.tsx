@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { getTopLevelClauses, getChildClauses } from "@/lib/data/iso27001-clauses";
+import { getTopLevelClauses, getChildClauses } from "@/lib/config/iso27001-clauses";
 import type { FindingSeverity, TestResult, EvidenceInput } from "@/lib/types/audit-types";
 import { useSaveFindingMutation } from "@/hooks/use-finding-mutations";
 import { SelectField } from "../ui/select-field";

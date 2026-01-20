@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { EvidenceGrid } from "../../../../../components/audit/evidence-grid";
 import { CreateOrUpdateFindingModal } from "../../../../../components/audit/create-finding-modal";
 import type { GeneralWorkpaperInput, EvidenceRow } from "@/lib/types/audit-types";
-import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/data/tick-marks";
+import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/config/tick-marks";
 import { SelectField } from "../../../../../components/ui/select-field";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";

@@ -7,14 +7,13 @@ import NextTopLoader from "nextjs-toploader";
 
 import "./globals.css";
 
-import { ActiveThemeProvider } from "@/components/active-theme";
-import { DEFAULT_THEME } from "@/lib/themes";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
 import { Metadata } from "next";
 import localFont from "next/font/local";
 import { verifySession } from "@/lib/session";
 import { defaultMetadata } from "./metadata";
+import { ActiveThemeProvider } from "@/components/active-theme";
 
 const inter = localFont({
   src: [
@@ -79,11 +78,10 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const themeSettings = {
-    preset: (cookieStore.get("theme_preset")?.value ?? DEFAULT_THEME.preset) as any,
-    scale: (cookieStore.get("theme_scale")?.value ?? DEFAULT_THEME.scale) as any,
-    radius: (cookieStore.get("theme_radius")?.value ?? DEFAULT_THEME.radius) as any,
-    contentLayout: (cookieStore.get("theme_content_layout")?.value ??
-      DEFAULT_THEME.contentLayout) as any
+    preset: cookieStore.get("theme_preset")?.value as any,
+    scale: cookieStore.get("theme_scale")?.value as any,
+    radius: cookieStore.get("theme_radius")?.value as any,
+    contentLayout: cookieStore.get("theme_content_layout")?.value as any
   };
 
   const bodyAttributes = Object.fromEntries(
@@ -100,11 +98,7 @@ export default async function RootLayout({
         suppressHydrationWarning
         className={cn("bg-background group/layout font-inter", inter.variable)}
         {...bodyAttributes}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <ActiveThemeProvider initialTheme={themeSettings}>
             {/* REST OF THE CLIENT SIDE PROVIDERS */}
             <Providers session={session}>{children}</Providers>

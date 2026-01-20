@@ -4,11 +4,7 @@ import {
   Building,
   MapPin,
   Users,
-  Package,
   type LucideIcon,
-  Settings,
-  BookTemplate,
-  Sliders,
   LayoutDashboard,
   Workflow,
   Home,
@@ -17,7 +13,8 @@ import {
   ShieldQuestion,
   ClipboardListIcon,
   BriefcaseBusiness,
-  MailCheck
+  MailCheck,
+  ChartPieIcon
 } from "lucide-react";
 
 export type NavGroup = {
@@ -90,7 +87,7 @@ export const adminNavItems: NavGroup[] = [
 
 export const navItems: NavGroup[] = [
   {
-    title: "Home",
+    title: "Dashboard",
     items: [
       {
         title: "Home",
@@ -125,6 +122,11 @@ export const navItems: NavGroup[] = [
           { title: "Budgets", href: "/dashboard/audit/budgets" },
           { title: "Plans & Executions", href: "/dashboard/audit/plans" }
         ]
+      },
+      {
+        title: "Reports",
+        href: "/dashboard/reports",
+        icon: ChartPieIcon
       }
     ]
   },

@@ -67,6 +67,7 @@ import { AuditPlanTasksPanel } from "./audit-plan-tasks-panel";
 import { CreateOrUpdateMemo, type CreateOrUpdateMemoRef } from "./create-a-memo";
 import { useAuditMemo } from "@/hooks/use-audit-queries";
 import Loader from "@/components/ui/loader";
+import { AuditPlanReportTab } from "./audit-plan-report-tab";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -353,12 +354,12 @@ export function AuditPlanWorkpaperView({
             </div>
             <div className="flex flex-col items-end gap-4">
               <div className="flex gap-2">
-                {auditPlanData.status.toUpperCase() === "COMPLETED" && (
+                {/* {auditPlanData.status.toUpperCase() === "COMPLETED" && (
                   <Button variant="outline" size="sm" className="gap-2">
                     <Download className="h-6 w-6" />
                     Export
                   </Button>
-                )}
+                )} */}
                 {auditPlanData.status.toUpperCase() === "DRAFT" && (
                   <>
                     <Button
@@ -479,7 +480,7 @@ export function AuditPlanWorkpaperView({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid h-14 w-full grid-cols-5">
+        <TabsList className="grid h-14 w-full grid-cols-6">
           <TabsTrigger value="plan-details">
             <FileText className="h-6 w-6 text-slate-700 dark:text-slate-300" />
             Plan Details
@@ -506,6 +507,10 @@ export function AuditPlanWorkpaperView({
           <TabsTrigger value="closure">
             <CheckCircle2 className="h-6 w-6 text-blue-600" />
             Closure
+          </TabsTrigger>
+          <TabsTrigger value="report">
+            <FileText className="h-6 w-6 text-purple-600" />
+            Report
           </TabsTrigger>
         </TabsList>
 
@@ -1376,6 +1381,11 @@ export function AuditPlanWorkpaperView({
               setAuditPlanData((prev) => ({ ...prev }));
             }}
           />
+        </TabsContent>
+
+        {/* Report Tab */}
+        <TabsContent value="report" className="space-y-4">
+          <AuditPlanReportTab auditPlan={auditPlan} />
         </TabsContent>
       </Tabs>
 
