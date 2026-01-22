@@ -100,6 +100,12 @@ export function WidgetConfigurationModal({
 
   // Confirm and fetch data
   const handleConfirm = useCallback(async () => {
+    console.log("🔍 [WidgetConfigModal] handleConfirm triggered:", {
+      selectedDataSource: selectedDataSource?.id,
+      selectedWidgetType,
+      entityId
+    });
+
     if (!selectedDataSource || !selectedWidgetType) {
       setError("Please select both a data source and widget type");
       return;
@@ -109,19 +115,39 @@ export function WidgetConfigurationModal({
     setError(null);
 
     try {
+      console.log("🔍 [WidgetConfigModal] Fetching widget data...");
       const rawData = await fetchWidgetData({
         dataSourceId: selectedDataSource.id,
         widgetType: selectedWidgetType,
         entityId
       });
 
+      console.log("🔍 [WidgetConfigModal] Raw data received:", {
+        dataType: typeof rawData,
+        isArray: Array.isArray(rawData),
+        keys: typeof rawData === "object" && rawData !== null ? Object.keys(rawData) : []
+      });
+
       // Transform the data based on widget type
+      console.log("🔍 [WidgetConfigModal] Transforming data...");
       const transformedData = transformWidgetData(
         rawData,
         selectedWidgetType,
         selectedDataSource.id,
         selectedDataSource.name
       );
+
+      console.log("🔍 [WidgetConfigModal] Transformed data:", {
+        title: transformedData.title,
+        dataSourceId: transformedData.data_source_id,
+        keys: Object.keys(transformedData)
+      });
+
+      console.log("🔍 [WidgetConfigModal] Calling onConfigure with config:", {
+        dataSourceId: selectedDataSource.id,
+        dataSourceName: selectedDataSource.name,
+        widgetType: selectedWidgetType
+      });
 
       onConfigure({
         dataSourceId: selectedDataSource.id,
@@ -130,9 +156,12 @@ export function WidgetConfigurationModal({
         data: transformedData
       });
 
+      console.log("✅ [WidgetConfigModal] Widget configured successfully");
+
       // Reset and close
       handleOpenChange(false);
     } catch (err: any) {
+      console.error("❌ [WidgetConfigModal] Error:", err);
       setError(err.message || "Failed to fetch widget data");
       setStep("select-widget-type");
     }

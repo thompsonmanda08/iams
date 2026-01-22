@@ -147,8 +147,16 @@ export function ReportBuilder({
   // Handle data source change with real data fetching
   const handleWidgetDataSourceChange = useCallback(
     async (sectionId: string, widgetId: string, dataSource: DataSource | null) => {
+      console.log("🔍 [handleWidgetDataSourceChange] Data source change triggered:", {
+        sectionId,
+        widgetId,
+        dataSourceId: dataSource?.id,
+        dataSourceName: dataSource?.name
+      });
+
       // If no data source selected (manual mode), just update the reference
       if (!dataSource) {
+        console.log("🔍 [handleWidgetDataSourceChange] No data source selected, switching to manual mode");
         updateWidgetDataSource(sectionId, widgetId, null);
         return;
       }
@@ -157,14 +165,21 @@ export function ReportBuilder({
       const section = report?.sections.find((s) => s.section_id === sectionId);
       const widget = section?.widgets.find((w) => w.instance_id === widgetId);
 
+      console.log("🔍 [handleWidgetDataSourceChange] Widget found:", {
+        widgetId: widget?.instance_id,
+        widgetType: widget?.widget_type,
+        currentDataSourceId: widget?.data?.data_source_id
+      });
+
       if (!widget) {
-        console.error("Widget not found");
+        console.error("❌ [handleWidgetDataSourceChange] Widget not found");
         return;
       }
 
       try {
         // Fetch real data from the API
         toast.loading("Fetching data...", { id: "fetch-data" });
+        console.log("🔍 [handleWidgetDataSourceChange] Fetching data from API...");
 
         const widgetType = widget.widget_type as
           | "pie_chart"
@@ -177,11 +192,18 @@ export function ReportBuilder({
 
         const result = await getDataSourceData(dataSource.id, widgetType, entity.id);
 
+        console.log("🔍 [handleWidgetDataSourceChange] Fetch result:", {
+          success: result.success,
+          hasData: !!result.data,
+          dataType: typeof result.data
+        });
+
         if (!result.success) {
           throw new Error(result.message || "Failed to fetch data");
         }
 
         // Transform the data to widget format
+        console.log("🔍 [handleWidgetDataSourceChange] Transforming data...");
         const transformedData = transformWidgetData(
           result.data,
           widget.widget_type,
@@ -189,12 +211,20 @@ export function ReportBuilder({
           dataSource.name
         );
 
+        console.log("🔍 [handleWidgetDataSourceChange] Transformed data:", {
+          title: transformedData.title,
+          dataSourceId: transformedData.data_source_id,
+          keys: Object.keys(transformedData)
+        });
+
         // Update the widget with fetched data
+        console.log("🔍 [handleWidgetDataSourceChange] Updating widget data in store...");
         updateWidgetData(sectionId, widgetId, transformedData);
 
         toast.success("Data loaded successfully", { id: "fetch-data" });
+        console.log("✅ [handleWidgetDataSourceChange] Data source change completed successfully");
       } catch (error: any) {
-        console.error("Failed to fetch widget data:", error);
+        console.error("❌ [handleWidgetDataSourceChange] Failed to fetch widget data:", error);
         toast.error(error.message || "Failed to fetch data", { id: "fetch-data" });
 
         // Still update the data source reference even if fetch fails
