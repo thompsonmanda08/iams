@@ -414,24 +414,34 @@ export async function fetchWidgetData(params: FetchWidgetDataParams): Promise<AP
  * Returns a unified list of all data sources with sample data for each widget type
  */
 export async function getAllDataSources(): Promise<APIResponse> {
-  // TEMPORARY: Use mock data for testing - remove this to use API data
-  console.log("Using local mock data sources for testing");
-  return successResponse(AVAILABLE_DATA_SOURCES);
-
-  /* Uncomment to use API data sources
   try {
     const response = await authenticatedApiClient({
       url: "/api/v1/data-sources",
       method: "GET"
     });
 
-    return successResponse(response?.data?.data || response?.data);
+    // Handle various response structures from the API
+    const apiData = response?.data?.data || response?.data;
+
+    // Validate that we got an array
+    if (!Array.isArray(apiData)) {
+      console.warn("API returned invalid data format, using mock data");
+      return successResponse(AVAILABLE_DATA_SOURCES);
+    }
+
+    // If API returns empty array, use mock data as fallback
+    if (apiData.length === 0) {
+      console.warn("API returned no data sources, using mock data");
+      return successResponse(AVAILABLE_DATA_SOURCES);
+    }
+
+    console.log(`✓ Successfully loaded ${apiData.length} data sources from API`);
+    return successResponse(apiData);
   } catch (error: any) {
-    // Fallback to local data sources if API not available
-    console.warn("Data sources API not available, using local data sources");
+    // Fallback to mock data sources if API not available
+    console.warn("Data sources API not available, using mock data sources");
     return successResponse(AVAILABLE_DATA_SOURCES);
   }
-  */
 }
 
 /**
@@ -525,8 +535,17 @@ export async function getDataSourceData(
 
     return handleBadRequest("No data received from data source endpoint");
   } catch (error: any) {
-    // Return the error response directly instead of falling back
-    console.error(`✗ Failed to fetch data for ${dataSourceId}:`, error?.message || error);
+    // Fallback to mock sample data if API fails
+    console.warn(`API failed for ${dataSourceId}, attempting to use mock sample data`);
+    const dataSource = AVAILABLE_DATA_SOURCES.find((ds) => ds.id === dataSourceId);
+
+    if (dataSource?.sample_data) {
+      const sampleData = dataSource.sample_data[widgetType] || dataSource.sample_data;
+      console.log(`✓ Using mock sample data for ${dataSourceId} (${widgetType})`);
+      return successResponse(sampleData);
+    }
+
+    console.error(`✗ No fallback data available for ${dataSourceId}`);
     return handleError(error, "GET | DATA SOURCE DATA", `/api/v1/data-sources/${dataSourceId}?widget_type=${widgetType}`);
   }
 }
