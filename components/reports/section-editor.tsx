@@ -20,7 +20,9 @@ import {
   DataSource,
   SectionType,
   DynamicSectionData,
-  ReportField
+  ReportField,
+  WidgetInstance,
+  ReportEntityType
 } from "@/lib/types/report-types";
 import { CoverPageEditor } from "./cover-page-editor";
 import { FindingsSelector } from "./findings-selector";
@@ -30,6 +32,7 @@ import { DynamicSection } from "./dynamic-section";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { BarChartWidget } from "./bar-chart-widget";
 import { RiskObjectiveMappingTable } from "./risk-objective-mapping-table";
+import { WidgetManager } from "./widget-manager";
 
 interface SectionEditorProps {
   section: ReportSection;
@@ -41,11 +44,20 @@ interface SectionEditorProps {
   onContentChange: (content: string) => void;
   onFindingsSelectionChange?: (selectedIds: string[]) => void;
   onFieldValuesChange?: (fieldValues: DynamicSectionData) => void;
-  onSchemaChange?: (fields: ReportField[]) => void; // New Prop
+  onSchemaChange?: (fields: ReportField[]) => void;
+  // Widget management props
   onWidgetColumnsChange?: (widgetId: string, columns: TableColumn[]) => void;
   onWidgetRowsChange?: (widgetId: string, rows: Record<string, any>[]) => void;
   onWidgetDataSourceChange?: (widgetId: string, dataSource: DataSource | null) => void;
   onWidgetDataChange?: (widgetId: string, data: any) => void;
+  // New widget CRUD props
+  onAddWidget?: (widget: WidgetInstance) => void;
+  onRemoveWidget?: (widgetId: string) => void;
+  onUpdateWidget?: (widgetId: string, updates: Partial<WidgetInstance>) => void;
+  // Entity context for data sources
+  entityId?: string;
+  entityType?: ReportEntityType;
+  // Section management
   onMove?: (direction: "up" | "down") => void;
   onDelete?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
@@ -67,6 +79,11 @@ export const SectionEditor = ({
   onWidgetRowsChange,
   onWidgetDataSourceChange,
   onWidgetDataChange,
+  onAddWidget,
+  onRemoveWidget,
+  onUpdateWidget,
+  entityId,
+  entityType,
   onMove,
   onDelete,
   onDragStart,
@@ -275,7 +292,26 @@ export const SectionEditor = ({
               />
             )}
 
-            {section.widgets && section.widgets.length > 0 && (
+            {/* Widget Manager for text_with_widgets sections - dynamic add/remove */}
+            {section.section_type === "text_with_widgets" && onAddWidget && onRemoveWidget && (
+              <WidgetManager
+                sectionId={section.section_id}
+                widgets={section.widgets || []}
+                entityId={entityId}
+                entityType={entityType}
+                filterByCategory={entityType === "risk_register" ? ["risk"] : entityType === "audit_plan" ? ["audit"] : undefined}
+                onAddWidget={onAddWidget}
+                onRemoveWidget={onRemoveWidget}
+                onUpdateWidget={onUpdateWidget || (() => {})}
+                onWidgetDataChange={onWidgetDataChange}
+                onWidgetDataSourceChange={onWidgetDataSourceChange}
+                onWidgetColumnsChange={onWidgetColumnsChange}
+                onWidgetRowsChange={onWidgetRowsChange}
+              />
+            )}
+
+            {/* Legacy widget rendering for non-text_with_widgets sections or when widget manager props not provided */}
+            {section.section_type !== "text_with_widgets" && section.widgets && section.widgets.length > 0 && (
               <div className="space-y-4">
                 <div className="border-t border-gray-100 pt-4">
                   <h4 className="mb-3 text-xs font-bold tracking-wider text-gray-500 uppercase">

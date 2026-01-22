@@ -21,7 +21,8 @@ import type {
   DynamicSectionData,
   ReportField,
   ReportType,
-  ReportEntityType
+  ReportEntityType,
+  WidgetInstance
 } from "@/lib/types/report-types";
 import { StatusBadge } from "../status-badge";
 import { Badge } from "../ui/badge";
@@ -118,6 +119,10 @@ export function ReportBuilder({
     moveSection,
     handleDragStart,
     handleDrop,
+    // Widget CRUD actions
+    addWidget,
+    removeWidget,
+    updateWidget,
     updateWidgetColumns,
     updateWidgetRows,
     updateWidgetData,
@@ -437,6 +442,19 @@ export function ReportBuilder({
                   onWidgetDataChange={(widgetId, data) =>
                     updateWidgetData(section.section_id, widgetId, data)
                   }
+                  // Widget CRUD operations
+                  onAddWidget={(widget: WidgetInstance) =>
+                    addWidget(section.section_id, widget)
+                  }
+                  onRemoveWidget={(widgetId: string) =>
+                    removeWidget(section.section_id, widgetId)
+                  }
+                  onUpdateWidget={(widgetId: string, updates: Partial<WidgetInstance>) =>
+                    updateWidget(section.section_id, widgetId, updates)
+                  }
+                  // Entity context for data source filtering
+                  entityId={entity.id}
+                  entityType={entityType}
                   onMove={(direction) => moveSection(index, direction)}
                   onDelete={() => deleteSection(section.section_id)}
                   onDragStart={(e) => {

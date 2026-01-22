@@ -11,7 +11,7 @@ export type SectionType =
   | "findings_selector"
   | "compliance_findings"
   | "dynamic_form";
-export type WidgetType = "table" | "pie_chart" | "bar_chart" | "line_chart" | "text_block" | "risk_objective_mapping";
+export type WidgetType = "table" | "pie_chart" | "bar_chart" | "line_chart" | "area_chart" | "metric_card" | "text_block" | "risk_objective_mapping";
 
 export interface TableColumn {
   key: string;

@@ -5,7 +5,8 @@ import type {
   FindingSummary,
   TableColumn,
   DataSource,
-  ReportEntityType
+  ReportEntityType,
+  WidgetInstance
 } from "@/lib/types/report-types";
 import {
   reorderSections,
@@ -50,6 +51,10 @@ interface ReportState {
   handleDrop: (targetId: string) => void;
 
   // Widget Actions
+  addWidget: (sectionId: string, widget: WidgetInstance) => void;
+  removeWidget: (sectionId: string, widgetId: string) => void;
+  updateWidget: (sectionId: string, widgetId: string, updates: Partial<WidgetInstance>) => void;
+  reorderWidgets: (sectionId: string, widgets: WidgetInstance[]) => void;
   updateWidgetColumns: (sectionId: string, widgetId: string, columns: TableColumn[]) => void;
   updateWidgetRows: (sectionId: string, widgetId: string, rows: Record<string, any>[]) => void;
   updateWidgetData: (sectionId: string, widgetId: string, data: any) => void;
@@ -170,6 +175,78 @@ export const useReportStore = create<ReportState>((set, get) => ({
       };
     }),
 
+  // Widget CRUD Actions
+  addWidget: (sectionId, widget) =>
+    set((state) => {
+      if (!state.report) return {};
+      return {
+        report: {
+          ...state.report,
+          sections: state.report.sections.map((s) => {
+            if (s.section_id !== sectionId) return s;
+            const newOrder = s.widgets.length;
+            return {
+              ...s,
+              widgets: [...s.widgets, { ...widget, order: newOrder }]
+            };
+          })
+        }
+      };
+    }),
+
+  removeWidget: (sectionId, widgetId) =>
+    set((state) => {
+      if (!state.report) return {};
+      return {
+        report: {
+          ...state.report,
+          sections: state.report.sections.map((s) => {
+            if (s.section_id !== sectionId) return s;
+            return {
+              ...s,
+              widgets: s.widgets
+                .filter((w) => w.instance_id !== widgetId)
+                .map((w, i) => ({ ...w, order: i })) // Re-order remaining widgets
+            };
+          })
+        }
+      };
+    }),
+
+  updateWidget: (sectionId, widgetId, updates) =>
+    set((state) => {
+      if (!state.report) return {};
+      return {
+        report: {
+          ...state.report,
+          sections: state.report.sections.map((s) => {
+            if (s.section_id !== sectionId) return s;
+            return {
+              ...s,
+              widgets: s.widgets.map((w) =>
+                w.instance_id === widgetId ? { ...w, ...updates } : w
+              )
+            };
+          })
+        }
+      };
+    }),
+
+  reorderWidgets: (sectionId, widgets) =>
+    set((state) => {
+      if (!state.report) return {};
+      return {
+        report: {
+          ...state.report,
+          sections: state.report.sections.map((s) =>
+            s.section_id === sectionId
+              ? { ...s, widgets: widgets.map((w, i) => ({ ...w, order: i })) }
+              : s
+          )
+        }
+      };
+    }),
+
   updateWidgetColumns: (sectionId, widgetId, columns) =>
     set((state) => {
       if (!state.report) return {};
@@ -261,6 +338,37 @@ export const useReportStore = create<ReportState>((set, get) => ({
                         data: {
                           ...w.data,
                           slices: sampleData,
+                          title: dataSource.name,
+                          data_source_id: dataSource.id
+                        }
+                      };
+                    } else if (w.widget_type === "bar_chart") {
+                      return {
+                        ...w,
+                        data: {
+                          ...w.data,
+                          ...sampleData,
+                          title: dataSource.name,
+                          data_source_id: dataSource.id
+                        }
+                      };
+                    } else if (w.widget_type === "line_chart" || w.widget_type === "area_chart") {
+                      return {
+                        ...w,
+                        data: {
+                          ...w.data,
+                          ...sampleData,
+                          title: dataSource.name,
+                          data_source_id: dataSource.id
+                        }
+                      };
+                    } else {
+                      // For other widget types, merge the sample data directly
+                      return {
+                        ...w,
+                        data: {
+                          ...w.data,
+                          ...sampleData,
                           title: dataSource.name,
                           data_source_id: dataSource.id
                         }
