@@ -414,6 +414,11 @@ export async function fetchWidgetData(params: FetchWidgetDataParams): Promise<AP
  * Returns a unified list of all data sources with sample data for each widget type
  */
 export async function getAllDataSources(): Promise<APIResponse> {
+  // TEMPORARY: Use mock data for testing - remove this to use API data
+  console.log("Using local mock data sources for testing");
+  return successResponse(AVAILABLE_DATA_SOURCES);
+
+  /* Uncomment to use API data sources
   try {
     const response = await authenticatedApiClient({
       url: "/api/v1/data-sources",
@@ -426,6 +431,7 @@ export async function getAllDataSources(): Promise<APIResponse> {
     console.warn("Data sources API not available, using local data sources");
     return successResponse(AVAILABLE_DATA_SOURCES);
   }
+  */
 }
 
 /**
