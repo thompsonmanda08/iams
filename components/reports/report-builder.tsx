@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Download, FileText, Eye, Send, Loader2 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
@@ -30,6 +30,9 @@ import { CreateReportDialog } from "@/app/dashboard/(modules)/reports/_component
 import { Button } from "../ui/button";
 import CustomAlert from "../ui/custom-alert";
 import Loader from "../ui/loader";
+import { getDataSourceData } from "@/app/_actions/reports-actions";
+import { transformWidgetData } from "@/hooks/shared/use-widget-data";
+import { toast } from "sonner";
 
 // Re-export for convenience
 export type { ReportEntityType };
@@ -140,6 +143,66 @@ export function ReportBuilder({
   const [showPreview, setShowPreview] = useState(false);
   const [pendingReportType, setPendingReportType] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+
+  // Handle data source change with real data fetching
+  const handleWidgetDataSourceChange = useCallback(
+    async (sectionId: string, widgetId: string, dataSource: DataSource | null) => {
+      // If no data source selected (manual mode), just update the reference
+      if (!dataSource) {
+        updateWidgetDataSource(sectionId, widgetId, null);
+        return;
+      }
+
+      // Find the widget to get its type
+      const section = report?.sections.find((s) => s.section_id === sectionId);
+      const widget = section?.widgets.find((w) => w.instance_id === widgetId);
+
+      if (!widget) {
+        console.error("Widget not found");
+        return;
+      }
+
+      try {
+        // Fetch real data from the API
+        toast.loading("Fetching data...", { id: "fetch-data" });
+
+        const widgetType = widget.widget_type as
+          | "pie_chart"
+          | "bar_chart"
+          | "table"
+          | "metric_card"
+          | "line_chart"
+          | "area_chart"
+          | "risk_objective_mapping";
+
+        const result = await getDataSourceData(dataSource.id, widgetType, entity.id);
+
+        if (!result.success) {
+          throw new Error(result.message || "Failed to fetch data");
+        }
+
+        // Transform the data to widget format
+        const transformedData = transformWidgetData(
+          result.data,
+          widget.widget_type,
+          dataSource.id,
+          dataSource.name
+        );
+
+        // Update the widget with fetched data
+        updateWidgetData(sectionId, widgetId, transformedData);
+
+        toast.success("Data loaded successfully", { id: "fetch-data" });
+      } catch (error: any) {
+        console.error("Failed to fetch widget data:", error);
+        toast.error(error.message || "Failed to fetch data", { id: "fetch-data" });
+
+        // Still update the data source reference even if fetch fails
+        updateWidgetDataSource(sectionId, widgetId, dataSource);
+      }
+    },
+    [report, entity.id, updateWidgetData, updateWidgetDataSource]
+  );
 
   // Scroll to section
   const scrollToSection = (id: string) => {
@@ -437,7 +500,7 @@ export function ReportBuilder({
                     updateWidgetRows(section.section_id, widgetId, rows)
                   }
                   onWidgetDataSourceChange={(widgetId, dataSource: DataSource | null) =>
-                    updateWidgetDataSource(section.section_id, widgetId, dataSource)
+                    handleWidgetDataSourceChange(section.section_id, widgetId, dataSource)
                   }
                   onWidgetDataChange={(widgetId, data) =>
                     updateWidgetData(section.section_id, widgetId, data)

@@ -304,77 +304,17 @@ export const useReportStore = create<ReportState>((set, get) => ({
               widgets: s.widgets.map((w) => {
                 if (w.instance_id !== widgetId) return w;
 
-                // If a valid data source is selected, inject its sample data
+                // If a valid data source is selected, update the reference
+                // Note: Actual data should be fetched separately using the data source ID
                 if (dataSource) {
-                  const widgetTypeKey = w.widget_type as keyof typeof dataSource.sample_data;
-                  const sampleData = dataSource.sample_data[widgetTypeKey];
-
-                  if (sampleData) {
-                    if (w.widget_type === "table") {
-                      const sampleTable = dataSource.sample_data.table || dataSource.sample_data;
-                      const rawColumns = sampleTable.columns || [];
-
-                      // Ensure columns are objects { key, header }
-                      const columns = rawColumns.map((col: any) => {
-                        if (typeof col === "string") {
-                          return { key: col.toLowerCase().replace(/\s+/g, "_"), header: col };
-                        }
-                        return col;
-                      });
-
-                      return {
-                        ...w,
-                        data: {
-                          ...w.data,
-                          ...sampleTable,
-                          columns,
-                          title: dataSource.name,
-                          data_source_id: dataSource.id
-                        }
-                      };
-                    } else if (w.widget_type === "pie_chart") {
-                      return {
-                        ...w,
-                        data: {
-                          ...w.data,
-                          slices: sampleData,
-                          title: dataSource.name,
-                          data_source_id: dataSource.id
-                        }
-                      };
-                    } else if (w.widget_type === "bar_chart") {
-                      return {
-                        ...w,
-                        data: {
-                          ...w.data,
-                          ...sampleData,
-                          title: dataSource.name,
-                          data_source_id: dataSource.id
-                        }
-                      };
-                    } else if (w.widget_type === "line_chart" || w.widget_type === "area_chart") {
-                      return {
-                        ...w,
-                        data: {
-                          ...w.data,
-                          ...sampleData,
-                          title: dataSource.name,
-                          data_source_id: dataSource.id
-                        }
-                      };
-                    } else {
-                      // For other widget types, merge the sample data directly
-                      return {
-                        ...w,
-                        data: {
-                          ...w.data,
-                          ...sampleData,
-                          title: dataSource.name,
-                          data_source_id: dataSource.id
-                        }
-                      };
+                  return {
+                    ...w,
+                    data: {
+                      ...w.data,
+                      title: dataSource.name,
+                      data_source_id: dataSource.id
                     }
-                  }
+                  };
                 } else {
                   // Reset to manual/empty if disconnected
                   return {
