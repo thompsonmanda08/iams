@@ -29,6 +29,7 @@ import { ConfigurableTable } from "./configurable-table";
 import { DynamicSection } from "./dynamic-section";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { BarChartWidget } from "./bar-chart-widget";
+import { RiskObjectiveMappingTable } from "./risk-objective-mapping-table";
 
 interface SectionEditorProps {
   section: ReportSection;
@@ -358,6 +359,26 @@ export const SectionEditor = ({
                                 ? (cols) => onWidgetColumnsChange(widget.instance_id, cols)
                                 : undefined
                             }
+                            onDataSourceChange={
+                              onWidgetDataSourceChange
+                                ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
+                                : undefined
+                            }
+                          />
+                        );
+                      }
+                      if (widget.widget_type === "risk_objective_mapping") {
+                        return (
+                          <RiskObjectiveMappingTable
+                            key={widget.instance_id}
+                            title={widget.data.title}
+                            subtitle={widget.data.subtitle}
+                            objectives={widget.data.objectives}
+                            risks={widget.data.risks}
+                            className="w-full"
+                            showNumbers={true}
+                            checkmarkColor="text-green-500"
+                            headerBgColor="bg-slate-800"
                             onDataSourceChange={
                               onWidgetDataSourceChange
                                 ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)

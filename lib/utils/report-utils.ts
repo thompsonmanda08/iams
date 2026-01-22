@@ -1,6 +1,38 @@
 import type { ReportSection } from "@/lib/types/report-types";
 
 /**
+ * Widget data types for risk assessment report
+ */
+export interface BarChartData {
+  categories: string[];
+  series: Array<{
+    label: string;
+    data: number[];
+    color: string;
+  }>;
+}
+
+export interface PieChartSlice {
+  label: string;
+  value: number;
+  color: string;
+}
+
+export interface RiskObjectiveMappingData {
+  objectives: Array<{
+    id: string;
+    label: string;
+    shortLabel?: string;
+  }>;
+  risks: Array<{
+    id: string;
+    number: number;
+    description: string;
+    mappedObjectives: string[];
+  }>;
+}
+
+/**
  * Reorders sections by swapping their order values.
  */
 export const reorderSections = (
@@ -102,4 +134,115 @@ export const populateReportLogo = (sections: ReportSection[], logoUrl: string): 
       return section;
     }
   });
+};
+
+/**
+ * Populate widget with pie chart data from API response
+ */
+export const populatePieChartWidget = (
+  sections: ReportSection[],
+  sectionId: string,
+  widgetId: string,
+  slices: PieChartSlice[]
+): ReportSection[] => {
+  return updateWidgetInSections(sections, sectionId, widgetId, (widget) => ({
+    ...widget,
+    data: {
+      ...widget.data,
+      slices
+    }
+  }));
+};
+
+/**
+ * Populate widget with bar chart data from API response
+ */
+export const populateBarChartWidget = (
+  sections: ReportSection[],
+  sectionId: string,
+  widgetId: string,
+  data: BarChartData
+): ReportSection[] => {
+  return updateWidgetInSections(sections, sectionId, widgetId, (widget) => ({
+    ...widget,
+    data: {
+      ...widget.data,
+      categories: data.categories,
+      series: data.series
+    }
+  }));
+};
+
+/**
+ * Populate widget with table data from API response
+ */
+export const populateTableWidget = (
+  sections: ReportSection[],
+  sectionId: string,
+  widgetId: string,
+  rows: any[]
+): ReportSection[] => {
+  return updateWidgetInSections(sections, sectionId, widgetId, (widget) => ({
+    ...widget,
+    data: {
+      ...widget.data,
+      rows
+    }
+  }));
+};
+
+/**
+ * Populate risk objective mapping widget with dynamic data
+ */
+export const populateRiskObjectiveMappingWidget = (
+  sections: ReportSection[],
+  sectionId: string,
+  widgetId: string,
+  data: RiskObjectiveMappingData
+): ReportSection[] => {
+  return updateWidgetInSections(sections, sectionId, widgetId, (widget) => ({
+    ...widget,
+    data: {
+      ...widget.data,
+      objectives: data.objectives,
+      risks: data.risks
+    }
+  }));
+};
+
+/**
+ * Populate all risk widgets in a report with dynamic data
+ * Accepts an object mapping widget IDs to their respective data
+ */
+export const populateRiskWidgets = (
+  sections: ReportSection[],
+  widgetDataMap: Record<
+    string,
+    {
+      sectionId: string;
+      type: "pie_chart" | "bar_chart" | "table" | "risk_objective_mapping";
+      data: any;
+    }
+  >
+): ReportSection[] => {
+  let updatedSections = [...sections];
+
+  Object.entries(widgetDataMap).forEach(([widgetId, { sectionId, type, data }]) => {
+    switch (type) {
+      case "pie_chart":
+        updatedSections = populatePieChartWidget(updatedSections, sectionId, widgetId, data);
+        break;
+      case "bar_chart":
+        updatedSections = populateBarChartWidget(updatedSections, sectionId, widgetId, data);
+        break;
+      case "table":
+        updatedSections = populateTableWidget(updatedSections, sectionId, widgetId, data);
+        break;
+      case "risk_objective_mapping":
+        updatedSections = populateRiskObjectiveMappingWidget(updatedSections, sectionId, widgetId, data);
+        break;
+    }
+  });
+
+  return updatedSections;
 };

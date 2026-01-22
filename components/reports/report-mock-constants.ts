@@ -85,8 +85,8 @@ export const AVAILABLE_DATA_SOURCES: DataSource[] = [
     }
   },
   {
-    id: "risk_dashboard_appetite_bar",
-    name: "Risk Dashboard - Against Appetite",
+    id: "risks_by_appetitie_status",
+    name: "Risk - Appetite",
     description: "Bar chart showing risks within and above appetite levels",
     category: "risk",
     compatible_widgets: ["bar_chart"],
@@ -94,39 +94,104 @@ export const AVAILABLE_DATA_SOURCES: DataSource[] = [
     entity_type: "risk_register",
     sample_data: {
       bar_chart: {
-        categories: [
+        categories: ["STRATEGIC", "OPERATIONAL", "FINANCIAL"],
+        series: [
           {
-            label: "STRATEGIC",
-            series: [
-              { label: "Within", value: 10, color: "#3b82f6" },
-              { label: "Above (Open)", value: 40, color: "#f59e0b" },
-              { label: "Above (Closed)", value: 4, color: "#10b981" }
-            ]
+            label: "Within",
+            data: [10, 3, 3],
+            color: "#3b82f6"
           },
           {
-            label: "OPERATIONAL",
-            series: [
-              { label: "Within", value: 3, color: "#3b82f6" },
-              { label: "Above (Open)", value: 0, color: "#f59e0b" },
-              { label: "Above (Closed)", value: 0, color: "#10b981" }
-            ]
+            label: "Above (Open)",
+            data: [40, 0, 0],
+            color: "#f59e0b"
           },
-          {
-            label: "FINANCIAL",
-            series: [
-              { label: "Within", value: 3, color: "#3b82f6" },
-              { label: "Above (Open)", value: 0, color: "#f59e0b" },
-              { label: "Above (Closed)", value: 0, color: "#10b981" }
-            ]
-          }
-        ],
-        orientation: "vertical",
-        show_values: true
+        ]
       }
     }
   },
   {
-    id: "corporate_risk",
+    id: "risks_by_department_distribution",
+    name: "Distribution by Department",
+    description: "Bar chart showing risk distribution across departments",
+    category: "risk",
+    compatible_widgets: ["bar_chart"],
+    requires_entity: true,
+    entity_type: "risk_register",
+    sample_data: {
+      bar_chart: {
+        categories: ["STRATEGIC", "OPERATIONAL", "FINANCIAL"],
+        series: [
+          {
+            label: "Within",
+            data: [10, 3, 3],
+            color: "#3b82f6"
+          },
+          {
+            label: "Above (Open)",
+            data: [40, 0, 0],
+            color: "#f59e0b"
+          },
+          {
+            label: "Above (Closed)",
+            data: [4, 0, 0],
+            color: "#10b981"
+          }
+        ]
+      }
+    }
+  },
+{
+  id: "map_risks_table_to_strategic_objectives",
+  name: "Risks to Objectives",
+  description: "Table mapping risks to strategic objectives",
+  category: "risk",
+  compatible_widgets: ["risk_objective_mapping"],
+  requires_entity: true,
+  entity_type: "risk_register",
+  sample_data: {
+    objectives: [
+      { id: "so-1", label: "Strategic Objective 1", shortLabel: "SO1" },
+      { id: "so-2", label: "Strategic Objective 2", shortLabel: "SO2" },
+      { id: "so-3", label: "Strategic Objective 3", shortLabel: "SO3" },
+      { id: "so-4", label: "Strategic Objective 4", shortLabel: "SO4" }
+    ],
+    risks: [
+      {
+        id: "risk-1",
+        number: 1,
+        description: "Cybersecurity threats and data breaches",
+        mappedObjectives: ["so-1", "so-3"]
+      },
+      {
+        id: "risk-2",
+        number: 2,
+        description: "Regulatory compliance and legal risks",
+        mappedObjectives: ["so-2", "so-4"]
+      },
+      {
+        id: "risk-3",
+        number: 3,
+        description: "Supply chain disruptions",
+        mappedObjectives: ["so-1", "so-2", "so-3"]
+      },
+      {
+        id: "risk-4",
+        number: 4,
+        description: "Market competition and technological changes",
+        mappedObjectives: ["so-1", "so-4"]
+      },
+      {
+        id: "risk-5",
+        number: 5,
+        description: "Talent retention and workforce challenges",
+        mappedObjectives: ["so-2", "so-3"]
+      }
+    ]
+  }
+},
+  {
+    id: "risks_by_corporate_profile",
     name: "Corporate Risk Profile",
     description: "Distribution of corporate risk profile",
     category: "risk",
@@ -142,7 +207,7 @@ export const AVAILABLE_DATA_SOURCES: DataSource[] = [
     }
   },
   {
-    id: "closure_status",
+    id: "risks_by_closure_status",
     name: "Closure Status",
     description: "Distribution of closure status",
     category: "risk",

@@ -365,10 +365,14 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                   )}
 
                   {/* Pie Chart Widget */}
-                  {widget.widget_type === "pie_chart" && "slices" in widget.data && (
-                    <View style={{ marginVertical: 15 }}>
+                  {widget.widget_type === "pie_chart" && (
+                    <View
+                      style={{
+                        marginVertical: 15
+                      }}>
                       {(() => {
-                        const slices = (widget.data as any).slices || [];
+                        // Handle both formats: slices property or direct array
+                        let slices = Array.isArray(widget.data) ? widget.data : (widget.data as any).slices || [];
                         if (!slices || slices.length === 0) {
                           return (
                             <Text style={{ fontSize: 10, color: "#666" }}>
@@ -377,6 +381,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                           );
                         }
 
+                        // Calculate total of ALL slices (including zeros)
                         const total = slices.reduce(
                           (sum: number, slice: any) => sum + (slice.value || 0),
                           0
@@ -384,107 +389,168 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
 
                         if (total === 0) {
                           return (
-                            <Text style={{ fontSize: 10, color: "#666" }}>
-                              No data to display
-                            </Text>
+                            <Text style={{ fontSize: 10, color: "#666" }}>No data to display</Text>
                           );
                         }
 
-                        // Helper function to generate SVG pie chart path
-                        const generatePieChart = () => {
-                          const radius = 50;
-                          const centerX = 60;
-                          const centerY = 60;
-                          let currentAngle = -Math.PI / 2; // Start from top
-                          const paths = [];
+                        // Filter slices with values > 0 for pie rendering only
+                        const renderSlices = slices.filter((slice: any) => (slice.value || 0) > 0);
 
-                          slices.forEach((slice: any, idx: number) => {
-                            const sliceAngle = (slice.value / total) * 2 * Math.PI;
+                        const generatePieSlices = () => {
+                          const radius = 50;
+                          const centerX = 80;
+                          const centerY = 80;
+                          let currentAngle = -Math.PI / 2; // Start from top (12 o'clock)
+                          const pieSlices = [] as any[];
+
+                          renderSlices.forEach((slice: any, idx: number) => {
+                            const sliceValue = slice.value || 0;
+                            const sliceAngle = (sliceValue / total) * 2 * Math.PI;
                             const startAngle = currentAngle;
                             const endAngle = currentAngle + sliceAngle;
 
+                            // Calculate start and end points on the circumference
                             const x1 = centerX + radius * Math.cos(startAngle);
                             const y1 = centerY + radius * Math.sin(startAngle);
                             const x2 = centerX + radius * Math.cos(endAngle);
                             const y2 = centerY + radius * Math.sin(endAngle);
 
+                            // Large arc flag - 1 if angle > 180 degrees
                             const largeArc = sliceAngle > Math.PI ? 1 : 0;
 
-                            const pathData = [
-                              `M${centerX},${centerY}`,
-                              `L${x1},${y1}`,
-                              `A${radius},${radius} 0 ${largeArc},1 ${x2},${y2}`,
-                              'Z'
-                            ].join(' ');
+                            // Handle full circle case (when sliceAngle ≈ 2π)
+                            // SVG arcs can't render a full 360-degree arc, so split it into two 180-degree arcs
+                            let pathData;
+                            if (sliceAngle >= 2 * Math.PI - 0.001) {
+                              // Full circle: draw two semicircles
+                              const midAngle = startAngle + Math.PI;
+                              const xMid = centerX + radius * Math.cos(midAngle);
+                              const yMid = centerY + radius * Math.sin(midAngle);
+                              pathData = [
+                                `M ${x1.toFixed(2)} ${y1.toFixed(2)}`, // Move to start point
+                                `A ${radius} ${radius} 0 1 1 ${xMid.toFixed(2)} ${yMid.toFixed(2)}`, // First semicircle
+                                `A ${radius} ${radius} 0 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}` // Second semicircle back to start
+                              ].join(" ");
+                            } else {
+                              // Normal wedge path
+                              pathData = [
+                                `M ${centerX} ${centerY}`, // Move to center
+                                `L ${x1.toFixed(2)} ${y1.toFixed(2)}`, // Line to start point
+                                `A ${radius} ${radius} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`, // Arc to end point
+                                `Z` // Close path
+                              ].join(" ");
+                            }
 
-                            paths.push({
+                            pieSlices.push({
                               d: pathData,
-                              fill: slice.color || '#ccc',
-                              label: slice.label || 'Unknown',
-                              value: slice.value,
-                              percentage: ((slice.value / total) * 100).toFixed(1)
+                              fill: slice.color || getDefaultColor(idx),
+                              label: slice.label || `Slice ${idx + 1}`,
+                              value: sliceValue,
+                              percentage: ((sliceValue / total) * 100).toFixed(1)
                             });
 
                             currentAngle = endAngle;
                           });
 
-                          return paths;
+                          return pieSlices;
                         };
 
-                        const piePaths = generatePieChart();
+                        // Helper function for default colors
+                        const getDefaultColor = (index: number) => {
+                          const colors = [
+                            "#FF6384",
+                            "#36A2EB",
+                            "#FFCE56",
+                            "#4BC0C0",
+                            "#9966FF",
+                            "#FF9F40",
+                            "#FF6384",
+                            "#C9CBCF",
+                            "#FF6384",
+                            "#36A2EB"
+                          ];
+                          return colors[index % colors.length];
+                        };
 
-                        return (
-                          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 20 }}>
-                            {/* Pie Chart SVG */}
-                            <View style={{ width: 140 }}>
-                              <Svg width="120" height="120" viewBox="0 0 120 120">
-                                {piePaths.map((path: any, idx: number) => (
-                                  <Path
-                                    key={idx}
-                                    d={path.d}
-                                    fill={path.fill}
-                                    stroke="white"
-                                    strokeWidth="1"
-                                  />
-                                ))}
-                              </Svg>
-                            </View>
+                        const pieSlices = generatePieSlices();
 
-                            {/* Legend */}
-                            <View style={{ flex: 1 }}>
-                              {slices.map((slice: any, idx: number) => {
-                                const percentage = total > 0 ? ((slice.value / total) * 100).toFixed(1) : 0;
+                        // Create actual circular pie chart using SVG paths
+                        const createVisualRepresentation = () => {
+                          return (
+                            <View
+                              style={{ flexDirection: "row", alignItems: "center", gap: 25 }}>
+                              {/* Circular Pie Chart */}
+                              <View
+                                style={{
+                                  width: 160,
+                                  height: 160,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0
+                                }}>
+                                <Svg width="160" height="160" viewBox="0 0 160 160">
+                                  {/* Draw each pie slice as a wedge path */}
+                                  {pieSlices.map((slice: any, idx: number) => (
+                                    <Path
+                                      key={idx}
+                                      d={slice.d}
+                                      fill={slice.fill}
+                                      stroke="white"
+                                      strokeWidth="2"
+                                    />
+                                  ))}
+                                </Svg>
+                              </View>
 
-                                return (
-                                  <View key={idx} style={{ marginBottom: 8 }}>
+                              {/* Legend - Show all slices including zeros */}
+                              <View style={{ flex: 1, justifyContent: "center" }}>
+                                {slices.map((slice: any, idx: number) => {
+                                  const percentage = ((slice.value || 0) / total * 100).toFixed(1);
+                                  const color = slice.color || getDefaultColor(idx);
+
+                                  return (
                                     <View
+                                      key={idx}
                                       style={{
+                                        marginBottom: 10,
                                         flexDirection: "row",
-                                        alignItems: "center",
-                                        marginBottom: 2
+                                        alignItems: "flex-start",
+                                        paddingRight: 10
                                       }}>
                                       <View
                                         style={{
-                                          width: 10,
-                                          height: 10,
-                                          backgroundColor: slice.color || "#ccc",
-                                          borderRadius: 1,
-                                          marginRight: 6
+                                          width: 14,
+                                          height: 14,
+                                          backgroundColor: color,
+                                          borderRadius: 2,
+                                          marginRight: 10,
+                                          marginTop: 2,
+                                          flexShrink: 0
                                         }}
                                       />
-                                      <Text style={{ fontSize: 8, color: "#4b5563", flex: 1 }}>
-                                        {slice.label || "Unknown"}
-                                      </Text>
-                                      <Text style={{ fontSize: 8, fontWeight: "bold", marginLeft: 4 }}>
-                                        {percentage}%
-                                      </Text>
+                                      <View style={{ flex: 1 }}>
+                                        <Text
+                                          style={{
+                                            fontSize: 10,
+                                            textTransform: "capitalize",
+                                            color: "#1f2937",
+                                            fontWeight: "500"
+                                          }}>
+                                          {slice.label}
+                                        </Text>
+                                        <Text style={{ fontSize: 9, color: "#6b7280", marginTop: 2 }}>
+                                          {slice.value || 0} ({percentage}%)
+                                        </Text>
+                                      </View>
                                     </View>
-                                  </View>
-                                );
-                              })}
+                                  );
+                                })}
+                              </View>
                             </View>
-                          </View>
-                        );
+                          );
+                        };
+
+                        return createVisualRepresentation();
                       })()}
                     </View>
                   )}
@@ -499,8 +565,9 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                         const seriesData = (widget.data as any).series;
 
                         // Detect if using flat structure (from API) or nested structure (legacy)
-                        const isFlatStructure = Array.isArray(rawCategories) &&
-                          typeof rawCategories[0] === 'string' &&
+                        const isFlatStructure =
+                          Array.isArray(rawCategories) &&
+                          typeof rawCategories[0] === "string" &&
                           seriesData;
 
                         // Convert flat structure to nested for rendering if needed
@@ -514,13 +581,13 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                               }))
                             }))
                           : Array.isArray(rawCategories)
-                          ? rawCategories
-                          : [];
+                            ? rawCategories
+                            : [];
 
                         // Safely calculate max value
-                        const values = categories.flatMap((cat: any) =>
-                          cat?.series?.map((s: any) => s.value) || []
-                        ).filter((v: any) => typeof v === 'number');
+                        const values = categories
+                          .flatMap((cat: any) => cat?.series?.map((s: any) => s.value) || [])
+                          .filter((v: any) => typeof v === "number");
                         const maxValue = values.length > 0 ? Math.max(...values) : 100;
 
                         // Validate we have categories and data
@@ -552,25 +619,30 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                                         height: 140,
                                         gap: 2
                                       }}>
-                                      {(category?.series || []).map((series: any, seriesIndex: number) => {
-                                        const barHeight = maxValue > 0 ? (series.value / maxValue) * 120 : 0;
-                                        return (
-                                          <View key={seriesIndex} style={{ alignItems: "center" }}>
-                                            <Text style={{ fontSize: 8, marginBottom: 2 }}>
-                                              {series.value || 0}
-                                            </Text>
+                                      {(category?.series || []).map(
+                                        (series: any, seriesIndex: number) => {
+                                          const barHeight =
+                                            maxValue > 0 ? (series.value / maxValue) * 120 : 0;
+                                          return (
                                             <View
-                                              style={{
-                                                width: 20,
-                                                height: barHeight > 0 ? barHeight : 2,
-                                                backgroundColor: series.color || "#ccc",
-                                                borderTopLeftRadius: 2,
-                                                borderTopRightRadius: 2
-                                              }}
-                                            />
-                                          </View>
-                                        );
-                                      })}
+                                              key={seriesIndex}
+                                              style={{ alignItems: "center" }}>
+                                              <Text style={{ fontSize: 8, marginBottom: 2 }}>
+                                                {series.value || 0}
+                                              </Text>
+                                              <View
+                                                style={{
+                                                  width: 20,
+                                                  height: barHeight > 0 ? barHeight : 2,
+                                                  backgroundColor: series.color || "#ccc",
+                                                  borderTopLeftRadius: 2,
+                                                  borderTopRightRadius: 2
+                                                }}
+                                              />
+                                            </View>
+                                          );
+                                        }
+                                      )}
                                     </View>
                                     <Text
                                       style={{ fontSize: 9, marginTop: 6, textAlign: "center" }}>
@@ -640,30 +712,35 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                                     {category.label}
                                   </Text>
                                   <View style={{ flex: 1, flexDirection: "row", gap: 2 }}>
-                                    {(category?.series || []).map((series: any, seriesIndex: number) => {
-                                      const barWidth = maxValue > 0 ? `${(series.value / maxValue) * 100}%` : "0%";
-                                      return (
-                                        <View
-                                          key={seriesIndex}
-                                          style={{
-                                            width: barWidth,
-                                            height: 20,
-                                            backgroundColor: series.color || "#ccc",
-                                            borderRadius: 2,
-                                            justifyContent: "center",
-                                            paddingHorizontal: 4
-                                          }}>
-                                          <Text
+                                    {(category?.series || []).map(
+                                      (series: any, seriesIndex: number) => {
+                                        const barWidth =
+                                          maxValue > 0
+                                            ? `${(series.value / maxValue) * 100}%`
+                                            : "0%";
+                                        return (
+                                          <View
+                                            key={seriesIndex}
                                             style={{
-                                              fontSize: 8,
-                                              color: "white",
-                                              fontWeight: "bold"
+                                              width: barWidth,
+                                              height: 20,
+                                              backgroundColor: series.color || "#ccc",
+                                              borderRadius: 2,
+                                              justifyContent: "center",
+                                              paddingHorizontal: 4
                                             }}>
-                                            {series.value || 0}
-                                          </Text>
-                                        </View>
-                                      );
-                                    })}
+                                            <Text
+                                              style={{
+                                                fontSize: 8,
+                                                color: "white",
+                                                fontWeight: "bold"
+                                              }}>
+                                              {series.value || 0}
+                                            </Text>
+                                          </View>
+                                        );
+                                      }
+                                    )}
                                   </View>
                                 </View>
                               ))}

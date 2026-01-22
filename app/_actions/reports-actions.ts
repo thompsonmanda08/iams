@@ -369,9 +369,10 @@ export async function getDataSources(): Promise<APIResponse> {
 
 interface FetchWidgetDataParams {
   dataSourceId: string;
-  widgetType: "pie_chart" | "table" | "bar_chart" | "line_chart";
+  widgetType: "pie_chart" | "table" | "bar_chart" | "line_chart" | "risk_objective_mapping";
   entityId?: string;
   entityType?: ReportEntityType;
+  riskRegisterId?: string;
 }
 
 /**
@@ -407,6 +408,190 @@ export async function fetchWidgetData(params: FetchWidgetDataParams): Promise<AP
     return handleError(error, "GET | FETCH WIDGET DATA", `/api/v1/data-sources/${dataSourceId}`);
   }
 }
+
+/**
+ * Fetch all available data sources
+ * Returns a unified list of all data sources with sample data for each widget type
+ */
+export async function getAllDataSources(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/data-sources",
+      method: "GET"
+    });
+
+    return successResponse(response?.data?.data || response?.data);
+  } catch (error: any) {
+    // Fallback to local data sources if API not available
+    console.warn("Data sources API not available, using local data sources");
+    return successResponse(AVAILABLE_DATA_SOURCES);
+  }
+}
+
+/**
+ * Get a specific data source by ID
+ * @param dataSourceId - The ID of the data source (e.g., "risks_by_appetitie_status")
+ * @returns The data source object with sample_data for all compatible widgets
+ */
+export async function getDataSourceById(dataSourceId: string): Promise<APIResponse> {
+  if (!dataSourceId) {
+    return handleBadRequest("Data source ID is required");
+  }
+
+  try {
+    // Fetch all data sources
+    const allSourcesRes = await getAllDataSources();
+
+    console.log("DEBUG [getDataSourceById]:", {
+      dataSourceId,
+      success: allSourcesRes.success,
+      dataType: typeof allSourcesRes.data,
+      isArray: Array.isArray(allSourcesRes.data),
+      dataLength: Array.isArray(allSourcesRes.data) ? allSourcesRes.data.length : "N/A",
+      firstItem: Array.isArray(allSourcesRes.data) ? allSourcesRes.data[0] : "N/A"
+    });
+
+    if (!allSourcesRes.success || !Array.isArray(allSourcesRes.data)) {
+      console.error("DEBUG [getDataSourceById] Failed:", {
+        success: allSourcesRes.success,
+        isArray: Array.isArray(allSourcesRes.data),
+        data: allSourcesRes.data
+      });
+      return handleError(
+        new Error("Failed to fetch data sources"),
+        "GET | GET DATA SOURCE BY ID",
+        `/api/v1/data-sources?id=${dataSourceId}`
+      );
+    }
+
+    // Find the specific data source
+    const dataSource = allSourcesRes.data.find((ds: any) => ds.id === dataSourceId);
+
+    if (!dataSource) {
+      // Log all available IDs for debugging
+      const availableIds = allSourcesRes.data.map((ds: any) => ds.id);
+      console.warn(`DEBUG [getDataSourceById] Not found. Looking for: "${dataSourceId}". Available IDs:`, availableIds);
+      return handleBadRequest(`Data source with ID "${dataSourceId}" not found`);
+    }
+
+    console.log("DEBUG [getDataSourceById] Found data source:", dataSourceId);
+    return successResponse(dataSource);
+  } catch (error: any) {
+    console.error("DEBUG [getDataSourceById] Exception:", error);
+    return handleError(error, "GET | GET DATA SOURCE BY ID", `/data-sources?id=${dataSourceId}`);
+  }
+}
+
+/**
+ * Get actual data for a specific data source and widget type from the backend
+ * @param dataSourceId - The ID of the data source (e.g., "risks_by_appetitie_status")
+ * @param widgetType - The widget type (pie_chart, bar_chart, table, etc.)
+ * @param riskRegisterId - Optional risk register ID for filtering data
+ * @returns The actual data for the specified widget type
+ */
+export async function getDataSourceData(
+  dataSourceId: string,
+  widgetType: "pie_chart" | "bar_chart" | "table" | "metric_card" | "line_chart" | "area_chart" | "risk_objective_mapping",
+  riskRegisterId?: string
+): Promise<APIResponse> {
+  try {
+    // Fetch actual data from the backend endpoint
+    // Format: GET /data-sources/{dataSourceId}?widget_type={widgetType}&risk_register_id={id}
+    const params = new URLSearchParams({
+      widget_type: widgetType
+    });
+
+    if (riskRegisterId) {
+      params.append("risk_register_id", riskRegisterId);
+    }
+
+    const response = await authenticatedApiClient({
+      url: `/api/v1/data-sources/${dataSourceId}?${params.toString()}`,
+      method: "GET"
+    });
+
+    if (response?.data) {
+      console.log(`✓ Successfully fetched REAL data for ${dataSourceId} (${widgetType})`);
+      // Extract the actual widget data from nested response structure
+      const widgetData = response.data?.data || response.data;
+      return successResponse(widgetData);
+    }
+
+    return handleBadRequest("No data received from data source endpoint");
+  } catch (error: any) {
+    // Return the error response directly instead of falling back
+    console.error(`✗ Failed to fetch data for ${dataSourceId}:`, error?.message || error);
+    return handleError(error, "GET | DATA SOURCE DATA", `/api/v1/data-sources/${dataSourceId}?widget_type=${widgetType}`);
+  }
+}
+
+/**
+ * Get data source sample data for a specific widget type
+ * @param dataSourceId - The ID of the data source
+ * @param widgetType - The widget type (pie_chart, bar_chart, table, etc.)
+ * @returns The sample data for the specified widget type
+ */
+export async function getDataSourceSampleData(
+  dataSourceId: string,
+  widgetType: "pie_chart" | "bar_chart" | "table" | "metric_card" | "line_chart" | "area_chart" | "risk_objective_mapping"
+): Promise<APIResponse> {
+  const dataSourceRes = await getDataSourceById(dataSourceId);
+
+  if (!dataSourceRes.success || !dataSourceRes.data) {
+    return dataSourceRes;
+  }
+
+  const dataSource = dataSourceRes.data;
+
+  // Check if the widget type is compatible
+  if (!dataSource.compatible_widgets?.includes(widgetType)) {
+    return handleBadRequest(
+      `Widget type "${widgetType}" is not compatible with data source "${dataSourceId}". Compatible types: ${dataSource.compatible_widgets?.join(", ")}`
+    );
+  }
+
+  // Get the sample data for the widget type
+  const sampleData = dataSource.sample_data?.[widgetType];
+
+  if (!sampleData) {
+    return handleBadRequest(`No sample data available for widget type "${widgetType}" in data source "${dataSourceId}"`);
+  }
+
+  return successResponse(sampleData);
+}
+
+/**
+ * Get risk-specific data sources
+ * Filters all data sources to return only risk-related ones
+ */
+export async function getRiskDataSources(): Promise<APIResponse> {
+  const allSourcesRes = await getAllDataSources();
+
+  if (!allSourcesRes.success || !Array.isArray(allSourcesRes.data)) {
+    return allSourcesRes;
+  }
+
+  const riskSources = allSourcesRes.data.filter((ds: any) => ds.category === "risk");
+
+  return successResponse(riskSources);
+}
+
+/**
+ * Get audit-specific data sources
+ * Filters all data sources to return only audit-related ones
+ */
+export async function getAuditDataSources(): Promise<APIResponse> {
+  const allSourcesRes = await getAllDataSources();
+
+  if (!allSourcesRes.success || !Array.isArray(allSourcesRes.data)) {
+    return allSourcesRes;
+  }
+
+  const auditSources = allSourcesRes.data.filter((ds: any) => ds.category === "audit");
+
+  return successResponse(auditSources);
+}
+
 
 // ============================================================================
 // FINDINGS (for report integration)

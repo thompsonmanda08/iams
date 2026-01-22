@@ -113,79 +113,158 @@ export const RISK_REPORT_TEMPLATE: ReportTemplate = {
   description: "Report focusing on risk profiles, ratings, and treatment plans.",
   default_sections: [
     createSection("cover", "cover_page", 1, "Risk Report"),
-    createSection(
-      "exec_summary",
-      "text_with_widgets",
-      2,
-      "Executive Summary",
-      "Risk Profile Overview",
-      "",
-      [
-        {
-          instance_id: "risk_dashboard_appetite_bar",
-          widget_type: "bar_chart",
-          order: 0,
-          data: {
-            title: "Risk Dashboard - Against Appetite",
-            categories: [
-              {
-                label: "STRATEGIC",
-                series: [
-                  { label: "Within", value: 10, color: "#3b82f6" },
-                  { label: "Above (Open)", value: 40, color: "#f59e0b" },
-                  { label: "Above (Closed)", value: 4, color: "#10b981" }
-                ]
-              },
-              {
-                label: "OPERATIONAL",
-                series: [
-                  { label: "Within", value: 3, color: "#3b82f6" },
-                  { label: "Above (Open)", value: 0, color: "#f59e0b" },
-                  { label: "Above (Closed)", value: 0, color: "#10b981" }
-                ]
-              },
-              {
-                label: "FINANCIAL",
-                series: [
-                  { label: "Within", value: 3, color: "#3b82f6" },
-                  { label: "Above (Open)", value: 0, color: "#f59e0b" },
-                  { label: "Above (Closed)", value: 0, color: "#10b981" }
-                ]
-              }
-            ],
-            orientation: "horizontal",
-            show_values: true
-          }
-        },
-        {
+    // In your template file (templates.ts or similar), update the section creation:
+
+createSection("exec_summary", "text_with_widgets",
+   2, "Executive Summary",
+    "Risk Profile Overview", "",
+[
+  {
+    instance_id: "risk_dashboard_appetite_bar",
+    widget_type: "bar_chart",
+    order: 0,
+    data: {
+      title: "Risk Dashboard - Against Appetite",
+      categories: [],
+      series: [],
+      orientation: "horizontal",
+      show_values: true,
+      data_source_id: "risks_by_appetitie_status"
+    }
+  },
+   {
           instance_id: "corporate_risk",
           widget_type: "pie_chart",
           order: 1,
           data: {
-            title: "Corporate Risk Profile",
+            title: "Corporate Risk Profile - April 2025",
             slices: [],
-            data_source_id: "corporate_risk"
+            data_source_id: "risks_by_corporate_profile"
           }
         },
-        {
+   {
           instance_id: "closure_status",
           widget_type: "pie_chart",
           order: 2,
           data: {
             title: "Closure Status",
             slices: [],
-            data_source_id: "closure_status"
+            data_source_id: "risks_by_closure_status"
+          }
+        },
+    {
+    instance_id: "risks_by_department_distribution",
+    widget_type: "bar_chart",
+    order: 0,
+    data: {
+      title: "Risk Distribution by Department",
+      categories: [],
+      series: [],
+      orientation: "horizontal",
+      show_values: true,
+      data_source_id: "risks_by_department_distribution"
+    }
+  },
+]
+),
+createSection("strategic_objective", "text_only", 3, "INFRATEL Strategic Objective", "Risk Strategic Objective"),
+ createSection("mapping_strategic_objective", "text_with_widgets",
+   4, "Mapping Of Key Risks Against Strategic Objectives",
+    "Strategic risks and Objectives", "",
+[
+  {
+    instance_id: "map_risks_table_to_strategic_objective",
+    widget_type: "risk_objective_mapping",
+    order: 0,
+    data: {
+      title: "Mapping Of Key Risks Against Strategic Objectives",
+      subtitle: "Strategic risks and Objectives",
+    
+    
+    objectives: [
+      { id: "so-1", label: "Strategic Objective 1", shortLabel: "SO1" },
+      { id: "so-2", label: "Strategic Objective 2", shortLabel: "SO2" },
+      { id: "so-3", label: "Strategic Objective 3", shortLabel: "SO3" },
+      { id: "so-4", label: "Strategic Objective 4", shortLabel: "SO4" }
+    ],
+    risks: [
+      {
+        id: "risk-1",
+        number: 1,
+        description: "Cybersecurity threats and data breaches",
+        mappedObjectives: ["so-1", "so-3"]
+      },
+      {
+        id: "risk-2",
+        number: 2,
+        description: "Regulatory compliance and legal risks",
+        mappedObjectives: ["so-2", "so-4"]
+      },
+      {
+        id: "risk-3",
+        number: 3,
+        description: "Supply chain disruptions",
+        mappedObjectives: ["so-1", "so-2", "so-3"]
+      },
+      {
+        id: "risk-4",
+        number: 4,
+        description: "Market competition and technological changes",
+        mappedObjectives: ["so-1", "so-4"]
+      },
+      {
+        id: "risk-5",
+        number: 5,
+        description: "Talent retention and workforce challenges",
+        mappedObjectives: ["so-2", "so-3"]
+      }
+    ],
+    data_source_id: "map_risks_table_to_objective",
+    }
+  }
+]
+),
+    createSection(
+      "risk_charts",
+      "text_with_widgets",
+      5,
+      "Risks Dashboard",
+      "Shows a summary of the risk profile above the set risk appetite of INFRATEL Corporation.",
+      "Breakdown of risks by severity and category.",
+      [
+         {
+          instance_id: "top_risks_table",
+          widget_type: "table",
+          order: 0,
+          data: {
+            title: "Risks Above Appetite",
+            columns: [
+              { key: "Risk Category", header: "Risk" },
+              { key: "SN", header: "SN" },
+              { key: "Key Risk", header: "Key" },
+              { key: "Mitigation", header: "Mitigation" },
+              { key: "Dept's Risk Register", header: "Register" },
+              { key: "Status", header: "Status" },
+              { key: "Inherent Risk", header: "Inherent" },
+              { key: "Residual Risk", header: "Residual" },
+              { key: "Risk Magnitude Rating", header: "Rating" },
+              { key: "Risk Appetite", header: "Appetite" },
+              { key: "Implementation Timeline", header: "Timeline" },
+              { key: "Executive Ownership", header: "Owner" },
+            ],
+            rows: [],
+            data_source_id: "risks_above_appetite"
           }
         }
       ]
     ),
     createSection(
-      "risk_charts",
+      "risk_register",
       "text_with_widgets",
-      3,
-      "Risks Dashboard",
-      "Risk Overview",
-      "Breakdown of risks by severity and category.",
+      6,
+      "Summary Of Detailed Risk Registers",
+      "Detailed Risk Register",
+      "Risks requiring immediate management attention.",
       [
         {
           instance_id: "top_risks_table",
@@ -194,10 +273,10 @@ export const RISK_REPORT_TEMPLATE: ReportTemplate = {
           data: {
             title: "Risks Above Appetite",
             columns: [
-              { key: "risk_title", header: "Risk" },
-              { key: "residual_score", header: "Score" },
-              { key: "risk_owner", header: "Owner" },
-              { key: "treatment_status", header: "Treatment" }
+              { key: "Risk Title", header: "Risk" },
+              { key: "Residual Score", header: "Score" },
+              { key: "Risk Owner", header: "Owner" },
+              { key: "Treatment Status", header: "Treatment" }
             ],
             rows: [],
             data_source_id: "risks_above_appetite"
@@ -205,7 +284,7 @@ export const RISK_REPORT_TEMPLATE: ReportTemplate = {
         }
       ]
     ),
-    createSection("conclusion", "text_only", 4, "Conclusion", "Final Remarks")
+    createSection("conclusion", "text_only", 7, "Conclusion", "Final Remarks")
   ]
 };
 

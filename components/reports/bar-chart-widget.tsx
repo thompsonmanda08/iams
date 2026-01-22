@@ -15,7 +15,12 @@ interface BarChartCategory {
 
 interface BarChartWidgetData {
   title: string;
-  categories: BarChartCategory[];
+  categories: BarChartCategory[] | string[];
+  series?: Array<{
+    label: string;
+    data: number[];
+    color: string;
+  }>;
   orientation?: "horizontal" | "vertical";
   show_values?: boolean;
 }
@@ -44,19 +49,38 @@ export const BarChartWidget = ({
   const orientation = data.orientation || "vertical";
   const showValues = data.show_values !== false;
 
+  // Determine if using flat structure (from API) or nested structure (legacy)
+  const isFlatStructure = Array.isArray(data.categories) &&
+    typeof data.categories[0] === 'string' &&
+    data.series;
+
+  // Convert flat structure to nested for rendering if needed
+  const categories: BarChartCategory[] = isFlatStructure
+    ? (data.categories as string[]).map((catLabel, catIndex) => ({
+        label: catLabel,
+        series: (data.series || []).map((s) => ({
+          label: s.label,
+          value: s.data[catIndex],
+          color: s.color
+        }))
+      }))
+    : Array.isArray(data.categories)
+    ? (data.categories as BarChartCategory[])
+    : [];
+
   // Calculate max value for scaling
-  const maxValue = Math.max(
-    ...data.categories.flatMap((cat) => cat.series.map((series) => series.value))
-  );
+  const values = categories.flatMap((cat) => cat?.series?.map((series) => series.value) || []);
+  const maxValue = values.length > 0 ? Math.max(...values) : 100;
 
   const addCategory = () => {
-    if (!onDataChange) return;
+    if (!onDataChange || isFlatStructure) return;
+    const nestedCategories = categories as BarChartCategory[];
     onDataChange({
       ...data,
       categories: [
-        ...data.categories,
+        ...nestedCategories,
         {
-          label: `Category ${data.categories.length + 1}`,
+          label: `Category ${nestedCategories.length + 1}`,
           series: [
             { label: "Series 1", value: 10, color: "#3b82f6" },
             { label: "Series 2", value: 15, color: "#10b981" }
@@ -67,24 +91,27 @@ export const BarChartWidget = ({
   };
 
   const removeCategory = (index: number) => {
-    if (!onDataChange) return;
+    if (!onDataChange || isFlatStructure) return;
+    const nestedCategories = categories as BarChartCategory[];
     onDataChange({
       ...data,
-      categories: data.categories.filter((_, i) => i !== index)
+      categories: nestedCategories.filter((_, i) => i !== index)
     });
   };
 
   const updateCategory = (index: number, updates: Partial<BarChartCategory>) => {
-    if (!onDataChange) return;
+    if (!onDataChange || isFlatStructure) return;
+    const nestedCategories = categories as BarChartCategory[];
     onDataChange({
       ...data,
-      categories: data.categories.map((cat, i) => (i === index ? { ...cat, ...updates } : cat))
+      categories: nestedCategories.map((cat, i) => (i === index ? { ...cat, ...updates } : cat))
     });
   };
 
   const addSeries = (categoryIndex: number) => {
-    if (!onDataChange) return;
-    const category = data.categories[categoryIndex];
+    if (!onDataChange || isFlatStructure) return;
+    const nestedCategories = categories as BarChartCategory[];
+    const category = nestedCategories[categoryIndex];
     const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#7c3aed", "#ec4899", "#8b5cf6"];
     const nextColor = colors[category.series.length % colors.length];
 
@@ -101,8 +128,9 @@ export const BarChartWidget = ({
   };
 
   const removeSeries = (categoryIndex: number, seriesIndex: number) => {
-    if (!onDataChange) return;
-    const category = data.categories[categoryIndex];
+    if (!onDataChange || isFlatStructure) return;
+    const nestedCategories = categories as BarChartCategory[];
+    const category = nestedCategories[categoryIndex];
     updateCategory(categoryIndex, {
       series: category.series.filter((_, i) => i !== seriesIndex)
     });
@@ -113,8 +141,9 @@ export const BarChartWidget = ({
     seriesIndex: number,
     updates: Partial<BarChartSeries>
   ) => {
-    if (!onDataChange) return;
-    const category = data.categories[categoryIndex];
+    if (!onDataChange || isFlatStructure) return;
+    const nestedCategories = categories as BarChartCategory[];
+    const category = nestedCategories[categoryIndex];
     updateCategory(categoryIndex, {
       series: category.series.map((series, i) =>
         i === seriesIndex ? { ...series, ...updates } : series
@@ -167,13 +196,13 @@ export const BarChartWidget = ({
         </div>
       </div>
 
-      {isConfiguring && (
+      {isConfiguring && !isFlatStructure && (
         <div className="mb-4 space-y-2 rounded-lg bg-gray-50 p-3">
           <div className="text-xs font-medium tracking-wider text-gray-500 uppercase">
             Configure Bar Chart
           </div>
           <div className="space-y-3">
-            {data.categories.map((category, catIndex) => (
+            {categories.map((category, catIndex) => (
               <div key={catIndex} className="rounded border border-gray-200 bg-white p-2">
                 <div className="mb-2 flex items-center justify-between">
                   <input
@@ -247,7 +276,7 @@ export const BarChartWidget = ({
         {orientation === "vertical" ? (
           // Vertical bars
           <div className="flex flex-1 items-end justify-between gap-1 px-4 pb-8">
-            {data.categories.map((category, catIndex) => (
+            {categories.map((category, catIndex) => (
               <div key={catIndex} className="flex h-full flex-col items-center gap-1">
                 <div className="flex h-full flex-col-reverse items-center justify-end gap-1">
                   {category.series.map((series, seriesIndex) => (
@@ -274,13 +303,13 @@ export const BarChartWidget = ({
         ) : (
           // Horizontal bars
           <div className="flex flex-col gap-2 px-4">
-            {data.categories.map((category, catIndex) => (
+            {categories.map((category, catIndex) => (
               <div key={catIndex} className="flex items-center gap-2">
                 <div className="w-32 truncate text-xs font-medium text-gray-700">
                   {category.label}
                 </div>
                 <div className="flex flex-1 gap-1">
-                  {category.series.map((series, seriesIndex) => (
+                  {category?.series?.map((series, seriesIndex) => (
                     <div
                       key={seriesIndex}
                       style={{
@@ -306,10 +335,10 @@ export const BarChartWidget = ({
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-2">
         {Array.from(
-          new Set(data.categories.flatMap((cat) => cat.series.map((series) => series.label)))
+          new Set(categories.flatMap((cat) => cat.series.map((series) => series.label)))
         ).map((seriesLabel, index) => {
           // Find the color for this series (take from first occurrence)
-          const firstSeries = data.categories
+          const firstSeries = categories
             .flatMap((cat) => cat.series)
             .find((series) => series.label === seriesLabel);
 

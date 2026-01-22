@@ -19,15 +19,16 @@ export const PieChartWidget = ({
   showDataSourcePicker = true
 }: PieChartWidgetProps) => {
   const [isConfiguring, setIsConfiguring] = useState(false);
-  const total = data.slices.reduce((sum, slice) => sum + slice.value, 0);
+  const slices = Array.isArray(data.slices) ? data.slices : [];
+  const total = slices.reduce((sum: number, slice: PieChartSlice) => sum + slice.value, 0);
 
   const addSlice = () => {
     if (!onDataChange) return;
     const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#7c3aed", "#ec4899"];
-    const nextColor = colors[data.slices.length % colors.length];
+    const nextColor = colors[slices.length % colors.length];
     onDataChange({
       ...data,
-      slices: [...data.slices, { label: `New Category`, value: 10, color: nextColor }]
+      slices: [...slices, { label: `New Category`, value: 10, color: nextColor }]
     });
   };
 
@@ -35,7 +36,7 @@ export const PieChartWidget = ({
     if (!onDataChange) return;
     onDataChange({
       ...data,
-      slices: data.slices.filter((_, i) => i !== index)
+      slices: slices.filter((_, i) => i !== index)
     });
   };
 
@@ -43,7 +44,7 @@ export const PieChartWidget = ({
     if (!onDataChange) return;
     onDataChange({
       ...data,
-      slices: data.slices.map((slice, i) => (i === index ? { ...slice, ...updates } : slice))
+      slices: slices.map((slice, i) => (i === index ? { ...slice, ...updates } : slice))
     });
   };
 
@@ -81,7 +82,7 @@ export const PieChartWidget = ({
             Configure Data Slices
           </div>
           <div className="space-y-2">
-            {data.slices.map((slice, i) => (
+            {slices.map((slice, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
                   type="color"
@@ -123,7 +124,7 @@ export const PieChartWidget = ({
           <svg viewBox="0 0 32 32" className="h-full w-full -rotate-90">
             {(() => {
               let cumulativePercent = 0;
-              return data.slices.map((slice, i) => {
+              return slices.map((slice, i) => {
                 const percent = (slice.value / total) * 100;
                 const strokeDasharray = `${percent} ${100 - percent}`;
                 const strokeDashoffset = -cumulativePercent;
@@ -152,7 +153,7 @@ export const PieChartWidget = ({
         </div>
         {/* Legend */}
         <div className="space-y-2">
-          {data.slices.map((slice, i) => (
+          {slices.map((slice, i) => (
             <div key={i} className="flex items-center gap-2 text-sm">
               <div className="h-3 w-3 rounded" style={{ backgroundColor: slice.color }} />
               <span className="text-gray-600">{slice.label}</span>

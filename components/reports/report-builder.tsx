@@ -160,7 +160,7 @@ export function ReportBuilder({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${report.title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-${Date.now()}.pdf`;
+      a.download = `${report?.title?.replace(/[^a-z0-9]/gi, "-")?.toLowerCase()}-${Date.now()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

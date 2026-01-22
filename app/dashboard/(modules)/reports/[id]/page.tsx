@@ -1,9 +1,8 @@
-import { notFound } from "next/navigation";
 import { FileBarChart, ArrowLeft, FileText } from "lucide-react";
 import Link from "next/link";
 import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { getReport } from "@/app/_actions/reports-actions";
+import { getAllDataSources, getReport } from "@/app/_actions/reports-actions";
 import { getAuditPlan } from "@/app/_actions/audit-module-actions";
 import { getRiskRegister } from "@/app/_actions/risk-module-actions";
 import { ReportDetailsClient } from "../_components/report-details-client";
@@ -78,12 +77,14 @@ export default async function ReportDetailsPage({ params }: { params: Promise<{ 
       }
     } else if (report.entity_type === "risk_register") {
       const entityResponse = await getRiskRegister(report.entity_id);
-      if (entityResponse.success && entityResponse.data) {
+      if (entityResponse.success && entityResponse.data.risk_register) {
         entity = {
-          id: entityResponse.data.id,
-          title: entityResponse.data.name || entityResponse.data.title,
-          description: entityResponse.data.description,
-          status: entityResponse.data.status
+          id: entityResponse.data?.risk_register.id,
+          title:
+            entityResponse.data?.risk_register.name || entityResponse.data?.risk_register.title,
+          description: entityResponse.data?.risk_register.description,
+          status: entityResponse.data?.risk_register.status
+          // Don't set management_standard - let the template merger use report_type as fallback
         };
       }
     }
@@ -136,7 +137,11 @@ export default async function ReportDetailsPage({ params }: { params: Promise<{ 
       <div className="container mx-auto px-4 py-6">
         <ReportDetailsClient
           reportId={id}
-          initialReport={report.report_content || null}
+          initialReport={{
+            ...(report.report_content || {}),
+            report_type: report.report_type,
+            title: report.title
+          }}
           reportStatus={report.status}
           entity={entity}
           entityType={entityType}

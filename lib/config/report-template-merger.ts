@@ -28,8 +28,22 @@ export function mergeReportWithTemplate(
   }
 ): ReportContent {
   // Get the appropriate template
-  const templateKey = normalizeManagementStandard(managementStandard);
-  const template = getTemplateForStandard(managementStandard);
+  // Use report_type as fallback if management_standard not provided
+  let templateStandard = managementStandard;
+
+  // If no management standard, derive from report_type
+  if (!templateStandard && savedReport?.report_type) {
+    const reportTypeToStandard: Record<string, string> = {
+      risk: "RISK ASSESSMENT",
+      general_audit: "GENERAL",
+      compliance_audit: "ISO 27001",
+      followup: "FOLLOW-UP"
+    };
+    templateStandard = reportTypeToStandard[savedReport.report_type];
+  }
+
+  const templateKey = normalizeManagementStandard(templateStandard);
+  const template = getTemplateForStandard(templateStandard);
 
   // If no saved report exists, create a new one from template
   if (!savedReport) {
