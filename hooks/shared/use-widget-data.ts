@@ -8,6 +8,7 @@ export interface FetchWidgetDataParams {
   dataSourceId: string;
   widgetType: WidgetType;
   entityId?: string;
+  entityType?: "audit_plan" | "risk_register" | "control_register";
 }
 
 /**
@@ -18,7 +19,7 @@ export function useWidgetDataFetch() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ dataSourceId, widgetType, entityId }: FetchWidgetDataParams) => {
+    mutationFn: async ({ dataSourceId, widgetType, entityId, entityType }: FetchWidgetDataParams) => {
       // Map widget types to API-compatible types
       const apiWidgetType = widgetType as
         | "pie_chart"
@@ -29,7 +30,7 @@ export function useWidgetDataFetch() {
         | "area_chart"
         | "risk_objective_mapping";
 
-      const result = await getDataSourceData(dataSourceId, apiWidgetType, entityId);
+      const result = await getDataSourceData(dataSourceId, apiWidgetType, entityId, entityType);
 
       if (!result.success) {
         throw new Error(result.message || "Failed to fetch widget data");
@@ -70,14 +71,20 @@ export function transformWidgetData(
   switch (widgetType) {
     case "pie_chart":
       // API returns array of { label, value, color }
+      const slices = Array.isArray(rawData) ? rawData : rawData?.slices || [];
       console.log("🔍 [transformWidgetData] pie_chart - rawData:", {
         isArray: Array.isArray(rawData),
         hasSlices: rawData?.slices !== undefined,
-        slicesLength: Array.isArray(rawData) ? rawData.length : rawData?.slices?.length
+        slicesLength: slices.length,
+        slicesData: slices.map((s: any) => ({
+          label: s.label,
+          value: s.value,
+          color: s.color
+        }))
       });
       result = {
         title: title || "Chart",
-        slices: Array.isArray(rawData) ? rawData : rawData?.slices || [],
+        slices: slices,
         data_source_id: dataSourceId
       };
       break;
@@ -138,6 +145,36 @@ export function transformWidgetData(
         title: title || "Chart",
         categories: rawData?.categories || [],
         series: rawData?.series || [],
+        data_source_id: dataSourceId
+      };
+      break;
+
+    case "metric_card":
+      // API returns { value, unit?, trend?, description? }
+      console.log("🔍 [transformWidgetData] metric_card - rawData:", {
+        hasValue: rawData?.value !== undefined,
+        hasUnit: rawData?.unit !== undefined,
+        hasTrend: rawData?.trend !== undefined
+      });
+      result = {
+        title: title || "Metric",
+        value: rawData?.value || 0,
+        unit: rawData?.unit || "",
+        trend: rawData?.trend || 0,
+        description: rawData?.description || "",
+        data_source_id: dataSourceId
+      };
+      break;
+
+    case "text_block":
+      // API returns { content, title? }
+      console.log("🔍 [transformWidgetData] text_block - rawData:", {
+        hasContent: rawData?.content !== undefined,
+        contentLength: rawData?.content?.length || 0
+      });
+      result = {
+        title: rawData?.title || title || "",
+        content: rawData?.content || "",
         data_source_id: dataSourceId
       };
       break;

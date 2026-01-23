@@ -10,15 +10,12 @@ import {
   ChevronDown,
   Loader2
 } from "lucide-react";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent
-} from "@/components/ui/popover";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useDataSources } from "@/hooks/shared/use-data-sources";
-import type { DataSource } from "@/lib/types/report-types";
+import type { DataSource, WidgetType } from "@/lib/types/report-types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { getWidgetTypeInfo } from "./widget-type-selector";
 
 export interface DataSourceSelectorProps {
   selectedDataSourceId?: string;
@@ -100,11 +97,21 @@ export function DataSourceSelector({
   // Filter by allowed categories if specified
   const filteredByAllowedCategories = useMemo(() => {
     if (!filterByCategory || filterByCategory.length === 0) {
-      console.log("🔍 [DataSourceSelector] No category filter applied, showing all", dataSources.length, "sources");
+      console.log(
+        "🔍 [DataSourceSelector] No category filter applied, showing all",
+        dataSources.length,
+        "sources"
+      );
       return dataSources;
     }
     const filtered = dataSources.filter((ds) => filterByCategory.includes(ds.category));
-    console.log("🔍 [DataSourceSelector] Filtered by categories", filterByCategory, ":", filtered.length, "sources");
+    console.log(
+      "🔍 [DataSourceSelector] Filtered by categories",
+      filterByCategory,
+      ":",
+      filtered.length,
+      "sources"
+    );
     return filtered;
   }, [dataSources, filterByCategory]);
 
@@ -122,7 +129,13 @@ export function DataSourceSelector({
     // Filter by selected category
     if (selectedCategory !== "all") {
       sources = sources.filter((ds) => ds.category === selectedCategory);
-      console.log("🔍 [DataSourceSelector] Filtered by category", selectedCategory, ":", sources.length, "sources");
+      console.log(
+        "🔍 [DataSourceSelector] Filtered by category",
+        selectedCategory,
+        ":",
+        sources.length,
+        "sources"
+      );
     }
 
     // Filter by search query
@@ -130,10 +143,15 @@ export function DataSourceSelector({
       const query = searchQuery.toLowerCase();
       sources = sources.filter(
         (ds) =>
-          ds.name.toLowerCase().includes(query) ||
-          ds.description.toLowerCase().includes(query)
+          ds.name.toLowerCase().includes(query) || ds.description.toLowerCase().includes(query)
       );
-      console.log("🔍 [DataSourceSelector] Filtered by search", query, ":", sources.length, "sources");
+      console.log(
+        "🔍 [DataSourceSelector] Filtered by search",
+        query,
+        ":",
+        sources.length,
+        "sources"
+      );
     }
 
     return sources;
@@ -154,14 +172,13 @@ export function DataSourceSelector({
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={setIsOpen} isModal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={isOpen}
-          className={cn("w-full justify-between", className)}
-        >
+          className={cn("w-full justify-between", className)}>
           <div className="flex items-center gap-2 truncate">
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
@@ -176,8 +193,7 @@ export function DataSourceSelector({
                     "shrink-0 rounded px-1.5 py-0.5 text-xs",
                     categoryConfig[selectedSource.category].bgColor,
                     categoryConfig[selectedSource.category].color
-                  )}
-                >
+                  )}>
                   {categoryConfig[selectedSource.category].label}
                 </span>
               </>
@@ -194,17 +210,17 @@ export function DataSourceSelector({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[400px] p-0" align="start">
+      <PopoverContent className="w-[500px] p-0" align="start" side="bottom" sideOffset={8}>
         {/* Search */}
         <div className="border-b border-gray-200 p-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search data sources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               autoFocus
             />
           </div>
@@ -220,8 +236,7 @@ export function DataSourceSelector({
               selectedCategory === "all"
                 ? "bg-gray-900 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            )}
-          >
+            )}>
             All
           </button>
           {availableCategories.map((cat) => (
@@ -234,8 +249,7 @@ export function DataSourceSelector({
                 selectedCategory === cat
                   ? "bg-gray-900 text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              )}
-            >
+              )}>
               {categoryConfig[cat].label}
             </button>
           ))}
@@ -246,11 +260,24 @@ export function DataSourceSelector({
           <button
             type="button"
             onClick={() => {
-              onSelect({ id: "manual", name: "Manual Entry", category: "custom" } as DataSource);
-              setIsOpen(false);
+              handleSelect({
+                id: "manual",
+                name: "Manual Entry",
+                category: "custom",
+                description: "Enter your own data manually",
+                compatible_widgets: [
+                  "pie_chart",
+                  "bar_chart",
+                  "table",
+                  "line_chart",
+                  "area_chart",
+                  "metric_card"
+                ],
+                requires_entity: false,
+                sample_data: {}
+              } as DataSource);
             }}
-            className="mb-1 w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-50"
-          >
+            className="mb-1 w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-50">
             <div className="flex items-center gap-2">
               <Edit2 className="h-4 w-4 text-purple-500" />
               <span className="font-medium text-gray-900">Manual Entry</span>
@@ -259,20 +286,41 @@ export function DataSourceSelector({
               </span>
             </div>
             <p className="mt-1 text-xs text-gray-500">Enter your own data manually</p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {(
+                [
+                  "pie_chart",
+                  "bar_chart",
+                  "table",
+                  "line_chart",
+                  "area_chart",
+                  "metric_card"
+                ] as WidgetType[]
+              ).map((type) => {
+                const info = getWidgetTypeInfo(type);
+                return (
+                  <span
+                    key={type}
+                    className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600"
+                    title={info.description}>
+                    {React.createElement(info.icon, { className: "h-3 w-3" })}
+                    {info.label}
+                  </span>
+                );
+              })}
+            </div>
           </button>
         </div>
 
         {/* Data Source List */}
-        <div className="max-h-64 overflow-y-auto p-2">
+        <div className="max-h-96 overflow-y-auto p-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
               <span className="ml-2 text-sm text-gray-500">Loading data sources...</span>
             </div>
           ) : filteredSources.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-500">
-              No data sources found
-            </div>
+            <div className="py-8 text-center text-sm text-gray-500">No data sources found</div>
           ) : (
             filteredSources.map((source) => {
               const config = categoryConfig[source.category];
@@ -286,21 +334,13 @@ export function DataSourceSelector({
                   onClick={() => handleSelect(source)}
                   className={cn(
                     "mb-1 w-full rounded-lg p-3 text-left transition-colors",
-                    isSelected
-                      ? "border border-blue-200 bg-blue-50"
-                      : "hover:bg-gray-50"
-                  )}
-                >
+                    isSelected ? "border border-blue-200 bg-blue-50" : "hover:bg-gray-50"
+                  )}>
                   <div className="flex items-center gap-2">
                     <Icon className={cn("h-4 w-4", config.color)} />
                     <span className="font-medium text-gray-900">{source.name}</span>
                     <span
-                      className={cn(
-                        "rounded px-1.5 py-0.5 text-xs",
-                        config.bgColor,
-                        config.color
-                      )}
-                    >
+                      className={cn("rounded px-1.5 py-0.5 text-xs", config.bgColor, config.color)}>
                       {config.label}
                     </span>
                   </div>
@@ -309,6 +349,24 @@ export function DataSourceSelector({
                     <p className="mt-1 text-xs text-amber-600">
                       ⚠ Requires linked audit plan or risk register
                     </p>
+                  )}
+
+                  {/* Compatible Widget Types */}
+                  {source.compatible_widgets && source.compatible_widgets.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {source.compatible_widgets.map((widgetType) => {
+                        const info = getWidgetTypeInfo(widgetType);
+                        return (
+                          <span
+                            key={widgetType}
+                            className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600"
+                            title={info.description}>
+                            {React.createElement(info.icon, { className: "h-3 w-3" })}
+                            {info.label}
+                          </span>
+                        );
+                      })}
+                    </div>
                   )}
                 </button>
               );
@@ -321,8 +379,7 @@ export function DataSourceSelector({
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="w-full rounded bg-gray-100 px-3 py-2 text-sm text-gray-600 hover:bg-gray-200"
-          >
+            className="w-full rounded bg-gray-100 px-3 py-2 text-sm text-gray-600 hover:bg-gray-200">
             Cancel
           </button>
         </div>

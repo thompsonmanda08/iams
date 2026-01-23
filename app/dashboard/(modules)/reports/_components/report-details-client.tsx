@@ -56,6 +56,7 @@ function getWidgetsWithDataSources(sections: ReportSection[]): Array<{
 function useWidgetDataPopulation(
   sections: ReportSection[],
   entityId: string | undefined,
+  entityType: ReportEntityType | undefined,
   enabled: boolean
 ) {
   const widgetsWithDataSources = enabled ? getWidgetsWithDataSources(sections) : [];
@@ -82,7 +83,7 @@ function useWidgetDataPopulation(
           | "risk_objective_mapping";
 
         try {
-          const result = await getDataSourceData(dataSourceId, widgetType, entityId);
+          const result = await getDataSourceData(dataSourceId, widgetType, entityId, entityType);
 
           if (result.success && result.data) {
             return {
@@ -206,6 +207,7 @@ export function ReportDetailsClient({
   const { data: widgetDataMap } = useWidgetDataPopulation(
     mergedReport?.sections || [],
     entity.id,
+    entityType,
     !!mergedReport
   );
 

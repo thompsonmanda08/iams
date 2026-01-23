@@ -39,15 +39,15 @@ export default function ReportsLoading() {
           {/* Tabs skeleton */}
           <Tabs className="overflow-x-auto">
             <TabsList className="inline-flex h-12 w-auto min-w-full gap-1 lg:gap-3">
-              <TabsTrigger value="all" className="gap-2" asChild>
+              <TabsTrigger value="all" className="gap-2">
                 <FileText className="h-5 w-5" />
                 All Reports
               </TabsTrigger>
-              <TabsTrigger value="draft" className="gap-2" asChild>
+              <TabsTrigger value="draft" className="gap-2">
                 <FileClock className="h-5 w-5 text-amber-500" />
                 Drafts
               </TabsTrigger>
-              <TabsTrigger value="published" className="gap-2" asChild>
+              <TabsTrigger value="published" className="gap-2">
                 <FileCheck className="h-5 w-5 text-green-500" />
                 Published
               </TabsTrigger>

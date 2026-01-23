@@ -52,6 +52,8 @@ export default async function ReportsPage({
     published: publishedReportsResponse?.data?.pagination?.total || 0
   };
 
+  console.log("📊 [ReportsPage] counts:", reports);
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -84,8 +86,8 @@ export default async function ReportsPage({
         <Tabs defaultValue={activeTab} className="space-y-4">
           <div className="overflow-x-auto">
             <TabsList className="grid h-11 w-auto min-w-full grid-cols-3 gap-1 lg:gap-3">
-              <Link href="?tab=all">
-                <TabsTrigger value="all" className="w-full gap-2">
+              <TabsTrigger value="all" className="w-full gap-2" asChild>
+                <Link href="?tab=all">
                   <FileText className="h-5 w-5" />
                   All Reports
                   {counts.all > 0 && (
@@ -93,10 +95,10 @@ export default async function ReportsPage({
                       {counts.all}
                     </span>
                   )}
-                </TabsTrigger>
-              </Link>
-              <Link href="?tab=draft">
-                <TabsTrigger value="draft" className="w-full gap-2">
+                </Link>
+              </TabsTrigger>
+              <TabsTrigger value="draft" className="w-full gap-2" asChild>
+                <Link href="?tab=draft">
                   <FileClock className="h-5 w-5 text-amber-500" />
                   Drafts
                   {counts.draft > 0 && (
@@ -104,10 +106,10 @@ export default async function ReportsPage({
                       {counts.draft}
                     </span>
                   )}
-                </TabsTrigger>
-              </Link>
-              <Link href="?tab=published">
-                <TabsTrigger value="published" className="w-full gap-2">
+                </Link>
+              </TabsTrigger>
+              <TabsTrigger value="published" className="w-full gap-2" asChild>
+                <Link href="?tab=published">
                   <FileCheck className="h-5 w-5 text-green-500" />
                   Published
                   {counts.published > 0 && (
@@ -115,8 +117,8 @@ export default async function ReportsPage({
                       {counts.published}
                     </span>
                   )}
-                </TabsTrigger>
-              </Link>
+                </Link>
+              </TabsTrigger>
             </TabsList>
           </div>
 

@@ -523,29 +523,40 @@ export async function getDataSourceById(dataSourceId: string): Promise<APIRespon
  * Get actual data for a specific data source and widget type from the backend
  * @param dataSourceId - The ID of the data source (e.g., "risks_by_appetitie_status")
  * @param widgetType - The widget type (pie_chart, bar_chart, table, etc.)
- * @param riskRegisterId - Optional risk register ID for filtering data
+ * @param entityId - Optional entity ID for filtering data
+ * @param entityType - Type of entity (determines query param name)
  * @returns The actual data for the specified widget type
  */
 export async function getDataSourceData(
   dataSourceId: string,
   widgetType: "pie_chart" | "bar_chart" | "table" | "metric_card" | "line_chart" | "area_chart" | "risk_objective_mapping",
-  riskRegisterId?: string
+  entityId?: string,
+  entityType?: ReportEntityType
 ): Promise<APIResponse> {
   console.log("🔍 [getDataSourceData] Fetching data:", {
     dataSourceId,
     widgetType,
-    riskRegisterId
+    entityId,
+    entityType
   });
 
   try {
     // Fetch actual data from the backend endpoint
-    // Format: GET /data-sources/{dataSourceId}?widget_type={widgetType}&risk_register_id={id}
+    // Format: GET /data-sources/{dataSourceId}?widget_type={widgetType}&{entity_param}={id}
     const params = new URLSearchParams({
       widget_type: widgetType
     });
 
-    if (riskRegisterId) {
-      params.append("risk_register_id", riskRegisterId);
+    if (entityId && entityType) {
+      // Determine the query parameter name based on entity type
+      const entityParamName =
+        entityType === "audit_plan" ? "audit_plan_id" :
+        entityType === "risk_register" ? "risk_register_id" :
+        entityType === "control_register" ? "control_register_id" :
+        "entity_id"; // Generic fallback
+
+      params.append(entityParamName, entityId);
+      console.log(`🔍 [getDataSourceData] Using entity param: ${entityParamName}=${entityId}`);
     }
 
     const url = `/api/v1/data-sources/${dataSourceId}?${params.toString()}`;
@@ -571,6 +582,14 @@ export async function getDataSourceData(
             ? JSON.stringify(widgetData, null, 2).substring(0, 200) + "..."
             : widgetData
       });
+
+      // Special logging for pie chart data to inspect colors
+      if (widgetType === "pie_chart") {
+        const slices = Array.isArray(widgetData) ? widgetData : widgetData?.slices || [];
+        console.log("🎨 [getDataSourceData] Pie chart slices with colors:",
+          JSON.stringify(slices, null, 2)
+        );
+      }
 
       return successResponse(widgetData);
     }
@@ -681,37 +700,81 @@ export async function getAuditDataSources(): Promise<APIResponse> {
 export async function fetchFindingsForReport(auditPlanId?: string): Promise<APIResponse> {
   try {
     if (auditPlanId) {
+      // Use correct endpoint - working paper contains findings
       const response = await authenticatedApiClient({
-        url: `/api/v1/audit-plans/${auditPlanId}/findings`,
+        url: `/api/v1/audit-plans/${auditPlanId}/working-paper`,
         method: "GET"
       });
 
+      // Extract findings from workpaper response
+      const workpaper = response?.data?.data || response?.data;
+      const rawFindings = workpaper?.findings || [];
+
+      console.log(`📋 [fetchFindingsForReport] Found ${rawFindings.length} findings for audit plan ${auditPlanId}`);
+
+      // Helper function to normalize conformity status
+      const normalizeConformityStatus = (status: string | null | undefined): "CONFORMITY" | "NON_CONFORMITY" | "PARTIAL_CONFORMITY" | null => {
+        if (!status) return null;
+
+        const normalized = status.toUpperCase().trim();
+
+        // Map various formats to standard values
+        if (normalized === "CONFORMITY" || normalized === "COMPLIANT" || normalized === "CONFORM") {
+          return "CONFORMITY";
+        }
+        if (normalized === "NON_CONFORMITY" || normalized === "NON-CONFORMITY" || normalized === "NON_COMPLIANT" || normalized === "NON-COMPLIANT" || normalized === "NONCONFORMITY") {
+          return "NON_CONFORMITY";
+        }
+        if (normalized === "PARTIAL_CONFORMITY" || normalized === "PARTIAL-CONFORMITY" || normalized === "PARTIALLY_COMPLIANT" || normalized === "PARTIALLY-COMPLIANT") {
+          return "PARTIAL_CONFORMITY";
+        }
+
+        return null;
+      };
+
       // Transform findings to match FindingSummary format
-      const findings = (response?.data?.data || response?.data || []).map((f: any) => ({
-        id: f.id,
-        reference_code: f.finding_number || f.reference_code,
-        title: f.title || f.category_name || "Untitled Finding",
-        severity: f.severity?.toLowerCase() || "medium",
-        status: f.status || "OPEN",
-        category_name: f.category_name || f.category?.name,
-        is_selected: false,
-        clause_number: f.clause_number,
-        clause: f.clause,
-        observation: f.conclusion || f.observation,
-        recommendation: f.recommendation,
-        management_response: f.management_response,
-        conformity_status: f.conformity_status,
-        compliance_status: f.compliance_status,
-        category: f.category
-      }));
+      const findings = rawFindings.map((f: any) => {
+        const rawConformityStatus = f.conformity_status || f.compliance_status;
+        const normalizedConformityStatus = normalizeConformityStatus(rawConformityStatus);
+
+        return {
+          id: f.id,
+          reference_code: f.finding_number || f.reference_code || `F-${f.id}`,
+          title: f.title || f.category_name || "Untitled Finding",
+          severity: f.severity?.toLowerCase() || "medium",
+          status: f.status || "OPEN",
+          category_name: f.category_name || f.category?.name,
+          is_selected: false,
+          // Compliance-specific fields
+          clause_number: f.clause_number,
+          clause: f.clause_number || f.clause,
+          clause_description: f.clause_description,
+          observation: f.conclusion || f.workings_and_test_results || f.observation,
+          recommendation: f.recommendation,
+          management_response: f.management_response,
+          conformity_status: normalizedConformityStatus,
+          compliance_status: f.compliance_status,
+          compliance_percentage: f.compliance_percentage,
+          // Additional metadata
+          action_plan: f.action_plan,
+          responsible_person: f.responsible_person,
+          due_date: f.due_date,
+          evidence_links: f.evidence_links,
+          evidence_summary: f.evidence_summary,
+          framework: f.framework,
+          category: f.category
+        };
+      });
 
       return successResponse(findings);
     }
 
     // Return mock findings if no audit plan ID
+    console.warn("⚠️ [fetchFindingsForReport] No audit plan ID provided, using mock data");
     return successResponse(MOCK_FINDINGS);
   } catch (error: any) {
-    console.warn("Findings API not available, using mock data");
+    console.error("❌ [fetchFindingsForReport] API error:", error?.message || error);
+    console.warn("⚠️ [fetchFindingsForReport] Using mock data as fallback");
     return successResponse(MOCK_FINDINGS);
   }
 }

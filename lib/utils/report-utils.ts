@@ -1,4 +1,5 @@
 import type { ReportSection } from "@/lib/types/report-types";
+import { buildSectionTree, flattenSectionTree } from "./report-hierarchy-utils";
 
 /**
  * Widget data types for risk assessment report
@@ -33,22 +34,47 @@ export interface RiskObjectiveMappingData {
 }
 
 /**
- * Reorders sections by swapping their order values.
+ * Reorders sections by swapping their order values within the same parent (hierarchy-aware).
  */
 export const reorderSections = (
   sections: ReportSection[],
   index: number,
   direction: "up" | "down"
 ): ReportSection[] => {
-  const newSections = [...sections];
-  if (direction === "up" && index > 0) {
-    [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]];
-  } else if (direction === "down" && index < newSections.length - 1) {
-    [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+  const section = sections[index];
+  const parentId = section.parent_section_id;
+
+  // Get siblings (sections with same parent)
+  const siblings = sections.filter((s) => s.parent_section_id === parentId);
+  const siblingIndex = siblings.findIndex((s) => s.section_id === section.section_id);
+
+  if (direction === "up" && siblingIndex > 0) {
+    // Swap with previous sibling
+    const prevSibling = siblings[siblingIndex - 1];
+    const newSections = sections.map((s) => {
+      if (s.section_id === section.section_id) return { ...s, order: prevSibling.order };
+      if (s.section_id === prevSibling.section_id) return { ...s, order: section.order };
+      return s;
+    });
+
+    // Rebuild tree to get proper flat ordering
+    const tree = buildSectionTree(newSections);
+    return flattenSectionTree(tree);
+  } else if (direction === "down" && siblingIndex < siblings.length - 1) {
+    // Swap with next sibling
+    const nextSibling = siblings[siblingIndex + 1];
+    const newSections = sections.map((s) => {
+      if (s.section_id === section.section_id) return { ...s, order: nextSibling.order };
+      if (s.section_id === nextSibling.section_id) return { ...s, order: section.order };
+      return s;
+    });
+
+    // Rebuild tree to get proper flat ordering
+    const tree = buildSectionTree(newSections);
+    return flattenSectionTree(tree);
   }
 
-  // Re-assign order based on new index to ensure consistency
-  return newSections.map((s, i) => ({ ...s, order: i + 1 }));
+  return sections;
 };
 
 /**

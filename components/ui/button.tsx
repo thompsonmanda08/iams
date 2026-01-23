@@ -49,6 +49,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Comp = asChild ? Slot : "button";
 
+    // When asChild is true, we can't apply isLoading logic because Slot expects exactly one child
+    // Just pass through the children as-is
+    if (asChild) {
+      return (
+        <Comp ref={ref} className={cn(buttonVariants({ variant, size, className }))} {...props}>
+          {props.children}
+        </Comp>
+      );
+    }
+
+    // Normal button rendering with isLoading support
     return (
       <Comp ref={ref} className={cn(buttonVariants({ variant, size, className }))} {...props}>
         {isLoading ? (

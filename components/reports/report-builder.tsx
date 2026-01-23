@@ -133,16 +133,17 @@ export function ReportBuilder({
     changeManagementStandard
   } = useReportStore();
 
-  // Pass the entity ID based on entity type
+  // Pass the entity ID and type for findings fetching
   const entityIdForFetching = entityType === "audit_plan" ? entity.id : undefined;
   const { saveReport, isSaving, publishReport, isPublishing } =
-    useReportFetching(entityIdForFetching);
+    useReportFetching(entityIdForFetching, entityType);
 
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [pendingReportType, setPendingReportType] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [retryingWidget, setRetryingWidget] = useState<{ sectionId: string; widgetId: string } | null>(null);
 
   // Handle data source change with real data fetching
   const handleWidgetDataSourceChange = useCallback(
@@ -190,7 +191,7 @@ export function ReportBuilder({
           | "area_chart"
           | "risk_objective_mapping";
 
-        const result = await getDataSourceData(dataSource.id, widgetType, entity.id);
+        const result = await getDataSourceData(dataSource.id, widgetType, entity.id, entityType);
 
         console.log("🔍 [handleWidgetDataSourceChange] Fetch result:", {
           success: result.success,
@@ -232,6 +233,149 @@ export function ReportBuilder({
       }
     },
     [report, entity.id, updateWidgetData, updateWidgetDataSource]
+  );
+
+  // Handle widget type change with real data fetching
+  const handleWidgetTypeChange = useCallback(
+    async (sectionId: string, widgetId: string, newType: WidgetType) => {
+      console.log("🔍 [handleWidgetTypeChange] Widget type change triggered:", {
+        sectionId,
+        widgetId,
+        newType
+      });
+
+      // Find the widget to get its current data source
+      const section = report?.sections.find((s) => s.section_id === sectionId);
+      const widget = section?.widgets.find((w) => w.instance_id === widgetId);
+
+      if (!widget) {
+        console.error("❌ [handleWidgetTypeChange] Widget not found");
+        return;
+      }
+
+      console.log("🔍 [handleWidgetTypeChange] Current widget:", {
+        currentType: widget.widget_type,
+        dataSourceId: widget.data?.data_source_id
+      });
+
+      // If widget has a data source, fetch new data for the new type
+      if (widget.data?.data_source_id) {
+        try {
+          toast.loading("Changing widget type and fetching data...", { id: "change-type" });
+          console.log("🔍 [handleWidgetTypeChange] Fetching data for new type...");
+
+          const widgetType = newType as
+            | "pie_chart"
+            | "bar_chart"
+            | "table"
+            | "metric_card"
+            | "line_chart"
+            | "area_chart"
+            | "risk_objective_mapping";
+
+          const result = await getDataSourceData(
+            widget.data.data_source_id,
+            widgetType,
+            entity.id,
+            entityType
+          );
+
+          if (!result.success) {
+            throw new Error(result.message || "Failed to fetch data");
+          }
+
+          // Transform the data to the new widget format
+          console.log("🔍 [handleWidgetTypeChange] Transforming data for new type...");
+          const transformedData = transformWidgetData(
+            result.data,
+            newType,
+            widget.data.data_source_id,
+            widget.data.title
+          );
+
+          console.log("🔍 [handleWidgetTypeChange] Updating widget with new type and data...");
+          updateWidget(sectionId, widgetId, {
+            widget_type: newType,
+            data: transformedData
+          });
+
+          toast.success("Widget type changed successfully", { id: "change-type" });
+          console.log("✅ [handleWidgetTypeChange] Widget type change completed successfully");
+        } catch (error: any) {
+          console.error("❌ [handleWidgetTypeChange] Failed:", error);
+          toast.error(error.message || "Failed to change widget type", { id: "change-type" });
+        }
+      } else {
+        // No data source, just change the type without fetching data
+        console.log("🔍 [handleWidgetTypeChange] No data source, just changing type");
+        updateWidget(sectionId, widgetId, {
+          widget_type: newType
+        });
+        toast.success("Widget type changed", { id: "change-type" });
+      }
+    },
+    [report, entity.id, updateWidget, entityType]
+  );
+
+  // Handle widget data retry
+  const handleRetryWidget = useCallback(
+    async (sectionId: string, widgetId: string) => {
+      console.log("🔄 [handleRetryWidget] Retry triggered:", { sectionId, widgetId });
+      setRetryingWidget({ sectionId, widgetId });
+
+      // Find the widget
+      const section = report?.sections.find((s) => s.section_id === sectionId);
+      const widget = section?.widgets.find((w) => w.instance_id === widgetId);
+
+      if (!widget || !widget.data.data_source_id) {
+        console.error("❌ [handleRetryWidget] Widget not found or no data source");
+        toast.error("Cannot retry: widget has no data source");
+        setRetryingWidget(null);
+        return;
+      }
+
+      try {
+        toast.loading("Retrying data fetch...", { id: "retry-fetch" });
+
+        const widgetType = widget.widget_type as
+          | "pie_chart"
+          | "bar_chart"
+          | "table"
+          | "metric_card"
+          | "line_chart"
+          | "area_chart"
+          | "risk_objective_mapping";
+
+        const result = await getDataSourceData(
+          widget.data.data_source_id,
+          widgetType,
+          entity.id,
+          entityType
+        );
+
+        if (!result.success) {
+          throw new Error(result.message || "Failed to fetch data");
+        }
+
+        // Transform and update widget data
+        const transformedData = transformWidgetData(
+          result.data,
+          widget.widget_type,
+          widget.data.data_source_id,
+          widget.data.title
+        );
+
+        updateWidgetData(sectionId, widgetId, transformedData);
+        toast.success("Data loaded successfully", { id: "retry-fetch" });
+        console.log("✅ [handleRetryWidget] Retry successful");
+      } catch (error: any) {
+        console.error("❌ [handleRetryWidget] Retry failed:", error);
+        toast.error(error.message || "Failed to fetch data", { id: "retry-fetch" });
+      } finally {
+        setRetryingWidget(null);
+      }
+    },
+    [report, entity.id, entityType, updateWidgetData]
   );
 
   // Scroll to section
@@ -359,8 +503,8 @@ export function ReportBuilder({
 
   if (!report) {
     return (
-      <div className="flex h-96 flex-col items-center justify-center text-gray-500">
-        <FileText className="mb-4 h-12 w-12 text-gray-400" />
+      <div className="flex h-96 flex-col items-center justify-center text-muted-foreground">
+        <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
         <p>No report available. Click &quot;Save Draft&quot; to create one.</p>
         <CreateReportDialog />
       </div>
@@ -370,11 +514,11 @@ export function ReportBuilder({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-gray-200 pb-2">
+      <div className="border-b border-border pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Report Builder</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-lg font-semibold text-foreground">Report Builder</h2>
+            <p className="text-sm text-muted-foreground">
               {entity.title ? ` ${entity.title}` : report.title || "Untitled Report"}
               {entity.ref_no && (
                 <span className="text-muted-foreground ml-2 text-xs">({entity.ref_no})</span>
@@ -427,16 +571,16 @@ export function ReportBuilder({
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
           <div className="col-span-12 space-y-4 lg:col-span-3">
-            <TableOfContents sections={report.sections} onItemClick={scrollToSection} />
+            <TableOfContents sections={report.sections || []} onItemClick={scrollToSection} />
 
             {/* Report Info */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900">Report Details</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-3 text-sm font-semibold text-foreground">Report Details</h3>
               <div className="space-y-2 text-sm">
                 {readOnlyType ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500">Type:</span>
-                    <p className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Type:</span>
+                    <p className="font-medium text-foreground">
                       {reportTypeOptions.find((opt) => opt.value === getReportTypeValue())?.label ||
                         getReportTypeValue()}
                     </p>
@@ -456,19 +600,19 @@ export function ReportBuilder({
                   />
                 )}
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">Source {getEntityLabel()}:</span>
-                  <p className="font-medium text-gray-900">{entity.title || "-"}</p>
+                  <span className="text-muted-foreground">Source {getEntityLabel()}:</span>
+                  <p className="font-medium text-foreground">{entity.title || "-"}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">Status:</span>
+                  <span className="text-muted-foreground">Status:</span>
                   <StatusBadge status={report.status as string} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">Sections:</span>
-                  <p className="font-medium text-gray-900">{report.sections.length}</p>
+                  <span className="text-muted-foreground">Sections:</span>
+                  <p className="font-medium text-foreground">{report.sections?.length || 0}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">Version:</span>
+                  <span className="text-muted-foreground">Version:</span>
                   <Badge variant={"default"} className="font-medium">
                     {report.version}
                   </Badge>
@@ -477,20 +621,32 @@ export function ReportBuilder({
             </div>
 
             {/* Section Type Legend */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900">Section Types</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-3 text-sm font-semibold text-foreground">Section Types</h3>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-green-300 bg-green-50 font-medium" />
-                  <span className="text-gray-600">Text Content</span>
+                  <div className="h-4 w-4 rounded border border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-950/30" />
+                  <span className="text-muted-foreground">Cover Page</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-blue-300 bg-blue-50 font-medium" />
-                  <span className="text-gray-600">Text + Widgets</span>
+                  <div className="h-4 w-4 rounded border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950/30" />
+                  <span className="text-muted-foreground">Text Content</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded border border-amber-300 bg-amber-50 font-medium" />
-                  <span className="text-gray-600">Findings Selector</span>
+                  <div className="h-4 w-4 rounded border border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30" />
+                  <span className="text-muted-foreground">Text + Widgets</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30" />
+                  <span className="text-muted-foreground">Findings Selector</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded border border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/30" />
+                  <span className="text-muted-foreground">Compliance Findings</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded border border-cyan-300 bg-cyan-50 dark:border-cyan-700 dark:bg-cyan-950/30" />
+                  <span className="text-muted-foreground">Dynamic Form</span>
                 </div>
               </div>
             </div>
@@ -500,7 +656,7 @@ export function ReportBuilder({
 
           {/* Main Editor */}
           <div className="col-span-12 space-y-4 lg:col-span-9">
-            {report.sections
+            {(report.sections || [])
               .sort((a, b) => a.order - b.order)
               .map((section, index) => (
                 <SectionEditor
@@ -535,6 +691,9 @@ export function ReportBuilder({
                   onWidgetDataChange={(widgetId, data) =>
                     updateWidgetData(section.section_id, widgetId, data)
                   }
+                  onWidgetTypeChange={(widgetId, newType) =>
+                    handleWidgetTypeChange(section.section_id, widgetId, newType)
+                  }
                   // Widget CRUD operations
                   onAddWidget={(widget: WidgetInstance) =>
                     addWidget(section.section_id, widget)
@@ -544,6 +703,14 @@ export function ReportBuilder({
                   }
                   onUpdateWidget={(widgetId: string, updates: Partial<WidgetInstance>) =>
                     updateWidget(section.section_id, widgetId, updates)
+                  }
+                  onRetryWidget={(widgetId: string) =>
+                    handleRetryWidget(section.section_id, widgetId)
+                  }
+                  retryingWidgetId={
+                    retryingWidget?.sectionId === section.section_id
+                      ? retryingWidget.widgetId
+                      : null
                   }
                   // Entity context for data source filtering
                   entityId={entity.id}
@@ -572,7 +739,7 @@ export function ReportBuilder({
         isOpen={isAddSectionModalOpen}
         onClose={() => setAddSectionModalOpen(false)}
         onAdd={addSection}
-        existingSectionsCount={report.sections.length}
+        existingSections={report.sections || []}
       />
 
       {/* PDF Preview Modal */}

@@ -33,6 +33,8 @@ import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog"
 import { BarChartWidget } from "./bar-chart-widget";
 import { RiskObjectiveMappingTable } from "./risk-objective-mapping-table";
 import { WidgetManager } from "./widget-manager";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SectionEditorProps {
   section: ReportSection;
@@ -50,10 +52,13 @@ interface SectionEditorProps {
   onWidgetRowsChange?: (widgetId: string, rows: Record<string, any>[]) => void;
   onWidgetDataSourceChange?: (widgetId: string, dataSource: DataSource | null) => void;
   onWidgetDataChange?: (widgetId: string, data: any) => void;
+  onWidgetTypeChange?: (widgetId: string, newType: import("@/lib/types/report-types").WidgetType) => void;
   // New widget CRUD props
   onAddWidget?: (widget: WidgetInstance) => void;
   onRemoveWidget?: (widgetId: string) => void;
   onUpdateWidget?: (widgetId: string, updates: Partial<WidgetInstance>) => void;
+  onRetryWidget?: (widgetId: string) => Promise<void>;
+  retryingWidgetId?: string | null;
   // Entity context for data sources
   entityId?: string;
   entityType?: ReportEntityType;
@@ -79,9 +84,12 @@ export const SectionEditor = ({
   onWidgetRowsChange,
   onWidgetDataSourceChange,
   onWidgetDataChange,
+  onWidgetTypeChange,
   onAddWidget,
   onRemoveWidget,
   onUpdateWidget,
+  onRetryWidget,
+  retryingWidgetId,
   entityId,
   entityType,
   onMove,
@@ -95,19 +103,19 @@ export const SectionEditor = ({
   const getTypeStyles = (type: SectionType) => {
     switch (type) {
       case "cover_page":
-        return { bg: "bg-purple-50", border: "border-purple-300", icon: FileText };
+        return { bg: "bg-purple-50 dark:bg-purple-950/30", border: "border-purple-300 dark:border-purple-700", icon: FileText };
       case "text_only":
-        return { bg: "bg-green-50", border: "border-green-300", icon: Edit2 };
+        return { bg: "bg-green-50 dark:bg-green-950/30", border: "border-green-300 dark:border-green-700", icon: Edit2 };
       case "text_with_widgets":
-        return { bg: "bg-blue-50", border: "border-blue-300", icon: PieChart };
+        return { bg: "bg-blue-50 dark:bg-blue-950/30", border: "border-blue-300 dark:border-blue-700", icon: PieChart };
       case "findings_selector":
-        return { bg: "bg-amber-50", border: "border-amber-300", icon: AlertCircle };
+        return { bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-300 dark:border-amber-700", icon: AlertCircle };
       case "compliance_findings":
-        return { bg: "bg-indigo-50", border: "border-indigo-300", icon: CheckCircle };
+        return { bg: "bg-indigo-50 dark:bg-indigo-950/30", border: "border-indigo-300 dark:border-indigo-700", icon: CheckCircle };
       case "dynamic_form":
-        return { bg: "bg-cyan-50", border: "border-cyan-300", icon: FileText }; // New style
+        return { bg: "bg-cyan-50 dark:bg-cyan-950/30", border: "border-cyan-300 dark:border-cyan-700", icon: FileText };
       default:
-        return { bg: "bg-gray-50", border: "border-gray-300", icon: FileText };
+        return { bg: "bg-gray-50 dark:bg-gray-950/30", border: "border-gray-300 dark:border-gray-700", icon: FileText };
     }
   };
 
@@ -143,7 +151,7 @@ export const SectionEditor = ({
   return (
     <div
       id={section.section_id}
-      className={`rounded-lg border-t border-r border-b border-l-4 border-gray-200 ${style.bg} ${style.border} transition-all duration-200`}
+      className={`rounded-lg border-t border-r border-b border-l-4 border-border ${style.bg} ${style.border} transition-all duration-200`}
       draggable={!!onDragStart}
       onDragStart={onDragStart}
       onDragOver={(e) => {
@@ -155,10 +163,10 @@ export const SectionEditor = ({
         className="flex cursor-pointer items-center justify-between px-4 py-3"
         onClick={onToggle}>
         <div className="flex items-center gap-3">
-          <div className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing">
+          <div className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing">
             <GripVertical className="h-5 w-5" />
           </div>
-          <Icon className="h-5 w-5 text-gray-600" />
+          <Icon className="h-5 w-5 text-muted-foreground" />
           <div className="flex flex-col">
             {isEditingHeader ? (
               <input
@@ -168,11 +176,11 @@ export const SectionEditor = ({
                 onBlur={() => setIsEditingHeader(false)}
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
-                className="rounded border border-gray-300 px-2 py-0.5 text-sm font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="rounded border border-input bg-background text-foreground px-2 py-0.5 text-sm font-semibold focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
               />
             ) : (
               <h3
-                className="text-sm font-semibold text-gray-900"
+                className="text-sm font-semibold text-foreground"
                 onDoubleClick={(e) => {
                   e.stopPropagation();
                   setIsEditingHeader(true);
@@ -180,7 +188,7 @@ export const SectionEditor = ({
                 {section.header}
               </h3>
             )}
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-muted-foreground">
               {section.sub_header || section.section_type.replace("_", " ")}
             </span>
           </div>
@@ -188,13 +196,13 @@ export const SectionEditor = ({
 
         <div className="flex items-center gap-2">
           {onMove && (
-            <div className="mr-2 flex gap-1 border-r border-gray-300 pr-2">
+            <div className="mr-2 flex gap-1 border-r border-border pr-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onMove("up");
                 }}
-                className="rounded p-1 text-gray-400 hover:bg-white hover:text-gray-600 hover:shadow-sm">
+                className="rounded p-1 text-muted-foreground hover:bg-card hover:text-foreground hover:shadow-sm">
                 <ChevronDown className="h-4 w-4 rotate-180" />
               </button>
               <button
@@ -202,7 +210,7 @@ export const SectionEditor = ({
                   e.stopPropagation();
                   onMove("down");
                 }}
-                className="rounded p-1 text-gray-400 hover:bg-white hover:text-gray-600 hover:shadow-sm">
+                className="rounded p-1 text-muted-foreground hover:bg-card hover:text-foreground hover:shadow-sm">
                 <ChevronDown className="h-4 w-4" />
               </button>
             </div>
@@ -213,45 +221,35 @@ export const SectionEditor = ({
                 e.stopPropagation();
                 setShowDeleteDialog(true);
               }}
-              className="mr-2 rounded p-1 text-gray-400 hover:bg-red-100 hover:text-red-500">
+              className="mr-2 rounded p-1 text-muted-foreground hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-950">
               <Trash2 className="h-4 w-4" />
             </button>
           )}
           {isExpanded ? (
-            <ChevronDown className="h-5 w-5 text-gray-500" />
+            <ChevronDown className="h-5 w-5 text-muted-foreground" />
           ) : (
-            <ChevronRight className="h-5 w-5 text-gray-500" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           )}
         </div>
       </div>
 
       {isExpanded && (
-        <div className="border-t border-gray-200 bg-white p-4">
+        <div className="border-t border-border bg-card p-4">
           <div className="space-y-6">
             {/* Header Editing */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500 uppercase">
-                  Header
-                </label>
-                <input
-                  type="text"
-                  value={section.header}
-                  onChange={(e) => onHeaderChange(e.target.value)}
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500 uppercase">
-                  Sub-Header
-                </label>
-                <input
-                  type="text"
-                  value={section.sub_header}
-                  onChange={(e) => onSubHeaderChange(e.target.value)}
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
+              <Input
+                label="Header"
+                type="text"
+                value={section.header}
+                onChange={(e) => onHeaderChange(e.target.value)}
+              />
+              <Input
+                label="Sub-Header"
+                type="text"
+                value={section.sub_header}
+                onChange={(e) => onSubHeaderChange(e.target.value)}
+              />
             </div>
 
             {/* Content Logic */}
@@ -269,18 +267,13 @@ export const SectionEditor = ({
 
             {(section.section_type === "text_only" ||
               section.section_type === "text_with_widgets") && (
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500 uppercase">
-                  Content
-                </label>
-                <textarea
-                  value={section.content}
-                  onChange={(e) => onContentChange(e.target.value)}
-                  rows={4}
-                  className="focus:blue-500 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:outline-none"
-                  placeholder="Enter text content..."
-                />
-              </div>
+              <Textarea
+                label="Content"
+                value={section.content}
+                onChange={(e) => onContentChange(e.target.value)}
+                rows={4}
+                placeholder="Enter text content..."
+              />
             )}
 
             {(section.section_type === "findings_selector" ||
@@ -304,17 +297,20 @@ export const SectionEditor = ({
                 onRemoveWidget={onRemoveWidget}
                 onUpdateWidget={onUpdateWidget || (() => {})}
                 onWidgetDataChange={onWidgetDataChange}
+                onWidgetTypeChange={onWidgetTypeChange}
                 onWidgetDataSourceChange={onWidgetDataSourceChange}
                 onWidgetColumnsChange={onWidgetColumnsChange}
                 onWidgetRowsChange={onWidgetRowsChange}
+                onRetryWidget={onRetryWidget}
+                retryingWidgetId={retryingWidgetId}
               />
             )}
 
             {/* Legacy widget rendering for non-text_with_widgets sections or when widget manager props not provided */}
             {section.section_type !== "text_with_widgets" && section.widgets && section.widgets.length > 0 && (
               <div className="space-y-4">
-                <div className="border-t border-gray-100 pt-4">
-                  <h4 className="mb-3 text-xs font-bold tracking-wider text-gray-500 uppercase">
+                <div className="border-t border-border pt-4">
+                  <h4 className="mb-3 text-xs font-bold tracking-wider text-muted-foreground uppercase">
                     Widgets
                   </h4>
                   <div className="space-y-6">
@@ -434,8 +430,8 @@ export const SectionEditor = ({
             {(section.section_type === "findings_selector" ||
               section.section_type === "compliance_findings") &&
               Object.keys(groupedFindingsByType).length > 0 && (
-                <div className="space-y-6 border-t border-gray-100 pt-4">
-                  <h4 className="text-xs font-bold tracking-wider text-gray-500 uppercase">
+                <div className="space-y-6 border-t border-border pt-4">
+                  <h4 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
                     Findings by Type
                   </h4>
                   {Object.entries(groupedFindingsByType).map(([conformityStatus, typeFindings]) => {
@@ -485,11 +481,11 @@ export const SectionEditor = ({
                           headerText: "text-red-900"
                         };
                       return {
-                        bg: "bg-gray-50",
-                        border: "border-gray-200",
-                        iconColor: "text-gray-600",
-                        headerBg: "bg-gray-100/50",
-                        headerText: "text-gray-900"
+                        bg: "bg-muted/50",
+                        border: "border-border",
+                        iconColor: "text-muted-foreground",
+                        headerBg: "bg-muted",
+                        headerText: "text-foreground"
                       };
                     };
 
@@ -507,43 +503,43 @@ export const SectionEditor = ({
                           <h5 className={`text-sm font-semibold ${colors.headerText}`}>
                             {displayLabel}
                           </h5>
-                          <span className="ml-auto text-xs text-gray-500">
+                          <span className="ml-auto text-xs text-muted-foreground">
                             {typeFindings.length} {typeFindings.length === 1 ? "item" : "items"}
                           </span>
                         </div>
 
                         {/* Table */}
-                        <div className="overflow-x-auto bg-white">
+                        <div className="overflow-x-auto bg-card">
                           <table className="w-full">
                             <thead>
                               <tr className={`border-b ${colors.border}`}>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                   Reference
                                 </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                   Clause
                                 </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                   Finding
                                 </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                   Observation
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-border">
                               {typeFindings.map((f) => (
-                                <tr key={f.id} className="hover:bg-gray-50/50">
-                                  <td className="px-4 py-3 font-mono text-sm text-gray-600">
+                                <tr key={f.id} className="hover:bg-muted/50">
+                                  <td className="px-4 py-3 font-mono text-sm text-muted-foreground">
                                     {f.reference_code}
                                   </td>
-                                  <td className="px-4 py-3 text-sm text-gray-900">
+                                  <td className="px-4 py-3 text-sm text-foreground">
                                     {f.clause_number || f.clause || "N/A"}
                                   </td>
-                                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                  <td className="px-4 py-3 text-sm font-medium text-foreground">
                                     {f.title}
                                   </td>
-                                  <td className="px-4 py-3 text-sm text-gray-700">
+                                  <td className="px-4 py-3 text-sm text-foreground">
                                     {f.observation || "No observation provided"}
                                   </td>
                                 </tr>

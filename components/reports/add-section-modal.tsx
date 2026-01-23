@@ -10,25 +10,26 @@ import {
   CheckCircle
 } from "lucide-react";
 import { ReportSection, SectionType, TableColumn, WidgetInstance, TableWidgetData } from "@/lib/types/report-types";
+import { getEligibleParents, getSectionDepth } from "@/lib/utils/report-hierarchy-utils";
 
 interface AddSectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (section: ReportSection) => void;
-  existingSectionsCount: number;
+  existingSections: ReportSection[];
 }
 
 export const AddSectionModal = ({
   isOpen,
   onClose,
   onAdd,
-  existingSectionsCount
+  existingSections
 }: AddSectionModalProps) => {
   const [sectionType, setSectionType] = useState<SectionType>("text_only");
   const [header, setHeader] = useState("");
   const [subHeader, setSubHeader] = useState("");
   const [includeInToc, setIncludeInToc] = useState(true);
-  const [tocLevel, setTocLevel] = useState<1 | 2 | 3>(1);
+  const [parentSectionId, setParentSectionId] = useState<string | null>(null);
   const [addTable, setAddTable] = useState(false);
   const [addPieChart, setAddPieChart] = useState(false);
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
@@ -98,13 +99,14 @@ export const AddSectionModal = ({
     const newSection: ReportSection = {
       section_id: `section-${Date.now()}`,
       section_type: sectionType,
-      order: existingSectionsCount + 1,
+      order: existingSections.length + 1,
       include_in_toc: includeInToc,
-      toc_level: tocLevel,
+      toc_level: 1, // Will be recalculated by store
       header,
       sub_header: subHeader,
       content: "",
-      widgets
+      widgets,
+      parent_section_id: parentSectionId
     };
 
     // Inject sample schema for verification
@@ -186,11 +188,11 @@ export const AddSectionModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-5xl overflow-hidden rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-100 p-6">
-          <h3 className="text-xl font-bold text-gray-900">Add New Section</h3>
-          <button onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
-            <X className="h-5 w-5 text-gray-500" />
+      <div className="w-full max-w-5xl overflow-hidden rounded-xl bg-card shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border p-6">
+          <h3 className="text-xl font-bold text-foreground">Add New Section</h3>
+          <button onClick={onClose} className="rounded-full p-1 hover:bg-muted">
+            <X className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
 
@@ -198,7 +200,7 @@ export const AddSectionModal = ({
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <div className="space-y-6">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-900">
+                <label className="mb-2 block text-sm font-semibold text-foreground">
                   Section Type
                 </label>
                 <div className="space-y-2">
@@ -208,25 +210,25 @@ export const AddSectionModal = ({
                       onClick={() => setSectionType(t.type)}
                       className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all ${
                         sectionType === t.type
-                          ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
-                          : "border-gray-200 hover:border-blue-200 hover:bg-gray-50"
+                          ? "border-primary bg-primary/10 ring-1 ring-primary dark:bg-primary/20"
+                          : "border-border hover:border-primary/50 hover:bg-muted"
                       }`}>
                       <div
                         className={`rounded-lg p-2 ${
                           sectionType === t.type
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-gray-100 text-gray-500"
+                            ? "bg-primary/20 text-primary dark:bg-primary/30"
+                            : "bg-muted text-muted-foreground"
                         }`}>
                         <t.icon className="h-5 w-5" />
                       </div>
                       <div>
                         <div
                           className={`text-sm font-medium ${
-                            sectionType === t.type ? "text-blue-900" : "text-gray-900"
+                            sectionType === t.type ? "text-primary" : "text-foreground"
                           }`}>
                           {t.label}
                         </div>
-                        <div className="text-xs text-gray-500">{t.desc}</div>
+                        <div className="text-xs text-muted-foreground">{t.desc}</div>
                       </div>
                     </button>
                   ))}
@@ -236,55 +238,79 @@ export const AddSectionModal = ({
 
             <div className="space-y-6">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Header</label>
+                <label className="mb-1 block text-sm font-medium text-muted-foreground">Header</label>
                 <input
                   type="text"
                   value={header}
                   onChange={(e) => setHeader(e.target.value)}
                   placeholder="e.g. Executive Summary"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
                 />
               </div>
 
               {sectionType !== "cover_page" && (
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Sub-Header</label>
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">Sub-Header</label>
                   <input
                     type="text"
                     value={subHeader}
                     onChange={(e) => setSubHeader(e.target.value)}
                     placeholder="e.g. Overview"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
                   />
                 </div>
               )}
 
-              <div className="flex items-center gap-4 rounded-lg border border-gray-200 p-3">
+              {/* Parent Section Selector */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                  Parent Section (Optional)
+                </label>
+                <select
+                  value={parentSectionId || ""}
+                  onChange={(e) => setParentSectionId(e.target.value || null)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="">None (Top Level)</option>
+                  {getEligibleParents(existingSections).map((section) => (
+                    <option key={section.section_id} value={section.section_id}>
+                      {section.header}
+                      {section.parent_section_id && " (Level 2)"}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Select a parent section to create a subsection. Only Level 1 and Level 2 sections can have children.
+                </p>
+              </div>
+
+              {/* Include in TOC Checkbox */}
+              <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/30 p-3">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={includeInToc}
                     onChange={(e) => setIncludeInToc(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-input text-primary focus:ring-ring"
                   />
-                  <span className="text-sm font-medium text-gray-700">Include in TOC</span>
+                  <span className="text-sm font-medium text-foreground">Include in TOC</span>
                 </label>
 
+                {/* Preview of calculated level */}
                 {includeInToc && (
-                  <select
-                    value={tocLevel}
-                    onChange={(e) => setTocLevel(Number(e.target.value) as 1 | 2 | 3)}
-                    className="rounded border border-gray-300 py-1 text-sm focus:border-blue-500 focus:outline-none">
-                    <option value={1}>Level 1</option>
-                    <option value={2}>Level 2</option>
-                    <option value={3}>Level 3</option>
-                  </select>
+                  <div className="ml-auto rounded bg-muted px-3 py-1 text-xs text-muted-foreground">
+                    <strong>Preview:</strong> This will be a Level{" "}
+                    {parentSectionId
+                      ? Math.min(getSectionDepth({ parent_section_id: parentSectionId } as any, existingSections) + 2, 3)
+                      : 1}{" "}
+                    section
+                  </div>
                 )}
               </div>
 
               {(sectionType === "text_with_widgets" || sectionType === "cover_page") && (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <h4 className="mb-3 text-xs font-bold tracking-wider text-gray-500 uppercase">
+                <div className="rounded-lg border border-border bg-muted/50 p-4">
+                  <h4 className="mb-3 text-xs font-bold tracking-wider text-muted-foreground uppercase">
                     Initial Widgets
                   </h4>
                   <div className="space-y-3">
@@ -293,23 +319,23 @@ export const AddSectionModal = ({
                         type="checkbox"
                         checked={addTable}
                         onChange={(e) => setAddTable(e.target.checked)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-input text-primary focus:ring-ring"
                       />
-                      <span className="text-sm text-gray-700">Add Table</span>
+                      <span className="text-sm text-foreground">Add Table</span>
                     </label>
 
                     {addTable && (
-                      <div className="ml-6 space-y-2 border-l-2 border-gray-200 pl-3">
-                        <div className="text-xs font-medium text-gray-500 uppercase">Columns</div>
+                      <div className="ml-6 space-y-2 border-l-2 border-border pl-3">
+                        <div className="text-xs font-medium text-muted-foreground uppercase">Columns</div>
                         <div className="flex flex-wrap gap-2">
                           {tableColumns.map((col) => (
                             <span
                               key={col.key}
-                              className="inline-flex items-center gap-1 rounded bg-white px-2 py-1 text-xs font-medium text-gray-600 shadow-sm ring-1 ring-gray-200">
+                              className="inline-flex items-center gap-1 rounded bg-background px-2 py-1 text-xs font-medium text-foreground shadow-sm ring-1 ring-border">
                               {col.header}
                               <button
                                 onClick={() => removeColumn(col.key)}
-                                className="text-gray-400 hover:text-red-500">
+                                className="text-muted-foreground hover:text-destructive">
                                 <X className="h-3 w-3" />
                               </button>
                             </span>
@@ -321,12 +347,12 @@ export const AddSectionModal = ({
                             value={newColumnHeader}
                             onChange={(e) => setNewColumnHeader(e.target.value)}
                             placeholder="New column..."
-                            className="flex-1 rounded border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
+                            className="flex-1 rounded border border-input bg-background px-2 py-1 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                           />
                           <button
                             onClick={addColumn}
                             disabled={!newColumnHeader.trim()}
-                            className="rounded bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50">
+                            className="rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
                             Add
                           </button>
                         </div>
@@ -339,9 +365,9 @@ export const AddSectionModal = ({
                           type="checkbox"
                           checked={addPieChart}
                           onChange={(e) => setAddPieChart(e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-input text-primary focus:ring-ring"
                         />
-                        <span className="text-sm text-gray-700">Add Pie Chart</span>
+                        <span className="text-sm text-foreground">Add Pie Chart</span>
                       </label>
                     )}
                   </div>
@@ -351,16 +377,16 @@ export const AddSectionModal = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50 p-6">
+        <div className="flex items-center justify-end gap-3 border-t border-border bg-muted/30 p-6">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+            className="rounded-lg px-4 py-2 text-sm font-medium text-foreground hover:bg-muted">
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!header.trim()}
-            className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50">
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50">
             Create Section
           </button>
         </div>

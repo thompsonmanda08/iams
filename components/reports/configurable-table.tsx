@@ -54,6 +54,9 @@ export const ConfigurableTable = ({
   const [isEditingColumns, setIsEditingColumns] = useState(false);
   const [newColumnHeader, setNewColumnHeader] = useState("");
 
+  // Check if in manual mode (no data source or manual entry)
+  const isManualMode = !dataSourceId || dataSourceId === "manual";
+
   const addColumn = () => {
     if (!newColumnHeader.trim() || !onColumnsChange) return;
     const newKey = newColumnHeader.toLowerCase().replace(/\s+/g, "_");
@@ -97,7 +100,7 @@ export const ConfigurableTable = ({
               onDataSourceChange={onDataSourceChange}
             />
           )}
-          {data.is_configurable && (
+          {(data.is_configurable || isManualMode) && onColumnsChange && (
             <button
               onClick={() => setIsEditingColumns(!isEditingColumns)}
               className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
@@ -107,7 +110,7 @@ export const ConfigurableTable = ({
               {isEditingColumns ? "Done" : "Configure Columns"}
             </button>
           )}
-          {!dataSourceId && onRowsChange && (
+          {isManualMode && onRowsChange && (
             <button
               onClick={addRow}
               className="flex items-center gap-1 rounded bg-green-50 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-100">
@@ -166,14 +169,14 @@ export const ConfigurableTable = ({
                   {col.header}
                 </th>
               ))}
-              {!dataSourceId && onRowsChange && <th className="w-10 px-4 py-3"></th>}
+              {isManualMode && onRowsChange && <th className="w-10 px-4 py-3"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {data.rows.length === 0 ? (
               <tr>
-                <td colSpan={data.columns.length} className="px-4 py-8 text-center text-gray-500">
-                  No data available. Select findings to populate this table.
+                <td colSpan={data.columns.length + (isManualMode && onRowsChange ? 1 : 0)} className="px-4 py-8 text-center text-gray-500">
+                  {isManualMode ? "No data yet. Click 'Add Row' to get started." : "No data available."}
                 </td>
               </tr>
             ) : (
@@ -181,7 +184,7 @@ export const ConfigurableTable = ({
                 <tr key={rowIndex} className="group hover:bg-gray-50/50">
                   {data.columns.map((col) => (
                     <td key={col.key} className="px-4 py-3">
-                      {!dataSourceId && onRowsChange ? (
+                      {isManualMode && onRowsChange ? (
                         <input
                           type="text"
                           value={row[col.key] || ""}
@@ -202,7 +205,7 @@ export const ConfigurableTable = ({
                       )}
                     </td>
                   ))}
-                  {!dataSourceId && onRowsChange && (
+                  {isManualMode && onRowsChange && (
                     <td className="px-4 py-3 text-right opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         onClick={() => removeRow(rowIndex)}

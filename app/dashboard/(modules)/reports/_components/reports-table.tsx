@@ -11,7 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, FileText, Download } from "lucide-react";
+import { Eye, Edit, Trash2, FileText, Download, View } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +31,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { CreateReportDialog } from "./create-report-dialog";
 import { useReportMutations } from "@/hooks/use-report-queries";
+import { capitalize } from "@/lib/utils";
 
 interface ReportsTableProps {
   reports: ReportListItem[];
@@ -45,11 +46,11 @@ const reportTypeLabels: Record<ReportType, string> = {
   followup: "Follow-up"
 };
 
-const statusColors: Record<ReportStatus, string> = {
+const statusColors = {
   DRAFT: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
   PUBLISHED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   ARCHIVED: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-};
+} as Record<ReportStatus, string>;
 
 export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTableProps) {
   const router = useRouter();
@@ -94,7 +95,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
     });
   };
 
-  const handleView = (report: ReportListItem) => `/dashboard/reports/${report.id}`;
+  const handleEditReport = (report: ReportListItem) => `/dashboard/reports/${report.id}`;
 
   const handleReportEntityView = (report: ReportListItem) => {
     // If report has entity_id and is an audit_plan, navigate to audit plan report tab
@@ -102,13 +103,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
       return `/dashboard/audit/plans/engagement/${report.entity_id}?tab=report`;
     }
     // Otherwise, navigate to standalone report editor
-    return handleView(report);
-  };
-
-  const handleViewOnlineClick = (report: ReportListItem) => {
-    // Assuming there's an online viewer URL pattern
-    const onlineUrl = `/reports/view/${report.id}`;
-    window.open(onlineUrl, "_blank");
+    return handleEditReport(report);
   };
 
   if (isLoading) {
@@ -167,8 +162,8 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="text-foreground/70 font-bold">REPORT TITLE</TableHead>
               <TableHead className="text-foreground/70 font-bold">TYPE</TableHead>
-              <TableHead className="text-foreground/70 font-bold">SOURCE</TableHead>
               <TableHead className="text-foreground/70 font-bold">CREATED BY</TableHead>
+              <TableHead className="text-foreground/70 font-bold">UPDATED BY</TableHead>
               <TableHead className="text-foreground/70 font-bold">LAST UPDATED</TableHead>
               <TableHead className="text-foreground/70 font-bold">STATUS</TableHead>
               <TableHead className="text-foreground/70 w-20 text-center font-bold">
@@ -186,7 +181,12 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
                       className="hover:text-primary/80 text-base font-medium text-blue-500 hover:underline">
                       {report.title}
                     </Link>
-                    <p className="text-muted-foreground text-xs">Version {report.version}</p>
+                    <p className="text-muted-foreground text-xs italic">
+                      Type:{" "}
+                      <span className="font-medium capitalize">
+                        {capitalize(report.entity_type.replaceAll("_", " "))}
+                      </span>
+                    </p>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -194,28 +194,17 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
                     {reportTypeLabels[report.report_type] || report.report_type}
                   </Badge>
                 </TableCell>
+
                 <TableCell>
-                  {report.entity ? (
-                    <Link
-                      href={
-                        report.entity_type === "audit_plan"
-                          ? `/dashboard/audit/plans/engagement/${report.entity_id}`
-                          : `/dashboard/risks/registers/${report.entity_id}`
-                      }
-                      className="flex items-center gap-1 text-sm text-blue-500 hover:underline">
-                      <FileText className="h-3.5 w-3.5" />
-                      {report.entity.title}
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground text-sm">-</span>
-                  )}
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">{report.created_by?.name || "-"}</p>
+                    <p className="text-muted-foreground text-xs">{report.created_by?.role || ""}</p>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium">{report.created_by_user?.name || "-"}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {report.created_by_user?.email || ""}
-                    </p>
+                    <p className="text-sm font-medium">{report.updated_by?.name || "-"}</p>
+                    <p className="text-muted-foreground text-xs">{report.updated_by?.role || ""}</p>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -245,9 +234,11 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={handleView(report)} className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" />
-                            View Report
+                          <Link
+                            href={handleReportEntityView(report)}
+                            className="flex items-center gap-2">
+                            <View className="h-4 w-4" />
+                            View Details & Report
                           </Link>
                         </DropdownMenuItem>
 
@@ -255,17 +246,17 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
                           <>
                             <DropdownMenuItem asChild>
                               <Link
-                                href={handleReportEntityView(report)}
+                                href={handleEditReport(report)}
                                 className="flex items-center gap-2">
                                 <Edit className="h-4 w-4" />
-                                Edit Report
+                                Edit/Update Report
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleDeleteClick(report)}
-                              className="text-destructive focus:text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" />
+                              className="text-destructive focus:text-destructive font-medium">
+                              <Trash2 className="h-4 w-4 text-red-500" />
                               Delete Report
                             </DropdownMenuItem>
                           </>

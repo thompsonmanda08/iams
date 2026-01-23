@@ -11,7 +11,15 @@ export type SectionType =
   | "findings_selector"
   | "compliance_findings"
   | "dynamic_form";
-export type WidgetType = "table" | "pie_chart" | "bar_chart" | "line_chart" | "area_chart" | "metric_card" | "text_block" | "risk_objective_mapping";
+export type WidgetType =
+  | "table"
+  | "pie_chart"
+  | "bar_chart"
+  | "line_chart"
+  | "area_chart"
+  | "metric_card"
+  | "text_block"
+  | "risk_objective_mapping";
 
 export interface TableColumn {
   key: string;
@@ -116,6 +124,12 @@ export interface ReportSection {
   selected_finding_ids?: string[];
   fields?: ReportField[];
   field_values?: DynamicSectionData;
+  parent_section_id?: string | null;
+}
+
+export interface SectionTreeNode extends ReportSection {
+  children: SectionTreeNode[];
+  depth: number;
 }
 
 export interface ReportBranding {
@@ -224,11 +238,18 @@ export interface ReportListItem {
   version: string;
   created_at: string;
   updated_at: string;
-  created_by?: string;
-  created_by_user?: {
+
+  created_by?: {
     id: string;
     name: string;
     email: string;
+    role: string;
+  };
+  updated_by?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
   };
   // Entity reference
   entity_id: string;

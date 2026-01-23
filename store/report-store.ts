@@ -17,6 +17,12 @@ import {
   normalizeManagementStandard,
   getTemplateForStandard
 } from "../components/reports/report-templates";
+import {
+  calculateTocLevel,
+  buildSectionTree,
+  flattenSectionTree,
+  validateSectionMove
+} from "../lib/utils/report-hierarchy-utils";
 
 interface ReportState {
   // Data State
@@ -49,6 +55,8 @@ interface ReportState {
   moveSection: (index: number, direction: "up" | "down") => void;
   handleDragStart: (id: string) => void;
   handleDrop: (targetId: string) => void;
+  reparentSection: (sectionId: string, newParentId: string | null) => void;
+  promoteSection: (sectionId: string) => void;
 
   // Widget Actions
   addWidget: (sectionId: string, widget: WidgetInstance) => void;
@@ -101,10 +109,14 @@ export const useReportStore = create<ReportState>((set, get) => ({
   addSection: (section) =>
     set((state) => {
       if (!state.report) return {};
+
+      // Auto-calculate toc_level based on parent
+      const toc_level = calculateTocLevel(section, state.report.sections);
+
       return {
         report: {
           ...state.report,
-          sections: [...state.report.sections, section]
+          sections: [...state.report.sections, { ...section, toc_level }]
         },
         expandedSections: { ...state.expandedSections, [section.section_id]: true }
       };
@@ -126,14 +138,32 @@ export const useReportStore = create<ReportState>((set, get) => ({
   deleteSection: (id) =>
     set((state) => {
       if (!state.report) return {};
+
+      // Find section being deleted
+      const sectionToDelete = state.report.sections.find((s) => s.section_id === id);
+      if (!sectionToDelete) return {};
+
+      // Promote children to grandparent level (orphan protection)
+      const updatedSections = state.report.sections
+        .filter((s) => s.section_id !== id) // Remove deleted section
+        .map((s) => {
+          if (s.parent_section_id === id) {
+            // Promote child to parent's parent
+            const promoted = { ...s, parent_section_id: sectionToDelete.parent_section_id };
+            return {
+              ...promoted,
+              toc_level: calculateTocLevel(promoted, state.report!.sections)
+            };
+          }
+          return s;
+        });
+
+      // Clean up expanded state
       const newExpandedSections = { ...state.expandedSections };
       delete newExpandedSections[id];
 
       return {
-        report: {
-          ...state.report,
-          sections: state.report.sections.filter((s) => s.section_id !== id)
-        },
+        report: { ...state.report, sections: updatedSections },
         expandedSections: newExpandedSections
       };
     }),
@@ -174,6 +204,53 @@ export const useReportStore = create<ReportState>((set, get) => ({
         draggedSectionId: null
       };
     }),
+
+  reparentSection: (sectionId, newParentId) =>
+    set((state) => {
+      if (!state.report) return {};
+
+      // Validate move
+      const validation = validateSectionMove(sectionId, newParentId, state.report.sections);
+      if (!validation.isValid) {
+        console.error("Invalid move:", validation.error);
+        return {};
+      }
+
+      // Update parent and recalculate toc_level
+      const updatedSections = state.report.sections.map((s) => {
+        if (s.section_id === sectionId) {
+          const updated = { ...s, parent_section_id: newParentId };
+          return {
+            ...updated,
+            toc_level: calculateTocLevel(updated, state.report!.sections)
+          };
+        }
+        return s;
+      });
+
+      // Rebuild tree and flatten for proper ordering
+      const tree = buildSectionTree(updatedSections);
+      const flatSections = flattenSectionTree(tree);
+
+      return {
+        report: { ...state.report, sections: flatSections }
+      };
+    }),
+
+  promoteSection: (sectionId) => {
+    const state = get();
+    if (!state.report) return;
+
+    const section = state.report.sections.find((s) => s.section_id === sectionId);
+    if (!section || !section.parent_section_id) return;
+
+    // Find grandparent
+    const parent = state.report.sections.find((s) => s.section_id === section.parent_section_id);
+    const grandparentId = parent?.parent_section_id || null;
+
+    // Use reparent action
+    get().reparentSection(sectionId, grandparentId);
+  },
 
   // Widget CRUD Actions
   addWidget: (sectionId, widget) =>
