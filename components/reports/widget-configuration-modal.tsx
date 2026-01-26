@@ -506,7 +506,8 @@ function InlineDataSourceSelector({
               "table",
               "line_chart",
               "area_chart",
-              "metric_card"
+              "metric_card",
+              "risk_objective_mapping"
             ],
             requires_entity: false,
             sample_data: {}

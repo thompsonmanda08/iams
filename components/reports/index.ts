@@ -10,8 +10,6 @@ export { useReportStore } from "@/store/report-store";
 // Utils
 export * from "@/lib/utils/report-utils";
 
-// Constants
-export { AVAILABLE_DATA_SOURCES, MOCK_FINDINGS } from "./report-mock-constants";
 
 // Templates
 export { REPORT_TEMPLATES } from "./report-templates";
@@ -34,7 +32,6 @@ export { ConfigurableTable } from "./configurable-table";
 export { CoverPageEditor } from "./cover-page-editor";
 export { FindingsSelector } from "./findings-selector";
 export { DynamicSection } from "./dynamic-section";
-export { WidgetDataSourcePicker } from "./widget-data-source-picker";
 export { PDFPreviewModal } from "./pdf-preview-modal";
 export { SchemaEditor } from "./schema-editor";
 export { FieldRenderer } from "./field-renderer";

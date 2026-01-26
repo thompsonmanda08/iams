@@ -2,6 +2,19 @@ import type { ReportSection, SectionType, ReportType } from "@/lib/types/report-
 
 export type ReportTemplateType = "GENERAL" | "ISO 27001" | "COSO" | "COBIT" | "NISIT" | "RISK ASSESSMENT" | "FOLLOW-UP";
 
+/**
+ * Helper function to get current month and year for dynamic titles
+ * Format: "January 2025"
+ */
+const getCurrentMonthYear = (): string => {
+  const date = new Date();
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+};
+
 export interface ReportTemplate {
   name: string;
   type: ReportType;
@@ -137,7 +150,7 @@ createSection("exec_summary", "text_with_widgets",
           widget_type: "pie_chart",
           order: 1,
           data: {
-            title: "Corporate Risk Profile - April 2025",
+            title: `Corporate Risk Profile - ${getCurrentMonthYear()}`,
             slices: [],
             data_source_id: "risks_by_corporate_profile"
           }
@@ -173,53 +186,14 @@ createSection("strategic_objective", "text_only", 3, "INFRATEL Strategic Objecti
     "Strategic risks and Objectives", "",
 [
   {
-    instance_id: "map_risks_table_to_strategic_objective",
+    instance_id: "risks_by_strategic_objectives",
     widget_type: "risk_objective_mapping",
     order: 0,
     data: {
       title: "Mapping Of Key Risks Against Strategic Objectives",
-      subtitle: "Strategic risks and Objectives",
-    
-    
-    objectives: [
-      { id: "so-1", label: "Strategic Objective 1", shortLabel: "SO1" },
-      { id: "so-2", label: "Strategic Objective 2", shortLabel: "SO2" },
-      { id: "so-3", label: "Strategic Objective 3", shortLabel: "SO3" },
-      { id: "so-4", label: "Strategic Objective 4", shortLabel: "SO4" }
-    ],
-    risks: [
-      {
-        id: "risk-1",
-        number: 1,
-        description: "Cybersecurity threats and data breaches",
-        mappedObjectives: ["so-1", "so-3"]
-      },
-      {
-        id: "risk-2",
-        number: 2,
-        description: "Regulatory compliance and legal risks",
-        mappedObjectives: ["so-2", "so-4"]
-      },
-      {
-        id: "risk-3",
-        number: 3,
-        description: "Supply chain disruptions",
-        mappedObjectives: ["so-1", "so-2", "so-3"]
-      },
-      {
-        id: "risk-4",
-        number: 4,
-        description: "Market competition and technological changes",
-        mappedObjectives: ["so-1", "so-4"]
-      },
-      {
-        id: "risk-5",
-        number: 5,
-        description: "Talent retention and workforce challenges",
-        mappedObjectives: ["so-2", "so-3"]
-      }
-    ],
-    data_source_id: "map_risks_table_to_objective",
+      objectives: [],
+      risks: [],
+      data_source_id: "risks_by_strategic_objectives"
     }
   }
 ]
@@ -233,27 +207,14 @@ createSection("strategic_objective", "text_only", 3, "INFRATEL Strategic Objecti
       "Breakdown of risks by severity and category.",
       [
          {
-          instance_id: "top_risks_table",
+          instance_id: "risks_by_summary_corporate_profile",
           widget_type: "table",
           order: 0,
           data: {
-            title: "Risks Above Appetite",
-            columns: [
-              { key: "Risk Category", header: "Risk" },
-              { key: "SN", header: "SN" },
-              { key: "Key Risk", header: "Key" },
-              { key: "Mitigation", header: "Mitigation" },
-              { key: "Dept's Risk Register", header: "Register" },
-              { key: "Status", header: "Status" },
-              { key: "Inherent Risk", header: "Inherent" },
-              { key: "Residual Risk", header: "Residual" },
-              { key: "Risk Magnitude Rating", header: "Rating" },
-              { key: "Risk Appetite", header: "Appetite" },
-              { key: "Implementation Timeline", header: "Timeline" },
-              { key: "Executive Ownership", header: "Owner" },
-            ],
+            title: "Risks by Summary Corporate Profile",
+            columns: [],
             rows: [],
-            data_source_id: "risks_above_appetite"
+            data_source_id: "risks_by_summary_corporate_profile"
           }
         }
       ]
@@ -267,19 +228,14 @@ createSection("strategic_objective", "text_only", 3, "INFRATEL Strategic Objecti
       "Risks requiring immediate management attention.",
       [
         {
-          instance_id: "top_risks_table",
+          instance_id: "risks_by_detailed_summary_register",
           widget_type: "table",
           order: 0,
           data: {
-            title: "Risks Above Appetite",
-            columns: [
-              { key: "Risk Title", header: "Risk" },
-              { key: "Residual Score", header: "Score" },
-              { key: "Risk Owner", header: "Owner" },
-              { key: "Treatment Status", header: "Treatment" }
-            ],
+            title: "Summary of Detailed Risk Registers",
+            columns:[],
             rows: [],
-            data_source_id: "risks_above_appetite"
+            data_source_id: "risks_by_detailed_summary_register"
           }
         }
       ]

@@ -5,7 +5,6 @@ import { PieChart as PieChartIcon, Edit2, X, Plus } from "lucide-react";
 import { Pie, PieChart, Cell, Label, Sector } from "recharts";
 import { type PieSectorDataItem } from "recharts/types/polar/Pie";
 import { PieChartWidgetData, DataSource, PieChartSlice } from "@/lib/types/report-types";
-import { WidgetDataSourcePicker } from "./widget-data-source-picker";
 import { WidgetEmptyState } from "./widget-empty-state";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +18,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 
 interface PieChartWidgetProps {
@@ -50,7 +49,7 @@ export const PieChartWidget = ({
 
   // Update active slice when slices change
   React.useEffect(() => {
-    if (slices.length > 0 && !slices.find(s => s.label === activeSlice)) {
+    if (slices.length > 0 && !slices.find((s) => s.label === activeSlice)) {
       setActiveSlice(slices[0].label);
     }
   }, [slices, activeSlice]);
@@ -112,10 +111,10 @@ export const PieChartWidget = ({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="border-border bg-card rounded-lg border p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <h4 className="text-foreground flex items-center gap-2 text-sm font-semibold">
             <PieChartIcon className="h-4 w-4 text-blue-600" />
             {data.title}
           </h4>
@@ -123,8 +122,7 @@ export const PieChartWidget = ({
             <Select value={activeSlice} onValueChange={setActiveSlice}>
               <SelectTrigger
                 className="h-7 w-[140px] rounded-lg text-xs"
-                aria-label="Select a slice"
-              >
+                aria-label="Select a slice">
                 <SelectValue placeholder="Select slice" />
               </SelectTrigger>
               <SelectContent align="start" className="rounded-xl">
@@ -132,8 +130,7 @@ export const PieChartWidget = ({
                   <SelectItem
                     key={slice.label}
                     value={slice.label}
-                    className="rounded-lg [&_span]:flex"
-                  >
+                    className="rounded-lg [&_span]:flex">
                     <div className="flex items-center gap-2 text-xs">
                       <span
                         className="flex h-3 w-3 shrink-0 rounded-sm"
@@ -148,18 +145,13 @@ export const PieChartWidget = ({
           )}
         </div>
         <div className="flex items-center gap-2">
-          {showDataSourcePicker && onDataSourceChange && (
-            <WidgetDataSourcePicker
-              widgetType="pie_chart"
-              currentDataSourceId={dataSourceId}
-              onDataSourceChange={onDataSourceChange}
-            />
-          )}
           {isManualMode && onDataChange && (
             <button
               onClick={() => setIsConfiguring(!isConfiguring)}
               className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                isConfiguring ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400" : "text-muted-foreground hover:bg-muted"
+                isConfiguring
+                  ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400"
+                  : "text-muted-foreground hover:bg-muted"
               }`}>
               <Edit2 className="h-3 w-3" />
               {isConfiguring ? "Done" : "Configure Slices"}
@@ -169,8 +161,8 @@ export const PieChartWidget = ({
       </div>
 
       {isConfiguring && (
-        <div className="mb-4 space-y-2 rounded-lg bg-muted/50 p-3">
-          <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <div className="bg-muted/50 mb-4 space-y-2 rounded-lg p-3">
+          <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Configure Data Slices
           </div>
           <div className="space-y-2">
@@ -180,25 +172,24 @@ export const PieChartWidget = ({
                   type="color"
                   value={slice.color}
                   onChange={(e) => updateSlice(i, { color: e.target.value })}
-                  className="h-8 w-8 cursor-pointer rounded border border-input bg-background"
+                  className="border-input bg-background h-8 w-8 cursor-pointer rounded border"
                 />
                 <Input
                   type="text"
                   value={slice.label}
                   onChange={(e) => updateSlice(i, { label: e.target.value })}
                   placeholder="Label"
-                  className="flex-1 h-8"
+                  className="h-8 flex-1"
                 />
                 <Input
                   type="number"
                   value={slice.value}
                   onChange={(e) => updateSlice(i, { value: Number(e.target.value) })}
-                  className="w-20 h-8"
+                  className="h-8 w-20"
                 />
                 <button
                   onClick={() => removeSlice(i)}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
-                >
+                  className="text-muted-foreground hover:text-destructive transition-colors">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -206,7 +197,7 @@ export const PieChartWidget = ({
           </div>
           <button
             onClick={addSlice}
-            className="mt-2 flex w-full items-center justify-center gap-1 rounded border border-dashed border-border py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary hover:bg-background hover:text-primary">
+            className="border-border text-muted-foreground hover:border-primary hover:bg-background hover:text-primary mt-2 flex w-full items-center justify-center gap-1 rounded border border-dashed py-1.5 text-xs font-medium transition-all">
             <Plus className="h-3 w-3" />
             Add New Slice
           </button>
@@ -216,7 +207,7 @@ export const PieChartWidget = ({
       {/* Empty State */}
       {slices.length === 0 ? (
         <WidgetEmptyState
-          icon={<PieChartIcon className="mx-auto h-10 w-10 text-muted-foreground" />}
+          icon={<PieChartIcon className="text-muted-foreground mx-auto h-10 w-10" />}
           hasDataSource={!!dataSourceId && dataSourceId !== "manual"}
           isError={!!dataSourceId && dataSourceId !== "manual"}
           onRetry={onRetry}
@@ -226,99 +217,91 @@ export const PieChartWidget = ({
         <div className="flex items-center gap-6 p-6">
           {/* Recharts Pie Chart */}
           <ChartContainer config={chartConfig} className="h-56 w-56">
-          <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={60}
-              strokeWidth={5}
-              activeIndex={activeIndex}
-              activeShape={({
-                outerRadius = 0,
-                fill,
-                ...props
-              }: PieSectorDataItem) => (
-                <g>
-                  <Sector {...props} outerRadius={outerRadius + 10} fill={fill} />
-                  <Sector
-                    {...props}
-                    outerRadius={outerRadius + 25}
-                    innerRadius={outerRadius + 12}
-                    fill={fill}
-                  />
-                </g>
-              )}
-              onClick={(data: any) => {
-                if (data && data.name) {
-                  setActiveSlice(data.name);
-                }
-              }}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} className="cursor-pointer" />
-              ))}
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    const activeSliceData = slices[activeIndex];
-                    const activeValue = activeSliceData?.value || total;
-                    const displayLabel = activeIndex >= 0 ? activeSliceData?.label : "Total";
+            <PieChart>
+              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={60}
+                strokeWidth={5}
+                activeIndex={activeIndex}
+                activeShape={({ outerRadius = 0, fill, ...props }: PieSectorDataItem) => (
+                  <g>
+                    <Sector {...props} outerRadius={outerRadius + 10} fill={fill} />
+                    <Sector
+                      {...props}
+                      outerRadius={outerRadius + 25}
+                      innerRadius={outerRadius + 12}
+                      fill={fill}
+                    />
+                  </g>
+                )}
+                onClick={(data: any) => {
+                  if (data && data.name) {
+                    setActiveSlice(data.name);
+                  }
+                }}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} className="cursor-pointer" />
+                ))}
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                      const activeSliceData = slices[activeIndex];
+                      const activeValue = activeSliceData?.value || total;
+                      const displayLabel = activeIndex >= 0 ? activeSliceData?.label : "Total";
 
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle">
-                        <tspan
+                      return (
+                        <text
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-3xl font-bold">
-                          {activeValue.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground text-sm">
-                          {displayLabel}
-                        </tspan>
-                      </text>
-                    );
-                  }
-                }}
-              />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
-
-        {/* Legend - Interactive */}
-        <div className="space-y-2">
-          {slices.map((slice, i) => {
-            const isActive = activeSlice === slice.label;
-            return (
-              <button
-                key={i}
-                onClick={() => setActiveSlice(slice.label)}
-                className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm transition-colors ${
-                  isActive
-                    ? "bg-blue-50 font-medium dark:bg-blue-950"
-                    : "hover:bg-muted/50"
-                }`}>
-                <div
-                  className="h-3 w-3 rounded"
-                  style={{ backgroundColor: slice.color }}
+                          textAnchor="middle"
+                          dominantBaseline="middle">
+                          <tspan
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            className="fill-foreground text-3xl font-bold">
+                            {activeValue.toLocaleString()}
+                          </tspan>
+                          <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) + 24}
+                            className="fill-muted-foreground text-sm">
+                            {displayLabel}
+                          </tspan>
+                        </text>
+                      );
+                    }
+                  }}
                 />
-                <span className={isActive ? "text-foreground" : "text-muted-foreground"}>
-                  {slice.label}
-                </span>
-                <span className={`ml-auto ${isActive ? "font-semibold text-foreground" : "font-medium text-foreground"}`}>
-                  ({slice.value})
-                </span>
-              </button>
-            );
-          })}
-        </div>
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+
+          {/* Legend - Interactive */}
+          <div className="space-y-2">
+            {slices.map((slice, i) => {
+              const isActive = activeSlice === slice.label;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setActiveSlice(slice.label)}
+                  className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm transition-colors ${
+                    isActive ? "bg-blue-50 font-medium dark:bg-blue-950" : "hover:bg-muted/50"
+                  }`}>
+                  <div className="h-3 w-3 rounded" style={{ backgroundColor: slice.color }} />
+                  <span className={isActive ? "text-foreground" : "text-muted-foreground"}>
+                    {slice.label}
+                  </span>
+                  <span
+                    className={`ml-auto ${isActive ? "text-foreground font-semibold" : "text-foreground font-medium"}`}>
+                    ({slice.value})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -271,7 +271,8 @@ export function DataSourceSelector({
                   "table",
                   "line_chart",
                   "area_chart",
-                  "metric_card"
+                  "metric_card",
+                  "risk_objective_mapping"
                 ],
                 requires_entity: false,
                 sample_data: {}
@@ -294,7 +295,8 @@ export function DataSourceSelector({
                   "table",
                   "line_chart",
                   "area_chart",
-                  "metric_card"
+                  "metric_card",
+                  "risk_objective_mapping"
                 ] as WidgetType[]
               ).map((type) => {
                 const info = getWidgetTypeInfo(type);

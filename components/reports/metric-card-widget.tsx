@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { TrendingUp, TrendingDown, Minus, Edit2, Gauge } from "lucide-react";
 import { DataSource } from "@/lib/types/report-types";
-import { WidgetDataSourcePicker } from "./widget-data-source-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,18 +64,13 @@ export const MetricCardWidget = ({
             <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            {showDataSourcePicker && onDataSourceChange && (
-              <WidgetDataSourcePicker
-                widgetType="metric_card"
-                currentDataSourceId={dataSourceId}
-                onDataSourceChange={onDataSourceChange}
-              />
-            )}
             {isManualMode && onDataChange && (
               <button
                 onClick={() => setIsConfiguring(!isConfiguring)}
                 className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  isConfiguring ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400" : "text-muted-foreground hover:bg-muted"
+                  isConfiguring
+                    ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
+                    : "text-muted-foreground hover:bg-muted"
                 }`}>
                 <Edit2 className="h-3 w-3" />
                 {isConfiguring ? "Done" : "Configure"}
@@ -84,12 +78,14 @@ export const MetricCardWidget = ({
             )}
           </div>
         </div>
-        {data.description && <CardDescription className="text-xs">{data.description}</CardDescription>}
+        {data.description && (
+          <CardDescription className="text-xs">{data.description}</CardDescription>
+        )}
       </CardHeader>
       <CardContent>
         {isConfiguring ? (
-          <div className="space-y-3 rounded-lg bg-muted/50 p-3">
-            <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+          <div className="bg-muted/50 space-y-3 rounded-lg p-3">
+            <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               Configure Metric
             </div>
             <div className="space-y-2">
@@ -139,14 +135,14 @@ export const MetricCardWidget = ({
         ) : (
           <div className="flex flex-col items-center gap-2 py-4">
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-foreground">
+              <span className="text-foreground text-4xl font-bold">
                 {data.value.toLocaleString()}
               </span>
-              {data.unit && <span className="text-lg text-muted-foreground">{data.unit}</span>}
+              {data.unit && <span className="text-muted-foreground text-lg">{data.unit}</span>}
             </div>
             {data.trend !== undefined && data.trend !== 0 && (
               <div
-                className={`flex items-center gap-1 text-sm font-medium leading-none ${getTrendColor()}`}>
+                className={`flex items-center gap-1 text-sm leading-none font-medium ${getTrendColor()}`}>
                 {getTrendIcon()}
                 <span>
                   {data.trend > 0 ? "+" : ""}

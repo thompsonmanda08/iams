@@ -4,7 +4,7 @@ import { pdf } from "@react-pdf/renderer";
 import { useReportStore } from "@/store/report-store";
 import { PDFPreviewModal } from "./pdf-preview-modal";
 import { PDFDocument } from "./pdf-react/pdf-document";
-import { MOCK_FINDINGS } from "@/components/reports/report-mock-constants";
+
 
 export const ReportHeader = () => {
   const { report } = useReportStore();
@@ -21,10 +21,9 @@ export const ReportHeader = () => {
     try {
       console.log("Exporting PDF for report:", report.title);
       console.log("Report data:", report);
-      console.log("Findings count:", MOCK_FINDINGS.length);
 
       // Generate PDF directly on client side
-      const blob = await pdf(<PDFDocument report={report} findings={MOCK_FINDINGS} />).toBlob();
+      const blob = await pdf(<PDFDocument report={report} findings={[]} />).toBlob();
 
       console.log("PDF blob generated, size:", blob.size);
 

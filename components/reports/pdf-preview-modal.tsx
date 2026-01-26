@@ -6,7 +6,7 @@ import { pdf } from "@react-pdf/renderer";
 import { Document, Page, pdfjs } from "react-pdf";
 import { PDFDocument } from "./pdf-react/pdf-document";
 import { useReportStore } from "@/store/report-store";
-import { MOCK_FINDINGS } from "@/components/reports/report-mock-constants";
+
 import {
   Dialog,
   DialogContent,
@@ -34,13 +34,15 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
   onClose,
   reportTitle
 }) => {
-  const { report } = useReportStore();
+  const { report, findings } = useReportStore();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
+
+  console.log("FINDING PREVIEW:", findings);
 
   useEffect(() => {
     if (isOpen && !pdfUrl && report) {
@@ -66,10 +68,9 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
 
     try {
       console.log("Generating PDF with report:", report.title);
-      console.log("Findings count:", MOCK_FINDINGS.length);
 
       // Generate PDF directly on client side
-      const blob = await pdf(<PDFDocument report={report} findings={MOCK_FINDINGS} />).toBlob();
+      const blob = await pdf(<PDFDocument report={report} findings={findings} />).toBlob();
 
       console.log("PDF blob generated, size:", blob.size);
 

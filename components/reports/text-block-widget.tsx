@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { FileText, Edit2 } from "lucide-react";
 import { DataSource } from "@/lib/types/report-types";
-import { WidgetDataSourcePicker } from "./widget-data-source-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -39,26 +38,21 @@ export const TextBlockWidget = ({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="border-border bg-card rounded-lg border p-4">
       {data.title && (
-        <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-          <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <FileText className="h-4 w-4 text-muted-foreground" />
+        <div className="border-border mb-4 flex items-center justify-between border-b pb-3">
+          <h4 className="text-foreground flex items-center gap-2 text-sm font-semibold">
+            <FileText className="text-muted-foreground h-4 w-4" />
             {data.title}
           </h4>
           <div className="flex items-center gap-2">
-            {showDataSourcePicker && onDataSourceChange && (
-              <WidgetDataSourcePicker
-                widgetType="text_block"
-                currentDataSourceId={dataSourceId}
-                onDataSourceChange={onDataSourceChange}
-              />
-            )}
             {isManualMode && onDataChange && (
               <button
                 onClick={() => setIsConfiguring(!isConfiguring)}
                 className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  isConfiguring ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"
+                  isConfiguring
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted"
                 }`}>
                 <Edit2 className="h-3 w-3" />
                 {isConfiguring ? "Done" : "Edit"}
@@ -69,8 +63,8 @@ export const TextBlockWidget = ({
       )}
 
       {isConfiguring ? (
-        <div className="space-y-3 rounded-lg bg-muted/50 p-3">
-          <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <div className="bg-muted/50 space-y-3 rounded-lg p-3">
+          <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Edit Text Block
           </div>
           <div className="space-y-2">
@@ -94,7 +88,7 @@ export const TextBlockWidget = ({
       ) : (
         <div className="prose prose-sm max-w-none">
           <div
-            className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground"
+            className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap"
             dangerouslySetInnerHTML={{ __html: data.content }}
           />
         </div>

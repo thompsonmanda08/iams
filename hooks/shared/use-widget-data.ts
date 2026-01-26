@@ -2,13 +2,13 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
-import type { WidgetType } from "@/lib/types/report-types";
+import type { WidgetType, ReportEntityType } from "@/lib/types/report-types";
 
 export interface FetchWidgetDataParams {
   dataSourceId: string;
   widgetType: WidgetType;
   entityId?: string;
-  entityType?: "audit_plan" | "risk_register" | "control_register";
+  entityType?: ReportEntityType;
 }
 
 /**
@@ -175,6 +175,53 @@ export function transformWidgetData(
       result = {
         title: rawData?.title || title || "",
         content: rawData?.content || "",
+        data_source_id: dataSourceId
+      };
+      break;
+
+    case "risk_objective_mapping":
+      // API returns { columns: [], rows: [] } where columns are objectives and rows are risks
+      // Transform table format to risk_objective_mapping format
+      const objectives = (rawData?.columns || []).map((col: any) => ({
+        id: col.key,
+        label: col.header,
+        shortLabel: col.header
+      }));
+
+      const risks = (rawData?.rows || []).map((row: any, index: number) => ({
+        id: row.risk_id,
+        number: index + 1,
+        description: row.risk_name,
+        mappedObjectives: [row.strategic_objective_id]
+      }));
+
+      // Group risks by risk_id to combine multiple objective mappings
+      const risksMap = new Map<string, any>();
+      (rawData?.rows || []).forEach((row: any, index: number) => {
+        if (!risksMap.has(row.risk_id)) {
+          risksMap.set(row.risk_id, {
+            id: row.risk_id,
+            number: 0,
+            description: row.risk_name,
+            mappedObjectives: []
+          });
+        }
+        const risk = risksMap.get(row.risk_id);
+        if (!risk.mappedObjectives.includes(row.strategic_objective_id)) {
+          risk.mappedObjectives.push(row.strategic_objective_id);
+        }
+      });
+
+      // Convert map to array and assign numbers
+      const risksList = Array.from(risksMap.values()).map((risk, index) => ({
+        ...risk,
+        number: index + 1
+      }));
+
+      result = {
+        title: title || "Risk Objective Mapping",
+        objectives: objectives,
+        risks: risksList,
         data_source_id: dataSourceId
       };
       break;

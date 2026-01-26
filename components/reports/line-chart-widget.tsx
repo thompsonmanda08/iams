@@ -4,7 +4,6 @@ import React, { useState, useMemo } from "react";
 import { TrendingUp, Edit2, Plus, X } from "lucide-react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { DataSource } from "@/lib/types/report-types";
-import { WidgetDataSourcePicker } from "./widget-data-source-picker";
 import { WidgetEmptyState } from "./widget-empty-state";
 import { Input } from "@/components/ui/input";
 import {
@@ -119,24 +118,19 @@ export const LineChartWidget = ({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="border-border bg-card rounded-lg border p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <h4 className="text-foreground flex items-center gap-2 text-sm font-semibold">
           {data.title}
         </h4>
         <div className="flex items-center gap-2">
-          {showDataSourcePicker && onDataSourceChange && (
-            <WidgetDataSourcePicker
-              widgetType="line_chart"
-              currentDataSourceId={dataSourceId}
-              onDataSourceChange={onDataSourceChange}
-            />
-          )}
           {isManualMode && onDataChange && (
             <button
               onClick={() => setIsConfiguring(!isConfiguring)}
               className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                isConfiguring ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400" : "text-muted-foreground hover:bg-muted"
+                isConfiguring
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
+                  : "text-muted-foreground hover:bg-muted"
               }`}>
               <Edit2 className="h-3 w-3" />
               {isConfiguring ? "Done" : "Configure"}
@@ -146,25 +140,25 @@ export const LineChartWidget = ({
       </div>
 
       {isConfiguring && (
-        <div className="mb-4 space-y-2 rounded-lg bg-muted/50 p-3">
-          <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <div className="bg-muted/50 mb-4 space-y-2 rounded-lg p-3">
+          <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Configure Series
           </div>
           <div className="space-y-2">
             {data.series.map((series, seriesIndex) => (
-              <div key={seriesIndex} className="rounded border border-border bg-card p-2">
+              <div key={seriesIndex} className="border-border bg-card rounded border p-2">
                 <div className="mb-2 flex items-center gap-2">
                   <input
                     type="color"
                     value={series.color}
                     onChange={(e) => updateSeries(seriesIndex, { color: e.target.value })}
-                    className="h-6 w-6 cursor-pointer rounded border border-input bg-background"
+                    className="border-input bg-background h-6 w-6 cursor-pointer rounded border"
                   />
                   <Input
                     type="text"
                     value={series.label}
                     onChange={(e) => updateSeries(seriesIndex, { label: e.target.value })}
-                    className="flex-1 h-7 text-xs"
+                    className="h-7 flex-1 text-xs"
                   />
                   <button
                     onClick={() => removeSeries(seriesIndex)}
@@ -175,14 +169,14 @@ export const LineChartWidget = ({
                 <div className="flex flex-wrap gap-2">
                   {data.categories.map((category, catIndex) => (
                     <div key={catIndex} className="flex items-center gap-1">
-                      <span className="text-xs text-muted-foreground">{category}:</span>
+                      <span className="text-muted-foreground text-xs">{category}:</span>
                       <Input
                         type="number"
                         value={series.data[catIndex] || 0}
                         onChange={(e) =>
                           updateDataPoint(seriesIndex, catIndex, Number(e.target.value))
                         }
-                        className="w-16 h-7 text-xs"
+                        className="h-7 w-16 text-xs"
                       />
                     </div>
                   ))}
@@ -191,7 +185,7 @@ export const LineChartWidget = ({
             ))}
             <button
               onClick={addSeries}
-              className="flex w-full items-center justify-center gap-1 rounded border border-dashed border-border py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary hover:bg-background hover:text-primary">
+              className="border-border text-muted-foreground hover:border-primary hover:bg-background hover:text-primary flex w-full items-center justify-center gap-1 rounded border border-dashed py-1.5 text-xs font-medium transition-all">
               <Plus className="h-3 w-3" />
               Add Series
             </button>
@@ -200,9 +194,12 @@ export const LineChartWidget = ({
       )}
 
       {/* Empty State */}
-      {!data.categories || data.categories.length === 0 || !data.series || data.series.length === 0 ? (
+      {!data.categories ||
+      data.categories.length === 0 ||
+      !data.series ||
+      data.series.length === 0 ? (
         <WidgetEmptyState
-          icon={<TrendingUp className="mx-auto h-10 w-10 text-muted-foreground" />}
+          icon={<TrendingUp className="text-muted-foreground mx-auto h-10 w-10" />}
           hasDataSource={!!dataSourceId && dataSourceId !== "manual"}
           isError={!!dataSourceId && dataSourceId !== "manual"}
         />
@@ -210,46 +207,46 @@ export const LineChartWidget = ({
         <>
           {/* Line Chart Visualization */}
           <ChartContainer config={chartConfig} className="h-64 w-full">
-        <LineChart
-          data={chartData}
-          margin={{
-            left: 12,
-            right: 12,
-            top: 12,
-            bottom: 12
-          }}>
-          <CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <XAxis
-            dataKey="category"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tick={{ fontSize: 12 }}
-          />
-          <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-          <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-          {data.series?.map((series) => (
-            <Line
-              key={series.label}
-              dataKey={series.label}
-              type="monotone"
-              stroke={series.color}
-              strokeWidth={2}
-              dot={{ fill: series.color, r: 4 }}
-            />
-          ))}
-        </LineChart>
-      </ChartContainer>
+            <LineChart
+              data={chartData}
+              margin={{
+                left: 12,
+                right: 12,
+                top: 12,
+                bottom: 12
+              }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis
+                dataKey="category"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              {data.series?.map((series) => (
+                <Line
+                  key={series.label}
+                  dataKey={series.label}
+                  type="monotone"
+                  stroke={series.color}
+                  strokeWidth={2}
+                  dot={{ fill: series.color, r: 4 }}
+                />
+              ))}
+            </LineChart>
+          </ChartContainer>
 
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-3">
-        {data.series?.map((series) => (
-          <div key={series.label} className="flex items-center gap-2 text-xs">
-            <div className="h-3 w-3 rounded" style={{ backgroundColor: series.color }} />
-            <span className="text-muted-foreground">{series.label}</span>
+          {/* Legend */}
+          <div className="mt-4 flex flex-wrap gap-3">
+            {data?.series?.map((series) => (
+              <div key={series?.label} className="flex items-center gap-2 text-xs">
+                <div className="h-3 w-3 rounded" style={{ backgroundColor: series?.color }} />
+                <span className="text-muted-foreground">{series?.label}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
         </>
       )}
     </div>

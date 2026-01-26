@@ -22,7 +22,8 @@ import type {
   ReportField,
   ReportType,
   ReportEntityType,
-  WidgetInstance
+  WidgetInstance,
+  WidgetType
 } from "@/lib/types/report-types";
 import { StatusBadge } from "../status-badge";
 import { Badge } from "../ui/badge";

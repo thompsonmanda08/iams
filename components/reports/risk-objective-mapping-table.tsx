@@ -3,7 +3,6 @@
 import { Check, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataSource } from "@/lib/types/report-types";
-import { WidgetDataSourcePicker } from "./widget-data-source-picker";
 
 export interface StrategicObjective {
   id: string;
@@ -63,15 +62,7 @@ export function RiskObjectiveMappingTable({
           <Table2 className="h-4 w-4 text-blue-600" />
           {title}
         </h4>
-        <div className="flex items-center gap-2">
-          {showDataSourcePicker && onDataSourceChange && (
-            <WidgetDataSourcePicker
-              widgetType="risk_objective_mapping"
-              currentDataSourceId={dataSourceId}
-              onDataSourceChange={onDataSourceChange}
-            />
-          )}
-        </div>
+        <div className="flex items-center gap-2"></div>
       </div>
 
       {/* Table */}
@@ -83,7 +74,7 @@ export function RiskObjectiveMappingTable({
                 <div className="font-bold tracking-wide text-white uppercase">GROUP RISK</div>
               </th>
               <th
-                colSpan={objectives.length}
+                colSpan={objectives?.length}
                 className="border-l border-slate-700 px-4 py-3 text-center">
                 <div className="font-bold tracking-wide text-white uppercase">
                   STRATEGIC OBJECTIVES
@@ -92,7 +83,7 @@ export function RiskObjectiveMappingTable({
             </tr>
             <tr className={cn(headerBgColor, "border-b border-slate-700")}>
               <th className="sticky left-0 z-20 border-r border-slate-700 bg-slate-800"></th>
-              {objectives.map((objective) => (
+              {objectives?.map((objective) => (
                 <th
                   key={objective.id}
                   className="min-w-[140px] border-l border-slate-700 px-4 py-3 text-center">
@@ -104,14 +95,14 @@ export function RiskObjectiveMappingTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {risks.length === 0 ? (
+            {risks?.length === 0 ? (
               <tr>
                 <td colSpan={objectives.length + 1} className="px-4 py-8 text-center text-gray-500">
                   No data available. Select a data source to populate this table.
                 </td>
               </tr>
             ) : (
-              risks.map((risk, index) => (
+              risks?.map((risk, index) => (
                 <tr
                   key={risk.id}
                   className={cn(

@@ -298,7 +298,7 @@ export function WidgetManager({
             objectives={widget.data.objectives}
             risks={widget.data.risks}
             className="w-full"
-            showNumbers={true}
+            showNumbers={false}
             checkmarkColor="text-green-500"
             headerBgColor="bg-slate-800"
             onDataSourceChange={

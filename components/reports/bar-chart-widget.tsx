@@ -4,7 +4,6 @@ import React, { useState, useMemo } from "react";
 import { BarChart3, Edit2, Plus, Trash2, X } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { DataSource } from "@/lib/types/report-types";
-import { WidgetDataSourcePicker } from "./widget-data-source-picker";
 import { WidgetEmptyState } from "./widget-empty-state";
 import { Input } from "@/components/ui/input";
 import {
@@ -74,8 +73,8 @@ export const BarChartWidget = ({
         }))
       }))
     : Array.isArray(data.categories)
-    ? (data.categories as BarChartCategory[])
-    : [];
+      ? (data.categories as BarChartCategory[])
+      : [];
 
   // Transform data for Recharts
   const chartData = useMemo(() => {
@@ -189,7 +188,9 @@ export const BarChartWidget = ({
     const nestedCategories = categories as BarChartCategory[];
     const category = nestedCategories[categoryIndex];
     updateCategory(categoryIndex, {
-      series: category.series.map((series, i) => (i === seriesIndex ? { ...series, ...updates } : series))
+      series: category.series.map((series, i) =>
+        i === seriesIndex ? { ...series, ...updates } : series
+      )
     });
   };
 
@@ -202,25 +203,18 @@ export const BarChartWidget = ({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="border-border bg-card rounded-lg border p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <h4 className="text-foreground flex items-center gap-2 text-sm font-semibold">
           <BarChart3 className="h-4 w-4 text-blue-600" />
           {data.title}
         </h4>
         <div className="flex items-center gap-2">
-          {showDataSourcePicker && onDataSourceChange && (
-            <WidgetDataSourcePicker
-              widgetType="bar_chart"
-              currentDataSourceId={dataSourceId}
-              onDataSourceChange={onDataSourceChange}
-            />
-          )}
           {isManualMode && onDataChange && (
             <>
               <button
                 onClick={toggleOrientation}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted">
+                className="text-muted-foreground hover:bg-muted flex items-center gap-1 rounded px-2 py-1 text-xs font-medium">
                 {orientation === "vertical" ? "↔" : "↕"} Orientation
               </button>
               <button
@@ -239,13 +233,13 @@ export const BarChartWidget = ({
       </div>
 
       {isConfiguring && !isFlatStructure && (
-        <div className="mb-4 space-y-2 rounded-lg bg-muted/50 p-3">
-          <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <div className="bg-muted/50 mb-4 space-y-2 rounded-lg p-3">
+          <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Configure Bar Chart
           </div>
           <div className="space-y-3">
             {categories.map((category, catIndex) => (
-              <div key={catIndex} className="rounded border border-border bg-card p-2">
+              <div key={catIndex} className="border-border bg-card rounded border p-2">
                 <div className="mb-2 flex items-center justify-between">
                   <Input
                     type="text"
@@ -275,7 +269,7 @@ export const BarChartWidget = ({
                         onChange={(e) =>
                           updateSeries(catIndex, seriesIndex, { color: e.target.value })
                         }
-                        className="h-6 w-6 cursor-pointer rounded border border-input bg-background"
+                        className="border-input bg-background h-6 w-6 cursor-pointer rounded border"
                       />
                       <Input
                         type="text"
@@ -283,7 +277,7 @@ export const BarChartWidget = ({
                         onChange={(e) =>
                           updateSeries(catIndex, seriesIndex, { label: e.target.value })
                         }
-                        className="flex-1 h-7 text-xs"
+                        className="h-7 flex-1 text-xs"
                       />
                       <Input
                         type="number"
@@ -291,7 +285,7 @@ export const BarChartWidget = ({
                         onChange={(e) =>
                           updateSeries(catIndex, seriesIndex, { value: Number(e.target.value) })
                         }
-                        className="w-20 h-7 text-xs"
+                        className="h-7 w-20 text-xs"
                       />
                       <button
                         onClick={() => removeSeries(catIndex, seriesIndex)}
@@ -305,7 +299,7 @@ export const BarChartWidget = ({
             ))}
             <button
               onClick={addCategory}
-              className="mt-2 flex w-full items-center justify-center gap-1 rounded border border-dashed border-border py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary hover:bg-background hover:text-primary">
+              className="border-border text-muted-foreground hover:border-primary hover:bg-background hover:text-primary mt-2 flex w-full items-center justify-center gap-1 rounded border border-dashed py-1.5 text-xs font-medium transition-all">
               <Plus className="h-3 w-3" />
               Add Category
             </button>
@@ -316,7 +310,7 @@ export const BarChartWidget = ({
       {/* Empty State */}
       {categories.length === 0 ? (
         <WidgetEmptyState
-          icon={<BarChart3 className="mx-auto h-10 w-10 text-muted-foreground" />}
+          icon={<BarChart3 className="text-muted-foreground mx-auto h-10 w-10" />}
           hasDataSource={!!dataSourceId && dataSourceId !== "manual"}
           isError={!!dataSourceId && dataSourceId !== "manual"}
         />
@@ -324,74 +318,77 @@ export const BarChartWidget = ({
         <>
           {/* Recharts Bar Chart */}
           <ChartContainer config={chartConfig} className="h-64 w-full">
-        <BarChart
-          data={chartData}
-          layout={orientation === "horizontal" ? "vertical" : "horizontal"}
-          margin={{
-            left: orientation === "horizontal" ? 12 : -20,
-            right: 12,
-            top: 12,
-            bottom: 12
-          }}>
-          <CartesianGrid
-            vertical={orientation === "vertical"}
-            horizontal={orientation === "horizontal"}
-            strokeDasharray="3 3"
-          />
-          {orientation === "vertical" ? (
-            <>
-              <XAxis
-                dataKey="category"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tick={{ fontSize: 12 }}
+            <BarChart
+              data={chartData}
+              layout={orientation === "horizontal" ? "vertical" : "horizontal"}
+              margin={{
+                left: orientation === "horizontal" ? 12 : -20,
+                right: 12,
+                top: 12,
+                bottom: 12
+              }}>
+              <CartesianGrid
+                vertical={orientation === "vertical"}
+                horizontal={orientation === "horizontal"}
+                strokeDasharray="3 3"
               />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-            </>
-          ) : (
-            <>
-              <XAxis type="number" hide />
-              <YAxis
-                dataKey="category"
-                type="category"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                tick={{ fontSize: 12 }}
-              />
-            </>
-          )}
-          <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-          {allSeriesLabels.map((seriesLabel) => {
-            const seriesColor = chartConfig[seriesLabel]?.color || "#3b82f6";
-            return (
-              <Bar
-                key={seriesLabel}
-                dataKey={seriesLabel}
-                fill={seriesColor}
-                radius={orientation === "vertical" ? [4, 4, 0, 0] : [0, 4, 4, 0]}
-              />
-            );
-          })}
-        </BarChart>
-      </ChartContainer>
+              {orientation === "vertical" ? (
+                <>
+                  <XAxis
+                    dataKey="category"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+                </>
+              ) : (
+                <>
+                  <XAxis type="number" hide />
+                  <YAxis
+                    dataKey="category"
+                    type="category"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    tick={{ fontSize: 12 }}
+                  />
+                </>
+              )}
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              {allSeriesLabels.map((seriesLabel) => {
+                const seriesColor = chartConfig[seriesLabel]?.color || "#3b82f6";
+                return (
+                  <Bar
+                    key={seriesLabel}
+                    dataKey={seriesLabel}
+                    fill={seriesColor}
+                    radius={orientation === "vertical" ? [4, 4, 0, 0] : [0, 4, 4, 0]}
+                  />
+                );
+              })}
+            </BarChart>
+          </ChartContainer>
 
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {allSeriesLabels.map((seriesLabel) => {
-          const firstSeries = categories
-            .flatMap((cat) => cat.series)
-            .find((series) => series.label === seriesLabel);
+          {/* Legend */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {allSeriesLabels.map((seriesLabel) => {
+              const firstSeries = categories
+                .flatMap((cat) => cat.series)
+                .find((series) => series.label === seriesLabel);
 
-          return (
-            <div key={seriesLabel} className="flex items-center gap-1 text-xs">
-              <div className="h-3 w-3 rounded" style={{ backgroundColor: firstSeries?.color || "#ccc" }} />
-              <span className="text-muted-foreground">{seriesLabel}</span>
-            </div>
-          );
-        })}
-      </div>
+              return (
+                <div key={seriesLabel} className="flex items-center gap-1 text-xs">
+                  <div
+                    className="h-3 w-3 rounded"
+                    style={{ backgroundColor: firstSeries?.color || "#ccc" }}
+                  />
+                  <span className="text-muted-foreground">{seriesLabel}</span>
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
     </div>

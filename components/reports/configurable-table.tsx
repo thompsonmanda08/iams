@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Table2, Settings2, Plus, Trash2, GripVertical, X } from "lucide-react";
 import { TableWidgetData, DataSource, TableColumn } from "@/lib/types/report-types";
-import { WidgetDataSourcePicker } from "./widget-data-source-picker";
 
 interface ConfigurableTableProps {
   data: TableWidgetData;
@@ -93,13 +92,6 @@ export const ConfigurableTable = ({
           {data.title}
         </h4>
         <div className="flex items-center gap-2">
-          {showDataSourcePicker && onDataSourceChange && (
-            <WidgetDataSourcePicker
-              widgetType="table"
-              currentDataSourceId={dataSourceId}
-              onDataSourceChange={onDataSourceChange}
-            />
-          )}
           {(data.is_configurable || isManualMode) && onColumnsChange && (
             <button
               onClick={() => setIsEditingColumns(!isEditingColumns)}
@@ -162,9 +154,9 @@ export const ConfigurableTable = ({
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
-              {data.columns.map((col) => (
+              {data?.columns?.map((col) => (
                 <th
-                  key={col.key}
+                  key={col?.key}
                   className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
                   {col.header}
                 </th>
@@ -175,8 +167,12 @@ export const ConfigurableTable = ({
           <tbody className="divide-y divide-gray-100">
             {data.rows.length === 0 ? (
               <tr>
-                <td colSpan={data.columns.length + (isManualMode && onRowsChange ? 1 : 0)} className="px-4 py-8 text-center text-gray-500">
-                  {isManualMode ? "No data yet. Click 'Add Row' to get started." : "No data available."}
+                <td
+                  colSpan={data.columns.length + (isManualMode && onRowsChange ? 1 : 0)}
+                  className="px-4 py-8 text-center text-gray-500">
+                  {isManualMode
+                    ? "No data yet. Click 'Add Row' to get started."
+                    : "No data available."}
                 </td>
               </tr>
             ) : (

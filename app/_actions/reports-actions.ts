@@ -18,7 +18,6 @@ import {
   normalizeManagementStandard,
   getTemplateForStandard
 } from "@/components/reports/report-templates";
-import { AVAILABLE_DATA_SOURCES, MOCK_FINDINGS } from "@/components/reports/report-mock-constants";
 import type { DataSource } from "@/lib/types/report-types";
 
 // ============================================================================
@@ -363,7 +362,7 @@ export async function getDataSources(): Promise<APIResponse> {
   } catch (error: any) {
     // Fallback to local data sources if API not available
     console.warn("Data sources API not available, using local data sources");
-    return successResponse(AVAILABLE_DATA_SOURCES);
+    return successResponse([]);
   }
 }
 
@@ -398,13 +397,6 @@ export async function fetchWidgetData(params: FetchWidgetDataParams): Promise<AP
     });
     return successResponse(response?.data);
   } catch (error: any) {
-    // Fallback to mock data if API not available
-    console.warn("Widget data API not available, using mock data");
-    const dataSource = AVAILABLE_DATA_SOURCES.find((ds) => ds.id === dataSourceId);
-    if (dataSource?.sample_data) {
-      const sampleData = dataSource.sample_data[widgetType] || dataSource.sample_data;
-      return successResponse(sampleData);
-    }
     return handleError(error, "GET | FETCH WIDGET DATA", `/api/v1/data-sources/${dataSourceId}`);
   }
 }
@@ -435,15 +427,13 @@ export async function getAllDataSources(): Promise<APIResponse> {
     // Validate that we got an array
     if (!Array.isArray(apiData)) {
       console.warn("⚠️ [getAllDataSources] API returned invalid data format, using mock data");
-      console.log("🔍 [getAllDataSources] Mock data sources:", AVAILABLE_DATA_SOURCES.map(ds => ({ id: ds.id, name: ds.name })));
-      return successResponse(AVAILABLE_DATA_SOURCES);
+      return successResponse([]);
     }
 
     // If API returns empty array, use mock data as fallback
     if (apiData.length === 0) {
       console.warn("⚠️ [getAllDataSources] API returned no data sources, using mock data");
-      console.log("🔍 [getAllDataSources] Mock data sources:", AVAILABLE_DATA_SOURCES.map(ds => ({ id: ds.id, name: ds.name })));
-      return successResponse(AVAILABLE_DATA_SOURCES);
+      return successResponse([]);
     }
 
     console.log(`✅ [getAllDataSources] Successfully loaded ${apiData.length} data sources from API`);
@@ -460,8 +450,7 @@ export async function getAllDataSources(): Promise<APIResponse> {
     // Fallback to mock data sources if API not available
     console.error("❌ [getAllDataSources] API error:", error?.message || error);
     console.warn("⚠️ [getAllDataSources] Using mock data sources as fallback");
-    console.log("🔍 [getAllDataSources] Mock data sources:", AVAILABLE_DATA_SOURCES.map(ds => ({ id: ds.id, name: ds.name })));
-    return successResponse(AVAILABLE_DATA_SOURCES);
+    return successResponse([]);
   }
 }
 
@@ -543,8 +532,13 @@ export async function getDataSourceData(
   try {
     // Fetch actual data from the backend endpoint
     // Format: GET /data-sources/{dataSourceId}?widget_type={widgetType}&{entity_param}={id}
+
+    // Special handling: risk_objective_mapping always fetches as 'table' format from API
+    // The transformation happens in transformWidgetData()
+    const apiWidgetType = widgetType === "risk_objective_mapping" ? "table" : widgetType;
+
     const params = new URLSearchParams({
-      widget_type: widgetType
+      widget_type: apiWidgetType
     });
 
     if (entityId && entityType) {
@@ -561,6 +555,9 @@ export async function getDataSourceData(
 
     const url = `/api/v1/data-sources/${dataSourceId}?${params.toString()}`;
     console.log("🔍 [getDataSourceData] API URL:", url);
+    if (widgetType === "risk_objective_mapping") {
+      console.log(`ℹ️ [getDataSourceData] Note: Fetching risk_objective_mapping as 'table' format from API`);
+    }
 
     const response = await authenticatedApiClient({
       url,
@@ -600,22 +597,6 @@ export async function getDataSourceData(
     // Fallback to mock sample data if API fails
     console.error("❌ [getDataSourceData] API error:", error?.message || error);
     console.warn(`⚠️ [getDataSourceData] API failed for ${dataSourceId}, attempting to use mock sample data`);
-
-    const dataSource = AVAILABLE_DATA_SOURCES.find((ds) => ds.id === dataSourceId);
-
-    if (dataSource?.sample_data) {
-      const sampleData = dataSource.sample_data[widgetType] || dataSource.sample_data;
-      console.log(`✅ [getDataSourceData] Using mock sample data for ${dataSourceId} (${widgetType})`);
-      console.log("🔍 [getDataSourceData] Mock data structure:", {
-        dataType: typeof sampleData,
-        isArray: Array.isArray(sampleData),
-        keys: typeof sampleData === "object" && sampleData !== null ? Object.keys(sampleData) : [],
-        sampleData: Array.isArray(sampleData)
-          ? `Array with ${sampleData.length} items`
-          : JSON.stringify(sampleData, null, 2).substring(0, 200) + "..."
-      });
-      return successResponse(sampleData);
-    }
 
     console.error(`❌ [getDataSourceData] No fallback data available for ${dataSourceId}`);
     return handleError(error, "GET | DATA SOURCE DATA", `/api/v1/data-sources/${dataSourceId}?widget_type=${widgetType}`);
@@ -771,11 +752,11 @@ export async function fetchFindingsForReport(auditPlanId?: string): Promise<APIR
 
     // Return mock findings if no audit plan ID
     console.warn("⚠️ [fetchFindingsForReport] No audit plan ID provided, using mock data");
-    return successResponse(MOCK_FINDINGS);
+    return successResponse([]);
   } catch (error: any) {
     console.error("❌ [fetchFindingsForReport] API error:", error?.message || error);
     console.warn("⚠️ [fetchFindingsForReport] Using mock data as fallback");
-    return successResponse(MOCK_FINDINGS);
+    return successResponse([]);
   }
 }
 

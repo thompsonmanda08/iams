@@ -184,7 +184,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
                     <p className="text-muted-foreground text-xs italic">
                       Type:{" "}
                       <span className="font-medium capitalize">
-                        {capitalize(report.entity_type.replaceAll("_", " "))}
+                        {capitalize(report?.entity_type?.replaceAll("_", " "))}
                       </span>
                     </p>
                   </div>

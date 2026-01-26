@@ -123,7 +123,7 @@ const createStyles = (primaryColor: string, secondaryColor: string) =>
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 4,
-      fontSize: 9,
+      fontSize: 7,
       fontWeight: "bold"
     },
     badgeConformity: {
@@ -300,42 +300,44 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
               {section.content && <Text style={styles.textContent}>{section.content}</Text>}
 
               {/* Findings table for findings_selector sections */}
-              {section.section_type === "findings_selector" && section.selected_finding_ids && (
-                <View style={styles.table}>
-                  <View style={[styles.tableRow, styles.tableHeader]}>
-                    <Text style={[styles.tableCellHeader, { flex: 0.8 }]}>Reference</Text>
-                    <Text style={[styles.tableCellHeader, { flex: 0.6 }]}>Clause</Text>
-                    <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Finding</Text>
-                    <Text style={[styles.tableCellHeader, { flex: 0.8 }]}>Status</Text>
-                    <Text style={[styles.tableCellHeader, { flex: 2 }]}>Observation</Text>
-                  </View>
-                  {findings
-                    .filter((f) => section.selected_finding_ids?.includes(f.id))
-                    .map((finding) => (
-                      <View key={finding.id} style={styles.tableRow}>
-                        <Text style={[styles.tableCell, { flex: 0.8 }]}>
-                          {finding.reference_code}
-                        </Text>
-                        <Text style={[styles.tableCell, { flex: 0.6 }]}>
-                          {finding.clause_number || ""}
-                        </Text>
-                        <Text style={[styles.tableCell, { flex: 1.5 }]}>{finding.title}</Text>
-                        <View style={[styles.tableCell, { flex: 0.8 }]}>
-                          <Text
-                            style={[
-                              styles.badge,
-                              getConformityStyle(finding.conformity_status || "")
-                            ]}>
-                            {getConformityLabel(finding.conformity_status || "")}
+              {(section.section_type === "compliance_findings" ||
+                section.section_type === "findings_selector") &&
+                section.selected_finding_ids && (
+                  <View style={styles.table}>
+                    <View style={[styles.tableRow, styles.tableHeader]}>
+                      <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Ref</Text>
+                      <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Clause</Text>
+                      <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Finding</Text>
+                      <Text style={[styles.tableCellHeader, { flex: 1.25 }]}>Status</Text>
+                      <Text style={[styles.tableCellHeader, { flex: 2 }]}>Observation</Text>
+                    </View>
+                    {findings
+                      .filter((f) => section.selected_finding_ids?.includes(f.id))
+                      .map((finding) => (
+                        <View key={finding.id} style={styles.tableRow}>
+                          <Text style={[styles.tableCell, { flex: 0.25 }]}>
+                            {finding.reference_code}
+                          </Text>
+                          <Text style={[styles.tableCell, { flex: 0.25 }]}>
+                            {finding.clause_number || ""}
+                          </Text>
+                          <Text style={[styles.tableCell, { flex: 1.5 }]}>{finding.title}</Text>
+                          <View style={[styles.tableCell, { flex: 1.25 }]}>
+                            <Text
+                              style={[
+                                styles.badge,
+                                getConformityStyle(finding.conformity_status || "")
+                              ]}>
+                              {getConformityLabel(finding.conformity_status || "")}
+                            </Text>
+                          </View>
+                          <Text style={[styles.tableCell, { flex: 2 }]}>
+                            {finding.observation || ""}
                           </Text>
                         </View>
-                        <Text style={[styles.tableCell, { flex: 2 }]}>
-                          {finding.observation || ""}
-                        </Text>
-                      </View>
-                    ))}
-                </View>
-              )}
+                      ))}
+                  </View>
+                )}
 
               {/* Widgets */}
               {section.widgets?.map((widget) => (
@@ -345,22 +347,98 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                   {/* Table Widget */}
                   {widget.widget_type === "table" && "columns" in widget.data && (
                     <View style={styles.table}>
-                      <View style={[styles.tableRow, styles.tableHeader]}>
-                        {(widget.data as any).columns?.map((col: any) => (
-                          <Text key={col.key} style={styles.tableCellHeader}>
-                            {col.header}
-                          </Text>
-                        ))}
-                      </View>
-                      {(widget.data as any).rows?.map((row: any, idx: number) => (
-                        <View key={idx} style={styles.tableRow}>
-                          {(widget.data as any).columns?.map((col: any) => (
-                            <Text key={col.key} style={styles.tableCell}>
-                              {String(row[col.key] || "")}
+                      {(() => {
+                        const columns = (widget.data as any).columns || [];
+                        const rows = (widget.data as any).rows || [];
+
+                        if (!columns || columns.length === 0) {
+                          return (
+                            <Text style={{ fontSize: 10, color: "#666" }}>
+                              No table data available
                             </Text>
-                          ))}
-                        </View>
-                      ))}
+                          );
+                        }
+
+                        // Calculate column width dynamically based on number of columns
+                        const totalWidth = 540; // Available width in PDF page
+                        const minColumnWidth = 60; // Minimum width per column
+                        const columnCount = columns.length;
+                        const calculatedWidth = Math.max(minColumnWidth, totalWidth / columnCount);
+
+                        const columnWidths = columns.map((col: any) => {
+                          // If column has custom width, use it; otherwise use calculated width
+                          return col.width ? parseInt(col.width) : calculatedWidth;
+                        });
+
+                        return (
+                          <View>
+                            {/* Header Row */}
+                            <View style={[styles.tableRow, styles.tableHeader]}>
+                              {columns.map((col: any, idx: number) => (
+                                <View
+                                  key={col.key}
+                                  style={{
+                                    width: columnWidths[idx],
+                                    padding: 5
+                                  }}>
+                                  <Text
+                                    style={{
+                                      fontSize: 9,
+                                      fontWeight: "bold",
+                                      color: "white"
+                                    }}>
+                                    {col.header}
+                                  </Text>
+                                </View>
+                              ))}
+                            </View>
+
+                            {/* Data Rows */}
+                            {rows.length === 0 ? (
+                              <View style={styles.tableRow}>
+                                <Text
+                                  style={{
+                                    padding: 10,
+                                    fontSize: 10,
+                                    color: "#999",
+                                    textAlign: "center"
+                                  }}>
+                                  No data available
+                                </Text>
+                              </View>
+                            ) : (
+                              rows.map((row: any, rowIdx: number) => (
+                                <View
+                                  key={rowIdx}
+                                  style={[
+                                    styles.tableRow,
+                                    {
+                                      backgroundColor: rowIdx % 2 === 0 ? "#f8f9fa" : "#ffffff"
+                                    }
+                                  ]}>
+                                  {columns.map((col: any, colIdx: number) => (
+                                    <View
+                                      key={`${rowIdx}-${col.key}`}
+                                      style={{
+                                        width: columnWidths[colIdx],
+                                        padding: 5,
+                                        borderBottomColor: "#e2e8f0"
+                                      }}>
+                                      <Text
+                                        style={{
+                                          fontSize: 9,
+                                          color: "#1f2937"
+                                        }}>
+                                        {String(row[col.key] || "-")}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              ))
+                            )}
+                          </View>
+                        );
+                      })()}
                     </View>
                   )}
 
@@ -372,7 +450,9 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                       }}>
                       {(() => {
                         // Handle both formats: slices property or direct array
-                        let slices = Array.isArray(widget.data) ? widget.data : (widget.data as any).slices || [];
+                        let slices = Array.isArray(widget.data)
+                          ? widget.data
+                          : (widget.data as any).slices || [];
                         if (!slices || slices.length === 0) {
                           return (
                             <Text style={{ fontSize: 10, color: "#666" }}>
@@ -477,8 +557,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                         // Create actual circular pie chart using SVG paths
                         const createVisualRepresentation = () => {
                           return (
-                            <View
-                              style={{ flexDirection: "row", alignItems: "center", gap: 25 }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 25 }}>
                               {/* Circular Pie Chart */}
                               <View
                                 style={{
@@ -505,7 +584,9 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                               {/* Legend - Show all slices including zeros */}
                               <View style={{ flex: 1, justifyContent: "center" }}>
                                 {slices.map((slice: any, idx: number) => {
-                                  const percentage = ((slice.value || 0) / total * 100).toFixed(1);
+                                  const percentage = (((slice.value || 0) / total) * 100).toFixed(
+                                    1
+                                  );
                                   const color = slice.color || getDefaultColor(idx);
 
                                   return (
@@ -538,7 +619,8 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                                           }}>
                                           {slice.label}
                                         </Text>
-                                        <Text style={{ fontSize: 9, color: "#6b7280", marginTop: 2 }}>
+                                        <Text
+                                          style={{ fontSize: 9, color: "#6b7280", marginTop: 2 }}>
                                           {slice.value || 0} ({percentage}%)
                                         </Text>
                                       </View>
@@ -790,6 +872,311 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                             </View>
                           );
                         }
+                      })()}
+                    </View>
+                  )}
+
+                  {/* Metric Card Widget  TODO!!!*/}
+                  {widget.widget_type === "metric_card" && (
+                    <View
+                      style={{
+                        marginVertical: 15,
+                        padding: 20,
+                        backgroundColor: "#f8fafc",
+                        borderWidth: 1,
+                        borderColor: "#e2e8f0",
+                        borderRadius: 6
+                      }}>
+                      {(widget.data as any).title && (
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: "bold",
+                            marginBottom: 12,
+                            color: "#475569"
+                          }}>
+                          {(widget.data as any).title}
+                        </Text>
+                      )}
+                      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
+                        <Text style={{ fontSize: 36, fontWeight: "bold", color: "#0f172a" }}>
+                          {(widget.data as any).value || 0}
+                        </Text>
+                        {(widget.data as any).unit && (
+                          <Text style={{ fontSize: 14, color: "#64748b" }}>
+                            {(widget.data as any).unit}
+                          </Text>
+                        )}
+                        {(widget.data as any).trend !== undefined && (
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              fontWeight: "600",
+                              color: (widget.data as any).trend >= 0 ? "#16a34a" : "#dc2626"
+                            }}>
+                            {(widget.data as any).trend >= 0 ? "↑" : "↓"}{" "}
+                            {Math.abs((widget.data as any).trend)}%
+                          </Text>
+                        )}
+                      </View>
+                      {(widget.data as any).description && (
+                        <Text style={{ fontSize: 9, color: "#78909c", marginTop: 8 }}>
+                          {(widget.data as any).description}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Line Chart Widget  TODO!!!*/}
+                  {widget.widget_type === "line_chart" && (
+                    <View
+                      style={{
+                        marginVertical: 15
+                      }}>
+                      {(() => {
+                        const categories = (widget.data as any).categories || [];
+                        const series = (widget.data as any).series || [];
+
+                        if (
+                          !categories ||
+                          categories.length === 0 ||
+                          !series ||
+                          series.length === 0
+                        ) {
+                          return (
+                            <Text style={{ fontSize: 10, color: "#666" }}>
+                              No line chart data available
+                            </Text>
+                          );
+                        }
+
+                        // Generate SVG line chart
+                        const dataPoints = categories.length;
+                        const chartWidth = 400;
+                        const chartHeight = 200;
+                        const padding = 40;
+                        const graphWidth = chartWidth - padding * 2;
+                        const graphHeight = chartHeight - padding * 2;
+
+                        // Find min and max values
+                        let minValue = Infinity;
+                        let maxValue = -Infinity;
+                        series.forEach((s: any) => {
+                          s.data?.forEach((val: number) => {
+                            minValue = Math.min(minValue, val || 0);
+                            maxValue = Math.max(maxValue, val || 0);
+                          });
+                        });
+
+                        const range = maxValue - minValue || 1;
+                        const scale = graphHeight / range;
+                        const xStep = graphWidth / (dataPoints - 1 || 1);
+
+                        return (
+                          <View
+                            style={{
+                              width: "100%",
+                              alignItems: "center"
+                            }}>
+                            <Svg
+                              width={chartWidth}
+                              height={chartHeight}
+                              viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                              {/* Grid lines */}
+                              {[0, 1, 2, 3, 4].map((i: number) => {
+                                const y = padding + (graphHeight / 4) * i;
+                                return (
+                                  <Path
+                                    key={`grid-${i}`}
+                                    d={`M ${padding} ${y} L ${chartWidth - padding} ${y}`}
+                                    stroke="#e5e7eb"
+                                    strokeWidth="0.5"
+                                  />
+                                );
+                              })}
+
+                              {/* Lines for each series */}
+                              {series.map((s: any, seriesIdx: number) => {
+                                let pathData = "";
+                                (s.data || []).forEach((val: number, pointIdx: number) => {
+                                  const x = padding + xStep * pointIdx;
+                                  const y = chartHeight - padding - (val - minValue) * scale;
+                                  if (pointIdx === 0) {
+                                    pathData += `M ${x} ${y}`;
+                                  } else {
+                                    pathData += ` L ${x} ${y}`;
+                                  }
+                                });
+
+                                return (
+                                  <Path
+                                    key={`line-${seriesIdx}`}
+                                    d={pathData}
+                                    stroke={s.color || "#3b82f6"}
+                                    strokeWidth="2"
+                                    fill="none"
+                                  />
+                                );
+                              })}
+                            </Svg>
+
+                            {/* Legend */}
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                flexWrap: "wrap",
+                                gap: 15,
+                                marginTop: 15,
+                                justifyContent: "center"
+                              }}>
+                              {series.map((s: any, idx: number) => (
+                                <View
+                                  key={idx}
+                                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                                  <View
+                                    style={{
+                                      width: 12,
+                                      height: 12,
+                                      backgroundColor: s.color || "#3b82f6"
+                                    }}
+                                  />
+                                  <Text style={{ fontSize: 9, color: "#475569" }}>{s.label}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        );
+                      })()}
+                    </View>
+                  )}
+
+                  {/* Area Chart Widget  TODO!!!*/}
+                  {widget.widget_type === "area_chart" && (
+                    <View
+                      style={{
+                        marginVertical: 15
+                      }}>
+                      {(() => {
+                        const categories = (widget.data as any).categories || [];
+                        const series = (widget.data as any).series || [];
+
+                        if (
+                          !categories ||
+                          categories.length === 0 ||
+                          !series ||
+                          series.length === 0
+                        ) {
+                          return (
+                            <Text style={{ fontSize: 10, color: "#666" }}>
+                              No area chart data available
+                            </Text>
+                          );
+                        }
+
+                        // Generate SVG area chart (similar to line chart but with filled areas)
+                        const dataPoints = categories.length;
+                        const chartWidth = 400;
+                        const chartHeight = 200;
+                        const padding = 40;
+                        const graphWidth = chartWidth - padding * 2;
+                        const graphHeight = chartHeight - padding * 2;
+
+                        // Find min and max values
+                        let minValue = Infinity;
+                        let maxValue = -Infinity;
+                        series.forEach((s: any) => {
+                          s.data?.forEach((val: number) => {
+                            minValue = Math.min(minValue, val || 0);
+                            maxValue = Math.max(maxValue, val || 0);
+                          });
+                        });
+
+                        const range = maxValue - minValue || 1;
+                        const scale = graphHeight / range;
+                        const xStep = graphWidth / (dataPoints - 1 || 1);
+
+                        return (
+                          <View
+                            style={{
+                              width: "100%",
+                              alignItems: "center"
+                            }}>
+                            <Svg
+                              width={chartWidth}
+                              height={chartHeight}
+                              viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                              {/* Grid lines */}
+                              {[0, 1, 2, 3, 4].map((i: number) => {
+                                const y = padding + (graphHeight / 4) * i;
+                                return (
+                                  <Path
+                                    key={`grid-${i}`}
+                                    d={`M ${padding} ${y} L ${chartWidth - padding} ${y}`}
+                                    stroke="#e5e7eb"
+                                    strokeWidth="0.5"
+                                  />
+                                );
+                              })}
+
+                              {/* Areas for each series */}
+                              {series.map((s: any, seriesIdx: number) => {
+                                let pathData = "";
+                                const dataLength = s.data?.length || 0;
+                                (s.data || []).forEach((val: number, pointIdx: number) => {
+                                  const x = padding + xStep * pointIdx;
+                                  const y = chartHeight - padding - (val - minValue) * scale;
+                                  if (pointIdx === 0) {
+                                    pathData += `M ${x} ${y}`;
+                                  } else {
+                                    pathData += ` L ${x} ${y}`;
+                                  }
+                                });
+
+                                // Close the area by drawing bottom baseline
+                                const lastX = padding + xStep * (dataLength - 1);
+                                pathData += ` L ${lastX} ${chartHeight - padding}`;
+                                pathData += ` L ${padding} ${chartHeight - padding}`;
+                                pathData += " Z";
+
+                                return (
+                                  <Path
+                                    key={`area-${seriesIdx}`}
+                                    d={pathData}
+                                    fill={s.color || "#3b82f6"}
+                                    fillOpacity="0.3"
+                                    stroke={s.color || "#3b82f6"}
+                                    strokeWidth="2"
+                                  />
+                                );
+                              })}
+                            </Svg>
+
+                            {/* Legend */}
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                flexWrap: "wrap",
+                                gap: 15,
+                                marginTop: 15,
+                                justifyContent: "center"
+                              }}>
+                              {series.map((s: any, idx: number) => (
+                                <View
+                                  key={idx}
+                                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                                  <View
+                                    style={{
+                                      width: 12,
+                                      height: 12,
+                                      backgroundColor: s.color || "#3b82f6"
+                                    }}
+                                  />
+                                  <Text style={{ fontSize: 9, color: "#475569" }}>{s.label}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        );
                       })()}
                     </View>
                   )}
