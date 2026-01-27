@@ -1,12 +1,7 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet, Svg, Path } from "@react-pdf/renderer";
 import { ReportContent, FindingSummary } from "@/lib/types/report-types";
-import {
-  StandardCoverPage,
-  SimpleCoverPage,
-  DetailedCoverPage,
-  SignatureCoverPage
-} from "./cover-pages";
+import { DetailedCoverPage } from "./cover-pages";
 
 // Define styles
 const createStyles = (primaryColor: string, secondaryColor: string) =>
@@ -99,13 +94,22 @@ const createStyles = (primaryColor: string, secondaryColor: string) =>
       flexDirection: "row",
       borderBottomWidth: 1,
       borderBottomColor: "#e2e8f0",
-      borderBottomStyle: "solid"
+      borderBottomStyle: "solid",
+      minHeight: 20
     },
     tableHeader: {
       flexDirection: "row",
       backgroundColor: primaryColor,
       color: "white",
-      fontWeight: "bold"
+      fontWeight: "bold",
+      minHeight: 30
+    },
+    ObjTableHeader: {
+      flexDirection: "row",
+      backgroundColor: primaryColor,
+      color: "white",
+      fontWeight: "bold",
+      minHeight: "10%"
     },
     tableCell: {
       padding: 10,
@@ -215,35 +219,6 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
     }
   };
 
-  // Get metadata label for first row based on report type
-  const getMetadataLabel = () => {
-    switch (report.report_type) {
-      case "risk":
-        return "Assessment Scope";
-      case "followup":
-        return "Follow-up Period";
-      case "compliance_audit":
-        return "Audit Scope";
-      default:
-        return "Process";
-    }
-  };
-
-  // Determine cover page style based on report type
-  const getCoverPageStyle = () => {
-    switch (report.report_type) {
-      case "followup":
-        return "simple"; // White background, simple layout
-      case "risk":
-        return "signature"; // White background with signature table
-      case "compliance_audit":
-        return "detailed"; // White background with version and author
-      case "general_audit":
-      default:
-        return "standard"; // Blue background with yellow highlights (current style)
-    }
-  };
-
   const Watermark = () => {
     return (
       <View style={styles.watermark} fixed>
@@ -254,24 +229,8 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
 
   return (
     <Document>
-      {/* Cover Page - Dynamic based on report type */}
-      {coverSection &&
-        (() => {
-          const coverStyle = getCoverPageStyle();
-          const props = { report, reportTypeLabel: getReportTypeLabel() };
-
-          switch (coverStyle) {
-            case "simple":
-              return <SimpleCoverPage {...props} />;
-            case "signature":
-              return <SignatureCoverPage {...props} />;
-            case "detailed":
-              return <DetailedCoverPage {...props} />;
-            case "standard":
-            default:
-              return <StandardCoverPage {...props} />;
-          }
-        })()}
+      {/* Cover Page */}
+      {coverSection && <DetailedCoverPage report={report} reportTypeLabel={getReportTypeLabel()} />}
 
       {/* Table of Contents */}
       {tocSections.length > 0 && (
@@ -638,244 +597,261 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                   )}
 
                   {/* Bar Chart Widget */}
-                  {widget.widget_type === "bar_chart" && "categories" in widget.data && (
-                    <View style={{ marginVertical: 15 }}>
-                      {/* Determine orientation */}
-                      {(() => {
-                        const orientation = (widget.data as any).orientation || "vertical";
-                        let rawCategories = (widget.data as any).categories || [];
-                        const seriesData = (widget.data as any).series;
+                  <View style={{ marginVertical: 15 }}>
+                    {/* Determine orientation */}
+                    {(() => {
+                      const orientation = (widget.data as any).orientation || "vertical";
+                      let rawCategories = (widget.data as any).categories || [];
+                      const seriesData = (widget.data as any).series;
 
-                        // Detect if using flat structure (from API) or nested structure (legacy)
-                        const isFlatStructure =
-                          Array.isArray(rawCategories) &&
-                          typeof rawCategories[0] === "string" &&
-                          seriesData;
+                      // Detect if using flat structure (from API) or nested structure (legacy)
+                      const isFlatStructure =
+                        Array.isArray(rawCategories) &&
+                        typeof rawCategories[0] === "string" &&
+                        seriesData;
 
-                        // Convert flat structure to nested for rendering if needed
-                        const categories = isFlatStructure
-                          ? (rawCategories as string[]).map((catLabel, catIndex) => ({
-                              label: catLabel,
-                              series: (seriesData || []).map((s: any) => ({
-                                label: s.label,
-                                value: s.data?.[catIndex] || 0,
-                                color: s.color
-                              }))
+                      // Convert flat structure to nested for rendering if needed
+                      const categories = isFlatStructure
+                        ? (rawCategories as string[]).map((catLabel, catIndex) => ({
+                            label: catLabel,
+                            series: (seriesData || []).map((s: any) => ({
+                              label: s.label,
+                              value: s.data?.[catIndex] || 0,
+                              color: s.color
                             }))
-                          : Array.isArray(rawCategories)
-                            ? rawCategories
-                            : [];
+                          }))
+                        : Array.isArray(rawCategories)
+                          ? rawCategories
+                          : [];
 
-                        // Safely calculate max value
-                        const values = categories
-                          .flatMap((cat: any) => cat?.series?.map((s: any) => s.value) || [])
-                          .filter((v: any) => typeof v === "number");
-                        const maxValue = values.length > 0 ? Math.max(...values) : 100;
+                      // Safely calculate max value
+                      const values = categories
+                        .flatMap((cat: any) => cat?.series?.map((s: any) => s.value) || [])
+                        .filter((v: any) => typeof v === "number");
+                      const maxValue = values.length > 0 ? Math.max(...values) : 100;
 
-                        // Validate we have categories and data
-                        if (!categories || categories.length === 0) {
-                          return (
-                            <Text style={{ fontSize: 10, color: "#666" }}>
-                              No bar chart data available
-                            </Text>
-                          );
+                      // Validate we have categories and data
+                      if (!categories || categories.length === 0) {
+                        return (
+                          <Text style={{ fontSize: 10, color: "#666" }}>
+                            No bar chart data available
+                          </Text>
+                        );
+                      }
+
+                      // Helper function to chunk array into groups of 3
+                      const chunkArray = (arr: any[], size: number) => {
+                        const chunks = [];
+                        for (let i = 0; i < arr.length; i += size) {
+                          chunks.push(arr.slice(i, i + size));
                         }
+                        return chunks;
+                      };
 
-                        if (orientation === "vertical") {
-                          return (
-                            <View style={{ height: 200, paddingHorizontal: 10 }}>
+                      if (orientation === "vertical") {
+                        // Split categories into rows of 3
+                        const categoryRows = chunkArray(categories, 3);
+
+                        return (
+                          <View style={{ paddingHorizontal: 10 }}>
+                            {categoryRows.map((row: any[], rowIndex: number) => (
+                              <View
+                                key={rowIndex}
+                                style={{
+                                  height: 200,
+                                  marginBottom: rowIndex < categoryRows.length - 1 ? 15 : 0
+                                }}>
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-around",
+                                    alignItems: "flex-end",
+                                    height: 160
+                                  }}>
+                                  {row.map((category: any, catIndex: number) => (
+                                    <View key={catIndex} style={{ alignItems: "center", flex: 1 }}>
+                                      <View
+                                        style={{
+                                          flexDirection: "row",
+                                          alignItems: "flex-end",
+                                          justifyContent: "center",
+                                          height: 140,
+                                          gap: 2
+                                        }}>
+                                        {(category?.series || []).map(
+                                          (series: any, seriesIndex: number) => {
+                                            const barHeight =
+                                              maxValue > 0 ? (series.value / maxValue) * 120 : 0;
+                                            return (
+                                              <View
+                                                key={seriesIndex}
+                                                style={{ alignItems: "center" }}>
+                                                <Text style={{ fontSize: 8, marginBottom: 2 }}>
+                                                  {series.value || 0}
+                                                </Text>
+                                                <View
+                                                  style={{
+                                                    width: 20,
+                                                    height: barHeight > 0 ? barHeight : 2,
+                                                    backgroundColor: series.color || "#ccc",
+                                                    borderTopLeftRadius: 2,
+                                                    borderTopRightRadius: 2
+                                                  }}
+                                                />
+                                              </View>
+                                            );
+                                          }
+                                        )}
+                                      </View>
+                                      <Text
+                                        style={{ fontSize: 9, marginTop: 6, textAlign: "center" }}>
+                                        {category.label}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            ))}
+
+                            {/* Legend - shown once at the bottom */}
+                            {categories && categories.length > 0 && (
                               <View
                                 style={{
                                   flexDirection: "row",
-                                  justifyContent: "space-around",
-                                  alignItems: "flex-end",
-                                  height: 160
+                                  flexWrap: "wrap",
+                                  marginTop: 10,
+                                  gap: 8
                                 }}>
-                                {categories.map((category: any, catIndex: number) => (
-                                  <View key={catIndex} style={{ alignItems: "center", flex: 1 }}>
+                                {Array.from(
+                                  new Set(
+                                    categories.flatMap((cat: any) =>
+                                      (cat?.series || []).map((s: any) => s.label)
+                                    )
+                                  )
+                                ).map((seriesLabel: any, index: number) => {
+                                  const firstSeries = categories
+                                    .flatMap((cat: any) => cat?.series || [])
+                                    .find((s: any) => s.label === seriesLabel);
+                                  return (
                                     <View
+                                      key={index}
                                       style={{
                                         flexDirection: "row",
-                                        alignItems: "flex-end",
-                                        justifyContent: "center",
-                                        height: 140,
-                                        gap: 2
+                                        alignItems: "center",
+                                        gap: 4
                                       }}>
-                                      {(category?.series || []).map(
-                                        (series: any, seriesIndex: number) => {
-                                          const barHeight =
-                                            maxValue > 0 ? (series.value / maxValue) * 120 : 0;
-                                          return (
-                                            <View
-                                              key={seriesIndex}
-                                              style={{ alignItems: "center" }}>
-                                              <Text style={{ fontSize: 8, marginBottom: 2 }}>
-                                                {series.value || 0}
-                                              </Text>
-                                              <View
-                                                style={{
-                                                  width: 20,
-                                                  height: barHeight > 0 ? barHeight : 2,
-                                                  backgroundColor: series.color || "#ccc",
-                                                  borderTopLeftRadius: 2,
-                                                  borderTopRightRadius: 2
-                                                }}
-                                              />
-                                            </View>
-                                          );
-                                        }
-                                      )}
+                                      <View
+                                        style={{
+                                          width: 10,
+                                          height: 10,
+                                          backgroundColor: firstSeries?.color || "#ccc",
+                                          borderRadius: 2
+                                        }}
+                                      />
+                                      <Text style={{ fontSize: 8, color: "#4b5563" }}>
+                                        {seriesLabel}
+                                      </Text>
                                     </View>
-                                    <Text
-                                      style={{ fontSize: 9, marginTop: 6, textAlign: "center" }}>
-                                      {category.label}
-                                    </Text>
-                                  </View>
-                                ))}
+                                  );
+                                })}
                               </View>
-                              {/* Legend */}
-                              {categories && categories.length > 0 && (
-                                <View
-                                  style={{
-                                    flexDirection: "row",
-                                    flexWrap: "wrap",
-                                    marginTop: 10,
-                                    gap: 8
-                                  }}>
-                                  {Array.from(
-                                    new Set(
-                                      categories.flatMap((cat: any) =>
-                                        (cat?.series || []).map((s: any) => s.label)
-                                      )
-                                    )
-                                  ).map((seriesLabel: any, index: number) => {
-                                    const firstSeries = categories
-                                      .flatMap((cat: any) => cat?.series || [])
-                                      .find((s: any) => s.label === seriesLabel);
-                                    return (
-                                      <View
-                                        key={index}
-                                        style={{
-                                          flexDirection: "row",
-                                          alignItems: "center",
-                                          gap: 4
-                                        }}>
+                            )}
+                          </View>
+                        );
+                      } else {
+                        // Horizontal bars remain unchanged
+                        return (
+                          <View style={{ paddingHorizontal: 10 }}>
+                            {categories.map((category: any, catIndex: number) => (
+                              <View
+                                key={catIndex}
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  marginBottom: 8
+                                }}>
+                                <Text style={{ width: 80, fontSize: 9, color: "#4b5563" }}>
+                                  {category.label}
+                                </Text>
+                                <View style={{ flex: 1, flexDirection: "row", gap: 2 }}>
+                                  {(category?.series || []).map(
+                                    (series: any, seriesIndex: number) => {
+                                      const barWidth =
+                                        maxValue > 0 ? `${(series.value / maxValue) * 100}%` : "0%";
+                                      return (
                                         <View
+                                          key={seriesIndex}
                                           style={{
-                                            width: 10,
-                                            height: 10,
-                                            backgroundColor: firstSeries?.color || "#ccc",
-                                            borderRadius: 2
-                                          }}
-                                        />
-                                        <Text style={{ fontSize: 8, color: "#4b5563" }}>
-                                          {seriesLabel}
-                                        </Text>
-                                      </View>
-                                    );
-                                  })}
-                                </View>
-                              )}
-                            </View>
-                          );
-                        } else {
-                          // Horizontal bars
-                          return (
-                            <View style={{ paddingHorizontal: 10 }}>
-                              {categories.map((category: any, catIndex: number) => (
-                                <View
-                                  key={catIndex}
-                                  style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    marginBottom: 8
-                                  }}>
-                                  <Text style={{ width: 80, fontSize: 9, color: "#4b5563" }}>
-                                    {category.label}
-                                  </Text>
-                                  <View style={{ flex: 1, flexDirection: "row", gap: 2 }}>
-                                    {(category?.series || []).map(
-                                      (series: any, seriesIndex: number) => {
-                                        const barWidth =
-                                          maxValue > 0
-                                            ? `${(series.value / maxValue) * 100}%`
-                                            : "0%";
-                                        return (
-                                          <View
-                                            key={seriesIndex}
+                                            width: barWidth,
+                                            height: 20,
+                                            backgroundColor: series.color || "#ccc",
+                                            borderRadius: 2,
+                                            justifyContent: "center",
+                                            paddingHorizontal: 4
+                                          }}>
+                                          <Text
                                             style={{
-                                              width: barWidth,
-                                              height: 20,
-                                              backgroundColor: series.color || "#ccc",
-                                              borderRadius: 2,
-                                              justifyContent: "center",
-                                              paddingHorizontal: 4
+                                              fontSize: 8,
+                                              color: "white",
+                                              fontWeight: "bold"
                                             }}>
-                                            <Text
-                                              style={{
-                                                fontSize: 8,
-                                                color: "white",
-                                                fontWeight: "bold"
-                                              }}>
-                                              {series.value || 0}
-                                            </Text>
-                                          </View>
-                                        );
-                                      }
-                                    )}
-                                  </View>
+                                            {series.value || 0}
+                                          </Text>
+                                        </View>
+                                      );
+                                    }
+                                  )}
                                 </View>
-                              ))}
-                              {/* Legend */}
-                              {categories && categories.length > 0 && (
-                                <View
-                                  style={{
-                                    flexDirection: "row",
-                                    flexWrap: "wrap",
-                                    marginTop: 10,
-                                    gap: 8
-                                  }}>
-                                  {Array.from(
-                                    new Set(
-                                      categories.flatMap((cat: any) =>
-                                        (cat?.series || []).map((s: any) => s.label)
-                                      )
+                              </View>
+                            ))}
+                            {/* Legend */}
+                            {categories && categories.length > 0 && (
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  flexWrap: "wrap",
+                                  marginTop: 10,
+                                  gap: 8
+                                }}>
+                                {Array.from(
+                                  new Set(
+                                    categories.flatMap((cat: any) =>
+                                      (cat?.series || []).map((s: any) => s.label)
                                     )
-                                  ).map((seriesLabel: any, index: number) => {
-                                    const firstSeries = categories
-                                      .flatMap((cat: any) => cat?.series || [])
-                                      .find((s: any) => s.label === seriesLabel);
-                                    return (
+                                  )
+                                ).map((seriesLabel: any, index: number) => {
+                                  const firstSeries = categories
+                                    .flatMap((cat: any) => cat?.series || [])
+                                    .find((s: any) => s.label === seriesLabel);
+                                  return (
+                                    <View
+                                      key={index}
+                                      style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 4
+                                      }}>
                                       <View
-                                        key={index}
                                         style={{
-                                          flexDirection: "row",
-                                          alignItems: "center",
-                                          gap: 4
-                                        }}>
-                                        <View
-                                          style={{
-                                            width: 10,
-                                            height: 10,
-                                            backgroundColor: firstSeries?.color || "#ccc",
-                                            borderRadius: 2
-                                          }}
-                                        />
-                                        <Text style={{ fontSize: 8, color: "#4b5563" }}>
-                                          {seriesLabel}
-                                        </Text>
-                                      </View>
-                                    );
-                                  })}
-                                </View>
-                              )}
-                            </View>
-                          );
-                        }
-                      })()}
-                    </View>
-                  )}
-
+                                          width: 10,
+                                          height: 10,
+                                          backgroundColor: firstSeries?.color || "#ccc",
+                                          borderRadius: 2
+                                        }}
+                                      />
+                                      <Text style={{ fontSize: 8, color: "#4b5563" }}>
+                                        {seriesLabel}
+                                      </Text>
+                                    </View>
+                                  );
+                                })}
+                              </View>
+                            )}
+                          </View>
+                        );
+                      }
+                    })()}
+                  </View>
                   {/* Metric Card Widget  TODO!!!*/}
                   {widget.widget_type === "metric_card" && (
                     <View
@@ -1195,7 +1171,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                         </View>
 
                         {/* Header Row 2 - Objective Labels */}
-                        <View style={[styles.tableRow, styles.tableHeader]}>
+                        <View style={[styles.tableRow, styles.ObjTableHeader]}>
                           <Text style={[styles.tableCellHeader, { flex: 2 }]}></Text>
                           {(widget.data as any).objectives?.map((objective: any) => (
                             <Text

@@ -1,11 +1,11 @@
 import React from "react";
-import { Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { ReportContent } from "@/lib/types/report-types";
 
 // Shared styles
 const sharedStyles = StyleSheet.create({
   whitePage: {
-    padding: 60,
+    padding: 40,
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -48,9 +48,37 @@ const sharedStyles = StyleSheet.create({
   }
 });
 
+interface TableColumn {
+  key: string;
+  header: string;
+}
+
+interface CoverPageData {
+  report_title: string;
+  report_date: string;
+  report_subtitle: string;
+  footer_label: string;
+  footer_value: string;
+  organization: {
+    name: string;
+    logo_url?: string;
+    tagline?: string;
+  };
+  author?: {
+    name: string;
+    certification?: string;
+    title?: string;
+  };
+  cover_page_table?: {
+    columns: TableColumn[];
+    rows: Record<string, any>[];
+  };
+}
+
 interface CoverPageProps {
   report: ReportContent;
   reportTypeLabel: string;
+  coverPageData?: CoverPageData;
 }
 
 {
@@ -64,489 +92,183 @@ const Watermark = () => {
   );
 };
 
-// Style 1: Standard (Blue background with yellow highlights) - General Audit
-export const StandardCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
-  <Page size="A4" style={sharedStyles.bluePage}>
-    <Watermark />
-    {/* Logo */}
-    <View style={{ marginBottom: 40, alignItems: "center" }}>
-      <Text style={{ ...sharedStyles.logo, color: "white" }}>INFRATEL</Text>
-      <Text style={{ ...sharedStyles.tagline, color: "white", opacity: 0.9 }}>
-        Accessible. Everywhere.
-      </Text>
-    </View>
+// Helper function to parse cover page data from JSON string
+const parseCoverPageData = (jsonString?: string): CoverPageData | null => {
+  if (!jsonString) return null;
+  try {
+    const parsed = JSON.parse(jsonString);
+    return {
+      report_title: parsed.report_title || "",
+      report_date: parsed.report_date || "",
+      report_subtitle: parsed.report_subtitle || "",
+      footer_label: parsed.footer_label || "",
+      footer_value: parsed.footer_value || "",
+      organization: {
+        name: parsed.organization?.name || "",
+        logo_url: parsed.organization?.logo_url || "",
+        tagline: parsed.organization?.tagline || ""
+      },
+      author: {
+        name: parsed.author?.name || "",
+        certification: parsed.author?.certification || "",
+        title: parsed.author?.title || ""
+      },
+      cover_page_table: parsed.cover_page_table || { columns: [], rows: [] }
+    };
+  } catch {
+    return null;
+  }
+};
 
-    {/* Tagline */}
-    <Text style={{ ...sharedStyles.idcTagline, color: "white", opacity: 0.9 }}>
-      "A member of the IDC group of Companies"
-    </Text>
+// Cover Page (White background with version and author info)
+export const DetailedCoverPage: React.FC<CoverPageProps> = ({
+  report,
+  reportTypeLabel,
+  coverPageData
+}) => {
+  // Parse cover page data from coverPageData prop or try to extract from report
+  let pageData = coverPageData;
+  if (!pageData && report.sections) {
+    const coverSection = report.sections.find((s) => s.section_type === "cover_page");
+    if (coverSection?.content) {
+      pageData = parseCoverPageData(coverSection.content) as any;
+    }
+  }
 
-    {/* Report Title */}
-    <View
-      style={{
-        borderTopWidth: 2,
-        borderTopColor: "white",
-        borderBottomWidth: 2,
-        borderBottomColor: "white",
-        paddingVertical: 15,
-        marginBottom: 30,
-        width: "100%"
-      }}>
-      <Text style={{ fontSize: 18, fontWeight: "bold", color: "white", textAlign: "center" }}>
-        {reportTypeLabel}
-      </Text>
-    </View>
+  // Fallback to report data if no cover page data is available
+  const logoTagline = pageData?.organization.tagline || "";
+  const reportTitle = pageData?.report_title || reportTypeLabel;
+  const reportSubtitle = pageData?.report_subtitle || "";
+  const orgName = pageData?.organization.name || "";
+  const logoUrl = pageData?.organization.logo_url || "";
+  const footerLabel = pageData?.footer_label || "";
+  const footerValue = pageData?.footer_value || "";
 
-    {/* Department/Process */}
-    <View
-      style={{
-        backgroundColor: "#fef08a",
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        marginBottom: 40,
-        width: "100%"
-      }}>
+  return (
+    <Page
+      size="A4"
+      style={{ ...sharedStyles.whitePage, justifyContent: "space-between", padding: 40 }}>
+      <Watermark />
+
+      {/* HEADER SECTION */}
+      <View style={{ alignItems: "center", marginBottom: 60 }}>
+        {/* Logo */}
+        {logoUrl && logoUrl.trim() && (
+          <Image src={logoUrl} style={{ width: 120, height: 60 }} />
+        )}
+        <View style={{ marginBottom: 15, alignItems: "center" }}>
+          <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>{orgName}</Text>
+          <Text
+            style={{
+              fontSize: 10,
+              color: "#64748b",
+              fontStyle: "italic",
+              marginTop: 10
+            }}>
+            {logoTagline}
+          </Text>
+        </View>
+
+        {/* Divider Line */}
+        <View
+          style={{
+            width: "100%",
+            height: 1,
+            backgroundColor: "#1e40af"
+          }}
+        />
+      </View>
+
+      {/* Report Title */}
       <Text
         style={{
-          fontSize: 16,
+          fontSize: 28,
           fontWeight: "bold",
+          color: "#1e40af",
+          textAlign: "center",
+          marginBottom: 15
+        }}>
+        {reportTitle}
+      </Text>
+
+      {/* Subtitle */}
+      <Text
+        style={{
+          fontSize: 14,
           color: "#000",
           textAlign: "center",
-          textTransform: "uppercase"
+          marginBottom: 60
         }}>
-        {report.title}
+        {reportSubtitle}
       </Text>
-    </View>
 
-    {/* Metadata Table */}
-    <View style={{ width: "60%", marginBottom: 40 }}>
-      <View style={{ flexDirection: "row", borderWidth: 1, borderColor: "white" }}>
+      {/* MAIN CONTENT SECTION */}
+      <View style={{ flex: 1, width: "100%", justifyContent: "center" }}>
+        {/* Information Table (from editor) */}
+        {pageData?.cover_page_table && pageData.cover_page_table.columns.length > 0 && (
+          <View style={{ width: "100%", marginBottom: 60 }}>
+            {/* Table Header */}
+            <View style={{ flexDirection: "row", backgroundColor: "#1e40af", marginBottom: 0 }}>
+              {pageData.cover_page_table.columns.map((col) => (
+                <View
+                  key={col.key}
+                  style={{ flex: 1, padding: 8, borderRightWidth: 1, borderRightColor: "#fff" }}>
+                  <Text style={{ fontSize: 10, fontWeight: "bold", color: "#fff" }}>
+                    {col.header}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            {/* Table Rows */}
+            {pageData.cover_page_table.rows.map((row, rowIndex) => (
+              <View
+                key={rowIndex}
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: rowIndex % 2 === 0 ? "#f8fafc" : "#fff",
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#e2e8f0"
+                }}>
+                {pageData.cover_page_table!.columns.map((col) => (
+                  <View
+                    key={col.key}
+                    style={{
+                      flex: 1,
+                      padding: 8,
+                      borderRightWidth: 1,
+                      borderRightColor: "#e2e8f0"
+                    }}>
+                    <Text style={{ fontSize: 9, color: "#000" }}>{row[col.key] || ""}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* FOOTER SECTION */}
         <View
-          style={{
-            flex: 1,
-            padding: 8,
-            backgroundColor: "#fef08a",
-            borderRightWidth: 1,
-            borderRightColor: "white"
-          }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>Process</Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>
-            {report.title}
-          </Text>
-        </View>
-      </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          borderWidth: 1,
-          borderColor: "white",
-          borderTopWidth: 0
-        }}>
-        <View
-          style={{
-            flex: 1,
-            padding: 8,
-            backgroundColor: "#fef08a",
-            borderRightWidth: 1,
-            borderRightColor: "white"
-          }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>
-            Creation Date
-          </Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>
-            {new Date().toLocaleDateString("en-US", {
-              day: "numeric",
-              month: "long",
-              year: "numeric"
-            })}
-          </Text>
+          style={{ width: "100%", paddingTop: 40, borderTopWidth: 1, borderTopColor: "#e5e7eb" }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            {/* Left Footer */}
+            <View>
+              <Text style={{ fontSize: 9, color: "#64748b" }}>{footerLabel}</Text>
+              <Text style={{ fontSize: 8, color: "#999", marginTop: 4 }}>{footerValue}</Text>
+            </View>
+            {/* Right Footer */}
+            <View style={{ textAlign: "right" }}>
+              <Text style={{ fontSize: 9, color: "#64748b" }}>
+                Generated:{" "}
+                {new Date().toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric"
+                })}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          borderWidth: 1,
-          borderColor: "white",
-          borderTopWidth: 0
-        }}>
-        <View
-          style={{
-            flex: 1,
-            padding: 8,
-            backgroundColor: "#fef08a",
-            borderRightWidth: 1,
-            borderRightColor: "white"
-          }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>
-            Document Number
-          </Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>
-            {report.report_id || "INF/HCA/IAR/Q2-2025-01"}
-          </Text>
-        </View>
-      </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          borderWidth: 1,
-          borderColor: "white",
-          borderTopWidth: 0
-        }}>
-        <View
-          style={{
-            flex: 1,
-            padding: 8,
-            backgroundColor: "#fef08a",
-            borderRightWidth: 1,
-            borderRightColor: "white"
-          }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>
-            Revision Number
-          </Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", fontStyle: "italic" }}>
-            {report.version || "001"}
-          </Text>
-        </View>
-      </View>
-    </View>
-
-    {/* Quarter Info */}
-    <View
-      style={{
-        backgroundColor: "#fef08a",
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        marginBottom: 20
-      }}>
-      <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-        Quarter II, 30th June {new Date().getFullYear()}
-      </Text>
-    </View>
-  </Page>
-);
-
-// Style 2: Simple (White background, minimal) - Follow-up Log
-export const SimpleCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
-  <Page size="A4" style={sharedStyles.whitePage}>
-    <Watermark />
-    {/* Logo */}
-    <View style={{ marginBottom: 60, alignItems: "center" }}>
-      <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>INFRATEL</Text>
-      <Text style={{ ...sharedStyles.tagline, color: "#64748b" }}>Accessible. Everywhere.</Text>
-    </View>
-
-    {/* Tagline */}
-    <Text style={{ ...sharedStyles.idcTagline, color: "#64748b" }}>
-      "A member of the IDC group of Companies"
-    </Text>
-
-    {/* Horizontal line */}
-    <View
-      style={{
-        width: "100%",
-        height: 2,
-        backgroundColor: "#000",
-        marginBottom: 40
-      }}
-    />
-
-    {/* Long descriptive title */}
-    <Text
-      style={{
-        fontSize: 14,
-        fontWeight: "bold",
-        color: "#000",
-        textAlign: "center",
-        marginBottom: 40,
-        paddingHorizontal: 20
-      }}>
-      {reportTypeLabel} submitted to the Executive Committee and Management of INFRATEL Corporation
-      Limited
-    </Text>
-
-    {/* Horizontal line */}
-    <View
-      style={{
-        width: "100%",
-        height: 2,
-        backgroundColor: "#000",
-        marginBottom: 80
-      }}
-    />
-
-    {/* Date */}
-    <Text style={{ fontSize: 12, color: "#000", marginBottom: 10 }}>
-      {new Date().toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      })}
-    </Text>
-
-    {/* Report type */}
-    <Text style={{ fontSize: 12, fontWeight: "bold", color: "#000" }}>Monthly Report</Text>
-  </Page>
-);
-
-// Style 3: Detailed (White background with version and author) - Compliance Audit
-export const DetailedCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
-  <Page size="A4" style={sharedStyles.whitePage}>
-    <Watermark />
-    {/* Logo */}
-    <View style={{ marginBottom: 80, alignItems: "center" }}>
-      <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>INFRATEL</Text>
-      <Text style={{ ...sharedStyles.tagline, color: "#64748b" }}>Accessible. Everywhere.</Text>
-    </View>
-
-    {/* Report Title */}
-    <Text
-      style={{
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#000",
-        textAlign: "center",
-        marginBottom: 60
-      }}>
-      {reportTypeLabel}
-    </Text>
-
-    {/* Organization */}
-    <Text
-      style={{
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "#000",
-        textAlign: "center",
-        marginBottom: 30
-      }}>
-      INFRATEL Corporation Limited
-    </Text>
-
-    {/* Date */}
-    <Text
-      style={{
-        fontSize: 14,
-        color: "#000",
-        textAlign: "center",
-        marginBottom: 80
-      }}>
-      {new Date().toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      })}
-    </Text>
-
-    {/* Version */}
-    <Text
-      style={{
-        fontSize: 12,
-        fontWeight: "bold",
-        color: "#000",
-        textAlign: "center",
-        marginBottom: 10
-      }}>
-      Ver {report.version || "1.0"}
-    </Text>
-
-    {/* Version Date */}
-    <Text
-      style={{
-        fontSize: 11,
-        color: "#000",
-        textAlign: "center",
-        marginBottom: 40
-      }}>
-      {new Date().toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-      })}
-    </Text>
-
-    {/* Author */}
-    <Text
-      style={{
-        fontSize: 11,
-        color: "#000",
-        textAlign: "center"
-      }}>
-      Report Author: Alex M. Maka
-    </Text>
-  </Page>
-);
-
-// Style 4: Signature (White background with approval table) - Risk Report
-export const SignatureCoverPage: React.FC<CoverPageProps> = ({ report, reportTypeLabel }) => (
-  <Page size="A4" style={{ ...sharedStyles.whitePage, justifyContent: "flex-start", padding: 40 }}>
-    <Watermark />
-    {/* Logo */}
-    <View style={{ marginBottom: 40, alignItems: "center", width: "100%" }}>
-      <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>INFRATEL</Text>
-      <Text style={{ ...sharedStyles.tagline, color: "#64748b" }}>Accessible. Everywhere.</Text>
-    </View>
-
-    {/* Tagline */}
-    <Text
-      style={{
-        ...sharedStyles.idcTagline,
-        color: "#64748b",
-        textAlign: "center",
-        marginBottom: 60
-      }}>
-      "A member of the IDC group of Companies"
-    </Text>
-
-    {/* Report Title with Date */}
-    <Text
-      style={{
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "#000",
-        marginBottom: 40,
-        textDecoration: "underline"
-      }}>
-      INFRATEL Corporation {reportTypeLabel} as of{" "}
-      {new Date().toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      })}
-    </Text>
-
-    {/* Signature Table */}
-    <View style={{ width: "100%", marginTop: 20 }}>
-      {/* Header Row */}
-      <View
-        style={{
-          flexDirection: "row",
-          backgroundColor: "#1e40af",
-          borderWidth: 1,
-          borderColor: "#000"
-        }}>
-        <View style={{ flex: 1, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>Action</Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>Name/Role</Text>
-        </View>
-        <View style={{ flex: 1, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>Signature</Text>
-        </View>
-        <View style={{ flex: 1, padding: 8 }}>
-          <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>Date</Text>
-        </View>
-      </View>
-
-      {/* Prepared by */}
-      <View
-        style={{
-          flexDirection: "row",
-          borderWidth: 1,
-          borderColor: "#000",
-          borderTopWidth: 0
-        }}>
-        <View
-          style={{
-            flex: 1,
-            padding: 8,
-            backgroundColor: "#1e40af",
-            borderRightWidth: 1,
-            borderRightColor: "#000"
-          }}>
-          <Text style={{ fontSize: 9, fontWeight: "bold", color: "white" }}>Prepared by</Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }}>
-          <Text style={{ fontSize: 9 }}>Alex Maka (Senior Information Systems Auditor)</Text>
-        </View>
-        <View style={{ flex: 1, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }} />
-        <View style={{ flex: 1, padding: 8 }}>
-          <Text style={{ fontSize: 9 }}>
-            {new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric"
-            })}
-          </Text>
-        </View>
-      </View>
-
-      {/* Reviewed by */}
-      <View
-        style={{
-          flexDirection: "row",
-          borderWidth: 1,
-          borderColor: "#000",
-          borderTopWidth: 0
-        }}>
-        <View
-          style={{
-            flex: 1,
-            padding: 8,
-            backgroundColor: "#1e40af",
-            borderRightWidth: 1,
-            borderRightColor: "#000"
-          }}>
-          <Text style={{ fontSize: 9, fontWeight: "bold", color: "white" }}>Reviewed by</Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }}>
-          <Text style={{ fontSize: 9 }}>Mwenya Zulu (Head Internal Audit & Risk)</Text>
-        </View>
-        <View style={{ flex: 1, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }} />
-        <View style={{ flex: 1, padding: 8 }}>
-          <Text style={{ fontSize: 9 }}>
-            {new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric"
-            })}
-          </Text>
-        </View>
-      </View>
-
-      {/* Approved by */}
-      <View
-        style={{
-          flexDirection: "row",
-          borderWidth: 1,
-          borderColor: "#000",
-          borderTopWidth: 0
-        }}>
-        <View
-          style={{
-            flex: 1,
-            padding: 8,
-            backgroundColor: "#1e40af",
-            borderRightWidth: 1,
-            borderRightColor: "#000"
-          }}>
-          <Text style={{ fontSize: 9, fontWeight: "bold", color: "white" }}>Approved by</Text>
-        </View>
-        <View style={{ flex: 2, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }}>
-          <Text style={{ fontSize: 9 }}>Dr. Evans Silarwe (Chief Executive Officer)</Text>
-        </View>
-        <View style={{ flex: 1, padding: 8, borderRightWidth: 1, borderRightColor: "#000" }} />
-        <View style={{ flex: 1, padding: 8 }}>
-          <Text style={{ fontSize: 9 }}>
-            {new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric"
-            })}
-          </Text>
-        </View>
-      </View>
-    </View>
-  </Page>
-);
+    </Page>
+  );
+};

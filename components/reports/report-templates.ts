@@ -173,7 +173,7 @@ createSection("exec_summary", "text_with_widgets",
       title: "Risk Distribution by Department",
       categories: [],
       series: [],
-      orientation: "horizontal",
+      orientation: "vertical",
       show_values: true,
       data_source_id: "risks_by_department_distribution"
     }

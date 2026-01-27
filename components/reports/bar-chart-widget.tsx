@@ -210,23 +210,26 @@ export const BarChartWidget = ({
           {data.title}
         </h4>
         <div className="flex items-center gap-2">
-          {isManualMode && onDataChange && (
+          {onDataChange && (
             <>
               <button
                 onClick={toggleOrientation}
-                className="text-muted-foreground hover:bg-muted flex items-center gap-1 rounded px-2 py-1 text-xs font-medium">
-                {orientation === "vertical" ? "↔" : "↕"} Orientation
+                title={`Switch to ${orientation === "vertical" ? "horizontal" : "vertical"} orientation`}
+                className="text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors">
+                {orientation === "vertical" ? "↕ Vertical" : "↔ Horizontal"}
               </button>
-              <button
-                onClick={() => setIsConfiguring(!isConfiguring)}
-                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  isConfiguring
-                    ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}>
-                <Edit2 className="h-3 w-3" />
-                {isConfiguring ? "Done" : "Configure"}
-              </button>
+              {isManualMode && (
+                <button
+                  onClick={() => setIsConfiguring(!isConfiguring)}
+                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                    isConfiguring
+                      ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}>
+                  <Edit2 className="h-3 w-3" />
+                  {isConfiguring ? "Done" : "Configure"}
+                </button>
+              )}
             </>
           )}
         </div>
@@ -317,13 +320,18 @@ export const BarChartWidget = ({
       ) : (
         <>
           {/* Recharts Bar Chart */}
-          <ChartContainer config={chartConfig} className="h-64 w-full">
+          <ChartContainer
+            config={chartConfig}
+            className="w-full"
+            style={{
+              height: orientation === "horizontal" ? Math.max(40 + categories.length * 60, 300) : 256
+            }}>
             <BarChart
               data={chartData}
               layout={orientation === "horizontal" ? "vertical" : "horizontal"}
               margin={{
-                left: orientation === "horizontal" ? 12 : -20,
-                right: 12,
+                left: orientation === "horizontal" ? 120 : 0,
+                right: orientation === "horizontal" ? 20 : 12,
                 top: 12,
                 bottom: 12
               }}>
@@ -345,7 +353,7 @@ export const BarChartWidget = ({
                 </>
               ) : (
                 <>
-                  <XAxis type="number" hide />
+                  <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
                   <YAxis
                     dataKey="category"
                     type="category"
@@ -353,6 +361,7 @@ export const BarChartWidget = ({
                     tickMargin={10}
                     axisLine={false}
                     tick={{ fontSize: 12 }}
+                    width={110}
                   />
                 </>
               )}
