@@ -5,6 +5,7 @@ import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { SelectField } from "../ui/select-field";
+import { StatusBadge } from "../status-badge";
 
 interface FindingsSelectorProps {
   findings: FindingSummary[];
@@ -25,21 +26,6 @@ const SeverityBadge = ({ severity }: { severity: string }) => {
     <span
       className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${colors[severity] || "bg-foreground/10 text-gray-800"}`}>
       {severity.charAt(0).toUpperCase() + severity.slice(1)}
-    </span>
-  );
-};
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const colors: Record<string, string> = {
-    OPEN: "bg-red-50 text-red-700",
-    IN_PROGRESS: "bg-blue-50 text-blue-700",
-    CLOSED: "bg-green-50 text-green-700"
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colors[status] || "text-foreground/70 bg-gray-50"}`}>
-      {status.replace("_", " ")}
     </span>
   );
 };
