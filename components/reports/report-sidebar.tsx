@@ -73,8 +73,12 @@ export const ReportSidebar = () => {
             className="min-w-full"
           />
           <div>
-            <span className="text-gray-500">Created:</span>
-            <p className="font-medium text-gray-900">{report.created_at}</p>
+            <span className="text-gray-500">Generated Date:</span>
+            <p className="font-medium text-gray-900">{report.created_at || "—"}</p>
+          </div>
+          <div>
+            <span className="text-gray-500">Last Modified:</span>
+            <p className="font-medium text-gray-900">{report.updated_at || "—"}</p>
           </div>
           <div>
             <span className="text-gray-500">Sections:</span>

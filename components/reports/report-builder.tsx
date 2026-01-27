@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Download, FileText, Eye, Send, Loader2 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
@@ -34,6 +34,7 @@ import Loader from "../ui/loader";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
 import { transformWidgetData } from "@/hooks/shared/use-widget-data";
 import { toast } from "sonner";
+import { format, formatDistanceToNow } from "date-fns";
 
 // Re-export for convenience
 export type { ReportEntityType };
@@ -136,15 +137,79 @@ export function ReportBuilder({
 
   // Pass the entity ID and type for findings fetching
   const entityIdForFetching = entityType === "audit_plan" ? entity.id : undefined;
-  const { saveReport, isSaving, publishReport, isPublishing } =
-    useReportFetching(entityIdForFetching, entityType);
+  const { saveReport, isSaving, publishReport, isPublishing } = useReportFetching(
+    entityIdForFetching,
+    entityType
+  );
 
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [pendingReportType, setPendingReportType] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [retryingWidget, setRetryingWidget] = useState<{ sectionId: string; widgetId: string } | null>(null);
+  const [retryingWidget, setRetryingWidget] = useState<{
+    sectionId: string;
+    widgetId: string;
+  } | null>(null);
+
+  // Auto-fetch data for template widgets that have a data_source_id but empty data.
+  // Runs once when the report first loads. Falls back to template defaults on error.
+  const hasAutoFetched = useRef(false);
+  useEffect(() => {
+    if (!report || hasAutoFetched.current) return;
+
+    const widgetsToFetch: Array<{
+      sectionId: string;
+      widget: WidgetInstance;
+    }> = [];
+
+    for (const section of report.sections || []) {
+      for (const widget of section.widgets || []) {
+        if (!widget.data?.data_source_id) continue;
+        // Check if widget data is empty (template placeholder)
+        const d = widget.data;
+        const isEmpty =
+          (d.slices && d.slices.length === 0) ||
+          (d.rows && d.rows.length === 0) ||
+          (d.categories && d.categories.length === 0);
+        if (isEmpty) {
+          widgetsToFetch.push({ sectionId: section.section_id, widget });
+        }
+      }
+    }
+
+    if (widgetsToFetch.length === 0) return;
+    hasAutoFetched.current = true;
+
+    // Fetch all in parallel; failures are silently ignored (template defaults remain)
+    widgetsToFetch.forEach(async ({ sectionId, widget }) => {
+      try {
+        const result = await getDataSourceData(
+          widget.data.data_source_id,
+          widget.widget_type as
+            | "pie_chart"
+            | "bar_chart"
+            | "table"
+            | "line_chart"
+            | "area_chart"
+            | "risk_objective_mapping",
+          entity.id,
+          entityType
+        );
+        if (result.success && result.data) {
+          const transformed = transformWidgetData(
+            result.data,
+            widget.widget_type,
+            widget.data.data_source_id,
+            widget.data.title
+          );
+          updateWidgetData(sectionId, widget.instance_id, transformed);
+        }
+      } catch {
+        // Fallback: keep template defaults (empty slices/rows)
+      }
+    });
+  }, [report, entity.id, entityType, updateWidgetData]);
 
   // Handle data source change with real data fetching
   const handleWidgetDataSourceChange = useCallback(
@@ -158,7 +223,9 @@ export function ReportBuilder({
 
       // If no data source selected (manual mode), just update the reference
       if (!dataSource) {
-        console.log("🔍 [handleWidgetDataSourceChange] No data source selected, switching to manual mode");
+        console.log(
+          "🔍 [handleWidgetDataSourceChange] No data source selected, switching to manual mode"
+        );
         updateWidgetDataSource(sectionId, widgetId, null);
         return;
       }
@@ -504,8 +571,8 @@ export function ReportBuilder({
 
   if (!report) {
     return (
-      <div className="flex h-96 flex-col items-center justify-center text-muted-foreground">
-        <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
+      <div className="text-muted-foreground flex h-96 flex-col items-center justify-center">
+        <FileText className="text-muted-foreground mb-4 h-12 w-12" />
         <p>No report available. Click &quot;Save Draft&quot; to create one.</p>
         <CreateReportDialog />
       </div>
@@ -515,11 +582,11 @@ export function ReportBuilder({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-border pb-2">
+      <div className="border-border border-b pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Report Builder</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-foreground text-lg font-semibold">Report Builder</h2>
+            <p className="text-muted-foreground text-sm">
               {entity.title ? ` ${entity.title}` : report.title || "Untitled Report"}
               {entity.ref_no && (
                 <span className="text-muted-foreground ml-2 text-xs">({entity.ref_no})</span>
@@ -544,6 +611,10 @@ export function ReportBuilder({
               <Eye className="h-4 w-4" />
               Preview
             </Button>
+            <Button onClick={exportToPDF} disabled={isExporting} isLoading={isExporting}>
+              <Download className="h-4 w-4" />
+              Export PDF
+            </Button>
             {report.status !== "PUBLISHED" && (
               <Button
                 onClick={handlePublish}
@@ -555,10 +626,6 @@ export function ReportBuilder({
                 Submit for Approval
               </Button>
             )}
-            <Button onClick={exportToPDF} disabled={isExporting} isLoading={isExporting}>
-              <Download className="h-4 w-4" />
-              Export PDF
-            </Button>
           </div>
         </div>
 
@@ -573,15 +640,16 @@ export function ReportBuilder({
           {/* Sidebar */}
           <div className="col-span-12 space-y-4 lg:col-span-3">
             <TableOfContents sections={report.sections || []} onItemClick={scrollToSection} />
+            <AddSectionButton variant="sidebar" />
 
             {/* Report Info */}
-            <div className="rounded-lg border border-border bg-card p-4">
-              <h3 className="mb-3 text-sm font-semibold text-foreground">Report Details</h3>
+            <div className="border-border bg-card rounded-lg border p-4">
+              <h3 className="text-foreground mb-3 text-sm font-semibold">Report Details</h3>
               <div className="space-y-2 text-sm">
                 {readOnlyType ? (
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">Type:</span>
-                    <p className="font-medium text-foreground">
+                    <p className="text-foreground font-medium">
                       {reportTypeOptions.find((opt) => opt.value === getReportTypeValue())?.label ||
                         getReportTypeValue()}
                     </p>
@@ -602,15 +670,16 @@ export function ReportBuilder({
                 )}
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Source {getEntityLabel()}:</span>
-                  <p className="font-medium text-foreground">{entity.title || "-"}</p>
+                  <p className="text-foreground font-medium">{entity.title || "-"}</p>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Status:</span>
                   <StatusBadge status={report.status as string} />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Sections:</span>
-                  <p className="font-medium text-foreground">{report.sections?.length || 0}</p>
+                  <p className="text-foreground font-medium">{report.sections?.length || 0}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Version:</span>
@@ -618,12 +687,40 @@ export function ReportBuilder({
                     {report.version}
                   </Badge>
                 </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Created</span>
+                  <p className="text-foreground text-sm font-medium">
+                    {format(report?.created_at || new Date(), "dd MMMMMM yyyy")}
+                    {report.created_by && (
+                      <span className="text-muted-foreground font-normal">
+                        {" "}
+                        by {report.created_by.name}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Last Modified</span>
+                  <p className="text-foreground text-sm font-medium">
+                    {report?.updated_at
+                      ? formatDistanceToNow(report?.updated_at || new Date(), {
+                          addSuffix: true
+                        })
+                      : "--"}
+                    {report.updated_by && (
+                      <span className="text-muted-foreground font-normal">
+                        {" "}
+                        by {report.updated_by.name}
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Section Type Legend */}
-            <div className="rounded-lg border border-border bg-card p-4">
-              <h3 className="mb-3 text-sm font-semibold text-foreground">Section Types</h3>
+            <div className="border-border bg-card rounded-lg border p-4">
+              <h3 className="text-foreground mb-3 text-sm font-semibold">Section Types</h3>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 rounded border border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-950/30" />
@@ -651,8 +748,6 @@ export function ReportBuilder({
                 </div>
               </div>
             </div>
-
-            <AddSectionButton variant="sidebar" />
           </div>
 
           {/* Main Editor */}
@@ -696,12 +791,8 @@ export function ReportBuilder({
                     handleWidgetTypeChange(section.section_id, widgetId, newType)
                   }
                   // Widget CRUD operations
-                  onAddWidget={(widget: WidgetInstance) =>
-                    addWidget(section.section_id, widget)
-                  }
-                  onRemoveWidget={(widgetId: string) =>
-                    removeWidget(section.section_id, widgetId)
-                  }
+                  onAddWidget={(widget: WidgetInstance) => addWidget(section.section_id, widget)}
+                  onRemoveWidget={(widgetId: string) => removeWidget(section.section_id, widgetId)}
                   onUpdateWidget={(widgetId: string, updates: Partial<WidgetInstance>) =>
                     updateWidget(section.section_id, widgetId, updates)
                   }

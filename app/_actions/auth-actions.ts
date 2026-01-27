@@ -347,7 +347,7 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       mfa_enabled: userData?.mfa_enabled
     };
 
-    await updateAuthSession({ user, logo_url: session?.logo_url || null });
+    await updateAuthSession({ user, logo_url: session?.logo_url || "" });
     // await createUserSession(user as any);
 
     return successResponse(session, response?.data?.message);

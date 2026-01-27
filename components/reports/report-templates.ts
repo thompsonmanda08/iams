@@ -101,9 +101,9 @@ export const ISO_AUDIT_TEMPLATE: ReportTemplate = {
           widget_type: "pie_chart",
           order: 0,
           data: {
-            title: "Control Compliance Status",
+            title: "Findings by Status",
             slices: [],
-            data_source_id: "control_compliance"
+            data_source_id: "findings_by_status"
           }
         }
       ]

@@ -141,6 +141,13 @@ export interface ReportBranding {
 // Entity type for reports (determines which entity the report is linked to)
 export type ReportEntityType = "audit_plan" | "risk_register" | "followup" | "compliance";
 
+export interface ReportUserRef {
+  user_id: string;
+  name: string;
+  email: string;
+  role?: string;
+}
+
 export interface ReportContent {
   report_id: string;
   report_type: ReportType;
@@ -152,6 +159,8 @@ export interface ReportContent {
   sections: ReportSection[];
   created_at?: string;
   updated_at?: string;
+  created_by?: ReportUserRef;
+  updated_by?: ReportUserRef;
 }
 
 /**
@@ -162,13 +171,13 @@ export interface ReportRecord {
   id: string;
   title: string;
   report_type: ReportType;
-  status: ReportStatus;
+  entity_type: ReportEntityType;
+  entity_id: string;
+  report_content?: ReportContent;
+  status?: ReportStatus;
   description?: string;
   pdf_url?: string;
   /** Report content with sections, branding, etc. */
-  report_content?: ReportContent;
-  entity_id?: string;
-  entity_type?: ReportEntityType;
   organization_id?: string;
   created_at?: string;
   updated_at?: string;

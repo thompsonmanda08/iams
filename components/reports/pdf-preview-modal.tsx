@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Download, Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, X } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -42,25 +42,39 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
 
-  console.log("FINDING PREVIEW:", findings);
+  // Use a ref to track the blob URL for reliable cleanup (avoids stale closures)
+  const pdfUrlRef = useRef<string | null>(null);
 
+  // Generate a fresh PDF each time the modal opens; clean up on close/unmount
   useEffect(() => {
-    if (isOpen && !pdfUrl && report) {
+    if (isOpen && report) {
       loadPDF();
     }
 
-    // Cleanup
     return () => {
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
+      // Revoke via ref to avoid stale closure over pdfUrl state
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
+        pdfUrlRef.current = null;
       }
+      setPdfUrl(null);
+      setError(null);
+      setNumPages(0);
+      setPageNumber(1);
     };
-  }, [isOpen, report]);
+  }, [isOpen]);
 
   const loadPDF = async () => {
     if (!report) {
       setError("No report data available");
       return;
+    }
+
+    // Revoke any previous blob URL before generating a new one
+    if (pdfUrlRef.current) {
+      URL.revokeObjectURL(pdfUrlRef.current);
+      pdfUrlRef.current = null;
+      setPdfUrl(null);
     }
 
     setIsLoading(true);
@@ -81,6 +95,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
       // Create blob URL for react-pdf
       const url = URL.createObjectURL(blob);
       console.log("PDF URL created:", url);
+      pdfUrlRef.current = url;
       setPdfUrl(url);
     } catch (err) {
       console.error("PDF preview error:", err);

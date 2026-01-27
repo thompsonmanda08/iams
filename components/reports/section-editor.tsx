@@ -152,8 +152,6 @@ export const SectionEditor = ({
     <div
       id={section.section_id}
       className={`rounded-lg border-t border-r border-b border-l-4 border-border ${style.bg} ${style.border} transition-all duration-200`}
-      draggable={!!onDragStart}
-      onDragStart={onDragStart}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
@@ -161,6 +159,8 @@ export const SectionEditor = ({
       onDrop={onDrop}>
       <div
         className="flex cursor-pointer items-center justify-between px-4 py-3"
+        draggable={!!onDragStart}
+        onDragStart={onDragStart}
         onClick={onToggle}>
         <div className="flex items-center gap-3">
           <div className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing">
@@ -458,27 +458,27 @@ export const SectionEditor = ({
                     const getColors = () => {
                       if (isConformity)
                         return {
-                          bg: "bg-green-50",
-                          border: "border-green-200",
-                          iconColor: "text-green-600",
-                          headerBg: "bg-green-100/50",
-                          headerText: "text-green-900"
+                          bg: "bg-green-50 dark:bg-green-950/30",
+                          border: "border-green-200 dark:border-green-800",
+                          iconColor: "text-green-600 dark:text-green-400",
+                          headerBg: "bg-green-100 dark:bg-green-900/50",
+                          headerText: "text-green-900 dark:text-green-100"
                         };
                       if (isPartialConformity)
                         return {
-                          bg: "bg-amber-50",
-                          border: "border-amber-200",
-                          iconColor: "text-amber-600",
-                          headerBg: "bg-amber-100/50",
-                          headerText: "text-amber-900"
+                          bg: "bg-amber-50 dark:bg-amber-950/30",
+                          border: "border-amber-200 dark:border-amber-800",
+                          iconColor: "text-amber-600 dark:text-amber-400",
+                          headerBg: "bg-amber-100 dark:bg-amber-900/50",
+                          headerText: "text-amber-900 dark:text-amber-100"
                         };
                       if (isNonConformity)
                         return {
-                          bg: "bg-red-50",
-                          border: "border-red-200",
-                          iconColor: "text-red-600",
-                          headerBg: "bg-red-100/50",
-                          headerText: "text-red-900"
+                          bg: "bg-red-50 dark:bg-red-950/30",
+                          border: "border-red-200 dark:border-red-800",
+                          iconColor: "text-red-600 dark:text-red-400",
+                          headerBg: "bg-red-100 dark:bg-red-900/50",
+                          headerText: "text-red-900 dark:text-red-100"
                         };
                       return {
                         bg: "bg-muted/50",
@@ -512,17 +512,17 @@ export const SectionEditor = ({
                         <div className="overflow-x-auto bg-card">
                           <table className="w-full">
                             <thead>
-                              <tr className={`border-b ${colors.border}`}>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                              <tr className={`${colors.headerBg} border-b ${colors.border}`}>
+                                <th className={`px-4 py-2.5 text-left text-xs font-bold tracking-wider uppercase ${colors.headerText}`}>
                                   Reference
                                 </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th className={`px-4 py-2.5 text-left text-xs font-bold tracking-wider uppercase ${colors.headerText}`}>
                                   Clause
                                 </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th className={`px-4 py-2.5 text-left text-xs font-bold tracking-wider uppercase ${colors.headerText}`}>
                                   Finding
                                 </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th className={`px-4 py-2.5 text-left text-xs font-bold tracking-wider uppercase ${colors.headerText}`}>
                                   Observation
                                 </th>
                               </tr>
@@ -536,8 +536,13 @@ export const SectionEditor = ({
                                   <td className="px-4 py-3 text-sm text-foreground">
                                     {f.clause_number || f.clause || "N/A"}
                                   </td>
-                                  <td className="px-4 py-3 text-sm font-medium text-foreground">
-                                    {f.title}
+                                  <td className="px-4 py-3">
+                                    <div className="text-sm font-medium text-foreground">{f.title}</div>
+                                    {f.clause_description && (
+                                      <div className="mt-0.5 text-xs text-muted-foreground">
+                                        {f.clause_description}
+                                      </div>
+                                    )}
                                   </td>
                                   <td className="px-4 py-3 text-sm text-foreground">
                                     {f.observation || "No observation provided"}

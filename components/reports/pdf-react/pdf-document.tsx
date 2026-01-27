@@ -1,7 +1,7 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet, Svg, Path } from "@react-pdf/renderer";
 import { ReportContent, FindingSummary } from "@/lib/types/report-types";
-import { DetailedCoverPage } from "./cover-pages";
+import { DetailedCoverPage } from "./cover-page";
 
 // Define styles
 const createStyles = (primaryColor: string, secondaryColor: string) =>
@@ -280,7 +280,14 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                           <Text style={[styles.tableCell, { flex: 0.25 }]}>
                             {finding.clause_number || ""}
                           </Text>
-                          <Text style={[styles.tableCell, { flex: 1.5 }]}>{finding.title}</Text>
+                          <View style={[styles.tableCell, { flex: 1.5 }]}>
+                            <Text style={{ fontSize: 10 }}>{finding.title}</Text>
+                            {finding.clause_description && (
+                              <Text style={{ fontSize: 8, color: "#6b7280", marginTop: 2 }}>
+                                {finding.clause_description}
+                              </Text>
+                            )}
+                          </View>
                           <View style={[styles.tableCell, { flex: 1.25 }]}>
                             <Text
                               style={[

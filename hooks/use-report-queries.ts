@@ -20,6 +20,7 @@ import {
 import type { ReportContent, ReportEntityType, ReportRecord } from "@/lib/types/report-types";
 import { QUERY_KEYS } from "@/lib/constants";
 import { toast } from "sonner";
+import { en } from "zod/v4/locales";
 
 // Extend QUERY_KEYS if not already present
 const REPORT_QUERY_KEYS = {
@@ -37,7 +38,7 @@ const REPORT_QUERY_KEYS = {
  */
 export function useReportFetching(entityId?: string, entityType?: ReportEntityType) {
   const queryClient = useQueryClient();
-  const { setReport, setFindings, setDataSources, setLoading, setEntityId, setEntityType } =
+  const { setFindings, setDataSources, setLoading, setEntityId, setEntityType } =
     useReportStore();
 
   // Set entity ID and type in store
@@ -50,7 +51,6 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
 
   // Fetch initial report
   const {
-    data: reportResult,
     isLoading: isReportLoading,
     refetch: refetchReport
   } = useQuery({
@@ -84,14 +84,10 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
     }
   });
 
-  // Sync with store
-  useEffect(() => {
-    if (reportResult) {
-      // ReportContent no longer has entity_id/entity_type fields
-      // Those are stored separately and managed via setEntityId/setEntityType
-      setReport(reportResult);
-    }
-  }, [reportResult, setReport]);
+  // NOTE: Report initialization is handled by parent components
+  // (ReportDetailsClient or AuditPlanReportTab) which perform template merging.
+  // Do NOT sync reportResult to the store here — it would overwrite the
+  // properly merged report with the raw API record (no sections at top level).
 
   useEffect(() => {
     if (findingsResult) setFindings(findingsResult);
@@ -108,7 +104,25 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
   // Save mutation - now passes entityId and entityType separately since they're not in ReportContent
   const saveMutation = useMutation({
     mutationFn: async (report: ReportContent) => {
-      const result = await saveReportAction(report, entityId || undefined, entityType || undefined);
+      const saveReportData = {
+        id: report.report_id || "",
+        title: report.title,
+        report_type: report.report_type,
+        entity_id: entityId as string,
+        entity_type: entityType as ReportEntityType,
+        report_content: report,
+
+        // Include management_standard at the top level for easier access
+        management_standard: report.management_standard
+      };
+
+      console.log("Saving report:", saveReportData);
+
+      const result = await saveReportAction(
+        saveReportData,
+        entityId || undefined,
+        entityType || undefined
+      );
       if (!result.success) {
         throw new Error(result.message || "Failed to save report");
       }
@@ -121,7 +135,9 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
       // Invalidate specific report query
       if (variables.report_id) {
-        queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT, variables.report_id] });
+        queryClient.invalidateQueries({
+          queryKey: [REPORT_QUERY_KEYS.REPORT, variables.report_id]
+        });
       }
       // Invalidate entity-specific report query
       if (entityId && entityType) {

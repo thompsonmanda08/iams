@@ -436,14 +436,18 @@ export async function getAllDataSources(): Promise<APIResponse> {
       return successResponse([]);
     }
 
-    console.log(`✅ [getAllDataSources] Successfully loaded ${apiData.length} data sources from API`);
-    console.table(apiData.map((ds: any) => ({
-      id: ds.id,
-      name: ds.name,
-      category: ds.category,
-      compatible_widgets: ds.compatible_widgets?.join(", "),
-      requires_entity: ds.requires_entity
-    })));
+    console.log(
+      `✅ [getAllDataSources] Successfully loaded ${apiData.length} data sources from API`
+    );
+    console.table(
+      apiData.map((ds: any) => ({
+        id: ds.id,
+        name: ds.name,
+        category: ds.category,
+        compatible_widgets: ds.compatible_widgets?.join(", "),
+        requires_entity: ds.requires_entity
+      }))
+    );
 
     return successResponse(apiData);
   } catch (error: any) {
@@ -496,7 +500,10 @@ export async function getDataSourceById(dataSourceId: string): Promise<APIRespon
     if (!dataSource) {
       // Log all available IDs for debugging
       const availableIds = allSourcesRes.data.map((ds: any) => ds.id);
-      console.warn(`DEBUG [getDataSourceById] Not found. Looking for: "${dataSourceId}". Available IDs:`, availableIds);
+      console.warn(
+        `DEBUG [getDataSourceById] Not found. Looking for: "${dataSourceId}". Available IDs:`,
+        availableIds
+      );
       return handleBadRequest(`Data source with ID "${dataSourceId}" not found`);
     }
 
@@ -518,7 +525,14 @@ export async function getDataSourceById(dataSourceId: string): Promise<APIRespon
  */
 export async function getDataSourceData(
   dataSourceId: string,
-  widgetType: "pie_chart" | "bar_chart" | "table" | "metric_card" | "line_chart" | "area_chart" | "risk_objective_mapping",
+  widgetType:
+    | "pie_chart"
+    | "bar_chart"
+    | "table"
+    | "metric_card"
+    | "line_chart"
+    | "area_chart"
+    | "risk_objective_mapping",
   entityId?: string,
   entityType?: ReportEntityType
 ): Promise<APIResponse> {
@@ -544,10 +558,13 @@ export async function getDataSourceData(
     if (entityId && entityType) {
       // Determine the query parameter name based on entity type
       const entityParamName =
-        entityType === "audit_plan" ? "audit_plan_id" :
-        entityType === "risk_register" ? "risk_register_id" :
-        entityType === "control_register" ? "control_register_id" :
-        "entity_id"; // Generic fallback
+        entityType === "audit_plan"
+          ? "audit_plan_id"
+          : entityType === "risk_register"
+            ? "risk_register_id"
+            : entityType === "control_register"
+              ? "control_register_id"
+              : "entity_id"; // Generic fallback
 
       params.append(entityParamName, entityId);
       console.log(`🔍 [getDataSourceData] Using entity param: ${entityParamName}=${entityId}`);
@@ -556,7 +573,9 @@ export async function getDataSourceData(
     const url = `/api/v1/data-sources/${dataSourceId}?${params.toString()}`;
     console.log("🔍 [getDataSourceData] API URL:", url);
     if (widgetType === "risk_objective_mapping") {
-      console.log(`ℹ️ [getDataSourceData] Note: Fetching risk_objective_mapping as 'table' format from API`);
+      console.log(
+        `ℹ️ [getDataSourceData] Note: Fetching risk_objective_mapping as 'table' format from API`
+      );
     }
 
     const response = await authenticatedApiClient({
@@ -568,7 +587,9 @@ export async function getDataSourceData(
       // Extract the actual widget data from nested response structure
       const widgetData = response.data?.data || response.data;
 
-      console.log(`✅ [getDataSourceData] Successfully fetched REAL data for ${dataSourceId} (${widgetType})`);
+      console.log(
+        `✅ [getDataSourceData] Successfully fetched REAL data for ${dataSourceId} (${widgetType})`
+      );
       console.log("🔍 [getDataSourceData] Data structure:", {
         dataType: typeof widgetData,
         isArray: Array.isArray(widgetData),
@@ -583,7 +604,8 @@ export async function getDataSourceData(
       // Special logging for pie chart data to inspect colors
       if (widgetType === "pie_chart") {
         const slices = Array.isArray(widgetData) ? widgetData : widgetData?.slices || [];
-        console.log("🎨 [getDataSourceData] Pie chart slices with colors:",
+        console.log(
+          "🎨 [getDataSourceData] Pie chart slices with colors:",
           JSON.stringify(slices, null, 2)
         );
       }
@@ -596,10 +618,16 @@ export async function getDataSourceData(
   } catch (error: any) {
     // Fallback to mock sample data if API fails
     console.error("❌ [getDataSourceData] API error:", error?.message || error);
-    console.warn(`⚠️ [getDataSourceData] API failed for ${dataSourceId}, attempting to use mock sample data`);
+    console.warn(
+      `⚠️ [getDataSourceData] API failed for ${dataSourceId}, attempting to use mock sample data`
+    );
 
     console.error(`❌ [getDataSourceData] No fallback data available for ${dataSourceId}`);
-    return handleError(error, "GET | DATA SOURCE DATA", `/api/v1/data-sources/${dataSourceId}?widget_type=${widgetType}`);
+    return handleError(
+      error,
+      "GET | DATA SOURCE DATA",
+      `/api/v1/data-sources/${dataSourceId}?widget_type=${widgetType}`
+    );
   }
 }
 
@@ -611,7 +639,14 @@ export async function getDataSourceData(
  */
 export async function getDataSourceSampleData(
   dataSourceId: string,
-  widgetType: "pie_chart" | "bar_chart" | "table" | "metric_card" | "line_chart" | "area_chart" | "risk_objective_mapping"
+  widgetType:
+    | "pie_chart"
+    | "bar_chart"
+    | "table"
+    | "metric_card"
+    | "line_chart"
+    | "area_chart"
+    | "risk_objective_mapping"
 ): Promise<APIResponse> {
   const dataSourceRes = await getDataSourceById(dataSourceId);
 
@@ -632,7 +667,9 @@ export async function getDataSourceSampleData(
   const sampleData = dataSource.sample_data?.[widgetType];
 
   if (!sampleData) {
-    return handleBadRequest(`No sample data available for widget type "${widgetType}" in data source "${dataSourceId}"`);
+    return handleBadRequest(
+      `No sample data available for widget type "${widgetType}" in data source "${dataSourceId}"`
+    );
   }
 
   return successResponse(sampleData);
@@ -670,7 +707,6 @@ export async function getAuditDataSources(): Promise<APIResponse> {
   return successResponse(auditSources);
 }
 
-
 // ============================================================================
 // FINDINGS (for report integration)
 // ============================================================================
@@ -691,10 +727,14 @@ export async function fetchFindingsForReport(auditPlanId?: string): Promise<APIR
       const workpaper = response?.data?.data || response?.data;
       const rawFindings = workpaper?.findings || [];
 
-      console.log(`📋 [fetchFindingsForReport] Found ${rawFindings.length} findings for audit plan ${auditPlanId}`);
+      console.log(
+        `📋 [fetchFindingsForReport] Found ${rawFindings.length} findings for audit plan ${auditPlanId}`
+      );
 
       // Helper function to normalize conformity status
-      const normalizeConformityStatus = (status: string | null | undefined): "CONFORMITY" | "NON_CONFORMITY" | "PARTIAL_CONFORMITY" | null => {
+      const normalizeConformityStatus = (
+        status: string | null | undefined
+      ): "CONFORMITY" | "NON_CONFORMITY" | "PARTIAL_CONFORMITY" | null => {
         if (!status) return null;
 
         const normalized = status.toUpperCase().trim();
@@ -703,10 +743,21 @@ export async function fetchFindingsForReport(auditPlanId?: string): Promise<APIR
         if (normalized === "CONFORMITY" || normalized === "COMPLIANT" || normalized === "CONFORM") {
           return "CONFORMITY";
         }
-        if (normalized === "NON_CONFORMITY" || normalized === "NON-CONFORMITY" || normalized === "NON_COMPLIANT" || normalized === "NON-COMPLIANT" || normalized === "NONCONFORMITY") {
+        if (
+          normalized === "NON_CONFORMITY" ||
+          normalized === "NON-CONFORMITY" ||
+          normalized === "NON_COMPLIANT" ||
+          normalized === "NON-COMPLIANT" ||
+          normalized === "NONCONFORMITY"
+        ) {
           return "NON_CONFORMITY";
         }
-        if (normalized === "PARTIAL_CONFORMITY" || normalized === "PARTIAL-CONFORMITY" || normalized === "PARTIALLY_COMPLIANT" || normalized === "PARTIALLY-COMPLIANT") {
+        if (
+          normalized === "PARTIAL_CONFORMITY" ||
+          normalized === "PARTIAL-CONFORMITY" ||
+          normalized === "PARTIALLY_COMPLIANT" ||
+          normalized === "PARTIALLY-COMPLIANT"
+        ) {
           return "PARTIAL_CONFORMITY";
         }
 
@@ -824,20 +875,13 @@ export async function fetchInitialReport(
  * Note: entity_id and entity_type must be passed separately as they're not part of ReportContent
  */
 export async function saveReport(
-  report: ReportContent,
+  report: ReportRecord,
   entityId?: string,
   entityType?: ReportEntityType
 ): Promise<APIResponse> {
-  if (!report.report_id) {
-    return handleBadRequest("Report ID is required");
-  }
-
-  // Check if this is an existing report or new
-  const existingReport = await getReport(report.report_id);
-
-  if (existingReport.success && existingReport.data) {
+  if (report.id.trim()) {
     // Update existing
-    return updateReport(report.report_id, report);
+    return updateReport(report.id, report);
   } else {
     // Create new - requires entity_id and entity_type
     if (!entityId || !entityType) {

@@ -14,6 +14,7 @@ type SelectInputProps = React.InputHTMLAttributes<HTMLSelectElement> & {
   label?: string;
   onError?: boolean;
   error?: string;
+  size?: "sm" | "default";
   errorText?: string;
   descriptionText?: string;
   isDisabled?: boolean;
@@ -80,7 +81,7 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
         {label && (
           <label
             className={cn(
-              "mb-0.5 pl-1 text-sm font-medium truncate",
+              "mb-0.5 truncate pl-1 text-sm font-medium",
               {
                 "text-red-500": onError || isInvalid,
                 "opacity-50": isDisabled || props?.disabled
@@ -99,11 +100,7 @@ const SelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
           defaultValue={String(defaultValue)}
           disabled={isDisabled || props?.disabled}>
           <SelectTrigger
-            size={
-              typeof props?.size === "string" && (props.size === "default" || props.size === "sm")
-                ? props.size
-                : "default"
-            }
+            size={props.size || "default"}
             className={cn("capitalize", className, classNames?.input)}>
             {isLoading ? (
               <div className="flex items-center gap-2 text-slate-400">

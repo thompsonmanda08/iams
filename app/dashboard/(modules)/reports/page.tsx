@@ -52,8 +52,6 @@ export default async function ReportsPage({
     published: publishedReportsResponse?.data?.pagination?.total || 0
   };
 
-  console.log("📊 [ReportsPage] counts:", reports);
-
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}

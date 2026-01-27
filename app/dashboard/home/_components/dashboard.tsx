@@ -9,28 +9,29 @@ import { getDashboardStats } from "@/app/_actions/reports-actions";
 
 export default async function Dashboard() {
   const data = await getDashboardStats();
+  const d = data?.data;
 
   // Calculate stats
-  const totalRisks = data?.data?.overview.total_risks || 0;
-  const highRisks = data?.data?.risk_summary?.risks_by_rating?.High || 0;
-  const mediumRisks = data?.data?.risk_summary?.risks_by_rating?.medium || 0;
-  const lowRisks = data?.data?.risk_summary?.risks_by_rating?.Low || 0;
+  const totalRisks = d?.overview?.total_risks || 0;
+  const highRisks = d?.risk_summary?.risks_by_rating?.High || 0;
+  const mediumRisks = d?.risk_summary?.risks_by_rating?.medium || 0;
+  const lowRisks = d?.risk_summary?.risks_by_rating?.Low || 0;
 
-  const totalKris = data?.data?.overview?.total_kris;
-  const greenKris = data?.data?.kri_summary?.kris_by_status?.Green || 0;
-  const amberKris = data.data.kri_summary.kris_by_status?.Amber || 0;
-  const redKris = data?.data?.kri_summary?.kris_by_status?.Red || 0;
+  const totalKris = d?.overview?.total_kris || 0;
+  const greenKris = d?.kri_summary?.kris_by_status?.Green || 0;
+  const amberKris = d?.kri_summary?.kris_by_status?.Amber || 0;
+  const redKris = d?.kri_summary?.kris_by_status?.Red || 0;
 
-  const activeAudits = data.data.audit_summary.active_audit_plans;
+  const activeAudits = d?.audit_summary?.active_audit_plans || 0;
   const scheduledAudits =
-    data?.data?.audit_summary?.total_audit_plans -
-    data?.data?.audit_summary?.active_audit_plans -
-    data?.data?.audit_summary?.completed_audit_plans;
+    (d?.audit_summary?.total_audit_plans || 0) -
+    (d?.audit_summary?.active_audit_plans || 0) -
+    (d?.audit_summary?.completed_audit_plans || 0);
 
-  const openFindings = data?.data?.audit_findings?.filter((f: any) => f.status === "OPEN").length;
-  const awaitingResponse = data?.data?.audit_findings?.filter(
+  const openFindings = d?.audit_findings?.filter((f: any) => f.status === "OPEN")?.length || 0;
+  const awaitingResponse = d?.audit_findings?.filter(
     (f: any) => f.status === "OPEN" && !f.severity
-  ).length;
+  )?.length || 0;
 
   return (
     <div className="bg-background min-h-screen">
@@ -119,36 +120,36 @@ export default async function Dashboard() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="mt-6 space-y-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <RiskOverview riskSummary={data.data.risk_summary} />
-              <KriMonitoring kriSummary={data.data.kri_summary} />
+              <RiskOverview riskSummary={d?.risk_summary} />
+              <KriMonitoring kriSummary={d?.kri_summary} />
             </div>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <AuditStatus auditSummary={data.data.audit_summary} />
-              <FindingsTracker findings={data.data.audit_findings} />
+              <AuditStatus auditSummary={d?.audit_summary} />
+              <FindingsTracker findings={d?.audit_findings} />
             </div>
           </TabsContent>
 
           {/* Risk Management Tab */}
           <TabsContent value="risks" className="mt-6 space-y-6">
-            <RiskOverview riskSummary={data.data.risk_summary} />
+            <RiskOverview riskSummary={d?.risk_summary} />
           </TabsContent>
 
           {/* KRI Monitoring Tab */}
           <TabsContent value="kri" className="mt-6 space-y-6">
-            <KriMonitoring kriSummary={data.data.kri_summary} />
+            <KriMonitoring kriSummary={d?.kri_summary} />
           </TabsContent>
 
           {/* Audit & Findings Tab */}
           <TabsContent value="audit" className="mt-6 space-y-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <AuditStatus auditSummary={data.data.audit_summary} />
-              <FindingsTracker findings={data.data.audit_findings} />
+              <AuditStatus auditSummary={d?.audit_summary} />
+              <FindingsTracker findings={d?.audit_findings} />
             </div>
           </TabsContent>
 
           {/* System Health Tab */}
           <TabsContent value="system" className="mt-6 space-y-6">
-            <SystemHealth systemHealth={data.data.system_health} />
+            <SystemHealth systemHealth={d?.system_health} />
           </TabsContent>
         </Tabs>
       </main>

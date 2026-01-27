@@ -1,6 +1,7 @@
 import React from "react";
 import { Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { ReportContent } from "@/lib/types/report-types";
+import { useSession } from "@/store/session-store";
 
 // Shared styles
 const sharedStyles = StyleSheet.create({
@@ -37,8 +38,9 @@ const sharedStyles = StyleSheet.create({
   },
   watermark: {
     position: "absolute",
-    fontSize: 48,
-    color: "rgba(200, 200, 200, 0.5)",
+    fontSize: 80,
+    fontWeight: "bold",
+    color: "rgba(200, 200, 200, 0.25)",
     transform: "rotate(-45deg)",
     top: "50%",
     left: "50%",
@@ -128,6 +130,7 @@ export const DetailedCoverPage: React.FC<CoverPageProps> = ({
 }) => {
   // Parse cover page data from coverPageData prop or try to extract from report
   let pageData = coverPageData;
+
   if (!pageData && report.sections) {
     const coverSection = report.sections.find((s) => s.section_type === "cover_page");
     if (coverSection?.content) {
@@ -139,6 +142,7 @@ export const DetailedCoverPage: React.FC<CoverPageProps> = ({
   const logoTagline = pageData?.organization.tagline || "";
   const reportTitle = pageData?.report_title || reportTypeLabel;
   const reportSubtitle = pageData?.report_subtitle || "";
+  const reportDate = pageData?.report_date || report.created_at || "";
   const orgName = pageData?.organization.name || "";
   const logoUrl = pageData?.organization.logo_url || "";
   const footerLabel = pageData?.footer_label || "";
@@ -154,7 +158,7 @@ export const DetailedCoverPage: React.FC<CoverPageProps> = ({
       <View style={{ alignItems: "center", marginBottom: 60 }}>
         {/* Logo */}
         {logoUrl && logoUrl.trim() && (
-          <Image src={logoUrl} style={{ width: 120, height: 60 }} />
+          <Image src={logoUrl} style={{ width: 160, height: 100, objectFit: "contain" }} />
         )}
         <View style={{ marginBottom: 15, alignItems: "center" }}>
           <Text style={{ ...sharedStyles.logo, color: "#1e40af" }}>{orgName}</Text>
@@ -197,7 +201,7 @@ export const DetailedCoverPage: React.FC<CoverPageProps> = ({
           fontSize: 14,
           color: "#000",
           textAlign: "center",
-          marginBottom: 60
+          marginBottom: 10
         }}>
         {reportSubtitle}
       </Text>

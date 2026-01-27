@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
+import { useReportStore } from "@/store/report-store";
 import { Trash2, Plus, Settings2, X, GripVertical } from "lucide-react";
+import { format, formatDate } from "date-fns";
 
 interface TableColumn {
   key: string;
@@ -33,12 +35,8 @@ export const CoverPageEditor = ({
   onChange: (data: string) => void;
 }) => {
   const { data: session } = useSystemSetup(true);
-
-  const organization = useMemo(() => {
-    return {
-      ...session?.data
-    };
-  }, [session?.data]);
+  const report = useReportStore((state) => state.report);
+  const hasPrefilled = useRef(false);
 
   const [newColumnHeader, setNewColumnHeader] = useState("");
   const [isEditingColumns, setIsEditingColumns] = useState(false);
@@ -82,6 +80,50 @@ export const CoverPageEditor = ({
     }
   }, [data]);
 
+  // Prefill empty organization fields from session and report_date from created_at
+  useEffect(() => {
+    if (hasPrefilled.current) return;
+    if (!session?.data) return;
+
+    try {
+      const parsed = typeof data === "string" ? JSON.parse(data) : data;
+      const org = parsed?.organization || {};
+      let needsUpdate = false;
+      const updated = { ...parsed, organization: { ...org } };
+
+      // Prefill organization name from session
+      if (!org.name?.trim() && session.data.organisation_name) {
+        updated.organization.name = session.data.organisation_name;
+        needsUpdate = true;
+      }
+
+      // Prefill logo_url from session
+      if (!org.logo_url?.trim() && session.data.logo_url) {
+        updated.organization.logo_url = session.data.logo_url;
+        needsUpdate = true;
+      }
+
+      // Prefill tagline from session
+      if (!org.tagline?.trim() && session.data.tagline) {
+        updated.organization.tagline = session.data.tagline;
+        needsUpdate = true;
+      }
+
+      // Prefill report_date from report created_at
+      if (!parsed.report_date?.trim() && report?.created_at) {
+        updated.report_date = report.created_at;
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        hasPrefilled.current = true;
+        onChange(JSON.stringify(updated));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [session?.data, report?.created_at, data, onChange]);
+
   const updateField = (path: string, value: any) => {
     const newData = { ...parsedData };
     const keys = path.split(".");
@@ -97,47 +139,38 @@ export const CoverPageEditor = ({
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       <div className="space-y-4">
-        <div>
-          <label className="text-muted-foreground mb-1 block text-sm font-medium">Logo URL</label>
-          <div className="flex gap-2">
+        <div className="border-border bg-muted/50 rounded-lg border p-4">
+          <h4 className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase">
+            Cover Page Details
+          </h4>
+
+          <div className="space-y-3">
             <Input
+              label="Report Title"
               type="text"
-              value={parsedData.organization.logo_url || ""}
-              onChange={(e) => updateField("organization.logo_url", e.target.value)}
-              className="flex-1 flex-none"
-              placeholder="https://..."
+              value={parsedData.report_title}
+              onChange={(e) => updateField("report_title", e.target.value)}
+              className="font-semibold"
             />
-            {parsedData.organization.logo_url && (
-              <div className="border-border bg-card flex h-10 w-10 items-center justify-center rounded border p-1">
-                <img
-                  src={parsedData.organization.logo_url}
-                  alt="Logo Preview"
-                  className="max-h-full max-w-full object-contain"
-                />
-              </div>
-            )}
+            <Input
+              label="Report Subtitle"
+              type="text"
+              value={parsedData.report_subtitle}
+              onChange={(e) => updateField("report_subtitle", e.target.value)}
+              className="font-semibold"
+            />
+            <Input
+              label="Report Date"
+              type="text"
+              disabled
+              value={format(
+                parsedData.report_date || report?.created_at || new Date(),
+                "MMM d, yyyy"
+              )}
+              className="cursor-not-allowed opacity-70"
+            />
           </div>
         </div>
-        <Input
-          label="Report Title"
-          type="text"
-          value={parsedData.report_title}
-          onChange={(e) => updateField("report_title", e.target.value)}
-          className="font-semibold"
-        />
-        <Input
-          label="Report Subtitle"
-          type="text"
-          value={parsedData.report_subtitle}
-          onChange={(e) => updateField("report_subtitle", e.target.value)}
-          className="font-semibold"
-        />
-        <Input
-          label="Report Date"
-          type="text"
-          value={parsedData.report_date}
-          onChange={(e) => updateField("report_date", e.target.value)}
-        />
         <div className="border-border bg-muted/50 rounded-lg border p-4">
           <h4 className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase">
             Organization Details
@@ -159,6 +192,29 @@ export const CoverPageEditor = ({
         </div>
       </div>
       <div className="space-y-4">
+        <div className="border-border bg-muted/50 rounded-lg border p-4">
+          <h4 className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase">
+            Logo
+          </h4>
+          <div className="space-y-3">
+            <Input
+              label="Logo URL"
+              type="text"
+              value={parsedData.organization.logo_url || ""}
+              onChange={(e) => updateField("organization.logo_url", e.target.value)}
+              placeholder="https://..."
+            />
+            {parsedData.organization.logo_url && (
+              <div className="border-border bg-card flex items-center justify-center rounded-lg border p-4">
+                <img
+                  src={parsedData.organization.logo_url}
+                  alt="Logo Preview"
+                  className="max-h-24 max-w-full object-contain"
+                />
+              </div>
+            )}
+          </div>
+        </div>
         <div className="border-border bg-muted/50 rounded-lg border p-4">
           <h4 className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase">
             Footer Details

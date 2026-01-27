@@ -107,11 +107,6 @@ export default async function ReportDetailsPage({ params }: { params: Promise<{ 
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="/dashboard/reports">
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
               <PageHeader
                 title={report.title}
                 description={`Edit and manage your ${entityType === "risk_register" ? "risk" : "audit"} report`}
@@ -119,14 +114,15 @@ export default async function ReportDetailsPage({ params }: { params: Promise<{ 
                   container: "flex items-center gap-4",
                   title: "text-3xl font-bold text-foreground"
                 }}
-                customIcon={
-                  <div className="relative">
-                    <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
-                    <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
-                      <FileBarChart className="h-7 w-7 text-white" />
-                    </div>
-                  </div>
-                }
+                showBackButton
+                // customIcon={
+                //   <div className="relative">
+                //     <div className="gradient-blue absolute inset-0 rounded-2xl opacity-40 blur-lg"></div>
+                //     <div className="gradient-blue relative rounded-2xl p-3 shadow-lg">
+                //       <FileBarChart className="h-7 w-7 text-white" />
+                //     </div>
+                //   </div>
+                // }
               />
             </div>
           </div>
@@ -140,7 +136,11 @@ export default async function ReportDetailsPage({ params }: { params: Promise<{ 
           initialReport={{
             ...(report.report_content || {}),
             report_type: report.report_type,
-            title: report.title
+            title: report.title,
+            created_at: report.created_at,
+            updated_at: report.updated_at,
+            created_by: report.created_by,
+            updated_by: report.updated_by
           }}
           reportStatus={report.status}
           entity={entity}

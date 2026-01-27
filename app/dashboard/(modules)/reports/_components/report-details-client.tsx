@@ -18,6 +18,7 @@ import type {
 import { mergeReportWithTemplate } from "@/lib/config/report-template-merger";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
 import { transformWidgetData } from "@/hooks/shared/use-widget-data";
+import { useSession } from "@/store/session-store";
 
 interface ReportDetailsClientProps {
   reportId: string;
@@ -62,13 +63,19 @@ function useWidgetDataPopulation(
   const widgetsWithDataSources = enabled ? getWidgetsWithDataSources(sections) : [];
 
   return useQuery({
-    queryKey: ["widgetData", entityId, widgetsWithDataSources.map((w) => w.widget.data.data_source_id)],
+    queryKey: [
+      "widgetData",
+      entityId,
+      widgetsWithDataSources.map((w) => w.widget.data.data_source_id)
+    ],
     queryFn: async () => {
       if (widgetsWithDataSources.length === 0) {
         return {};
       }
 
-      console.log(`Fetching data for ${widgetsWithDataSources.length} widgets with data sources...`);
+      console.log(
+        `Fetching data for ${widgetsWithDataSources.length} widgets with data sources...`
+      );
 
       // Fetch all widget data in parallel
       const fetchPromises = widgetsWithDataSources.map(async ({ sectionId, widget }) => {
@@ -137,7 +144,10 @@ function useWidgetDataPopulation(
  */
 function applyWidgetDataToSections(
   sections: ReportSection[],
-  widgetDataMap: Record<string, Record<string, { widgetType: WidgetType; dataSourceId: string; data: any }>>
+  widgetDataMap: Record<
+    string,
+    Record<string, { widgetType: WidgetType; dataSourceId: string; data: any }>
+  >
 ): ReportSection[] {
   return sections.map((section) => {
     const sectionWidgetData = widgetDataMap[section.section_id];
@@ -196,6 +206,8 @@ export function ReportDetailsClient({
       status: reportStatus
     });
 
+    console.log("🧩 [ReportDetailsClient] Merged report with template:", report, initialReport);
+
     // Ensure the report_id and status are set correctly from the database
     report.report_id = reportId;
     report.status = reportStatus;
@@ -220,7 +232,8 @@ export function ReportDetailsClient({
     if (!mergedReport) return;
 
     // Check if widget data has actually changed
-    const widgetDataChanged = JSON.stringify(widgetDataMap) !== JSON.stringify(lastWidgetDataMapRef.current);
+    const widgetDataChanged =
+      JSON.stringify(widgetDataMap) !== JSON.stringify(lastWidgetDataMapRef.current);
 
     // Skip if already initialized and widget data hasn't changed
     if (hasInitialized.current && !widgetDataChanged) {
@@ -232,12 +245,19 @@ export function ReportDetailsClient({
     // Apply fetched widget data if available
     if (widgetDataMap && Object.keys(widgetDataMap).length > 0) {
       try {
-        const updatedSections = applyWidgetDataToSections(mergedReport.sections || [], widgetDataMap);
+        const updatedSections = applyWidgetDataToSections(
+          mergedReport.sections || [],
+          widgetDataMap
+        );
         finalReport = {
           ...mergedReport,
           sections: updatedSections
         };
-        console.log("Widget data populated successfully for", Object.keys(widgetDataMap).length, "sections");
+        console.log(
+          "Widget data populated successfully for",
+          Object.keys(widgetDataMap).length,
+          "sections"
+        );
       } catch (error) {
         console.error("Error applying widget data:", error);
         // Continue with unmodified report if population fails
@@ -253,15 +273,7 @@ export function ReportDetailsClient({
       setEntityId(entity.id);
       setEntityType(entityType);
     }
-  }, [
-    mergedReport,
-    widgetDataMap,
-    entity.id,
-    entityType,
-    setReport,
-    setEntityId,
-    setEntityType
-  ]);
+  }, [mergedReport, widgetDataMap, entity.id, entityType, setReport, setEntityId, setEntityType]);
 
   // Show ReportBuilder with read-only type since entity is already determined
   return <ReportBuilder entity={entity} entityType={entityType} readOnlyType />;
