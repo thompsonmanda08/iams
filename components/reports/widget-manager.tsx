@@ -321,8 +321,8 @@ export function WidgetManager({
   return (
     <div className="space-y-4">
       {/* Section Header with Add Button */}
-      <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-        <h4 className="text-xs font-bold tracking-wider text-gray-500 uppercase">
+      <div className="flex items-center justify-between border-t border-border pt-4">
+        <h4 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
           Widgets ({widgets.length})
         </h4>
         <AddWidgetButton onClick={handleAddWidget} variant="compact" />
@@ -336,14 +336,14 @@ export function WidgetManager({
           {widgets
             .sort((a, b) => a.order - b.order)
             .map((widget) => (
-              <div key={widget.instance_id} className="rounded-lg border border-gray-200 bg-white">
+              <div key={widget.instance_id} className="rounded-lg border border-border bg-card">
                 {/* Widget Content */}
                 <div className="p-4">{renderWidget(widget)}</div>
 
                 {/* Widget Footer with Data Source and Actions */}
-                <div className="flex w-full grid-cols-2 items-center justify-between overflow-clip border-t border-gray-100 px-4 py-2 lg:pr-14">
+                <div className="flex w-full grid-cols-2 items-center justify-between overflow-clip border-t border-border px-4 py-2 lg:pr-14">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                       {widget.data.data_source_id
                         ? `Data source: ${widget.data.data_source_id}`
                         : "Manual data"}
@@ -373,7 +373,7 @@ export function WidgetManager({
                       size={"icon"}
                       variant={"outline"}
                       onClick={() => setDeleteWidgetId(widget.instance_id)}
-                      className="rounded p-1.5 text-red-400 transition-colors hover:bg-red-100 hover:text-red-600"
+                      className="rounded p-1.5 text-red-400 transition-colors hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950"
                       title="Remove widget">
                       <Trash2 className="h-4 w-4" />
                     </Button>

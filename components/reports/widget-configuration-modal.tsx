@@ -295,8 +295,8 @@ export function WidgetConfigurationModal({
             {/* Left: Data Source Selection */}
             <div className="space-y-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">1. Select Data Source</h3>
-                <p className="text-xs text-gray-500">Choose where the data comes from</p>
+                <h3 className="text-sm font-semibold text-foreground">1. Select Data Source</h3>
+                <p className="text-xs text-muted-foreground">Choose where the data comes from</p>
               </div>
               <InlineDataSourceSelector
                 selectedDataSourceId={selectedDataSource?.id}
@@ -308,8 +308,8 @@ export function WidgetConfigurationModal({
             {/* Right: Widget Type Selection */}
             <div className="space-y-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">2. Select Widget Type</h3>
-                <p className="text-xs text-gray-500">
+                <h3 className="text-sm font-semibold text-foreground">2. Select Widget Type</h3>
+                <p className="text-xs text-muted-foreground">
                   {selectedDataSource
                     ? `Choose how to display "${selectedDataSource.name}"`
                     : "Select a data source first"}
@@ -322,8 +322,8 @@ export function WidgetConfigurationModal({
                   onSelect={handleWidgetTypeSelect}
                 />
               ) : (
-                <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-gray-200">
-                  <p className="text-sm text-gray-400">Please select a data source</p>
+                <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-border">
+                  <p className="text-sm text-muted-foreground">Please select a data source</p>
                 </div>
               )}
             </div>
@@ -452,13 +452,13 @@ function InlineDataSourceSelector({
     <div className="flex flex-col gap-3">
       {/* Search */}
       <div className="relative">
-        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search data sources..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-md border border-gray-300 py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full rounded-md border border-input py-2 pr-3 pl-9 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
         />
       </div>
 
@@ -470,8 +470,8 @@ function InlineDataSourceSelector({
           className={cn(
             "rounded px-2 py-1 text-xs font-medium transition-colors",
             selectedCategory === "all"
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-foreground text-background"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
           )}>
           All
         </button>
@@ -483,8 +483,8 @@ function InlineDataSourceSelector({
             className={cn(
               "rounded px-2 py-1 text-xs font-medium transition-colors",
               selectedCategory === cat
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
             )}>
             {categoryConfig[cat].label}
           </button>
@@ -516,28 +516,28 @@ function InlineDataSourceSelector({
         className={cn(
           "w-full rounded-lg border-2 p-3 text-left transition-colors",
           selectedDataSourceId === "manual"
-            ? "border-purple-500 bg-purple-50"
-            : "border-gray-200 hover:border-purple-300 hover:bg-purple-50/50"
+            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30"
+            : "border-border hover:border-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-950/20"
         )}>
         <div className="flex items-center gap-2">
           <Edit2 className="h-4 w-4 text-purple-500" />
-          <span className="font-medium text-gray-900">Manual Entry</span>
+          <span className="font-medium text-foreground">Manual Entry</span>
           <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">
             Custom
           </span>
         </div>
-        <p className="mt-1 text-xs text-gray-500">Enter your own data manually</p>
+        <p className="mt-1 text-xs text-muted-foreground">Enter your own data manually</p>
       </button>
 
       {/* Data Source List */}
-      <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg border border-gray-200 p-2">
+      <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg border border-border p-2">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading data sources...</span>
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading data sources...</span>
           </div>
         ) : filteredSources.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500">No data sources found</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">No data sources found</div>
         ) : (
           filteredSources.map((source: DataSource) => {
             const config = categoryConfig[source.category];
@@ -552,18 +552,18 @@ function InlineDataSourceSelector({
                 className={cn(
                   "w-full rounded-lg p-3 text-left transition-colors",
                   isSelected
-                    ? "border-2 border-blue-500 bg-blue-50"
-                    : "border-2 border-transparent hover:border-gray-300 hover:bg-gray-50"
+                    ? "border-2 border-primary bg-primary/10"
+                    : "border-2 border-transparent hover:border-border hover:bg-muted"
                 )}>
                 <div className="flex items-center gap-2">
                   <Icon className={cn("h-4 w-4", config.color)} />
-                  <span className="font-medium text-gray-900">{source.name}</span>
+                  <span className="font-medium text-foreground">{source.name}</span>
                   <span
                     className={cn("rounded px-1.5 py-0.5 text-xs", config.bgColor, config.color)}>
                     {config.label}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">{source.description}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{source.description}</p>
                 {source.requires_entity && (
                   <p className="mt-1 text-xs text-amber-600">
                     ⚠ Requires linked audit plan or risk register

@@ -36,56 +36,56 @@ const widgetTypeConfig: Record<
     description: "Show data as proportional slices",
     icon: PieChart,
     color: "text-blue-600",
-    bgColor: "bg-blue-50 hover:bg-blue-100 border-blue-200"
+    bgColor: "bg-blue-50 hover:bg-blue-100 border-blue-200 dark:bg-blue-950/30 dark:hover:bg-blue-950/50 dark:border-blue-800"
   },
   bar_chart: {
     label: "Bar Chart",
     description: "Compare values across categories",
     icon: BarChart2,
     color: "text-green-600",
-    bgColor: "bg-green-50 hover:bg-green-100 border-green-200"
+    bgColor: "bg-green-50 hover:bg-green-100 border-green-200 dark:bg-green-950/30 dark:hover:bg-green-950/50 dark:border-green-800"
   },
   table: {
     label: "Table",
     description: "Display data in rows and columns",
     icon: Table2,
     color: "text-purple-600",
-    bgColor: "bg-purple-50 hover:bg-purple-100 border-purple-200"
+    bgColor: "bg-purple-50 hover:bg-purple-100 border-purple-200 dark:bg-purple-950/30 dark:hover:bg-purple-950/50 dark:border-purple-800"
   },
   line_chart: {
     label: "Line Chart",
     description: "Show trends over time",
     icon: LineChart,
     color: "text-orange-600",
-    bgColor: "bg-orange-50 hover:bg-orange-100 border-orange-200"
+    bgColor: "bg-orange-50 hover:bg-orange-100 border-orange-200 dark:bg-orange-950/30 dark:hover:bg-orange-950/50 dark:border-orange-800"
   },
   text_block: {
     label: "Text Block",
     description: "Display formatted text content",
     icon: Type,
-    color: "text-gray-600",
-    bgColor: "bg-gray-50 hover:bg-gray-100 border-gray-200"
+    color: "text-muted-foreground",
+    bgColor: "bg-muted/50 hover:bg-muted border-border"
   },
   risk_objective_mapping: {
     label: "Risk-Objective Map",
     description: "Map risks to strategic objectives",
     icon: GitBranch,
     color: "text-indigo-600",
-    bgColor: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
+    bgColor: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/50 dark:border-indigo-800"
   },
   area_chart: {
     label: "Area Chart",
     description: "Show trends with filled areas",
     icon: AreaChart,
     color: "text-teal-600",
-    bgColor: "bg-teal-50 hover:bg-teal-100 border-teal-200"
+    bgColor: "bg-teal-50 hover:bg-teal-100 border-teal-200 dark:bg-teal-950/30 dark:hover:bg-teal-950/50 dark:border-teal-800"
   },
   metric_card: {
     label: "Metric Card",
     description: "Display a single key metric",
     icon: Gauge,
     color: "text-rose-600",
-    bgColor: "bg-rose-50 hover:bg-rose-100 border-rose-200"
+    bgColor: "bg-rose-50 hover:bg-rose-100 border-rose-200 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 dark:border-rose-800"
   }
 };
 
@@ -101,7 +101,7 @@ export function WidgetTypeSelector({
 }: WidgetTypeSelectorProps) {
   if (!compatibleWidgets || compatibleWidgets.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-gray-500">
+      <div className="py-8 text-center text-sm text-muted-foreground">
         No compatible widget types available
       </div>
     );
@@ -109,7 +109,7 @@ export function WidgetTypeSelector({
 
   return (
     <div className={cn("grid gap-3", className)}>
-      <p className="text-sm font-medium text-gray-700">
+      <p className="text-sm font-medium text-foreground">
         Select how you want to display this data:
       </p>
       <div
@@ -134,15 +134,15 @@ export function WidgetTypeSelector({
                 "flex flex-col items-center rounded-lg border p-4 transition-all",
                 config.bgColor,
                 isSelected
-                  ? "ring-2 ring-blue-500 ring-offset-1"
-                  : "border-gray-200"
+                  ? "ring-2 ring-primary ring-offset-1"
+                  : "border-border"
               )}
             >
               <Icon className={cn("h-8 w-8 mb-2", config.color)} />
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium text-foreground">
                 {config.label}
               </span>
-              <span className="mt-1 text-xs text-gray-500 text-center">
+              <span className="mt-1 text-xs text-muted-foreground text-center">
                 {config.description}
               </span>
             </button>

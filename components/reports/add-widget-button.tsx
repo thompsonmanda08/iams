@@ -29,7 +29,7 @@ export function AddWidgetButton({
         type="button"
         onClick={onClick}
         className={cn(
-          "flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 py-8 text-gray-500 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600",
+          "flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/50 py-8 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
           className
         )}
       >

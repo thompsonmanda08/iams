@@ -638,7 +638,7 @@ export function ReportBuilder({
       <div className="flex-1 py-4">
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
-          <div className="col-span-12 space-y-4 lg:col-span-3">
+          <div className="sticky top-20 col-span-12 space-y-4 self-start lg:col-span-3">
             <TableOfContents sections={report.sections || []} onItemClick={scrollToSection} />
             <AddSectionButton variant="sidebar" />
 

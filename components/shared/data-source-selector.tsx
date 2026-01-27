@@ -181,13 +181,13 @@ export function DataSourceSelector({
           className={cn("w-full justify-between", className)}>
           <div className="flex items-center gap-2 truncate">
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : selectedSource ? (
               <>
                 {React.createElement(categoryConfig[selectedSource.category].icon, {
                   className: `h-4 w-4 ${categoryConfig[selectedSource.category].color}`
                 })}
-                <span className="truncate text-gray-900">{selectedSource.name}</span>
+                <span className="truncate text-foreground">{selectedSource.name}</span>
                 <span
                   className={cn(
                     "shrink-0 rounded px-1.5 py-0.5 text-xs",
@@ -198,12 +198,12 @@ export function DataSourceSelector({
                 </span>
               </>
             ) : (
-              <span className="text-gray-500">{placeholder}</span>
+              <span className="text-muted-foreground">{placeholder}</span>
             )}
           </div>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-gray-400 transition-transform",
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
               isOpen && "rotate-180"
             )}
           />
@@ -212,30 +212,30 @@ export function DataSourceSelector({
 
       <PopoverContent className="w-[500px] p-0" align="start" side="bottom" sideOffset={8}>
         {/* Search */}
-        <div className="border-b border-gray-200 p-3">
+        <div className="border-b border-border p-3">
           <div className="relative">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search data sources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-gray-300 py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="w-full rounded-md border border-input py-2 pr-3 pl-9 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
               autoFocus
             />
           </div>
         </div>
 
         {/* Category Filters */}
-        <div className="flex flex-wrap gap-1 border-b border-gray-200 p-2">
+        <div className="flex flex-wrap gap-1 border-b border-border p-2">
           <button
             type="button"
             onClick={() => setSelectedCategory("all")}
             className={cn(
               "rounded px-2 py-1 text-xs font-medium transition-colors",
               selectedCategory === "all"
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
             )}>
             All
           </button>
@@ -247,8 +247,8 @@ export function DataSourceSelector({
               className={cn(
                 "rounded px-2 py-1 text-xs font-medium transition-colors",
                 selectedCategory === cat
-                  ? "bg-gray-900 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}>
               {categoryConfig[cat].label}
             </button>
@@ -256,7 +256,7 @@ export function DataSourceSelector({
         </div>
 
         {/* Manual Entry Option */}
-        <div className="border-b border-gray-100 p-2">
+        <div className="border-b border-border p-2">
           <button
             type="button"
             onClick={() => {
@@ -278,15 +278,15 @@ export function DataSourceSelector({
                 sample_data: {}
               } as DataSource);
             }}
-            className="mb-1 w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-50">
+            className="mb-1 w-full rounded-lg p-3 text-left transition-colors hover:bg-muted">
             <div className="flex items-center gap-2">
               <Edit2 className="h-4 w-4 text-purple-500" />
-              <span className="font-medium text-gray-900">Manual Entry</span>
+              <span className="font-medium text-foreground">Manual Entry</span>
               <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">
                 Custom
               </span>
             </div>
-            <p className="mt-1 text-xs text-gray-500">Enter your own data manually</p>
+            <p className="mt-1 text-xs text-muted-foreground">Enter your own data manually</p>
             <div className="mt-2 flex flex-wrap gap-1">
               {(
                 [
@@ -303,7 +303,7 @@ export function DataSourceSelector({
                 return (
                   <span
                     key={type}
-                    className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600"
+                    className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
                     title={info.description}>
                     {React.createElement(info.icon, { className: "h-3 w-3" })}
                     {info.label}
@@ -318,11 +318,11 @@ export function DataSourceSelector({
         <div className="max-h-96 overflow-y-auto p-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-              <span className="ml-2 text-sm text-gray-500">Loading data sources...</span>
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading data sources...</span>
             </div>
           ) : filteredSources.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-500">No data sources found</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">No data sources found</div>
           ) : (
             filteredSources.map((source) => {
               const config = categoryConfig[source.category];
@@ -336,17 +336,17 @@ export function DataSourceSelector({
                   onClick={() => handleSelect(source)}
                   className={cn(
                     "mb-1 w-full rounded-lg p-3 text-left transition-colors",
-                    isSelected ? "border border-blue-200 bg-blue-50" : "hover:bg-gray-50"
+                    isSelected ? "border border-primary/30 bg-primary/10" : "hover:bg-muted"
                   )}>
                   <div className="flex items-center gap-2">
                     <Icon className={cn("h-4 w-4", config.color)} />
-                    <span className="font-medium text-gray-900">{source.name}</span>
+                    <span className="font-medium text-foreground">{source.name}</span>
                     <span
                       className={cn("rounded px-1.5 py-0.5 text-xs", config.bgColor, config.color)}>
                       {config.label}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">{source.description}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{source.description}</p>
                   {source.requires_entity && (
                     <p className="mt-1 text-xs text-amber-600">
                       ⚠ Requires linked audit plan or risk register
@@ -361,7 +361,7 @@ export function DataSourceSelector({
                         return (
                           <span
                             key={widgetType}
-                            className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600"
+                            className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
                             title={info.description}>
                             {React.createElement(info.icon, { className: "h-3 w-3" })}
                             {info.label}
@@ -377,11 +377,11 @@ export function DataSourceSelector({
         </div>
 
         {/* Close Button */}
-        <div className="border-t border-gray-200 p-2">
+        <div className="border-t border-border p-2">
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="w-full rounded bg-gray-100 px-3 py-2 text-sm text-gray-600 hover:bg-gray-200">
+            className="w-full rounded bg-muted px-3 py-2 text-sm text-muted-foreground hover:bg-muted/80">
             Cancel
           </button>
         </div>
