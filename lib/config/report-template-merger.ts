@@ -73,7 +73,10 @@ export function mergeReportWithTemplate(
       report_type: template.type,
       management_standard:
         normalizeManagementStandard(savedReport.management_standard) || templateKey,
-      sections: template.default_sections
+      sections: template.default_sections,
+      // Use entity metadata timestamps as fallback when report_content doesn't have them
+      created_at: savedReport.created_at || entityMetadata?.created_at,
+      updated_at: savedReport.updated_at || entityMetadata?.updated_at
     };
   }
 
@@ -86,7 +89,10 @@ export function mergeReportWithTemplate(
     report_type: template.type,
     management_standard:
       normalizeManagementStandard(savedReport.management_standard) || templateKey,
-    sections: mergedSections
+    sections: mergedSections,
+    // Use entity metadata timestamps as fallback when report_content doesn't have them
+    created_at: savedReport.created_at || entityMetadata?.created_at,
+    updated_at: savedReport.updated_at || entityMetadata?.updated_at
   };
 }
 
