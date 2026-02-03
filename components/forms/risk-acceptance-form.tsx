@@ -468,7 +468,9 @@ export default function RiskAcceptanceForm({
                       <Calendar
                         mode="single"
                         selected={formData.risk_acceptance_expiry_date as Date}
-                        onSelect={(date) => updateField("risk_acceptance_expiry_date", date as Date)}
+                        onSelect={(date) =>
+                          updateField("risk_acceptance_expiry_date", date as Date)
+                        }
                       />
                     </PopoverContent>
                   </Popover>

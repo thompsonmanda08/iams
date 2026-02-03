@@ -11,7 +11,7 @@ type RiskScalesManagerProps = {
 export function RiskScalesManager({ matrixId }: RiskScalesManagerProps) {
   return (
     <Tabs defaultValue="likelihood" className="space-y-6">
-      <TabsList className="w-full">
+      <TabsList className="inline-flex h-12 w-auto min-w-full gap-1 lg:gap-2">
         <TabsTrigger value="likelihood" >
           Likelihood Scale
         </TabsTrigger>

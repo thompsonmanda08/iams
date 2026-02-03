@@ -9,7 +9,6 @@ import authenticatedApiClient, {
 } from "./api-config";
 import { revalidatePath } from "next/cache";
 import { RiskCategoryInput } from "./risk-module-actions";
-import { is } from "date-fns/locale";
 
 // ============================================================================
 // BRANCH MANAGEMENT
@@ -1820,6 +1819,385 @@ export async function deleteResidualRiskRating(id: string): Promise<APIResponse>
       error,
       "DELETE | DELETE RESIDUAL RISK RATING",
       `/api/v1/risk-configs/residual-risk-ratings/${id}`
+    );
+  }
+}
+
+// ============================================================================
+// REPORT GUIDES ACTIONS
+// ============================================================================
+
+// Create Report Guide
+export async function createReportGuide(data: any): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides`,
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/system-configs/report-guides-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE REPORT GUIDE",
+      `/api/v1/report-guides`
+    );
+  }
+}
+
+// Get All Report Guides (with pagination)
+export async function getReportGuides(
+  page: number = 1,
+  pageSize: number = 10
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides?page=${page}&page_size=${pageSize}`,
+      method: "GET"
+    });
+
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET REPORT GUIDES",
+      `/api/v1/report-guides?page=${page}&page_size=${pageSize}`
+    );
+  }
+}
+
+// Get Report Guide by ID
+export async function getReportGuideById(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${id}`,
+      method: "GET"
+    });
+
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET REPORT GUIDE BY ID",
+      `/api/v1/report-guides/${id}`
+    );
+  }
+}
+
+// Update Report Guide
+export async function updateReportGuide(
+  id: string,
+  data: any
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${id}`,
+      method: "PUT",
+      data
+    });
+
+    revalidatePath("/dashboard/system-configs/report-guides-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE REPORT GUIDE",
+      `/api/v1/report-guides/${id}`
+    );
+  }
+}
+
+// Delete Report Guide
+export async function deleteReportGuide(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${id}`,
+      method: "DELETE"
+    });
+
+    revalidatePath("/dashboard/system-configs/report-guides-settings");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE REPORT GUIDE",
+      `/api/v1/report-guides/${id}`
+    );
+  }
+}
+
+
+// ==================== RISK FINDINGS GRADING ====================
+
+// Create Risk Finding Grading
+export async function createRiskFindingGrading(
+  reportGuideId: string,
+  data: any
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/risk-findings-grading`,
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE RISK FINDING GRADING",
+      `/api/v1/report-guides/${reportGuideId}/risk-findings-grading`
+    );
+  }
+}
+
+// Get Risk Finding Gradings
+export async function getRiskFindingGradings(
+  reportGuideId: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/risk-findings-grading`,
+      method: "GET"
+    });
+
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET RISK FINDING GRADINGS",
+      `/api/v1/report-guides/${reportGuideId}/risk-findings-grading`
+    );
+  }
+}
+
+// Update Risk Finding Grading
+export async function updateRiskFindingGrading(
+  reportGuideId: string,
+  gradingId: string,
+  data: any
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/risk-findings-grading/${gradingId}`,
+      method: "PUT",
+      data
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE RISK FINDING GRADING",
+      `/api/v1/report-guides/${reportGuideId}/risk-findings-grading/${gradingId}`
+    );
+  }
+}
+
+// Delete Risk Finding Grading
+export async function deleteRiskFindingGrading(
+  reportGuideId: string,
+  gradingId: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/risk-findings-grading/${gradingId}`,
+      method: "DELETE"
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE RISK FINDING GRADING",
+      `/api/v1/report-guides/${reportGuideId}/risk-findings-grading/${gradingId}`
+    );
+  }
+}
+
+// ==================== CONTROLS ASSESSMENT GUIDE ====================
+
+// Create Controls Assessment Guide
+export async function createControlsAssessmentGuide(
+  reportGuideId: string,
+  data: any
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide`,
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE CONTROLS ASSESSMENT GUIDE",
+      `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide`
+    );
+  }
+}
+
+// Get Controls Assessment Guides
+export async function getControlsAssessmentGuides(
+  reportGuideId: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide`,
+      method: "GET"
+    });
+
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET CONTROLS ASSESSMENT GUIDES",
+      `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide`
+    );
+  }
+}
+
+// Update Controls Assessment Guide
+export async function updateControlsAssessmentGuide(
+  reportGuideId: string,
+  assessmentId: string,
+  data: any
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide/${assessmentId}`,
+      method: "PUT",
+      data
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE CONTROLS ASSESSMENT GUIDE",
+      `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide/${assessmentId}`
+    );
+  }
+}
+
+// Delete Controls Assessment Guide
+export async function deleteControlsAssessmentGuide(
+  reportGuideId: string,
+  assessmentId: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide/${assessmentId}`,
+      method: "DELETE"
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE CONTROLS ASSESSMENT GUIDE",
+      `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide/${assessmentId}`
+    );
+  }
+}
+
+// ==================== AUDIT CRITERIA RATING ====================
+
+// Create Audit Criteria Rating
+export async function createAuditCriteriaRating(
+  reportGuideId: string,
+  data: any
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating`,
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | CREATE AUDIT CRITERIA RATING",
+      `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating`
+    );
+  }
+}
+
+// Get Audit Criteria Ratings
+export async function getAuditCriteriaRatings(
+  reportGuideId: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating`,
+      method: "GET"
+    });
+
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "GET | GET AUDIT CRITERIA RATINGS",
+      `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating`
+    );
+  }
+}
+
+// Update Audit Criteria Rating
+export async function updateAuditCriteriaRating(
+  reportGuideId: string,
+  ratingId: string,
+  data: any
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating/${ratingId}`,
+      method: "PUT",
+      data
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | UPDATE AUDIT CRITERIA RATING",
+      `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating/${ratingId}`
+    );
+  }
+}
+
+// Delete Audit Criteria Rating
+export async function deleteAuditCriteriaRating(
+  reportGuideId: string,
+  ratingId: string
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating/${ratingId}`,
+      method: "DELETE"
+    });
+
+    revalidatePath("/dashboard/report-guides");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "DELETE | DELETE AUDIT CRITERIA RATING",
+      `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating/${ratingId}`
     );
   }
 }

@@ -1,8 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import {
   CheckCircle2,
   XCircle,
@@ -38,12 +37,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/page-header";
 import Search from "@/components/ui/search-field";
-import { getRiskAcceptances } from "@/app/_actions/risk-module-actions";
 import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
-import { useRiskAcceptances, useUpdateRiskAcceptanceMutation, useSubmitRiskAcceptanceMutation } from "@/hooks/use-risk-acceptance-mutations";
+import {
+  useRiskAcceptances,
+  useUpdateRiskAcceptanceMutation,
+  useSubmitRiskAcceptanceMutation
+} from "@/hooks/use-risk-acceptance-mutations";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -218,7 +220,11 @@ export default function RiskAcceptanceList() {
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
 
   // Fetch acceptances using query hook
-  const { data: acceptances = [], isLoading, isError } = useRiskAcceptances() as {
+  const {
+    data: acceptances = [],
+    isLoading,
+    isError
+  } = useRiskAcceptances() as {
     data: Acceptance[];
     isLoading: boolean;
     isError: boolean;
@@ -232,13 +238,14 @@ export default function RiskAcceptanceList() {
     }
   });
 
-  const { mutate: submitAcceptance, isPending: isSubmittingForApproval } = useSubmitRiskAcceptanceMutation({
-    onSuccess: () => {
-      setSubmitConfirmationOpen(false);
-      setShowModal(false);
-      setSelectedAcceptance(null);
-    }
-  });
+  const { mutate: submitAcceptance, isPending: isSubmittingForApproval } =
+    useSubmitRiskAcceptanceMutation({
+      onSuccess: () => {
+        setSubmitConfirmationOpen(false);
+        setShowModal(false);
+        setSelectedAcceptance(null);
+      }
+    });
 
   const filteredAcceptances = acceptances.filter((acceptance) => {
     const matchesTab =

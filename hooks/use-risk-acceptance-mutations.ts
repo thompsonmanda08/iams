@@ -21,10 +21,10 @@ export function useRiskAcceptances() {
     queryKey: ["riskAcceptances"],
     queryFn: async () => {
       const response = await getRiskAcceptances();
-      if (!response.status || !response.data?.acceptances) {
+      if (!response.status || !response.data?.data) {
         throw new Error(response.message || "Failed to fetch risk acceptances");
       }
-      return response.data.acceptances;
+      return response.data.data;
     },
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes
   });

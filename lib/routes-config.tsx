@@ -14,7 +14,8 @@ import {
   ClipboardListIcon,
   BriefcaseBusiness,
   MailCheck,
-  ChartPieIcon
+  ChartPieIcon,
+  CompassIcon
 } from "lucide-react";
 
 export type NavGroup = {
@@ -167,6 +168,11 @@ export const navItems: NavGroup[] = [
         title: "Audit Module Settings",
         href: "/dashboard/system-configs/audit-settings",
         icon: ClipboardListIcon
+      },
+      {
+        title: "Report Guides Settings",
+        href: "/dashboard/system-configs/report-guides-settings",
+        icon: CompassIcon
       }
     ]
   },

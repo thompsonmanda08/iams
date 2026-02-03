@@ -1677,14 +1677,14 @@ export async function submitRiskAcceptanceForApproval(acceptanceId: string): Pro
   const url = `/api/v1/risk-acceptances/${acceptanceId}/submit-for-approval`;
 
   try {
-    const response = await authenticatedApiClient({ method: "GET", url });
+    const response = await authenticatedApiClient({ method: "POST", url });
 
     revalidatePath("/dashboard/risks/risk-acceptances");
     revalidatePath(`/dashboard/risks/risk-acceptances/${acceptanceId}`);
 
     return successResponse(response.data, "Risk acceptance submitted for approval successfully");
   } catch (error: any) {
-    return handleError(error, "GET | SUBMIT RISK ACCEPTANCE", url);
+    return handleError(error, "POST | SUBMIT RISK ACCEPTANCE", url);
   }
 }
 
