@@ -382,23 +382,34 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                                       backgroundColor: rowIdx % 2 === 0 ? "#f8f9fa" : "#ffffff"
                                     }
                                   ]}>
-                                  {columns.map((col: any, colIdx: number) => (
-                                    <View
-                                      key={`${rowIdx}-${col.key}`}
-                                      style={{
-                                        width: columnWidths[colIdx],
-                                        padding: 5,
-                                        borderBottomColor: "#e2e8f0"
-                                      }}>
-                                      <Text
+                                  {columns.map((col: any, colIdx: number) => {
+                                    // Apply color_hex only to the first column
+                                    const cellBackgroundColor =
+                                      colIdx === 0 && row.color_hex ? row.color_hex : undefined;
+                                    const cellTextColor =
+                                      colIdx === 0 && row.color_hex ? "#ffffff" : "#1f2937";
+
+                                    return (
+                                      <View
+                                        key={`${rowIdx}-${col.key}`}
                                         style={{
-                                          fontSize: 9,
-                                          color: "#1f2937"
+                                          width: columnWidths[colIdx],
+                                          padding: 5,
+                                          borderBottomColor: "#e2e8f0",
+                                          ...(cellBackgroundColor && {
+                                            backgroundColor: cellBackgroundColor
+                                          })
                                         }}>
-                                        {String(row[col.key] || "-")}
-                                      </Text>
-                                    </View>
-                                  ))}
+                                        <Text
+                                          style={{
+                                            fontSize: 9,
+                                            color: cellTextColor
+                                          }}>
+                                          {String(row[col.key] || "-")}
+                                        </Text>
+                                      </View>
+                                    );
+                                  })}
                                 </View>
                               ))
                             )}

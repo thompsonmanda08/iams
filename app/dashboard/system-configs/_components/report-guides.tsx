@@ -40,7 +40,7 @@ type PaginationState = {
 };
 
 export function ReportGuides() {
-    const router = useRouter(); 
+  const router = useRouter();
   const [guides, setGuides] = useState<ReportGuide[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -153,7 +153,7 @@ export function ReportGuides() {
     setEditDialog({ open: true, guide });
   };
 
-const handleNavigate = (guideId: string) => {
+  const handleNavigate = (guideId: string) => {
     router.push(`/dashboard/system-configs/report-guides-settings/${guideId}`);
   };
 
@@ -174,10 +174,12 @@ const handleNavigate = (guideId: string) => {
             Manage and configure report guides for risk and audit reports
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Report Guide
-        </Button>
+        {pagination.total < 2 && (
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Report Guide
+          </Button>
+        )}
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -207,10 +209,12 @@ const handleNavigate = (guideId: string) => {
                       Get started by creating your first report guide to standardize report
                       generation.
                     </p>
-                    <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Create Your First Guide
-                    </Button>
+                    {pagination.total < 2 && (
+                      <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create Your First Guide
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
