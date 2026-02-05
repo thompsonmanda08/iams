@@ -27,29 +27,44 @@ export default async function ReportsPage({
   const activeTab = urlSearchParams?.tab || "all";
 
   // Map tab to status filter
-  const statusFilter: ReportStatus =
-    activeTab === "published" ? "PUBLISHED" : activeTab === "archived" ? "ARCHIVED" : "DRAFT";
+  const statusFilter: ReportStatus | undefined =
+    activeTab === "published"
+      ? "PUBLISHED"
+      : activeTab === "archived"
+        ? "ARCHIVED"
+        : activeTab === "draft"
+          ? "DRAFT"
+          : undefined;
 
   // Fetch reports
   const reportsResponse = await getReports({
     page,
     page_size: pageSize,
-    status: statusFilter
+    ...(statusFilter && { status: statusFilter })
   });
 
   const reports = Array.isArray(reportsResponse.data?.data) ? reportsResponse.data.data : [];
   const pagination = reportsResponse?.data?.pagination || null;
 
   // Get counts for each status in parallel
-  const [draftReportsResponse, publishedReportsResponse] = await Promise.all([
+  const [
+    draftReportsResponse,
+    publishedReportsResponse,
+    inReviewReportsResponse,
+    archivedReportsResponse
+  ] = await Promise.all([
     getReports({ page: 1, page_size: 1, status: "DRAFT" }),
-    getReports({ page: 1, page_size: 1, status: "PUBLISHED" })
+    getReports({ page: 1, page_size: 1, status: "PUBLISHED" }),
+    getReports({ page: 1, page_size: 1, status: "IN_REVIEW" }),
+    getReports({ page: 1, page_size: 1, status: "ARCHIVED" })
   ]);
 
   const counts = {
     all: pagination?.total || 0,
     draft: draftReportsResponse?.data?.pagination?.total || 0,
-    published: publishedReportsResponse?.data?.pagination?.total || 0
+    published: publishedReportsResponse?.data?.pagination?.total || 0,
+    in_review: inReviewReportsResponse?.data?.pagination?.total || 0,
+    archived: archivedReportsResponse?.data?.pagination?.total || 0
   };
 
   return (
