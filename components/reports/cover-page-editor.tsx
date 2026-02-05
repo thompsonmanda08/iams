@@ -45,16 +45,18 @@ export const CoverPageEditor = ({
     try {
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
       // Ensure specific fields exist to prevent runtime errors
+      // Use session data as fallback for organization fields
+      const sessionOrg = session?.data;
       return {
         report_title: parsed.report_title || parsed.title || "",
         report_subtitle: parsed.report_subtitle || parsed.subtitle || "",
         footer_label: parsed.footer_label || parsed.footer_label || "",
         footer_value: parsed.footer_value || parsed.footer_value || "",
-        report_date: parsed.report_date || parsed.date || "",
+        report_date: parsed.report_date || parsed.date || report?.created_at || "",
         organization: {
-          name: parsed.organization?.name || " ",
-          tagline: parsed.organization?.tagline || "",
-          logo_url: parsed.organization?.logo_url || parsed.logoUrl || ""
+          name: parsed.organization?.name?.trim() || sessionOrg?.organisation_name || "",
+          tagline: parsed.organization?.tagline?.trim() || sessionOrg?.tagline || "",
+          logo_url: parsed.organization?.logo_url?.trim() || parsed.logoUrl?.trim() || sessionOrg?.logo_url || ""
         },
         author:
           typeof parsed.author === "string"
@@ -67,20 +69,27 @@ export const CoverPageEditor = ({
         cover_page_table: parsed.cover_page_table || { columns: [], rows: [] }
       };
     } catch (e) {
+      // Use session data as fallback even on parse error
+      const sessionOrg = session?.data;
       return {
         report_title: "",
-        report_date: "",
+        report_date: report?.created_at || "",
         report_subtitle: "",
         footer_label: "",
         footer_value: "",
-        organization: { name: "", tagline: "" },
+        organization: {
+          name: sessionOrg?.organisation_name || "",
+          tagline: sessionOrg?.tagline || "",
+          logo_url: sessionOrg?.logo_url || ""
+        },
         author: { name: "", certification: "" },
         cover_page_table: { columns: [], rows: [] }
       };
     }
-  }, [data]);
+  }, [data, session?.data, report?.created_at]);
 
-  // Prefill empty organization fields from session and report_date from created_at
+  // Persist session data to stored data once when session loads
+  // This ensures the data is saved even if user doesn't edit anything
   useEffect(() => {
     if (hasPrefilled.current) return;
     if (!session?.data) return;
@@ -91,25 +100,25 @@ export const CoverPageEditor = ({
       let needsUpdate = false;
       const updated = { ...parsed, organization: { ...org } };
 
-      // Prefill organization name from session
+      // Persist organization name from session if not already set
       if (!org.name?.trim() && session.data.organisation_name) {
         updated.organization.name = session.data.organisation_name;
         needsUpdate = true;
       }
 
-      // Prefill logo_url from session
+      // Persist logo_url from session if not already set
       if (!org.logo_url?.trim() && session.data.logo_url) {
         updated.organization.logo_url = session.data.logo_url;
         needsUpdate = true;
       }
 
-      // Prefill tagline from session
+      // Persist tagline from session if not already set
       if (!org.tagline?.trim() && session.data.tagline) {
         updated.organization.tagline = session.data.tagline;
         needsUpdate = true;
       }
 
-      // Prefill report_date from report created_at
+      // Persist report_date from report created_at if not already set
       if (!parsed.report_date?.trim() && report?.created_at) {
         updated.report_date = report.created_at;
         needsUpdate = true;
@@ -117,7 +126,11 @@ export const CoverPageEditor = ({
 
       if (needsUpdate) {
         hasPrefilled.current = true;
-        onChange(JSON.stringify(updated));
+        // Use setTimeout to avoid state update during render
+        setTimeout(() => onChange(JSON.stringify(updated)), 0);
+      } else {
+        // Mark as prefilled even if no update needed to prevent re-running
+        hasPrefilled.current = true;
       }
     } catch {
       // Ignore parse errors
@@ -239,9 +252,9 @@ export const CoverPageEditor = ({
 
       {/* Cover Page Table Configuration */}
       <div className="col-span-full">
-        <div className="rounded-lg border border-gray-200 bg-white">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+        <div className="bg-card border-border rounded-lg border">
+          <div className="border-border flex items-center justify-between border-b px-4 py-3">
+            <h4 className="text-foreground flex items-center gap-2 text-sm font-semibold">
               <Settings2 className="h-4 w-4 text-blue-600" />
               Cover Page Information Table
             </h4>
@@ -249,7 +262,7 @@ export const CoverPageEditor = ({
               <button
                 onClick={() => setIsEditingColumns(!isEditingColumns)}
                 className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  isEditingColumns ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+                  isEditingColumns ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
                 }`}>
                 <Settings2 className="h-3 w-3" />
                 {isEditingColumns ? "Done" : "Configure Columns"}
@@ -277,16 +290,16 @@ export const CoverPageEditor = ({
 
           {/* Column Configuration Section */}
           {isEditingColumns && (
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-              <div className="mb-2 text-xs font-medium text-gray-600">Current Columns:</div>
+            <div className="bg-muted border-border border-b px-4 py-3">
+              <div className="text-muted-foreground mb-2 text-xs font-medium">Current Columns:</div>
               <div className="mb-3 flex flex-wrap gap-2">
                 {parsedData.cover_page_table?.columns &&
                 parsedData.cover_page_table.columns.length > 0 ? (
                   parsedData.cover_page_table.columns.map((col) => (
                     <span
                       key={col.key}
-                      className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-sm shadow-sm">
-                      <GripVertical className="h-3 w-3 cursor-move text-gray-400" />
+                      className="bg-card border-border inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm shadow-sm">
+                      <GripVertical className="text-muted-foreground h-3 w-3 cursor-move" />
                       {col.header}
                       <button
                         onClick={() => {
@@ -303,13 +316,13 @@ export const CoverPageEditor = ({
                           };
                           updateField("cover_page_table", updatedTable);
                         }}
-                        className="ml-1 text-gray-400 hover:text-red-500">
+                        className="text-muted-foreground ml-1 hover:text-red-500">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
                   ))
                 ) : (
-                  <span className="text-xs text-gray-500 italic">No columns yet</span>
+                  <span className="text-muted-foreground text-xs italic">No columns yet</span>
                 )}
               </div>
               <div className="flex gap-2">
@@ -333,7 +346,7 @@ export const CoverPageEditor = ({
                     }
                   }}
                   placeholder="New column header..."
-                  className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary flex-1 rounded border px-3 py-1.5 text-sm focus:ring-1 focus:outline-none"
                 />
                 <button
                   onClick={() => {
@@ -362,33 +375,33 @@ export const CoverPageEditor = ({
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
+                <tr className="bg-muted border-border border-b">
                   {parsedData.cover_page_table?.columns &&
                   parsedData.cover_page_table.columns.length > 0 ? (
                     <>
                       {parsedData.cover_page_table.columns.map((col) => (
                         <th
                           key={col.key}
-                          className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                          className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                           {col.header}
                         </th>
                       ))}
                       <th className="w-10 px-4 py-3"></th>
                     </>
                   ) : (
-                    <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                    <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                       Column
                     </th>
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-border divide-y">
                 {parsedData.cover_page_table?.rows &&
                 parsedData.cover_page_table.rows.length === 0 ? (
                   <tr>
                     <td
                       colSpan={(parsedData.cover_page_table?.columns?.length || 1) + 1}
-                      className="px-4 py-8 text-center text-gray-500">
+                      className="text-muted-foreground px-4 py-8 text-center">
                       {(parsedData.cover_page_table?.columns || []).length > 0
                         ? "No data yet. Click 'Add Row' to get started."
                         : "Configure columns first to add rows."}
@@ -396,7 +409,7 @@ export const CoverPageEditor = ({
                   </tr>
                 ) : (
                   parsedData.cover_page_table?.rows?.map((row, rowIndex) => (
-                    <tr key={rowIndex} className="group hover:bg-gray-50/50">
+                    <tr key={rowIndex} className="group hover:bg-muted/50">
                       {parsedData.cover_page_table!.columns.map((col) => (
                         <td key={col.key} className="px-4 py-3">
                           <input
@@ -414,7 +427,7 @@ export const CoverPageEditor = ({
                               };
                               updateField("cover_page_table", updatedTable);
                             }}
-                            className="w-full border-none bg-transparent text-sm text-gray-900 placeholder:text-gray-300 focus:ring-0 focus:outline-none"
+                            className="text-foreground placeholder:text-muted-foreground w-full border-none bg-transparent text-sm focus:ring-0 focus:outline-none"
                             placeholder="..."
                           />
                         </td>
@@ -430,7 +443,7 @@ export const CoverPageEditor = ({
                             };
                             updateField("cover_page_table", updatedTable);
                           }}
-                          className="text-gray-400 hover:text-red-500">
+                          className="text-muted-foreground hover:text-red-500">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </td>
