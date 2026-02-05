@@ -149,8 +149,9 @@ const createStyles = (primaryColor: string, secondaryColor: string) =>
     },
     watermark: {
       position: "absolute",
-      fontSize: 48,
-      color: "rgba(200, 200, 200, 0.5)",
+      fontSize: 80,
+      fontWeight: "bold",
+      color: "rgba(200, 200, 200, 0.25)",
       transform: "rotate(-45deg)",
       top: "50%",
       left: "50%",

@@ -480,39 +480,54 @@ export function AuditPlanWorkpaperView({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid h-14 w-full grid-cols-6">
-          <TabsTrigger value="plan-details">
-            <FileText className="h-6 w-6 text-slate-700 dark:text-slate-300" />
-            Plan Details
-          </TabsTrigger>
-          <TabsTrigger value="workpaper">
-            <FileArchive className="h-6 w-6 text-slate-700 dark:text-slate-300" />
-            Workpaper
-            <Badge
-              variant={activeTab === "workpaper" ? "default" : "info"}
-              className={cn("flex items-center justify-center rounded p-1 text-xs font-medium", {
-                "bg-muted-foreground/20 opacity-50": activeTab !== "workpaper"
-              })}>
-              {completionStats.completed}/{completionStats.total}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="findings">
-            <CircleAlertIcon className="h-6 w-6 text-orange-500" />
-            Audit Execution
-          </TabsTrigger>
-          <TabsTrigger value="approvals">
-            <CircleCheckBig className="h-6 w-6 text-green-600" />
-            Audit Approvals
-          </TabsTrigger>
-          <TabsTrigger value="closure">
-            <CheckCircle2 className="h-6 w-6 text-blue-600" />
-            Closure
-          </TabsTrigger>
-          <TabsTrigger value="report">
-            <FileText className="h-6 w-6 text-purple-600" />
-            Report
-          </TabsTrigger>
-        </TabsList>
+        <div
+          className="overflow-x-auto"
+          // className="-mx-4 overflow-x-auto px-4 lg:overflow-visible md:mx-0 md:px-0"
+        >
+          <TabsList className="inline-flex h-14 w-max gap-1 md:grid md:w-full md:grid-cols-6">
+            <TabsTrigger
+              value="plan-details"
+              className="w-full min-w-max text-nowrap whitespace-nowrap">
+              <FileText className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+              <span className="hidden sm:inline">Plan Details</span>
+              <span className="sm:hidden">Details</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="workpaper"
+              className="w-full min-w-max text-nowrap whitespace-nowrap">
+              <FileArchive className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+              <span className="inline">Workpaper</span>
+              <Badge
+                variant={activeTab === "workpaper" ? "default" : "info"}
+                className={cn("flex items-center justify-center rounded p-1 text-xs font-medium", {
+                  "bg-muted-foreground/20 opacity-50": activeTab !== "workpaper"
+                })}>
+                {completionStats.completed}/{completionStats.total}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger
+              value="findings"
+              className="w-full min-w-max text-nowrap whitespace-nowrap">
+              <CircleAlertIcon className="h-5 w-5 text-orange-500" />
+              <span className="hidden sm:inline">Audit Execution</span>
+              <span className="sm:hidden">Findings</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="approvals"
+              className="w-full min-w-max text-nowrap whitespace-nowrap">
+              <CircleCheckBig className="h-5 w-5 text-green-600" />
+              <span className="inline">Approvals</span>
+            </TabsTrigger>
+            <TabsTrigger value="closure" className="w-full min-w-max text-nowrap whitespace-nowrap">
+              <CheckCircle2 className="h-5 w-5 text-blue-600" />
+              Closure
+            </TabsTrigger>
+            <TabsTrigger value="report" className="w-full min-w-max text-nowrap whitespace-nowrap">
+              <FileText className="h-5 w-5 text-purple-600" />
+              Report
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Plan Details Tab */}
         <TabsContent value="plan-details" className="space-y-4">

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Download, FileText, Eye, Send, Loader2 } from "lucide-react";
+import { Save, Download, FileText, Eye, Send, Loader2, Menu } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { useReportStore } from "@/store/report-store";
 import { useReportFetching } from "@/hooks/use-report-queries";
@@ -26,6 +26,7 @@ import type {
   WidgetType
 } from "@/lib/types/report-types";
 import { StatusBadge } from "../status-badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { Badge } from "../ui/badge";
 import { CreateReportDialog } from "@/app/dashboard/(modules)/reports/_components/create-report-dialog";
 import { Button } from "../ui/button";
@@ -151,6 +152,7 @@ export function ReportBuilder({
     sectionId: string;
     widgetId: string;
   } | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Auto-fetch data for template widgets that have a data_source_id but empty data.
   // Runs once when the report first loads. Falls back to template defaults on error.
@@ -584,46 +586,165 @@ export function ReportBuilder({
       {/* Header */}
       <div className="border-border border-b pb-2">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-foreground text-lg font-semibold">Report Builder</h2>
-            <p className="text-muted-foreground text-sm">
-              {entity.title ? ` ${entity.title}` : report.title || "Untitled Report"}
-              {entity.ref_no && (
-                <span className="text-muted-foreground ml-2 text-xs">({entity.ref_no})</span>
-              )}
-            </p>
+          <div className="flex items-center gap-3">
+            {/* Mobile Sidebar Toggle */}
+            <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="lg:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle sidebar</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] overflow-y-auto sm:w-[350px]">
+                <SheetHeader>
+                  <SheetTitle>Report Navigation</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 space-y-4">
+                  <TableOfContents
+                    sections={report.sections || []}
+                    onItemClick={(id) => {
+                      scrollToSection(id);
+                      setMobileSidebarOpen(false);
+                    }}
+                  />
+                  <AddSectionButton variant="sidebar" />
+
+                  {/* Report Info */}
+                  <div className="border-border bg-card rounded-lg border p-4">
+                    <h3 className="text-foreground mb-3 text-sm font-semibold">Report Details</h3>
+                    <div className="space-y-2 text-sm">
+                      {readOnlyType ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Type:</span>
+                          <p className="text-foreground font-medium">
+                            {reportTypeOptions.find((opt) => opt.value === getReportTypeValue())
+                              ?.label || getReportTypeValue()}
+                          </p>
+                        </div>
+                      ) : (
+                        <SelectField
+                          label="Type"
+                          value={getReportTypeValue()}
+                          placeholder="Select report type..."
+                          onValueChange={(value) => {
+                            if (value === getReportTypeValue()) return;
+                            setPendingReportType(value);
+                            setConfirmDialogOpen(true);
+                          }}
+                          options={reportTypeOptions as any}
+                          className="min-w-full"
+                        />
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Source {getEntityLabel()}:</span>
+                        <p className="text-foreground font-medium">{entity.title || "-"}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Status:</span>
+                        <StatusBadge status={report.status as string} />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Sections:</span>
+                        <p className="text-foreground font-medium">{report.sections?.length || 0}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Version:</span>
+                        <Badge variant={"default"} className="font-medium">
+                          {report.version}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section Type Legend */}
+                  <div className="border-border bg-card rounded-lg border p-4">
+                    <h3 className="text-foreground mb-3 text-sm font-semibold">Section Types</h3>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded border border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-950/30" />
+                        <span className="text-muted-foreground">Cover Page</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950/30" />
+                        <span className="text-muted-foreground">Text Content</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded border border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30" />
+                        <span className="text-muted-foreground">Text + Widgets</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30" />
+                        <span className="text-muted-foreground">Findings Selector</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded border border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/30" />
+                        <span className="text-muted-foreground">Compliance Findings</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded border border-cyan-300 bg-cyan-50 dark:border-cyan-700 dark:bg-cyan-950/30" />
+                        <span className="text-muted-foreground">Dynamic Form</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <div>
+              <h2 className="text-foreground text-lg font-semibold">Report Builder</h2>
+              <p className="text-muted-foreground text-sm">
+                {entity.title ? ` ${entity.title}` : report.title || "Untitled Report"}
+                {entity.ref_no && (
+                  <span className="text-muted-foreground ml-2 text-xs">({entity.ref_no})</span>
+                )}
+              </p>
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {report.status !== "PUBLISHED" && (
               <Button
                 variant={"outline"}
+                size="icon"
                 onClick={handleSave}
                 disabled={isSaving}
-                isLoading={isSaving}>
+                isLoading={isSaving}
+                className="sm:w-auto sm:px-3"
+                title="Save Draft">
                 <Save className="h-4 w-4" />
-                Save Draft
+                <span className="hidden sm:inline md:hidden">Save</span>
+                <span className="hidden md:inline">Save Draft</span>
               </Button>
             )}
             <Button
               variant={"outline"}
+              size="icon"
               onClick={() => setShowPreview(true)}
-              className="text-primary-700 text-primary flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm transition-colors hover:bg-blue-100">
+              className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 sm:w-auto sm:px-3"
+              title="Preview">
               <Eye className="h-4 w-4" />
-              Preview
+              <span className="hidden sm:inline">Preview</span>
             </Button>
-            <Button onClick={exportToPDF} disabled={isExporting} isLoading={isExporting}>
+            <Button
+              onClick={exportToPDF}
+              disabled={isExporting}
+              isLoading={isExporting}
+              size="icon"
+              className="sm:w-auto sm:px-3"
+              title="Export PDF">
               <Download className="h-4 w-4" />
-              Export PDF
+              <span className="hidden sm:inline md:hidden">Export</span>
+              <span className="hidden md:inline">Export PDF</span>
             </Button>
             {report.status !== "PUBLISHED" && (
               <Button
                 onClick={handlePublish}
                 disabled={isPublishing}
                 isLoading={isPublishing}
-                variant={"secondary"}
-                className="flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 disabled:opacity-50">
+                size="icon"
+                className="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 sm:w-auto sm:px-3"
+                title="Submit for Approval">
                 <Send className="h-4 w-4" />
-                Submit for Approval
+                <span className="hidden sm:inline md:hidden">Submit</span>
+                <span className="hidden md:inline">Submit for Approval</span>
               </Button>
             )}
           </div>
@@ -637,8 +758,8 @@ export function ReportBuilder({
       {/* Main Content */}
       <div className="flex-1 py-4">
         <div className="grid grid-cols-12 gap-6">
-          {/* Sidebar */}
-          <div className="sticky top-20 col-span-12 space-y-4 self-start lg:col-span-3">
+          {/* Sidebar - Hidden on mobile, shown on large screens */}
+          <div className="sticky top-20 hidden space-y-4 self-start lg:col-span-3 lg:block">
             <TableOfContents sections={report.sections || []} onItemClick={scrollToSection} />
             <AddSectionButton variant="sidebar" />
 

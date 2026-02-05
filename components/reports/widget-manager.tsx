@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { Settings2, Trash2, GripVertical, Settings } from "lucide-react";
+import { Settings2, Trash2, GripVertical, Settings, AlertTriangle } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DataSourceSelector } from "@/components/shared/data-source-selector";
 import { PieChartWidget } from "./pie-chart-widget";
@@ -142,12 +142,96 @@ export function WidgetManager({
     return dataSource.compatible_widgets || [];
   };
 
+  // Check if widget type is compatible with its data source
+  const checkWidgetCompatibility = (widget: WidgetInstance): {
+    isCompatible: boolean;
+    dataSource: DataSource | null;
+    compatibleWidgets: WidgetType[];
+  } => {
+    // No data source means manual entry - always compatible
+    if (!widget.data.data_source_id) {
+      return { isCompatible: true, dataSource: null, compatibleWidgets: [] };
+    }
+
+    const dataSource = dataSources.find((ds) => ds.id === widget.data.data_source_id);
+
+    // Data source not found (might still be loading)
+    if (!dataSource) {
+      return { isCompatible: true, dataSource: null, compatibleWidgets: [] };
+    }
+
+    const compatibleWidgets = dataSource.compatible_widgets || [];
+
+    // If no compatible widgets defined, assume all are compatible
+    if (compatibleWidgets.length === 0) {
+      return { isCompatible: true, dataSource, compatibleWidgets: [] };
+    }
+
+    const isCompatible = compatibleWidgets.includes(widget.widget_type);
+    return { isCompatible, dataSource, compatibleWidgets };
+  };
+
+  // Render widget type mismatch error
+  const renderWidgetMismatchError = (
+    widget: WidgetInstance,
+    dataSource: DataSource,
+    compatibleWidgets: WidgetType[]
+  ) => {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 p-6 text-center dark:border-amber-700 dark:bg-amber-950/30">
+        <AlertTriangle className="mb-3 h-10 w-10 text-amber-500" />
+        <h4 className="mb-2 font-semibold text-amber-800 dark:text-amber-200">
+          Widget Type Mismatch
+        </h4>
+        <p className="mb-4 max-w-md text-sm text-amber-700 dark:text-amber-300">
+          The current widget type <strong className="font-mono">"{widget.widget_type}"</strong> is not
+          compatible with the data source <strong>"{dataSource.name}"</strong>.
+        </p>
+        <div className="mb-4 rounded-md bg-white/50 px-4 py-2 dark:bg-black/20">
+          <p className="mb-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+            Compatible widget types:
+          </p>
+          <div className="flex flex-wrap justify-center gap-1">
+            {compatibleWidgets.map((type) => (
+              <span
+                key={type}
+                className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+              >
+                {type.replace(/_/g, " ")}
+              </span>
+            ))}
+          </div>
+        </div>
+        {onWidgetTypeChange && compatibleWidgets.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2">
+            <span className="text-xs text-amber-600 dark:text-amber-400">Switch to:</span>
+            {compatibleWidgets.map((type) => (
+              <button
+                key={type}
+                onClick={() => onWidgetTypeChange(widget.instance_id, type)}
+                className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-amber-700"
+              >
+                {type.replace(/_/g, " ")}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Render individual widget based on type
   const renderWidget = (widget: WidgetInstance) => {
     const isRetrying = retryingWidgetId === widget.instance_id;
     const handleRetry = onRetryWidget
       ? () => onRetryWidget(widget.instance_id)
       : undefined;
+
+    // Check widget type compatibility with data source
+    const { isCompatible, dataSource, compatibleWidgets } = checkWidgetCompatibility(widget);
+    if (!isCompatible && dataSource) {
+      return renderWidgetMismatchError(widget, dataSource, compatibleWidgets);
+    }
 
     switch (widget.widget_type) {
       case "pie_chart":

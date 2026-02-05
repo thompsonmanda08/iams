@@ -38,8 +38,7 @@ const REPORT_QUERY_KEYS = {
  */
 export function useReportFetching(entityId?: string, entityType?: ReportEntityType) {
   const queryClient = useQueryClient();
-  const { setFindings, setDataSources, setLoading, setEntityId, setEntityType } =
-    useReportStore();
+  const { setFindings, setDataSources, setLoading, setEntityId, setEntityType } = useReportStore();
 
   // Set entity ID and type in store
   useEffect(() => {
@@ -50,10 +49,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
   }, [entityId, entityType, setEntityId, setEntityType]);
 
   // Fetch initial report
-  const {
-    isLoading: isReportLoading,
-    refetch: refetchReport
-  } = useQuery({
+  const { isLoading: isReportLoading, refetch: refetchReport } = useQuery({
     queryKey: [REPORT_QUERY_KEYS.REPORT, "initial", entityId, entityType],
     queryFn: async () => {
       if (!entityId || !entityType) return null;
@@ -158,12 +154,12 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
     mutationFn: async (reportId: string) => {
       const result = await publishReport(reportId);
       if (!result.success) {
-        throw new Error(result.message || "Failed to publish report");
+        throw new Error(result.message || "Failed to submit report");
       }
       return result.data;
     },
     onSuccess: (_data, reportId) => {
-      toast.success("Report published successfully!");
+      toast.success("Report submitted successfully!");
       // Invalidate all report queries
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
@@ -179,7 +175,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       refetchReport();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to publish report");
+      toast.error(error.message || "Failed to submit report");
     }
   });
 
