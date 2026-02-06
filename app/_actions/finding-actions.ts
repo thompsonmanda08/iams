@@ -216,7 +216,52 @@ export async function getFindingActions(filters?: {
     return handleError(error, "GET | FINDING ACTIONS", url);
   }
 }
+/**
+ * Get all follow up actions with optional filters
+ */
+export async function getAuditFollowupLogs(filters?: {
+  status?: string;
+  assigned_to?: string;
+  finding_id?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<APIResponse> {
+  const params = new URLSearchParams();
+  if (filters?.status) params.append("status", filters.status);
+  if (filters?.assigned_to) params.append("assigned_to", filters.assigned_to);
+  if (filters?.finding_id) params.append("finding_id", filters.finding_id);
+  if (filters?.page) params.append("page", String(filters.page));
+  if (filters?.page_size) params.append("page_size", String(filters.page_size));
 
+  const queryString = params.toString();
+  const url = `/api/v1/finding-actions/audit-followup-log${queryString ? `?${queryString}` : ""}`;
+  try {
+    const response = await authenticatedApiClient({ url });
+
+    return successResponse(response.data?.data, "Finding actions fetched successfully");
+  } catch (error: any) {
+    return handleError(error, "GET | AUDIT FOLLOW UP", url);
+  }
+}
+
+/**
+ * Send a follow up reminder for a finding action to the assigned user
+ */
+
+export async function sendFollowupReminder(action_id: string): Promise<APIResponse> {
+  if (!action_id) {
+    return handleBadRequest("Action ID is required");
+  }
+
+  const url = `/api/v1/finding-actions/${action_id}/remind`;
+  try {
+    await authenticatedApiClient({ url });
+
+    return successResponse(null, "Reminder sent successfully");
+  } catch (error: any) {
+    return handleError(error, "POST | SEND FOLLOW UP REMINDER", url);
+  }
+}
 /**
  * Get finding actions by finding ID
  */

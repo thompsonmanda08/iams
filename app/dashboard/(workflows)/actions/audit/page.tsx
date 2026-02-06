@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getFindingActions } from "@/app/_actions/finding-actions";
+import { getAuditFollowupLogs, getFindingActions } from "@/app/_actions/finding-actions";
 import PageHeader from "@/components/page-header";
 import BackButton from "@/components/back-button";
 import { CheckCircle2 } from "lucide-react";
@@ -14,23 +14,30 @@ export default async function FindingActionsPage({
   searchParams?: Promise<{
     page?: string;
     page_size?: string;
-    // [key: string]: string | string[] | undefined;
+    audit_page?: string;
+    audit_page_size?: string;
   }>;
 }) {
   const urlSearchParams = await searchParams;
 
   const page = urlSearchParams?.page ? Number(urlSearchParams.page) : 1;
   const page_size = urlSearchParams?.page_size ? Number(urlSearchParams.page_size) : 10;
+  const audit_page = urlSearchParams?.audit_page ? Number(urlSearchParams.audit_page) : 1;
+  const audit_page_size = urlSearchParams?.audit_page_size
+    ? Number(urlSearchParams.audit_page_size)
+    : 10;
 
-  // Fetch all finding actions server-side
-  const actionsResponse = await getFindingActions({ page, page_size });
-
-  if (!actionsResponse.success) {
-    notFound();
-  }
+  // Fetch all finding actions server-side (for My Actions tab)
+  const [actionsResponse, auditLogResponse] = await Promise.all([
+    getFindingActions({ page, page_size }),
+    getAuditFollowupLogs({ page: audit_page, page_size: audit_page_size })
+  ]);
 
   const findingActions = actionsResponse.data?.data || [];
   const pagination: Pagination = actionsResponse.data?.pagination || {};
+
+  const auditLogActions = auditLogResponse.data?.data || [];
+  const auditLogPagination: Pagination = auditLogResponse.data?.pagination || {};
 
   return (
     <div className="bg-background min-h-screen">
@@ -59,7 +66,12 @@ export default async function FindingActionsPage({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <FindingActionsPageLayout initialActions={findingActions} pagination={pagination} />
+        <FindingActionsPageLayout
+          initialActions={findingActions}
+          pagination={pagination}
+          auditLogActions={auditLogActions}
+          auditLogPagination={auditLogPagination}
+        />
       </div>
     </div>
   );

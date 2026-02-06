@@ -141,7 +141,7 @@ export const navItems: NavGroup[] = [
         icon: FileUserIcon,
         items: [
           { title: "Risk Actions", href: "/dashboard/actions/risk" },
-          { title: "Audit Actions", href: "/dashboard/actions/audit" }
+          { title: "Audit Actions & Logs", href: "/dashboard/actions/audit" }
         ]
       },
       {

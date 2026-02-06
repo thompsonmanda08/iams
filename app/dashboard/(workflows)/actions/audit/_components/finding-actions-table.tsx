@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Eye, AlertCircle, View } from "lucide-react";
+import { Eye, AlertCircle, View, Send } from "lucide-react";
 import type { FindingAction } from "@/lib/types/audit-types";
 import { FindingActionDetailsDialog } from "./finding-action-details-dialog";
 import { cn } from "@/lib/utils";
@@ -21,33 +21,15 @@ import { StatusBadge } from "@/components/status-badge";
 
 interface FindingActionsTableProps {
   actions: FindingAction[];
+  handleSendReminder?: (actionId: string) => void;
+  isSendingReminder?: boolean;
 }
 
-const STATUS_COLORS: Record<string, { badge: string; text: string }> = {
-  PENDING: {
-    badge: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200",
-    text: "Pending"
-  },
-  IN_PROGRESS: {
-    badge: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    text: "In Progress"
-  },
-  UNDER_REVIEW: {
-    badge: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    text: "Under Review"
-  },
-  APPROVED: {
-    badge: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    text: "Approved"
-  },
-  COMPLETED: {
-    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-    text: "Completed"
-  },
-  REJECTED: { badge: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200", text: "Rejected" }
-};
-
-export function FindingActionsTable({ actions }: FindingActionsTableProps) {
+export function FindingActionsTable({
+  actions,
+  handleSendReminder,
+  isSendingReminder
+}: FindingActionsTableProps) {
   const [selectedAction, setSelectedAction] = useState<FindingAction | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -152,15 +134,32 @@ export function FindingActionsTable({ actions }: FindingActionsTableProps) {
                   </TableCell>
 
                   {/* Actions */}
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewDetails(action)}
-                      className="gap-2">
-                      <View className="h-4 w-4" />
-                      View
-                    </Button>
+                  <TableCell className="gap-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewDetails(action)}
+                        className="gap-2">
+                        <View className="h-4 w-4" />
+                        View
+                      </Button>
+                      {handleSendReminder && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          isLoading={isSendingReminder}
+                          loadingText="Sending"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendReminder(action.id);
+                          }}
+                          className="gap-2">
+                          <Send className="h-4 w-4" />
+                          Send Reminder
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
