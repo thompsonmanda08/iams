@@ -484,6 +484,7 @@ export function WidgetManager({
         }}
         onConfigure={handleConfigure}
         entityId={entityId}
+        entityType={entityType}
         existingWidget={editingWidget ?? undefined}
         filterByCategory={filterByCategory}
       />

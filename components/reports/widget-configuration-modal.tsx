@@ -25,7 +25,7 @@ import { DataSourceSelector } from "@/components/shared/data-source-selector";
 import { WidgetTypeSelector } from "@/components/shared/widget-type-selector";
 import { useWidgetDataFetch, transformWidgetData } from "@/hooks/shared/use-widget-data";
 import { useDataSources } from "@/hooks/shared/use-data-sources";
-import type { DataSource, WidgetType, WidgetInstance } from "@/lib/types/report-types";
+import type { DataSource, WidgetType, WidgetInstance, ReportEntityType } from "@/lib/types/report-types";
 import { cn } from "@/lib/utils";
 
 export interface WidgetConfiguration {
@@ -40,6 +40,7 @@ export interface WidgetConfigurationModalProps {
   onClose: () => void;
   onConfigure: (config: WidgetConfiguration) => void;
   entityId?: string;
+  entityType?: ReportEntityType;
   existingWidget?: WidgetInstance;
   filterByCategory?: DataSource["category"][];
 }
@@ -135,6 +136,7 @@ export function WidgetConfigurationModal({
   onClose,
   onConfigure,
   entityId,
+  entityType,
   existingWidget,
   filterByCategory
 }: WidgetConfigurationModalProps) {
@@ -222,7 +224,8 @@ export function WidgetConfigurationModal({
         const rawData = await fetchWidgetData({
           dataSourceId: selectedDataSource.id,
           widgetType: selectedWidgetType,
-          entityId
+          entityId,
+          entityType
         });
 
         console.log("🔍 [WidgetConfigModal] Raw data received:", {
@@ -273,6 +276,7 @@ export function WidgetConfigurationModal({
     selectedDataSource,
     selectedWidgetType,
     entityId,
+    entityType,
     fetchWidgetData,
     onConfigure,
     handleOpenChange

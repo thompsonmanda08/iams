@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { BarChart3, Edit2, Plus, Trash2, X } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { DataSource } from "@/lib/types/report-types";
 import { WidgetEmptyState } from "./widget-empty-state";
 import { Input } from "@/components/ui/input";
@@ -76,7 +76,7 @@ export const BarChartWidget = ({
       ? (data.categories as BarChartCategory[])
       : [];
 
-  // Transform data for Recharts
+  // Transform data for Recharts (vertical mode - grouped bars)
   const chartData = useMemo(() => {
     return categories.map((cat) => {
       const dataPoint: any = { category: cat.label };
@@ -87,14 +87,27 @@ export const BarChartWidget = ({
     });
   }, [categories]);
 
-  // Create chart config
+  // Flatten data for horizontal mode - each value becomes its own row
+  const horizontalChartData = useMemo(() => {
+    if (orientation !== "horizontal") return [];
+    const flatData: Array<{ name: string; value: number; color: string }> = [];
+    categories.forEach((cat) => {
+      cat.series.forEach((s) => {
+        const name = categories.length > 1 ? `${cat.label} - ${s.label}` : s.label;
+        flatData.push({ name, value: s.value, color: s.color });
+      });
+    });
+    return flatData;
+  }, [orientation, categories]);
+
+  // Create chart config (vertical mode)
   const chartConfig: ChartConfig = useMemo(() => {
     const config: ChartConfig = {};
-    const allSeriesLabels = Array.from(
+    const allLabels = Array.from(
       new Set(categories.flatMap((cat) => cat.series.map((s) => s.label)))
     );
 
-    allSeriesLabels.forEach((seriesLabel) => {
+    allLabels.forEach((seriesLabel) => {
       const firstSeries = categories
         .flatMap((cat) => cat.series)
         .find((s) => s.label === seriesLabel);
@@ -110,10 +123,31 @@ export const BarChartWidget = ({
     return config;
   }, [categories]);
 
+  // Chart config for horizontal mode (flattened)
+  const horizontalChartConfig: ChartConfig = useMemo(() => {
+    if (orientation !== "horizontal") return {};
+    const config: ChartConfig = { value: { label: "Value" } };
+    horizontalChartData.forEach((item) => {
+      config[item.name] = { label: item.name, color: item.color };
+    });
+    return config;
+  }, [orientation, horizontalChartData]);
+
   // Get all series labels
   const allSeriesLabels = useMemo(() => {
     return Array.from(new Set(categories.flatMap((cat) => cat.series.map((s) => s.label))));
   }, [categories]);
+
+  // Compute chart height based on bar count so bars are always properly sized
+  const chartHeight = useMemo(() => {
+    if (orientation === "vertical") {
+      return Math.max(256, 40 + allSeriesLabels.length * 8);
+    }
+    // Horizontal: one bar per flattened row
+    const totalBars = categories.reduce((acc, cat) => acc + cat.series.length, 0);
+    const barH = 32; // height per bar including spacing
+    return Math.max(80 + totalBars * barH, 140);
+  }, [orientation, categories, allSeriesLabels.length]);
 
   const addCategory = () => {
     if (!onDataChange || isFlatStructure) return;
@@ -320,83 +354,108 @@ export const BarChartWidget = ({
       ) : (
         <>
           {/* Recharts Bar Chart */}
-          <ChartContainer
-            config={chartConfig}
-            className="w-full"
-            style={{
-              height: orientation === "horizontal" ? Math.max(40 + categories.length * 60, 300) : 256
-            }}>
-            <BarChart
-              data={chartData}
-              layout={orientation === "horizontal" ? "vertical" : "horizontal"}
-              margin={{
-                left: orientation === "horizontal" ? 120 : 0,
-                right: orientation === "horizontal" ? 20 : 12,
-                top: 12,
-                bottom: 12
-              }}>
-              <CartesianGrid
-                vertical={orientation === "vertical"}
-                horizontal={orientation === "horizontal"}
-                strokeDasharray="3 3"
-              />
-              {orientation === "vertical" ? (
-                <>
-                  <XAxis
-                    dataKey="category"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-                </>
-              ) : (
-                <>
-                  <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-                  <YAxis
-                    dataKey="category"
-                    type="category"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                    tick={{ fontSize: 12 }}
-                    width={110}
-                  />
-                </>
-              )}
-              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-              {allSeriesLabels.map((seriesLabel) => {
-                const seriesColor = chartConfig[seriesLabel]?.color || "#3b82f6";
-                return (
-                  <Bar
-                    key={seriesLabel}
-                    dataKey={seriesLabel}
-                    fill={seriesColor}
-                    radius={orientation === "vertical" ? [4, 4, 0, 0] : [0, 4, 4, 0]}
-                  />
-                );
-              })}
-            </BarChart>
-          </ChartContainer>
+          {orientation === "horizontal" ? (
+            <ChartContainer
+              config={horizontalChartConfig}
+              className="aspect-auto! w-full"
+              style={{ height: chartHeight }}>
+              <BarChart
+                data={horizontalChartData}
+                layout="vertical"
+                barSize={20}
+                margin={{ left: 120, right: 20, top: 12, bottom: 12 }}>
+                <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 12, fill: "var(--color-muted-foreground, #6b7280)" }}
+                />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  tick={{ fontSize: 12, fill: "var(--color-muted-foreground, #6b7280)" }}
+                  width={110}
+                />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                  {horizontalChartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          ) : (
+            <ChartContainer
+              config={chartConfig}
+              className="w-full"
+              style={{ height: chartHeight }}>
+              <BarChart
+                data={chartData}
+                layout="horizontal"
+                barSize={20}
+                barGap={4}
+                barCategoryGap={24}
+                margin={{ left: 0, right: 12, top: 12, bottom: 12 }}>
+                <CartesianGrid vertical={true} strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="category"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tick={{ fontSize: 12, fill: "var(--color-muted-foreground, #6b7280)" }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 12, fill: "var(--color-muted-foreground, #6b7280)" }}
+                />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                {allSeriesLabels.map((seriesLabel) => {
+                  const seriesColor = chartConfig[seriesLabel]?.color || "#3b82f6";
+                  return (
+                    <Bar
+                      key={seriesLabel}
+                      dataKey={seriesLabel}
+                      fill={seriesColor}
+                      radius={[4, 4, 0, 0]}
+                    />
+                  );
+                })}
+              </BarChart>
+            </ChartContainer>
+          )}
 
           {/* Legend */}
           <div className="mt-4 flex flex-wrap gap-2">
-            {allSeriesLabels.map((seriesLabel) => {
-              const firstSeries = categories
-                .flatMap((cat) => cat.series)
-                .find((series) => series.label === seriesLabel);
+            {orientation === "horizontal"
+              ? horizontalChartData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1 text-xs">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-muted-foreground">{item.name}</span>
+                  </div>
+                ))
+              : allSeriesLabels.map((seriesLabel) => {
+                  const firstSeries = categories
+                    .flatMap((cat) => cat.series)
+                    .find((series) => series.label === seriesLabel);
 
-              return (
-                <div key={seriesLabel} className="flex items-center gap-1 text-xs">
-                  <div
-                    className="h-3 w-3 rounded"
-                    style={{ backgroundColor: firstSeries?.color || "#ccc" }}
-                  />
-                  <span className="text-muted-foreground">{seriesLabel}</span>
-                </div>
-              );
-            })}
+                  return (
+                    <div key={seriesLabel} className="flex items-center gap-1 text-xs">
+                      <div
+                        className="h-3 w-3 rounded"
+                        style={{ backgroundColor: firstSeries?.color || "#ccc" }}
+                      />
+                      <span className="text-muted-foreground">{seriesLabel}</span>
+                    </div>
+                  );
+                })}
           </div>
         </>
       )}
