@@ -584,7 +584,7 @@ export function ReportBuilder({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-border border-b pb-2">
+      <div className="border-border bg-background sticky top-0 z-30 border-b pt-2 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Mobile Sidebar Toggle */}
