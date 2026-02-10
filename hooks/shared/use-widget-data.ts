@@ -98,10 +98,15 @@ export function transformWidgetData(
         seriesLength: rawData?.series?.length
       });
       if (rawData?.categories && rawData?.series) {
+        // Map series "name" to "label" if needed (API returns "name", widget expects "label")
+        const barSeries = (rawData.series || []).map((s: any) => ({
+          ...s,
+          label: s.label || s.name || "Series"
+        }));
         result = {
           title: title || "Chart",
           categories: rawData.categories,
-          series: rawData.series,
+          series: barSeries,
           orientation: "vertical",
           show_values: true,
           data_source_id: dataSourceId
@@ -141,10 +146,15 @@ export function transformWidgetData(
         hasCategories: rawData?.categories !== undefined,
         hasSeries: rawData?.series !== undefined
       });
+      // Map series "name" to "label" if needed (API returns "name", widget expects "label")
+      const lineSeries = (rawData?.series || []).map((s: any) => ({
+        ...s,
+        label: s.label || s.name || "Series"
+      }));
       result = {
         title: title || "Chart",
         categories: rawData?.categories || [],
-        series: rawData?.series || [],
+        series: lineSeries,
         data_source_id: dataSourceId
       };
       break;
