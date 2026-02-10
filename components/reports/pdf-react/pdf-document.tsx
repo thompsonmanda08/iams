@@ -871,56 +871,121 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                       }
                     })()}
                   </View>
-                  {/* Metric Card Widget  TODO!!!*/}
-                  {widget.widget_type === "metric_card" && (
-                    <View
-                      style={{
-                        marginVertical: 15,
-                        padding: 20,
-                        backgroundColor: "#f8fafc",
-                        borderWidth: 1,
-                        borderColor: "#e2e8f0",
-                        borderRadius: 6
-                      }}>
-                      {(widget.data as any).title && (
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            fontWeight: "bold",
-                            marginBottom: 12,
-                            color: "#475569"
-                          }}>
-                          {(widget.data as any).title}
-                        </Text>
-                      )}
-                      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-                        <Text style={{ fontSize: 36, fontWeight: "bold", color: "#0f172a" }}>
-                          {(widget.data as any).value || 0}
-                        </Text>
-                        {(widget.data as any).unit && (
-                          <Text style={{ fontSize: 14, color: "#64748b" }}>
-                            {(widget.data as any).unit}
-                          </Text>
-                        )}
-                        {(widget.data as any).trend !== undefined && (
+                  {/* Metric Card Widget */}
+                  {widget.widget_type === "metric_card" && (() => {
+                    const metricData = widget.data as any;
+                    const metrics = metricData?.metrics as Array<{
+                      title: string;
+                      value: string;
+                      subtitle?: string;
+                      trend?: string;
+                      trend_value?: string;
+                      trend_period?: string;
+                      color?: string;
+                    }> | undefined;
+
+                    if (metrics && metrics.length > 0) {
+                      // Multi-metric grid layout
+                      return (
+                        <View style={{ marginVertical: 15 }}>
+                          {metricData.title && (
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontWeight: "bold",
+                                marginBottom: 12,
+                                color: "#475569"
+                              }}>
+                              {metricData.title}
+                            </Text>
+                          )}
+                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                            {metrics.map((metric, idx) => (
+                              <View
+                                key={idx}
+                                style={{
+                                  width: "48%",
+                                  padding: 12,
+                                  backgroundColor: "#f8fafc",
+                                  borderWidth: 1,
+                                  borderColor: "#e2e8f0",
+                                  borderRadius: 6,
+                                  alignItems: "center"
+                                }}>
+                                <Text style={{ fontSize: 8, color: "#64748b", marginBottom: 4 }}>
+                                  {metric.title}
+                                </Text>
+                                <Text
+                                  style={{
+                                    fontSize: 22,
+                                    fontWeight: "bold",
+                                    color: metric.color || "#0f172a"
+                                  }}>
+                                  {metric.value}
+                                </Text>
+                                {metric.subtitle ? (
+                                  <Text style={{ fontSize: 7, color: "#94a3b8", marginTop: 2 }}>
+                                    {metric.subtitle}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      );
+                    }
+
+                    // Single metric fallback
+                    return (
+                      <View
+                        style={{
+                          marginVertical: 15,
+                          padding: 20,
+                          backgroundColor: "#f8fafc",
+                          borderWidth: 1,
+                          borderColor: "#e2e8f0",
+                          borderRadius: 6
+                        }}>
+                        {metricData.title && (
                           <Text
                             style={{
                               fontSize: 12,
-                              fontWeight: "600",
-                              color: (widget.data as any).trend >= 0 ? "#16a34a" : "#dc2626"
+                              fontWeight: "bold",
+                              marginBottom: 12,
+                              color: "#475569"
                             }}>
-                            {(widget.data as any).trend >= 0 ? "↑" : "↓"}{" "}
-                            {Math.abs((widget.data as any).trend)}%
+                            {metricData.title}
+                          </Text>
+                        )}
+                        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
+                          <Text style={{ fontSize: 36, fontWeight: "bold", color: "#0f172a" }}>
+                            {metricData.value || 0}
+                          </Text>
+                          {metricData.unit && (
+                            <Text style={{ fontSize: 14, color: "#64748b" }}>
+                              {metricData.unit}
+                            </Text>
+                          )}
+                          {metricData.trend !== undefined && (
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontWeight: "600",
+                                color: metricData.trend >= 0 ? "#16a34a" : "#dc2626"
+                              }}>
+                              {metricData.trend >= 0 ? "↑" : "↓"}{" "}
+                              {Math.abs(metricData.trend)}%
+                            </Text>
+                          )}
+                        </View>
+                        {metricData.description && (
+                          <Text style={{ fontSize: 9, color: "#78909c", marginTop: 8 }}>
+                            {metricData.description}
                           </Text>
                         )}
                       </View>
-                      {(widget.data as any).description && (
-                        <Text style={{ fontSize: 9, color: "#78909c", marginTop: 8 }}>
-                          {(widget.data as any).description}
-                        </Text>
-                      )}
-                    </View>
-                  )}
+                    );
+                  })()}
 
                   {/* Line Chart Widget  TODO!!!*/}
                   {widget.widget_type === "line_chart" && (

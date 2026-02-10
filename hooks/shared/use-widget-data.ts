@@ -160,20 +160,42 @@ export function transformWidgetData(
       break;
 
     case "metric_card":
-      // API returns { value, unit?, trend?, description? }
+      // API may return a single object or an array of metric objects
       console.log("🔍 [transformWidgetData] metric_card - rawData:", {
+        isArray: Array.isArray(rawData),
         hasValue: rawData?.value !== undefined,
-        hasUnit: rawData?.unit !== undefined,
-        hasTrend: rawData?.trend !== undefined
+        length: Array.isArray(rawData) ? rawData.length : undefined
       });
-      result = {
-        title: title || "Metric",
-        value: rawData?.value || 0,
-        unit: rawData?.unit || "",
-        trend: rawData?.trend || 0,
-        description: rawData?.description || "",
-        data_source_id: dataSourceId
-      };
+      if (Array.isArray(rawData) && rawData.length > 0) {
+        // Array of metrics - store all in metrics array
+        result = {
+          title: title || rawData[0]?.title || "Metrics",
+          value: parseFloat(rawData[0]?.value) || 0,
+          unit: rawData[0]?.unit || "",
+          trend: parseFloat(rawData[0]?.trend_value) || 0,
+          description: rawData[0]?.subtitle || "",
+          metrics: rawData.map((m: any) => ({
+            title: m.title || "Metric",
+            value: String(m.value ?? 0),
+            subtitle: m.subtitle || "",
+            trend: m.trend || "",
+            trend_value: m.trend_value || "",
+            trend_period: m.trend_period || "",
+            color: m.color || "#3b82f6",
+            icon: m.icon || ""
+          })),
+          data_source_id: dataSourceId
+        };
+      } else {
+        result = {
+          title: title || "Metric",
+          value: rawData?.value || 0,
+          unit: rawData?.unit || "",
+          trend: rawData?.trend || 0,
+          description: rawData?.description || "",
+          data_source_id: dataSourceId
+        };
+      }
       break;
 
     case "text_block":
