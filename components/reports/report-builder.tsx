@@ -133,6 +133,7 @@ export function ReportBuilder({
     updateWidgetRows,
     updateWidgetData,
     updateWidgetDataSource,
+    toggleTableManualOverride,
     changeManagementStandard
   } = useReportStore();
 
@@ -288,9 +289,9 @@ export function ReportBuilder({
           keys: Object.keys(transformedData)
         });
 
-        // Update the widget with fetched data
+        // Update the widget with fetched data (clear manual override if any)
         console.log("🔍 [handleWidgetDataSourceChange] Updating widget data in store...");
-        updateWidgetData(sectionId, widgetId, transformedData);
+        updateWidgetData(sectionId, widgetId, { ...transformedData, is_manual_override: false });
 
         toast.success("Data loaded successfully", { id: "fetch-data" });
         console.log("✅ [handleWidgetDataSourceChange] Data source change completed successfully");
@@ -446,6 +447,58 @@ export function ReportBuilder({
       }
     },
     [report, entity.id, entityType, updateWidgetData]
+  );
+
+  // Handle toggling manual override on a data-source-backed table
+  const handleToggleTableManualOverride = useCallback(
+    async (sectionId: string, widgetId: string, enabled: boolean) => {
+      if (enabled) {
+        // Enable manual edit — data stays as-is, just flip the flag
+        toggleTableManualOverride(sectionId, widgetId, true);
+      } else {
+        // Revert: re-fetch original data from the data source
+        const section = report?.sections.find((s) => s.section_id === sectionId);
+        const widget = section?.widgets.find((w) => w.instance_id === widgetId);
+
+        if (!widget || !widget.data?.data_source_id || widget.data.data_source_id === "manual") {
+          toggleTableManualOverride(sectionId, widgetId, false);
+          return;
+        }
+
+        try {
+          toast.loading("Reverting to data source...", { id: "revert-table" });
+
+          const result = await getDataSourceData(
+            widget.data.data_source_id,
+            widget.widget_type as "table",
+            entity.id,
+            entityType
+          );
+
+          if (!result.success) {
+            throw new Error(result.message || "Failed to fetch data");
+          }
+
+          const transformedData = transformWidgetData(
+            result.data,
+            widget.widget_type,
+            widget.data.data_source_id,
+            widget.data.title
+          );
+
+          updateWidgetData(sectionId, widgetId, {
+            ...transformedData,
+            is_manual_override: false
+          });
+
+          toast.success("Reverted to data source", { id: "revert-table" });
+        } catch (error: any) {
+          console.error("Failed to revert table:", error);
+          toast.error(error.message || "Failed to revert", { id: "revert-table" });
+        }
+      }
+    },
+    [report, entity.id, entityType, toggleTableManualOverride, updateWidgetData]
   );
 
   // Scroll to section
@@ -919,6 +972,9 @@ export function ReportBuilder({
                   }
                   onRetryWidget={(widgetId: string) =>
                     handleRetryWidget(section.section_id, widgetId)
+                  }
+                  onToggleTableManualOverride={(widgetId, enabled) =>
+                    handleToggleTableManualOverride(section.section_id, widgetId, enabled)
                   }
                   retryingWidgetId={
                     retryingWidget?.sectionId === section.section_id

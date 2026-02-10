@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table2, Settings2, Plus, Trash2, GripVertical, X } from "lucide-react";
+import { Table2, Settings2, Plus, Trash2, GripVertical, X, Pencil, RotateCcw } from "lucide-react";
 import { TableWidgetData, DataSource, TableColumn } from "@/lib/types/report-types";
 
 interface ConfigurableTableProps {
@@ -9,6 +9,7 @@ interface ConfigurableTableProps {
   onRowsChange?: (rows: Record<string, any>[]) => void;
   onDataSourceChange?: (dataSource: DataSource | null) => void;
   showDataSourcePicker?: boolean;
+  onToggleManualOverride?: (enabled: boolean) => void;
 }
 
 const SeverityBadge = ({ severity }: { severity: string }) => {
@@ -48,13 +49,16 @@ export const ConfigurableTable = ({
   onColumnsChange,
   onRowsChange,
   onDataSourceChange,
-  showDataSourcePicker = true
+  showDataSourcePicker = true,
+  onToggleManualOverride
 }: ConfigurableTableProps) => {
   const [isEditingColumns, setIsEditingColumns] = useState(false);
   const [newColumnHeader, setNewColumnHeader] = useState("");
 
   // Check if in manual mode (no data source or manual entry)
   const isManualMode = !dataSourceId || dataSourceId === "manual";
+  // Editable when in manual mode OR when manual override is active on a data-source table
+  const isEditable = isManualMode || data.is_manual_override === true;
 
   const addColumn = () => {
     if (!newColumnHeader.trim() || !onColumnsChange) return;
@@ -92,7 +96,28 @@ export const ConfigurableTable = ({
           {data.title}
         </h4>
         <div className="flex items-center gap-2">
-          {(data.is_configurable || isManualMode) && onColumnsChange && (
+          {!isManualMode && dataSourceId && onToggleManualOverride && (
+            <button
+              onClick={() => onToggleManualOverride(!data.is_manual_override)}
+              className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                data.is_manual_override
+                  ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}>
+              {data.is_manual_override ? (
+                <>
+                  <RotateCcw className="h-3 w-3" />
+                  Revert to Data Source
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-3 w-3" />
+                  Edit Table
+                </>
+              )}
+            </button>
+          )}
+          {(data.is_configurable || isEditable) && onColumnsChange && (
             <button
               onClick={() => setIsEditingColumns(!isEditingColumns)}
               className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
@@ -102,7 +127,7 @@ export const ConfigurableTable = ({
               {isEditingColumns ? "Done" : "Configure Columns"}
             </button>
           )}
-          {isManualMode && onRowsChange && (
+          {isEditable && onRowsChange && (
             <button
               onClick={addRow}
               className="flex items-center gap-1 rounded bg-green-50 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-100">
@@ -112,6 +137,13 @@ export const ConfigurableTable = ({
           )}
         </div>
       </div>
+
+      {data.is_manual_override && (
+        <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+          <Pencil className="h-3 w-3" />
+          <span>Manual edit mode — changes will not sync with the data source</span>
+        </div>
+      )}
 
       {isEditingColumns && (
         <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
@@ -161,16 +193,16 @@ export const ConfigurableTable = ({
                   {col.header}
                 </th>
               ))}
-              {isManualMode && onRowsChange && <th className="w-10 px-4 py-3"></th>}
+              {isEditable && onRowsChange && <th className="w-10 px-4 py-3"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {data.rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={data.columns.length + (isManualMode && onRowsChange ? 1 : 0)}
+                  colSpan={data.columns.length + (isEditable && onRowsChange ? 1 : 0)}
                   className="px-4 py-8 text-center text-gray-500">
-                  {isManualMode
+                  {isEditable
                     ? "No data yet. Click 'Add Row' to get started."
                     : "No data available."}
                 </td>
@@ -180,7 +212,7 @@ export const ConfigurableTable = ({
                 <tr key={rowIndex} className="group hover:bg-gray-50/50">
                   {data.columns.map((col) => (
                     <td key={col.key} className="px-4 py-3">
-                      {isManualMode && onRowsChange ? (
+                      {isEditable && onRowsChange ? (
                         <input
                           type="text"
                           value={row[col.key] || ""}
@@ -201,7 +233,7 @@ export const ConfigurableTable = ({
                       )}
                     </td>
                   ))}
-                  {isManualMode && onRowsChange && (
+                  {isEditable && onRowsChange && (
                     <td className="px-4 py-3 text-right opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         onClick={() => removeRow(rowIndex)}

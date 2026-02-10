@@ -59,6 +59,7 @@ interface SectionEditorProps {
   onUpdateWidget?: (widgetId: string, updates: Partial<WidgetInstance>) => void;
   onRetryWidget?: (widgetId: string) => Promise<void>;
   retryingWidgetId?: string | null;
+  onToggleTableManualOverride?: (widgetId: string, enabled: boolean) => void;
   // Entity context for data sources
   entityId?: string;
   entityType?: ReportEntityType;
@@ -90,6 +91,7 @@ export const SectionEditor = ({
   onUpdateWidget,
   onRetryWidget,
   retryingWidgetId,
+  onToggleTableManualOverride,
   entityId,
   entityType,
   onMove,
@@ -303,6 +305,7 @@ export const SectionEditor = ({
                 onWidgetRowsChange={onWidgetRowsChange}
                 onRetryWidget={onRetryWidget}
                 retryingWidgetId={retryingWidgetId}
+                onToggleTableManualOverride={onToggleTableManualOverride}
               />
             )}
 
