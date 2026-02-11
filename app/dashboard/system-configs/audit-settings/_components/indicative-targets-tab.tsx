@@ -158,10 +158,10 @@ export default function IndicativeTargetsTab() {
                 // Show skeleton rows during initial loading
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={`skeleton-${index}`}>
-                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
-                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
-                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
-                    <TableCell className="h-12 bg-muted animate-pulse rounded" />
+                    <TableCell className="bg-muted h-12 animate-pulse rounded" />
+                    <TableCell className="bg-muted h-12 animate-pulse rounded" />
+                    <TableCell className="bg-muted h-12 animate-pulse rounded" />
+                    <TableCell className="bg-muted h-12 animate-pulse rounded" />
                   </TableRow>
                 ))
               ) : items.length === 0 ? (
@@ -398,7 +398,11 @@ export function CreateOrUpdate({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{initialData ? "Update Target " : "Create New Target"}</DialogTitle>
         </DialogHeader>

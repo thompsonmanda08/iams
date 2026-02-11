@@ -382,7 +382,11 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Configure New KRI</DialogTitle>
           <DialogDescription>
@@ -592,7 +596,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                   </p>
 
                   <div className="mt-2 rounded-md bg-amber-100 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-                    {getDirectionWarning()?.message || 'N/A'}
+                    {getDirectionWarning()?.message || "N/A"}
                   </div>
                 </div>
               </div>

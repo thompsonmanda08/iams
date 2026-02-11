@@ -462,7 +462,9 @@ export default function RisksDashboardPage() {
                 <ChartContainer config={categoryChartConfig} className="h-[450px] w-full">
                   <BarChart
                     data={categoryData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    barSize={30}
+                    maxBarSize={50}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="name"
@@ -501,7 +503,11 @@ export default function RisksDashboardPage() {
             ) : (
               <CardContent>
                 <ChartContainer config={departmentChartConfig} className="h-[450px] w-full">
-                  <BarChart data={graphData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <BarChart
+                    data={graphData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    barSize={30}
+                    maxBarSize={50}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
                     <XAxis

@@ -87,7 +87,11 @@ export function AuditClosureApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-w-md">
         <DialogHeader>
           <DialogTitle>Audit Closure {approvalRole === "MANAGER" ? "Manager" : "Executive"} Approval</DialogTitle>
           <DialogDescription>

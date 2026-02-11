@@ -265,7 +265,7 @@ export default function KRIRegistersClient({
             />
             <Button size="sm" onClick={() => setDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              New Register
+              New KRI Register
             </Button>
           </div>
         </div>
@@ -427,7 +427,11 @@ export default function KRIRegistersClient({
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+          className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Create New KRI Register</DialogTitle>
             <DialogDescription>

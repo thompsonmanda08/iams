@@ -40,7 +40,11 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuditableAreas, useStrategicPillars, useProcessActivities } from "@/hooks/use-audit-settings-query-data";
+import {
+  useAuditableAreas,
+  useStrategicPillars,
+  useProcessActivities
+} from "@/hooks/use-audit-settings-query-data";
 import { de } from "zod/v4/locales";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -447,7 +451,11 @@ function CreateOrUpdate({
         </DialogTrigger>
       )}
 
-      <DialogContent className="flex flex-col sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="flex flex-col sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Update Process/Activity" : "Add Process/Activity"}

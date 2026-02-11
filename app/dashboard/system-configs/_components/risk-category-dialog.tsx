@@ -134,7 +134,11 @@ export function RiskCategoryFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
             {mode === "edit" ? "Edit Risk Category" : "Create Risk Category"}

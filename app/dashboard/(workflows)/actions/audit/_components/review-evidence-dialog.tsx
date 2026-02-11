@@ -109,7 +109,11 @@ export function ReviewEvidenceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Update Review" : "Review Evidence"}</DialogTitle>
           <DialogDescription>

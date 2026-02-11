@@ -67,7 +67,11 @@ export function EditScaleDialog({ open, onOpenChange, scale, onSuccess }: EditSc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Edit Scale Level {scale.level}</DialogTitle>

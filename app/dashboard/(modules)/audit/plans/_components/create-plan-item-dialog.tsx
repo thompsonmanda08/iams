@@ -177,7 +177,11 @@ export function CreatePlanItemDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-3xl">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Update Annual Audit Plan Item" : "Create Annual Audit Plan Item"}

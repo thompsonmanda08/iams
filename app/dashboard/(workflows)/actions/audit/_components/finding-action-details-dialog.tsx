@@ -146,7 +146,11 @@ export function FindingActionDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex! h-[90vh] w-full! max-w-3xl! flex-col overflow-y-auto">
+        <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="flex! h-[90vh] w-full! max-w-3xl! flex-col overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Finding Action Details</DialogTitle>
           </DialogHeader>

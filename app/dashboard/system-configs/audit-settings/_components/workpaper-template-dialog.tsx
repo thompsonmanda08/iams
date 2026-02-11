@@ -58,7 +58,11 @@ export function WorkpaperTemplateDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] w-full max-w-3xl! overflow-y-auto">
+        <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-h-[90vh] w-full max-w-3xl! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Choose Workpaper Template</DialogTitle>
             <DialogDescription>

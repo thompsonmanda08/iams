@@ -64,7 +64,10 @@ export default function StrategicPillarsTab() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: pillarsData, isFetching } = useStrategicPillars(undefined, { page, page_size: pageSize });
+  const { data: pillarsData, isFetching } = useStrategicPillars(undefined, {
+    page,
+    page_size: pageSize
+  });
   const items = pillarsData?.data || [];
   const paginationData = pillarsData?.pagination;
 
@@ -148,11 +151,21 @@ export default function StrategicPillarsTab() {
               {isFetching && items.length === 0 ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={`skeleton-${index}`}>
-                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-4/5" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded animate-pulse w-1/3" /></TableCell>
+                    <TableCell>
+                      <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-4/5 animate-pulse rounded bg-gray-200" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-1/3 animate-pulse rounded bg-gray-200" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : items.length === 0 ? (
@@ -382,7 +395,11 @@ function CreateOrUpdate({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Update Strategic Pillar" : "Add Strategic Pillar"}

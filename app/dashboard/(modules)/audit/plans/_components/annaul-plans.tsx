@@ -364,7 +364,11 @@ export default function AuditAnnualPlan({
 
       {/* Create Approval Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+          className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Generate Annual Audit Plan?</DialogTitle>
             <DialogDescription>

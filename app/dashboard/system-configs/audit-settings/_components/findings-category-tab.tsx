@@ -347,7 +347,11 @@ function CreateOrUpdate({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Update Findings Category" : "Add Findings Category"}

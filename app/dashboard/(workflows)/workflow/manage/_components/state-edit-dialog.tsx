@@ -61,12 +61,17 @@ export const StateEditDialog = ({ state, isOpen, onClose, onSave }: StateEditDia
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[500px]" onPointerDownOutside={(e) => {
-        // Prevent closing dialog by clicking outside
-        if (isSaving) {
+      <DialogContent
+        className="sm:max-w-[500px]"
+        onPointerDownOutside={(e) => {
+          // Prevent closing dialog by clicking outside
+          if (isSaving) {
+            e.preventDefault();
+          }
+        }}
+        onInteractOutside={(e) => {
           e.preventDefault();
-        }
-      }}>
+        }}>
         <DialogHeader>
           <DialogTitle>Edit State</DialogTitle>
           <DialogDescription>

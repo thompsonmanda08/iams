@@ -444,7 +444,11 @@ function CreateOrUpdate({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Update Strategic Initiative" : "Add Strategic Initiative"}

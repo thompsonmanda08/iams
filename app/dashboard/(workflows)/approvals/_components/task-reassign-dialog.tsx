@@ -62,7 +62,11 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[525px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <UserCog className="h-5 w-5 text-blue-600" />

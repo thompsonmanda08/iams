@@ -145,7 +145,12 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="h-[90vh] max-h-[90vh] max-w-7xl! gap-0 p-0" hideCloseButton>
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="h-[90vh] max-h-[90vh] max-w-7xl! gap-0 p-0"
+        hideCloseButton>
         {/* Header */}
         <DialogHeader className="flex-row items-center justify-between border-b px-6 py-4">
           <div>

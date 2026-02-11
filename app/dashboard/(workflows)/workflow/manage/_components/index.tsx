@@ -2,13 +2,12 @@
 import { useMemo, useState } from "react";
 import {
   Plus,
-  Trash2,
   WorkflowIcon,
   GitBranch,
   MessageCircleQuestionMark,
-  Settings2,
   Pencil,
-  View
+  View,
+  Trash2
 } from "lucide-react";
 import {
   AlertDialog,
@@ -61,6 +60,8 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   // Use TanStack Query to manage workflow list with initial data
   const { data: workflowsData, refetch } = useWorkflows(initialWorkflows);
   const workflows: WorkflowItem[] = (workflowsData as WorkflowItem[]) || [];
+
+  console.log("LOGS:", initialWorkflows);
 
   const handleEdit = (workflowId: string) => {
     setEditingWorkflowId(workflowId);
@@ -389,20 +390,24 @@ function WorkflowCard({
             <Button onClick={() => onEdit(workflow.id)} size="sm">
               <Pencil className="h-4 w-4" /> Edit
             </Button>
-            {/* <Button
+            <Button
               onClick={() => onDelete(workflow.id)}
               size="sm"
               variant="outline"
               className="h-8 w-8 border-red-100 p-0 text-red-600 hover:border-red-200 hover:bg-red-50 sm:h-9 sm:w-auto sm:px-3 dark:border-red-900/30 dark:text-red-400 dark:hover:border-red-700 dark:hover:bg-red-900/20">
               <Trash2 className="h-4 w-4" /> Delete
-            </Button> */}
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+          className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl">{workflow.name}</DialogTitle>
             <DialogDescription className="mt-2 text-sm text-slate-600 dark:text-slate-400">

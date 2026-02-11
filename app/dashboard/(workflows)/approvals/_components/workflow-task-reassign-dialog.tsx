@@ -119,7 +119,11 @@ export function WorkflowTaskReassignDialog({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Reassign Workflow Task</DialogTitle>
             <DialogDescription>

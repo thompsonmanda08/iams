@@ -96,9 +96,9 @@ function PageHeader({
   const defaultContainer = "flex items-center gap-4";
   const defaultIconWrapper = "from-primary to-primary/80 flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br shadow-lg";
   const defaultIcon = "text-primary-foreground h-7 w-7";
-  const defaultTextWrapper = "";
+  const defaultTextWrapper = "min-w-0 flex-1";
   const defaultTitle = "text-foreground text-2xl font-bold tracking-tight";
-  const defaultDescription = "text-muted-foreground text-sm";
+  const defaultDescription = "text-muted-foreground text-sm word-break";
 
   return (
     <div className={cn(defaultContainer, classNames?.container)}>

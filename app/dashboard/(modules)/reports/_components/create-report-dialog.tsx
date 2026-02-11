@@ -252,7 +252,11 @@ export function CreateReportDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-lg">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />

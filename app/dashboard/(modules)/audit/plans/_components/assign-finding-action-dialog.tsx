@@ -129,7 +129,11 @@ export function AssignFindingActionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Assign Action to Finding</DialogTitle>
           <DialogDescription>

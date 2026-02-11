@@ -51,7 +51,7 @@ export function ActionEvidenceViewerDialog({
   onOpenChange,
   execution
 }: ActionEvidenceViewerDialogProps) {
-  const hasFile = execution.evidence_file_name && execution.evidence_file_url;
+  const hasFile = execution.evidence_file_url;
 
   const handleDownload = () => {
     if (execution.evidence_file_url) {
@@ -61,7 +61,11 @@ export function ActionEvidenceViewerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />

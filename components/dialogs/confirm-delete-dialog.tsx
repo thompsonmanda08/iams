@@ -30,7 +30,11 @@ export function ConfirmDeleteDialog({
 }: ConfirmDeleteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[425px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">

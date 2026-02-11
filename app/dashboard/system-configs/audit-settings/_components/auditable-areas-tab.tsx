@@ -442,7 +442,11 @@ export function CreateOrUpdateArea({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{initialData ? "Update Area" : "Create New Area"}</DialogTitle>
         </DialogHeader>

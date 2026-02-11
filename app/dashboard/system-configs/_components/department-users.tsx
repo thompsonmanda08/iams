@@ -312,7 +312,11 @@ function EditUserRoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit User Role</DialogTitle>
         </DialogHeader>
@@ -505,7 +509,11 @@ export function CreateOrUpdateDepartment({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{initialData ? "Update Department" : "Create New Department"}</DialogTitle>
         </DialogHeader>

@@ -73,7 +73,11 @@ export function CreateReportGuideDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create Report Guide</DialogTitle>
           <DialogDescription>Add a new report guide for risk or audit reports</DialogDescription>

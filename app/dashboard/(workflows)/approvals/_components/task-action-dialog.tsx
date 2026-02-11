@@ -96,7 +96,11 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[600px]">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Icon className={`h-5 w-5 ${iconColor}`} />

@@ -98,7 +98,11 @@ export function RiskFindingGradingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Add Risk Finding Grade" : "Edit Risk Finding Grade"}

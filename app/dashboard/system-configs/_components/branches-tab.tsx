@@ -457,7 +457,11 @@ function CreateOrUpdateBranchDialog({
           setInitialData(null);
         }
       }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{initialData ? "Update Branch" : "Create New Branch"}</DialogTitle>
         </DialogHeader>

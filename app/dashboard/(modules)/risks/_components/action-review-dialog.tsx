@@ -229,7 +229,11 @@ export function ActionReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90svh]! max-w-2xl! flex-col">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="flex max-h-[90svh]! max-w-2xl! flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

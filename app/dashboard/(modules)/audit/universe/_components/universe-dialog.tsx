@@ -88,7 +88,11 @@ export default function UniverseDialog({
           )}
         </DialogTrigger>
       )}
-      <DialogContent className="max-h-[90vh]! w-[70vw] max-w-[70vw]! overflow-y-auto">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-h-[90vh]! w-[70vw] max-w-[70vw]! overflow-y-auto">
         {/* <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Universe" : "Create New Universe"}</DialogTitle>
           <DialogDescription>

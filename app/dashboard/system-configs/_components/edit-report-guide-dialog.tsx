@@ -91,7 +91,11 @@ export function EditReportGuideDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Report Guide</DialogTitle>
           <DialogDescription>Update the report guide details</DialogDescription>

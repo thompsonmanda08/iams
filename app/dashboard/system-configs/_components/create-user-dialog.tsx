@@ -355,7 +355,11 @@ export default function CreateUserForm({
         </DialogTrigger>
       )}
 
-      <DialogContent className="max-h-[90vh] w-full overflow-hidden p-0">
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        className="max-h-[90vh] w-full overflow-hidden p-0">
         <DialogHeader className="border-b px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="bg-primary/5 text-primary hover:bg-primary/10 flex h-7 w-7 items-center justify-center rounded-full">
