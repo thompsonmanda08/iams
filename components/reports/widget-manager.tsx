@@ -46,6 +46,7 @@ export interface WidgetManagerProps {
   onWidgetRowsChange?: (widgetId: string, rows: Record<string, any>[]) => void;
   onRetryWidget?: (widgetId: string) => Promise<void>;
   retryingWidgetId?: string | null;
+  onToggleTableManualOverride?: (widgetId: string, enabled: boolean) => void;
 }
 
 /**
@@ -67,7 +68,8 @@ export function WidgetManager({
   onWidgetColumnsChange,
   onWidgetRowsChange,
   onRetryWidget,
-  retryingWidgetId
+  retryingWidgetId,
+  onToggleTableManualOverride
 }: WidgetManagerProps) {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [editingWidget, setEditingWidget] = useState<WidgetInstance | null>(null);
@@ -295,6 +297,11 @@ export function WidgetManager({
                 ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
                 : undefined
             }
+            onToggleManualOverride={
+              onToggleTableManualOverride
+                ? (enabled) => onToggleTableManualOverride(widget.instance_id, enabled)
+                : undefined
+            }
           />
         );
 
@@ -484,6 +491,7 @@ export function WidgetManager({
         }}
         onConfigure={handleConfigure}
         entityId={entityId}
+        entityType={entityType}
         existingWidget={editingWidget ?? undefined}
         filterByCategory={filterByCategory}
       />

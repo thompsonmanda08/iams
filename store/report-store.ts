@@ -71,6 +71,7 @@ interface ReportState {
     widgetId: string,
     dataSource: DataSource | null
   ) => void;
+  toggleTableManualOverride: (sectionId: string, widgetId: string, enabled: boolean) => void;
 
   // UI Actions
   setAddSectionModalOpen: (isOpen: boolean) => void;
@@ -389,7 +390,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
                     data: {
                       ...w.data,
                       title: dataSource.name,
-                      data_source_id: dataSource.id
+                      data_source_id: dataSource.id,
+                      is_manual_override: false
                     }
                   };
                 } else {
@@ -398,7 +400,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
                     ...w,
                     data: {
                       ...w.data,
-                      data_source_id: undefined
+                      data_source_id: undefined,
+                      is_manual_override: false
                     }
                   };
                 }
@@ -407,6 +410,20 @@ export const useReportStore = create<ReportState>((set, get) => ({
               })
             };
           })
+        }
+      };
+    }),
+
+  toggleTableManualOverride: (sectionId, widgetId, enabled) =>
+    set((state) => {
+      if (!state.report) return {};
+      return {
+        report: {
+          ...state.report,
+          sections: updateWidgetInSections(state.report.sections, sectionId, widgetId, (w) => ({
+            ...w,
+            data: { ...w.data, is_manual_override: enabled }
+          }))
         }
       };
     }),

@@ -33,6 +33,7 @@ export interface TableWidgetData {
   rows: Record<string, any>[];
   is_configurable?: boolean;
   data_source_id?: string;
+  is_manual_override?: boolean;
 }
 
 export interface PieChartSlice {

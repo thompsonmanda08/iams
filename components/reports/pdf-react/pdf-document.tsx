@@ -95,14 +95,14 @@ const createStyles = (primaryColor: string, secondaryColor: string) =>
       borderBottomWidth: 1,
       borderBottomColor: "#e2e8f0",
       borderBottomStyle: "solid",
-      minHeight: 20
+      minHeight: 28
     },
     tableHeader: {
       flexDirection: "row",
       backgroundColor: primaryColor,
       color: "white",
       fontWeight: "bold",
-      minHeight: 30
+      minHeight: 32
     },
     ObjTableHeader: {
       flexDirection: "row",
@@ -263,8 +263,8 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
               {(section.section_type === "compliance_findings" ||
                 section.section_type === "findings_selector") &&
                 section.selected_finding_ids && (
-                  <View style={styles.table}>
-                    <View style={[styles.tableRow, styles.tableHeader]}>
+                  <View style={styles.table} wrap>
+                    <View style={[styles.tableRow, styles.tableHeader]} minPresenceAhead={50}>
                       <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Ref</Text>
                       <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Clause</Text>
                       <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Finding</Text>
@@ -274,7 +274,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                     {findings
                       .filter((f) => section.selected_finding_ids?.includes(f.id))
                       .map((finding) => (
-                        <View key={finding.id} style={styles.tableRow}>
+                        <View key={finding.id} style={styles.tableRow} wrap={false}>
                           <Text style={[styles.tableCell, { flex: 0.25 }]}>
                             {finding.reference_code}
                           </Text>
@@ -308,7 +308,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
 
               {/* Widgets */}
               {section.widgets?.map((widget) => (
-                <View key={widget.instance_id} wrap={false}>
+                <View key={widget.instance_id}>
                   {widget.data.title && <Text style={styles.widgetTitle}>{widget.data.title}</Text>}
 
                   {/* Table Widget */}
@@ -326,31 +326,29 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                           );
                         }
 
-                        // Calculate column width dynamically based on number of columns
-                        const totalWidth = 540; // Available width in PDF page
-                        const minColumnWidth = 60; // Minimum width per column
-                        const columnCount = columns.length;
-                        const calculatedWidth = Math.max(minColumnWidth, totalWidth / columnCount);
-
-                        const columnWidths = columns.map((col: any) => {
-                          // If column has custom width, use it; otherwise use calculated width
-                          return col.width ? parseInt(col.width) : calculatedWidth;
+                        // Use flex-based layout so columns share space and text wraps
+                        const columnFlex = columns.map((col: any) => {
+                          return col.width ? parseInt(col.width) / 100 : 1;
                         });
 
+                        // Scale font size down for tables with many columns
+                        const cellFontSize = columns.length > 5 ? 8 : 9;
+
                         return (
-                          <View>
+                          <View wrap>
                             {/* Header Row */}
-                            <View style={[styles.tableRow, styles.tableHeader]}>
+                            <View style={[styles.tableRow, styles.tableHeader]} minPresenceAhead={50}>
                               {columns.map((col: any, idx: number) => (
                                 <View
                                   key={col.key}
                                   style={{
-                                    width: columnWidths[idx],
-                                    padding: 5
+                                    flex: columnFlex[idx],
+                                    paddingHorizontal: 6,
+                                    paddingVertical: 8
                                   }}>
                                   <Text
                                     style={{
-                                      fontSize: 9,
+                                      fontSize: cellFontSize,
                                       fontWeight: "bold",
                                       color: "white"
                                     }}>
@@ -377,6 +375,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                               rows.map((row: any, rowIdx: number) => (
                                 <View
                                   key={rowIdx}
+                                  wrap={false}
                                   style={[
                                     styles.tableRow,
                                     {
@@ -394,8 +393,9 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                                       <View
                                         key={`${rowIdx}-${col.key}`}
                                         style={{
-                                          width: columnWidths[colIdx],
-                                          padding: 5,
+                                          flex: columnFlex[colIdx],
+                                          paddingHorizontal: 6,
+                                          paddingVertical: 8,
                                           borderBottomColor: "#e2e8f0",
                                           ...(cellBackgroundColor && {
                                             backgroundColor: cellBackgroundColor
@@ -403,7 +403,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                                         }}>
                                         <Text
                                           style={{
-                                            fontSize: 9,
+                                            fontSize: cellFontSize,
                                             color: cellTextColor
                                           }}>
                                           {String(row[col.key] || "-")}
@@ -871,56 +871,121 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
                       }
                     })()}
                   </View>
-                  {/* Metric Card Widget  TODO!!!*/}
-                  {widget.widget_type === "metric_card" && (
-                    <View
-                      style={{
-                        marginVertical: 15,
-                        padding: 20,
-                        backgroundColor: "#f8fafc",
-                        borderWidth: 1,
-                        borderColor: "#e2e8f0",
-                        borderRadius: 6
-                      }}>
-                      {(widget.data as any).title && (
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            fontWeight: "bold",
-                            marginBottom: 12,
-                            color: "#475569"
-                          }}>
-                          {(widget.data as any).title}
-                        </Text>
-                      )}
-                      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-                        <Text style={{ fontSize: 36, fontWeight: "bold", color: "#0f172a" }}>
-                          {(widget.data as any).value || 0}
-                        </Text>
-                        {(widget.data as any).unit && (
-                          <Text style={{ fontSize: 14, color: "#64748b" }}>
-                            {(widget.data as any).unit}
-                          </Text>
-                        )}
-                        {(widget.data as any).trend !== undefined && (
+                  {/* Metric Card Widget */}
+                  {widget.widget_type === "metric_card" && (() => {
+                    const metricData = widget.data as any;
+                    const metrics = metricData?.metrics as Array<{
+                      title: string;
+                      value: string;
+                      subtitle?: string;
+                      trend?: string;
+                      trend_value?: string;
+                      trend_period?: string;
+                      color?: string;
+                    }> | undefined;
+
+                    if (metrics && metrics.length > 0) {
+                      // Multi-metric grid layout
+                      return (
+                        <View style={{ marginVertical: 15 }}>
+                          {metricData.title && (
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontWeight: "bold",
+                                marginBottom: 12,
+                                color: "#475569"
+                              }}>
+                              {metricData.title}
+                            </Text>
+                          )}
+                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                            {metrics.map((metric, idx) => (
+                              <View
+                                key={idx}
+                                style={{
+                                  width: "48%",
+                                  padding: 12,
+                                  backgroundColor: "#f8fafc",
+                                  borderWidth: 1,
+                                  borderColor: "#e2e8f0",
+                                  borderRadius: 6,
+                                  alignItems: "center"
+                                }}>
+                                <Text style={{ fontSize: 8, color: "#64748b", marginBottom: 4 }}>
+                                  {metric.title}
+                                </Text>
+                                <Text
+                                  style={{
+                                    fontSize: 22,
+                                    fontWeight: "bold",
+                                    color: metric.color || "#0f172a"
+                                  }}>
+                                  {metric.value}
+                                </Text>
+                                {metric.subtitle ? (
+                                  <Text style={{ fontSize: 7, color: "#94a3b8", marginTop: 2 }}>
+                                    {metric.subtitle}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      );
+                    }
+
+                    // Single metric fallback
+                    return (
+                      <View
+                        style={{
+                          marginVertical: 15,
+                          padding: 20,
+                          backgroundColor: "#f8fafc",
+                          borderWidth: 1,
+                          borderColor: "#e2e8f0",
+                          borderRadius: 6
+                        }}>
+                        {metricData.title && (
                           <Text
                             style={{
                               fontSize: 12,
-                              fontWeight: "600",
-                              color: (widget.data as any).trend >= 0 ? "#16a34a" : "#dc2626"
+                              fontWeight: "bold",
+                              marginBottom: 12,
+                              color: "#475569"
                             }}>
-                            {(widget.data as any).trend >= 0 ? "↑" : "↓"}{" "}
-                            {Math.abs((widget.data as any).trend)}%
+                            {metricData.title}
+                          </Text>
+                        )}
+                        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
+                          <Text style={{ fontSize: 36, fontWeight: "bold", color: "#0f172a" }}>
+                            {metricData.value || 0}
+                          </Text>
+                          {metricData.unit && (
+                            <Text style={{ fontSize: 14, color: "#64748b" }}>
+                              {metricData.unit}
+                            </Text>
+                          )}
+                          {metricData.trend !== undefined && (
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontWeight: "600",
+                                color: metricData.trend >= 0 ? "#16a34a" : "#dc2626"
+                              }}>
+                              {metricData.trend >= 0 ? "↑" : "↓"}{" "}
+                              {Math.abs(metricData.trend)}%
+                            </Text>
+                          )}
+                        </View>
+                        {metricData.description && (
+                          <Text style={{ fontSize: 9, color: "#78909c", marginTop: 8 }}>
+                            {metricData.description}
                           </Text>
                         )}
                       </View>
-                      {(widget.data as any).description && (
-                        <Text style={{ fontSize: 9, color: "#78909c", marginTop: 8 }}>
-                          {(widget.data as any).description}
-                        </Text>
-                      )}
-                    </View>
-                  )}
+                    );
+                  })()}
 
                   {/* Line Chart Widget  TODO!!!*/}
                   {widget.widget_type === "line_chart" && (

@@ -14,6 +14,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { useDataSources } from "@/hooks/shared/use-data-sources";
 import type { DataSource, WidgetType } from "@/lib/types/report-types";
 import { cn } from "@/lib/utils";
+import { searchDataSources } from "@/lib/utils/search-data-sources";
 import { Button } from "@/components/ui/button";
 import { getWidgetTypeInfo } from "./widget-type-selector";
 
@@ -122,36 +123,18 @@ export function DataSourceSelector({
     return categories;
   }, [filteredByAllowedCategories]);
 
-  // Apply search and category filter
+  // Apply search and category filter with smart scoring
   const filteredSources = useMemo(() => {
     let sources = filteredByAllowedCategories;
 
     // Filter by selected category
     if (selectedCategory !== "all") {
       sources = sources.filter((ds) => ds.category === selectedCategory);
-      console.log(
-        "🔍 [DataSourceSelector] Filtered by category",
-        selectedCategory,
-        ":",
-        sources.length,
-        "sources"
-      );
     }
 
-    // Filter by search query
+    // Smart search with scoring and ranking
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      sources = sources.filter(
-        (ds) =>
-          ds.name.toLowerCase().includes(query) || ds.description.toLowerCase().includes(query)
-      );
-      console.log(
-        "🔍 [DataSourceSelector] Filtered by search",
-        query,
-        ":",
-        sources.length,
-        "sources"
-      );
+      return searchDataSources(sources, searchQuery).map((scored) => scored.source);
     }
 
     return sources;

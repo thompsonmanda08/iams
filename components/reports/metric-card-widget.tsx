@@ -7,6 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface MetricItem {
+  title: string;
+  value: string;
+  subtitle?: string;
+  trend?: string;
+  trend_value?: string;
+  trend_period?: string;
+  color?: string;
+  icon?: string;
+}
+
 interface MetricCardWidgetData {
   title: string;
   value: number;
@@ -14,6 +25,7 @@ interface MetricCardWidgetData {
   trend?: number; // Percentage change
   description?: string;
   data_source_id?: string;
+  metrics?: MetricItem[]; // Array of metrics from API
 }
 
 interface MetricCardWidgetProps {
@@ -131,6 +143,49 @@ export const MetricCardWidget = ({
                 rows={2}
               />
             </div>
+          </div>
+        ) : data.metrics && data.metrics.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 py-2">
+            {data.metrics.map((metric, index) => {
+              const trendVal = parseFloat(metric.trend_value || "0");
+              const hasTrend = metric.trend && metric.trend !== "" && trendVal !== 0;
+              return (
+                <div
+                  key={index}
+                  className="border-border flex flex-col items-center gap-1 rounded-lg border p-3">
+                  <span className="text-muted-foreground text-xs font-medium">{metric.title}</span>
+                  <span className="text-2xl font-bold" style={{ color: metric.color }}>
+                    {metric.value}
+                  </span>
+                  {metric.subtitle && (
+                    <span className="text-muted-foreground text-xs">{metric.subtitle}</span>
+                  )}
+                  {hasTrend && (
+                    <div
+                      className={`flex items-center gap-1 text-xs font-medium ${
+                        metric.trend === "up"
+                          ? "text-green-600 dark:text-green-400"
+                          : metric.trend === "down"
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-muted-foreground"
+                      }`}>
+                      {metric.trend === "up" ? (
+                        <TrendingUp className="h-3 w-3" />
+                      ) : metric.trend === "down" ? (
+                        <TrendingDown className="h-3 w-3" />
+                      ) : (
+                        <Minus className="h-3 w-3" />
+                      )}
+                      <span>
+                        {trendVal > 0 ? "+" : ""}
+                        {metric.trend_value}
+                        {metric.trend_period ? ` ${metric.trend_period}` : ""}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 py-4">

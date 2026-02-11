@@ -221,9 +221,9 @@ export const LineChartWidget = ({
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: "var(--color-muted-foreground, #6b7280)" }}
               />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "var(--color-muted-foreground, #6b7280)" }} />
               <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
               {data.series?.map((series) => (
                 <Line

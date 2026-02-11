@@ -25,8 +25,9 @@ import { DataSourceSelector } from "@/components/shared/data-source-selector";
 import { WidgetTypeSelector } from "@/components/shared/widget-type-selector";
 import { useWidgetDataFetch, transformWidgetData } from "@/hooks/shared/use-widget-data";
 import { useDataSources } from "@/hooks/shared/use-data-sources";
-import type { DataSource, WidgetType, WidgetInstance } from "@/lib/types/report-types";
+import type { DataSource, WidgetType, WidgetInstance, ReportEntityType } from "@/lib/types/report-types";
 import { cn } from "@/lib/utils";
+import { searchDataSources } from "@/lib/utils/search-data-sources";
 
 export interface WidgetConfiguration {
   dataSourceId: string;
@@ -40,6 +41,7 @@ export interface WidgetConfigurationModalProps {
   onClose: () => void;
   onConfigure: (config: WidgetConfiguration) => void;
   entityId?: string;
+  entityType?: ReportEntityType;
   existingWidget?: WidgetInstance;
   filterByCategory?: DataSource["category"][];
 }
@@ -135,6 +137,7 @@ export function WidgetConfigurationModal({
   onClose,
   onConfigure,
   entityId,
+  entityType,
   existingWidget,
   filterByCategory
 }: WidgetConfigurationModalProps) {
@@ -222,7 +225,8 @@ export function WidgetConfigurationModal({
         const rawData = await fetchWidgetData({
           dataSourceId: selectedDataSource.id,
           widgetType: selectedWidgetType,
-          entityId
+          entityId,
+          entityType
         });
 
         console.log("🔍 [WidgetConfigModal] Raw data received:", {
@@ -273,6 +277,7 @@ export function WidgetConfigurationModal({
     selectedDataSource,
     selectedWidgetType,
     entityId,
+    entityType,
     fetchWidgetData,
     onConfigure,
     handleOpenChange
@@ -420,7 +425,7 @@ function InlineDataSourceSelector({
     return Array.from(new Set(filteredByAllowedCategories.map((ds: DataSource) => ds.category)));
   }, [filteredByAllowedCategories]);
 
-  // Apply search and category filter
+  // Apply search and category filter with smart scoring
   const filteredSources = useMemo(() => {
     let sources = filteredByAllowedCategories;
 
@@ -429,11 +434,7 @@ function InlineDataSourceSelector({
     }
 
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      sources = sources.filter(
-        (ds: DataSource) =>
-          ds.name.toLowerCase().includes(query) || ds.description.toLowerCase().includes(query)
-      );
+      return searchDataSources(sources, searchQuery).map((scored) => scored.source);
     }
 
     return sources;
@@ -458,7 +459,9 @@ function InlineDataSourceSelector({
           placeholder="Search data sources..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-md border border-input py-2 pr-3 pl-9 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+          onKeyDown={(e) => e.stopPropagation()}
+          autoFocus
+          className="bg-background text-foreground w-full rounded-md border border-input py-2 pr-3 pl-9 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
         />
       </div>
 
@@ -491,43 +494,45 @@ function InlineDataSourceSelector({
         ))}
       </div>
 
-      {/* Manual Entry Option */}
-      <button
-        type="button"
-        onClick={() => {
-          handleSelect({
-            id: "manual",
-            name: "Manual Entry",
-            category: "custom",
-            description: "Enter your own data manually",
-            compatible_widgets: [
-              "pie_chart",
-              "bar_chart",
-              "table",
-              "line_chart",
-              "area_chart",
-              "metric_card",
-              "risk_objective_mapping"
-            ],
-            requires_entity: false,
-            sample_data: {}
-          } as DataSource);
-        }}
-        className={cn(
-          "w-full rounded-lg border-2 p-3 text-left transition-colors",
-          selectedDataSourceId === "manual"
-            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30"
-            : "border-border hover:border-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-950/20"
-        )}>
-        <div className="flex items-center gap-2">
-          <Edit2 className="h-4 w-4 text-purple-500" />
-          <span className="font-medium text-foreground">Manual Entry</span>
-          <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">
-            Custom
-          </span>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">Enter your own data manually</p>
-      </button>
+      {/* Manual Entry Option - hidden when search doesn't match */}
+      {(!searchQuery.trim() || "manual entry".includes(searchQuery.toLowerCase())) && (
+        <button
+          type="button"
+          onClick={() => {
+            handleSelect({
+              id: "manual",
+              name: "Manual Entry",
+              category: "custom",
+              description: "Enter your own data manually",
+              compatible_widgets: [
+                "pie_chart",
+                "bar_chart",
+                "table",
+                "line_chart",
+                "area_chart",
+                "metric_card",
+                "risk_objective_mapping"
+              ],
+              requires_entity: false,
+              sample_data: {}
+            } as DataSource);
+          }}
+          className={cn(
+            "w-full rounded-lg border-2 p-3 text-left transition-colors",
+            selectedDataSourceId === "manual"
+              ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30"
+              : "border-border hover:border-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-950/20"
+          )}>
+          <div className="flex items-center gap-2">
+            <Edit2 className="h-4 w-4 text-purple-500" />
+            <span className="font-medium text-foreground">Manual Entry</span>
+            <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">
+              Custom
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Enter your own data manually</p>
+        </button>
+      )}
 
       {/* Data Source List */}
       <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg border border-border p-2">
