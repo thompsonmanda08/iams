@@ -43,6 +43,7 @@ import {
   getWorkflowTransitions
 } from "@/app/_actions/workflow-actions";
 import { QUERY_KEYS } from "@/lib/constants";
+import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
 
 interface WorkflowClientProps {
   initialWorkflows: WorkflowItem[];
@@ -55,13 +56,11 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [workflowToDelete, setWorkflowToDelete] = useState<string | null>(null);
   const [isDeletingLoading, setIsDeletingLoading] = useState(false);
-  // const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
+  const { deleteWorkflow: deleteWorkflowMutation } = useWorkflowMutations();
 
   // Use TanStack Query to manage workflow list with initial data
   const { data: workflowsData, refetch } = useWorkflows(initialWorkflows);
   const workflows: WorkflowItem[] = (workflowsData as WorkflowItem[]) || [];
-
-  console.log("LOGS:", initialWorkflows);
 
   const handleEdit = (workflowId: string) => {
     setEditingWorkflowId(workflowId);
@@ -88,24 +87,34 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
   );
 
   const handleConfirmDelete = async () => {
-    if (true) {
-      return notify({
-        title: "Maintenance Mode",
-        description: "This action is not allowed at the moment.",
-        type: "warning"
+    if (!workflowToDelete) return;
+
+    setIsDeletingLoading(true);
+    try {
+      const response = await deleteWorkflowMutation(workflowToDelete);
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to delete workflow");
+      }
+
+      notify({
+        title: "Success",
+        description: response.message || "Workflow deleted successfully",
+        type: "success"
       });
+
+      setIsDeleteDialogOpen(false);
+      setWorkflowToDelete(null);
+      refetch();
+    } catch (error: any) {
+      notify({
+        title: "Error",
+        description: error?.message || "Failed to delete workflow",
+        type: "error"
+      });
+    } finally {
+      setIsDeletingLoading(false);
     }
-    // if (workflowToDelete) {
-    //   setIsDeletingLoading(true);
-    //   try {
-    //     await deleteWorkflowMutation(workflowToDelete);
-    //     setIsDeleteDialogOpen(false);
-    //     setWorkflowToDelete(null);
-    //     refetch();
-    //   } finally {
-    //     setIsDeletingLoading(false);
-    //   }
-    // }
   };
 
   const handleCreateSuccess = () => {

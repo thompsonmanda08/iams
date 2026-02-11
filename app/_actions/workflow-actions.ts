@@ -110,6 +110,27 @@ export async function getWorkflowDetails(workflowId: string): Promise<APIRespons
   }
 }
 
+/**
+ * Delete workflow by ID
+ */
+
+export async function deleteWorkflow(workflowId: string): Promise<APIResponse> {
+  if (!workflowId) {
+    return handleBadRequest("Transition ID is required");
+  }
+
+  const url = `/api/v1/simple-workflows/${workflowId}`;
+
+  try {
+    const response = await authenticatedApiClient({ method: "DELETE", url });
+
+    revalidatePath("/dashboard/workflow/manage");
+    return successResponse(response.data);
+  } catch (error: any) {
+    return handleError(error, "DELETE | DELETE WORKFLOW", url);
+  }
+}
+
 // ============================================================================
 // WORKFLOW STATES
 // ============================================================================
