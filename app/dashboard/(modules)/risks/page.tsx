@@ -448,7 +448,7 @@ export default function RisksDashboardPage() {
           {/* Category Distribution Bar Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Risk Distribution by Category</CardTitle>
+              <CardTitle>Risk against set risk appetite</CardTitle>
               <CardDescription>Breakdown of risks across organizational categories</CardDescription>
             </CardHeader>
             {!categoryData ? (
