@@ -3,18 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 import { toast } from "sonner";
-import { initializeSystemSetup, loginUser } from "@/app/_actions/auth-actions";
+import { loginUser } from "@/app/_actions/auth-actions";
 import { ErrorState } from "@/lib/types";
 import Link from "next/link";
 import CustomAlert from "../ui/custom-alert";
 import { capitalize } from "@/lib/utils";
-import { init } from "next/dist/compiled/webpack/webpack";
+
 
 export default function LoginForm() {
   const router = useRouter();
@@ -22,7 +20,6 @@ export default function LoginForm() {
   const [error, setError] = useState<ErrorState>({});
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
