@@ -19,7 +19,8 @@ export const signupSchema = z.object({
   is_active: z.boolean().optional().default(true),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().optional(),
-  user_type: z.string().optional()
+  user_type: z.string().optional(),
+  mfa_enabled: z.boolean().optional().default(true)
 });
 
 // Schema for editing user (password is optional)
@@ -34,7 +35,8 @@ export const updateUserSchema = z.object({
   is_active: z.boolean().optional(),
   password: z.string().optional(),
   phone: z.string().optional(),
-  user_type: z.string().optional()
+  user_type: z.string().optional(),
+  mfa_enabled: z.boolean().optional()
 });
 
 // Base schema with common fields

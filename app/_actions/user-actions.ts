@@ -14,7 +14,8 @@ export async function createNewUser({
   last_name,
   branch_id,
   department_id,
-  role_id
+  role_id,
+  mfa_enabled
 }: {
   username: string;
   email: string;
@@ -25,6 +26,7 @@ export async function createNewUser({
   branch_id: string;
   department_id: string;
   role_id: string;
+  mfa_enabled: boolean;
   user_type?: UserType;
 }): Promise<APIResponse> {
   const url = `/api/v1/users`;
@@ -40,7 +42,8 @@ export async function createNewUser({
         last_name,
         branch_id,
         department_id,
-        role_id
+        role_id,
+        mfa_enabled,
       },
       method: "POST"
     });

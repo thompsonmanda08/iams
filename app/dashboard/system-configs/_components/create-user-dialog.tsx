@@ -26,7 +26,6 @@ import { Check, Copy, UserCog, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -116,7 +115,8 @@ export default function CreateUserForm({
         department_id: user.department_id || "",
         is_active: user.is_active ?? true,
         user_type,
-        password: ""
+        password: "",
+        mfa_enabled: user.mfa_enabled ?? true
       };
     }
     return {
@@ -130,7 +130,8 @@ export default function CreateUserForm({
       department_id: "",
       is_active: true,
       user_type,
-      password: generateRandomString()
+      password: generateRandomString(),
+      mfa_enabled: true
     };
   }, [isEditMode, user?.id]);
 
@@ -160,7 +161,8 @@ export default function CreateUserForm({
         department_id: user.department_id || "",
         is_active: user.is_active ?? true,
         user_type,
-        password: ""
+        password: "",
+        mfa_enabled: user.mfa_enabled ?? true
       });
     } else if (!isEditMode && dialogOpen) {
       // Reset to empty form in create mode when dialog opens
@@ -175,7 +177,8 @@ export default function CreateUserForm({
         department_id: "",
         is_active: true,
         user_type,
-        password: generateRandomString()
+        password: generateRandomString(),
+        mfa_enabled: true
       });
     }
   }, [user?.id, dialogOpen, isEditMode]);
@@ -214,13 +217,13 @@ export default function CreateUserForm({
       department_id: "",
       is_active: true,
       user_type,
-      password: generateRandomString()
+      password: generateRandomString(),
+      mfa_enabled: true
     });
     setCopied(false);
   };
 
   function handleCloseModal() {
-    console.log("handleCloseModal called, setDialogOpen exists:", !!setDialogOpen);
     resetForm();
     setDialogOpen?.(false);
   }
@@ -238,8 +241,6 @@ export default function CreateUserForm({
   const processForm = async (values: SignupFormValues) => {
     const isEdit = !!user;
 
-    console.log("Processing form:", { isEdit, values, userId: user?.id });
-
     try {
       let response;
       if (isEdit) {
@@ -253,14 +254,14 @@ export default function CreateUserForm({
           department_id: values.department_id,
           role_id: values.role_id,
           is_active: values.is_active ?? true,
-          user_type
+          user_type,
+          mfa_enabled: values.mfa_enabled ?? true
         };
-        console.log("Updating user with data:", updateData);
+
         response = await updateUserMutation.mutateAsync({
           userId: user.id,
           data: updateData
         });
-        console.log("Update response:", response);
       } else {
         response = await createUserMutation.mutateAsync({
           username: values.username,
@@ -272,7 +273,8 @@ export default function CreateUserForm({
           branch_id: values.branch_id,
           department_id: values.department_id,
           role_id: values.role_id,
-          user_type
+          user_type,
+          mfa_enabled: values.mfa_enabled
         });
       }
 
@@ -592,27 +594,50 @@ export default function CreateUserForm({
                   )}
 
                   {isEditMode && (
-                    <FormField
-                      control={form.control}
-                      name="is_active"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Account Status</FormLabel>
-                            <FormDescription>
-                              {field.value ? "Account is active" : "Account is deactivated"}
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              disabled={isSubmitting}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                    <div className="rounded-lg border p-4">
+                      <FormField
+                        control={form.control}
+                        name="is_active"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">Account Status</FormLabel>
+                              <FormDescription>
+                                {field.value ? "Account is active" : "Account is deactivated"}
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                disabled={isSubmitting}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="mfa_enabled"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">MFA</FormLabel>
+                              <FormDescription>
+                                {field.value ? "MFA is enabled" : "MFA is disabled"}
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                disabled={isSubmitting}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   )}
 
                   {!isEditMode && (
