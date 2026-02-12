@@ -12,7 +12,8 @@ import {
   deleteWorkflowState,
   createWorkflowTransition,
   updateWorkflowTransition,
-  deleteWorkflowTransition
+  deleteWorkflowTransition,
+  deleteWorkflow
 } from "@/app/_actions/workflow-actions";
 
 /**
@@ -538,7 +539,7 @@ export function useWorkflowMutations() {
   return {
     saveWorkflow,
     updateWorkflowData,
-    // deleteWorkflow,
+    deleteWorkflow,
     saveOrUpdateWorkflow,
     createStates,
     updateStates,

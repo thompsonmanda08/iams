@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { AlertTriangle, Upload, Eye, CheckCircle2, AlertCircle } from "lucide-react";
+import { AlertTriangle, Upload, Eye, CheckCircle2, AlertCircle, Send, Loader2 } from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
@@ -24,6 +24,8 @@ import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
+import { sendRiskActionReminder } from "@/app/_actions/task-actions";
+import { toast } from "sonner";
 
 interface ActionsTableProps {
   actions: ActionDefinition[];
@@ -45,6 +47,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     null
   );
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reminderSendingId, setReminderSendingId] = useState<string | null>(null);
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -69,6 +72,23 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     return new Date(dueDate) < new Date();
   };
 
+  const handleSendReminder = async (actionId: string) => {
+    setReminderSendingId(actionId);
+    try {
+      const response = await sendRiskActionReminder(actionId);
+      if (response.success) {
+        toast.success(response.message || "Reminder sent successfully");
+      } else {
+        toast.error(response.message || "Failed to send reminder");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reminder");
+    } finally {
+      setReminderSendingId(null);
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
@@ -88,39 +108,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {/* 
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleExport("copy")}>
-              <Copy className="mr-2 size-4" />
-              Copy
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
-              <FileText className="mr-2 size-4" />
-              CSV
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("excel")}>
-              <FileSpreadsheet className="mr-2 size-4" />
-              Excel
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("pdf")}>
-              <FileText className="mr-2 size-4" />
-              PDF
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("print")}>
-              <Printer className="mr-2 size-4" />
-              Print
-            </Button>
-          </div>
-          <Search
-            placeholder="Search risks..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e)}
-            className="ml-auto max-w-xs"
-          /> 
-        </div>
-          */}
-
         <div className="rounded-md border">
           <Table>
             <TableHeader className="uppercase">
@@ -256,6 +243,20 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                               View Evidence
                             </Button>
                           )}
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSendReminder(action.id)}
+                            disabled={reminderSendingId === action.id}
+                            className="h-8 gap-1.5">
+                            {reminderSendingId === action.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Send className="h-3.5 w-3.5" />
+                            )}
+                            {reminderSendingId === action.id ? "Sending..." : "Send Reminder"}
+                          </Button>
 
                           {isUserReviewer && (
                             <Button

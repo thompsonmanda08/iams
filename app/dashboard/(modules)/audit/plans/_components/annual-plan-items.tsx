@@ -1078,14 +1078,14 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
   const teamMembersOptions = useMemo(() => {
     return teamMembers.map((member) => ({
       value: member.id,
-      label: `${member.first_name} ${member.last_name} - (${member.role.name})`
+      label: `${member.first_name ?? ""} ${member.last_name ?? ""} - (${member.role?.name ?? "N/A"})`
     }));
   }, [teamMembers]);
 
   const headsOptions = useMemo(() => {
     return headsOfDepartment.map((head) => ({
       id: head.id,
-      name: `${head.first_name} ${head.last_name} - (${head.role.name})`
+      name: `${head.first_name ?? ""} ${head.last_name ?? ""} - (${head.role?.name ?? "N/A"})`
     }));
   }, [headsOfDepartment]);
 

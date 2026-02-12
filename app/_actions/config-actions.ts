@@ -2201,3 +2201,90 @@ export async function deleteAuditCriteriaRating(
     );
   }
 }
+
+// ============================================================================
+// PASSWORD POLICY MANAGEMENT
+// ============================================================================
+
+/**
+ * Get Password Policy Configuration
+ * Endpoint: GET /api/v1/password-policy
+ * Status: ✅ Documented in API
+ */
+export async function getPasswordPolicy(): Promise<APIResponse> {
+  const url = `/api/v1/password-policy`;
+
+  try {
+    const response = await authenticatedApiClient({
+      url,
+      method: "GET"
+    });
+    return successResponse(response?.data?.data, "Password policy fetched successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "GET", url);
+  }
+}
+
+/**
+ * Update Password Policy Configuration
+ * Endpoint: PUT /api/v1/password-policy
+ * Status: ✅ Documented in API
+ *
+ * Configuration object structure:
+ * {
+ *   min_length: number,
+ *   require_uppercase: boolean,
+ *   require_lowercase: boolean,
+ *   require_numbers: boolean,
+ *   require_special_chars: boolean,
+ *   max_failed_attempts: number,
+ *   lockout_duration_mins: number,
+ *   password_expiry_days: number,
+ *   otp_length: number,
+ *   otp_expiry_mins: number,
+ *   require_mfa: boolean,
+ *   session_timeout_mins: number
+ * }
+ */
+export async function updatePasswordPolicy(data: {
+  min_length: number;
+  require_uppercase: boolean;
+  require_lowercase: boolean;
+  require_numbers: boolean;
+  require_special_chars: boolean;
+  max_failed_attempts: number;
+  lockout_duration_mins: number;
+  password_expiry_days: number;
+  otp_length: number;
+  otp_expiry_mins: number;
+  require_mfa: boolean;
+  session_timeout_mins: number;
+}): Promise<APIResponse> {
+  const url = `/api/v1/password-policy`;
+
+  if (
+    data.min_length === undefined ||
+    data.max_failed_attempts === undefined ||
+    data.lockout_duration_mins === undefined ||
+    data.password_expiry_days === undefined ||
+    data.otp_length === undefined ||
+    data.otp_expiry_mins === undefined ||
+    data.session_timeout_mins === undefined
+  ) {
+    return handleBadRequest(
+      "All password policy fields are required (min_length, max_failed_attempts, lockout_duration_mins, password_expiry_days, otp_length, otp_expiry_mins, session_timeout_mins)"
+    );
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      url,
+      method: "PUT",
+      data
+    });
+    revalidatePath("/dashboard/system-configs/password-policy");
+    return successResponse(response?.data?.data, "Password policy updated successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "PUT", url);
+  }
+}

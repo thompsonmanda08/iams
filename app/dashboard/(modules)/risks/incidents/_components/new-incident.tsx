@@ -88,7 +88,7 @@ export function NewIncident() {
   // Computed values
   const availableSubCauses = useMemo(() => {
     if (!formData.primary_cause_id) return [];
-    const selectedCause = causes.find((process) => process.id === formData.primary_cause_id);
+    const selectedCause = causes.find((process:any) => process.id === formData.primary_cause_id);
     return selectedCause?.sub_causes || [];
   }, [formData.primary_cause_id, causes]);
 
@@ -100,7 +100,7 @@ export function NewIncident() {
     createNewIncident(formData);
   };
 
-  const departmentUser = users.map((user) => ({
+  const departmentUser = users.map((user: any) => ({
     name: `${user.first_name} ${user.last_name}`,
     id: user.id
   }));

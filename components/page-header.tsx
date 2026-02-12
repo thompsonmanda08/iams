@@ -25,7 +25,8 @@ import {
   ChartNetwork,
   Globe,
   Calendar,
-  Compass
+  Compass,
+  Mail
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
@@ -57,7 +58,8 @@ const iconMap: Record<string, LucideIcon> = {
   ChartNetwork,
   Globe,
   Calendar,
-  Compass
+  Compass,
+  Mail
 };
 
 export interface PageHeaderClassNames {

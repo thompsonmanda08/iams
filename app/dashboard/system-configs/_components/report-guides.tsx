@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Loader2, BookOpen, Settings } from "lucide-react";
+import { Plus, Edit2, Trash2,BookOpen, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateReportGuideDialog } from "./create-report-guide-dialog";
@@ -160,7 +160,7 @@ export function ReportGuides() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+         <div className="border-t-primary h-8 w-8 animate-spin rounded-full border-4 border-gray-300"></div>
       </div>
     );
   }

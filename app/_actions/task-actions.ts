@@ -270,3 +270,36 @@ export async function completeWorkflowTask(
     return handleError(error, "POST | COMPLETE WORKFLOW TASK", url);
   }
 }
+
+// ============================================================================
+// RISK ACTIONS REMINDERS
+// ============================================================================
+
+/**
+ * Send a reminder for a risk action
+ * Endpoint: POST /api/v1/risk-actions/{risk_action_id}/remind
+ * Sends a notification to the assigned executor/reviewer about the pending action
+ */
+export async function sendRiskActionReminder(riskActionId: string): Promise<APIResponse> {
+  if (!riskActionId) {
+    return handleBadRequest("Risk action ID is required");
+  }
+
+  const url = `/api/v1/risk-actions/${riskActionId}/remind`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "POST",
+      url,
+      data: {}
+    });
+
+    revalidatePath("/dashboard/actions/risk");
+    return successResponse(
+      response.data,
+      "Reminder sent successfully to the assigned user"
+    );
+  } catch (error: any) {
+    return handleError(error, "POST | SEND RISK ACTION REMINDER", url);
+  }
+}
