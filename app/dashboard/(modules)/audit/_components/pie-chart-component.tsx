@@ -8,7 +8,7 @@ import {
   ChartLegend,
   ChartLegendContent
 } from "@/components/ui/chart";
-import { PieChart as RechartsPieChart, Pie, Cell } from "recharts";
+import { PieChart as RechartsPieChart, Pie, Cell, Label } from "recharts";
 import { CHART_CONFIG } from "./chart-utils";
 
 interface PieChartComponentProps {
@@ -33,29 +33,56 @@ export function PieChartComponent({
     fill: config[item.name as keyof typeof config]?.color || "#8884d8"
   }));
 
+  const total = chartData.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <div className="space-y-2">
       <h4 className="text-muted-foreground text-center text-sm font-medium">{title}</h4>
-      <ChartContainer config={config} className="w-full" style={{ height }}>
+      <ChartContainer config={config} className="w-full flex justify-center" style={{ height }}>
         <RechartsPieChart>
+          {showTooltip && (
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+          )}
           <Pie
             data={chartData}
             cx="50%"
             cy="50%"
-            innerRadius={0}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={50}
             outerRadius={80}
             paddingAngle={2}
-            dataKey="value"
-            strokeWidth={1}
-            label={(entry) => `${entry.name}: ${entry.value}`}
-            labelLine={false}>
+            strokeWidth={2}>
+            <Label
+              content={({ viewBox }) => {
+                if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                  return (
+                    <text
+                      x={viewBox.cx}
+                      y={viewBox.cy}
+                      textAnchor="middle"
+                      dominantBaseline="middle">
+                      <tspan
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        className="fill-foreground text-2xl font-bold">
+                        {total.toLocaleString()}
+                      </tspan>
+                      <tspan
+                        x={viewBox.cx}
+                        y={(viewBox.cy || 0) + 20}
+                        className="fill-muted-foreground text-xs">
+                        Total
+                      </tspan>
+                    </text>
+                  );
+                }
+              }}
+            />
             {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.fill} stroke="transparent" />
+              <Cell key={`cell-${index}`} fill={entry.fill} />
             ))}
           </Pie>
-          {showTooltip && (
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-          )}
           {showLegend && <ChartLegend content={<ChartLegendContent />} />}
         </RechartsPieChart>
       </ChartContainer>

@@ -15,34 +15,6 @@ interface FindingsTrackerProps {
   findings: Finding[];
 }
 
-const getSeverityColor = (severity: string) => {
-  switch (severity?.toUpperCase()) {
-    case "CRITICAL":
-      return "bg-destructive/10 text-destructive";
-    case "HIGH":
-      return "bg-orange-500/10 text-orange-500";
-    case "MEDIUM":
-      return "bg-yellow-500/10 text-yellow-500";
-    case "LOW":
-      return "bg-green-500/10 text-green-500";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status?.toUpperCase()) {
-    case "OPEN":
-      return "bg-destructive/10 text-destructive";
-    case "IN_PROGRESS":
-      return "bg-blue-500/10 text-blue-500";
-    case "RESOLVED":
-      return "bg-green-500/10 text-green-500";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
-};
-
 const getDaysOverdue = (dueDate: string) => {
   const due = new Date(dueDate);
   const today = new Date();
@@ -52,7 +24,7 @@ const getDaysOverdue = (dueDate: string) => {
 };
 
 export default function FindingsTracker({ findings }: FindingsTrackerProps) {
-  const openFindings = findings.filter((f) => f.status === "OPEN");
+  const openFindings = findings.filter((f) => f.status);
 
   return (
     <Card className="border-border bg-card">
@@ -84,12 +56,7 @@ export default function FindingsTracker({ findings }: FindingsTrackerProps) {
                         </p>
                       </div>
                     </div>
-                    {finding.severity && (
-                      <span
-                        className={`rounded px-2 py-1 text-xs font-semibold ${getStatusColor(finding.severity)}`}>
-                        {finding.severity}
-                      </span>
-                    )}
+                    {finding.severity && <StatusBadge status={finding.severity} />}
                   </div>
                   <div className="flex items-center justify-between">
                     <StatusBadge status={finding.status} />

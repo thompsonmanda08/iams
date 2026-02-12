@@ -6,6 +6,7 @@ import AuditStatus from "./audit-status";
 import FindingsTracker from "./findings-tracker";
 import SystemHealth from "./system-health";
 import { getDashboardStats } from "@/app/_actions/reports-actions";
+import RiskAppetite from "./risk-appetite";
 
 export default async function Dashboard() {
   const data = await getDashboardStats();
@@ -29,9 +30,8 @@ export default async function Dashboard() {
     (d?.audit_summary?.completed_audit_plans || 0);
 
   const openFindings = d?.audit_findings?.filter((f: any) => f.status === "OPEN")?.length || 0;
-  const awaitingResponse = d?.audit_findings?.filter(
-    (f: any) => f.status === "OPEN" && !f.severity
-  )?.length || 0;
+  const awaitingResponse =
+    d?.audit_findings?.filter((f: any) => f.status === "OPEN" && !f.severity)?.length || 0;
 
   return (
     <div className="bg-background min-h-screen">
@@ -123,7 +123,9 @@ export default async function Dashboard() {
               <RiskOverview riskSummary={d?.risk_summary} />
               <KriMonitoring kriSummary={d?.kri_summary} />
             </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <RiskAppetite riskAppetite={d?.risk_appetite_status} />
               <AuditStatus auditSummary={d?.audit_summary} />
               <FindingsTracker findings={d?.audit_findings} />
             </div>
@@ -132,6 +134,9 @@ export default async function Dashboard() {
           {/* Risk Management Tab */}
           <TabsContent value="risks" className="mt-6 space-y-6">
             <RiskOverview riskSummary={d?.risk_summary} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <RiskAppetite riskAppetite={d?.risk_appetite_status} />
+            </div>
           </TabsContent>
 
           {/* KRI Monitoring Tab */}

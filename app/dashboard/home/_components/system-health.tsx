@@ -7,7 +7,8 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { PieChart, Pie, Cell } from "recharts";
+import { PieChart, Pie, Cell, Label } from "recharts";
+import { ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 
 interface SystemHealthProps {
   systemHealth: {
@@ -20,15 +21,15 @@ interface SystemHealthProps {
 }
 
 const activityChartConfig = {
-  active: {
+  Active: {
     label: "Active",
     color: "var(--green-active)"
   },
-  inactive: {
+  Inactive: {
     label: "Inactive",
     color: "var(--amber-active)"
   },
-  locked: {
+  Locked: {
     label: "Locked",
     color: "var(--red-active)"
   }
@@ -89,23 +90,51 @@ export default function SystemHealth({ systemHealth }: SystemHealthProps) {
             <CardTitle>User Status Distribution</CardTitle>
             <CardDescription>Visual breakdown of user account statuses</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={activityChartConfig} className="h-[300px] w-full">
+          <CardContent className="flex justify-center">
+            <ChartContainer config={activityChartConfig} className="h-[250px] w-full">
               <PieChart>
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie
                   data={pieData}
+                  dataKey="value"
+                  nameKey="name"
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value">
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={2}
+                  strokeWidth={2}>
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle">
+                            <tspan
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              className="fill-foreground text-3xl font-bold">
+                              {systemHealth.total_users}
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) + 24}
+                              className="fill-muted-foreground text-sm">
+                              Total Users
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
               </PieChart>
             </ChartContainer>
           </CardContent>
