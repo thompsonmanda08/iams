@@ -46,6 +46,7 @@ import { Pagination } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import BackButton from "@/components/back-button";
 import { StatusBadge } from "@/components/status-badge";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
@@ -104,6 +105,7 @@ const INIT_LINE_DATA: BudgetLineFormData = {
 
 const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [lineData, setLineData] = useState<BudgetLineFormData>({
     ...INIT_LINE_DATA,
     budget_id: budget?.id || "",
@@ -197,6 +199,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkPermission("AUDIT_PLANS", editingLine ? "can_edit" : "can_create")) return;
     setIsCreating(true);
 
     try {
@@ -238,6 +241,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   };
 
   const handleEditLine = (line: BudgetLine) => {
+    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
     setEditingLine(line);
     setLineData({
       budget_id: budget.id,
@@ -254,6 +258,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   };
 
   const handleDeleteClick = (line: BudgetLine) => {
+    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
     setLineToDelete(line);
     setShowDeleteModal(true);
   };
@@ -295,6 +300,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   };
 
   const handleSubmitBudget = async () => {
+    if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
     setIsSubmitting(true);
     try {
       const response = await submitBudgetForApproval(budget.id);
@@ -329,7 +335,10 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                 Submit for Approval
               </Button>
             )}
-            <Button onClick={() => setShowLineForm(true)} className="gap-2" size="sm">
+            <Button onClick={() => {
+              if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+              setShowLineForm(true);
+            }} className="gap-2" size="sm">
               <Plus className="h-5 w-5" />
               Budget Line
             </Button>
@@ -629,7 +638,10 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                     <p className="text-muted-foreground mb-6">
                       Add your first budget line to get started
                     </p>
-                    <Button onClick={() => setShowLineForm(true)} className="gap-2">
+                    <Button onClick={() => {
+                      if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                      setShowLineForm(true);
+                    }} className="gap-2">
                       <Plus className="h-4 w-4" />
                       Add First Line
                     </Button>

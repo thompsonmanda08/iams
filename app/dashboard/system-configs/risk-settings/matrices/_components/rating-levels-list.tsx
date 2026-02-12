@@ -20,6 +20,7 @@ import { CreateRatingDialog } from "./create-rating-dialog";
 import { EditRatingDialog } from "./edit-rating-dialog";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Rating = {
   id: string;
@@ -37,6 +38,7 @@ type RatingLevelsListProps = {
 };
 
 export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
+  const { checkPermission } = usePermissions();
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -125,6 +127,7 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
   };
 
   const handleDeleteConfirm = async () => {
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_delete")) return;
     if (!deleteDialog.ratingId) return;
 
     try {

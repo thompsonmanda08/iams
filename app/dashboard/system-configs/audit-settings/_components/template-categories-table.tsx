@@ -29,6 +29,7 @@ import { TemplateCategory } from "@/lib/types/audit-types";
 import { toast } from "sonner";
 import Link from "next/link";
 import { MetadataDisplay } from "@/components/audit/metadata-display";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface TemplateCategoriesTableProps {
   categories: TemplateCategory[];
@@ -44,6 +45,7 @@ export function TemplateCategoriesTable({
   frameworkType = "ISO27001"
 }: TemplateCategoriesTableProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   // const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<TemplateCategory | null>(null);
@@ -53,9 +55,10 @@ export function TemplateCategoriesTable({
     category: TemplateCategory,
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
+    e.stopPropagation();
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
     setCategoryToDelete(category);
     setDeleteDialogOpen(true);
-    e.stopPropagation();
   };
 
   const handleDeleteConfirm = async () => {
@@ -193,6 +196,11 @@ export function TemplateCategoriesTable({
                     className="h-8 gap-1.5">
                     <Link
                       href={`/dashboard/system-configs/audit-settings/templates/${templateId}/categories/${category.id}/edit`}
+                      onClick={(e) => {
+                        if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) {
+                          e.preventDefault();
+                        }
+                      }}
                       className="flex cursor-pointer items-center gap-2">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Edit2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type ResponseStrategy = {
   id: string;
@@ -24,6 +25,7 @@ type TreatmentStatus = {
 
 export function RiskResponseConfig() {
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [editingStrategies, setEditingStrategies] = useState(false);
   const [editingStatuses, setEditingStatuses] = useState(false);
 
@@ -97,7 +99,10 @@ export function RiskResponseConfig() {
               </CardDescription>
             </div>
             {!editingStrategies ? (
-              <Button variant="outline" size="sm" onClick={() => setEditingStrategies(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditingStrategies(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -158,7 +163,10 @@ export function RiskResponseConfig() {
               <CardDescription>Track the progress of risk treatment activities</CardDescription>
             </div>
             {!editingStatuses ? (
-              <Button variant="outline" size="sm" onClick={() => setEditingStatuses(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditingStatuses(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>

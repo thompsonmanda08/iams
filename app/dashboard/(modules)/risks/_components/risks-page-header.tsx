@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import BackButton from "@/components/back-button";
 import PageHeader from "@/components/page-header";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface RisksPageHeaderProps {
   registerId: string;
@@ -14,6 +15,12 @@ interface RisksPageHeaderProps {
 
 export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const { checkPermission } = usePermissions();
+
+  const handleCreateClick = () => {
+    if (!checkPermission("RISK_REGISTERS", "can_create")) return;
+    setCreateDialogOpen(true);
+  };
 
   return (
     <>
@@ -27,7 +34,7 @@ export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderPro
 
           <div className="flex gap-2">
             <BackButton title="Back to registers" />
-            <Button size={"sm"} onClick={() => setCreateDialogOpen(true)}>
+            <Button size={"sm"} onClick={handleCreateClick}>
               <Plus className="h-4 w-4" />
               Create Risk
             </Button>

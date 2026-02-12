@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { deleteRiskRegister } from "@/app/_actions/risk-module-actions";
 import EditRiskRegisterDialog from "@/components/forms/edit-risk-register-dialog";
 import { StatusBadge } from "@/components/status-badge";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type RiskRegistersTableProps = {
   registers: RiskRegister[];
@@ -71,6 +72,8 @@ export default function RiskRegistersTable({
     register: null
   });
 
+  const { checkPermission } = usePermissions();
+
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value && value !== "all") {
@@ -109,6 +112,7 @@ export default function RiskRegistersTable({
   };
 
   const handleDeleteClick = (register: RiskRegister) => {
+    if (!checkPermission("RISK_REGISTERS", "can_delete")) return;
     setDeleteDialog({
       open: true,
       registerId: register.id,
@@ -134,6 +138,7 @@ export default function RiskRegistersTable({
   };
 
   const handleEditClick = (register: RiskRegister) => {
+    if (!checkPermission("RISK_REGISTERS", "can_edit")) return;
     setEditDialog({
       open: true,
       register

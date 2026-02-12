@@ -53,11 +53,11 @@ export function CategorySelector({
   const handleSelectAll = () => {
     if (selectAll) {
       // Deselect all except required categories
-      const requiredCategories = categories.filter((cat) => cat.is_required).map((cat) => cat.id!);
+      const requiredCategories = categories.filter((cat) => cat.is_required).map((cat) => cat.id ?? "").filter(Boolean);
       onCategoriesChange(requiredCategories);
     } else {
       // Select all categories
-      onCategoriesChange(categories.map((cat) => cat.id!));
+      onCategoriesChange(categories.map((cat) => cat.id ?? "").filter(Boolean));
     }
   };
 
@@ -361,7 +361,12 @@ function CategoryItem({
                     <div>
                       <span className="text-foreground font-medium">Clauses:</span>
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {(category.clauses as unknown as string).split(",")?.map((clause) => (
+                        {(Array.isArray(category.clauses)
+                          ? category.clauses
+                          : typeof category.clauses === "string"
+                            ? (category.clauses as string).split(",")
+                            : []
+                        ).map((clause) => (
                           <Badge key={clause} variant="outline" className="text-xs">
                             {clause}
                           </Badge>

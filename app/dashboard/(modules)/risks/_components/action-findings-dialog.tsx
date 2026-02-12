@@ -22,6 +22,7 @@ import type { Risk, ActionFindingsInput } from "@/app/_actions/risk-module-actio
 import { notify } from "@/lib/utils";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { QUERY_KEYS } from "@/lib/constants";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface ActionFindingsDialogProps {
   open: boolean;
@@ -42,6 +43,7 @@ export function ActionFindingsDialog({
 }: ActionFindingsDialogProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const uploadFieldRef = useRef<any>(null);
   const [formData, setFormData] = useState({
     evidence_description: "",
@@ -125,6 +127,8 @@ export function ActionFindingsDialog({
   });
 
   const handleSubmit = async () => {
+    if (!checkPermission("RISK_ACTIONS", "can_create")) return;
+
     // Validation
     if (!formData.evidence_description.trim()) {
       toast.error("Please provide evidence description");

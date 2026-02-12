@@ -46,6 +46,7 @@ import {
 } from "@/hooks/use-audit-settings-query-data";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
+import { usePermissions } from "@/hooks/use-permissions";
 
 /**
  * Audit Plan Form Data Type
@@ -88,6 +89,7 @@ const STEPS = [
 
 export default function EditAuditPlanPage() {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const params = useParams();
   const auditPlanId = String(params.id);
 
@@ -109,7 +111,7 @@ export default function EditAuditPlanPage() {
     audit_scope: "",
     audit_criteria: "",
     audit_objective: "",
-    management_standard: FRAMEWORK_TYPES[0].id,
+    management_standard: FRAMEWORK_TYPES[0]?.id || "",
     audit_team_leader: "",
     audit_team_member: [],
     client_representative: "",
@@ -140,20 +142,20 @@ export default function EditAuditPlanPage() {
   useEffect(() => {
     if (auditPlan) {
       setFormData({
-        year: auditPlan.year,
-        title: auditPlan.title,
-        description: auditPlan.description,
-        ref_no: auditPlan.ref_no,
+        year: auditPlan.year ?? new Date().getFullYear(),
+        title: auditPlan.title ?? "",
+        description: auditPlan.description ?? "",
+        ref_no: auditPlan.ref_no ?? "",
         department_id: auditPlan.department_id || "",
-        audit_area: auditPlan.audit_area,
-        audit_scope: auditPlan.audit_scope,
-        audit_criteria: auditPlan.audit_criteria,
-        audit_objective: auditPlan.audit_objective,
-        management_standard: auditPlan.management_standard || FRAMEWORK_TYPES[0].id,
-        audit_team_leader: auditPlan.audit_team_leader,
+        audit_area: auditPlan.audit_area ?? "",
+        audit_scope: auditPlan.audit_scope ?? "",
+        audit_criteria: auditPlan.audit_criteria ?? "",
+        audit_objective: auditPlan.audit_objective ?? "",
+        management_standard: auditPlan.management_standard || FRAMEWORK_TYPES[0]?.id || "",
+        audit_team_leader: auditPlan.audit_team_leader ?? "",
         audit_team_member: auditPlan.audit_team_members || [],
-        client_representative: auditPlan.client_representative,
-        audit_language: auditPlan.audit_language,
+        client_representative: auditPlan.client_representative ?? "",
+        audit_language: auditPlan.audit_language ?? "English",
         start_date: auditPlan.start_date ? new Date(auditPlan.start_date) : null,
         end_date: auditPlan.end_date ? new Date(auditPlan.end_date) : null,
         audit_plan_date: auditPlan.audit_plan_date ? new Date(auditPlan.audit_plan_date) : null,
@@ -163,7 +165,7 @@ export default function EditAuditPlanPage() {
         closing_meeting_datetime: auditPlan.closing_meeting_datetime
           ? new Date(auditPlan.closing_meeting_datetime)
           : null,
-        working_paper_template_id: auditPlan.working_paper_template_id,
+        working_paper_template_id: auditPlan.working_paper_template_id ?? "",
         selected_audit_universe_id: auditPlan.audit_universe_id || "",
         audit_universe_item_ids: auditPlan.audit_universe_item_ids || [],
         budget_id: "",
@@ -270,9 +272,9 @@ export default function EditAuditPlanPage() {
         categories:
           templateCategoriesFromAPI.length > 0
             ? templateCategoriesFromAPI
-            : selectedTemplateWithCategories.categories
+            : selectedTemplateWithCategories.categories ?? []
       }
-    : ({} as WorkpaperTemplateDefinition);
+    : ({ id: "", name: "", description: "", standard: "", categories: [] } as unknown as WorkpaperTemplateDefinition);
 
   const validateStep1 = (): boolean => {
     const errors: FieldErrors = {};
@@ -383,6 +385,7 @@ export default function EditAuditPlanPage() {
   }, []);
 
   async function handleSubmit() {
+    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
     setValidationError(null);
 
     // Validate that all required categories are selected
@@ -444,31 +447,31 @@ export default function EditAuditPlanPage() {
   }
 
   const budgetsOptions = useMemo(() => {
-    return budgetsData.map((budget: any) => ({
-      value: budget.id,
-      label: `${budget.title} - ${budget.currency} ${budget.total_amount.toLocaleString("en-GB")} [${budget.status}]`
+    return (budgetsData ?? []).map((budget: any) => ({
+      value: budget?.id,
+      label: `${budget?.title ?? ""} - ${budget?.currency ?? ""} ${(budget?.total_amount ?? 0).toLocaleString("en-GB")} [${budget?.status ?? ""}]`
     }));
   }, [budgetsData]);
 
   const budgetLinesOptions = useMemo(() => {
-    return budgetLinesData.map((budgetLine: any) => ({
-      value: budgetLine.id,
-      label: `${budgetLine.name} (${budgetLine.currency} ${budgetLine.allocated_amount?.toLocaleString("en-GB")}) - ${budgetLine.category}`
+    return (budgetLinesData ?? []).map((budgetLine: any) => ({
+      value: budgetLine?.id,
+      label: `${budgetLine?.name ?? ""} (${budgetLine?.currency ?? ""} ${(budgetLine?.allocated_amount ?? 0).toLocaleString("en-GB")}) - ${budgetLine?.category ?? ""}`
     }));
   }, [budgetLinesData]);
 
   const universesOptions = useMemo(() => {
-    return universesData.map((universe: any) => ({
-      value: universe.id,
-      label: universe.universe_name
+    return (universesData ?? []).map((universe: any) => ({
+      value: universe?.id,
+      label: universe?.universe_name ?? ""
     }));
   }, [universesData]);
 
   const universeItemsOptions = useMemo(
     () =>
-      universeItemsData.map((universeItem: any) => ({
-        value: universeItem.id,
-        label: `KRI:${universeItem.kri_name} - (${universeItem.auditable_area_name})`
+      (universeItemsData ?? []).map((universeItem: any) => ({
+        value: universeItem?.id,
+        label: `KRI:${universeItem?.kri_name ?? ""} - (${universeItem?.auditable_area_name ?? ""})`
       })),
     [universeItemsData]
   );
@@ -861,7 +864,7 @@ export default function EditAuditPlanPage() {
                           }}
                           options={teamMembers.map((member) => ({
                             id: member.id,
-                            name: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                            name: `${member.first_name ?? ""} ${member.last_name ?? ""}  - (${member.role?.name ?? "N/A"})`
                           }))}
                           isInvalid={!!fieldErrors.audit_team_leader}
                           errorText={fieldErrors.audit_team_leader}
@@ -878,7 +881,7 @@ export default function EditAuditPlanPage() {
                         placeholder="e.g., John Doe, CISO"
                         options={headsOfDepartment.map((member) => ({
                           id: member.id,
-                          name: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                          name: `${member.first_name ?? ""} ${member.last_name ?? ""}  - (${member.role?.name ?? "N/A"})`
                         }))}
                       />
                     </div>
@@ -894,7 +897,7 @@ export default function EditAuditPlanPage() {
                         }}
                         options={teamMembers.map((member) => ({
                           value: member.id,
-                          label: `${member.first_name} ${member.last_name}  - (${member.role.name})`
+                          label: `${member.first_name ?? ""} ${member.last_name ?? ""}  - (${member.role?.name ?? "N/A"})`
                         }))}
                       />
                     </div>

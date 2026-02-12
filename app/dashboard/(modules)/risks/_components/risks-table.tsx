@@ -29,6 +29,7 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { AssignActionDialog } from "./assign-action-dialog";
 import { StatusBadge } from "@/components/status-badge";
 import { Pagination } from "@/lib/types";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Risk = {
   id: string;
@@ -156,6 +157,8 @@ export default function RisksTable({
   const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
   const [riskForAssignment, setRiskForAssignment] = useState<Risk | undefined>();
 
+  const { checkPermission } = usePermissions();
+
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -204,15 +207,18 @@ export default function RisksTable({
   };
 
   const handleEdit = (risk: Risk) => {
+    if (!checkPermission("RISK_REGISTERS", "can_edit")) return;
     setSelectedRisk(risk);
     setEditDialogOpen(true);
   };
 
   const handleDeleteClick = (risk: Risk) => {
+    if (!checkPermission("RISK_REGISTERS", "can_delete")) return;
     setRiskToDelete({ id: risk.id, title: risk.title });
     setDeleteDialogOpen(true);
   };
   const handleCloseClick = (risk: Risk) => {
+    if (!checkPermission("RISK_REGISTERS", "can_edit")) return;
     setRiskToClose({ id: risk.id, title: risk.title });
     setCloseDialogOpen(true);
   };
@@ -446,6 +452,7 @@ export default function RisksTable({
                           size="sm"
                           variant="default"
                           onClick={(e) => {
+                            if (!checkPermission("RISK_ACTIONS", "can_assign")) return;
                             setRiskForAssignment(risk);
                             setAssignActionDialogOpen(true);
                             e.stopPropagation();

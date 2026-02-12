@@ -9,6 +9,7 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { handleClearFinding, handleUpdateFindingStatus } from "@/app/_actions/finding-actions";
 import { notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface FindingActionsMenuProps {
   findingId: string;
@@ -31,6 +32,7 @@ export function FindingActionsMenu({
   onRefresh
 }: FindingActionsMenuProps) {
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
   // Check if finding is editable
@@ -88,6 +90,7 @@ export function FindingActionsMenu({
   };
 
   const handleStatusChange = (newStatus: string) => {
+    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
     statusMutation.mutate(newStatus);
   };
 
@@ -98,7 +101,10 @@ export function FindingActionsMenu({
           <Button
             variant="outline"
             size="sm"
-            onClick={onEdit}
+            onClick={() => {
+              if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+              onEdit();
+            }}
             className="gap-2"
             disabled={clearMutation.isPending || statusMutation.isPending}
             title="">

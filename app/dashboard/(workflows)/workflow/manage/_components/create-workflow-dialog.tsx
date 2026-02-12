@@ -19,6 +19,7 @@ import { createWorkflow } from "@/app/_actions/workflow-actions";
 import { WorkflowTriggerType, WorkflowItem } from "@/lib/types/workflow";
 import { WORKFLOW_TRIGGER_TYPES } from "@/lib/constants";
 import { notify } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface CreateWorkflowDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ export function CreateWorkflowDialog({
   existingWorkflows = []
 }: CreateWorkflowDialogProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState({
     name: "",
     trigger_type: "" as WorkflowTriggerType,
@@ -151,6 +153,7 @@ export function CreateWorkflowDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkPermission("WORKFLOW_CONFIG", "can_create")) return;
 
     // Execute mutation with form data
     createWorkflowMutate(

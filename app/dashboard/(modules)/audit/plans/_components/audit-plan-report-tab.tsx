@@ -11,6 +11,7 @@ import { normalizeManagementStandard } from "@/components/reports/report-templat
 import { mergeReportWithTemplate } from "@/lib/config/report-template-merger";
 import type { ReportRecord } from "@/lib/types/report-types";
 import Loader from "@/components/ui/loader";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface AuditPlanReportTabProps {
   auditPlan: {
@@ -24,6 +25,7 @@ interface AuditPlanReportTabProps {
 }
 
 export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
+  const { checkPermission } = usePermissions();
   const { setEntityId, setEntityType, setReport, report } = useReportStore();
 
   // Fetch report by entity_id using the reusable hook
@@ -73,6 +75,7 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
 
   // Handle create report
   const handleCreateReport = () => {
+    if (!checkPermission("AUDIT_REPORTS", "can_create")) return;
     const managementStandard = normalizeManagementStandard(auditPlan.management_standard);
 
     // Determine report type based on management standard

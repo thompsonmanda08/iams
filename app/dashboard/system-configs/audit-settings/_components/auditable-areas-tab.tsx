@@ -45,6 +45,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { set } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface AreaFormData {
   name: string;
@@ -59,6 +60,7 @@ const INIT_FORM_DATA: AreaFormData = {
 };
 
 export default function AuditableAreaConfig() {
+  const { checkPermission } = usePermissions();
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id"> | null>(
     INIT_FORM_DATA
@@ -94,6 +96,7 @@ export default function AuditableAreaConfig() {
   const { deleteAuditableAreaMutation } = useAuditableAreasMutations();
 
   const handleDeleteClick = (id: string) => {
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
     setAreaId(id);
     setDeleteDialogOpen(true);
   };
@@ -125,6 +128,7 @@ export default function AuditableAreaConfig() {
           <Button
             size="sm"
             onClick={() => {
+              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
               setFormData(null);
               setOpenModal(true);
             }}>
@@ -187,6 +191,7 @@ export default function AuditableAreaConfig() {
                           <Button
                             size="sm"
                             onClick={() => {
+                              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
                               setFormData(null);
                               setOpenModal(true);
                             }}>
@@ -247,10 +252,11 @@ export default function AuditableAreaConfig() {
                             size="sm"
                             variant="outline"
                             onClick={(e) => {
+                              e.stopPropagation();
+                              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
                               setFormData(item);
                               setAreaId(item.id);
                               setOpenModal(true);
-                              e.stopPropagation();
                             }}
                             className="h-8 gap-1.5">
                             <Edit className="h-3.5 w-3.5" />

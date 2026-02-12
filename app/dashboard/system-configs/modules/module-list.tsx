@@ -24,6 +24,7 @@ import { ErrorState } from "@/lib/types";
 import { Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type ModuleIcon = ReactElement | React.ReactNode | string;
 
@@ -77,6 +78,7 @@ const initialModules: Module[] = [
 ];
 
 export default function ModuleListConfig({ initialModules = [] }: { initialModules?: Module[] }) {
+  const { checkPermission } = usePermissions();
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [editingSubModule, setEditingSubModule] = useState<string | null>(null);
 
@@ -177,12 +179,18 @@ export default function ModuleListConfig({ initialModules = [] }: { initialModul
                         variant="ghost"
                         size="icon"
                         className="text-chart-1 hover:text-chart-1 hover:bg-chart-1/10 h-7 w-7"
-                        onClick={() => setEditingSubModule(subModule.id)}>
+                        onClick={() => {
+                          if (!checkPermission("USER_MGMT", "can_edit")) return;
+                          setEditingSubModule(subModule.id);
+                        }}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => {
+                          if (!checkPermission("USER_MGMT", "can_delete")) return;
+                        }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -315,7 +323,10 @@ export function CreateOrUpdateModuleDialog({
     }
   });
 
+  const { checkPermission } = usePermissions();
+
   const handleSubmit = () => {
+    if (!checkPermission("USER_MGMT", "can_create")) return;
     console.log("Saving module:", formData);
     saveMutation.mutate(formData);
   };

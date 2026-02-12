@@ -18,6 +18,7 @@ import PageHeader from "@/components/page-header";
 import { useWorkpaperTemplate } from "@/hooks/use-audit-query-data";
 import Loader from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
 
 // Framework field configurations
 type FrameworkFields = {
@@ -115,6 +116,7 @@ interface NewCategoryPageProps {
 export default function NewCategoryPage({ params, initialData, categoryId }: NewCategoryPageProps) {
   const { id: templateId } = use(params);
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setUpdating] = useState(initialData && categoryId);
 
@@ -149,6 +151,12 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
     if (!formData.name) {
       toast.error("Category name is required");
       return;
+    }
+
+    if (isUpdating && categoryId) {
+      if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
+    } else {
+      if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
     }
 
     setIsSubmitting(true);

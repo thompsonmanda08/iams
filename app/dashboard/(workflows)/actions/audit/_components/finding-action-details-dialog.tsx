@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSession } from "@/store/session-store";
 import { StatusBadge } from "@/components/status-badge";
+import { usePermissions } from "@/hooks/use-permissions";
 import {
   FindingInformationCardSkeleton,
   ActionOverviewCardSkeleton,
@@ -96,6 +97,7 @@ export function FindingActionDetailsDialog({
   onOpenChange,
   action
 }: FindingActionDetailsDialogProps) {
+  const { checkPermission } = usePermissions();
   const [submitEvidenceOpen, setSubmitEvidenceOpen] = useState(false);
   const [reviewEvidenceOpen, setReviewEvidenceOpen] = useState(false);
   const [createReassessmentOpen, setCreateReassessmentOpen] = useState(false);
@@ -492,7 +494,10 @@ export function FindingActionDetailsDialog({
                       </div>
                       <Button
                         size="sm"
-                        onClick={() => setSubmitEvidenceOpen(true)}
+                        onClick={() => {
+                          if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                          setSubmitEvidenceOpen(true);
+                        }}
                         className="gap-2">
                         <Plus className="h-4 w-4" />
                         Submit Action Evidence
@@ -582,7 +587,10 @@ export function FindingActionDetailsDialog({
                       </div>
                       <Button
                         size="sm"
-                        onClick={() => setReviewEvidenceOpen(true)}
+                        onClick={() => {
+                          if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                          setReviewEvidenceOpen(true);
+                        }}
                         className="gap-2"
                         disabled={!hasEvidence}>
                         <Plus className="h-4 w-4" />
@@ -638,7 +646,10 @@ export function FindingActionDetailsDialog({
             {/* Create Reassessment Button */}
             {hasEvidence && isAssignedReviewer && !isCompliant && (
               <Button
-                onClick={() => setCreateReassessmentOpen(true)}
+                onClick={() => {
+                  if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                  setCreateReassessmentOpen(true);
+                }}
                 // variant="outline"
                 className="w-full">
                 Create Reassessment

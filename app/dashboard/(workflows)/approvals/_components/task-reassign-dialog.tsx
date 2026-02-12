@@ -23,6 +23,7 @@ import type { Task } from "@/lib/types/task";
 import { UserCog, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUsersWithRole, useReassignTaskMutation } from "@/hooks/use-task-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface TaskReassignDialogProps {
   task: Task;
@@ -33,6 +34,7 @@ interface TaskReassignDialogProps {
 export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDialogProps) {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [comment, setComment] = useState("");
+  const { checkPermission } = usePermissions();
 
   // Query hook for fetching users
   const { data: users = [], isLoading: isLoadingUsers } = useUsersWithRole(
@@ -49,6 +51,7 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
   });
 
   const handleSubmit = () => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_assign")) return;
     if (!selectedUserId) {
       return;
     }

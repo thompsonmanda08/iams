@@ -13,6 +13,7 @@ import type { FindingEvidence, FindingEvidenceType } from "@/lib/types/audit-typ
 import UploadField, { ACCEPTABLE_FILE_TYPES } from "@/components/ui/file-dropzone";
 import { notify } from "@/lib/utils";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface EvidenceFormProps {
   finding_id: string;
@@ -45,6 +46,8 @@ export function EvidenceForm({
   onCancel,
   isLoading
 }: EvidenceFormProps) {
+  const { checkPermission } = usePermissions();
+
   const [formData, setFormData] = useState({
     evidence_type: "" as FindingEvidenceType,
     title: "",
@@ -87,6 +90,7 @@ export function EvidenceForm({
   };
 
   const handleSubmit = async (e: any) => {
+    if (!checkPermission("AUDIT_WPS", "can_create")) return;
     // e.preventDefault();
 
     // Validate required fields

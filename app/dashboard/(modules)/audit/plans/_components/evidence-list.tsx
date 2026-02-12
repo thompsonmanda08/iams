@@ -8,6 +8,7 @@ import { Edit2, Trash2, ExternalLink, Download, AlertCircle } from "lucide-react
 import type { EvidenceType, FindingEvidence } from "@/lib/types/audit-types";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface EvidenceListProps {
   evidence: FindingEvidence[];
@@ -29,6 +30,7 @@ const EVIDENCE_TYPE_COLORS: Record<EvidenceType, string> = {
 };
 
 export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: EvidenceListProps) {
+  const { checkPermission } = usePermissions();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (evidence.length === 0) {
@@ -168,7 +170,10 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => onEdit(item)}
+                  onClick={() => {
+                    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+                    onEdit(item);
+                  }}
                   disabled={isLoading}
                   className="h-8 w-8 p-0">
                   <Edit2 className="h-4 w-4" />
@@ -176,7 +181,10 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => onDelete(item)}
+                  onClick={() => {
+                    if (!checkPermission("AUDIT_WPS", "can_delete")) return;
+                    onDelete(item);
+                  }}
                   disabled={isLoading}
                   className="text-destructive hover:text-destructive h-8 w-8 p-0">
                   <Trash2 className="h-4 w-4" />

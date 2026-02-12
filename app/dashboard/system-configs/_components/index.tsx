@@ -33,8 +33,10 @@ import {
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export const AddNewRoleForm = () => {
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
 
   const params = useParams();
@@ -56,6 +58,7 @@ export const AddNewRoleForm = () => {
 
   async function handleUpdateDepartment(e: React.FormEvent) {
     e.preventDefault();
+    if (!checkPermission("DEPT_MGMT", "can_edit")) return;
     setIsLoading(true);
 
     const res = await updateDepartment({ ...formData, id: departmentId });
@@ -220,6 +223,7 @@ export function ModuleSelection({
   department: Department;
   allowSelect?: boolean;
 }) {
+  const { checkPermission } = usePermissions();
   const queryClient = useQueryClient();
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [initialModules, setInitialModules] = useState<string[]>([]);
@@ -349,6 +353,7 @@ export function ModuleSelection({
   });
 
   const handleSave = () => {
+    if (!checkPermission("DEPT_MGMT", "can_edit")) return;
     saveModulesMutation.mutate();
   };
 

@@ -22,6 +22,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface TransitionTrigger {
   id: string;
@@ -46,6 +47,7 @@ export const TransitionTriggersManager = ({
   transitionId,
   transitionName
 }: TransitionTriggersManagerProps) => {
+  const { checkPermission } = usePermissions();
   const [triggers, setTriggers] = useState<TransitionTrigger[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState<TransitionTrigger | null>(null);
@@ -78,6 +80,7 @@ export const TransitionTriggersManager = ({
   };
 
   const handleOpenDialog = (trigger?: TransitionTrigger) => {
+    if (!checkPermission("WORKFLOW_CONFIG", trigger ? "can_edit" : "can_create")) return;
     if (trigger) {
       setEditingTrigger(trigger);
       setTriggerName(trigger.trigger_name);
@@ -144,6 +147,7 @@ export const TransitionTriggersManager = ({
   };
 
   const handleDeleteTrigger = async (triggerId: string) => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_delete")) return;
     if (!confirm("Are you sure you want to delete this trigger?")) return;
 
     setIsLoading(true);

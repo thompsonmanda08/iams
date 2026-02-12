@@ -17,6 +17,7 @@ import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useCreateFindingActionEvidenceMutation } from "@/hooks/use-finding-actions-queries";
 import { Input } from "@/components/ui/input";
 import { CreateFindingActionEvidenceInput } from "@/lib/types/audit-types";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface SubmitEvidenceDialogProps {
   open: boolean;
@@ -39,6 +40,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
 
   const createEvidenceMutation = useCreateFindingActionEvidenceMutation();
   const uploading = createEvidenceMutation.isPending;
+  const { checkPermission } = usePermissions();
 
   const updatePayload = (field: keyof CreateFindingActionEvidenceInput, value: string) => {
     setPayload((prev) => {
@@ -117,6 +119,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
   };
 
   const handleSubmit = async () => {
+    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
     if (!validateForm()) {
       return;
     }

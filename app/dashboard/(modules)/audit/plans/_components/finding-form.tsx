@@ -18,6 +18,7 @@ import { updateFinding } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface FindingFormProps {
   category: any;
@@ -47,6 +48,7 @@ export function FindingForm({
   onEditComplete
 }: FindingFormProps) {
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const { data: teamMemberResponse, isLoading: loadingTeamMembers } = useUsers({
     page_size: 100
   });
@@ -179,6 +181,7 @@ export function FindingForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
 
     if (!lastFinding?.id) {
       notify({
@@ -469,7 +472,7 @@ export function FindingForm({
               onValueChange={(value) => handleInputChange("responsible_person", value)}
               options={teamMembers.map((member) => ({
                 id: member.id,
-                name: `${member.first_name} ${member.last_name} - (${member.role.name})`
+                name: `${member.first_name ?? ""} ${member.last_name ?? ""} - (${member.role?.name ?? "N/A"})`
               }))}
               isLoading={loadingTeamMembers}
             />

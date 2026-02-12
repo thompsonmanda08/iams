@@ -23,6 +23,7 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 import { useCompleteWorkflowTaskMutation } from "@/hooks/use-task-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface WorkflowTask {
   id: string;
@@ -64,6 +65,7 @@ interface TaskActionDialogProps {
 
 export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActionDialogProps) {
   const [comment, setComment] = useState("");
+  const { checkPermission } = usePermissions();
 
   const { mutate: completeTask, isPending: isSubmitting } = useCompleteWorkflowTaskMutation({
     onSuccess: () => {
@@ -81,6 +83,7 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
   const actionLabel = isApproving ? "Approve" : "Reject";
 
   const handleSubmit = () => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_approve")) return;
     if (action === "REJECTED" && !comment.trim()) {
       toast.error("Comment is required when rejecting a task");
       return;

@@ -39,6 +39,7 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import { CustomPagination } from "@/components/ui/pagination";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface Province {
   id: string;
@@ -64,6 +65,7 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const [towns, setTowns] = useState<Town[]>(initialTowns);
   const [openModal, setOpenModal] = useState(false);
   const [editingTown, setEditingTown] = useState<Town | null>(null);
@@ -91,6 +93,7 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
   });
 
   const handleDeleteTown = async (id: string) => {
+    if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
     if (true) {
       return toast.warning("This action currently is disabled");
     }
@@ -282,6 +285,7 @@ function CreateOrUpdateTownDialog({
   provinces,
   onSuccess
 }: CreateOrUpdateTownDialogProps) {
+  const { checkPermission } = usePermissions();
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
@@ -334,6 +338,12 @@ function CreateOrUpdateTownDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (initialData) {
+      if (!checkPermission("BRANCH_MGMT", "can_edit")) return;
+    } else {
+      if (!checkPermission("BRANCH_MGMT", "can_create")) return;
+    }
 
     if (!formData.province_id) {
       setError({ status: true, message: "Please select a province" });

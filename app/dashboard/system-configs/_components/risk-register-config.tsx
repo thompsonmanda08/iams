@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Edit2, Save, X, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type RegisterType = {
   id: string;
@@ -33,6 +34,7 @@ type AutoArchivalRule = {
 
 export function RiskRegisterConfig() {
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [editingTypes, setEditingTypes] = useState(false);
   const [editingLifecycle, setEditingLifecycle] = useState(false);
   const [editingRules, setEditingRules] = useState(false);
@@ -196,7 +198,10 @@ export function RiskRegisterConfig() {
               <CardDescription>Configure available risk register categories</CardDescription>
             </div>
             {!editingTypes ? (
-              <Button variant="outline" size="sm" onClick={() => setEditingTypes(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditingTypes(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -286,7 +291,10 @@ export function RiskRegisterConfig() {
               <CardDescription>Define status progression for risk records</CardDescription>
             </div>
             {!editingLifecycle ? (
-              <Button variant="outline" size="sm" onClick={() => setEditingLifecycle(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditingLifecycle(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -341,7 +349,10 @@ export function RiskRegisterConfig() {
               <CardDescription>Automated risk record management policies</CardDescription>
             </div>
             {!editingRules ? (
-              <Button variant="outline" size="sm" onClick={() => setEditingRules(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditingRules(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>

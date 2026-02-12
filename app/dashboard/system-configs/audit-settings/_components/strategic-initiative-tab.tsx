@@ -47,6 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Spinner } from "@/components/ui/spinner";
 import Loader from "@/components/ui/loader";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface InitiativeFormData extends Omit<AuditConfigurableItem, "id"> {
   pillar_id?: string;
@@ -86,9 +87,11 @@ export default function StrategicInitiativeTab() {
     }
   };
 
+  const { checkPermission } = usePermissions();
   const { deleteStrategicInitiativeMutation } = useStrategicInitiativesMutations();
 
   const handleDeleteClick = (id: string) => {
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
     setSelectedId(id);
     setDeleteDialogOpen(true);
   };
@@ -162,6 +165,7 @@ export default function StrategicInitiativeTab() {
               size="sm"
               className="h-9"
               onClick={() => {
+                if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
                 setFormData(null);
                 setOpenModal(true);
               }}>
@@ -221,6 +225,7 @@ export default function StrategicInitiativeTab() {
                               size="sm"
                               className="h-9"
                               onClick={() => {
+                                if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
                                 setFormData(null);
                                 setOpenModal(true);
                               }}>
@@ -263,10 +268,11 @@ export default function StrategicInitiativeTab() {
                               size="sm"
                               variant="outline"
                               onClick={(e) => {
+                                e.stopPropagation();
+                                if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
                                 setFormData(item);
                                 setSelectedId(item.id);
                                 setOpenModal(true);
-                                e.stopPropagation();
                               }}
                               className="h-8 gap-1.5">
                               <Edit className="h-3.5 w-3.5" />

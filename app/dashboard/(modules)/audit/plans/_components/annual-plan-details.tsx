@@ -20,6 +20,7 @@ import Loader from "@/components/ui/loader";
 import { AnnualPlanItems, CreateOrUpdatePlanItem } from "./annual-plan-items";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function AuditDetailClient({
   auditPlan,
@@ -28,6 +29,7 @@ export default function AuditDetailClient({
   auditPlan: any;
   planItems: any;
 }) {
+  const { checkPermission } = usePermissions();
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [comments, setComments] = useState("");
   const [openAddPlanItemModal, setOpenAddPlanItemModal] = useState(false);
@@ -84,7 +86,10 @@ export default function AuditDetailClient({
                   <Button
                     size="sm"
                     className="gap-2"
-                    onClick={() => setSubmitDialogOpen(true)}
+                    onClick={() => {
+                      if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                      setSubmitDialogOpen(true);
+                    }}
                     disabled={submitMutation.isPending || items.length === 0}
                     isLoading={submitMutation.isPending}
                     loadingText="Submitting..."

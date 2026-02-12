@@ -98,7 +98,9 @@ export function TemplateSelectorSimple({
   useEffect(() => {
     if (!value && templateResponse?.success && templates.length > 0) {
       const firstTemplate = templates[0];
-      onChange({ ...firstTemplate, categories: [] }); // Pass template with empty categories initially
+      if (firstTemplate) {
+        onChange({ ...firstTemplate, categories: firstTemplate.categories ?? [] });
+      }
     }
   }, [value, templates, templateResponse?.success, onChange]);
 

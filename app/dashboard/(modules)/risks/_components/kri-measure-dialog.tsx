@@ -17,6 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export function KRIMeasureDialog({
   kri_id,
@@ -34,8 +35,10 @@ export function KRIMeasureDialog({
   const [isSaving, setIsSaving] = useState(false);
 
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
 
   const handleSave = async () => {
+    if (!checkPermission("KRI_DASHBOARD", "can_create")) return;
     setIsSaving(true);
     try {
       const response = await addKRIMeasurement(kri_id, {

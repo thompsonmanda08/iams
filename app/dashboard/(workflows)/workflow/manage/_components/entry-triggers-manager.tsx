@@ -22,6 +22,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface EntryTrigger {
   id: string;
@@ -43,6 +44,7 @@ const ENTRY_TRIGGER_TYPES = [
 ];
 
 export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggersManagerProps) => {
+  const { checkPermission } = usePermissions();
   const [triggers, setTriggers] = useState<EntryTrigger[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState<EntryTrigger | null>(null);
@@ -74,6 +76,7 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
   };
 
   const handleOpenDialog = (trigger?: EntryTrigger) => {
+    if (!checkPermission("WORKFLOW_CONFIG", trigger ? "can_edit" : "can_create")) return;
     if (trigger) {
       setEditingTrigger(trigger);
       setTriggerName(trigger.trigger_name);
@@ -135,6 +138,7 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
   };
 
   const handleDeleteTrigger = async (triggerId: string) => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_delete")) return;
     if (!confirm("Are you sure you want to delete this entry trigger?")) return;
 
     setIsLoading(true);

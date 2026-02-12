@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useAssessActionFindingsMutation } from "@/hooks/use-action-mutations";
 import type { ActionFindings } from "@/app/_actions/risk-module-actions";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface ActionAssessmentFormProps {
   findings: ActionFindings;
@@ -30,6 +31,7 @@ export function ActionAssessmentForm({
   onAssessmentComplete
 }: ActionAssessmentFormProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState({
     assessment_score: [5],
     reviewer_feedback: "",
@@ -49,6 +51,7 @@ export function ActionAssessmentForm({
   });
 
   const handleSubmit = () => {
+    if (!checkPermission("RISK_ACTIONS", "can_approve")) return;
     // Validation
     if (!formData.reviewer_feedback.trim()) {
       return;
