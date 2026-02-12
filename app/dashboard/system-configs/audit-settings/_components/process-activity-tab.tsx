@@ -47,6 +47,7 @@ import {
 } from "@/hooks/use-audit-settings-query-data";
 import { de } from "zod/v4/locales";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface ProcessFormData {
   id?: string;
@@ -98,9 +99,11 @@ export default function ProcessActivityTab() {
     }
   };
 
+  const { checkPermission } = usePermissions();
   const { deleteProcessActivityMutation } = useProcessActivitiesMutations();
 
   const handleDeleteClick = (id: string) => {
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
     setSelectedId(id);
     setDeleteDialogOpen(true);
   };
@@ -152,6 +155,7 @@ export default function ProcessActivityTab() {
           <Button
             size="sm"
             onClick={() => {
+              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
               setFormData(null);
               setOpenModal(true);
             }}>
@@ -221,6 +225,7 @@ export default function ProcessActivityTab() {
                           <Button
                             size="sm"
                             onClick={() => {
+                              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
                               setFormData(null);
                               setOpenModal(true);
                             }}>
@@ -278,10 +283,11 @@ export default function ProcessActivityTab() {
                             size="sm"
                             variant="outline"
                             onClick={(e) => {
+                              e.stopPropagation();
+                              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
                               setFormData(item);
                               setSelectedId(item.id);
                               setOpenModal(true);
-                              e.stopPropagation();
                             }}
                             className="h-8 gap-1.5">
                             <Edit className="h-3.5 w-3.5" />

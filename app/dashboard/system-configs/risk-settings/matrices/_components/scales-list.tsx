@@ -19,6 +19,7 @@ import { EditScaleDialog } from "./edit-scale-dialog";
 import { CustomPagination } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import { Pagination } from "@/lib/types";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Scale = {
   id: string;
@@ -45,6 +46,7 @@ const getLevelColor = (level: number) => {
 };
 
 export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
+  const { checkPermission } = usePermissions();
   const [scales, setScales] = useState<Scale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -133,6 +135,7 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
   };
 
   const handleDeleteConfirm = async () => {
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_delete")) return;
     if (!deleteDialog.scaleId) return;
 
     try {

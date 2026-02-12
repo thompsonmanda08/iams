@@ -32,6 +32,7 @@ import { MoreHorizontal } from "lucide-react";
 import { CreateReportDialog } from "./create-report-dialog";
 import { useReportMutations } from "@/hooks/use-report-queries";
 import { capitalize } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface ReportsTableProps {
   reports: ReportListItem[];
@@ -58,6 +59,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
   // Ensure reports is always an array even when fetching fails
   const safeReports = Array.isArray(reports) ? reports : [];
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<ReportListItem | null>(null);
 
@@ -70,6 +72,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
   };
 
   const handleDeleteClick = (report: ReportListItem) => {
+    if (!checkPermission("AUDIT_REPORTS", "can_delete")) return;
     if (report.status !== "DRAFT") {
       toast({
         title: "Cannot Delete",

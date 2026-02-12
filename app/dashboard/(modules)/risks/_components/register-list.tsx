@@ -39,6 +39,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { KRIStatsSection } from "./kri-stats-section";
 import { is } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type KRIRegister = {
   id: string;
@@ -96,6 +97,8 @@ export default function KRIRegistersClient({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [registerToDelete, setRegisterToDelete] = useState<KRIRegister | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const { checkPermission } = usePermissions();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -173,7 +176,13 @@ export default function KRIRegistersClient({
     }
   };
 
+  const handleCreateClick = () => {
+    if (!checkPermission("KRI_DASHBOARD", "can_create")) return;
+    setDialogOpen(true);
+  };
+
   const handleEditClick = (register: KRIRegister) => {
+    if (!checkPermission("KRI_DASHBOARD", "can_edit")) return;
     setEditingRegister(register);
     setFormData({
       name: register.name,
@@ -210,6 +219,7 @@ export default function KRIRegistersClient({
   };
 
   const handleDeleteClick = (register: KRIRegister) => {
+    if (!checkPermission("KRI_DASHBOARD", "can_delete")) return;
     setRegisterToDelete(register);
     setDeleteDialogOpen(true);
   };
@@ -263,7 +273,7 @@ export default function KRIRegistersClient({
               description="Manage your Key Risk Indicator registers and reports"
               Icon={FileText}
             />
-            <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <Button size="sm" onClick={handleCreateClick}>
               <Plus className="mr-2 h-4 w-4" />
               New KRI Register
             </Button>
@@ -344,7 +354,7 @@ export default function KRIRegistersClient({
                           : "Get started by creating your first KRI register"}
                       </p>
                       {!currentSearch && (
-                        <Button className="mt-4" onClick={() => setDialogOpen(true)}>
+                        <Button className="mt-4" onClick={handleCreateClick}>
                           <Plus className="mr-2 h-4 w-4" />
                           Create Register
                         </Button>

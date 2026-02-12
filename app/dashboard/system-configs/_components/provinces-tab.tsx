@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/empty";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter, useSearchParams } from "next/navigation";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface Pagination {
   total: number;
@@ -63,6 +64,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const [provinces, setProvinces] = useState<Province[]>(initialProvinces);
   const [openModal, setOpenModal] = useState(false);
   const [editingProvince, setEditingProvince] = useState<Province | null>(null);
@@ -86,6 +88,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
   });
 
   const handleDeleteProvince = async (id: string) => {
+    if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
     if (true) {
       return toast.warning("This action currently is disabled");
     }
@@ -273,6 +276,7 @@ function CreateOrUpdateProvinceDialog({
   setInitialData,
   onSuccess
 }: CreateOrUpdateProvinceDialogProps) {
+  const { checkPermission } = usePermissions();
   const [error, setError] = useState<ErrorState>({
     status: false,
     message: ""
@@ -305,6 +309,11 @@ function CreateOrUpdateProvinceDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (initialData) {
+      if (!checkPermission("BRANCH_MGMT", "can_edit")) return;
+    } else {
+      if (!checkPermission("BRANCH_MGMT", "can_create")) return;
+    }
     saveMutation.mutate(formData);
   };
 

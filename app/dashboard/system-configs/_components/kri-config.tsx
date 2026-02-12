@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Edit2, Save, X, TrendingUp, TrendingDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type KRI = {
   id: string;
@@ -28,6 +29,7 @@ type KRICategory = {
 
 export function KRIConfig() {
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
   const [categories, setCategories] = useState<KRICategory[]>([
@@ -238,6 +240,7 @@ export function KRIConfig() {
   ]);
 
   const handleEditCategory = (categoryId: string) => {
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
     setEditingCategory(categoryId);
   };
 
@@ -268,6 +271,7 @@ export function KRIConfig() {
   };
 
   const handleAddKRI = (categoryId: string) => {
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
     const newKRI: KRI = {
       id: Date.now().toString(),
       name: "New KRI",

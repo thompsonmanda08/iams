@@ -14,6 +14,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useApproveAuditClosureMutation } from "@/hooks/use-audit-closure-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface AuditClosureApprovalDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ export function AuditClosureApprovalDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const approveMutation = useApproveAuditClosureMutation();
+  const { checkPermission } = usePermissions();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -63,6 +65,7 @@ export function AuditClosureApprovalDialog({
   };
 
   const handleSubmit = async () => {
+    if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
     if (!validateForm()) {
       return;
     }

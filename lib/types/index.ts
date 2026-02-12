@@ -58,6 +58,30 @@ export type AuthSession = JWTPayload & {
   [x: string]: any;
 };
 
+export type PermissionAction =
+  | "can_view"
+  | "can_create"
+  | "can_edit"
+  | "can_delete"
+  | "can_approve"
+  | "can_export"
+  | "can_assign"
+  | "can_configure";
+
+export type ModulePermissions = {
+  can_view: boolean;
+  can_create: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+  can_approve: boolean;
+  can_export: boolean;
+  can_assign: boolean;
+  can_configure: boolean;
+  custom_permissions: Record<string, any> | null;
+  granted_at: string;
+  granted_by: string | null;
+};
+
 export type Permission = {
   role_id: string;
   module_id: string;

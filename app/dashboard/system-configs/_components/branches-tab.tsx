@@ -39,6 +39,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import CustomAlert from "@/components/ui/custom-alert";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface Province {
   id: string;
@@ -87,6 +88,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const [branches, setBranches] = useState<Branch[]>(initialBranches);
   const [openModal, setOpenModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
@@ -157,6 +159,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
         <Button
           size="sm"
           onClick={() => {
+            if (!checkPermission("BRANCH_MGMT", "can_create")) return;
             setEditingBranch(null);
             setOpenModal(true);
           }}>
@@ -244,9 +247,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        // if (true) {
-                        //   return toast.warning("This action currently is disabled");
-                        // }
+                        if (!checkPermission("BRANCH_MGMT", "can_edit")) return;
                         setEditingBranch(branch);
                         setOpenModal(true);
                         e.stopPropagation();
@@ -259,6 +260,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
+                        if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
                         setBranchToDelete(branch);
                         setDeleteDialogOpen(true);
                         e.stopPropagation();

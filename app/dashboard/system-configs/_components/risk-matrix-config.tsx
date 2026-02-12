@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Edit2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type ScaleItem = {
   value: number;
@@ -16,6 +17,7 @@ type ScaleItem = {
 
 export function RiskMatrixConfig() {
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [editingLikelihood, setEditingLikelihood] = useState(false);
   const [editingImpact, setEditingImpact] = useState(false);
 
@@ -85,7 +87,10 @@ export function RiskMatrixConfig() {
               <CardDescription>Define the probability levels for risk occurrence</CardDescription>
             </div>
             {!editingLikelihood ? (
-              <Button variant="outline" size="sm" onClick={() => setEditingLikelihood(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditingLikelihood(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -156,7 +161,10 @@ export function RiskMatrixConfig() {
               <CardDescription>Define the severity levels for risk consequences</CardDescription>
             </div>
             {!editingImpact ? (
-              <Button variant="outline" size="sm" onClick={() => setEditingImpact(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditingImpact(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>

@@ -46,6 +46,7 @@ import {
   useUpdateRiskAcceptanceMutation,
   useSubmitRiskAcceptanceMutation
 } from "@/hooks/use-risk-acceptance-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
 
 // Simple date formatter
 const formatDate = (dateString: string, formatType: "short" | "long" = "short") => {
@@ -211,6 +212,7 @@ const AcceptanceCard = ({ acceptance, onAcceptanceClick, onViewRisk }: Acceptanc
 export default function RiskAcceptanceList() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const [activeTab, setActiveTab] = useState<Status>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAcceptance, setSelectedAcceptance] = useState<Acceptance | null>(null);
@@ -278,6 +280,7 @@ export default function RiskAcceptanceList() {
 
   const handleStatusUpdate = async () => {
     if (!selectedAcceptance || !modalStatus || !remarks.trim()) return;
+    if (!checkPermission("RISK_ACCEPTANCES", "can_approve")) return;
 
     const updatedData = {
       ...selectedAcceptance,
@@ -289,6 +292,7 @@ export default function RiskAcceptanceList() {
 
   const handleSubmitAcceptance = async () => {
     if (!selectedAcceptance) return;
+    if (!checkPermission("RISK_ACCEPTANCES", "can_edit")) return;
     submitAcceptance(selectedAcceptance.id);
   };
 

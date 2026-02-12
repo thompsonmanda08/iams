@@ -17,6 +17,7 @@ import { SelectField } from "@/components/ui/select-field";
 import { notify } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ErrorState } from "@/lib/types";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export const FRAMEWORK_TYPES = [
   { id: "ISO27001", name: "ISO 27001 Audit" },
@@ -46,6 +47,7 @@ export function ComplianceWorkpaperTemplateForm({
   onCancel?: () => void;
 }) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const [error, setError] = useState<ErrorState>({
@@ -106,6 +108,7 @@ export function ComplianceWorkpaperTemplateForm({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
+    if (!checkPermission("AUDIT_MODULE_CONFIG", initialData ? "can_edit" : "can_create")) return;
     saveMutation.mutate(formData);
   }
 

@@ -59,6 +59,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import CreateUserForm from "../_components/create-user-dialog";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Pagination = {
   total: number;
@@ -234,6 +235,7 @@ export default function UsersDataTable({
 }: UsersDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { checkPermission } = usePermissions();
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
@@ -285,6 +287,7 @@ export default function UsersDataTable({
   };
 
   const handleDeleteClick = (id: string) => {
+    if (!checkPermission("USER_MGMT", "can_delete")) return;
     const user = data.find((u) => u.id === id);
     if (user) {
       setDeleteDialog({
@@ -296,6 +299,7 @@ export default function UsersDataTable({
   };
 
   const handleToggleStatusClick = (id: string, activate: boolean) => {
+    if (!checkPermission("USER_MGMT", "can_edit")) return;
     const user = data.find((u) => u.id === id);
     if (user) {
       setToggleStatusDialog({
@@ -369,6 +373,7 @@ export default function UsersDataTable({
   };
 
   const handleEditClick = (user: User) => {
+    if (!checkPermission("USER_MGMT", "can_edit")) return;
     setEditingUser(user);
   };
 

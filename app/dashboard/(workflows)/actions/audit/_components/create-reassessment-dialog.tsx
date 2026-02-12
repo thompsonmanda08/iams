@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useCreateFindingReassessmentMutation } from "@/hooks/use-finding-actions-queries";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface CreateReassessmentDialogProps {
   open: boolean;
@@ -54,6 +55,7 @@ export function CreateReassessmentDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createReassessmentMutation = useCreateFindingReassessmentMutation();
+  const { checkPermission } = usePermissions();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -100,6 +102,7 @@ export function CreateReassessmentDialog({
   };
 
   const handleSubmit = () => {
+    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
     if (!validateForm()) {
       return;
     }

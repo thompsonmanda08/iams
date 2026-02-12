@@ -63,12 +63,14 @@ import { User } from "@/lib/types/account";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function DepartmentUsersConfig({ users = [] }: { users: DepartmentUser[] }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const params = useParams();
   const departmentId = params?.id as string;
+  const { checkPermission } = usePermissions();
 
   const [editingUser, setEditingUser] = useState<DepartmentUser | null>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -210,6 +212,7 @@ export default function DepartmentUsersConfig({ users = [] }: { users: Departmen
         title="Remove User from Department"
         description={`Are you sure you want to remove ${userToRemove?.first_name} ${userToRemove?.last_name} from this department? This action cannot be undone.`}
         onConfirm={async () => {
+          if (!checkPermission("USER_MGMT", "can_delete")) return;
           if (!userToRemove) return;
 
           try {
@@ -250,6 +253,7 @@ function EditUserRoleDialog({
 }) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
 
   // Fetch roles for this department
@@ -296,6 +300,7 @@ function EditUserRoleDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkPermission("USER_MGMT", "can_edit")) return;
     if (selectedRoleId && selectedRoleId !== user?.role?.id) {
       updateRoleMutation.mutate(selectedRoleId);
     } else {

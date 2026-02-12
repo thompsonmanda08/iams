@@ -34,6 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface WorkflowEditorProps {
   onBack: () => void;
@@ -176,6 +177,7 @@ const transformWorkflowData = (apiWorkflow: any): WorkflowItem => {
 };
 
 export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEditorProps) => {
+  const { checkPermission } = usePermissions();
   const { saveOrUpdateWorkflow, isLoading: isSaving } = useWorkflowMutations();
   const queryClient = useQueryClient();
 
@@ -541,6 +543,9 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
   };
 
   const handleSave = async () => {
+    const isExistingWorkflow = !!workflowId;
+    if (!checkPermission("WORKFLOW_CONFIG", isExistingWorkflow ? "can_edit" : "can_create")) return;
+
     if (!workflow.name.trim()) {
       toast.error("Workflow name is required");
       return;

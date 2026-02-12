@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/empty";
 import CustomAlert from "@/components/ui/custom-alert";
 import { Textarea } from "@/components/ui/textarea";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface CategoryFormData {
   name: string;
@@ -68,6 +69,7 @@ export default function FindingsCategoryTab({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  const { checkPermission } = usePermissions();
   const [items, setItems] = useState<CategoryFormData[]>(categories);
 
   useEffect(() => {
@@ -99,6 +101,7 @@ export default function FindingsCategoryTab({
   });
 
   const handleDeleteClick = (id: string) => {
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
     setSelectedId(id);
     setDeleteDialogOpen(true);
   };
@@ -121,6 +124,7 @@ export default function FindingsCategoryTab({
           <Button
             size="sm"
             onClick={() => {
+              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
               setFormData(null);
               setOpenModal(true);
             }}>
@@ -159,6 +163,7 @@ export default function FindingsCategoryTab({
                         <Button
                           size="sm"
                           onClick={() => {
+                            if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
                             setFormData(null);
                             setOpenModal(true);
                           }}>
@@ -189,10 +194,11 @@ export default function FindingsCategoryTab({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
+                          e.stopPropagation();
+                          if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
                           setFormData({ ...item });
                           setSelectedId(item.id);
                           setOpenModal(true);
-                          e.stopPropagation();
                         }}
                         className="h-8 gap-1.5">
                         <Edit className="h-3.5 w-3.5" />

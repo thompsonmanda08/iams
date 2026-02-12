@@ -26,6 +26,7 @@ import { useRiskMatrices, useEffectivenessLevels } from "@/hooks/use-risk-query-
 import type { RiskMatrix } from "@/lib/types/risk-type";
 import { RiskSlider } from "./risk-slider";
 import { RiskScoreDisplay } from "./risk-score-display";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface ActionReviewDialogProps {
   open: boolean;
@@ -65,6 +66,7 @@ export function ActionReviewDialog({
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [selectedMatrix, setSelectedMatrix] = useState<RiskMatrix | null>(null);
+  const { checkPermission } = usePermissions();
   const [errors, setErrors] = useState<{
     remarks?: string;
     assessment_decision?: string;
@@ -145,6 +147,7 @@ export function ActionReviewDialog({
   };
 
   const handleNextStep = () => {
+    if (!checkPermission("RISK_ACTIONS", "can_approve")) return;
     if (validateStep(step)) {
       // Submit Step 1 review to API - Step 2 will only be shown after success
       submitReviewMutation.mutate();

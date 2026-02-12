@@ -42,6 +42,7 @@ import {
 } from "@/hooks/use-audit-settings-query-data";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
+import { usePermissions } from "@/hooks/use-permissions";
 
 /**
  * Audit Plan Form Data Type
@@ -85,6 +86,7 @@ const STEPS = [
 
 export default function NewAuditPlanPage() {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -336,6 +338,7 @@ export default function NewAuditPlanPage() {
   }, []);
 
   async function handleSubmit() {
+    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
     setValidationError(null);
 
     // Validate that all required categories are selected

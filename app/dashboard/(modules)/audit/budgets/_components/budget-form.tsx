@@ -15,6 +15,7 @@ import { useBudgets } from "@/hooks/use-audit-settings-query-data";
 import { useCreateBudgetMutation, useCreateBudgetLineMutation } from "@/hooks/use-budget-mutations";
 import { Budget } from "@/lib/types/audit-types";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const formatCurrency = (num: number): string => {
   return num.toLocaleString("en-US", {
@@ -88,6 +89,7 @@ const BudgetForm = ({
   onBudgetCreated?: (budgetId: string) => void;
 }) => {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
 
   const [budgetData, setBudgetData] = useState<BudgetFormData>({
     ...INIT_BUDGET_DATA,
@@ -197,6 +199,7 @@ const BudgetForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
 
     if (mode === "budget") {
       createBudgetHandler();

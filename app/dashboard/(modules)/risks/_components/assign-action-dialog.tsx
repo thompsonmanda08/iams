@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { createRiskAction } from "@/app/_actions/risk-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
+import { usePermissions } from "@/hooks/use-permissions";
 
 // Type for Risk from risks-table
 type Risk = {
@@ -60,6 +61,7 @@ export function AssignActionDialog({
 }: AssignActionDialogProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
 
   // Fetch users
   const { data: usersResponse, isLoading: isLoadingUsers } = useUsers({
@@ -137,6 +139,7 @@ export function AssignActionDialog({
   });
 
   const handleSubmit = () => {
+    if (!checkPermission("RISK_ACTIONS", "can_assign")) return;
     if (!validateForm()) {
       return;
     }

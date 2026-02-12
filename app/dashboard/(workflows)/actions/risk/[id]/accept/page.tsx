@@ -5,14 +5,17 @@ import RiskAcceptanceForm, { FormData } from "@/components/forms/risk-acceptance
 import { toast } from "sonner";
 import { createRiskAcceptance, updateRiskAcceptance } from "@/app/_actions/risk-module-actions";
 import { useRouter } from "next/navigation";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function RiskAcceptancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [existingFormData, setExistingFormData] = useState<Partial<FormData> | null>(null);
   const { id } = use(params);
 
   const handleCreate = async (data: FormData) => {
+    if (!checkPermission("RISK_ACCEPTANCES", "can_create")) return;
     try {
       const response = await createRiskAcceptance(id, data);
       if (response.success) {
@@ -30,6 +33,7 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
   };
 
   const handleUpdate = async (data: FormData) => {
+    if (!checkPermission("RISK_ACCEPTANCES", "can_edit")) return;
     try {
       const response = await updateRiskAcceptance(id, data);
 

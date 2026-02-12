@@ -31,6 +31,7 @@ import { StatusBadge } from "@/components/status-badge";
 
 import { Spinner } from "../../../../../components/ui/spinner";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -57,6 +58,7 @@ export function WorkpaperTemplatesTable({
 }: WorkpaperTemplatesTableProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<WorkingPaperTemplate | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -64,11 +66,13 @@ export function WorkpaperTemplatesTable({
   const [templateToEdit, setTemplateToEdit] = useState<WorkingPaperTemplate | null>(null);
 
   const handleDeleteClick = (template: WorkingPaperTemplate) => {
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
     setTemplateToDelete(template);
     setDeleteDialogOpen(true);
   };
 
   const handleEditClick = (template: WorkingPaperTemplate) => {
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
     const frameworkType = (template.framework_type || "").toUpperCase();
     const isStandardFramework = ["ISO27001", "COSO", "COBIT", "NIST"].includes(frameworkType);
 
@@ -156,7 +160,10 @@ export function WorkpaperTemplatesTable({
             </div>
           </div>
 
-          <Button size="lg" onClick={onCreateClick} className="gap-2">
+          <Button size="lg" onClick={() => {
+            if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+            onCreateClick?.();
+          }} className="gap-2">
             <Plus className="h-5 w-5" />
             Create Workpaper Template
           </Button>

@@ -46,6 +46,7 @@ import {
 } from "@/hooks/use-audit-settings-query-data";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
+import { usePermissions } from "@/hooks/use-permissions";
 
 /**
  * Audit Plan Form Data Type
@@ -88,6 +89,7 @@ const STEPS = [
 
 export default function EditAuditPlanPage() {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const params = useParams();
   const auditPlanId = String(params.id);
 
@@ -383,6 +385,7 @@ export default function EditAuditPlanPage() {
   }, []);
 
   async function handleSubmit() {
+    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
     setValidationError(null);
 
     // Validate that all required categories are selected

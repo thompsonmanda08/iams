@@ -11,6 +11,7 @@ import { useFindingActionsByFinding } from "@/hooks/use-finding-actions-queries"
 import { AssignFindingActionDialog } from "./assign-finding-action-dialog";
 import { RequiresApprovalState } from "./requires-approval-state";
 import type { AuditPlan } from "@/lib/types/audit-types";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface FindingsListProps {
   findings: any[];
@@ -37,6 +38,7 @@ const STATUS_ICONS: Record<string, any> = {
 
 // Individual finding card component with evidence
 function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any) {
+  const { checkPermission } = usePermissions();
   const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
   const { data: evidenceData } = useFindingEvidence(finding.id);
   const { data: actions } = useFindingActionsByFinding(finding.id);
@@ -92,7 +94,10 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setAssignActionDialogOpen(true)}
+                onClick={() => {
+                  if (!checkPermission("AUDIT_WPS", "can_assign")) return;
+                  setAssignActionDialogOpen(true);
+                }}
                 className="gap-2">
                 <Plus className="mr-2 h-4 w-4" />
                 Assign Action

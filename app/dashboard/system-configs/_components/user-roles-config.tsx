@@ -50,6 +50,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRoles } from "@/hooks/use-query-data";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface RolesPermissionsProps {
   departmentId: string;
@@ -109,6 +110,7 @@ const formatModuleName = (name: string, moduleCode?: string): string => {
 
 export default function UserRolesConfig({ departmentId }: RolesPermissionsProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
 
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
@@ -343,6 +345,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
   });
 
   const handleSave = () => {
+    if (!checkPermission("USER_MGMT", "can_configure")) return;
     savePermissionsMutation.mutate();
   };
 
@@ -481,6 +484,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
                 <Button
                   size="sm"
                   onClick={() => {
+                    if (!checkPermission("USER_MGMT", "can_create")) return;
                     setEditingRole(null);
                     setOpenRoleModal(true);
                   }}>
@@ -533,6 +537,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
           <Button
             size="sm"
             onClick={() => {
+              if (!checkPermission("USER_MGMT", "can_create")) return;
               setEditingRole(null);
               setOpenRoleModal(true);
             }}>
@@ -581,6 +586,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
                       className="absolute top-2 right-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (!checkPermission("USER_MGMT", "can_edit")) return;
                         setEditingRole(role);
                         setOpenRoleModal(true);
                       }}>

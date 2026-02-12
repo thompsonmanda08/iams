@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Edit2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type AppetiteLevel = {
   category: string;
@@ -24,6 +25,7 @@ type AppetiteLevel = {
 
 export function RiskAppetiteConfig() {
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [editing, setEditing] = useState(false);
 
   const [appetiteLevels, setAppetiteLevels] = useState<AppetiteLevel[]>([
@@ -95,7 +97,10 @@ export function RiskAppetiteConfig() {
               <CardDescription>Define acceptable risk levels for each category</CardDescription>
             </div>
             {!editing ? (
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                setEditing(true);
+              }}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>

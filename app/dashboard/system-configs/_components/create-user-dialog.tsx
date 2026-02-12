@@ -42,6 +42,7 @@ import { useBranches, useDepartments, useRoles } from "@/hooks/use-query-data";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users-query-data";
 import { Branch, Department } from "@/lib/types";
 import { DialogClose } from "@radix-ui/react-dialog";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type SignUpFormProps = {
   user: User | null;
@@ -71,6 +72,7 @@ export default function CreateUserForm({
   setIsOpenModal?: Dispatch<SetStateAction<boolean>>;
 }) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [copied, setCopied] = useState(false);
   const [internalOpen, setInternalOpen] = useState<boolean>(false);
 
@@ -329,6 +331,8 @@ export default function CreateUserForm({
         if (showTrigger) {
           // In trigger mode, manage internal state
           if (open) {
+            const action = isEditMode ? "can_edit" : "can_create";
+            if (!checkPermission("USER_MGMT", action)) return;
             setInternalOpen(true);
           } else {
             handleCloseModal();

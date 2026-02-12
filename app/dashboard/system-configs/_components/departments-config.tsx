@@ -30,6 +30,7 @@ import {
 import { CustomPagination } from "@/components/ui/pagination";
 import { CreateOrUpdateDepartment } from "./department-users";
 import Link from "next/link";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Pagination = {
   total: number;
@@ -54,6 +55,7 @@ export default function DepartmentsConfig({
   const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
 
+  const { checkPermission } = usePermissions();
   const [openModal, setOpenModal] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -105,6 +107,7 @@ export default function DepartmentsConfig({
   });
 
   const handleDeleteClick = (id: string) => {
+    if (!checkPermission("DEPT_MGMT", "can_delete")) return;
     setDepartmentToDelete(id);
     setDeleteDialogOpen(true);
   };
@@ -132,6 +135,7 @@ export default function DepartmentsConfig({
           <Button
             size="sm"
             onClick={() => {
+              if (!checkPermission("DEPT_MGMT", "can_create")) return;
               setEditingDepartment(null);
               setOpenModal(true);
             }}>
@@ -221,6 +225,7 @@ export default function DepartmentsConfig({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
+                          if (!checkPermission("DEPT_MGMT", "can_edit")) return;
                           setEditingDepartment(department);
                           setOpenModal(true);
                           e.stopPropagation();

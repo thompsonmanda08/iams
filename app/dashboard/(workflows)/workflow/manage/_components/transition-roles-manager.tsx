@@ -13,6 +13,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface TransitionRolesManagerProps {
   transitionId: string;
@@ -25,6 +26,7 @@ export const TransitionRolesManager = ({
   transitionName,
   availableRoles
 }: TransitionRolesManagerProps) => {
+  const { checkPermission } = usePermissions();
   const [assignedRoles, setAssignedRoles] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +54,7 @@ export const TransitionRolesManager = ({
   };
 
   const handleAssignRole = async () => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_edit")) return;
     if (!selectedRoleId) {
       toast.error("Please select a role");
       return;
@@ -75,6 +78,7 @@ export const TransitionRolesManager = ({
   };
 
   const handleRemoveRole = async (roleId: string) => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_delete")) return;
     if (!confirm("Are you sure you want to remove this role?")) return;
 
     setIsLoading(true);

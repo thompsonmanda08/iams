@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { deleteBudget } from "@/app/_actions/audit-module-actions";
 import { BudgetEditModal } from "./budget-edit-modal";
 import { StatusBadge } from "@/components/status-badge";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface BudgetLine {
   id: string;
@@ -56,6 +57,7 @@ interface BudgetListProps {
 
 const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -133,6 +135,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   };
 
   const handleDeleteClick = (budget: Budget) => {
+    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
     setBudgetToDelete(budget);
     setShowDeleteModal(true);
   };
@@ -160,6 +163,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   };
 
   const handleEditClick = (budgetId: string) => {
+    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
     setBudgetToEdit(budgetId);
     setShowEditModal(true);
   };

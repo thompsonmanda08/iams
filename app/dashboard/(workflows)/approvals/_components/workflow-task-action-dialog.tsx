@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useCompleteWorkflowTaskMutation } from "@/hooks/use-workflow-tasks";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface WorkflowTask {
   id: string;
@@ -47,8 +48,10 @@ export function WorkflowTaskActionDialog({
   const router = useRouter();
   const [remarks, setRemarks] = useState("");
   const completeTaskMutation = useCompleteWorkflowTaskMutation();
+  const { checkPermission } = usePermissions();
 
   const handleCompleteTask = async () => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_approve")) return;
     if (!task || !action) return;
 
     completeTaskMutation.mutate(

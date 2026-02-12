@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
 import { RiskCategoryFormDialog } from "./risk-category-dialog";
+import { usePermissions } from "@/hooks/use-permissions";
 import {
   Table,
   TableBody,
@@ -89,6 +90,7 @@ export function RiskCategoriesConfig() {
   });
 
   const router = useRouter();
+  const { checkPermission } = usePermissions();
 
   // Fetch categories when pagination changes
   useEffect(() => {
@@ -165,6 +167,7 @@ export function RiskCategoriesConfig() {
   };
 
   const handleAddCategory = () => {
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_create")) return;
     setFormDialog({
       open: true,
       mode: "create",
@@ -173,6 +176,7 @@ export function RiskCategoriesConfig() {
   };
 
   const handleEditCategory = (category: RiskCategory) => {
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_edit")) return;
     setFormDialog({
       open: true,
       mode: "edit",
@@ -181,6 +185,7 @@ export function RiskCategoriesConfig() {
   };
 
   const handleDeleteClick = (category: RiskCategory) => {
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_delete")) return;
     setDeleteDialog({
       open: true,
       categoryId: category.id,

@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useWorkpaperTemplates } from "@/hooks/use-audit-query-data";
 import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -27,12 +28,14 @@ export default function WorkpaperTemplatesTab() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { checkPermission } = usePermissions();
 
   const { data: response, isFetching } = useWorkpaperTemplates({ page, page_size: pageSize });
   const templates = (response?.data?.data as WorkingPaperTemplate[]) || [];
   const paginationData = response?.data?.pagination as Pagination;
 
   const handleOpenCreateDialog = () => {
+    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
     setIsCreateDialogOpen(true);
   };
 

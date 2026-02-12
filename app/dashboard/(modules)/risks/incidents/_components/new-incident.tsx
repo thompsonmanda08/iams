@@ -22,6 +22,7 @@ import {
   useIncidentKRIs,
   useCreateIncidentMutation
 } from "@/hooks/use-incident-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export function NewIncident() {
   const router = useRouter();
@@ -91,8 +92,11 @@ export function NewIncident() {
     return selectedCause?.sub_causes || [];
   }, [formData.primary_cause_id, causes]);
 
+  const { checkPermission } = usePermissions();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkPermission("RISK_INCIDENTS", "can_create")) return;
     createNewIncident(formData);
   };
 

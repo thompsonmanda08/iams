@@ -17,6 +17,7 @@ import { useUsers } from "@/hooks/use-users-query-data";
 import { useCreateFindingActionMutation } from "@/hooks/use-finding-actions-queries";
 import type { WorkpaperFinding } from "@/lib/types/audit-types";
 import { Loader2 } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface AssignFindingActionDialogProps {
   open: boolean;
@@ -31,6 +32,7 @@ export function AssignFindingActionDialog({
   finding,
   auditPlanStatus
 }: AssignFindingActionDialogProps) {
+  const { checkPermission } = usePermissions();
   // Only allow if audit plan is COMPLETED, APPROVED, or REJECTED
   const canAssignAction =
     auditPlanStatus === "COMPLETED" || auditPlanStatus === "APPROVED" || auditPlanStatus === "REJECTED";
@@ -83,6 +85,7 @@ export function AssignFindingActionDialog({
   };
 
   const handleSubmit = () => {
+    if (!checkPermission("AUDIT_PLANS", "can_assign")) return;
     if (!finding || !canAssignAction || !validateForm()) {
       return;
     }

@@ -68,6 +68,7 @@ import { CreateOrUpdateMemo, type CreateOrUpdateMemoRef } from "./create-a-memo"
 import { useAuditMemo } from "@/hooks/use-audit-queries";
 import Loader from "@/components/ui/loader";
 import { AuditPlanReportTab } from "./audit-plan-report-tab";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -192,6 +193,7 @@ export function AuditPlanWorkpaperView({
   auditPlanStatus
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const memoRef = useRef<CreateOrUpdateMemoRef>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("plan-details");
@@ -365,7 +367,10 @@ export function AuditPlanWorkpaperView({
                     <Button
                       size="sm"
                       className="gap-2"
-                      onClick={() => setSubmitConfirmationOpen(true)}
+                      onClick={() => {
+                        if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                        setSubmitConfirmationOpen(true);
+                      }}
                       disabled={isSubmitting}
                       isLoading={isSubmitting}
                       loadingText="Submitting...">
@@ -373,7 +378,13 @@ export function AuditPlanWorkpaperView({
                       Submit for Approval
                     </Button>
                     <Button asChild variant="secondary" size="sm" className="gap-2">
-                      <Link href={`/dashboard/audit/plans/engagement/${auditPlan.id}/edit`}>
+                      <Link
+                        href={`/dashboard/audit/plans/engagement/${auditPlan.id}/edit`}
+                        onClick={(e) => {
+                          if (!checkPermission("AUDIT_PLANS", "can_edit")) {
+                            e.preventDefault();
+                          }
+                        }}>
                         <PencilLineIcon className="h-6 w-6" />
                         Edit Plan
                       </Link>
@@ -382,7 +393,10 @@ export function AuditPlanWorkpaperView({
                       variant="destructive"
                       size="sm"
                       className="gap-2"
-                      onClick={() => setDeleteDialogOpen(true)}
+                      onClick={() => {
+                        if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
+                        setDeleteDialogOpen(true);
+                      }}
                       disabled={isDeleting}>
                       <Trash2 className="h-6 w-6" />
                       Delete Plan
@@ -635,6 +649,7 @@ export function AuditPlanWorkpaperView({
                                       variant="outline"
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
                                         memoRef.current?.openEdit();
                                       }}
                                       className="gap-2">
@@ -655,6 +670,7 @@ export function AuditPlanWorkpaperView({
                                       variant="destructive"
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
                                         memoRef.current?.openDelete();
                                       }}
                                       className="gap-2">
@@ -726,7 +742,10 @@ export function AuditPlanWorkpaperView({
                       </p>
                       <Button
                         size="sm"
-                        onClick={() => memoRef.current?.setOpenModal(true)}
+                        onClick={() => {
+                          if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                          memoRef.current?.setOpenModal(true);
+                        }}
                         className="w-full gap-2">
                         <Plus className="h-6 w-6" />
                         Create Memo
@@ -1205,7 +1224,10 @@ export function AuditPlanWorkpaperView({
                                     ) : (
                                       <Button
                                         size="sm"
-                                        onClick={() => setEditingFinding(finding)}
+                                        onClick={() => {
+                                          if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+                                          setEditingFinding(finding);
+                                        }}
                                         className="shrink-0">
                                         <PencilLineIcon className="h-6 w-6" />
                                         Edit

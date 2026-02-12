@@ -7,6 +7,7 @@ import { KRIConfigureForm } from "@/components/forms/kri-configuration-form";
 import { createKRI, KRIFrequency } from "@/app/_actions/risk-module-actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type KRIFormData = {
   name: string;
@@ -39,6 +40,7 @@ interface KRIConfigureDialogProps {
 
 export function KRIConfigureDialog({ registerId }: KRIConfigureDialogProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [configureOpen, setConfigureOpen] = useState(false);
 
   const handleKRISubmit = async (data: KRIFormData) => {
@@ -60,7 +62,10 @@ export function KRIConfigureDialog({ registerId }: KRIConfigureDialogProps) {
 
   return (
     <>
-      <Button size="sm" onClick={() => setConfigureOpen(true)}>
+      <Button size="sm" onClick={() => {
+        if (!checkPermission("KRI_DASHBOARD", "can_configure")) return;
+        setConfigureOpen(true);
+      }}>
         <AlertCircle className="mr-2 h-4 w-4" />
         Configure KRIs
       </Button>

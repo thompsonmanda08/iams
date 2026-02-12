@@ -43,6 +43,7 @@ import {
 import { EvidenceForm } from "./evidence-form";
 import { EvidenceList } from "./evidence-list";
 import { Spinner } from "@/components/ui/spinner";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface FrameworkFindingFormProps {
   category: any;
@@ -78,6 +79,7 @@ export function FrameworkFindingForm({
   onEditComplete
 }: FrameworkFindingFormProps) {
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const { data: teamMemberResponse } = useUsers({ page_size: 100 });
   const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
 
@@ -256,6 +258,7 @@ export function FrameworkFindingForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
 
     // Check if there's unsaved evidence form
     if (showEvidenceForm) {

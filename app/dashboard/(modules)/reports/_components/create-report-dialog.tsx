@@ -26,6 +26,7 @@ import { notify } from "@/lib/utils";
 import { ErrorState } from "@/lib/types";
 import type { ReportType, ReportEntityType } from "@/lib/types/report-types";
 import { useQuery } from "@tanstack/react-query";
+import { usePermissions } from "@/hooks/use-permissions";
 
 // Report type options
 const REPORT_TYPE_OPTIONS: { id: ReportType; name: string; description: string }[] = [
@@ -90,6 +91,7 @@ export function CreateReportDialog({
 }: CreateReportDialogProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { checkPermission } = usePermissions();
 
   // Internal state for uncontrolled mode
   const [internalOpen, setInternalOpen] = useState(false);
@@ -197,6 +199,7 @@ export function CreateReportDialog({
 
   async function handleCreateReport(e: React.FormEvent) {
     e.preventDefault();
+    if (!checkPermission("AUDIT_REPORTS", "can_create")) return;
 
     // Validation
     if (!formData.title.trim()) {

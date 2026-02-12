@@ -13,6 +13,7 @@ import { createSmtpConfig, updateSmtpConfig } from "@/app/_actions/smtp-actions"
 import { Spinner } from "@/components/ui/spinner";
 import BackButton from "@/components/back-button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface SmtpFormData {
   host: string;
@@ -31,6 +32,7 @@ export function MailingSettingsForm({
 }: {
   initialData?: SmtpFormData & { id?: string };
 }) {
+  const { checkPermission } = usePermissions();
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showTestSection, setShowTestSection] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -104,6 +106,7 @@ export function MailingSettingsForm({
   };
 
   const handleSave = async () => {
+    if (!checkPermission("USER_MGMT", "can_configure")) return;
     if (!validateForm()) {
       toast.error("Please fix the validation errors");
       return;

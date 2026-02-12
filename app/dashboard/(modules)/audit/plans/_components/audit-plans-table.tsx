@@ -33,6 +33,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface AuditPlansTableProps {
   plans: AuditPlan[];
@@ -43,6 +44,7 @@ interface AuditPlansTableProps {
 export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTableProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { checkPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<AuditPlan | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -53,6 +55,7 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
   };
 
   const handleDeleteClick = (plan: AuditPlan) => {
+    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
     // Only allow deletion for DRAFT plans
     if (plan.status !== "DRAFT") {
       toast({
@@ -284,6 +287,7 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
                               router.push(`/dashboard/audit/plans/engagement/${plan.id}/edit`);
                             }}
                             className="h-8 gap-1.5">

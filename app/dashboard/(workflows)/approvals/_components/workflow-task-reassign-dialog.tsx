@@ -30,6 +30,7 @@ import { Info } from "lucide-react";
 import { SelectField } from "@/components/ui/select-field";
 import { id } from "date-fns/locale";
 import { SearchSelectField } from "@/components/ui/search-select-field";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface WorkflowTask {
   id: string;
@@ -83,6 +84,7 @@ export function WorkflowTaskReassignDialog({
   const [remarks, setRemarks] = useState("");
 
   const reassignTaskMutation = useReassignWorkflowTaskMutation();
+  const { checkPermission } = usePermissions();
 
   // Fetch available users for reassignment
   const { data: usersResponse, isLoading: usersLoading } = useQuery({
@@ -97,6 +99,7 @@ export function WorkflowTaskReassignDialog({
   const availableUsers = usersResponse?.data || [];
 
   const handleReassignTask = async () => {
+    if (!checkPermission("WORKFLOW_CONFIG", "can_assign")) return;
     if (!task || !selectedUserId) return;
 
     reassignTaskMutation.mutate(
