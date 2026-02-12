@@ -469,7 +469,7 @@ export function FindingForm({
               onValueChange={(value) => handleInputChange("responsible_person", value)}
               options={teamMembers.map((member) => ({
                 id: member.id,
-                name: `${member.first_name} ${member.last_name} - (${member.role.name})`
+                name: `${member.first_name ?? ""} ${member.last_name ?? ""} - (${member.role?.name ?? "N/A"})`
               }))}
               isLoading={loadingTeamMembers}
             />
