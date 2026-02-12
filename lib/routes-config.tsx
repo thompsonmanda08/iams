@@ -15,7 +15,8 @@ import {
   BriefcaseBusiness,
   MailCheck,
   ChartPieIcon,
-  CompassIcon
+  CompassIcon,
+  SquareAsterisk
 } from "lucide-react";
 
 export type NavGroup = {
@@ -198,6 +199,11 @@ export const navItems: NavGroup[] = [
         title: "Mail Settings",
         href: "/dashboard/system-configs/mail-settings",
         icon: MailCheck
+      },
+      {
+        title: "Password Policy",
+        href: "/dashboard/system-configs/password-policy",
+        icon: SquareAsterisk
       }
     ]
   }

@@ -561,6 +561,23 @@ export function MyIncidents() {
                 <h3 className="border-b pb-2 text-lg font-semibold">Responsibility & Timeline</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <Label className="text-muted-foreground text-xs">Created By</Label>
+                    <p className="font-medium">
+                      {`${selectedIncident.created_by_user.first_name} ${selectedIncident.created_by_user.last_name}`}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {selectedIncident.created_by_user.email}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Created Date</Label>
+                    <p className="font-medium">
+                      {format(new Date(selectedIncident.incident.created_at), "PPP")}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <Label className="text-muted-foreground text-xs">Responsible Person</Label>
                     <p className="font-medium">
                       {`${selectedIncident.responsible_person.first_name} ${selectedIncident.responsible_person.last_name}`}
