@@ -19,12 +19,18 @@ import {
   Building,
   AlertTriangle,
   ChevronDown,
-  FileText
+  FileText,
+  Logs,
+  ClipboardList
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import BackButton from "@/components/back-button";
+import { ActionLog } from "./[id]/_components/action-log";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { RiskActionLog, PaginationInfo } from "@/lib/types/risk-log";
+import { useState } from "react";
 
 interface RiskOwner {
   id: string;
@@ -97,10 +103,14 @@ interface RiskAction {
 
 interface ActionDetailsProps {
   action: RiskAction;
+  actionLogs: RiskActionLog;
+  pagination: PaginationInfo;
 }
 
-export function ActionDetails({ action }: ActionDetailsProps) {
+export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsProps) {
   const router = useRouter();
+
+  const [activeTab, setActiveTab] = useState("risk-details");
 
   const handleMitigationSelect = (option: string) => {
     toast.success(`Risk response changed to: ${option}`);
@@ -175,7 +185,7 @@ export function ActionDetails({ action }: ActionDetailsProps) {
   };
 
   return (
-    <div className="bg-muted/30 min-h-screen">
+    <div className="min-h-screen">
       {/* Header Section */}
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-6">
@@ -226,304 +236,326 @@ export function ActionDetails({ action }: ActionDetailsProps) {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid gap-6">
-          {/* Status and Response Row */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-lg">
-                    <AlertTriangle className="text-primary h-6 w-6" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-muted-foreground text-sm">Status</p>
-                    <Badge variant={getStatusVariant(action?.status)} className="mt-1">
-                      {action?.status || "Unknown"}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
-                    <Shield className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-muted-foreground text-sm">Risk Response</p>
-                    <Badge className={cn("mt-1 border", getResponseColor(action?.risk_response))}>
-                      {action?.risk_response || "Not set"}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10">
-                    <Target className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-muted-foreground text-sm">Risk Appetite</p>
-                    <p className="mt-1 text-lg font-semibold">
-                      {action?.risk_appetite_status || "Not specified"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Risk Assessment Row */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Inherent Risk */}
-            <Card className="relative overflow-hidden">
-              <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-red-500/10 blur-2xl" />
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <TrendingUp className="h-5 w-5 text-red-600" />
-                  Inherent Risk
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className={cn("h-3 w-3 rounded-full", inherentRisk.color)} />
-                  <span className={cn("text-2xl font-bold", inherentRisk.textColor)}>
-                    {inherentRisk.label}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Likelihood</p>
-                    <p className="text-2xl font-bold">{action?.inherent_likelihood || 0}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Impact</p>
-                    <p className="text-2xl font-bold">{action?.inherent_impact || 0}</p>
-                  </div>
-                </div>
-                <div className="border-t pt-2">
-                  <p className="text-muted-foreground text-xs">Risk Score</p>
-                  <p className="text-3xl font-bold">{inherentScore}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Residual Risk */}
-            <Card className="relative overflow-hidden">
-              <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-green-500/10 blur-2xl" />
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Shield className="h-5 w-5 text-green-600" />
-                  Residual Risk
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className={cn("h-3 w-3 rounded-full", residualRisk.color)} />
-                  <span className={cn("text-2xl font-bold", residualRisk.textColor)}>
-                    {residualRisk.label}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Likelihood</p>
-                    <p className="text-2xl font-bold">{action?.residual_likelihood || "--"}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Impact</p>
-                    <p className="text-2xl font-bold">{action?.residual_impact || "--"}</p>
-                  </div>
-                </div>
-                <div className="border-t pt-2">
-                  <p className="text-muted-foreground text-xs">Risk Score</p>
-                  <p className="text-3xl font-bold">{residualScore}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Details Grid */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Risk Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Risk Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-muted-foreground text-sm">Category</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: action?.category?.color || "#ccc" }}
-                      />
-                      <p className="font-semibold">{action?.category?.name || "Not specified"}</p>
-                      <Badge variant="outline" className="text-xs">
-                        {action?.category?.code || "N/A"}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="container mx-auto w-full px-4 py-8">
+        <TabsList className="mb-6 grid h-12 w-full grid-cols-2">
+          <TabsTrigger value="risk-details" className="gap-2">
+            <ClipboardList className="h-4 w-4" />
+            <span>Risk Details</span>
+          </TabsTrigger>
+          <TabsTrigger value="risk-action-log" className="gap-2">
+            <Logs className="h-4 w-4" />
+            <span>Risk Action Log</span>
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="risk-details" className="space-y-6">
+          <div className="grid gap-6">
+            {/* Status and Response Row */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-lg">
+                      <AlertTriangle className="text-primary h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-muted-foreground text-sm">Status</p>
+                      <Badge variant={getStatusVariant(action?.status)} className="mt-1">
+                        {action?.status || "Unknown"}
                       </Badge>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div>
-                    <p className="text-muted-foreground text-sm">Department</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Building className="text-muted-foreground h-4 w-4" />
-                      <p className="font-semibold">{action?.department?.name || "Not specified"}</p>
-                      <Badge variant="outline" className="text-xs">
-                        {action?.department?.code || "N/A"}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+                      <Shield className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-muted-foreground text-sm">Risk Response</p>
+                      <Badge className={cn("mt-1 border", getResponseColor(action?.risk_response))}>
+                        {action?.risk_response || "Not set"}
                       </Badge>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div>
-                    <p className="text-muted-foreground text-sm">Risk Owner</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <User className="text-muted-foreground h-4 w-4" />
-                      <div>
-                        <p className="font-semibold">
-                          {action?.risk_owner?.first_name || action?.risk_owner?.last_name
-                            ? `${action.risk_owner.first_name || ""} ${action.risk_owner.last_name || ""}`.trim()
-                            : "Not assigned"}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {action?.risk_owner?.email || "No email"}
-                        </p>
-                      </div>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10">
+                      <Target className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-muted-foreground text-sm">Risk Appetite</p>
+                      <p className="mt-1 text-lg font-semibold">
+                        {action?.risk_appetite_status || "Not specified"}
+                      </p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                  <div>
-                    <p className="text-muted-foreground text-sm">Strategic Objective</p>
-                    <p className="mt-1 font-semibold">
-                      {action?.strategic_objective?.name || "Not specified"}
-                    </p>
+            {/* Risk Assessment Row */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Inherent Risk */}
+              <Card className="relative overflow-hidden">
+                <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-red-500/10 blur-2xl" />
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                    <TrendingUp className="h-5 w-5 text-red-600" />
+                    Inherent Risk
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("h-3 w-3 rounded-full", inherentRisk.color)} />
+                    <span className={cn("text-2xl font-bold", inherentRisk.textColor)}>
+                      {inherentRisk.label}
+                    </span>
                   </div>
-
-                  <div>
-                    <p className="text-muted-foreground text-sm">Step</p>
-                    <Badge variant="outline" className="mt-1">
-                      Step {action?.step || 0}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Process Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Process & Timeline</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-muted-foreground text-sm">Macro Process</p>
-                    <p className="mt-1 font-semibold">
-                      {action?.macro_process?.name || "Not specified"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground text-sm">Sub Process</p>
-                    <p className="mt-1 font-semibold">
-                      {action?.sub_process?.name || "Not specified"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground text-sm">Target Closing Date</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Calendar className="text-muted-foreground h-4 w-4" />
-                      <div>
-                        <p className="font-semibold">{formatDate(action?.target_closing_date)}</p>
-                        {isOverdue(action?.target_closing_date) && (
-                          <p className="text-xs text-red-600">
-                            Overdue
-                            {action?.overdue_days ? ` by ${action.overdue_days} days` : ""}
-                          </p>
-                        )}
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-xs">Likelihood</p>
+                      <p className="text-2xl font-bold">{action?.inherent_likelihood || 0}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-xs">Impact</p>
+                      <p className="text-2xl font-bold">{action?.inherent_impact || 0}</p>
                     </div>
                   </div>
-
-                  <div>
-                    <p className="text-muted-foreground text-sm">Recurrence</p>
-                    <Badge variant="outline" className="mt-1 capitalize">
-                      {action?.recurrence || "Not specified"}
-                    </Badge>
+                  <div className="border-t pt-2">
+                    <p className="text-muted-foreground text-xs">Risk Score</p>
+                    <p className="text-3xl font-bold">{inherentScore}</p>
                   </div>
+                </CardContent>
+              </Card>
 
-                  {action?.review_date && (
+              {/* Residual Risk */}
+              <Card className="relative overflow-hidden">
+                <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-green-500/10 blur-2xl" />
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    Residual Risk
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("h-3 w-3 rounded-full", residualRisk.color)} />
+                    <span className={cn("text-2xl font-bold", residualRisk.textColor)}>
+                      {residualRisk.label}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-xs">Likelihood</p>
+                      <p className="text-2xl font-bold">{action?.residual_likelihood || "--"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-xs">Impact</p>
+                      <p className="text-2xl font-bold">{action?.residual_impact || "--"}</p>
+                    </div>
+                  </div>
+                  <div className="border-t pt-2">
+                    <p className="text-muted-foreground text-xs">Risk Score</p>
+                    <p className="text-3xl font-bold">{residualScore}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Details Grid */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Risk Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Risk Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <p className="text-muted-foreground text-sm">Review Date</p>
-                      <p className="mt-1 font-semibold">{formatDate(action.review_date)}</p>
+                      <p className="text-muted-foreground text-sm">Category</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: action?.category?.color || "#ccc" }}
+                        />
+                        <p className="font-semibold">{action?.category?.name || "Not specified"}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {action?.category?.code || "N/A"}
+                        </Badge>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Root Cause & Controls */}
-          <div className="grid gap-6 md:grid-cols-2">
+                    <div>
+                      <p className="text-muted-foreground text-sm">Department</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <Building className="text-muted-foreground h-4 w-4" />
+                        <p className="font-semibold">
+                          {action?.department?.name || "Not specified"}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {action?.department?.code || "N/A"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground text-sm">Risk Owner</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <User className="text-muted-foreground h-4 w-4" />
+                        <div>
+                          <p className="font-semibold">
+                            {action?.risk_owner?.first_name || action?.risk_owner?.last_name
+                              ? `${action.risk_owner.first_name || ""} ${action.risk_owner.last_name || ""}`.trim()
+                              : "Not assigned"}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {action?.risk_owner?.email || "No email"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground text-sm">Strategic Objective</p>
+                      <p className="mt-1 font-semibold">
+                        {action?.strategic_objective?.name || "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground text-sm">Step</p>
+                      <Badge variant="outline" className="mt-1">
+                        Step {action?.step || 0}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Process Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Process & Timeline</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-muted-foreground text-sm">Macro Process</p>
+                      <p className="mt-1 font-semibold">
+                        {action?.macro_process?.name || "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground text-sm">Sub Process</p>
+                      <p className="mt-1 font-semibold">
+                        {action?.sub_process?.name || "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground text-sm">Target Closing Date</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <Calendar className="text-muted-foreground h-4 w-4" />
+                        <div>
+                          <p className="font-semibold">{formatDate(action?.target_closing_date)}</p>
+                          {isOverdue(action?.target_closing_date) && (
+                            <p className="text-xs text-red-600">
+                              Overdue
+                              {action?.overdue_days ? ` by ${action.overdue_days} days` : ""}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground text-sm">Recurrence</p>
+                      <Badge variant="outline" className="mt-1 capitalize">
+                        {action?.recurrence || "Not specified"}
+                      </Badge>
+                    </div>
+
+                    {action?.review_date && (
+                      <div>
+                        <p className="text-muted-foreground text-sm">Review Date</p>
+                        <p className="mt-1 font-semibold">{formatDate(action.review_date)}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Root Cause & Controls */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Root Cause</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">{action?.root_cause || "Not specified"}</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-lg font-semibold">
+                    Existing Controls
+                    <Badge variant="outline">
+                      Effectiveness: {action?.control_effectiveness || 0}/5
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">{action?.existing_controls || "No controls specified"}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Treatment Plan */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Root Cause</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">{action?.root_cause || "Not specified"}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between text-lg font-semibold">
-                  Existing Controls
-                  <Badge variant="outline">
-                    Effectiveness: {action?.control_effectiveness || 0}/5
-                  </Badge>
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                  <FileText className="h-5 w-5" />
+                  Treatment Plan
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{action?.existing_controls || "No controls specified"}</p>
+                <p className="text-sm">{action?.treatment_plan || "No treatment plan specified"}</p>
+                <div className="mt-4 flex items-center gap-4 border-t pt-4">
+                  <div className="flex items-center gap-2">
+                    <Banknote className="text-muted-foreground h-4 w-4" />
+                    <div>
+                      <p className="text-muted-foreground text-xs">Mitigation Cost</p>
+                      <p className="font-semibold">
+                        {action?.mitigation_cost
+                          ? `${action.mitigation_cost.toLocaleString()}`
+                          : "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        <TabsContent value="risk-action-log" className="space-y-6">
+          <ActionLog logs={actionLogs || []} pagination={pagination} />
+        </TabsContent>
+      </Tabs>
 
-          {/* Treatment Plan */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <FileText className="h-5 w-5" />
-                Treatment Plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{action?.treatment_plan || "No treatment plan specified"}</p>
-              <div className="mt-4 flex items-center gap-4 border-t pt-4">
-                <div className="flex items-center gap-2">
-                  <Banknote className="text-muted-foreground h-4 w-4" />
-                  <div>
-                    <p className="text-muted-foreground text-xs">Mitigation Cost</p>
-                    <p className="font-semibold">
-                      {action?.mitigation_cost
-                        ? `${action.mitigation_cost.toLocaleString()}`
-                        : "Not specified"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <div className="container mx-auto px-4 py-8"></div>
     </div>
   );
 }

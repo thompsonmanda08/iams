@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { getAuditFollowupLogs, getFindingActions } from "@/app/_actions/finding-actions";
 import PageHeader from "@/components/page-header";
 import BackButton from "@/components/back-button";
@@ -40,7 +39,7 @@ export default async function FindingActionsPage({
   const auditLogPagination: Pagination = auditLogResponse.data?.pagination || {};
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="bg-card border-b">
         <div className="container mx-auto flex justify-between px-4 py-6">

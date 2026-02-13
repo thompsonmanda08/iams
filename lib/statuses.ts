@@ -36,7 +36,8 @@ export const STATUS_VALUES = {
   LOW: "LOW",
   ABOVE: "ABOVE",
   BELOW: "BELOW",
-  CRITICAL: "CRITICAL"
+  CRITICAL: "CRITICAL",
+  COMPLETE: "COMPLETE",
 } as const;
 
 export type StandardStatus = (typeof STATUS_VALUES)[keyof typeof STATUS_VALUES];
@@ -248,7 +249,16 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     style: "solid",
     hexColor: "#DC3545",
     sortOrder: 14
-  }
+  },
+   COMPLETE: {
+    id: "COMPLETE",
+    label: "Complete",
+    description: "Entity execution is complete",
+    color: "success",
+    style: "solid",
+    hexColor: "#20C997",
+    sortOrder: 15
+  },
 };
 
 // ============================================================================
@@ -272,7 +282,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       "APPROVED",
       "REJECTED",
       "COMPLETED",
-      "ARCHIVED"
+      "ARCHIVED",
+      "COMPLETE"
     ],
     defaultStatus: "DRAFT",
     transitions: {
@@ -296,7 +307,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       BELOW: [],
       CRITICAL: [],
       IN_PROGRESS: [],
-      UNDER_REVIEW: []
+      UNDER_REVIEW: [],
+      COMPLETE: [],
     }
   },
 
@@ -309,7 +321,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       "APPROVED",
       "REJECTED",
       "COMPLETED",
-      "ARCHIVED"
+      "ARCHIVED",
+      "COMPLETE"
     ],
     defaultStatus: "DRAFT",
     transitions: {
@@ -333,13 +346,14 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       BELOW: [],
       CRITICAL: [],
       IN_PROGRESS: [],
-      UNDER_REVIEW: []
+      UNDER_REVIEW: [],
+      COMPLETE: [],
     }
   },
 
   // ========== FINDING STATUSES ==========
   finding: {
-    allowedStatuses: ["OPEN", "PENDING", "IN_REVIEW", "COMPLETED", "CLOSED", "ARCHIVED"],
+    allowedStatuses: ["OPEN", "PENDING", "IN_REVIEW", "COMPLETED", "CLOSED", "ARCHIVED", "COMPLETE"],
     defaultStatus: "OPEN",
     transitions: {
       DRAFT: [],
@@ -353,15 +367,17 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["CLOSED", "ARCHIVED"],
       CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
       ABOVE: [],
-      BELOW: [],
+      BELOW: [], 
       CRITICAL: [],
       CLOSURE_REVIEW: [],
       IN_PROGRESS: [],
-      UNDER_REVIEW: []
+      UNDER_REVIEW: [],
+      COMPLETE: [],
     }
   },
 
@@ -381,6 +397,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: [],
       CLOSED: ["ARCHIVED"],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -389,7 +406,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       CLOSURE_REVIEW: [],
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      COMPLETE: [],
     }
   },
 
@@ -426,13 +444,14 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       CLOSURE_REVIEW: [],
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      COMPLETE: [],
     }
   },
 
   // ========== TASK STATUSES ==========
   task: {
-    allowedStatuses: ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "ON_HOLD"],
+    allowedStatuses: ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "ON_HOLD", "COMPLETE"],
     defaultStatus: "PENDING",
     transitions: {
       DRAFT: [],
@@ -446,6 +465,7 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       COMPLETED: ["ARCHIVED"],
       CLOSED: [],
       ARCHIVED: [],
+      PUBLISHED: [],
       HIGH: [],
       MEDIUM: [],
       LOW: [],
@@ -454,7 +474,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
       BELOW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      COMPLETE: [],
     }
   },
 
@@ -483,7 +504,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       CLOSURE_REVIEW: [],
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      COMPLETE: [],
     }
   },
 
@@ -512,7 +534,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       CLOSURE_REVIEW: [],
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      COMPLETE: [],
     }
   },
   // ========== RISK MATRIX STATUSES ==========
@@ -540,7 +563,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       CLOSURE_REVIEW: [],
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      COMPLETE: [],
     }
   },
 
@@ -576,7 +600,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
       BELOW: [],
-      CRITICAL: []
+      CRITICAL: [],
+      COMPLETE: [],
     }
   }
 };

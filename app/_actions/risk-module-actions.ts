@@ -521,102 +521,7 @@ interface StatusSummary {
  * Mock data for action findings submissions
  * Demonstrates the complete workflow: OPEN → PENDING_REVIEW → COMPLETED
  */
-const mockActionFindings: ActionFindings[] = [
-  // Completed action - approved
-  {
-    id: "AF-2024-001",
-    risk_id: "1",
-    action_owner_id: "user-security-1",
-    description:
-      "Implemented multi-factor authentication (MFA) for all system access points. Updated authentication framework to require OTP verification in addition to password.",
-    evidence_notes:
-      "MFA implementation completed on 2024-11-01. All 150 users have been enrolled. Configuration screenshots and deployment logs available. Zero failed authentications reported in first week.",
-    evidence_file_url: "https://example.com/files/mfa-deployment-report.pdf",
-    evidence_file_name: "mfa-deployment-report.pdf",
-    submission_date: new Date("2024-11-05"),
-    status: "COMPLETED",
-    reviewer_id: "user-reviewer-1",
-    reviewer_feedback:
-      "Excellent implementation of MFA across all systems. The deployment was executed flawlessly with comprehensive user training. Control effectiveness has increased from 2/5 to 4.5/5. This significantly reduces the risk of unauthorized access.",
-    assessment_score: 9,
-    assessment_date: new Date("2024-11-06"),
-    created_at: new Date("2024-11-05"),
-    updated_at: new Date("2024-11-06")
-  },
 
-  // Pending review action
-  {
-    id: "AF-2024-002",
-    risk_id: "1",
-    action_owner_id: "user-security-1",
-    description:
-      "Conducted security vulnerability assessment using automated scanning tools. Identified and patched 12 critical vulnerabilities, 35 high-severity issues, and 89 medium-severity issues.",
-    evidence_notes:
-      "Vulnerability scan performed on 2024-11-03 using Nessus and Qualys tools. All identified vulnerabilities have been patched and re-scanned for confirmation. Patches successfully applied to 98% of systems. Remaining 2% scheduled for next maintenance window.",
-    evidence_file_url: "https://example.com/files/vuln-scan-report.pdf",
-    evidence_file_name: "vulnerability-assessment-report.pdf",
-    submission_date: new Date("2024-11-04"),
-    status: "PENDING_REVIEW",
-    created_at: new Date("2024-11-04"),
-    updated_at: new Date("2024-11-04")
-  },
-
-  // Needs revision - rejected, more action needed
-  {
-    id: "AF-2024-003",
-    risk_id: "2",
-    action_owner_id: "user-compliance-1",
-    description:
-      "Updated data protection policy documentation to align with GDPR requirements. Added new sections on data handling procedures.",
-    evidence_notes:
-      "Policy document updated and circulated to stakeholders. Version 2.1 released on 2024-10-15. Initial feedback from legal team received.",
-    evidence_file_url: "https://example.com/files/gdpr-policy-v2.1.docx",
-    evidence_file_name: "gdpr-policy-v2.1.docx",
-    submission_date: new Date("2024-10-20"),
-    status: "NEEDS_REVISION",
-    reviewer_id: "user-reviewer-2",
-    reviewer_feedback:
-      "The policy update covers basic GDPR requirements but lacks comprehensive data processing agreements (DPAs) with third-party vendors. Additionally, incident response procedures need to be more detailed. Please provide: (1) DPA templates, (2) Enhanced incident response plan, (3) Evidence of staff training completion. Once these items are addressed, this can be approved.",
-    assessment_score: 5,
-    assessment_date: new Date("2024-10-25"),
-    created_at: new Date("2024-10-20"),
-    updated_at: new Date("2024-10-25")
-  },
-
-  // Another completed action with high score
-  {
-    id: "AF-2024-004",
-    risk_id: "1",
-    action_owner_id: "user-security-1",
-    description:
-      "Implemented comprehensive security awareness training program for all employees. Mandatory training includes phishing simulation, password management, and social engineering tactics.",
-    evidence_notes:
-      "Training rollout completed on 2024-10-10. 98% of employees (147/150) completed the mandatory 2-hour training module. Average test score: 87%. Three low performers scheduled for follow-up training. Monthly simulated phishing tests show 12% click rate (industry average: 20%).",
-    evidence_file_url: "https://example.com/files/security-training-completion-report.xlsx",
-    evidence_file_name: "security-training-completion-report.xlsx",
-    submission_date: new Date("2024-10-15"),
-    status: "COMPLETED",
-    reviewer_id: "user-reviewer-1",
-    reviewer_feedback:
-      "Outstanding security awareness program execution. The 98% completion rate and 87% average test score demonstrate strong engagement. The phishing click rate of 12% (well below industry average) shows the training is effective. This significantly improves the human security posture.",
-    assessment_score: 10,
-    assessment_date: new Date("2024-10-18"),
-    created_at: new Date("2024-10-15"),
-    updated_at: new Date("2024-10-18")
-  },
-
-  // Open action - not yet submitted
-  {
-    id: "AF-2024-005",
-    risk_id: "2",
-    action_owner_id: "user-compliance-1",
-    description: "Conduct risk assessment for third-party data processors",
-    status: "OPEN",
-    submission_date: new Date("2024-11-07"),
-    created_at: new Date("2024-11-07"),
-    updated_at: new Date("2024-11-07")
-  }
-];
 
 // ============================================================================
 // RISK CATEGORY MANAGEMENT
@@ -1480,18 +1385,6 @@ export async function submitActionFindings(data: ActionFindingsInput): Promise<A
   }
 }
 
-/**
- * Get action findings for a specific risk
- */
-export async function getActionFindings(riskId: string): Promise<APIResponse> {
-  try {
-    // Mock implementation - Replace with real API call when backend is ready
-    const findings = mockActionFindings.filter((f) => f.risk_id === riskId);
-    return successResponse(findings);
-  } catch (error) {
-    return handleError(error, "GET | GET ACTION FINDINGS", `/api/v1/risks/${riskId}/findings`);
-  }
-}
 
 /**
  * Assess action findings as a reviewer
@@ -1727,3 +1620,40 @@ export async function getRiskOverview(start_date: string, end_date: string): Pro
     return handleError(error, "GET | RISK OVERVIEW", url);
   }
 }
+
+/**
+ * Get All Risk Action Logs
+ */
+
+export async function getRiskLogs(
+  risk_id: string,
+  params?: {
+    limit?: number;
+    offset?: number;
+  }
+): Promise<APIResponse> {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params?.limit)
+      queryParams.append("limit", String(params.limit));
+
+    if (params?.offset)
+      queryParams.append("offset", String(params.offset));
+
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risks/${risk_id}/logs${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`,
+      method: "GET",
+    });
+
+    return successResponse(response.data?.data);
+  } catch (error) {
+    return handleError(
+      error,
+      "GET | GET RISK LOGS",
+      `/api/v1/risks/${risk_id}/logs`
+    );
+  }
+}
+
