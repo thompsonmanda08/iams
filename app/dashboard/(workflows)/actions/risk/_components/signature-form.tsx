@@ -193,7 +193,7 @@ export default function SignatureForm({
     <>
       {/* Signature Modal */}
       {showSignatureModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4 rounded-lg">
+        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center rounded-lg bg-black p-4">
           <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
             <div className="flex items-center justify-between border-b p-4">
               <h3 className="text-lg font-semibold text-slate-800">Sign Here</h3>
@@ -312,6 +312,11 @@ export default function SignatureForm({
               Click to Sign
             </Button>
           )}
+          <div className="mt-3 gap-2 rounded-lg bg-orange-50 px-2 py-2">
+            <span className="font-mono text-xs italic">
+              Submitting this form without a signature will be treated as a rejection of the action.
+            </span>
+          </div>
         </div>
 
         <div className="flex gap-3 border-t pt-6">

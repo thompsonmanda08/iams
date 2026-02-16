@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -7,11 +7,8 @@ import {
   ChevronRight,
   FileText,
   Shield,
-  Users,
   ClipboardCheck,
   Download,
-  Pen,
-  X,
   Calendar as CalendarIcon,
   Save
 } from "lucide-react";
@@ -24,7 +21,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { downloadPDF } from "./download-acceptance-form";
 
 // Type definitions
 type RiskRate = "High" | "Medium" | "Low" | "";
@@ -85,10 +81,7 @@ export default function RiskAcceptanceForm({
 }: RiskAcceptanceFormProps) {
   const [mode, setMode] = useState<FormMode>(initialMode);
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const [showSignatureModal, setShowSignatureModal] = useState<boolean>(false);
-  const [currentSignatureField, setCurrentSignatureField] = useState<ApproverKey | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     risk_description: initialData?.risk_description || "",
@@ -139,7 +132,7 @@ export default function RiskAcceptanceForm({
       icon: Shield,
       fields: ["compensatingControls", "additionalRemarks", "expirationDate"],
       mode: ["create", "edit"]
-    },
+    }
   ];
 
   // Filter steps based on current mode
@@ -149,17 +142,6 @@ export default function RiskAcceptanceForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateApprover = (
-    approver: ApproverKey,
-    field: ApproverField,
-    value: string | Date
-  ): void => {
-    setFormData((prev) => ({
-      ...prev,
-      [approver]: { ...prev[approver], [field]: value }
-    }));
-  };
-
   const nextStep = (): void => {
     if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
   };
@@ -167,83 +149,6 @@ export default function RiskAcceptanceForm({
   const prevStep = (): void => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
-
-  const openSignatureModal = (approverKey: ApproverKey): void => {
-    setCurrentSignatureField(approverKey);
-    setShowSignatureModal(true);
-  };
-
-  const clearCanvas = (): void => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-  };
-
-  const saveSignature = (): void => {
-    const canvas = canvasRef.current;
-    if (canvas && currentSignatureField) {
-      const signatureData = canvas.toDataURL();
-      updateApprover(currentSignatureField, "signature", signatureData);
-      setShowSignatureModal(false);
-      setCurrentSignatureField(null);
-    }
-  };
-
-  const startDrawing = (
-    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
-  ): void => {
-    setIsDrawing(true);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = ("clientX" in e ? e.clientX : e.touches[0].clientX) - rect.left;
-    const y = ("clientY" in e ? e.clientY : e.touches[0].clientY) - rect.top;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const draw = (
-    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
-  ): void => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = ("clientX" in e ? e.clientX : e.touches[0].clientX) - rect.left;
-    const y = ("clientY" in e ? e.clientY : e.touches[0].clientY) - rect.top;
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = "#1e293b";
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.stroke();
-  };
-
-  const stopDrawing = (): void => {
-    setIsDrawing(false);
-  };
-
-  useEffect(() => {
-    if (showSignatureModal && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-  }, [showSignatureModal]);
 
   const handleSubmit = async (): Promise<void> => {
     setIsSubmitting(true);
@@ -259,14 +164,6 @@ export default function RiskAcceptanceForm({
       setIsSubmitting(false);
     }
   };
-
-  const approverConfigs: ApproverConfig[] = [
-    { key: "risk_coordinator", title: "Risk Coordinator" },
-    { key: "risk_owner", title: "Risk Owner" },
-    { key: "reviewed_by", title: "Reviewed By" },
-    { key: "emc_approval", title: "EMC Approval (CEO)" },
-    { key: "board_approval", title: "Board Approval - Audit and Risk Chairperson" }
-  ];
 
   const isLastStep = currentStep === steps.length - 1;
 
@@ -290,13 +187,6 @@ export default function RiskAcceptanceForm({
                     : "Add approvals and signatures"}
                 </p>
               </div>
-              <Button
-                onClick={() => downloadPDF(formData)}
-                variant="outline"
-                className="text-primary">
-                <Download className="mr-2 h-5 w-5" />
-                Download
-              </Button>
             </div>
           </div>
 

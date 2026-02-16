@@ -241,7 +241,13 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                       </TableCell>
 
                       <TableCell>
-                        <StatusBadge status={execution?.status || "Awaiting Action"} />
+                        <StatusBadge
+                          status={
+                            action.action_type === "RISK_ACCEPTANCE"
+                              ? action?.status
+                              : execution?.status || "Awaiting Action"
+                          }
+                        />
                       </TableCell>
 
                       <TableCell className="text-right">
