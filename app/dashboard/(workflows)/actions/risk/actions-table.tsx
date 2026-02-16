@@ -388,7 +388,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
             <SignatureForm
               actionId={selectedActionForSignature.action.id}
               userId={selectedActionForSignature.action.created_by}
-              acceptanceId={selectedActionForSignature.action.risk_id}
+              acceptanceId={selectedActionForSignature.action.acceptance_id}
               onSubmit={handleSignatureSubmit}
               onClose={() => setSignatureDialogOpen(false)}
             />

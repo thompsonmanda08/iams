@@ -245,7 +245,8 @@ export interface Action {
   created_at: string;
   updated_by: string | null;
   updated_at: string;
-  action_type: string | null
+  action_type: string | null;
+  acceptance_id:string
 }
 
 // Complete Action Definition with all related data
