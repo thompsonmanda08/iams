@@ -52,6 +52,8 @@ export default function SignatureForm({
     signature: ""
   });
 
+  console.log("FORM DATA:", formData);
+
   // Initialize canvas when modal opens
   useEffect(() => {
     if (showSignatureModal && canvasRef.current) {
@@ -168,9 +170,10 @@ export default function SignatureForm({
     try {
       // Submit to API
       const submitResponse = await submitRiskAcceptanceSignature(acceptanceId, {
+        action_id: formData.action_id,
+        user_id: formData.user_id,
         name: formData.name,
         designation: formData.designation,
-        date: format(formData.date as Date, "yyyy-MM-dd"),
         signature: formData.signature
       });
 

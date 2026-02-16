@@ -107,11 +107,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     }
   };
 
-  const handleSignatureSubmit = async (data: ApproverSignature) => {
+  const handleSignatureSubmit = async () => {
     try {
-      // TODO: Call API to submit signature
-      console.log("Signature submitted:", data);
-      toast.success("Signature submitted successfully");
       setSignatureDialogOpen(false);
       setSelectedActionForSignature(null);
     } catch (error: any) {

@@ -1725,9 +1725,10 @@ export async function updateRiskAcceptanceConfig(
 // ============================================================================
 
 export interface RiskAcceptanceSignatureInput {
+  action_id: string;
+  user_id: string;
   name: string;
   designation: string;
-  date: string;
   signature: string;
 }
 

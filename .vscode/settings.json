@@ -13,5 +13,6 @@
     "signup",
     "WORKPAPER",
     "workpapers"
-  ]
+  ],
+  "kiroAgent.configureMCP": "Disabled"
 }
