@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -13,7 +12,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { AlertTriangle, Upload, Eye, CheckCircle2, AlertCircle, Send, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Upload,
+  Eye,
+  CheckCircle2,
+  AlertCircle,
+  Send,
+  Loader2,
+  Signature
+} from "lucide-react";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
@@ -26,6 +34,14 @@ import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import { sendRiskActionReminder } from "@/app/_actions/task-actions";
 import { toast } from "sonner";
+import SignatureForm, { type ApproverSignature } from "./_components/signature-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 
 interface ActionsTableProps {
   actions: ActionDefinition[];
@@ -48,6 +64,9 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   );
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reminderSendingId, setReminderSendingId] = useState<string | null>(null);
+  const [selectedActionForSignature, setSelectedActionForSignature] =
+    useState<ActionDefinition | null>(null);
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -88,6 +107,17 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     }
   };
 
+  const handleSignatureSubmit = async (data: ApproverSignature) => {
+    try {
+      // TODO: Call API to submit signature
+      console.log("Signature submitted:", data);
+      toast.success("Signature submitted successfully");
+      setSignatureDialogOpen(false);
+      setSelectedActionForSignature(null);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to submit signature");
+    }
+  };
 
   return (
     <Card>
@@ -216,19 +246,34 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {isUserExecutor && action.status === "PENDING" && !execution && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => {
-                                setSelectedActionForFindings(actionDef);
-                                setFindingsDialogOpen(true);
-                              }}
-                              className="h-8 gap-1.5">
-                              <Upload className="h-3.5 w-3.5" />
-                              Submit
-                            </Button>
-                          )}
+                          {isUserExecutor &&
+                            action.status === "PENDING" &&
+                            !execution &&
+                            (action.action_type === "RISK_ACCEPTANCE" ? (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => {
+                                  setSelectedActionForSignature(actionDef);
+                                  setSignatureDialogOpen(true);
+                                }}
+                                className="h-8 gap-1.5">
+                                <Signature className="h-3.5 w-3.5" />
+                                Approval Sign Off
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => {
+                                  setSelectedActionForFindings(actionDef);
+                                  setFindingsDialogOpen(true);
+                                }}
+                                className="h-8 gap-1.5">
+                                <Upload className="h-3.5 w-3.5" />
+                                Submit
+                              </Button>
+                            ))}
 
                           {execution && (
                             <Button
@@ -318,6 +363,31 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
           onOpenChange={setReviewDialogOpen}
           actionDefinition={selectedActionForReview}
         />
+      )}
+
+      {/* Signature Form Dialog - For Risk Acceptance Approvals */}
+      {selectedActionForSignature && (
+        <Dialog open={signatureDialogOpen} onOpenChange={setSignatureDialogOpen}>
+          <DialogContent
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
+            className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Risk Acceptance Approval</DialogTitle>
+              <DialogDescription>
+                Sign off on the risk acceptance for: {selectedActionForSignature.risk_name}
+              </DialogDescription>
+            </DialogHeader>
+            <SignatureForm
+              actionId={selectedActionForSignature.action.id}
+              userId={selectedActionForSignature.action.created_by}
+              acceptanceId={selectedActionForSignature.action.risk_id}
+              onSubmit={handleSignatureSubmit}
+              onClose={() => setSignatureDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </Card>
   );

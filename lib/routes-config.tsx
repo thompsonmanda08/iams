@@ -16,7 +16,8 @@ import {
   MailCheck,
   ChartPieIcon,
   CompassIcon,
-  SquareAsterisk
+  SquareAsterisk,
+  Signature
 } from "lucide-react";
 
 export type NavGroup = {
@@ -204,6 +205,11 @@ export const navItems: NavGroup[] = [
         title: "Password Policy",
         href: "/dashboard/system-configs/password-policy",
         icon: SquareAsterisk
+      },
+       {
+        title: "Risk Acceptance Signatories",
+        href: "/dashboard/system-configs/risk-acceptance-signatories",
+        icon: Signature 
       }
     ]
   }

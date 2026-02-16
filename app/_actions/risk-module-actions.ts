@@ -245,6 +245,7 @@ export interface Action {
   created_at: string;
   updated_by: string | null;
   updated_at: string;
+  action_type: string | null
 }
 
 // Complete Action Definition with all related data
@@ -1657,3 +1658,99 @@ export async function getRiskLogs(
   }
 }
 
+
+// ============================================================================
+// RISK ACCEPTANCE CONFIGURATION
+// ============================================================================
+
+export interface RiskAcceptanceConfig {
+  id: string;
+  organization_id: string;
+  signoff_role_ids: string[];
+  is_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+}
+
+export interface RiskAcceptanceConfigInput {
+  signoff_role_ids: string[];
+  is_enabled: boolean;
+}
+
+/**
+ * Get risk acceptance configuration
+ * Endpoint: GET /api/v1/risk-acceptance-config
+ */
+export async function getRiskAcceptanceConfig(): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-acceptance-config",
+      method: "GET"
+    });
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "GET | GET RISK ACCEPTANCE CONFIG", "/api/v1/risk-acceptance-config");
+  }
+}
+
+/**
+ * Update risk acceptance configuration
+ * Endpoint: PUT /api/v1/risk-acceptance-config
+ */
+export async function updateRiskAcceptanceConfig(
+  input: RiskAcceptanceConfigInput
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/risk-acceptance-config",
+      data: input,
+      method: "PUT"
+    });
+    revalidatePath("/dashboard/system-configs/risk-acceptance-signatories");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(
+      error,
+      "PUT | UPDATE RISK ACCEPTANCE CONFIG",
+      "/api/v1/risk-acceptance-config"
+    );
+  }
+}
+
+// ============================================================================
+// RISK ACCEPTANCE SIGNATURES
+// ============================================================================
+
+export interface RiskAcceptanceSignatureInput {
+  name: string;
+  designation: string;
+  date: string;
+  signature: string;
+}
+
+/**
+ * Submit risk acceptance signature
+ * Endpoint: POST /api/v1/risk-acceptances/{{acceptance_id}}/signatures
+ */
+export async function submitRiskAcceptanceSignature(
+  acceptanceId: string,
+  input: RiskAcceptanceSignatureInput
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/risk-acceptances/${acceptanceId}/signatures`,
+      data: input,
+      method: "POST"
+    });
+    revalidatePath("/dashboard/(workflows)/actions/risk");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(
+      error,
+      "POST | SUBMIT RISK ACCEPTANCE SIGNATURE",
+      `/api/v1/risk-acceptances/${acceptanceId}/signatures`
+    );
+  }
+}

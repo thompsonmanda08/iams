@@ -39,7 +39,7 @@ export default async function RiskConfigurationsPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="matrix" className="space-y-4">
-          <TabsList className="inline-flex h-12 w-auto min-w-full gap-1 lg:gap-2">
+          <TabsList className="inline-flex h-12 w-auto min-w-full gap-1 lg:gap-2 overflow-x-auto">
             <TabsTrigger value="matrix" className="gap-2">
               <Grid3x3 className="h-4 w-4" />
               Risk Matrix

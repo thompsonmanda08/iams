@@ -1,7 +1,7 @@
 import { getSmtpConfig } from "@/app/_actions/smtp-actions";
 import { MailingSettingsForm } from "./_components/mailing-settings-form";
 import PageHeader from "@/components/page-header";
-import { Mail } from "lucide-react";
+
 
 export const metadata = {
   title: "Mailing Settings",

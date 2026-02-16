@@ -26,7 +26,8 @@ import {
   Globe,
   Calendar,
   Compass,
-  Mail
+  Mail,
+  Signature
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
@@ -59,7 +60,8 @@ const iconMap: Record<string, LucideIcon> = {
   Globe,
   Calendar,
   Compass,
-  Mail
+  Mail,
+  Signature
 };
 
 export interface PageHeaderClassNames {

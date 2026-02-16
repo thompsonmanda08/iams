@@ -15,7 +15,7 @@ import {
   Calendar as CalendarIcon,
   Save
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -140,12 +140,6 @@ export default function RiskAcceptanceForm({
       fields: ["compensatingControls", "additionalRemarks", "expirationDate"],
       mode: ["create", "edit"]
     },
-    {
-      title: "Approvals",
-      icon: Users,
-      fields: ["riskCoordinator", "riskOwner", "reviewedBy", "emcApproval", "boardApproval"],
-      mode: ["edit"]
-    }
   ];
 
   // Filter steps based on current mode
@@ -487,100 +481,6 @@ export default function RiskAcceptanceForm({
               </div>
             )}
 
-            {/* Step 3: Approvals (Edit Mode Only) */}
-            {currentStep === 3 && mode === "edit" && (
-              <div className="animate-fade-in space-y-8">
-                <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-slate-600">
-                  <strong>Approval Sign Off:</strong> Complete your information and add your
-                  signature
-                </p>
-
-                {approverConfigs.map((approver) => (
-                  <div
-                    key={approver.key}
-                    className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <h3 className="mb-4 font-semibold text-slate-700">{approver.title}</h3>
-                    <div className="mb-4 grid gap-4 md:grid-cols-3">
-                      <div>
-                        <Label className="mb-1 block">Name *</Label>
-                        <Input
-                          type="text"
-                          value={formData[approver.key].name}
-                          onChange={(e) => updateApprover(approver.key, "name", e.target.value)}
-                          placeholder="Full name"
-                        />
-                      </div>
-                      <div>
-                        <Label className="mb-1 block">Designation *</Label>
-                        <Input
-                          type="text"
-                          value={formData[approver.key].designation}
-                          onChange={(e) =>
-                            updateApprover(approver.key, "designation", e.target.value)
-                          }
-                          placeholder="Job title"
-                        />
-                      </div>
-                      <div>
-                        <Label className="mb-1 block">Date *</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !formData[approver.key].date && "text-muted-foreground"
-                              )}>
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {formData[approver.key].date
-                                ? format(formData[approver.key].date as Date, "PPP")
-                                : "Pick a date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={formData[approver.key].date as Date}
-                              onSelect={(date) =>
-                                updateApprover(approver.key, "date", date as Date)
-                              }
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="mb-2 block">Signature *</Label>
-                      {formData[approver.key].signature ? (
-                        <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-4">
-                          <img
-                            src={formData[approver.key].signature}
-                            alt="Signature"
-                            className="h-16 max-w-[200px] object-contain"
-                          />
-                          <Button onClick={() => openSignatureModal(approver.key)}>Change</Button>
-                        </div>
-                      ) : (
-                        <Button onClick={() => openSignatureModal(approver.key)}>
-                          <Pen className="mr-2 h-5 w-5" />
-                          Click to Sign
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-sm text-amber-800">
-                    <strong>Note:</strong> Send completed form to:{" "}
-                    <a href="mailto:InternalAuditRisk@infratel.co.zm" className="underline">
-                      InternalAuditRisk@infratel.co.zm
-                    </a>
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Navigation Buttons */}
             <div className="mt-8 flex items-center justify-between border-t pt-6">
               <Button type="button" onClick={prevStep} disabled={currentStep === 0}>
@@ -616,63 +516,6 @@ export default function RiskAcceptanceForm({
           </div>
         </div>
       </div>
-
-      {/* Signature Modal */}
-      {showSignatureModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-          <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b p-4">
-              <h3 className="text-lg font-semibold text-slate-800">Sign Here</h3>
-              <button
-                onClick={() => {
-                  setShowSignatureModal(false);
-                  setCurrentSignatureField(null);
-                }}
-                className="rounded p-1 hover:bg-slate-100">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-4">
-              <p className="mb-4 text-sm text-slate-600">
-                Draw your signature below using your mouse or touch screen
-              </p>
-              <div className="overflow-hidden rounded-lg border-2 border-slate-300 bg-white">
-                <canvas
-                  ref={canvasRef}
-                  width={600}
-                  height={200}
-                  className="w-full cursor-crosshair"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t bg-slate-50 p-4">
-              <Button onClick={clearCanvas} variant="outline">
-                Clear
-              </Button>
-              <Button onClick={saveSignature}>Save Signature</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
