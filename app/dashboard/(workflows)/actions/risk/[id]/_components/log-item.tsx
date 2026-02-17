@@ -1,9 +1,7 @@
 // components/risk-log/log-item.tsx
 import {
   Clock,
-  User,
   CheckCircle,
-  XCircle,
   AlertCircle,
   PlusCircle,
   Edit,
@@ -28,10 +26,11 @@ import {
   Target,
   TrendingDown,
   Activity,
-  ChevronRight
+  Pen,
+  Ban
 } from "lucide-react";
-import { EnrichedLog, EventType, EventCategory } from "@/lib/types/risk-log";
-import { format, formatDistanceToNow } from "date-fns";
+import { EnrichedLog, EventType } from "@/lib/types/risk-log";
+import { format } from "date-fns";
 import { StatusBadge } from "@/components/status-badge";
 
 interface LogItemProps {
@@ -70,7 +69,11 @@ const eventIcons = {
   [EventType.LIKELIHOOD_CHANGED]: Percent,
   [EventType.IMPACT_CHANGED]: Target,
   [EventType.INHERENT_RATING_CHANGED]: TrendingDown,
-  [EventType.RESIDUAL_RATING_CHANGED]: Activity
+  [EventType.RESIDUAL_RATING_CHANGED]: Activity,
+
+  // Signature Events
+  [EventType.SIGNATURE_SUBMITTED]: Pen,
+  [EventType.SIGNATURE_REJECTED]: Ban
 };
 
 // Color mapping for event types
@@ -105,7 +108,11 @@ const eventColors = {
   [EventType.LIKELIHOOD_CHANGED]: "bg-teal-500",
   [EventType.IMPACT_CHANGED]: "bg-teal-500",
   [EventType.INHERENT_RATING_CHANGED]: "bg-teal-500",
-  [EventType.RESIDUAL_RATING_CHANGED]: "bg-teal-500"
+  [EventType.RESIDUAL_RATING_CHANGED]: "bg-teal-500",
+
+  // Signature Events - Green for submitted, Red for rejected
+  [EventType.SIGNATURE_SUBMITTED]: "bg-green-500",
+  [EventType.SIGNATURE_REJECTED]: "bg-red-500"
 };
 
 // Helper to format time like "07:23"
@@ -140,6 +147,8 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
         return "Evidence submitted for review";
       case EventType.REVIEW_APPROVED:
         return "Review approved";
+      case EventType.REVIEW_REJECTED:
+        return "Review rejected";
       case EventType.ACTION_ASSIGNED:
         return "Action item assigned";
       case EventType.RISK_ASSESSED:
@@ -150,6 +159,10 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
         return "Risk owner updated";
       case EventType.RISK_CLOSED:
         return "Risk closed";
+      case EventType.SIGNATURE_SUBMITTED:
+        return "Signature submitted";
+      case EventType.SIGNATURE_REJECTED:
+        return "Signature rejected";
       default:
         return log.description || log.event_type.toLowerCase().replace(/_/g, " ");
     }
@@ -168,42 +181,42 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
 
   // Render event-specific metadata cards
   const renderMetadataDetails = () => {
-    if (!log.metadata) return null;
-
     switch (log.event_type) {
       case EventType.ACTION_ASSIGNED:
         return (
-          <div className="bg-secondary mt-4 space-y-2 rounded-lg p-3 text-sm">
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
             {log.metadata.executer_name && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Assigned to:</span>
-                <span className="font-medium text-white">{log.metadata.executer_name}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Assigned to</span>
+                <span className="text-foreground font-semibold">{log.metadata.executer_name}</span>
               </div>
             )}
             {log.metadata.reviewer_name && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Reviewer:</span>
-                <span className="font-medium text-white">{log.metadata.reviewer_name}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Reviewer</span>
+                <span className="text-foreground font-semibold">{log.metadata.reviewer_name}</span>
               </div>
             )}
             {log.metadata.due_date && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Due date:</span>
-                <span className="font-medium text-white">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Due date</span>
+                <span className="text-foreground font-semibold">
                   {format(new Date(log.metadata.due_date), "MMM d, yyyy")}
                 </span>
               </div>
             )}
             {log.metadata.status && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Status</span>
                 <StatusBadge status={log.metadata.status} />
               </div>
             )}
             {log.metadata.instructions && (
-              <div className="border-border mt-2 border-t pt-2">
-                <span className="text-muted-foreground text-xs">Instructions:</span>
-                <p className="mt-1 text-white">{log.metadata.instructions}</p>
+              <div className="border-border/30 mt-3 border-t pt-3">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Instructions
+                </span>
+                <p className="text-foreground mt-2 leading-relaxed">{log.metadata.instructions}</p>
               </div>
             )}
           </div>
@@ -211,21 +224,25 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
 
       case EventType.EVIDENCE_SUBMITTED:
         return (
-          <div className="bg-secondary mt-4 space-y-2 rounded-lg p-3 text-sm">
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
             {log.metadata.evidence_description && (
               <div>
-                <span className="text-muted-foreground">Description:</span>
-                <p className="mt-1 font-medium text-white">{log.metadata.evidence_description}</p>
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Description
+                </span>
+                <p className="text-foreground mt-2 leading-relaxed">
+                  {log.metadata.evidence_description}
+                </p>
               </div>
             )}
             {log.metadata.evidence_file_url && (
-              <div className="border-border border-t pt-2">
+              <div className="border-border/30 border-t pt-3">
                 <a
                   href={log.metadata.evidence_file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-medium text-white hover:underline">
-                  View Evidence File →
+                  className="inline-flex items-center gap-1 text-xs font-bold text-blue-500 transition-colors hover:text-blue-600">
+                  View Evidence File <span>→</span>
                 </a>
               </div>
             )}
@@ -235,17 +252,21 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
       case EventType.REVIEW_APPROVED:
       case EventType.REVIEW_REJECTED:
         return (
-          <div className="bg-secondary mt-4 space-y-2 rounded-lg p-3 text-sm">
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
             {log.metadata.approval_status && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Status</span>
                 <StatusBadge status={log.metadata.approval_status} />
               </div>
             )}
             {log.metadata.remarks && (
-              <div className="border-border mt-2 border-t pt-2">
-                <span className="text-muted-foreground">Remarks:</span>
-                <p className="mt-1 text-white italic">"{log.metadata.remarks}"</p>
+              <div className="border-border/30 mt-3 border-t pt-3">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Remarks
+                </span>
+                <p className="text-foreground mt-2 leading-relaxed italic">
+                  "{log.metadata.remarks}"
+                </p>
               </div>
             )}
           </div>
@@ -253,31 +274,41 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
 
       case EventType.RISK_ASSESSED:
         return (
-          <div className="bg-secondary mt-4 space-y-3 rounded-lg p-3 text-sm">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
+            <div className="grid grid-cols-2 gap-4">
               {log.metadata.inherent_rating && (
-                <div>
-                  <span className="text-muted-foreground text-xs">Inherent Rating</span>
-                  <p className="font-semibold text-white">{log.metadata.inherent_rating}</p>
+                <div className="border-border/30 bg-secondary/10 rounded-lg border p-3">
+                  <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                    Inherent
+                  </span>
+                  <p className="text-foreground mt-2 text-lg font-bold">
+                    {log.metadata.inherent_rating}
+                  </p>
                 </div>
               )}
               {log.metadata.residual_rating && (
-                <div>
-                  <span className="text-muted-foreground text-xs">Residual Rating</span>
-                  <p className="font-semibold text-white">{log.metadata.residual_rating}</p>
+                <div className="border-border/30 bg-secondary/10 rounded-lg border p-3">
+                  <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                    Residual
+                  </span>
+                  <p className="text-foreground mt-2 text-lg font-bold">
+                    {log.metadata.residual_rating}
+                  </p>
                 </div>
               )}
             </div>
             {log.metadata.control_effectiveness && (
-              <div>
-                <span className="text-muted-foreground">Control Effectiveness:</span>
-                <p className="font-medium text-white">{log.metadata.control_effectiveness}/5</p>
+              <div className="border-border/30 bg-secondary/10 flex items-center justify-between rounded-lg border p-3">
+                <span className="text-muted-foreground font-medium">Control Effectiveness</span>
+                <span className="text-foreground font-bold">
+                  {log.metadata.control_effectiveness}/5
+                </span>
               </div>
             )}
             {log.metadata.risk_appetite_status && (
-              <div className="border-border mt-2 space-x-4 border-t pt-2">
-                <span className="text-muted-foreground">Risk Appetite Status:</span>
-                <StatusBadge status={log.metadata.risk_appetite_status} className="text-white" />
+              <div className="border-border/30 mt-3 flex items-center justify-between border-t pt-3">
+                <span className="text-muted-foreground font-medium">Risk Appetite</span>
+                <StatusBadge status={log.metadata.risk_appetite_status} />
               </div>
             )}
           </div>
@@ -285,17 +316,17 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
 
       case EventType.RISK_CLOSED:
         return (
-          <div className="bg-secondary mt-4 space-y-2 rounded-lg p-3 text-sm">
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
             {log.metadata.previous_status && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Previous Status:</span>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Previous Status</span>
                 <StatusBadge status={log.metadata.previous_status} />
               </div>
             )}
             {log.metadata.residual_rating && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Final Rating:</span>
-                <span className="font-medium text-white">{log.metadata.residual_rating}</span>
+              <div className="border-border/30 bg-secondary/10 flex items-center justify-between rounded-lg border p-3">
+                <span className="text-muted-foreground font-medium">Final Rating</span>
+                <span className="text-foreground font-bold">{log.metadata.residual_rating}</span>
               </div>
             )}
           </div>
@@ -303,13 +334,84 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
 
       case EventType.RISK_OWNER_CHANGED:
         return (
-          <div className="bg-secondary mt-4 rounded-lg p-3 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">New Risk Owner:</span>
-              <span className="font-semibold text-white">
+          <div className="bg-secondary/5 border-border/30 mt-4 rounded-xl border p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground font-medium">New Risk Owner</span>
+              <span className="text-foreground font-bold">
                 {log.metadata.risk_owner_name || "Unassigned"}
               </span>
             </div>
+          </div>
+        );
+
+      case EventType.SIGNATURE_SUBMITTED:
+        return (
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
+            {log.metadata.designation && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Designation</span>
+                <span className="text-foreground font-semibold">{log.metadata.designation}</span>
+              </div>
+            )}
+            {log.metadata.name && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Signer</span>
+                <span className="text-foreground font-semibold">{log.metadata.name}</span>
+              </div>
+            )}
+            <div className="border-border/30 mt-3 border-t pt-3">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                Description
+              </span>
+              <p className="text-foreground mt-2 leading-relaxed">{log.description}</p>
+            </div>
+
+            {log.metadata.timestamp && (
+              <div className="border-border/30 mt-3 border-t pt-3">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Signed at
+                </span>
+                <p className="text-foreground mt-2 font-medium">
+                  {format(new Date(log.metadata.timestamp), "PPP p")}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      case EventType.SIGNATURE_REJECTED:
+        return (
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
+            {log.metadata?.designation && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Designation</span>
+                <span className="text-foreground font-semibold">{log.metadata.designation}</span>
+              </div>
+            )}
+
+            {log.metadata?.name && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Signer</span>
+                <span className="text-foreground font-semibold">{log.metadata.name}</span>
+              </div>
+            )}
+
+            <div className="border-border/30 mt-3 border-t pt-3">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                Description
+              </span>
+              <p className="text-foreground mt-2 leading-relaxed">{log.description}</p>
+            </div>
+
+            {log.metadata?.timestamp && (
+              <div className="border-border/30 mt-3 border-t pt-3">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Signed at
+                </span>
+                <p className="text-foreground mt-2 font-medium">
+                  {format(new Date(log.metadata.timestamp), "PPP p")}
+                </p>
+              </div>
+            )}
           </div>
         );
 
@@ -318,7 +420,7 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
         if (Object.keys(log.metadata).length === 0) return null;
 
         return (
-          <div className="bg-secondary mt-4 space-y-2 rounded-lg p-3 text-sm">
+          <div className="bg-secondary/5 border-border/30 mt-4 space-y-2 rounded-xl border p-4 text-sm">
             {Object.entries(log.metadata).map(([key, value]) => {
               // Skip ID fields
               if (key.endsWith("_id") || !value) return null;
@@ -346,10 +448,10 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
 
               return (
                 <div key={key} className="flex items-start justify-between gap-4">
-                  <span className="text-muted-foreground capitalize">{displayKey}:</span>
-                  <span className="max-w-xs text-right font-medium break-words text-white">
+                  <span className="text-muted-foreground font-medium capitalize">{displayKey}</span>
+                  <span className="text-foreground max-w-xs text-right font-semibold break-words">
                     {displayKey === "Status" ? (
-                      <StatusBadge status={value} className="text-white" />
+                      <StatusBadge status={value} />
                     ) : (
                       String(displayValue)
                     )}
@@ -388,51 +490,77 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
     );
   }
 
-  // Default variant (timeline view)
+  // Default variant (timeline view) - Modern design
   const colorBg = eventColors[log.event_type] || "bg-muted";
+  // Create consistent light versions using a standardized approach
+  const lightBg = colorBg.replace("500", "100");
+  const darkText = colorBg.replace("bg-", "text-").replace("-500", "-700");
+
+  // Activity type dot colors - more visible
+  let activityDotColor = "bg-amber-500";
+  if (activityType === "scheduled") activityDotColor = "bg-blue-300";
+  if (activityType === "manual") activityDotColor = "bg-purple-300";
+  if (activityType === "system") activityDotColor = "bg-slate-300";
 
   return (
-    <div className="group flex gap-6 pb-10 transition-opacity hover:opacity-80">
+    <div className="group relative flex gap-6 pb-8">
       {/* Timeline column */}
       <div className="flex flex-col items-center">
-        {/* Icon badge */}
+        {/* Icon badge with modern styling */}
         <div
-          className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full ${colorBg} shadow-lg transition-transform hover:scale-110`}>
-          <Icon className="h-7 w-7 text-white" />
+          className={`relative flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl ${lightBg} border-border/40 border shadow-md transition-all duration-300 hover:scale-110 hover:shadow-lg`}>
+          <Icon className={`h-8 w-8 ${darkText}`} />
         </div>
-        {/* Connecting line */}
-        <div className="from-border via-border mt-4 h-20 w-0.5 bg-gradient-to-b to-transparent"></div>
+        {/* Connecting line - gradient */}
+        <div className="from-border/60 via-border/30 mt-6 h-24 w-1 bg-gradient-to-b to-transparent"></div>
       </div>
 
       {/* Content column */}
-      <div className="min-w-0 flex-1 pt-1.5">
+      <div className="min-w-0 flex-1 pt-1">
         <div className="flex flex-col gap-2.5">
-          {/* Time */}
-          <span className="text-muted-foreground text-sm font-medium">{logTime}</span>
+          {/* Top section with time and badge */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Clock className="text-muted-foreground/60 h-3.5 w-3.5" />
+              <span className="text-muted-foreground/70 text-xs font-medium tracking-wide">
+                {logTime}
+              </span>
+            </div>
+            {/* Activity type dot */}
+            <div className="flex items-center gap-1.5">
+              <div className={`h-3 w-3 rounded-full ${activityDotColor}`}></div>
+              <span className="text-muted-foreground text-xs font-medium">
+                {activityType === "scheduled" && "Scheduled"}
+                {activityType === "manual" && "Manual"}
+                {activityType === "system" && "System"}
+              </span>
+            </div>
+          </div>
 
-          {/* Title */}
-          <h3 className="text-foreground text-lg leading-snug font-semibold">{getMainText()}</h3>
+          {/* Title - more prominent */}
+          <h3 className="text-foreground text-base leading-snug font-bold">{getMainText()}</h3>
 
-          {/* Details row */}
+          {/* Details row - enhanced */}
           {(log.username || getDetails()) && (
-            <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="flex flex-wrap items-center gap-3 pt-1 text-sm">
               {log.username && (
-                <div className="flex items-center gap-2.5">
-                  <div className="from-accent h-6 w-6 rounded-full bg-gradient-to-br to-orange-400" />
-                  <span className="text-foreground font-medium">{log.username}</span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`h-6 w-6 rounded-full ${lightBg} border-border/40 flex items-center justify-center border ${darkText} text-xs font-bold`}>
+                    {log.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-foreground text-sm font-semibold">{log.username}</span>
+                  </div>
                 </div>
               )}
-              {getDetails() && <span className="text-muted-foreground">@ {getDetails()}</span>}
+              {getDetails() && (
+                <span className="text-muted-foreground text-xs">
+                  in <span className="text-foreground/70 font-medium">{getDetails()}</span>
+                </span>
+              )}
             </div>
           )}
-
-          {/* Activity type badge */}
-          <div className="bg-secondary mt-1 inline-flex w-fit items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-white">
-            <div className="bg-muted-foreground h-2 w-2 rounded-full"></div>
-            {activityType === "scheduled" && "Scheduled Activity"}
-            {activityType === "manual" && "Manually Set"}
-            {activityType === "system" && "System Event"}
-          </div>
 
           {/* Event-specific metadata */}
           {renderMetadataDetails()}

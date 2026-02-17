@@ -161,10 +161,6 @@ export default function SignatureForm({
       toast.error("Please enter your designation");
       return;
     }
-    if (!formData.signature) {
-      toast.error("Please provide your signature");
-      return;
-    }
 
     setIsSubmitting(true);
     try {

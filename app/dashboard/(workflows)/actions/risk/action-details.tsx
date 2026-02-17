@@ -97,6 +97,7 @@ interface RiskAction {
   review_date: string | null;
   mitigation_cost: number;
   latest_update: string | null;
+  acceptance_status: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -133,6 +134,10 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
 
   const inherentRisk = getRiskLevel(inherentScore);
   const residualRisk = getRiskLevel(residualScore);
+
+  const status = action?.acceptance_status;
+
+  const isDisabled = status !== "Rejected" && status !== null;
 
   // Get status badge variant
   const getStatusVariant = (status: string) => {
@@ -184,6 +189,8 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
     }
   };
 
+  console.log("Action:", action);
+
   return (
     <div className="min-h-screen">
       {/* Header Section */}
@@ -217,7 +224,8 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
                     Reduce
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/actions/risk/${action.id}/accept`)}>
+                    onClick={() => router.push(`/dashboard/actions/risk/${action.id}/accept`)}
+                    disabled={isDisabled}>
                     <Target className="mr-2 h-4 w-4" />
                     Accept
                   </DropdownMenuItem>

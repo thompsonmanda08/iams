@@ -85,6 +85,9 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     });
   };
 
+  console.log("LOG>>>>:", actions);
+  
+
   // Check if action is overdue
   const isOverdue = (dueDate: string, status: string) => {
     if (status === "COMPLETED" || status === "CANCELLED") return false;
@@ -167,8 +170,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                   const action = actionDef.action;
                   const task = actionDef.task;
                   const execution = actionDef.execution;
-                  const isUserExecutor = task.task_type === "EXECUTION";
-                  const isUserReviewer = task.task_type === "REVIEW";
+                  const isUserExecutor = task?.task_type === "EXECUTION";
+                  const isUserReviewer = task?.task_type === "REVIEW";
                   const overdue = isOverdue(action.due_date, action.status);
 
                   return (
@@ -344,7 +347,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
           open={findingsDialogOpen}
           onOpenChange={setFindingsDialogOpen}
           actionId={selectedActionForFindings.action.id}
-          taskId={selectedActionForFindings.task.id}
+          taskId={selectedActionForFindings.task?.id}
           actionTitle={selectedActionForFindings.action.instructions}
           riskTitle={selectedActionForFindings.risk_name}
         />

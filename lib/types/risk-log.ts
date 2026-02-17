@@ -58,6 +58,10 @@ export const EventType = {
   IMPACT_CHANGED: "IMPACT_CHANGED",
   INHERENT_RATING_CHANGED: "INHERENT_RATING_CHANGED",
   RESIDUAL_RATING_CHANGED: "RESIDUAL_RATING_CHANGED",
+
+  // Signature Events
+  SIGNATURE_SUBMITTED: "SIGNATURE_SUBMITTED",
+  SIGNATURE_REJECTED: "SIGNATURE_REJECTED",
 } as const;
 
 export type EventCategory = typeof EventCategory[keyof typeof EventCategory];
