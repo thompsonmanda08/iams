@@ -137,7 +137,7 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
 
   const status = action?.acceptance_status;
 
-  const isDisabled = status !== "Rejected" && status !== null;
+  const isDisabled = status !== "REJECTED" && status !== null;
 
   // Get status badge variant
   const getStatusVariant = (status: string) => {
@@ -188,8 +188,6 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
       return false;
     }
   };
-
-  console.log("Action:", action);
 
   return (
     <div className="min-h-screen">

@@ -27,7 +27,8 @@ import {
   TrendingDown,
   Activity,
   Pen,
-  Ban
+  Ban,
+  ExternalLink
 } from "lucide-react";
 import { EnrichedLog, EventType } from "@/lib/types/risk-log";
 import { format } from "date-fns";
@@ -275,11 +276,12 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
       case EventType.RISK_ASSESSED:
         return (
           <div className="bg-secondary/5 border-border/30 mt-4 space-y-3 rounded-xl border p-4 text-sm">
+            {/* Rating Cards Row */}
             <div className="grid grid-cols-2 gap-4">
               {log.metadata.inherent_rating && (
                 <div className="border-border/30 bg-secondary/10 rounded-lg border p-3">
                   <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                    Inherent
+                    Inherent Rating
                   </span>
                   <p className="text-foreground mt-2 text-lg font-bold">
                     {log.metadata.inherent_rating}
@@ -289,7 +291,7 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
               {log.metadata.residual_rating && (
                 <div className="border-border/30 bg-secondary/10 rounded-lg border p-3">
                   <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                    Residual
+                    Residual Rating
                   </span>
                   <p className="text-foreground mt-2 text-lg font-bold">
                     {log.metadata.residual_rating}
@@ -297,11 +299,54 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
                 </div>
               )}
             </div>
+
+            {/* Scores Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {log.metadata.inherent_score && (
+                <div className="border-border/30 bg-secondary/10 flex items-center justify-between rounded-lg border p-3">
+                  <span className="text-muted-foreground text-xs font-semibold uppercase">
+                    Inherent Score
+                  </span>
+                  <span className="text-foreground font-bold">{log.metadata.inherent_score}</span>
+                </div>
+              )}
+              {log.metadata.residual_score && (
+                <div className="border-border/30 bg-secondary/10 flex items-center justify-between rounded-lg border p-3">
+                  <span className="text-muted-foreground text-xs font-semibold uppercase">
+                    Residual Score
+                  </span>
+                  <span className="text-foreground font-bold">{log.metadata.residual_score}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Impact & Likelihood Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {log.metadata.inherent_impact && (
+                <div className="border-border/30 bg-secondary/10 flex items-center justify-between rounded-lg border p-3">
+                  <span className="text-muted-foreground text-xs font-semibold uppercase">
+                    Impact
+                  </span>
+                  <span className="text-foreground font-bold">{log.metadata.inherent_impact}</span>
+                </div>
+              )}
+              {log.metadata.inherent_likelihood && (
+                <div className="border-border/30 bg-secondary/10 flex items-center justify-between rounded-lg border p-3">
+                  <span className="text-muted-foreground text-xs font-semibold uppercase">
+                    Likelihood
+                  </span>
+                  <span className="text-foreground font-bold">
+                    {log.metadata.inherent_likelihood}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {log.metadata.control_effectiveness && (
               <div className="border-border/30 bg-secondary/10 flex items-center justify-between rounded-lg border p-3">
                 <span className="text-muted-foreground font-medium">Control Effectiveness</span>
                 <span className="text-foreground font-bold">
-                  {log.metadata.control_effectiveness}/5
+                  {log.metadata.control_effectiveness}
                 </span>
               </div>
             )}
@@ -359,6 +404,30 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
                 <span className="text-foreground font-semibold">{log.metadata.name}</span>
               </div>
             )}
+
+            {log.metadata.signature && (
+              <div className="space-y-2 border-t border-border/30 pt-3">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Signature
+                </span>
+                <div className="border-border/30 flex items-center justify-center rounded-lg border bg-gray-50 p-3">
+                  <img
+                    src={log.metadata.signature}
+                    alt={`Signature of ${log.metadata.name || "signer"}`}
+                    className="max-h-20 max-w-full object-contain"
+                  />
+                </div>
+                <a
+                  href={log.metadata.signature}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700">
+                  View Full Size
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            )}
+
             <div className="border-border/30 mt-3 border-t pt-3">
               <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                 Description
@@ -366,13 +435,13 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
               <p className="text-foreground mt-2 leading-relaxed">{log.description}</p>
             </div>
 
-            {log.metadata.timestamp && (
+            {log.metadata.signed_at && (
               <div className="border-border/30 mt-3 border-t pt-3">
                 <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                   Signed at
                 </span>
                 <p className="text-foreground mt-2 font-medium">
-                  {format(new Date(log.metadata.timestamp), "PPP p")}
+                  {format(new Date(log.metadata.signed_at), "PPP p")}
                 </p>
               </div>
             )}
@@ -402,13 +471,13 @@ export function LogItem({ log, variant = "default" }: LogItemProps) {
               <p className="text-foreground mt-2 leading-relaxed">{log.description}</p>
             </div>
 
-            {log.metadata?.timestamp && (
+            {log.metadata?.signed_at && (
               <div className="border-border/30 mt-3 border-t pt-3">
                 <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                   Signed at
                 </span>
                 <p className="text-foreground mt-2 font-medium">
-                  {format(new Date(log.metadata.timestamp), "PPP p")}
+                  {format(new Date(log.metadata.signed_at), "PPP p")}
                 </p>
               </div>
             )}

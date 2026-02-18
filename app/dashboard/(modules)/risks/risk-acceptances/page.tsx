@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -10,20 +9,13 @@ import {
   FileText,
   Eye,
   View,
-  Send,
   Plus,
-  ClipboardListIcon
+  ClipboardListIcon,
+  Pen,
+  ExternalLink
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -38,14 +30,9 @@ import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/page-header";
 import Search from "@/components/ui/search-field";
 import RiskAcceptanceListSkeleton from "@/components/skeleton-loader";
-import { ConfirmationModal } from "@/components/confirmation-modal";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
-import {
-  useRiskAcceptances,
-  useUpdateRiskAcceptanceMutation,
-  useSubmitRiskAcceptanceMutation
-} from "@/hooks/use-risk-acceptance-mutations";
+import { useRiskAcceptances } from "@/hooks/use-risk-acceptance-mutations";
 import { usePermissions } from "@/hooks/use-permissions";
 
 // Simple date formatter
@@ -67,7 +54,19 @@ const formatDate = (dateString: string, formatType: "short" | "long" = "short") 
   });
 };
 
-type Status = "all" | "pending" | "approved" | "rejected";
+type Status = "all" | "approved" | "rejected" | "draft";
+
+interface Signature {
+  id: string;
+  organization_id: string;
+  acceptance_id: string;
+  action_id: string;
+  user_id: string;
+  name: string;
+  designation: string;
+  signature: string;
+  signed_at: string;
+}
 
 interface Acceptance {
   id: string;
@@ -82,20 +81,21 @@ interface Acceptance {
   risk_acceptance_expiry_date: string;
   acceptance_approved_by: string | null;
   acceptance_approved_date: string | null;
-  acceptance_status: "PENDING" | "APPROVED" | "REJECTED";
+  acceptance_status: "APPROVED" | "REJECTED" | "DRAFT";
   created_at: string;
   updated_at: string;
   created_by_name: string;
   updated_by_name: string;
+  signatures?: Signature[];
 }
 
 // Status configuration
 const statusConfig = {
-  PENDING: {
+  DRAFT: {
     icon: Clock,
     color: "bg-yellow-50 border-yellow-200",
     badge: "outline",
-    label: "Pending",
+    label: "Draft",
     textColor: "text-yellow-700"
   },
   APPROVED: {
@@ -211,15 +211,11 @@ const AcceptanceCard = ({ acceptance, onAcceptanceClick, onViewRisk }: Acceptanc
 
 export default function RiskAcceptanceList() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { checkPermission } = usePermissions();
   const [activeTab, setActiveTab] = useState<Status>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAcceptance, setSelectedAcceptance] = useState<Acceptance | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalStatus, setModalStatus] = useState("");
-  const [remarks, setRemarks] = useState("");
-  const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
 
   // Fetch acceptances using query hook
   const {
@@ -231,23 +227,6 @@ export default function RiskAcceptanceList() {
     isLoading: boolean;
     isError: boolean;
   };
-
-  const { mutate: updateAcceptance, isPending: isSubmitting } = useUpdateRiskAcceptanceMutation({
-    onSuccess: () => {
-      setShowModal(false);
-      setSelectedAcceptance(null);
-      setRemarks("");
-    }
-  });
-
-  const { mutate: submitAcceptance, isPending: isSubmittingForApproval } =
-    useSubmitRiskAcceptanceMutation({
-      onSuccess: () => {
-        setSubmitConfirmationOpen(false);
-        setShowModal(false);
-        setSelectedAcceptance(null);
-      }
-    });
 
   const filteredAcceptances = acceptances.filter((acceptance) => {
     const matchesTab =
@@ -261,39 +240,18 @@ export default function RiskAcceptanceList() {
   // Count by status
   const counts = {
     all: acceptances.length,
-    pending: acceptances.filter((a) => a.acceptance_status === "PENDING").length,
+    draft: acceptances.filter((a) => a.acceptance_status === "DRAFT").length,
     approved: acceptances.filter((a) => a.acceptance_status === "APPROVED").length,
     rejected: acceptances.filter((a) => a.acceptance_status === "REJECTED").length
   };
 
   const handleAcceptanceClick = (acceptance: Acceptance) => {
     setSelectedAcceptance(acceptance);
-    setModalStatus(
-      acceptance.acceptance_status === "PENDING" ? "PENDING" : acceptance.acceptance_status
-    );
     setShowModal(true);
   };
 
   const handleViewRisk = (riskId: string) => {
     router.push(`/dashboard/actions/risk/${riskId}`);
-  };
-
-  const handleStatusUpdate = async () => {
-    if (!selectedAcceptance || !modalStatus || !remarks.trim()) return;
-    if (!checkPermission("RISK_ACCEPTANCES", "can_approve")) return;
-
-    const updatedData = {
-      ...selectedAcceptance,
-      acceptance_status: modalStatus as "PENDING" | "APPROVED" | "REJECTED",
-      additional_remarks: remarks
-    };
-    updateAcceptance({ id: selectedAcceptance.id, data: updatedData });
-  };
-
-  const handleSubmitAcceptance = async () => {
-    if (!selectedAcceptance) return;
-    if (!checkPermission("RISK_ACCEPTANCES", "can_edit")) return;
-    submitAcceptance(selectedAcceptance.id);
   };
 
   if (isLoading) {
@@ -389,8 +347,8 @@ export default function RiskAcceptanceList() {
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Status)}>
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
-                <TabsTrigger value="pending" className={statusConfig.PENDING.textColor}>
-                  Pending ({counts.pending})
+                <TabsTrigger value="draft" className={statusConfig.DRAFT.textColor}>
+                  Draft ({counts.draft})
                 </TabsTrigger>
                 <TabsTrigger value="approved" className={statusConfig.APPROVED.textColor}>
                   Approved ({counts.approved})
@@ -428,7 +386,11 @@ export default function RiskAcceptanceList() {
 
       {/* Detail Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-h-[90vh] min-w-2xl overflow-hidden p-0">
+        <DialogContent
+          className="max-h-[90vh] min-w-2xl overflow-hidden p-0"
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}>
           <DialogHeader className="p-6 pb-0">
             <div className="flex items-start justify-between">
               <div>
@@ -559,84 +521,79 @@ export default function RiskAcceptanceList() {
 
               <Separator />
 
-              {/* Status Update Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Update Status</CardTitle>
-                  <CardDescription>Change the acceptance status and add remarks</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status *</Label>
-                    <Select value={modalStatus} onValueChange={setModalStatus}>
-                      <SelectTrigger id="status" className="w-full">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="APPROVED">APPROVED</SelectItem>
-                        <SelectItem value="REJECTED">REJECTED</SelectItem>
-                        <SelectItem value="PENDING">PENDING</SelectItem>
-                      </SelectContent>
-                    </Select>
+              {/* Signatories Section */}
+              {selectedAcceptance?.signatures && selectedAcceptance.signatures.length > 0 && (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-base font-semibold">Signatories</h3>
+                    <p className="text-muted-foreground text-sm">Risk acceptance signatures</p>
                   </div>
+                  <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+                    {selectedAcceptance.signatures.map((sig) => (
+                      <Card key={sig.id} className="border-border/50">
+                        <CardContent className="pt-6">
+                          <div className="space-y-4">
+                            {/* Signer Info */}
+                            <div className="flex items-start gap-4">
+                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                                <Pen className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-foreground font-semibold">{sig?.name}</p>
+                                <p className="text-muted-foreground text-sm">{sig?.designation}</p>
+                              </div>
+                            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="remarks">Remarks *</Label>
-                    <Textarea
-                      id="remarks"
-                      value={remarks}
-                      onChange={(e) => setRemarks(e.target.value)}
-                      rows={4}
-                      placeholder="Enter your remarks here..."
-                      className="resize-none"
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      Please provide detailed remarks explaining your decision
-                    </p>
+                            {/* Signature Image */}
+                            {sig.signature && (
+                              <div className="space-y-2">
+                                <Label className="text-muted-foreground text-xs font-semibold uppercase">
+                                  Signature
+                                </Label>
+                                <div className="border-border/30 flex items-center justify-center rounded-lg border bg-gray-50 p-3">
+                                  <img
+                                    src={sig?.signature}
+                                    alt={`Signature of ${sig?.name}`}
+                                    className="max-h-16 max-w-full object-contain"
+                                  />
+                                </div>
+                                <a
+                                  href={sig?.signature}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700">
+                                  View Full Size
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Signed Date */}
+                            <div className="space-y-1 border-t pt-3">
+                              <Label className="text-muted-foreground text-xs font-semibold uppercase">
+                                Signed On
+                              </Label>
+                              <p className="text-sm font-medium">
+                                {sig?.signed_at && formatDate(sig?.signed_at, "long")}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
           <DialogFooter className="p-6 pt-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowModal(false)}
-              size="sm"
-              disabled={isSubmitting || isSubmittingForApproval}>
+            <Button variant="outline" onClick={() => setShowModal(false)} size="sm">
               Cancel
-            </Button>
-            {selectedAcceptance?.acceptance_status === "PENDING" && (
-              <Button
-                onClick={() => setSubmitConfirmationOpen(true)}
-                className="gap-2"
-                size="sm"
-                disabled={isSubmitting || isSubmittingForApproval}>
-                <Send className="h-4 w-4" />
-                Submit for Approval
-              </Button>
-            )}
-            <Button
-              onClick={handleStatusUpdate}
-              size="sm"
-              disabled={isSubmitting || isSubmittingForApproval || !modalStatus || !remarks.trim()}>
-              {isSubmitting ? "Updating..." : "Update Status"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Submit for Approval Confirmation Modal */}
-      <ConfirmationModal
-        open={submitConfirmationOpen}
-        onOpenChange={setSubmitConfirmationOpen}
-        onConfirm={handleSubmitAcceptance}
-        title="Submit Risk Acceptance for Approval?"
-        description="You are about to submit this risk acceptance for approval. Once submitted, it will be reviewed by the approval committee."
-        confirmText="Submit"
-        isLoading={isSubmittingForApproval}
-      />
     </div>
   );
 }
