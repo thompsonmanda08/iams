@@ -2,141 +2,216 @@
 
 ## System Overview
 
-INFRATEL IAMS follows a **modern full-stack architecture** with clear separation of concerns:
+INFRATEL IAMS follows a **layered architecture** with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────────────┐
-│           Next.js Frontend              │
-│  (React Components + Client State)      │
+│         UI Components ("use client")    │
+│    (React Components + Client State)    │
 └──────────────┬──────────────────────────┘
-               │
+               │ consumes
 ┌──────────────▼──────────────────────────┐
-│       Server Actions Layer              │
-│    (app/_actions/*.ts)                  │
+│     React Query Hooks Layer             │
+│  (useQuery / useMutation wrappers)      │
 └──────────────┬──────────────────────────┘
-               │
+               │ calls
 ┌──────────────▼──────────────────────────┐
-│        Supabase Backend                 │
-│  (PostgreSQL + RLS + Auth)              │
+│       Server Actions ("use server")     │
+│         (app/_actions/*.ts)             │
+└──────────────┬──────────────────────────┘
+               │ uses api-config.ts
+┌──────────────▼──────────────────────────┐
+│      API Config (Axios Client)          │
+│  (authenticated + unauthenticated)      │
+└──────────────┬──────────────────────────┘
+               │ HTTP requests
+┌──────────────▼──────────────────────────┐
+│        Go Backend API                   │
+│     (REST API + PostgreSQL)             │
 └─────────────────────────────────────────┘
 ```
 
 ## Architecture Layers
 
-### 1. Presentation Layer
+### 1. Presentation Layer (UI)
 **Location:** `app/`, `components/`
 
-- Next.js 14 App Router
-- React Server Components (RSC)
-- Client Components for interactivity
+- Next.js App Router
+- Client Components (`"use client"`) for interactivity
 - Radix UI components
 - TailwindCSS styling
+- **Consumes hooks** for all data fetching and mutations
 
-### 2. State Management Layer
-**Location:** `hooks/`, `store/`
+### 2. Hooks Layer (React Query)
+**Location:** `hooks/`, co-located `*-hooks.ts` files
 
-- **TanStack React Query:** Server state, caching, mutations
+- **Queries (`useQuery`):** Fetch data from server actions, cache results
+- **Mutations (`useMutation`):** Call server actions, invalidate queries on success
+- **TanStack React Query** for server state, caching, and cache invalidation
 - **Zustand:** Client-side UI state (modals, selections, screen lock)
-- **React Context:** Theme, user preferences
 
-### 3. API Layer
-**Location:** `app/_actions/`
+### 3. Server Actions Layer
+**Location:** `app/_actions/*.ts`
 
-- **Server Actions:** Primary API pattern
-- **API Routes:** External webhooks, file uploads
-- Type-safe with TypeScript
-- Error handling with try-catch
+- All files marked with `"use server"` directive
+- Call the Go backend via `authenticatedApiClient()` from `api-config.ts`
+- Return standardized `APIResponse` (`{ success, data, message }`)
+- Handle errors with `handleError()` utility
 
-### 4. Data Layer
-**Location:** Supabase
+### 4. API Config Layer
+**Location:** `app/_actions/api-config.ts`
 
+- **`authenticatedApiClient()`:** Creates Axios instance with session token (Bearer) and cookie credentials
+- **Response helpers:** `successResponse()`, `handleError()`, `unauthorizedResponse()`, `notFoundResponse()`
+- Global error interceptors for timeout, network, and HTTP errors
+
+### 5. Backend (Go API)
+
+- **Go REST API** serving `/api/v1/*` endpoints
 - PostgreSQL database
+- JWT-based authentication
 - Row-Level Security (RLS)
-- Real-time subscriptions
-- File storage
 
 ## Key Patterns
 
-### Server Actions Pattern
+### Server Action Pattern (api-config.ts)
 
 ```typescript
-// app/_actions/reports-actions.ts
-export async function updateReport(data: UpdateReportInput) {
-  const supabase = createClient();
+// app/_actions/backoffice-actions.ts
+"use server";
 
-  const { data: report, error } = await supabase
-    .from("reports")
-    .update(data)
-    .eq("id", data.id)
-    .single();
+import { authenticatedApiClient } from "./api-config";
+import { successResponse, handleError } from "./api-config";
 
-  if (error) throw error;
+// GET - Query
+export async function getCountries(params?: {
+  page?: number;
+  page_size?: number;
+  search?: string;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/backoffice/countries`,
+      method: "GET",
+    });
+    return successResponse(response.data.data, "Countries fetched successfully");
+  } catch (error) {
+    return handleError(error, "GET", "/api/v1/backoffice/countries");
+  }
+}
 
-  revalidatePath("/dashboard/reports");
-  return report;
+// POST - Mutation
+export async function createCompanyLocation(data: {
+  company_id: string;
+  country_id: string;
+}): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: "/api/v1/backoffice/company-locations",
+      method: "POST",
+      data,
+    });
+    return successResponse(response.data.data, "Company location created successfully");
+  } catch (error) {
+    return handleError(error, "POST", "/api/v1/backoffice/company-locations");
+  }
 }
 ```
 
-### React Query Pattern
+### React Query Hook Pattern
 
 ```typescript
-// hooks/use-report-queries.ts
-export function useUpdateReport() {
+// hooks/use-backoffice-queries.ts
+
+// Query hook
+export function useCountries(params?: { search?: string }) {
+  return useQuery({
+    queryKey: ["countries", params],
+    queryFn: () => getCountries(params),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Mutation hook
+export function useCreateCompanyLocation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: updateReport,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-      toast.success("Report updated!");
-    }
+    mutationFn: createCompanyLocation,
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ["company-locations"] });
+        notify({ title: "Success", type: "success" });
+      }
+    },
+    onError: (error) => {
+      notify({ title: "Error", description: error.message });
+    },
   });
 }
 ```
 
-### Component Pattern
+### UI Component Pattern
 
 ```typescript
-// Client component wraps server data
-export default async function ReportPage({ params }) {
-  const report = await getReport(params.id); // Server
+// app/(private)/admin/companies/companies.tsx
+"use client";
 
-  return <ReportDetailsClient report={report} />; // Client
+export default function CompaniesPage() {
+  // Consume query hook
+  const { data: companiesResponse, isLoading } = useQuery({
+    queryKey: ["companies"],
+    queryFn: () => getOrganizations(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const companies = companiesResponse?.success ? companiesResponse.data?.data : [];
+
+  // Consume mutation hook
+  const deleteMutation = useMutation({
+    mutationFn: deleteCompanyLocation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-locations"] });
+    },
+  });
+
+  return <DataTable data={companies} isLoading={isLoading} />;
 }
 ```
 
 ## Data Flow
 
 ### Read Operations
-1. User navigates to page
-2. Server Component fetches data
-3. Data passed to Client Component
-4. React Query caches result
-5. UI renders
+1. UI component mounts
+2. `useQuery` hook fires, calling a server action
+3. Server action uses `authenticatedApiClient()` to call Go backend
+4. Go backend returns data
+5. Server action wraps in `successResponse()`
+6. React Query caches the result
+7. UI renders the data
 
 ### Write Operations
 1. User submits form
-2. Client calls mutation hook
-3. Mutation invokes Server Action
-4. Server Action updates Supabase
-5. Server revalidates cache
-6. Client invalidates queries
-7. UI refetches and updates
+2. UI calls `mutate()` from a `useMutation` hook
+3. Mutation calls server action
+4. Server action uses `authenticatedApiClient()` to POST/PUT/DELETE to Go backend
+5. On success, hook calls `queryClient.invalidateQueries()` to refetch stale data
+6. UI re-renders with updated data
 
 ## Security Architecture
 
-- **Authentication:** Supabase Auth (JWT)
-- **Authorization:** Row-Level Security (RLS)
+- **Authentication:** Go Backend Auth (JWT via Bearer token)
+- **Session:** Verified via `verifySession()` in `api-config.ts` before every API call
+- **Authorization:** Row-Level Security (RLS) in PostgreSQL
 - **Session Management:** HTTP-only cookies
 - **Screen Lock:** Zustand state + localStorage
 - **MFA:** TOTP-based two-factor auth
 
 ## Performance Optimizations
 
-- Server Components reduce client JS
-- React Query minimizes network requests
+- React Query caching with configurable `staleTime` minimizes network requests
+- Dependent queries (`enabled` flag) prevent unnecessary fetches
 - Parallel data fetching with Promise.all
-- Incremental Static Regeneration (ISR)
 - Image optimization with next/image
 
 ## Next Steps
