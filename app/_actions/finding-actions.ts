@@ -255,7 +255,7 @@ export async function sendFollowupReminder(action_id: string): Promise<APIRespon
 
   const url = `/api/v1/finding-actions/${action_id}/remind`;
   try {
-    await authenticatedApiClient({ url });
+    await authenticatedApiClient({method: "POST", url});
 
     return successResponse(null, "Reminder sent successfully");
   } catch (error: any) {

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -13,10 +12,9 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Eye, AlertCircle, View, Send } from "lucide-react";
+import { AlertCircle, View, Send, Loader2 } from "lucide-react";
 import type { FindingAction } from "@/lib/types/audit-types";
 import { FindingActionDetailsDialog } from "./finding-action-details-dialog";
-import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
 
 interface FindingActionsTableProps {
@@ -25,13 +23,10 @@ interface FindingActionsTableProps {
   isSendingReminder?: boolean;
 }
 
-export function FindingActionsTable({
-  actions,
-  handleSendReminder,
-  isSendingReminder
-}: FindingActionsTableProps) {
+export function FindingActionsTable({ actions, handleSendReminder }: FindingActionsTableProps) {
   const [selectedAction, setSelectedAction] = useState<FindingAction | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [reminderSendingId, setReminderSendingId] = useState<string | null>(null);
 
   const handleViewDetails = (action: FindingAction) => {
     setSelectedAction(action);
@@ -148,15 +143,21 @@ export function FindingActionsTable({
                         <Button
                           size="sm"
                           variant="outline"
-                          isLoading={isSendingReminder}
-                          loadingText="Sending"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSendReminder(action.id);
+                            setReminderSendingId(action.id);
+                            Promise.resolve(handleSendReminder(action.id)).finally(() => {
+                              setReminderSendingId(null);
+                            });
                           }}
-                          className="gap-2">
-                          <Send className="h-4 w-4" />
-                          Send Reminder
+                          disabled={reminderSendingId === action.id}
+                          className="h-8 gap-1.5">
+                          {reminderSendingId === action.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Send className="h-3.5 w-3.5" />
+                          )}
+                          {reminderSendingId === action.id ? "Sending..." : "Send Reminder"}
                         </Button>
                       )}
                     </div>

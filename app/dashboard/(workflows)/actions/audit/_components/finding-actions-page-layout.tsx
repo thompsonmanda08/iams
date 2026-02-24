@@ -126,6 +126,8 @@ export function FindingActionsPageLayout({
       }
     },
     onError: (error: Error) => {
+      console.log("LOGGGGG:", error);
+
       notify({
         type: "error",
         description:

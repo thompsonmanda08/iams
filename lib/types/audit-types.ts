@@ -822,6 +822,7 @@ export interface WorkpaperFinding {
   organization_id: string;
   audit_plan_id: string;
   working_paper_id: string;
+  audit_plan_name: string;
 
   // Base finding information
   category_name: string;
@@ -1396,7 +1397,7 @@ export interface FindingAction {
   updated_by: string;
   created_at: string;
   updated_at: string;
-
+  engagement_name: string;
   // Relationships (populated by API)
   finding?: WorkpaperFinding;
   assigned_to_user?: {
