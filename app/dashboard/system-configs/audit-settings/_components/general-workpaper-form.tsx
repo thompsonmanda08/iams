@@ -23,9 +23,14 @@ interface GeneralWorkpaperFormProps {
   initialData?: Partial<GeneralWorkpaperInput> | null;
   onSuccess?: () => void;
   onCancel?: () => void;
+  configs?: Record<string, any>;
 }
 
-export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpaperFormProps) {
+export function GeneralTemplateConfigsForm({
+  templateId,
+  initialData,
+  configs
+}: GeneralWorkpaperFormProps) {
   const router = useRouter();
   const { data: teamMembersResponse, isLoading: loadingTeam } = useUsers({ page_size: 200 });
   const teamMembers = (teamMembersResponse?.data?.data || []) as User[];

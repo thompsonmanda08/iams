@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Pagination } from "@/lib/types";
-import { WorkpaperTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-template-dialog";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
 import { Card } from "@/components/ui/card";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useWorkpaperTemplates } from "@/hooks/use-audit-query-data";
 import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 import { usePermissions } from "@/hooks/use-permissions";
+import { CreateWorkpaperTemplateDialog } from "./create-workpaper-dialog";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -18,10 +18,6 @@ interface WorkingPaperTemplate {
   standard: string;
   description?: string;
   is_active?: boolean;
-}
-
-interface WorkpapersPageClientProps {
-  templates?: WorkingPaperTemplate[];
 }
 
 export default function WorkpaperTemplatesTab() {
@@ -85,11 +81,9 @@ export default function WorkpaperTemplatesTab() {
         )}
 
         {/* Create Workpaper Template Selection Dialog */}
-        <WorkpaperTemplateDialog
-          open={isCreateDialogOpen}
-          onOpenChange={setIsCreateDialogOpen}
-          // audits={audits}
-          customTemplates={[]}
+        <CreateWorkpaperTemplateDialog
+          openModal={isCreateDialogOpen}
+          setOpenModal={setIsCreateDialogOpen}
         />
       </Card>
     </>

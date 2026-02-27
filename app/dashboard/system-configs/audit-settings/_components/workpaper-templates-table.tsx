@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, View, ClipboardCheck, Plus } from "lucide-react";
-import { CreateOrUpdateISOTemplateDialog } from "./create-workpaper-dialog";
+import { CreateWorkpaperTemplateDialog } from "./create-workpaper-dialog";
 import { format } from "date-fns";
 import Link from "next/link";
 import {
@@ -160,10 +160,13 @@ export function WorkpaperTemplatesTable({
             </div>
           </div>
 
-          <Button size="lg" onClick={() => {
-            if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
-            onCreateClick?.();
-          }} className="gap-2">
+          <Button
+            size="lg"
+            onClick={() => {
+              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+              onCreateClick?.();
+            }}
+            className="gap-2">
             <Plus className="h-5 w-5" />
             Create Workpaper Template
           </Button>
@@ -297,7 +300,7 @@ export function WorkpaperTemplatesTable({
 
       {/* Edit Modal for Standard Frameworks */}
       {templateToEdit && (
-        <CreateOrUpdateISOTemplateDialog
+        <CreateWorkpaperTemplateDialog
           openModal={isEditModalOpen}
           setOpenModal={setIsEditModalOpen}
           initialData={templateToEdit as any}

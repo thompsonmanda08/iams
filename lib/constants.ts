@@ -117,7 +117,8 @@ export const QUERY_KEYS = {
   WORKFLOWS: "workflows",
   WORKFLOW_INSTANCES: "workflow-instances",
   WORKFLOW_APPROVALS: "workflow-approvals",
-  WORKFLOW_HISTORY: "workflow-history"
+  WORKFLOW_HISTORY: "workflow-history",
+  GENERAL_WORK_PAPER_CONFIGS: "general-work-paper-configs"
 };
 
 // ANIMATION_VARIANTS

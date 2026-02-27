@@ -30,7 +30,12 @@ import {
   deleteStrategicInitiative,
   createProcessActivity,
   updateProcessActivity,
-  deleteProcessActivity
+  deleteProcessActivity,
+  createGeneralWorkPaperConfig,
+  updateGeneralWorkPaperConfig,
+  deleteGeneralWorkPaperConfig,
+  type CreateGeneralWorkPaperConfigPayload,
+  type UpdateGeneralWorkPaperConfigPayload
 } from "@/app/_actions/audit-settings-actions";
 
 // ============================================================================
@@ -335,5 +340,86 @@ export const useProcessActivitiesMutations = () => {
   return {
     deleteProcessActivityMutation,
     saveProcessActivityMutation
+  };
+};
+
+// ============================================================================
+// GENERAL WORK PAPER CONFIGS MUTATIONS
+// ============================================================================
+
+/**
+ * Hook for general work paper config mutations (create, update, delete)
+ */
+export const useGeneralWorkPaperConfigMutations = () => {
+  const queryClient = useQueryClient();
+
+  const createConfigMutation = useMutation({
+    mutationFn: (payload: CreateGeneralWorkPaperConfigPayload & { onSuccess?: () => void }) => {
+      const { onSuccess: _cb, ...data } = payload;
+      return createGeneralWorkPaperConfig(data);
+    },
+    onSuccess: (response, payload) => {
+      if (response.success) {
+        toast.success("Work paper config created successfully");
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GENERAL_WORK_PAPER_CONFIGS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_TEMPLATES] });
+        payload.onSuccess?.();
+      } else {
+        toast.error(response.message || "Failed to create config");
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create work paper config");
+      console.error("Error creating work paper config:", error);
+    }
+  });
+
+  const updateConfigMutation = useMutation({
+    mutationFn: (payload: { id: string } & UpdateGeneralWorkPaperConfigPayload & { onSuccess?: () => void }) => {
+      const { id, onSuccess: _cb, ...data } = payload;
+      return updateGeneralWorkPaperConfig(id, data);
+    },
+    onSuccess: (response, payload) => {
+      if (response.success) {
+        toast.success("Work paper config updated successfully");
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GENERAL_WORK_PAPER_CONFIGS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_TEMPLATES] });
+        payload.onSuccess?.();
+      } else {
+        toast.error(response.message || "Failed to update config");
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update work paper config");
+      console.error("Error updating work paper config:", error);
+    }
+  });
+
+  const deleteConfigMutation = useMutation({
+    mutationFn: (payload: string | { id: string; onSuccess?: () => void }) => {
+      const id = typeof payload === "string" ? payload : payload.id;
+      return deleteGeneralWorkPaperConfig(id);
+    },
+    onSuccess: (response, payload) => {
+      const onSuccess = typeof payload === "object" ? payload.onSuccess : undefined;
+      if (response.success) {
+        toast.success("Work paper config deleted successfully");
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GENERAL_WORK_PAPER_CONFIGS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_TEMPLATES] });
+        onSuccess?.();
+      } else {
+        toast.error(response.message || "Failed to delete config");
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete work paper config");
+      console.error("Error deleting work paper config:", error);
+    }
+  });
+
+  return {
+    createConfigMutation,
+    updateConfigMutation,
+    deleteConfigMutation
   };
 };

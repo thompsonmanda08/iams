@@ -64,7 +64,7 @@ import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
 import { useHeadsOfDepartments } from "@/hooks/use-users-query-data";
 import { useBudgetLines, useBudgets } from "@/hooks/use-audit-settings-query-data";
-import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
+import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-template-form";
 import { useGenerateAuditPlanFromItem } from "@/hooks/use-audit-query-data";
 import { DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { TemplateSelectorSimple } from "./template-selector-simple";

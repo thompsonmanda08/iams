@@ -41,7 +41,7 @@ import {
   useBudgetLines
 } from "@/hooks/use-audit-settings-query-data";
 import { SearchSelectField } from "@/components/ui/search-select-field";
-import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/iso-workpaper-form";
+import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-template-form";
 import { usePermissions } from "@/hooks/use-permissions";
 
 /**
@@ -223,9 +223,15 @@ export default function NewAuditPlanPage() {
         categories:
           templateCategoriesFromAPI.length > 0
             ? templateCategoriesFromAPI
-            : selectedTemplateWithCategories.categories ?? []
+            : (selectedTemplateWithCategories.categories ?? [])
       }
-    : ({ id: "", name: "", description: "", standard: "", categories: [] } as unknown as WorkpaperTemplateDefinition);
+    : ({
+        id: "",
+        name: "",
+        description: "",
+        standard: "",
+        categories: []
+      } as unknown as WorkpaperTemplateDefinition);
 
   const validateStep1 = (): boolean => {
     const errors: FieldErrors = {};
@@ -374,7 +380,9 @@ export default function NewAuditPlanPage() {
       start_date: formData.start_date?.toISOString().split("T")[0] as string,
       end_date: formData.end_date?.toISOString().split("T")[0] as string,
       ref_no: formData.ref_no,
-      audit_plan_date: formData.audit_plan_date ? formData.audit_plan_date.toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      audit_plan_date: formData.audit_plan_date
+        ? formData.audit_plan_date.toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
       audit_criteria: formData.audit_criteria,
@@ -384,8 +392,12 @@ export default function NewAuditPlanPage() {
       audit_team_members: formData.audit_team_member || [],
       client_representative: formData.client_representative,
       audit_language: formData.audit_language,
-      opening_meeting_datetime: formData.opening_meeting_datetime ? formData.opening_meeting_datetime.toISOString().split("T")[0] : undefined,
-      closing_meeting_datetime: formData.closing_meeting_datetime ? formData.closing_meeting_datetime.toISOString().split("T")[0] : undefined,
+      opening_meeting_datetime: formData.opening_meeting_datetime
+        ? formData.opening_meeting_datetime.toISOString().split("T")[0]
+        : undefined,
+      closing_meeting_datetime: formData.closing_meeting_datetime
+        ? formData.closing_meeting_datetime.toISOString().split("T")[0]
+        : undefined,
       working_paper_template_id: formData.working_paper_template_id,
       department_id: formData.department_id,
       audit_universe_item_ids: formData.audit_universe_item_ids || [],

@@ -3,7 +3,7 @@ import { GeneralWorkpaperForm } from "../../../_components/general-workpaper-for
 import { WorkpaperBuilderTemplateId } from "@/lib/types/audit-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { CustomWorkpaperForm } from "@/app/dashboard/system-configs/audit-settings/_components/custom-workpaper-form";
-import { ComplianceWorkpaperTemplateForm } from "../../../_components/iso-workpaper-form";
+import { WorkpaperTemplateForm } from "../../../_components/workpaper-template-form";
 
 export default async function CreateNewTemplatePage({
   params
@@ -29,9 +29,7 @@ export default async function CreateNewTemplatePage({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {builderId == "ISO27001" && (
-          <ComplianceWorkpaperTemplateForm templateId={null} initialData={null} />
-        )}
+        {builderId == "ISO27001" && <WorkpaperTemplateForm templateId={null} initialData={null} />}
 
         {builderId === "GENERAL" && (
           <GeneralWorkpaperForm

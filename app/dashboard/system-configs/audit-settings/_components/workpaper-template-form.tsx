@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useState } from "react"; 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,19 +22,20 @@ export const FRAMEWORK_TYPES = [
   { id: "ISO27001", name: "ISO 27001 Audit" },
   { id: "COSO", name: "COSO Audit" },
   { id: "COBIT", name: "COBIT Audit" },
-  { id: "NIST", name: "NIST Audit" }
+  { id: "NIST", name: "NIST Audit" },
+  { id: "GENERAL", name: "General Work Paper (B.1.1.2)" }
 ];
 
 const INIT_WORKPAPER_TEMPLATE: Omit<WorkpaperTemplate, "id"> = {
   name: "",
-  standard: "ISO",
+  standard: "ISO27001",
   framework_type: "ISO27001",
   description: "",
   version: "",
   is_active: true
 };
 
-export function ComplianceWorkpaperTemplateForm({
+export function WorkpaperTemplateForm({
   templateId,
   initialData,
   onSuccess,

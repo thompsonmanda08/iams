@@ -237,6 +237,74 @@
               }
             }
           ]
+        },
+        {
+          "name": "Password Policy",
+          "item": [
+            {
+              "name": "Get Password Policy",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/password-policy",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "password-policy"
+                  ],
+                  "query": []
+                },
+                "description": "Retrieves the password policy for the organization. Falls back to global default if no organization-specific policy exists."
+              }
+            },
+            {
+              "name": "Update Password Policy",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/password-policy",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "password-policy"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"min_length\": 8,\n  \"require_uppercase\": true,\n  \"require_lowercase\": true,\n  \"require_numbers\": true,\n  \"require_special_chars\": true,\n  \"max_failed_attempts\": 5,\n  \"lockout_duration_mins\": 30,\n  \"password_expiry_days\": 90,\n  \"otp_length\": 6,\n  \"otp_expiry_mins\": 5,\n  \"require_mfa\": false,\n  \"session_timeout_mins\": 30\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Creates or updates the password policy for the organization. Uses upsert behavior - creates if not exists, updates if exists. Cannot modify the global default policy."
+              }
+            }
+          ]
         }
       ]
     },
@@ -2199,6 +2267,43 @@
               }
             },
             {
+              "name": "Close Audit Plan (Start AUDIT_CLOSURE Workflow)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/audit-plans/{{audit_plan_id}}/close",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit-plans",
+                    "{{audit_plan_id}}",
+                    "close"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
               "name": "Allocate Budget to Plan",
               "request": {
                 "method": "POST",
@@ -3364,6 +3469,349 @@
           ]
         },
         {
+          "name": "General Work Papers",
+          "item": [
+            {
+              "name": "Templates",
+              "item": [
+                {
+                  "name": "Create Template",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-templates",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-templates"]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Invoice Verification Template\",\n  \"standard\": \"Financial Audit\",\n  \"description\": \"Template for verifying invoices and payments\",\n  \"version\": \"1.0\"\n}",
+                      "options": {"raw": {"language": "json"}}
+                    }
+                  }
+                },
+                {
+                  "name": "List Templates",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-templates?page=1&page_size=10",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-templates"],
+                      "query": [
+                        {"key": "page", "value": "1"},
+                        {"key": "page_size", "value": "10"},
+                        {"key": "name", "value": "Invoice", "disabled": true},
+                        {"key": "is_active", "value": "true", "disabled": true}
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Template by ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-templates/{{template_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-templates", "{{template_id}}"]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Template with Configs",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-templates/{{template_id}}/with-configs",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-templates", "{{template_id}}", "with-configs"]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Configs by Template ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-templates/{{template_id}}/configs",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-templates", "{{template_id}}", "configs"]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Template",
+                  "request": {
+                    "method": "PUT",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-templates/{{template_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-templates", "{{template_id}}"]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Updated Invoice Verification Template\",\n  \"framework_type\": \"ISO27001\",\n  \"description\": \"Updated description\",\n  \"is_active\": true\n}",
+                      "options": {"raw": {"language": "json"}}
+                    }
+                  }
+                },
+                {
+                  "name": "Delete Template",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-templates/{{template_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-templates", "{{template_id}}"]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Configs",
+              "item": [
+                {
+                  "name": "Create Config",
+                  "request": {
+                    "method": "POST",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-configs",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-configs"]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"template_id\": \"{{template_id}}\",\n  \"columns\": [\n    {\"key\": \"invoice_number\", \"name\": \"Invoice Number\", \"type\": \"text\", \"required\": true, \"description\": \"Invoice reference number\"},\n    {\"key\": \"amount\", \"name\": \"Amount\", \"type\": \"number\", \"required\": true, \"description\": \"Invoice amount\"},\n    {\"key\": \"date\", \"name\": \"Date\", \"type\": \"date\", \"required\": true, \"description\": \"Invoice date\"},\n    {\"key\": \"vendor\", \"name\": \"Vendor\", \"type\": \"text\", \"required\": true, \"description\": \"Vendor name\"}\n  ],\n  \"keys\": [\n    {\"key\": \"transaction_id\", \"name\": \"Transaction ID\", \"type\": \"text\", \"required\": true, \"description\": \"Unique transaction identifier\"}\n  ]\n}",
+                      "options": {"raw": {"language": "json"}}
+                    }
+                  }
+                },
+                {
+                  "name": "Get Config by ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-configs/{{config_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-configs", "{{config_id}}"]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Config",
+                  "request": {
+                    "method": "PUT",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-configs/{{config_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-configs", "{{config_id}}"]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"columns\": [\n    {\"key\": \"invoice_number\", \"name\": \"Invoice Number\", \"type\": \"text\", \"required\": true, \"description\": \"Invoice reference number\"},\n    {\"key\": \"amount\", \"name\": \"Amount\", \"type\": \"number\", \"required\": true, \"description\": \"Invoice amount\"},\n    {\"key\": \"date\", \"name\": \"Date\", \"type\": \"date\", \"required\": true, \"description\": \"Invoice date\"},\n    {\"key\": \"vendor\", \"name\": \"Vendor\", \"type\": \"text\", \"required\": true, \"description\": \"Vendor name\"},\n    {\"key\": \"status\", \"name\": \"Status\", \"type\": \"text\", \"required\": false, \"description\": \"Payment status\"}\n  ]\n}",
+                      "options": {"raw": {"language": "json"}}
+                    }
+                  }
+                },
+                {
+                  "name": "Delete Config",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-configs/{{config_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-configs", "{{config_id}}"]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Findings",
+              "item": [
+                {
+                  "name": "Create Finding",
+                  "request": {
+                    "method": "POST",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-findings",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-findings"]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"audit_plan_id\": \"{{audit_plan_id}}\",\n  \"working_paper_id\": \"{{working_paper_id}}\",\n  \"columns\": [\n    {\"Invoice Number\": \"INV-001\"},\n    {\"Amount\": 5000.00},\n    {\"Date\": \"2026-02-01\"},\n    {\"Vendor\": \"Acme Corp\"}\n  ],\n  \"keys\": [\n    {\"Transaction ID\": \"TXN-12345\"}\n  ],\n  \"audit_observation\": \"Invoice verified and matches payment records\",\n  \"audit_comments\": \"All documentation in order\",\n  \"evidence\": \"invoice_001_scan.pdf\",\n  \"status\": \"DRAFT\"\n}",
+                      "options": {"raw": {"language": "json"}}
+                    }
+                  }
+                },
+                {
+                  "name": "List Findings",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-findings?page=1&page_size=10&working_paper_id={{working_paper_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-findings"],
+                      "query": [
+                        {"key": "page", "value": "1"},
+                        {"key": "page_size", "value": "10"},
+                        {"key": "working_paper_id", "value": "{{working_paper_id}}"},
+                        {"key": "audit_plan_id", "value": "{{audit_plan_id}}", "disabled": true},
+                        {"key": "status", "value": "DRAFT", "disabled": true}
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Finding by ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-findings/{{finding_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-findings", "{{finding_id}}"]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Finding",
+                  "request": {
+                    "method": "PUT",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-findings/{{finding_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-findings", "{{finding_id}}"]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"columns\": [\n    {\"Invoice Number\": \"INV-001\"},\n    {\"Amount\": 5500.00},\n    {\"Date\": \"2026-02-01\"},\n    {\"Vendor\": \"Acme Corp\"}\n  ],\n  \"audit_observation\": \"Invoice verified - amount corrected after review\",\n  \"status\": \"SUBMITTED\"\n}",
+                      "options": {"raw": {"language": "json"}}
+                    }
+                  }
+                },
+                {
+                  "name": "Submit Finding for Approval",
+                  "request": {
+                    "method": "POST",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-findings/{{finding_id}}/submit",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-findings", "{{finding_id}}", "submit"]
+                    },
+                    "description": "Submits a general finding for approval workflow. Finding must be in DRAFT status. Updates status to IN_REVIEW and creates a workflow instance with tasks assigned to approvers."
+                  }
+                },
+                {
+                  "name": "Delete Finding",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-paper-findings/{{finding_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-paper-findings", "{{finding_id}}"]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Working Papers (from working_papers table)",
+              "item": [
+                {
+                  "name": "Get Working Paper by Audit Plan ID (Query)",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/working-papers?audit_plan_id={{audit_plan_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "working-papers"],
+                      "query": [{"key": "audit_plan_id", "value": "{{audit_plan_id}}"}]
+                    },
+                    "description": "Fetches working paper from working_papers table with general_work_paper_template_id, general_config, and general_findings (using query parameter)"
+                  }
+                },
+                {
+                  "name": "Get General Working Paper by Audit Plan ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/general-work-papers/audit-plan/{{audit_plan_id}}",
+                      "protocol": "http",
+                      "host": ["{{host}}"],
+                      "port": "{{port}}",
+                      "path": ["api", "v1", "general-work-papers", "audit-plan", "{{audit_plan_id}}"]
+                    },
+                    "description": "Retrieves a general working paper for a specific audit plan ID. Returns the working paper from the working_papers table where general_work_paper_template_id is not null."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
           "name": "Working Paper Categories",
           "item": [
             {
@@ -4384,6 +4832,80 @@
                   "path": [
                     "finding-actions",
                     "{{action_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Audit Follow-Up Log",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finding-actions/audit-followup-log?audit_plan_id={{audit_plan_id}}&status=PENDING&page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "finding-actions",
+                    "audit-followup-log"
+                  ],
+                  "query": [
+                    {
+                      "key": "audit_plan_id",
+                      "value": "{{audit_plan_id}}",
+                      "description": "Optional: Filter by audit plan ID"
+                    },
+                    {
+                      "key": "status",
+                      "value": "PENDING",
+                      "description": "Optional: Filter by status (PENDING, IN_PROGRESS, UNDER_REVIEW, COMPLETED, REJECTED)"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Send Action Reminder",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finding-actions/{{action_id}}/remind",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "finding-actions",
+                    "{{action_id}}",
+                    "remind"
                   ],
                   "query": []
                 }
@@ -5453,15 +5975,49 @@
                   ],
                   "query": []
                 }
-              }
-            }
-          ]
-        },
-        {
-          "name": "Risks",
-          "item": [
+              },
+              "response": []
+            },
             {
-              "name": "Create Risk",
+              "name": "Update Risk Register",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-registers/{{risk_register_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-registers",
+                    "{{risk_register_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Corporate Risk Register\",\n  \"description\": \"Updated description\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Update an existing risk register"
+              },
+              "response": []
+            },
+            {
+              "name": "Close Risk Register",
               "request": {
                 "method": "POST",
                 "header": [
@@ -5471,7 +6027,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/api/v1/risks",
+                  "raw": "{{base_url}}/api/v1/risk-registers/{{risk_register_id}}/close",
                   "protocol": "http",
                   "host": [
                     "{{host}}"
@@ -5480,20 +6036,326 @@
                   "path": [
                     "api",
                     "v1",
+                    "risk-registers",
+                    "{{risk_register_id}}",
+                    "close"
+                  ],
+                  "query": []
+                },
+                "description": "Close a risk register"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Risk Register",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-registers/{{risk_register_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-registers",
+                    "{{risk_register_id}}"
+                  ],
+                  "query": []
+                },
+                "description": "Delete a risk register"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Risks in Register",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-registers/{{risk_register_id}}/risks",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-registers",
+                    "{{risk_register_id}}",
                     "risks"
+                  ],
+                  "query": []
+                },
+                "description": "Get all risks in a specific risk register"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Register Heatmap",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-registers/{{risk_register_id}}/heatmap",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-registers",
+                    "{{risk_register_id}}",
+                    "heatmap"
+                  ],
+                  "query": []
+                },
+                "description": "Get heatmap data for all risks in a register"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Registers by Department",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/departments/{{department_id}}/risk-registers",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "departments",
+                    "{{department_id}}",
+                    "risk-registers"
+                  ],
+                  "query": []
+                },
+                "description": "Get all risk registers for a specific department"
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Department Risks",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-registers/{{risk_register_id}}/departments/{{department_id}}/submit",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-registers",
+                    "{{risk_register_id}}",
+                    "departments",
+                    "{{department_id}}",
+                    "submit"
+                  ],
+                  "query": []
+                },
+                "description": "Submit all risks from a department for review"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Risks",
+          "item": [
+            {
+              "name": "Create Risk - Step One",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/step-one",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "step-one"
                   ],
                   "query": []
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"risk_register_id\": \"{{risk_register_id}}\",\n  \"category_id\": \"{{risk_category_id}}\",\n  \"title\": \"Data Breach\",\n  \"description\": \"Unauthorized access to sensitive data\",\n  \"likelihood\": \"Medium\",\n  \"impact\": \"High\",\n  \"status\": \"Active\"\n}",
+                  "raw": "{\n  \"risk_register_id\": \"{{risk_register_id}}\",\n  \"category_id\": \"{{risk_category_id}}\",\n  \"title\": \"Data Breach Risk\",\n  \"description\": \"Unauthorized access to sensitive customer data\",\n  \"risk_owner_id\": \"{{user_id}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
                     }
                   }
-                }
-              }
+                },
+                "description": "Step 1: Create a risk with basic information (title, description, category, risk owner)"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Risk - Step One",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/step-one",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "step-one"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Data Breach Risk\",\n  \"description\": \"Updated description\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Update Step 1 information for an existing risk"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Risk - Step Two",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/step-two",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "step-two"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"likelihood\": 3,\n  \"impact\": 4,\n  \"risk_response_id\": \"{{risk_response_id}}\",\n  \"risk_appetite_status_id\": \"{{risk_appetite_status_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Step 2: Add risk assessment (likelihood, impact, inherent risk rating, risk response strategy)"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Risk - Step Three",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/step-three",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "step-three"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"residual_likelihood\": 2,\n  \"residual_impact\": 2,\n  \"residual_risk_rating_id\": \"{{residual_risk_rating_id}}\",\n  \"existing_controls\": \"MFA enabled, encryption at rest\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Step 3: Add residual risk assessment after considering controls"
+              },
+              "response": []
             },
             {
               "name": "List Risks",
@@ -5591,7 +6453,445 @@
                     }
                   }
                 }
-              }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Risk",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}"
+                  ],
+                  "query": []
+                },
+                "description": "Delete a risk"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Risk Status",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/status",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "status"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Update the status of a risk (e.g., DRAFT, ACTIVE, CLOSED)"
+              },
+              "response": []
+            },
+            {
+              "name": "Close Risk",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/close",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "close"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"closure_reason\": \"Risk mitigated successfully\",\n  \"closure_notes\": \"All controls are in place and effective\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Close a risk with reason and notes"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Risk Matrix",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/matrix",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "matrix"
+                  ],
+                  "query": []
+                },
+                "description": "Get the risk matrix visualization data"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Risk Heatmap",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/heatmap",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "heatmap"
+                  ],
+                  "query": []
+                },
+                "description": "Get detailed heatmap data for risks"
+              },
+              "response": []
+            },
+            {
+              "name": "Accept Risk",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/accept",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "accept"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"justification\": \"Cost of mitigation exceeds potential impact\",\n  \"approved_by_id\": \"{{approver_id}}\",\n  \"valid_until\": \"2026-12-31\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Accept a risk without mitigation (risk acceptance)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Risk Acceptance History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/acceptances",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "acceptances"
+                  ],
+                  "query": []
+                },
+                "description": "Get all risk acceptance records for a specific risk"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Risk Acceptance by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-acceptance/{{acceptance_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-acceptance",
+                    "{{acceptance_id}}"
+                  ],
+                  "query": []
+                },
+                "description": "Get a specific risk acceptance by ID"
+              },
+              "response": []
+            },
+            {
+              "name": "List All Risk Acceptances",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-acceptances?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-acceptances"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "List all risk acceptances for the organization"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Risk Acceptance",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-acceptances/{{acceptance_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-acceptances",
+                    "{{acceptance_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"justification\": \"Updated justification\",\n  \"valid_until\": \"2027-06-30\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Update an existing risk acceptance"
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Risk Acceptance for Approval",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-acceptances/{{acceptance_id}}/submit-for-approval",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-acceptances",
+                    "{{acceptance_id}}",
+                    "submit-for-approval"
+                  ],
+                  "query": []
+                },
+                "description": "Submit a risk acceptance for approval workflow"
+              },
+              "response": []
+            },
+            {
+              "name": "Revoke Risk Acceptance",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-acceptances/{{acceptance_id}}/revoke",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-acceptances",
+                    "{{acceptance_id}}",
+                    "revoke"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"revocation_reason\": \"Risk level has changed\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Revoke a previously accepted risk"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Risk Performance History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/performance-history",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "performance-history"
+                  ],
+                  "query": []
+                },
+                "description": "Get the performance history (changes over time) for a specific risk"
+              },
+              "response": []
             }
           ]
         },
@@ -5730,8 +7030,1031 @@
                   }
                 }
               }
+            },
+            {
+              "name": "Send Action Reminder",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-actions/{{risk_action_id}}/remind",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-actions",
+                    "{{risk_action_id}}",
+                    "remind"
+                  ],
+                  "query": []
+                },
+                "description": "Sends a reminder email to the executor assigned to the risk action. The email includes:\n- Action instructions\n- Current status\n- Due date with urgency indicators (overdue, due today, due soon)\n- Link to view the action\n\nThe reminder sender is automatically identified from the JWT token. The system will send a branded email using the organization's SMTP configuration."
+              }
             }
           ]
+        },
+        {
+          "name": "Risk Action Executions",
+          "item": [
+            {
+              "name": "Create Action Execution",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-actions/{{action_id}}/executions",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-actions",
+                    "{{action_id}}",
+                    "executions"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"execution_notes\": \"Implementing MFA for all users\",\n  \"evidence_description\": \"Configuration screenshots and policy document\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Create a new execution record for a risk action (executor submits their work)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Execution by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/executions/{{execution_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "executions",
+                    "{{execution_id}}"
+                  ],
+                  "query": []
+                },
+                "description": "Get a specific execution by ID"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Execution by Action ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-actions/{{action_id}}/execution",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-actions",
+                    "{{action_id}}",
+                    "execution"
+                  ],
+                  "query": []
+                },
+                "description": "Get the execution for a specific action"
+              },
+              "response": []
+            },
+            {
+              "name": "List All Executions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/executions?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "executions"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "List all action executions with pagination"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Execution",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/executions/{{execution_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "executions",
+                    "{{execution_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"execution_notes\": \"Updated execution notes\",\n  \"evidence_description\": \"Additional evidence added\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Update an existing execution"
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Execution",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/executions/{{execution_id}}/submit",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "executions",
+                    "{{execution_id}}",
+                    "submit"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"evidence_file_url\": \"https://storage.example.com/evidence/mfa-implementation.pdf\",\n  \"evidence_description\": \"Complete MFA implementation evidence\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Submit an execution with evidence for review"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Execution",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/executions/{{execution_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "executions",
+                    "{{execution_id}}"
+                  ],
+                  "query": []
+                },
+                "description": "Delete an execution"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Risk Action Reviews",
+          "item": [
+            {
+              "name": "Create Review",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reviews",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reviews"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"execution_id\": \"{{execution_id}}\",\n  \"reviewer_comments\": \"MFA implementation looks good\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Create a new review for an action execution"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Review by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reviews/{{review_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reviews",
+                    "{{review_id}}"
+                  ],
+                  "query": []
+                },
+                "description": "Get a specific review by ID"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Review by Execution ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/executions/{{execution_id}}/review",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "executions",
+                    "{{execution_id}}",
+                    "review"
+                  ],
+                  "query": []
+                },
+                "description": "Get the review for a specific execution"
+              },
+              "response": []
+            },
+            {
+              "name": "List All Reviews",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reviews?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reviews"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "List all action reviews with pagination"
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Review (Approve/Reject)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reviews/{{review_id}}/submit",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reviews",
+                    "{{review_id}}",
+                    "submit"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"decision\": \"APPROVED\",\n  \"reviewer_comments\": \"All controls implemented correctly\",\n  \"likelihood\": 2,\n  \"impact\": 2,\n  \"control_effectiveness_id\": \"{{effectiveness_level_id}}\",\n  \"existing_controls\": \"MFA enabled, encryption at rest, regular audits\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Submit a review decision (APPROVED or REJECTED) with residual risk assessment"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Review",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/reviews/{{review_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reviews",
+                    "{{review_id}}"
+                  ],
+                  "query": []
+                },
+                "description": "Delete a review"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Risk Logs",
+          "item": [
+            {
+              "name": "Get Logs for Risk",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/logs?limit=50&offset=0",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risks",
+                    "{{risk_id}}",
+                    "logs"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50",
+                      "description": "Number of logs to retrieve (default: 50)"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0",
+                      "description": "Number of logs to skip for pagination"
+                    }
+                  ]
+                },
+                "description": "Retrieves all audit logs for a specific risk, including risk creation, updates, assessments, status changes, and control modifications. Logs are returned in reverse chronological order."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Logs for Risk Action",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-actions/{{action_id}}/logs?limit=50&offset=0",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-actions",
+                    "{{action_id}}",
+                    "logs"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50",
+                      "description": "Number of logs to retrieve (default: 50)"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0",
+                      "description": "Number of logs to skip for pagination"
+                    }
+                  ]
+                },
+                "description": "Retrieves all audit logs for a specific risk action, including action assignment, status changes, evidence submissions, and review decisions. Logs are returned in reverse chronological order."
+              },
+              "response": []
+            },
+            {
+              "name": "List Risk Logs with Filters",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-logs?risk_id={{risk_id}}&event_type=ACTION_ASSIGNED&event_category=ACTION&user_id={{user_id}}&from_date=2026-01-01&to_date=2026-12-31&limit=50&offset=0",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-logs"
+                  ],
+                  "query": [
+                    {
+                      "key": "risk_id",
+                      "value": "{{risk_id}}",
+                      "description": "Filter by specific risk ID",
+                      "disabled": true
+                    },
+                    {
+                      "key": "event_type",
+                      "value": "ACTION_ASSIGNED",
+                      "description": "Filter by event type (RISK_CREATED, ACTION_ASSIGNED, EVIDENCE_SUBMITTED, REVIEW_APPROVED, etc.)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "event_category",
+                      "value": "ACTION",
+                      "description": "Filter by category (RISK, ACTION, ASSESSMENT, CONTROL, REVIEW)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "user_id",
+                      "value": "{{user_id}}",
+                      "description": "Filter by user who performed the action",
+                      "disabled": true
+                    },
+                    {
+                      "key": "from_date",
+                      "value": "2026-01-01",
+                      "description": "Start date for filtering (YYYY-MM-DD)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "to_date",
+                      "value": "2026-12-31",
+                      "description": "End date for filtering (YYYY-MM-DD)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "limit",
+                      "value": "50",
+                      "description": "Number of logs to retrieve (default: 50)"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0",
+                      "description": "Number of logs to skip for pagination"
+                    }
+                  ]
+                },
+                "description": "Retrieves risk logs with advanced filtering options. Supports filtering by risk, event type, category, user, and date range. All filters are optional and can be combined."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Recent Risk Activity",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/risk-logs/recent?limit=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "risk-logs",
+                    "recent"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "description": "Number of recent activities to retrieve (default: 20)"
+                    }
+                  ]
+                },
+                "description": "Retrieves the most recent risk-related activities for the organization. Useful for dashboards and activity feeds to show what has been happening across all risks."
+              },
+              "response": []
+            },
+            {
+              "name": "Risk Acceptance Config",
+              "item": [
+                {
+                  "name": "Get Risk Acceptance Config",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/risk-acceptance-config",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "risk-acceptance-config"
+                      ],
+                      "query": []
+                    },
+                    "description": "Retrieves the risk acceptance sign-off config for the organization. Returns null if not yet configured."
+                  }
+                },
+                {
+                  "name": "Create/Update Risk Acceptance Config",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/risk-acceptance-config",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "risk-acceptance-config"
+                      ],
+                      "query": []
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"signoff_role_ids\": [\"{{role_id}}\"],\n  \"is_enabled\": true\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "description": "Creates or updates the risk acceptance sign-off config. signoff_role_ids is the list of roles whose users will receive sign-off actions when a risk acceptance is triggered."
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Risk Acceptance Signatures",
+              "item": [
+                {
+                  "name": "Submit Signature",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/risk-acceptances/{{acceptance_id}}/signatures",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "risk-acceptances",
+                        "{{acceptance_id}}",
+                        "signatures"
+                      ],
+                      "query": []
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"action_id\": \"{{action_id}}\",\n  \"user_id\": \"{{user_id}}\",\n  \"name\": \"John Doe\",\n  \"designation\": \"Risk Manager\",\n  \"signature\": \"https://example.com/signatures/johndoe.png\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "description": "Records a signature for a risk acceptance. action_id links the signature to a specific sign-off action."
+                  }
+                },
+                {
+                  "name": "List Signatures by Acceptance",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/risk-acceptances/{{acceptance_id}}/signatures",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "risk-acceptances",
+                        "{{acceptance_id}}",
+                        "signatures"
+                      ],
+                      "query": []
+                    },
+                    "description": "Retrieves all signatures collected for a given risk acceptance, ordered by signed_at ASC."
+                  }
+                },
+                {
+                  "name": "Get Signature by Action",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/risk-actions/{{action_id}}/signature",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "risk-actions",
+                        "{{action_id}}",
+                        "signature"
+                      ],
+                      "query": []
+                    },
+                    "description": "Retrieves the signature submitted against a specific sign-off action."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Risk Controls",
+      "item": [
+        {
+          "name": "List Risk Controls",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/controls",
+              "protocol": "http",
+              "host": [
+                "{{host}}"
+              ],
+              "port": "{{port}}",
+              "path": [
+                "api",
+                "v1",
+                "risks",
+                "{{risk_id}}",
+                "controls"
+              ],
+              "query": []
+            },
+            "description": "Get all controls for a specific risk"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Risk Control",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/controls",
+              "protocol": "http",
+              "host": [
+                "{{host}}"
+              ],
+              "port": "{{port}}",
+              "path": [
+                "api",
+                "v1",
+                "risks",
+                "{{risk_id}}",
+                "controls"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"control_name\": \"Multi-Factor Authentication\",\n  \"control_description\": \"Require MFA for all user accounts\",\n  \"control_type\": \"PREVENTIVE\",\n  \"effectiveness_level_id\": \"{{effectiveness_level_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Add a new control to a risk"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Risk Control",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/controls/{{control_id}}",
+              "protocol": "http",
+              "host": [
+                "{{host}}"
+              ],
+              "port": "{{port}}",
+              "path": [
+                "api",
+                "v1",
+                "risks",
+                "{{risk_id}}",
+                "controls",
+                "{{control_id}}"
+              ],
+              "query": []
+            },
+            "description": "Get a specific risk control by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Risk Control",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/controls/{{control_id}}",
+              "protocol": "http",
+              "host": [
+                "{{host}}"
+              ],
+              "port": "{{port}}",
+              "path": [
+                "api",
+                "v1",
+                "risks",
+                "{{risk_id}}",
+                "controls",
+                "{{control_id}}"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"control_name\": \"Enhanced Multi-Factor Authentication\",\n  \"effectiveness_level_id\": \"{{new_effectiveness_level_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update an existing risk control"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Risk Control",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/risks/{{risk_id}}/controls/{{control_id}}",
+              "protocol": "http",
+              "host": [
+                "{{host}}"
+              ],
+              "port": "{{port}}",
+              "path": [
+                "api",
+                "v1",
+                "risks",
+                "{{risk_id}}",
+                "controls",
+                "{{control_id}}"
+              ],
+              "query": []
+            },
+            "description": "Delete a risk control"
+          },
+          "response": []
         }
       ]
     },
@@ -6124,6 +8447,10 @@
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
                   }
                 ],
                 "url": {
@@ -6142,7 +8469,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"title\": \"Security Breach\",\n  \"description\": \"Unauthorized access to system\",\n  \"incident_date\": \"2024-12-01\",\n  \"severity\": \"High\",\n  \"status\": \"Open\",\n  \"reported_by\": \"{{user_id}}\"\n}",
+                  "raw": "{\n  \"department_id\": \"{{department_id}}\",\n  \"kri_id\": \"\",\n  \"incident_date\": \"2026-02-19T08:00:00Z\",\n  \"discovery_date\": \"2026-02-19T09:00:00Z\",\n  \"location\": \"Head Office - Server Room\",\n  \"details\": \"Unauthorized access attempt detected on the core banking system. Multiple failed login attempts from an unknown IP address.\",\n  \"primary_cause_id\": \"\",\n  \"specific_cause_id\": \"\",\n  \"materiality\": \"HIGH\",\n  \"measured_value\": null,\n  \"root_cause\": \"Weak password policy enforcement\",\n  \"action_plan\": \"Reset credentials, enforce MFA, review access logs\",\n  \"due_date\": \"2026-03-01T00:00:00Z\",\n  \"responsible_person_id\": \"{{user_id}}\",\n  \"financial_loss_implications\": \"NO\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -6181,6 +8508,16 @@
                     {
                       "key": "page_size",
                       "value": "20"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "materiality",
+                      "value": "",
+                      "disabled": true
                     }
                   ]
                 }
@@ -6221,6 +8558,10 @@
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
                   }
                 ],
                 "url": {
@@ -6240,7 +8581,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"status\": \"Resolved\",\n  \"notes\": \"Incident mitigated\"\n}",
+                  "raw": "{\n  \"location\": \"Head Office - IT Department\",\n  \"details\": \"Updated: Confirmed unauthorized access attempt, logs reviewed.\",\n  \"root_cause\": \"Phishing email leading to credential compromise\",\n  \"action_plan\": \"Implement MFA for all users, conduct phishing awareness training\",\n  \"materiality\": \"CRITICAL\",\n  \"financial_loss_implications\": \"YES\",\n  \"due_date\": \"2026-03-15T00:00:00Z\",\n  \"responsible_person_id\": \"{{user_id}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -6273,6 +8614,233 @@
                     "{{incident_id}}"
                   ],
                   "query": []
+                }
+              }
+            },
+            {
+              "name": "Send Incident For Review",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/incidents/{{incident_id}}/send-for-review",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "incidents",
+                    "{{incident_id}}",
+                    "send-for-review"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"responsible_person_id\": \"{{user_id}}\",\n  \"reviewer_id\": \"{{reviewer_id}}\",\n  \"due_date\": \"2026-03-15T00:00:00Z\",\n  \"instructions\": \"Please review the attached evidence and determine root cause classification.\",\n  \"comment\": \"Attaching initial evidence files for review. Please see the access logs and screenshot.\",\n  \"file_urls\": [\n    \"https://storage.example.com/incidents/access-log-2026-02-19.pdf\",\n    \"https://storage.example.com/incidents/screenshot-failed-logins.png\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Incident Log",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/incidents/{{incident_id}}/logs",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "incidents",
+                    "{{incident_id}}",
+                    "logs"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Add Responsible Submission",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/incidents/{{incident_id}}/logs/responsible",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "incidents",
+                    "{{incident_id}}",
+                    "logs",
+                    "responsible"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"comment\": \"Following up on the initial report. Attached is the full audit trail and corrective action evidence.\",\n  \"file_urls\": [\n    \"https://storage.example.com/incidents/audit-trail-full.pdf\",\n    \"https://storage.example.com/incidents/corrective-action-evidence.pdf\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Add Reviewer Submission",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/incidents/{{incident_id}}/logs/reviewer",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "incidents",
+                    "{{incident_id}}",
+                    "logs",
+                    "reviewer"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"comment\": \"Reviewed the audit trail. The root cause classification looks correct. Please provide evidence that MFA has been enforced for all affected accounts before I can close this.\",\n  \"file_urls\": [\n    \"https://storage.example.com/incidents/reviewer-notes-2026-02-19.pdf\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Resolve Incident",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/incidents/{{incident_id}}/resolve",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "incidents",
+                    "{{incident_id}}",
+                    "resolve"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Reject Incident",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/incidents/{{incident_id}}/reject",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "incidents",
+                    "{{incident_id}}",
+                    "reject"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
                 }
               }
             }
@@ -6756,7 +9324,8 @@
                     "{{workflow_id}}"
                   ],
                   "query": []
-                }
+                },
+                "description": "Deletes a workflow by ID. Workflow must belong to the organization. Returns error if workflow has active (non-finalized) instances - all instances must be finalized or canceled first. CASCADE deletes all related: states, transitions, instances, approvals, tasks, and events."
               }
             },
             {
@@ -7928,7 +10497,314 @@
       ]
     },
     {
-      "name": "11. Risk Matrix & Budget",
+      "name": "11. Audit Memos",
+      "item": [
+        {
+          "name": "Memos",
+          "item": [
+            {
+              "name": "Create Audit Memo",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/audit-plans/{{audit_plan_id}}/memo",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit-plans",
+                    "{{audit_plan_id}}",
+                    "memo"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"subject\": \"Audit Planning Memo\",\n  \"content\": \"This memo documents the audit planning phase findings and recommendations for the engagement.\",\n  \"status\": \"DRAFT\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Audit Memo",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/audit-plans/{{audit_plan_id}}/memo",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit-plans",
+                    "{{audit_plan_id}}",
+                    "memo"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Audit Memo",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/audit-plans/{{audit_plan_id}}/memo",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit-plans",
+                    "{{audit_plan_id}}",
+                    "memo"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"subject\": \"Updated Audit Memo\",\n  \"content\": \"Updated memo content with additional audit findings and observations.\",\n  \"status\": \"IN_REVIEW\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Audit Memo",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/audit-plans/{{audit_plan_id}}/memo",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit-plans",
+                    "{{audit_plan_id}}",
+                    "memo"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Memo History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/audit-plans/{{audit_plan_id}}/memo/history",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit-plans",
+                    "{{audit_plan_id}}",
+                    "memo",
+                    "history"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Memo Templates",
+          "item": [
+            {
+              "name": "Create Memo Template",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/memo-templates",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "memo-templates"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Standard Audit Memo Template\",\n  \"description\": \"Template for standard audit planning memos\",\n  \"category\": \"AUDIT_PLANNING\",\n  \"html\": \"<h1>Audit Memo</h1><p>Audit engagement details and findings will be documented here.</p>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Memo Templates",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/memo-templates?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "memo-templates"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Memo Template",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/memo-templates/{{memo_template_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "memo-templates",
+                    "{{memo_template_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Audit Memo Template\",\n  \"description\": \"Updated template for audit memos\",\n  \"category\": \"AUDIT_PLANNING\",\n  \"html\": \"<h1>Audit Memo</h1><p>Updated template content for audit engagement documentation.</p>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Memo Template",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/memo-templates/{{memo_template_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "memo-templates",
+                    "{{memo_template_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12. Risk Matrix & Budget",
       "item": [
         {
           "name": "Risk Matrix",
@@ -8383,6 +11259,1291 @@
           ]
         }
       ]
+    },
+    {
+      "name": "13. Data Sources",
+      "item": [
+        {
+          "name": "Data Sources",
+          "item": [
+            {
+              "name": "Get Available Data Sources",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/data-sources",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "data-sources"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Data Source Data by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/data-sources/{{data_source_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "data-sources",
+                    "{{data_source_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guides",
+          "item": [
+            {
+              "name": "Risk Guide Data Sources",
+              "item": [
+                {
+                  "name": "Risk Findings Grading (Risk Reports)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/data-sources/risk_findings_grading_risk?widget_type=table",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "data-sources",
+                        "risk_findings_grading_risk"
+                      ],
+                      "query": [
+                        {
+                          "key": "widget_type",
+                          "value": "table"
+                        },
+                        {
+                          "key": "report_guide_id",
+                          "value": "{{report_guide_id}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Risk findings grading for risk report guides with severity levels and color mappings"
+                  }
+                },
+                {
+                  "name": "Controls Assessment Guide (Risk Reports)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/data-sources/controls_assessment_guide_risk?widget_type=table",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "data-sources",
+                        "controls_assessment_guide_risk"
+                      ],
+                      "query": [
+                        {
+                          "key": "widget_type",
+                          "value": "table"
+                        },
+                        {
+                          "key": "report_guide_id",
+                          "value": "{{report_guide_id}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Controls assessment criteria for risk report guides with rating levels and descriptions"
+                  }
+                },
+                {
+                  "name": "Audit Criteria Rating (Risk Reports)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/data-sources/audit_criteria_rating_risk?widget_type=table",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "data-sources",
+                        "audit_criteria_rating_risk"
+                      ],
+                      "query": [
+                        {
+                          "key": "widget_type",
+                          "value": "table"
+                        },
+                        {
+                          "key": "report_guide_id",
+                          "value": "{{report_guide_id}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Audit criteria rating guide for risk reports with rating scales and color codes"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Audit Guide Data Sources",
+              "item": [
+                {
+                  "name": "Risk Findings Grading (Audit Reports)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/data-sources/risk_findings_grading_audit?widget_type=table",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "data-sources",
+                        "risk_findings_grading_audit"
+                      ],
+                      "query": [
+                        {
+                          "key": "widget_type",
+                          "value": "table"
+                        },
+                        {
+                          "key": "report_guide_id",
+                          "value": "{{report_guide_id}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Risk findings grading for audit report guides with severity levels and color mappings"
+                  }
+                },
+                {
+                  "name": "Controls Assessment Guide (Audit Reports)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/data-sources/controls_assessment_guide_audit?widget_type=table",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "data-sources",
+                        "controls_assessment_guide_audit"
+                      ],
+                      "query": [
+                        {
+                          "key": "widget_type",
+                          "value": "table"
+                        },
+                        {
+                          "key": "report_guide_id",
+                          "value": "{{report_guide_id}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Controls assessment criteria for audit report guides with rating levels and descriptions"
+                  }
+                },
+                {
+                  "name": "Audit Criteria Rating (Audit Reports)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/data-sources/audit_criteria_rating_audit?widget_type=table",
+                      "protocol": "http",
+                      "host": [
+                        "{{host}}"
+                      ],
+                      "port": "{{port}}",
+                      "path": [
+                        "api",
+                        "v1",
+                        "data-sources",
+                        "audit_criteria_rating_audit"
+                      ],
+                      "query": [
+                        {
+                          "key": "widget_type",
+                          "value": "table"
+                        },
+                        {
+                          "key": "report_guide_id",
+                          "value": "{{report_guide_id}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Audit criteria rating guide for audit reports with rating scales and color codes"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14. Reports",
+      "item": [
+        {
+          "name": "Reports",
+          "item": [
+            {
+              "name": "Create Report",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reports",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Q4 2025 Risk Assessment Report\",\n  \"description\": \"Comprehensive risk assessment for Q4\",\n  \"report_type\": \"risk\",\n  \"entity_id\": \"{{audit_plan_id}}\",\n  \"entity_type\": \"audit_plan\",\n  \"report_content\": {\n    \"sections\": [],\n    \"widgets\": []\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List All Reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reports?page=1&page_size=20&status=DRAFT",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    },
+                    {
+                      "key": "status",
+                      "value": "DRAFT"
+                    },
+                    {
+                      "key": "report_type",
+                      "value": "risk",
+                      "disabled": true
+                    },
+                    {
+                      "key": "entity_id",
+                      "value": "{{audit_plan_id}}",
+                      "disabled": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Report by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reports/{{report_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Report",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reports/{{report_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Q4 2025 Risk Assessment Report - Updated\",\n  \"description\": \"Updated comprehensive risk assessment for Q4\",\n  \"report_content\": {\n    \"sections\": [],\n    \"widgets\": []\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Report",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reports/{{report_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Submit Report for Approval",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reports/{{report_id}}/submit-for-approval",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}",
+                    "submit-for-approval"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Publish Report",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reports/{{report_id}}/publish",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    "{{report_id}}",
+                    "publish"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "15. Report Guides",
+      "item": [
+        {
+          "name": "Report Guides",
+          "item": [
+            {
+              "name": "Create Report Guide",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"report_type\": \"risk\",\n  \"name\": \"Risk Assessment Report Guide\",\n  \"description\": \"Guidelines for risk assessment reporting\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Report Guides",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides?page=1&page_size=20",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    },
+                    {
+                      "key": "report_type",
+                      "value": "risk",
+                      "disabled": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Report Guide by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Report Guide by Type",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/by-type?report_type=risk",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "by-type"
+                  ],
+                  "query": [
+                    {
+                      "key": "report_type",
+                      "value": "risk"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Report Guide",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Risk Assessment Report Guide\",\n  \"description\": \"Updated guidelines for risk assessment reporting\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Report Guide",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Child Guides by Type",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/child-guides?guide_type=RISK_FINDINGS_GRADING",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "child-guides"
+                  ],
+                  "query": [
+                    {
+                      "key": "guide_type",
+                      "value": "RISK_FINDINGS_GRADING",
+                      "description": "Type of child guide to fetch (RISK_FINDINGS_GRADING, CONTROLS_ASSESSMENT_GUIDE, AUDIT_CRITERIA_RATING)"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Risk Findings Grading",
+          "item": [
+            {
+              "name": "Create Risk Findings Grading",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/risk-findings-grading",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "risk-findings-grading"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"guide_type\": \"RISK_FINDINGS_GRADING\",\n  \"issue_rating\": \"Critical\",\n  \"term_rating\": \"HIGH\",\n  \"symbol\": \"H\",\n  \"color_hex\": \"#FF0000\",\n  \"description\": \"High risk findings requiring immediate attention\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Risk Findings Grading",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/risk-findings-grading",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "risk-findings-grading"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Risk Findings Grading by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/risk-findings-grading/{{grading_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "risk-findings-grading",
+                    "{{grading_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Risk Findings Grading",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/risk-findings-grading/{{grading_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "risk-findings-grading",
+                    "{{grading_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"guide_type\": \"RISK_FINDINGS_GRADING\",\n  \"issue_rating\": \"Very High\",\n  \"term_rating\": \"CRITICAL\",\n  \"symbol\": \"C\",\n  \"color_hex\": \"#DC143C\",\n  \"description\": \"Critical risk findings requiring urgent action\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Risk Findings Grading",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/risk-findings-grading/{{grading_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "risk-findings-grading",
+                    "{{grading_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Controls Assessment Guide",
+          "item": [
+            {
+              "name": "Create Controls Assessment Guide",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/controls-assessment-guide",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "controls-assessment-guide"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"guide_type\": \"CONTROLS_ASSESSMENT_GUIDE\",\n  \"control_name\": \"Access Control\",\n  \"assessment_desc\": \"Controls are operating effectively with proper access restrictions in place\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Controls Assessment Guide",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/controls-assessment-guide",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "controls-assessment-guide"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Controls Assessment Guide by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/controls-assessment-guide/{{assessment_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "controls-assessment-guide",
+                    "{{assessment_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Controls Assessment Guide",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/controls-assessment-guide/{{assessment_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "controls-assessment-guide",
+                    "{{assessment_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"guide_type\": \"CONTROLS_ASSESSMENT_GUIDE\",\n  \"control_name\": \"Data Encryption\",\n  \"assessment_desc\": \"Controls are operating at maximum effectiveness with full encryption implementation\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Controls Assessment Guide",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/controls-assessment-guide/{{assessment_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "controls-assessment-guide",
+                    "{{assessment_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Audit Criteria Rating",
+          "item": [
+            {
+              "name": "Create Audit Criteria Rating",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/audit-criteria-rating",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "audit-criteria-rating"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"guide_type\": \"AUDIT_CRITERIA_RATING\",\n  \"rating\": \"Satisfactory\",\n  \"criteria_desc\": \"Audit criteria met satisfactorily with all requirements fulfilled\",\n  \"color_hex\": \"#00FF00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Audit Criteria Rating",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/audit-criteria-rating",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "audit-criteria-rating"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Get Audit Criteria Rating by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/audit-criteria-rating/{{rating_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "audit-criteria-rating",
+                    "{{rating_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Update Audit Criteria Rating",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/audit-criteria-rating/{{rating_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "audit-criteria-rating",
+                    "{{rating_id}}"
+                  ],
+                  "query": []
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"guide_type\": \"AUDIT_CRITERIA_RATING\",\n  \"rating\": \"Excellent\",\n  \"criteria_desc\": \"Audit criteria exceeded expectations with outstanding performance\",\n  \"color_hex\": \"#00AA00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Audit Criteria Rating",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/report-guides/{{report_guide_id}}/audit-criteria-rating/{{rating_id}}",
+                  "protocol": "http",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "port": "{{port}}",
+                  "path": [
+                    "api",
+                    "v1",
+                    "report-guides",
+                    "{{report_guide_id}}",
+                    "audit-criteria-rating",
+                    "{{rating_id}}"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -8727,6 +12888,54 @@
       "value": "2025-12-31",
       "type": "string",
       "description": "Audit plan end date (YYYY-MM-DD format). Optional - defaults to 1 month after engagement date if not provided"
+    },
+    {
+      "key": "memo_template_id",
+      "value": "",
+      "type": "string",
+      "description": "From create memo template response"
+    },
+    {
+      "key": "data_source_id",
+      "value": "",
+      "type": "string",
+      "description": "Data source ID for fetching specific data source data"
+    },
+    {
+      "key": "report_id",
+      "value": "",
+      "type": "string",
+      "description": "From create report response"
+    },
+    {
+      "key": "report_guide_id",
+      "value": "",
+      "type": "string",
+      "description": "From create report guide response"
+    },
+    {
+      "key": "grading_id",
+      "value": "",
+      "type": "string",
+      "description": "From create risk findings grading response"
+    },
+    {
+      "key": "assessment_id",
+      "value": "",
+      "type": "string",
+      "description": "From create controls assessment guide response"
+    },
+    {
+      "key": "rating_id",
+      "value": "",
+      "type": "string",
+      "description": "From create audit criteria rating response"
+    },
+    {
+      "key": "general_work_paper_id",
+      "value": "",
+      "type": "string",
+      "description": "From create general work paper response"
     }
   ]
 }

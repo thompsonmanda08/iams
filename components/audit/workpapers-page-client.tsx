@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Download, FileCode } from "lucide-react";
 import { WorkpapersTable } from "./workpapers-table";
-import { WorkpaperTemplateDialog } from "../../app/dashboard/system-configs/audit-settings/_components/workpaper-template-dialog";
+import { WorkpaperTemplateDialog } from "../../app/dashboard/system-configs/audit-settings/_components/samples/workpaper-template-dialog";
 import type { Workpaper, AuditPlan, CustomTemplate } from "@/lib/types/audit-types";
 import Link from "next/link";
 import { Pagination } from "@/lib/types";

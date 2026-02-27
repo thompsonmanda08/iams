@@ -644,3 +644,149 @@ export async function deleteIndicativeTarget(id: string): Promise<APIResponse> {
     return handleError(error, "DELETE", url);
   }
 }
+
+// ============================================================================
+// GENERAL WORK PAPER CONFIGS CRUD
+// ============================================================================
+
+export type WorkPaperFieldType = "text" | "number" | "date" | "boolean" | "select" | "textarea";
+
+export interface WorkPaperConfigColumn {
+  key: string;         // snake_case identifier, e.g. "invoice_number"
+  name: string;        // Display label, e.g. "Invoice Number"
+  type: WorkPaperFieldType;
+  required: boolean;
+  description?: string;
+  order?: number;      // auto-generated from array position before sending
+}
+
+export interface WorkPaperConfigKey {
+  key: string;
+  name: string;
+  type: WorkPaperFieldType;
+  required: boolean;
+  description?: string;
+  order?: number;
+}
+
+export interface CreateGeneralWorkPaperConfigPayload {
+  template_id: string;
+  columns: WorkPaperConfigColumn[];
+  keys: WorkPaperConfigKey[];   // required — defines the lookup/identifier fields
+}
+
+export interface UpdateGeneralWorkPaperConfigPayload {
+  columns: WorkPaperConfigColumn[];
+  keys: WorkPaperConfigKey[];
+}
+
+/**
+ * Get general work paper config by ID
+ * Endpoint: GET /api/v1/general-work-paper-configs/{config_id}
+ */
+export async function getGeneralWorkPaperConfig(configId: string): Promise<APIResponse> {
+  const url = `/api/v1/general-work-paper-configs/${configId}`;
+
+  if (!configId) {
+    return handleBadRequest("Config ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({ url, method: "GET" });
+    return successResponse(response?.data?.data ?? response?.data, "Config fetched successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "GET", url);
+  }
+}
+
+/**
+ * Create general work paper config
+ * Endpoint: POST /api/v1/general-work-paper-configs
+ */
+export async function createGeneralWorkPaperConfig(
+  data: CreateGeneralWorkPaperConfigPayload
+): Promise<APIResponse> {
+  const url = `/api/v1/general-work-paper-configs`;
+
+  if (!data.template_id) {
+    return handleBadRequest("Template ID is required");
+  }
+  if (!data.columns?.length) {
+    return handleBadRequest("At least one column is required");
+  }
+  if (!data.keys?.length) {
+    return handleBadRequest("At least one key is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      url,
+      method: "POST",
+      data: {
+        template_id: data.template_id,
+        columns: data.columns.map((col, i) => ({ ...col, order: i + 1 })),
+        keys: data.keys.map((k, i) => ({ ...k, order: i + 1 }))
+      }
+    });
+    revalidatePath("/dashboard/system-configs/audit-settings");
+    return successResponse(response?.data, "Work paper config created successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "POST", url);
+  }
+}
+
+/**
+ * Update general work paper config
+ * Endpoint: PUT /api/v1/general-work-paper-configs/{config_id}
+ */
+export async function updateGeneralWorkPaperConfig(
+  configId: string,
+  data: UpdateGeneralWorkPaperConfigPayload
+): Promise<APIResponse> {
+  const url = `/api/v1/general-work-paper-configs/${configId}`;
+
+  if (!configId) {
+    return handleBadRequest("Config ID is required");
+  }
+  if (!data.columns?.length) {
+    return handleBadRequest("At least one column is required");
+  }
+  if (!data.keys?.length) {
+    return handleBadRequest("At least one key is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      url,
+      method: "PUT",
+      data: {
+        columns: data.columns.map((col, i) => ({ ...col, order: i + 1 })),
+        keys: data.keys.map((k, i) => ({ ...k, order: i + 1 }))
+      }
+    });
+    revalidatePath("/dashboard/system-configs/audit-settings");
+    return successResponse(response?.data, "Work paper config updated successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "PUT", url);
+  }
+}
+
+/**
+ * Delete general work paper config
+ * Endpoint: DELETE /api/v1/general-work-paper-configs/{config_id}
+ */
+export async function deleteGeneralWorkPaperConfig(configId: string): Promise<APIResponse> {
+  const url = `/api/v1/general-work-paper-configs/${configId}`;
+
+  if (!configId) {
+    return handleBadRequest("Config ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({ url, method: "DELETE" });
+    revalidatePath("/dashboard/system-configs/audit-settings");
+    return successResponse(response?.data, "Work paper config deleted successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "DELETE", url);
+  }
+}

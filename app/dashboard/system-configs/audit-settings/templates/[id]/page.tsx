@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Layers, Plus } from "lucide-react";
+import { Layers, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +13,9 @@ import { format } from "date-fns";
 import { TemplateCategoriesTable } from "@/app/dashboard/system-configs/audit-settings/_components/template-categories-table";
 import PageHeader from "@/components/page-header";
 import BackButton from "@/components/back-button";
-import { CreateOrUpdateISOTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/create-workpaper-dialog";
+import { CreateWorkpaperTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/create-workpaper-dialog";
 import type { WorkpaperTemplate } from "@/lib/types/audit-types";
+import { GeneralTemplateConfigsForm } from "../../_components/general-workpaper-form";
 
 interface TemplateDetailPageProps {
   params: Promise<{
@@ -24,6 +25,9 @@ interface TemplateDetailPageProps {
 
 export default async function TemplateDetailPage({ params }: TemplateDetailPageProps) {
   const { id } = await params;
+  let categories = [];
+  let configurations = [];
+  let template = null;
 
   const [templateResponse, categoriesResponse] = await Promise.all([
     getWorkingPaperTemplate(id),
@@ -34,13 +38,17 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
     notFound();
   }
 
-  const template = templateResponse.success ? templateResponse.data?.data || [] : [];
-  const categories = categoriesResponse.success ? categoriesResponse.data?.data || [] : [];
+  template = templateResponse.success ? templateResponse.data?.data || [] : [];
+  const isISO27001 = template.framework_type.toUpperCase() !== "GENERAL";
 
-  // Only show edit button for ISO27001 framework type
-  const isISO27001 =
-    template.framework_type.toUpperCase() !== "CUSTOM" ||
-    template.framework_type.toUpperCase() !== "GENERAL";
+  if (template && template.framework_type.toUpperCase() !== "GENERAL") {
+    const categoriesResponse = await getTemplateCategories(id);
+    categories = categoriesResponse.success ? categoriesResponse.data?.data || [] : [];
+  } else {
+    // For GENERAL framework type, we show configurations instead of categories
+    const configsResponse = await getTemplateCategories(id);
+    configurations = configsResponse.success ? configsResponse.data?.data || [] : [];
+  }
 
   return (
     <div className="bg-background min-h-screen">
@@ -56,21 +64,11 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
 
             <div className="flex items-center gap-3">
               <BackButton className="mb-0 h-8!" title="Back to Templates" />
-              {isISO27001 ? (
-                <CreateOrUpdateISOTemplateDialog
-                  showTrigger={true}
-                  initialData={template as WorkpaperTemplate}
-                  templateId={id}
-                />
-              ) : (
-                <Link
-                  href={`/dashboard/system-configs/audit-settings/templates/${id}/edit?builderId=GENERAL&framework_type=CUSTOM`}>
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Manage General Template
-                  </Button>
-                </Link>
-              )}
+              <CreateWorkpaperTemplateDialog
+                showTrigger={true}
+                initialData={template as WorkpaperTemplate}
+                templateId={id}
+              />
             </div>
           </div>
         </div>
@@ -135,10 +133,21 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
           <Tabs defaultValue="categories" className="space-y-">
             <div className="flex items-center justify-between">
               <TabsList>
-                <TabsTrigger value="categories" className="gap-2">
-                  <Layers className="h-4 w-4" />
-                  Categories ({categories.length})
-                </TabsTrigger>
+                {isISO27001 ? (
+                  <>
+                    <TabsTrigger value="categories" className="gap-2">
+                      <Layers className="h-4 w-4" />
+                      Categories ({categories.length})
+                    </TabsTrigger>
+                  </>
+                ) : (
+                  <>
+                    <TabsTrigger value="configs" className="gap-2">
+                      <Layers className="h-4 w-4" />
+                      Configurations ({configurations.length})
+                    </TabsTrigger>
+                  </>
+                )}
               </TabsList>
               {isISO27001 ? (
                 <Link
@@ -150,17 +159,18 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                 </Link>
               ) : (
                 <Link
-                  href={`/dashboard/system-configs/audit-settings/templates/${id}/edit?builderId=${(
-                    template.framework_type ||
-                    template.standard ||
-                    ""
-                  ).toUpperCase()}&framework_type=${(template.framework_type || template.standard || "").toUpperCase()}`}>
+                  href={`/dashboard/system-configs/audit-settings/templates/${id}/edit?builderId=GENERAL`}>
                   <Button size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Manage Categories
+                    <Settings className="mr-2 h-4 w-4" />
+                    Manage Configs
                   </Button>
                 </Link>
               )}
+              {/* UPDATE MODAL */}
+              <CreateWorkpaperTemplateDialog
+                showTrigger={true}
+                initialData={template} 
+              />
             </div>
 
             <TabsContent value="categories" className="space-y-">
@@ -169,6 +179,10 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                 templateId={id}
                 frameworkType={template.framework_type || template.standard || "ISO27001"}
               />
+            </TabsContent>
+            <TabsContent value="configs" className="space-y-">
+              {/* THIS WILL BE THE DISPLAY AND NOT THE FORM - THE FORM WILL BE ON:  */}
+              <GeneralTemplateConfigsForm configs={configurations} templateId={id} />
             </TabsContent>
           </Tabs>
         </div>
