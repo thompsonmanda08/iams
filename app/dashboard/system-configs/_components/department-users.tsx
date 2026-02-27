@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, PropsWithChildren, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +14,8 @@ import {
 import {
   Plus,
   Trash2,
-  Building,
   PencilLine,
   ShieldAlert,
-  ArrowRight,
   ArrowUpRightIcon,
   Users2,
   View,
@@ -37,11 +35,10 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   updateDepartment,
-  deleteDepartment,
   createDepartment,
   getRoles
 } from "@/app/_actions/config-actions";
-import { updateUser } from "@/app/_actions/user-actions";
+import { updateUser, getUsers } from "@/app/_actions/user-actions";
 import { useRouter, useParams } from "next/navigation";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -56,16 +53,15 @@ import {
 import CustomAlert from "@/components/ui/custom-alert";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { useDepartments } from "@/hooks/use-query-data";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User } from "@/lib/types/account";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
 import { usePermissions } from "@/hooks/use-permissions";
+import { CustomPagination } from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function DepartmentUsersConfig({ users = [] }: { users: DepartmentUser[] }) {
+export default function DepartmentUsersConfig() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const params = useParams();
@@ -76,6 +72,37 @@ export default function DepartmentUsersConfig({ users = [] }: { users: Departmen
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [userToRemove, setUserToRemove] = useState<DepartmentUser | null>(null);
   const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
+  const [paginationParams, setPaginationParams] = useState({ page: 1, page_size: 10 });
+
+  const { data: usersResponse, isLoading } = useQuery({
+    queryKey: [QUERY_KEYS.USERS, departmentId, paginationParams.page, paginationParams.page_size],
+    queryFn: () =>
+      getUsers({
+        departmentId,
+        page: paginationParams.page,
+        page_size: paginationParams.page_size
+      }),
+    enabled: !!departmentId
+  });
+
+  const users = (usersResponse?.data?.data || []) as DepartmentUser[];
+  const paginationMeta = usersResponse?.data?.pagination;
+
+  const customPaginationData = {
+    page: paginationMeta?.page || paginationParams.page,
+    page_size: paginationMeta?.page_size || paginationParams.page_size,
+    total_pages: paginationMeta?.total_pages || 0,
+    totalCount: paginationMeta?.total || 0,
+    has_prev: paginationMeta?.has_prev || false,
+    has_next: paginationMeta?.has_next || false
+  };
+
+  const updatePagination = ({ page, page_size }: { page: number; page_size?: number }) => {
+    setPaginationParams((prev) => ({
+      page: page_size ? 1 : page,
+      page_size: page_size ?? prev.page_size
+    }));
+  };
 
   return (
     <>
@@ -99,15 +126,26 @@ export default function DepartmentUsersConfig({ users = [] }: { users: Departmen
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-32 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                  <TableCell><Skeleton className="ml-auto h-8 w-48" /></TableCell>
+                </TableRow>
+              ))
+            ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   <div className="col-span-full">
                     <Empty>
                       <EmptyHeader>
@@ -142,6 +180,11 @@ export default function DepartmentUsersConfig({ users = [] }: { users: Departmen
                   <TableCell>
                     <span className="font-medium">
                       {user.first_name} {user.last_name}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">
+                      {(user as any).department?.name ?? user.department ?? "—"}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -195,6 +238,16 @@ export default function DepartmentUsersConfig({ users = [] }: { users: Departmen
             )}
           </TableBody>
         </Table>
+
+        {!isLoading && users.length > 0 && (
+          <CustomPagination
+            pagination={customPaginationData}
+            updatePagination={updatePagination}
+            allowSetPageSize
+            showDetails
+            className="mt-2 border-t"
+          />
+        )}
       </Card>
 
       {/* Edit User Role Dialog */}

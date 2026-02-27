@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { InfoIcon, ShieldIcon, Plus, Edit } from "lucide-react";
+import { InfoIcon, ShieldIcon, Plus, Edit, ShieldCheck, ShieldX } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
@@ -19,11 +18,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
-  getRoles,
   getDepartmentModules,
   createRole,
-  updateRole,
-  deleteRole
+  updateRole
 } from "@/app/_actions/config-actions";
 import { getRolePermissions, bulkUpdateRolePermissions } from "@/app/_actions/permissions-actions";
 import { toast } from "sonner";
@@ -109,7 +106,6 @@ const formatModuleName = (name: string, moduleCode?: string): string => {
 };
 
 export default function UserRolesConfig({ departmentId }: RolesPermissionsProps) {
-  const router = useRouter();
   const { checkPermission } = usePermissions();
 
   const queryClient = useQueryClient();
@@ -257,6 +253,72 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
           [permissionType]: newValue
         }
       };
+    });
+    setHasChanges(true);
+  };
+
+  const grantAllPermissions = () => {
+    setPermissionsMatrix((prev) => {
+      const updated = { ...prev };
+      modules.forEach((module) => {
+        updated[module.id] = {
+          can_view: true,
+          can_create: true,
+          can_edit: true,
+          can_delete: true,
+          can_approve: true,
+          can_export: true,
+          can_assign: true,
+          can_configure: true
+        };
+      });
+      return updated;
+    });
+    setHasChanges(true);
+  };
+
+  const revokeAllPermissions = () => {
+    setPermissionsMatrix((prev) => {
+      const updated = { ...prev };
+      modules.forEach((module) => {
+        updated[module.id] = {
+          can_view: false,
+          can_create: false,
+          can_edit: false,
+          can_delete: false,
+          can_approve: false,
+          can_export: false,
+          can_assign: false,
+          can_configure: false
+        };
+      });
+      return updated;
+    });
+    setHasChanges(true);
+  };
+
+  const toggleColumnPermissions = (permType: PermissionType) => {
+    const allEnabled = modules.every(
+      (module) => permissionsMatrix[module.id]?.[permType] === true
+    );
+    setPermissionsMatrix((prev) => {
+      const updated = { ...prev };
+      modules.forEach((module) => {
+        updated[module.id] = {
+          ...(updated[module.id] || {
+            can_view: false,
+            can_create: false,
+            can_edit: false,
+            can_delete: false,
+            can_approve: false,
+            can_export: false,
+            can_assign: false,
+            can_configure: false
+          }),
+          [permType]: !allEnabled
+        };
+      });
+      return updated;
     });
     setHasChanges(true);
   };
@@ -611,12 +673,36 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
           {selectedRole && (
             <Card>
               <CardHeader>
-                <CardTitle>
-                  Permissions for {roles.find((r) => r.id === selectedRole)?.name}
-                </CardTitle>
-                <CardDescription>
-                  Configure which modules and actions this role can access
-                </CardDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle>
+                      Permissions for {roles.find((r) => r.id === selectedRole)?.name}
+                    </CardTitle>
+                    <CardDescription>
+                      Configure which modules and actions this role can access
+                    </CardDescription>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={grantAllPermissions}
+                      disabled={isSaving}
+                      className="gap-1.5">
+                      <ShieldCheck className="h-4 w-4 text-green-600" />
+                      Grant All
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={revokeAllPermissions}
+                      disabled={isSaving}
+                      className="gap-1.5">
+                      <ShieldX className="h-4 w-4 text-destructive" />
+                      Revoke All
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {permissionsLoading ? (
@@ -630,23 +716,52 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
                       <TableHeader>
                         <TableRow>
                           <TableHead>Module</TableHead>
-                          {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
-                            <TableHead key={key} className="text-center">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <div className="flex items-center justify-center gap-1">
-                                      {label}
-                                      <InfoIcon className="text-muted-foreground h-3 w-3" />
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{key}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </TableHead>
-                          ))}
+                          {Object.entries(PERMISSION_LABELS).map(([key, label]) => {
+                            const permType = key as PermissionType;
+                            const allEnabled = modules.every(
+                              (m) => permissionsMatrix[m.id]?.[permType] === true
+                            );
+                            const someEnabled = modules.some(
+                              (m) => permissionsMatrix[m.id]?.[permType] === true
+                            );
+                            return (
+                              <TableHead key={key} className="text-center">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div
+                                        role="button"
+                                        tabIndex={isSaving ? -1 : 0}
+                                        onClick={() => !isSaving && toggleColumnPermissions(permType)}
+                                        onKeyDown={(e) => e.key === "Enter" && !isSaving && toggleColumnPermissions(permType)}
+                                        className="hover:text-primary mx-auto flex cursor-pointer flex-col items-center gap-1 transition-colors aria-disabled:opacity-50"
+                                        aria-disabled={isSaving}>
+                                        <div className="flex items-center gap-1">
+                                          {label}
+                                          <InfoIcon className="text-muted-foreground h-3 w-3" />
+                                        </div>
+                                        <Checkbox
+                                          checked={allEnabled}
+                                          data-state={
+                                            allEnabled
+                                              ? "checked"
+                                              : someEnabled
+                                                ? "indeterminate"
+                                                : "unchecked"
+                                          }
+                                          className="pointer-events-none h-3.5 w-3.5"
+                                          aria-label={`Toggle all ${label} permissions`}
+                                        />
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{allEnabled ? "Disable" : "Enable"} all {label} permissions</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </TableHead>
+                            );
+                          })}
                         </TableRow>
                       </TableHeader>
                       <TableBody>

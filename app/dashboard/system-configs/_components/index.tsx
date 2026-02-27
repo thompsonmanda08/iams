@@ -453,9 +453,13 @@ export function ModuleSelection({
       // Check if this is a parent module (no parent_module_id)
       const isParentModule = !clickedModule.parent_module_id;
 
-      // Find all children of this module (if it's a parent)
+      // Find children from categorizeModules — consistent with what is rendered in the UI.
+      // Avoids mismatches when children were matched via href/module_code fallback rather
+      // than by a strict parent_module_id relationship.
       const childModuleIds = isParentModule
-        ? modules.filter((m) => m.parent_module_id === moduleId).map((m) => m.backendKey)
+        ? (Object.values(categorizeModules).find(
+            (cat) => cat.parent?.backendKey === moduleId
+          )?.children.map((c) => c.backendKey) ?? [])
         : [];
 
       // Find the parent of this module (if it's a child)

@@ -663,6 +663,7 @@ export async function createWorkingPaperTemplate(data: {
 
     revalidatePath("/dashboard/audit/templates");
     revalidatePath("/dashboard/system-configs/audit-settings");
+    revalidatePath("/dashboard/system-configs/audit-settings/templates");
 
     return successResponse(response.data, "Working paper template created successfully");
   } catch (error: any) {
@@ -701,6 +702,7 @@ export async function updateWorkingPaperTemplate(
 
     revalidatePath("/dashboard/audit/templates");
     revalidatePath(`/dashboard/audit/templates/${templateId}`);
+    revalidatePath("/dashboard/system-configs/audit-settings/templates");
 
     return successResponse(response.data, "Working paper template updated successfully");
   } catch (error: any) {

@@ -1,14 +1,18 @@
 import { Suspense } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
-import Link from "next/link";
 import { getWorkingPaperTemplates } from "@/app/_actions/audit-module-actions";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
+import { CreateWorkpaperTemplateDialog } from "@/app/dashboard/system-configs/audit-settings/_components/create-workpaper-dialog";
 import PageHeader from "@/components/page-header";
 
 export default async function WorkpaperTemplatesPage() {
   const templatesResponse = await getWorkingPaperTemplates();
-  const templates = templatesResponse.success ? templatesResponse.data?.data : [];
+  const rawTemplates = templatesResponse.success ? (templatesResponse.data?.data ?? []) : [];
+
+  // Sort newest first
+  const templates = [...rawTemplates].sort(
+    (a: any, b: any) =>
+      new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+  );
 
 
 
@@ -24,26 +28,7 @@ export default async function WorkpaperTemplatesPage() {
               icon="FileCode2"
             />
 
-            <div className="flex gap-2">
-              <Link href="/dashboard/system-configs/audit-settings/templates/new/CUSTOM">
-                <Button variant="outline" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Custom Template
-                </Button>
-              </Link>
-              <Link href="/dashboard/system-configs/audit-settings/templates/new/GENERAL">
-                <Button variant="outline" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create General Template
-                </Button>
-              </Link>
-              <Link href="/dashboard/system-configs/audit-settings/templates/new/ISO27001">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create ISO27001 Template
-                </Button>
-              </Link>
-            </div>
+            <CreateWorkpaperTemplateDialog showTrigger={true} />
           </div>
         </div>
       </div>

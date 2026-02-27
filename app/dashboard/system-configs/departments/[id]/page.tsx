@@ -2,8 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleSelection } from "../../_components";
 import { FolderCogIcon, UserLock, Users } from "lucide-react";
-import { Department, DepartmentUser } from "@/lib/types";
-import { getUsers } from "@/app/_actions/user-actions";
+import { Department } from "@/lib/types";
 import { getDepartmentById } from "@/app/_actions/config-actions";
 import { notFound } from "next/navigation";
 import DepartmentUsersConfig, {
@@ -18,14 +17,8 @@ export default async function DepartmentDetailsPage({
 }) {
   const departmentId = (await params).id;
 
-  const [userResponse, departmentResponse] = await Promise.all([
-    getUsers({ page: 1, page_size: 100, departmentId }),
-    getDepartmentById(departmentId)
-  ]);
+  const departmentResponse = await getDepartmentById(departmentId);
 
-  const users = userResponse.success
-    ? ((userResponse?.data?.data || []) as DepartmentUser[])
-    : ([] as DepartmentUser[]);
   const department = departmentResponse.success
     ? ((departmentResponse?.data || {}) as Department)
     : null;
@@ -87,7 +80,7 @@ export default async function DepartmentDetailsPage({
 
         {/* Users */}
         <TabsContent value="users">
-          <DepartmentUsersConfig users={users} />
+          <DepartmentUsersConfig />
         </TabsContent>
 
         {/* Roles & Permissions */}

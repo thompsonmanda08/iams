@@ -17,6 +17,7 @@ import { notify } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ErrorState } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
+import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 
 export const FRAMEWORK_TYPES = [
   { id: "ISO27001", name: "ISO 27001 Audit" },
@@ -82,9 +83,10 @@ export function WorkpaperTemplateForm({
           description: `Working paper template ${templateId ? "updated" : "created"} successfully`,
           type: "success"
         });
-        // queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
+        queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
         setFormData(INIT_WORKPAPER_TEMPLATE);
         setError({ status: false, message: "" });
+        router.refresh();
         onSuccess?.();
       } else {
         notify({

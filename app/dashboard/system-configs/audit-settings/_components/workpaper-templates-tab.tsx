@@ -27,7 +27,10 @@ export default function WorkpaperTemplatesTab() {
   const { checkPermission } = usePermissions();
 
   const { data: response, isFetching } = useWorkpaperTemplates({ page, page_size: pageSize });
-  const templates = (response?.data?.data as WorkingPaperTemplate[]) || [];
+  const rawTemplates = (response?.data?.data as (WorkingPaperTemplate & { created_at?: string })[]) || [];
+  const templates = [...rawTemplates].sort(
+    (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+  );
   const paginationData = response?.data?.pagination as Pagination;
 
   const handleOpenCreateDialog = () => {

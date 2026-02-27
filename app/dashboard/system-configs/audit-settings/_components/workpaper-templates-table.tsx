@@ -15,21 +15,12 @@ import { Trash2, Pencil, View, ClipboardCheck, Plus } from "lucide-react";
 import { CreateWorkpaperTemplateDialog } from "./create-workpaper-dialog";
 import { format } from "date-fns";
 import Link from "next/link";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { deleteWorkingPaperTemplate } from "@/app/_actions/audit-module-actions";
 import { useToast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/status-badge";
-
-import { Spinner } from "../../../../../components/ui/spinner";
+import { useQueryClient } from "@tanstack/react-query";
+import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -57,6 +48,7 @@ export function WorkpaperTemplatesTable({
   onCreateClick
 }: WorkpaperTemplatesTableProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -73,17 +65,20 @@ export function WorkpaperTemplatesTable({
 
   const handleEditClick = (template: WorkingPaperTemplate) => {
     if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
-    const frameworkType = (template.framework_type || "").toUpperCase();
-    const isStandardFramework = ["ISO27001", "COSO", "COBIT", "NIST"].includes(frameworkType);
 
-    if (isStandardFramework) {
-      // Open modal for standard frameworks
-      setTemplateToEdit(template);
-      setIsEditModalOpen(true);
-    } else {
-      // Route to edit page for custom/general frameworks
-      router.push(`/dashboard/system-configs/audit-settings/templates/${template.id}/edit`);
-    }
+    // setTemplateToEdit(template);
+    setTemplateToEdit({
+      id: template.id,
+      name: template.name,
+      standard: template.standard,
+      description: template.description,
+      version: template.version,
+      is_active: template.is_active || true,
+      framework_type: template.framework_type,
+      created_at: template.created_at,
+      updated_at: template.updated_at
+    });
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -98,6 +93,7 @@ export function WorkpaperTemplatesTable({
           title: "Success",
           description: "Template deleted successfully"
         });
+        queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
         setDeleteDialogOpen(false);
         setTemplateToDelete(null);
         router.refresh();
@@ -270,33 +266,14 @@ export function WorkpaperTemplatesTable({
       </Table>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{templateToDelete?.name}&quot;? This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {isDeleting ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Template"
+        description={`Are you sure you want to delete "${templateToDelete?.name}"? This action cannot be undone.`}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleting}
+      />
 
       {/* Edit Modal for Standard Frameworks */}
       {templateToEdit && (
