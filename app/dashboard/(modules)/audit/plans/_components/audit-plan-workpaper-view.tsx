@@ -34,6 +34,7 @@ import {
 import { AuditClosureReview } from "./audit-closure-review";
 import { AuditPlanTasksPanel } from "./audit-plan-tasks-panel";
 import { ComplianceAuditWorkpaperTab } from "./compliance-workpaper-tab";
+import { GeneralAuditWorkpaperTab } from "./general-audit-workpaper-tab";
 import { AuditPlanReportTab } from "./audit-plan-report-tab";
 import { usePermissions } from "@/hooks/use-permissions";
 import { AuditPlanDetailsTab } from "./plan-details-tab";
@@ -382,19 +383,23 @@ export function AuditPlanWorkpaperView({
 
         {/* Workpaper Tab */}
         <TabsContent value="workpaper" className="space-y-4">
-          <ComplianceAuditWorkpaperTab
-            auditPlan={auditPlan}
-            findings={findings}
-            workpaperCategories={workpaperCategories}
-            categoriesFromFindings={categoriesFromFindings}
-            completionStats={completionStats}
-            selectedCategoryId={selectedCategoryId}
-            setSelectedCategoryId={setSelectedCategoryId}
-            editingFinding={editingFinding}
-            setEditingFinding={setEditingFinding}
-            onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
-            isSubmitting={isSubmitting}
-          />
+          {auditPlan.framework_type?.toUpperCase() === "GENERAL" ? (
+            <GeneralAuditWorkpaperTab auditPlan={auditPlan} />
+          ) : (
+            <ComplianceAuditWorkpaperTab
+              auditPlan={auditPlan}
+              findings={findings}
+              workpaperCategories={workpaperCategories}
+              categoriesFromFindings={categoriesFromFindings}
+              completionStats={completionStats}
+              selectedCategoryId={selectedCategoryId}
+              setSelectedCategoryId={setSelectedCategoryId}
+              editingFinding={editingFinding}
+              setEditingFinding={setEditingFinding}
+              onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
+              isSubmitting={isSubmitting}
+            />
+          )}
         </TabsContent>
 
         {/* Findings Tab */}

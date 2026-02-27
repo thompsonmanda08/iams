@@ -681,6 +681,30 @@ export interface UpdateGeneralWorkPaperConfigPayload {
 }
 
 /**
+ * Get all configs for a general work paper template
+ * Endpoint: GET /api/v1/general-work-paper-templates/{template_id}/configs
+ */
+export async function getGeneralWorkPaperConfigsByTemplateId(
+  templateId: string
+): Promise<APIResponse> {
+  const url = `/api/v1/general-work-paper-templates/${templateId}/configs`;
+
+  if (!templateId) {
+    return handleBadRequest("Template ID is required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({ url, method: "GET" });
+    return successResponse(
+      response?.data?.configs ?? response?.data?.data ?? response?.data,
+      "Configs fetched successfully"
+    );
+  } catch (error: Error | any) {
+    return handleError(error, "GET", url);
+  }
+}
+
+/**
  * Get general work paper config by ID
  * Endpoint: GET /api/v1/general-work-paper-configs/{config_id}
  */
@@ -728,8 +752,8 @@ export async function createGeneralWorkPaperConfig(
         keys: data.keys.map((k, i) => ({ ...k, order: i + 1 }))
       }
     });
-    revalidatePath("/dashboard/system-configs/audit-settings");
-    return successResponse(response?.data, "Work paper config created successfully");
+    revalidatePath("/dashboard/system-configs/audit-settings", "layout");
+    return successResponse(response?.data?.data ?? response?.data, "Work paper config created successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);
   }
@@ -764,8 +788,8 @@ export async function updateGeneralWorkPaperConfig(
         keys: data.keys.map((k, i) => ({ ...k, order: i + 1 }))
       }
     });
-    revalidatePath("/dashboard/system-configs/audit-settings");
-    return successResponse(response?.data, "Work paper config updated successfully");
+    revalidatePath("/dashboard/system-configs/audit-settings", "layout");
+    return successResponse(response?.data?.data ?? response?.data, "Work paper config updated successfully");
   } catch (error: Error | any) {
     return handleError(error, "PUT", url);
   }

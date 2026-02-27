@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Layers, Plus, Settings } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import {
   getWorkingPaperTemplate,
   getTemplateCategories
 } from "@/app/_actions/audit-module-actions";
+import { getGeneralWorkPaperConfigsByTemplateId } from "@/app/_actions/audit-settings-actions";
 import { format } from "date-fns";
 import { TemplateCategoriesTable } from "@/app/dashboard/system-configs/audit-settings/_components/template-categories-table";
 import PageHeader from "@/components/page-header";
@@ -27,27 +28,24 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
   const { id } = await params;
   let categories = [];
   let configurations = [];
-  let template = null;
 
-  const [templateResponse, categoriesResponse] = await Promise.all([
-    getWorkingPaperTemplate(id),
-    getTemplateCategories(id)
-  ]);
+  const templateResponse = await getWorkingPaperTemplate(id);
 
   if (!templateResponse.success || !templateResponse.data) {
     notFound();
   }
 
-  template = templateResponse.success ? templateResponse.data?.data || [] : [];
-  const isISO27001 = template.framework_type.toUpperCase() !== "GENERAL";
+  const template = templateResponse.data?.data || [];
+  const isISO27001 = template.framework_type?.toUpperCase() !== "GENERAL";
 
-  if (template && template.framework_type.toUpperCase() !== "GENERAL") {
+  if (isISO27001) {
     const categoriesResponse = await getTemplateCategories(id);
     categories = categoriesResponse.success ? categoriesResponse.data?.data || [] : [];
   } else {
-    // For GENERAL framework type, we show configurations instead of categories
-    const configsResponse = await getTemplateCategories(id);
-    configurations = configsResponse.success ? configsResponse.data?.data || [] : [];
+    const configsResponse = await getGeneralWorkPaperConfigsByTemplateId(id);
+    configurations = configsResponse.success ? configsResponse.data?.configs[1] || [] : [];
+
+    console.log("General Configurations:", configurations);
   }
 
   return (
@@ -129,27 +127,24 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
             </div>
           </Card>
 
-          {/* Categories Section */}
-          <Tabs defaultValue="categories" className="space-y-">
+          {/* Categories / Configurations Section */}
+          <Tabs defaultValue={isISO27001 ? "categories" : "configs"} className="space-y-4">
             <div className="flex items-center justify-between">
               <TabsList>
                 {isISO27001 ? (
-                  <>
-                    <TabsTrigger value="categories" className="gap-2">
-                      <Layers className="h-4 w-4" />
-                      Categories ({categories.length})
-                    </TabsTrigger>
-                  </>
+                  <TabsTrigger value="categories" className="gap-2">
+                    <Layers className="h-4 w-4" />
+                    Categories ({categories.length})
+                  </TabsTrigger>
                 ) : (
-                  <>
-                    <TabsTrigger value="configs" className="gap-2">
-                      <Layers className="h-4 w-4" />
-                      Configurations ({configurations.length})
-                    </TabsTrigger>
-                  </>
+                  <TabsTrigger value="configs" className="gap-2">
+                    <Layers className="h-4 w-4" />
+                    Configurations
+                  </TabsTrigger>
                 )}
               </TabsList>
-              {isISO27001 ? (
+
+              {isISO27001 && (
                 <Link
                   href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
                   <Button size="sm">
@@ -157,31 +152,18 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                     Add Category
                   </Button>
                 </Link>
-              ) : (
-                <Link
-                  href={`/dashboard/system-configs/audit-settings/templates/${id}/edit?builderId=GENERAL`}>
-                  <Button size="sm">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Manage Configs
-                  </Button>
-                </Link>
               )}
-              {/* UPDATE MODAL */}
-              <CreateWorkpaperTemplateDialog
-                showTrigger={true}
-                initialData={template} 
-              />
             </div>
 
-            <TabsContent value="categories" className="space-y-">
+            <TabsContent value="categories" className="space-y-4">
               <TemplateCategoriesTable
                 categories={categories}
                 templateId={id}
                 frameworkType={template.framework_type || template.standard || "ISO27001"}
               />
             </TabsContent>
-            <TabsContent value="configs" className="space-y-">
-              {/* THIS WILL BE THE DISPLAY AND NOT THE FORM - THE FORM WILL BE ON:  */}
+
+            <TabsContent value="configs" className="space-y-4">
               <GeneralTemplateConfigsForm configs={configurations} templateId={id} />
             </TabsContent>
           </Tabs>

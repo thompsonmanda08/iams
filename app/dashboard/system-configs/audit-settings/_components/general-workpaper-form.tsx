@@ -1,460 +1,484 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Save, Loader2, AlertCircle, FileText, AlertTriangle } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { EvidenceGrid } from "../../../../../components/audit/evidence-grid";
-import { CreateOrUpdateFindingModal } from "../../../../../components/audit/create-finding-modal";
-import type { GeneralWorkpaperInput, EvidenceRow } from "@/lib/types/audit-types";
-import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/config/tick-marks";
-import { SelectField } from "../../../../../components/ui/select-field";
-import { useUsers } from "@/hooks/use-users-query-data";
-import { User } from "@/lib/types/account";
-import { notify } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
+import { Plus, Trash2, Pencil, X, Info, AlertCircle } from "lucide-react";
+import { SelectField } from "@/components/ui/select-field";
+import { useGeneralWorkPaperConfigMutations } from "@/hooks/use-audit-settings-mutations";
+import type {
+  WorkPaperConfigColumn,
+  WorkPaperConfigKey,
+  WorkPaperFieldType
+} from "@/app/_actions/audit-settings-actions";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface FieldRow {
+  _id: string;
+  key: string;        // auto-derived, read-only
+  name: string;
+  type: WorkPaperFieldType;
+  required: boolean;
+  description: string;
+}
 
 interface GeneralWorkpaperFormProps {
   templateId?: string | null;
-  initialData?: Partial<GeneralWorkpaperInput> | null;
-  onSuccess?: () => void;
-  onCancel?: () => void;
-  configs?: Record<string, any>;
+  configs?: any;
 }
 
-export function GeneralTemplateConfigsForm({
-  templateId,
-  initialData,
-  configs
-}: GeneralWorkpaperFormProps) {
-  const router = useRouter();
-  const { data: teamMembersResponse, isLoading: loadingTeam } = useUsers({ page_size: 200 });
-  const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-  const teamMemberOptions = useMemo(() => {
-    return teamMembers && teamMembers.length > 0
-      ? teamMembers?.map((m: User, i: number) => ({
-          id: m.id || `${i}-${m.first_name}-${m.last_name}-${m.role}`,
-          name: `${m.first_name} ${m.last_name} - ${m.role}`
-        }))
-      : [];
-  }, [teamMembers]);
+const FIELD_TYPE_OPTIONS = [
+  { id: "text",     name: "Text" },
+  { id: "number",   name: "Number" },
+  { id: "date",     name: "Date" },
+  { id: "boolean",  name: "Boolean (Tick Mark)" },
+  { id: "select",   name: "Select" },
+  { id: "textarea", name: "Textarea" }
+];
 
-  // Get current user (mock - replace with actual auth)
-  const currentUser = teamMembers?.[0]?.first_name || "Current User";
+const emptyRow = (): FieldRow => ({
+  _id: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  key: "",
+  name: "",
+  type: "text",
+  required: false,
+  description: ""
+});
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [showCreateFinding, setShowCreateFinding] = useState(false);
-  const [createdWorkpaperId, setCreatedWorkpaperId] = useState<string | null>(null);
-  const [selectedRowForFinding, setSelectedRowForFinding] = useState<EvidenceRow | null>(null);
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  // Form state
-  const [formData, setFormData] = useState<{
-    processUnderReview: string;
-    preparedBy: string;
-    preparedDate: Date;
-    reviewedBy: string;
-    reviewedDate?: Date;
-    workDone: string;
-    mattersArising: string;
-    conclusion: string;
-    evidenceRows: EvidenceRow[];
-    selectedTickMarks: string[];
-  }>({
-    processUnderReview: initialData?.processUnderReview || "",
-    preparedBy: initialData?.preparedBy || currentUser,
-    preparedDate: initialData?.preparedDate || new Date(),
-    reviewedBy: initialData?.reviewedBy || "",
-    reviewedDate: initialData?.reviewedDate,
-    workDone: initialData?.workDone || "",
-    mattersArising: initialData?.mattersArising || "",
-    conclusion: initialData?.conclusion || "",
-    evidenceRows: initialData?.evidenceRows || [],
-    selectedTickMarks: initialData?.selectedTickMarks || DEFAULT_REVENUE_TICK_MARKS
+const toSnakeKey = (name: string) =>
+  name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+function parseConfigs(configs: any): {
+  existingConfigId: string | null;
+  columns: FieldRow[];
+  keys: FieldRow[];
+} {
+  const raw = Array.isArray(configs) ? configs[0] : configs;
+
+  if (!raw || (!raw.columns?.length && !raw.keys?.length)) {
+    return { existingConfigId: null, columns: [emptyRow()], keys: [emptyRow()] };
+  }
+
+  const toRow = (item: any): FieldRow => ({
+    _id: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    key: item.key ?? "",
+    name: item.name ?? "",
+    type: (item.type as WorkPaperFieldType) ?? "text",
+    required: Boolean(item.required),
+    description: item.description ?? ""
   });
 
-  // Update form field
-  const updateField = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  return {
+    existingConfigId: raw.id ?? null,
+    columns: raw.columns?.length ? raw.columns.map(toRow) : [emptyRow()],
+    keys: raw.keys?.length ? raw.keys.map(toRow) : [emptyRow()]
+  };
+}
+
+// ─── Sub-component: Row Builder Table ────────────────────────────────────────
+
+function FieldRowTable({
+  rows,
+  onChange
+}: {
+  rows: FieldRow[];
+  onChange: (rows: FieldRow[]) => void;
+}) {
+  const update = (id: string, field: keyof FieldRow, value: any) => {
+    onChange(
+      rows.map((r) => {
+        if (r._id !== id) return r;
+        const updated = { ...r, [field]: value };
+        if (field === "name") updated.key = toSnakeKey(value as string);
+        return updated;
+      })
+    );
   };
 
-  // Validation
-  const validateForm = (): string | null => {
-    if (!formData.processUnderReview) return "Process under review is required";
-    if (!formData.preparedBy) return "Prepared by is required";
-    if (!formData.workDone) return "Work done description is required";
-    if (formData.evidenceRows.length === 0) return "At least one evidence row is required";
-    return null;
-  };
+  const remove = (id: string) => onChange(rows.filter((r) => r._id !== id));
 
-  // Handle save draft manually
-  const handleSaveDraft = () => {
-    if (!templateId) {
-      notify({
-        title: "Cannot Save Draft",
-        description: "Drafts can only be saved when attached to an audit plan.",
-        type: "error"
-      });
-      return;
-    }
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-36">Key (auto)</TableHead>
+          <TableHead>Display Name</TableHead>
+          <TableHead className="w-40">Type</TableHead>
+          <TableHead className="w-24 text-center">Required</TableHead>
+          <TableHead>Description / Tooltip</TableHead>
+          <TableHead className="w-10" />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row._id}>
+            {/* Key — auto-derived badge */}
+            <TableCell>
+              <Badge variant="secondary" className="font-mono text-xs">
+                {row.key || "—"}
+              </Badge>
+            </TableCell>
 
-    notify({
-      title: "Draft Saved",
-      description: "Your work has been saved as a draft."
-    });
-  };
+            {/* Display Name */}
+            <TableCell>
+              <Input
+                placeholder="e.g. Invoice Number"
+                value={row.name}
+                onChange={(e) => update(row._id, "name", e.target.value)}
+                classNames={{ wrapper: "max-w-none" }}
+              />
+            </TableCell>
 
-  // Handle submit
-  const handleSubmit = async () => {
-    const error = validateForm();
-    if (error) {
-      notify({
-        title: "Validation Error",
-        description: error,
-        type: "error"
-      });
-      return;
-    }
+            {/* Type */}
+            <TableCell>
+              <SelectField
+                value={row.type}
+                options={FIELD_TYPE_OPTIONS}
+                onValueChange={(v) => update(row._id, "type", v)}
+                classNames={{ wrapper: "max-w-none" }}
+              />
+            </TableCell>
 
-    setIsSaving(true);
+            {/* Required */}
+            <TableCell className="text-center">
+              <Switch
+                checked={row.required}
+                onCheckedChange={(v) => update(row._id, "required", v)}
+              />
+            </TableCell>
 
-    const workpaperData: GeneralWorkpaperInput = {
-      // auditId,
-      processUnderReview: formData.processUnderReview,
-      preparedBy: formData.preparedBy,
-      preparedDate: formData.preparedDate,
-      reviewedBy: formData.reviewedBy || undefined,
-      reviewedDate: formData.reviewedDate,
-      workDone: formData.workDone,
-      mattersArising: formData.mattersArising || undefined,
-      conclusion: formData.conclusion || undefined,
-      evidenceRows: formData.evidenceRows,
-      selectedTickMarks: formData.selectedTickMarks
+            {/* Description */}
+            <TableCell>
+              <Input
+                placeholder="Shown as tooltip on hover"
+                value={row.description}
+                onChange={(e) => update(row._id, "description", e.target.value)}
+                classNames={{ wrapper: "max-w-none" }}
+              />
+            </TableCell>
+
+            {/* Delete */}
+            <TableCell>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive"
+                onClick={() => remove(row._id)}
+                disabled={rows.length === 1}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+// ─── Sub-component: Read-only View Table ─────────────────────────────────────
+
+function FieldViewTable({ rows, label }: { rows: FieldRow[]; label: string }) {
+  if (!rows.length) {
+    return <p className="text-muted-foreground text-sm">No {label} defined.</p>;
+  }
+
+  return (
+    <TooltipProvider>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Key</TableHead>
+            <TableHead>Display Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Required</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row._id}>
+              <TableCell>
+                <Badge variant="secondary" className="font-mono text-xs">
+                  {row.key}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium">{row.name}</span>
+                  {row.description && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="text-muted-foreground h-3.5 w-3.5 shrink-0 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-56 text-xs">
+                        {row.description}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline" className="text-xs capitalize">
+                  {row.type}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {row.required ? (
+                  <Badge className="bg-green-100 text-green-800 text-xs dark:bg-green-950 dark:text-green-300">
+                    Required
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground text-xs">Optional</span>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TooltipProvider>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkpaperFormProps) {
+  const { existingConfigId: initialConfigId, columns: initialColumns, keys: initialKeys } =
+    parseConfigs(configs);
+
+  const [existingConfigId, setExistingConfigId] = useState<string | null>(initialConfigId);
+  const [columns, setColumns] = useState<FieldRow[]>(initialColumns);
+  const [keys, setKeys] = useState<FieldRow[]>(initialKeys);
+  const [isEditing, setIsEditing] = useState(!initialConfigId); // open immediately when no config
+
+  // Snapshot for cancel
+  const [snapshot, setSnapshot] = useState({ columns: initialColumns, keys: initialKeys });
+
+  const router = useRouter();
+  const { createConfigMutation, updateConfigMutation } = useGeneralWorkPaperConfigMutations();
+
+  // Sync state when the server component re-renders with fresh configs (after router.refresh())
+  useEffect(() => {
+    const { existingConfigId: id, columns: cols, keys: ks } = parseConfigs(configs);
+    setExistingConfigId(id);
+    setColumns(cols);
+    setKeys(ks);
+    setIsEditing(!id);
+  }, [configs]);
+
+  const isPending = createConfigMutation.isPending || updateConfigMutation.isPending;
+
+  const isValid =
+    columns.some((c) => c.name.trim()) && keys.some((k) => k.name.trim());
+
+  const handleEdit = useCallback(() => {
+    setSnapshot({ columns, keys });
+    setIsEditing(true);
+  }, [columns, keys]);
+
+  const handleCancel = useCallback(() => {
+    setColumns(snapshot.columns);
+    setKeys(snapshot.keys);
+    setIsEditing(false);
+  }, [snapshot]);
+
+  const toApiFields = (rows: FieldRow[]): WorkPaperConfigColumn[] | WorkPaperConfigKey[] =>
+    rows
+      .filter((r) => r.name.trim())
+      .map(({ key, name, type, required, description }) => ({
+        key,
+        name,
+        type,
+        required,
+        description
+      }));
+
+  const handleSave = () => {
+    const payload = {
+      columns: toApiFields(columns) as WorkPaperConfigColumn[],
+      keys: toApiFields(keys) as WorkPaperConfigKey[]
     };
 
-    try {
-      // TODO: Replace with actual API call when backend is ready
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Mock workpaper ID
-      const mockWorkpaperId = `GWP-${Date.now()}`;
-      setCreatedWorkpaperId(mockWorkpaperId);
-
-      notify({
-        title: "Success",
-        description: "General workpaper created successfully"
-      });
-
-      // Check if there are any rows with observations that might need findings
-      const rowsWithObservations = formData.evidenceRows.filter(
-        (row) => row.auditObservation && row.auditObservation.trim().length > 0
+    if (existingConfigId) {
+      updateConfigMutation.mutate(
+        { id: existingConfigId, ...payload },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            router.refresh();
+          }
+        }
       );
-
-      if (rowsWithObservations.length > 0 && formData.mattersArising) {
-        // Prompt to create finding if there are matters arising
-        setShowCreateFinding(true);
-        // Don't close yet
-      } else {
-        router.back();
-        //
-      }
-    } catch (error) {
-      notify({
-        title: "Error",
-        description: "Failed to create general workpaper",
-        type: "error"
-      });
-    } finally {
-      setIsSaving(false);
+    } else {
+      if (!templateId) return;
+      createConfigMutation.mutate(
+        { template_id: templateId, ...payload },
+        {
+          onSuccess: () => {
+            router.refresh();
+          }
+        }
+      );
     }
   };
 
-  // Handle create finding from specific row
-  const handleCreateFindingFromRow = (row: EvidenceRow) => {
-    if (!createdWorkpaperId) {
-      notify({
-        title: "Error",
-        description: "Please save the workpaper first",
-        type: "error"
-      });
-      return;
-    }
-    setSelectedRowForFinding(row);
-    setShowCreateFinding(true);
-  };
+  // ── View mode (config exists, not editing) ───────────────────────────────
 
-  // Handle finding creation complete
-  const handleFindingCreated = () => {
-    setShowCreateFinding(false);
-    setSelectedRowForFinding(null);
-    router.back();
-  };
+  if (existingConfigId && !isEditing) {
+    return (
+      <div className="space-y-4">
+        {/* Columns view */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base">Columns ({columns.filter((c) => c.name).length})</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={handleEdit}>
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              Edit Config
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <FieldViewTable rows={columns.filter((c) => c.name)} label="columns" />
+          </CardContent>
+        </Card>
 
-  // Handle skip finding creation
-  const handleSkipFinding = () => {
-    setShowCreateFinding(false);
-    setSelectedRowForFinding(null);
-    router.back();
-  };
+        {/* Keys view */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
+              Audit Test Keys / Tick Marks ({keys.filter((k) => k.name).length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldViewTable rows={keys.filter((k) => k.name)} label="keys" />
+          </CardContent>
+        </Card>
 
-  // Handle cancel
-  const handleCancel = () => {
-    const confirmLeave = window.confirm(
-      "Are you sure you want to cancel? Any unsaved changes will be lost."
+        {/* Static columns notice */}
+        <StaticColumnsNotice />
+      </div>
     );
-    if (confirmLeave) {
-      router.back();
-    }
-  };
+  }
+
+  // ── Edit / Create mode ────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-          <FileText className="h-5 w-5 text-blue-600" />
+      {/* No config callout */}
+      {!existingConfigId && (
+        <div className="bg-muted/40 flex items-start gap-3 rounded-lg border p-4">
+          <AlertCircle className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+          <p className="text-muted-foreground text-sm">
+            No config defined yet for this template. Define columns and keys below then save.
+          </p>
         </div>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold">General Work Paper (B.1.1.2)</h2>
-          {/* {auditTitle ? (
-            <p className="text-muted-foreground mt-1 text-sm">For Audit: {auditTitle}</p>
-          ) : (
-            <p className="text-muted-foreground mt-1 text-sm">
-              You can attach this workpaper to an audit plan later
-            </p>
-          )} */}
-        </div>
-      </div>
+      )}
 
-      {/* Company Header */}
-      <Card className="bg-slate-50 p-6">
-        <div className="text-center">
-          <h3 className="text-xl font-bold">INFRATEL INTERNAL AUDIT</h3>
-          <p className="text-muted-foreground mt-1 text-sm">General Work Paper</p>
-        </div>
+      {/* Columns builder */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Columns</CardTitle>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                Data entry headers — users fill these in during audit execution (e.g. Po No., Vendor Name, Amount)
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setColumns((prev) => [...prev, emptyRow()])}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add Column
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0 pb-2">
+          <FieldRowTable rows={columns} onChange={setColumns} />
+        </CardContent>
       </Card>
 
-      {/* Basic Information */}
-      <Card className="p-6">
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold">Basic Information</h3>
+      {/* Static columns notice */}
+      <StaticColumnsNotice />
 
-          {/* Process Under Review */}
-          <div className="space-y-2">
-            <Label htmlFor="process">
-              Process Under Review <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="process"
-              placeholder="e.g., Revenue Recognition Process"
-              value={formData.processUnderReview}
-              onChange={(e) => updateField("processUnderReview", e.target.value)}
-            />
+      {/* Keys builder */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Audit Test Keys (Tick Marks)</CardTitle>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                Rendered under "Audit Tests – Tick Marks" header. Use <code>boolean</code> type for
+                checkboxes. The <em>description</em> appears as a tooltip on column headers.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setKeys((prev) => [...prev, emptyRow()])}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add Key
+            </Button>
           </div>
-
-          <Separator />
-
-          {/* Assignment Grid */}
-          <div className="grid grid-cols-2 gap-6">
-            {/* Prepared By */}
-            <div className="space-y-2">
-              {/* Prepared By */}
-              <SelectField
-                // id="preparedBy"
-                label="Prepared By"
-                placeholder="Select a user"
-                required
-                className="w-full"
-                classNames={{
-                  wrapper: "w-full "
-                }}
-                value={formData.preparedBy}
-                onValueChange={(v) => updateField("preparedBy", v)}
-                options={teamMemberOptions}
-              />
-            </div>
-
-            {/* Preparation Date */}
-            <div className="space-y-2">
-              <Label htmlFor="preparedDate">
-                Preparation Date <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="preparedDate"
-                type="date"
-                value={formData.preparedDate.toISOString().split("T")[0]}
-                onChange={(e) => updateField("preparedDate", new Date(e.target.value))}
-              />
-            </div>
-
-            {/* Reviewed By */}
-            <div className="space-y-2">
-              <SelectField
-                label="Reviewed By (Optional)"
-                placeholder="Select a user"
-                className="w-full"
-                classNames={{
-                  wrapper: "w-full "
-                }}
-                value={formData.reviewedBy}
-                onValueChange={(v) => updateField("reviewedBy", v)}
-                options={teamMemberOptions}
-              />
-            </div>
-
-            {/* Review Date */}
-            <div className="space-y-2">
-              <Label htmlFor="reviewedDate">Review Date (Optional)</Label>
-              <Input
-                id="reviewedDate"
-                type="date"
-                value={
-                  formData.reviewedDate ? formData.reviewedDate.toISOString().split("T")[0] : ""
-                }
-                onChange={(e) =>
-                  updateField("reviewedDate", e.target.value ? new Date(e.target.value) : undefined)
-                }
-              />
-            </div>
-          </div>
-        </div>
+        </CardHeader>
+        <CardContent className="p-0 pb-2">
+          <FieldRowTable rows={keys} onChange={setKeys} />
+        </CardContent>
       </Card>
 
-      {/* Work Documentation */}
-      <Card className="p-6">
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold">Work Documentation</h3>
-
-          {/* Work Done */}
-          <div className="space-y-2">
-            <Label htmlFor="workDone">
-              Work Done <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="workDone"
-              placeholder="Describe the audit work performed, procedures executed, and evidence examined..."
-              rows={4}
-              className="resize-none font-mono text-sm"
-              value={formData.workDone}
-              onChange={(e) => updateField("workDone", e.target.value)}
-            />
-            <p className="text-muted-foreground text-xs">{formData.workDone.length} characters</p>
-          </div>
-
-          {/* Matters Arising */}
-          <div className="space-y-2">
-            <Label htmlFor="mattersArising">Matters Arising (Optional)</Label>
-            <Textarea
-              id="mattersArising"
-              placeholder="Document any issues, concerns, or follow-up items identified during the audit work..."
-              rows={4}
-              className="resize-none font-mono text-sm"
-              value={formData.mattersArising}
-              onChange={(e) => updateField("mattersArising", e.target.value)}
-            />
-            <p className="text-muted-foreground text-xs">
-              {formData.mattersArising.length} characters
-            </p>
-
-            {/* Matters Arising Notice */}
-            {formData.mattersArising && formData.mattersArising.trim().length > 0 && (
-              <Card className="mt-2 border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" />
-                  <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                    After creating this workpaper, you can create findings to track these matters.
-                  </p>
-                </div>
-              </Card>
-            )}
-          </div>
-
-          {/* Conclusion */}
-          <div className="space-y-2">
-            <Textarea
-              id="conclusion"
-              label="Conclusion (Optional)"
-              placeholder="Summarize the overall findings, audit opinion, and key takeaways..."
-              rows={4}
-              className="resize-none font-mono text-sm"
-              value={formData.conclusion}
-              onChange={(e) => updateField("conclusion", e.target.value)}
-            />
-            <p className="text-muted-foreground text-xs">{formData.conclusion.length} characters</p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Evidence & Testing Grid */}
-      <Card className="p-6">
-        <EvidenceGrid
-          rows={formData.evidenceRows}
-          onRowsChange={(rows) => updateField("evidenceRows", rows)}
-          selectedTickMarks={formData.selectedTickMarks}
-          onTickMarksChange={(marks) => updateField("selectedTickMarks", marks)}
-          availableTickMarks={TICK_MARKS}
-        />
-      </Card>
-
-      {/* Validation Message */}
-      {(() => {
-        const error = validateForm();
-        return error ? (
-          <Card className="bg-destructive/10 border-destructive p-4">
-            <div className="text-destructive flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          </Card>
-        ) : null;
-      })()}
-
-      {/* Actions */}
-      <div className="flex items-center justify-between border-t pt-4">
-        <Button variant="outline" onClick={handleSaveDraft}>
-          <Save className="mr-2 h-4 w-4" />
-          Save Draft
-        </Button>
-
-        <div className="flex gap-2">
-          <Button variant="ghost" onClick={handleCancel} disabled={isSaving}>
+      {/* Footer actions */}
+      <div className="flex items-center justify-end gap-3 border-t pt-4">
+        {existingConfigId && (
+          <Button type="button" variant="ghost" onClick={handleCancel} disabled={isPending}>
+            <X className="mr-1.5 h-4 w-4" />
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSaving || !!validateForm()}>
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              "Create General Workpaper"
-            )}
-          </Button>
-        </div>
+        )}
+        <Button type="button" onClick={handleSave} disabled={!isValid || isPending} isLoading={isPending}>
+          {existingConfigId ? "Save Changes" : "Create Config"}
+        </Button>
       </div>
-
-      {/* Create Finding Modal */}
-      {showCreateFinding && createdWorkpaperId && (
-        <CreateOrUpdateFindingModal
-          open={showCreateFinding}
-          onOpenChange={(open) => {
-            if (!open) handleSkipFinding();
-          }}
-          auditPlanId={""}
-          workpaperId={createdWorkpaperId}
-          evidenceRowId={selectedRowForFinding?.id}
-          preFilledData={{
-            description: selectedRowForFinding
-              ? `Issue found in evidence row: ${selectedRowForFinding.description}\nObservation: ${selectedRowForFinding.auditObservation || ""}\nComment: ${selectedRowForFinding.auditComment || ""}`
-              : formData.mattersArising || ""
-          }}
-          onSuccess={handleFindingCreated}
-        />
-      )}
     </div>
   );
 }
+
+// ─── Static columns notice ────────────────────────────────────────────────────
+
+function StaticColumnsNotice() {
+  return (
+    <div className="bg-muted/30 flex items-start gap-3 rounded-lg border border-dashed p-3 text-sm">
+      <Info className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+      <p className="text-muted-foreground text-xs">
+        The following columns are always appended automatically during audit execution:{" "}
+        <strong>Audit Observations</strong> &middot; <strong>Audit Comments</strong> &middot;{" "}
+        <strong>Evidence</strong> (optional)
+      </p>
+    </div>
+  );
+}
+
+// Keep legacy named export for the new template page
+export { GeneralTemplateConfigsForm as GeneralWorkpaperForm };
