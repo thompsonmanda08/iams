@@ -50,8 +50,15 @@ interface Risk {
   updated_at: string;
 }
 
-export default async function ActionsPage() {
-  const response = await getActions({ page: 1, page_size: 10 });
+export default async function ActionsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const page = params.page ? Number(params.page) : 1;
+  const page_size = params.page_size ? Number(params.page_size) : 10;
+  const response = await getActions({ page, page_size });
   const actions = response.success && response.data?.data ? response.data.data : [];
 
   const pagination: Pagination = response.data?.pagination || {

@@ -172,3 +172,59 @@ export async function deleteIncident(incidentId: string): Promise<APIResponse> {
     );
   }
 }
+
+// Send incident for review
+export async function sendIncidentForReview(
+  incidentId: string,
+  data: {
+    responsible_person_id: string;
+    reviewer_id: string;
+    due_date: string;
+    instructions?: string;
+    comment?: string;
+    file_urls?: string[];
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/incidents/${incidentId}/send-for-review`,
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/(modules)/risks/incidents");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SEND INCIDENT FOR REVIEW",
+      `/api/v1/incidents/${incidentId}/send-for-review`
+    );
+  }
+}
+
+// Submit incident findings/logs from responsible person
+export async function submitIncidentFindings(
+  incidentId: string,
+  data: {
+    comment: string;
+    file_urls: string[];
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/incidents/${incidentId}/logs/responsible`,
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/(workflows)/actions/risk");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SUBMIT INCIDENT FINDINGS",
+      `/api/v1/incidents/${incidentId}/logs/responsible`
+    );
+  }
+}

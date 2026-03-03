@@ -27,6 +27,7 @@ import type { RiskMatrix } from "@/lib/types/risk-type";
 import { RiskSlider } from "./risk-slider";
 import { RiskScoreDisplay } from "./risk-score-display";
 import { usePermissions } from "@/hooks/use-permissions";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ActionReviewDialogProps {
   open: boolean;
@@ -236,238 +237,234 @@ export function ActionReviewDialog({
         onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        className="flex max-h-[90svh]! max-w-2xl! flex-col">
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5" />
-              Review Action Submission
-            </DialogTitle>
-            <DialogDescription>
-              Step {step} of {2}: {step === 1 ? "Review & Decision" : "Risk Assessment"}
-              <br />
-              <span className="text-muted-foreground text-xs sm:text-sm">
-                {step === 1
-                  ? "Please review the submitted evidence and provide your decision."
-                  : "Please provide a risk assessment score."}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
+        className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Review Action Submission
+          </DialogTitle>
+          <DialogDescription>
+            Step {step} of {2}: {step === 1 ? "Review & Decision" : "Risk Assessment"}
+            <br />
+            <span className="text-muted-foreground text-xs sm:text-sm">
+              {step === 1
+                ? "Please review the submitted evidence and provide your decision."
+                : "Please provide a risk assessment score."}
+            </span>
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* Progress Bar */}
-          <div>
-            <div className="flex gap-2">
-              {Array.from({ length: 2 }).map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-2 flex-1 rounded-full transition-all ${index + 1 <= step ? "bg-primary" : "bg-muted"}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-4">
-            {step === 1 ? (
-              <>
-                {/* Step 1: Review & Decision */}
-                <div className="space-y-4">
-                  {/* Reviewer Feedback */}
-                  <Textarea
-                    id="remarks"
-                    label="Reviewer Feedback / Comments"
-                    placeholder="Provide feedback on the submitted evidence and action taken..."
-                    value={formData.remarks}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        remarks: e.target.value
-                      }));
-                      if (errors.remarks) {
-                        setErrors((prev) => ({
-                          ...prev,
-                          remarks: undefined
-                        }));
-                      }
-                    }}
-                    rows={4}
-                    className="resize-none"
-                    showLimit={true}
-                    maxLength={500}
-                    descriptionText="Provide your feedback and comments on the submitted evidence."
-                    isInvalid={!!errors.remarks}
-                    errorText={errors.remarks}
-                    required
-                  />
-                  {/* Evidence Summary */}
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-700">Evidence Submitted</p>
-                        <p className="mt-1 text-sm whitespace-pre-wrap text-gray-900">
-                          {execution?.evidence_description}
-                        </p>
-                      </div>
-                      {execution?.evidence_file_name && (
-                        <div>
-                          <p className="text-xs text-gray-600">File attached:</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {execution.evidence_file_name}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Step 2: Residual Risk Assessment */}
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
-                      <div>
-                        <p className="text-sm font-semibold text-amber-900">
-                          Residual Risk Assessment
-                        </p>
-                        <p className="mt-1 text-xs text-amber-800">
-                          Based on the submitted evidence, assess the residual risk after this
-                          action has been taken. Update the risk matrix and control effectiveness.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 rounded-lg border p-4">
-                    <h3 className="font-semibold">Residual Risk Assessment</h3>
-
-                    {/* Risk Matrix Selection */}
-                    <SearchSelectField
-                      label="Risk Matrix"
-                      required
-                      placeholder="Select risk matrix"
-                      options={riskMatrices}
-                      value={formData.risk_matrix_id}
-                      onValueChange={handleMatrixChange}
-                      isLoading={loadingMatrices}
-                      isDisabled={updateRiskMutation.isPending || loadingMatrices}
-                      classNames={{ wrapper: "max-w-full" }}
-                      isInvalid={!!errors.risk_matrix_id}
-                      errorText={errors.risk_matrix_id}
-                      descriptionText={
-                        selectedMatrix
-                          ? `Likelihood: ${selectedMatrix.likelihood_min || 1}-${
-                              selectedMatrix.likelihood_max || 5
-                            }, Impact: ${selectedMatrix.impact_min || 1}-${selectedMatrix.impact_max || 5}`
-                          : "Select a matrix to define risk assessment ranges"
-                      }
-                    />
-
-                    {/* Likelihood and Impact Sliders */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <RiskSlider
-                        id="residual_likelihood"
-                        label="Likelihood"
-                        value={formData.residual_likelihood}
-                        min={likelihoodRange.min}
-                        max={likelihoodRange.max}
-                        onChange={(value) =>
-                          setFormData((prev) => ({ ...prev, residual_likelihood: value }))
-                        }
-                        disabled={updateRiskMutation.isPending || !formData.risk_matrix_id}
-                        minLabel="Rare"
-                        maxLabel="Almost Certain"
-                      />
-                      <RiskSlider
-                        id="residual_impact"
-                        label="Impact"
-                        value={formData.residual_impact}
-                        min={impactRange.min}
-                        max={impactRange.max}
-                        onChange={(value) =>
-                          setFormData((prev) => ({ ...prev, residual_impact: value }))
-                        }
-                        disabled={updateRiskMutation.isPending || !formData.risk_matrix_id}
-                        minLabel="Insignificant"
-                        maxLabel="Catastrophic"
-                      />
-                    </div>
-
-                    {/* Residual Score Display */}
-                    <RiskScoreDisplay
-                      score={residualScore}
-                      likelihood={formData.residual_likelihood}
-                      impact={formData.residual_impact}
-                      label="Residual"
-                    />
-                  </div>
-
-                  {/* Existing Controls and Control Effectiveness */}
-                  <div className="space-y-4 rounded-lg border p-4">
-                    <h3 className="font-semibold">Control Assessment</h3>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="existing_controls">Existing Controls</Label>
-                      <Textarea
-                        id="existing_controls"
-                        placeholder="Describe current controls in place (optional)"
-                        rows={3}
-                        value={formData.existing_controls}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            existing_controls: e.target.value
-                          }))
-                        }
-                        disabled={updateRiskMutation.isPending}
-                      />
-                    </div>
-
-                    <SearchSelectField
-                      label="Control Effectiveness"
-                      required
-                      placeholder="Select control effectiveness"
-                      options={controlsOptions}
-                      value={String(formData.control_effectiveness)}
-                      onValueChange={(val) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          control_effectiveness: parseInt(val)
-                        }))
-                      }
-                      isLoading={loadingControls}
-                      isDisabled={updateRiskMutation.isPending || loadingControls}
-                      isInvalid={!!errors.control_effectiveness}
-                      errorText={errors.control_effectiveness}
-                      classNames={{ wrapper: "max-w-full" }}
-                    />
-                  </div>
-
-                  {/* Review Summary */}
-                  <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <p className="text-sm font-semibold text-gray-700">Review Summary</p>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Decision:</span>
-                        <Badge className="bg-blue-100 text-blue-800">
-                          {formData.assessment_decision === "APPROVE"
-                            ? "Approve"
-                            : "Request Changes"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Residual Score:</span>
-                        <Badge className="bg-green-100 text-green-800">
-                          {residualScore > 0 ? residualScore : "Not set"}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+        {/* Progress Bar */}
+        <div>
+          <div className="flex gap-2">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div
+                key={index}
+                className={`h-2 flex-1 rounded-full transition-all ${index + 1 <= step ? "bg-primary" : "bg-muted"}`}
+              />
+            ))}
           </div>
         </div>
+
+        <ScrollArea className="max-h-[500px] pt-4 pr-4">
+          {step === 1 ? (
+            <>
+              {/* Step 1: Review & Decision */}
+              <div className="space-y-4">
+                {/* Reviewer Feedback */}
+                <Textarea
+                  id="remarks"
+                  label="Reviewer Feedback / Comments"
+                  placeholder="Provide feedback on the submitted evidence and action taken..."
+                  value={formData.remarks}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      remarks: e.target.value
+                    }));
+                    if (errors.remarks) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        remarks: undefined
+                      }));
+                    }
+                  }}
+                  rows={4}
+                  className="resize-none"
+                  showLimit={true}
+                  maxLength={500}
+                  descriptionText="Provide your feedback and comments on the submitted evidence."
+                  isInvalid={!!errors.remarks}
+                  errorText={errors.remarks}
+                  required
+                />
+                {/* Evidence Summary */}
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Evidence Submitted</p>
+                      <p className="mt-1 text-sm whitespace-pre-wrap text-gray-900">
+                        {execution?.evidence_description}
+                      </p>
+                    </div>
+                    {execution?.evidence_file_name && (
+                      <div>
+                        <p className="text-xs text-gray-600">File attached:</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {execution.evidence_file_name}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Step 2: Residual Risk Assessment */}
+              <div className="space-y-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-900">
+                        Residual Risk Assessment
+                      </p>
+                      <p className="mt-1 text-xs text-amber-800">
+                        Based on the submitted evidence, assess the residual risk after this action
+                        has been taken. Update the risk matrix and control effectiveness.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-lg border p-4">
+                  <h3 className="font-semibold">Residual Risk Assessment</h3>
+
+                  {/* Risk Matrix Selection */}
+                  <SearchSelectField
+                    label="Risk Matrix"
+                    required
+                    placeholder="Select risk matrix"
+                    options={riskMatrices}
+                    value={formData.risk_matrix_id}
+                    onValueChange={handleMatrixChange}
+                    isLoading={loadingMatrices}
+                    isDisabled={updateRiskMutation.isPending || loadingMatrices}
+                    classNames={{ wrapper: "max-w-full" }}
+                    isInvalid={!!errors.risk_matrix_id}
+                    errorText={errors.risk_matrix_id}
+                    descriptionText={
+                      selectedMatrix
+                        ? `Likelihood: ${selectedMatrix.likelihood_min || 1}-${
+                            selectedMatrix.likelihood_max || 5
+                          }, Impact: ${selectedMatrix.impact_min || 1}-${selectedMatrix.impact_max || 5}`
+                        : "Select a matrix to define risk assessment ranges"
+                    }
+                  />
+
+                  {/* Likelihood and Impact Sliders */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <RiskSlider
+                      id="residual_likelihood"
+                      label="Likelihood"
+                      value={formData.residual_likelihood}
+                      min={likelihoodRange.min}
+                      max={likelihoodRange.max}
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, residual_likelihood: value }))
+                      }
+                      disabled={updateRiskMutation.isPending || !formData.risk_matrix_id}
+                      minLabel="Rare"
+                      maxLabel="Almost Certain"
+                    />
+                    <RiskSlider
+                      id="residual_impact"
+                      label="Impact"
+                      value={formData.residual_impact}
+                      min={impactRange.min}
+                      max={impactRange.max}
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, residual_impact: value }))
+                      }
+                      disabled={updateRiskMutation.isPending || !formData.risk_matrix_id}
+                      minLabel="Insignificant"
+                      maxLabel="Catastrophic"
+                    />
+                  </div>
+
+                  {/* Residual Score Display */}
+                  <RiskScoreDisplay
+                    score={residualScore}
+                    likelihood={formData.residual_likelihood}
+                    impact={formData.residual_impact}
+                    label="Residual"
+                  />
+                </div>
+
+                {/* Existing Controls and Control Effectiveness */}
+                <div className="space-y-4 rounded-lg border p-4">
+                  <h3 className="font-semibold">Control Assessment</h3>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="existing_controls">Existing Controls</Label>
+                    <Textarea
+                      id="existing_controls"
+                      placeholder="Describe current controls in place (optional)"
+                      rows={3}
+                      value={formData.existing_controls}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          existing_controls: e.target.value
+                        }))
+                      }
+                      disabled={updateRiskMutation.isPending}
+                    />
+                  </div>
+
+                  <SearchSelectField
+                    label="Control Effectiveness"
+                    required
+                    placeholder="Select control effectiveness"
+                    options={controlsOptions}
+                    value={String(formData.control_effectiveness)}
+                    onValueChange={(val) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        control_effectiveness: parseInt(val)
+                      }))
+                    }
+                    isLoading={loadingControls}
+                    isDisabled={updateRiskMutation.isPending || loadingControls}
+                    isInvalid={!!errors.control_effectiveness}
+                    errorText={errors.control_effectiveness}
+                    classNames={{ wrapper: "max-w-full" }}
+                  />
+                </div>
+
+                {/* Review Summary */}
+                <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm font-semibold text-gray-700">Review Summary</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Decision:</span>
+                      <Badge className="bg-blue-100 text-blue-800">
+                        {formData.assessment_decision === "APPROVE" ? "Approve" : "Request Changes"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Residual Score:</span>
+                      <Badge className="bg-green-100 text-green-800">
+                        {residualScore > 0 ? residualScore : "Not set"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </ScrollArea>
 
         <DialogFooter className="border-t bg-white">
           <div className="flex w-full items-center justify-between py-4">

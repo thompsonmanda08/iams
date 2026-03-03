@@ -239,7 +239,7 @@ export interface Action {
   reviewer_id: string | null;
   due_date: string;
   overdue_by: number;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "RESOLVED";
   completion_date: string | null;
   created_by: string;
   created_at: string;
@@ -253,6 +253,7 @@ export interface Action {
 export interface ActionDefinition {
   action: Action;
   task: Task;
+  incident_log: any;
   execution: Execution | null;
   risk_name: string;
   executer_name: string;

@@ -14,6 +14,12 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -32,7 +38,9 @@ import {
   Filter,
   Loader2,
   Eye,
-  Trash2
+  Trash2,
+  MoreVertical,
+  Send
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -45,6 +53,7 @@ import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { SendForReviewDialog } from "./send-for-review-dialog";
 
 export function MyIncidents() {
   const router = useRouter();
@@ -54,6 +63,8 @@ export function MyIncidents() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIncident, setSelectedIncident] = useState<IncidentData | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [sendForReviewDialogOpen, setSendForReviewDialogOpen] = useState(false);
+  const [selectedIncidentForReview, setSelectedIncidentForReview] = useState<IncidentData | null>(null);
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -121,6 +132,11 @@ export function MyIncidents() {
       open: true,
       incidentId: incident.incident.id
     });
+  };
+
+  const handleSendForReviewClick = (incident: IncidentData) => {
+    setSelectedIncidentForReview(incident);
+    setSendForReviewDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -342,104 +358,111 @@ export function MyIncidents() {
             />
           </div>
 
-          <div className="rounded-lg border">
-            <div className="max-h-[600px] overflow-auto">
-              <Table>
-                <TableHeader className="bg-background sticky top-0 z-10 uppercase">
+          <div className="bg-card max-h-[600px] overflow-auto rounded-lg border">
+            <Table>
+              <TableHeader className="bg-background sticky top-0 z-10 uppercase">
+                <TableRow>
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead className="min-w-[120px]">Incident Date</TableHead>
+                  <TableHead className="min-w-[150px]">Department</TableHead>
+                  <TableHead className="min-w-[150px]">Primary Cause</TableHead>
+                  <TableHead className="min-w-[120px]">Materiality</TableHead>
+                  <TableHead className="min-w-[150px]">Location</TableHead>
+                  <TableHead className="min-w-[150px]">Responsible Person</TableHead>
+                  <TableHead className="min-w-[120px]">Due Date</TableHead>
+                  <TableHead className="min-w-[120px]">Status</TableHead>
+                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
                   <TableRow>
-                    <TableHead className="w-12">#</TableHead>
-                    <TableHead className="min-w-[120px]">Incident Date</TableHead>
-                    <TableHead className="min-w-[150px]">Department</TableHead>
-                    <TableHead className="min-w-[150px]">Primary Cause</TableHead>
-                    <TableHead className="min-w-[120px]">Materiality</TableHead>
-                    <TableHead className="min-w-[150px]">Location</TableHead>
-                    <TableHead className="min-w-[150px]">Responsible Person</TableHead>
-                    <TableHead className="min-w-[120px]">Due Date</TableHead>
-                    <TableHead className="min-w-[120px]">Status</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+                    <TableCell colSpan={10} className="py-12 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+                        <p className="text-muted-foreground">Loading incidents...</p>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="py-12 text-center">
-                        <div className="flex flex-col items-center gap-2">
-                          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-                          <p className="text-muted-foreground">Loading incidents...</p>
-                        </div>
+                ) : filteredIncidents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-muted-foreground py-12 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className="text-muted-foreground/50 h-8 w-8" />
+                        <p>No incidents found</p>
+                        {searchQuery && <p className="text-xs">Try adjusting your search</p>}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredIncidents.map((item, index) => (
+                    <TableRow key={item.incident.id}>
+                      <TableCell className="font-medium">
+                        {(pagination.page - 1) * pagination.page_size + index + 1}
                       </TableCell>
-                    </TableRow>
-                  ) : filteredIncidents.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-muted-foreground py-12 text-center">
-                        <div className="flex flex-col items-center gap-2">
-                          <FileText className="text-muted-foreground/50 h-8 w-8" />
-                          <p>No incidents found</p>
-                          {searchQuery && <p className="text-xs">Try adjusting your search</p>}
-                        </div>
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(item.incident.incident_date), "MMM dd, yyyy")}
                       </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredIncidents.map((item, index) => (
-                      <TableRow key={item.incident.id}>
-                        <TableCell className="font-medium">
-                          {(pagination.page - 1) * pagination.page_size + index + 1}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {format(new Date(item.incident.incident_date), "MMM dd, yyyy")}
-                        </TableCell>
-                        <TableCell className="flex flex-col gap-y-2">
-                          <span>{item.department.name}</span>
-                          <span className="font-bold">
-                            KRI:{" "}
-                            <span className="text-xs font-normal text-gray-600">
-                              {item.incident.kri_id || "N/A"}
-                            </span>
+                      <TableCell className="flex flex-col gap-y-2">
+                        <span>{item.department.name}</span>
+                        <span className="font-bold">
+                          KRI:{" "}
+                          <span className="text-xs font-normal text-gray-600">
+                            {item.incident.kri_id || "N/A"}
                           </span>
-                        </TableCell>
-                        <TableCell>{item.primary_cause.name}</TableCell>
-                        <TableCell>
-                          <StatusBadge status={item.incident.materiality} />
-                        </TableCell>
-                        <TableCell>{item.incident.location}</TableCell>
-                        <TableCell>
-                          {`${item.responsible_person.first_name} ${item.responsible_person.last_name}`}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {format(new Date(item.incident.due_date), "MMM dd, yyyy")}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={item.incident.status} />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewDetails(item)}
-                              className="h-8 gap-1.5">
-                              <Eye className="h-3.5 w-3.5" />
-                              View Incident
+                        </span>
+                      </TableCell>
+                      <TableCell>{item.primary_cause.name}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={item.incident.materiality} />
+                      </TableCell>
+                      <TableCell>{item.incident.location}</TableCell>
+                      <TableCell>
+                        {`${item.responsible_person.first_name} ${item.responsible_person.last_name}`}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(item.incident.due_date), "MMM dd, yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={item.incident.status} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => handleSendForReviewClick(item)}
+                              className="gap-2">
+                              <Send className="h-4 w-4" />
+                              <span>Submit for Review</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleViewDetails(item)}
+                              className="gap-2">
+                              <Eye className="h-4 w-4" />
+                              <span>View Incident</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               onClick={(e) => {
                                 handleDeleteClick(item);
                                 e.stopPropagation();
                               }}
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                              className="text-destructive gap-2">
                               <Trash2 className="h-4 w-4" />
-                              Delete
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                              <span>Delete</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
 
           {/* CustomPagination */}
@@ -618,6 +641,13 @@ export function MyIncidents() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Send For Review Dialog */}
+      <SendForReviewDialog
+        open={sendForReviewDialogOpen}
+        onOpenChange={setSendForReviewDialogOpen}
+        incident={selectedIncidentForReview}
+      />
     </div>
   );
 }
