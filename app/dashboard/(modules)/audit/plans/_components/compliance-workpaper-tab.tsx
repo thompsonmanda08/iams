@@ -61,8 +61,7 @@ export function ComplianceAuditWorkpaperTab({
   const categoryFindings = useMemo(() => {
     if (!selectedCategory) return [];
 
-    const filteredFindings =
-      findings?.filter((f) => f.category?.id === selectedCategory.id) || [];
+    const filteredFindings = findings?.filter((f) => f.category?.id === selectedCategory.id) || [];
 
     if (editingFinding) {
       const isEditingInThisCategory = filteredFindings.some((f) => f.id === editingFinding.id);
@@ -270,8 +269,7 @@ export function ComplianceAuditWorkpaperTab({
                                 </div>
                               </div>
 
-                              {finding.status === "IN_REVIEW" ||
-                              finding.status === "SUBMITTED" ? (
+                              {finding.status === "IN_REVIEW" || finding.status === "SUBMITTED" ? (
                                 <StatusBadge status={finding.status} />
                               ) : finding.status === "CLOSED" || finding.status === "APPROVED" ? (
                                 <Badge className="ml-3 shrink-0 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
@@ -375,6 +373,7 @@ export function ComplianceAuditWorkpaperTab({
 
         {/* Finding Edit Modal Dialog */}
         <Dialog
+          isModal={true}
           open={editingFinding !== null}
           onOpenChange={(open) => !open && setEditingFinding(null)}>
           <DialogContent className="max-h-[90vh] max-w-2xl! overflow-y-auto pb-0">

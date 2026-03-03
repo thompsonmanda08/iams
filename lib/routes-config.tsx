@@ -17,7 +17,9 @@ import {
   ChartPieIcon,
   CompassIcon,
   SquareAsterisk,
-  Signature
+  Signature,
+  Settings,
+  UserCog2
 } from "lucide-react";
 
 export type NavGroup = {
@@ -146,15 +148,24 @@ export const navItems: NavGroup[] = [
           { title: "Audit Actions & Logs", href: "/dashboard/actions/audit" }
         ]
       },
-      {
-        title: "Approvals",
-        href: "/dashboard/approvals",
-        icon: ShieldCheck
-      },
+
       {
         title: "Manage Workflow",
         href: "/dashboard/workflow/manage",
-        icon: Workflow
+        icon: Workflow,
+        items: [
+          {
+            title: "Tasks & Approvals",
+            href: "/dashboard/approvals",
+            icon: ShieldCheck
+          },
+
+          {
+            title: "Workflow Designer",
+            href: "/dashboard/workflow/manage",
+            icon: ShieldCheck
+          }
+        ]
       }
     ]
   },
@@ -164,12 +175,36 @@ export const navItems: NavGroup[] = [
       {
         title: "Risk Module Settings",
         href: "/dashboard/system-configs/risk-settings",
-        icon: ShieldQuestion
+        icon: ShieldQuestion,
+        items: [
+          {
+            title: "Risk Settings",
+            href: "/dashboard/system-configs/risk-settings",
+            icon: Signature
+          },
+          {
+            title: "Risk Acceptance Signatories",
+            href: "/dashboard/system-configs/risk-acceptance-signatories",
+            icon: Signature
+          }
+        ]
       },
       {
         title: "Audit Module Settings",
         href: "/dashboard/system-configs/audit-settings",
-        icon: ClipboardListIcon
+        icon: ClipboardListIcon,
+        items: [
+          {
+            title: "Audit Settings",
+            href: "/dashboard/system-configs/audit-settings",
+            icon: Signature
+          },
+          {
+            title: "Audit Workpaper Templates",
+            href: "/dashboard/system-configs/audit-settings/templates",
+            icon: Signature
+          }
+        ]
       },
       {
         title: "Report Guides Settings",
@@ -182,34 +217,45 @@ export const navItems: NavGroup[] = [
     title: "System Configuration",
     items: [
       {
-        title: "Branches",
-        href: "/dashboard/system-configs/branches",
-        icon: MapPin
-      },
-      {
-        title: "Departments",
+        title: "Setup",
         href: "/dashboard/system-configs/departments",
-        icon: BriefcaseBusiness
+        icon: UserCog2,
+        items: [
+          {
+            title: "Branches",
+            href: "/dashboard/system-configs/branches",
+            icon: MapPin
+          },
+          {
+            title: "Departments",
+            href: "/dashboard/system-configs/departments",
+            icon: BriefcaseBusiness
+          },
+          {
+            title: "Users",
+            href: "/dashboard/system-configs/users",
+            icon: Users
+          }
+        ]
       },
+
       {
-        title: "Users",
-        href: "/dashboard/system-configs/users",
-        icon: Users
-      },
-      {
-        title: "Mail Settings",
-        href: "/dashboard/system-configs/mail-settings",
-        icon: MailCheck
-      },
-      {
-        title: "Password Policy",
-        href: "/dashboard/system-configs/password-policy",
-        icon: SquareAsterisk
-      },
-       {
-        title: "Risk Acceptance Signatories",
-        href: "/dashboard/system-configs/risk-acceptance-signatories",
-        icon: Signature 
+        title: "General Settings",
+        href: "/dashboard/system-configs",
+        icon: Settings,
+        isNew: true,
+        items: [
+          {
+            title: "Mail Settings",
+            href: "/dashboard/system-configs/mail-settings",
+            icon: MailCheck
+          },
+          {
+            title: "Password Policy",
+            href: "/dashboard/system-configs/password-policy",
+            icon: SquareAsterisk
+          }
+        ]
       }
     ]
   }

@@ -44,7 +44,9 @@ export function useCompleteWorkflowTaskMutation(options?: {
       return result;
     },
     onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["workflowTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["user-workflow-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["workflow-instances"] });
+      queryClient.invalidateQueries({ queryKey: ["workflow-instance-tasks"] });
       const actionLabel = variables.action === "APPROVED" ? "approved" : "rejected";
       notify({
         title: "Success",
@@ -126,7 +128,9 @@ export function useReassignTaskMutation(options?: {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workflowTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["user-workflow-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["workflow-instances"] });
+      queryClient.invalidateQueries({ queryKey: ["workflow-instance-tasks"] });
       notify({
         title: "Success",
         description: "Task reassigned successfully",

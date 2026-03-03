@@ -15,12 +15,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Trash2, Pencil, X, Info, AlertCircle } from "lucide-react";
 import { SelectField } from "@/components/ui/select-field";
 import { useGeneralWorkPaperConfigMutations } from "@/hooks/use-audit-settings-mutations";
@@ -34,7 +29,7 @@ import type {
 
 interface FieldRow {
   _id: string;
-  key: string;        // auto-derived, read-only
+  key: string; // auto-derived, read-only
   name: string;
   type: WorkPaperFieldType;
   required: boolean;
@@ -49,11 +44,11 @@ interface GeneralWorkpaperFormProps {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const FIELD_TYPE_OPTIONS = [
-  { id: "text",     name: "Text" },
-  { id: "number",   name: "Number" },
-  { id: "date",     name: "Date" },
-  { id: "boolean",  name: "Boolean (Tick Mark)" },
-  { id: "select",   name: "Select" },
+  { id: "text", name: "Text" },
+  { id: "number", name: "Number" },
+  { id: "date", name: "Date" },
+  { id: "boolean", name: "Boolean (Tick Mark)" },
+  { id: "select", name: "Select" },
   { id: "textarea", name: "Textarea" }
 ];
 
@@ -69,7 +64,11 @@ const emptyRow = (): FieldRow => ({
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const toSnakeKey = (name: string) =>
-  name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
 
 function parseConfigs(configs: any): {
   existingConfigId: string | null;
@@ -247,7 +246,7 @@ function FieldViewTable({ rows, label }: { rows: FieldRow[]; label: string }) {
               </TableCell>
               <TableCell>
                 {row.required ? (
-                  <Badge className="bg-green-100 text-green-800 text-xs dark:bg-green-950 dark:text-green-300">
+                  <Badge className="bg-green-100 text-xs text-green-800 dark:bg-green-950 dark:text-green-300">
                     Required
                   </Badge>
                 ) : (
@@ -265,8 +264,11 @@ function FieldViewTable({ rows, label }: { rows: FieldRow[]; label: string }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkpaperFormProps) {
-  const { existingConfigId: initialConfigId, columns: initialColumns, keys: initialKeys } =
-    parseConfigs(configs);
+  const {
+    existingConfigId: initialConfigId,
+    columns: initialColumns,
+    keys: initialKeys
+  } = parseConfigs(configs);
 
   const [existingConfigId, setExistingConfigId] = useState<string | null>(initialConfigId);
   const [columns, setColumns] = useState<FieldRow[]>(initialColumns);
@@ -290,8 +292,7 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
 
   const isPending = createConfigMutation.isPending || updateConfigMutation.isPending;
 
-  const isValid =
-    columns.some((c) => c.name.trim()) && keys.some((k) => k.name.trim());
+  const isValid = columns.some((c) => c.name.trim()) && keys.some((k) => k.name.trim());
 
   const handleEdit = useCallback(() => {
     setSnapshot({ columns, keys });
@@ -352,7 +353,9 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
         {/* Columns view */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">Columns ({columns.filter((c) => c.name).length})</CardTitle>
+            <CardTitle className="text-base">
+              Columns ({columns.filter((c) => c.name).length})
+            </CardTitle>
             <Button type="button" variant="outline" size="sm" onClick={handleEdit}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit Config
@@ -367,7 +370,7 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              Audit Test Keys / Tick Marks ({keys.filter((k) => k.name).length})
+              Audit Test Keys ({keys.filter((k) => k.name).length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -402,7 +405,8 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
             <div>
               <CardTitle className="text-base">Columns</CardTitle>
               <p className="text-muted-foreground mt-0.5 text-xs">
-                Data entry headers — users fill these in during audit execution (e.g. Po No., Vendor Name, Amount)
+                Data entry headers — users fill these in during audit execution (e.g. Po No., Vendor
+                Name, Amount)
               </p>
             </div>
             <Button
@@ -452,12 +456,16 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
       {/* Footer actions */}
       <div className="flex items-center justify-end gap-3 border-t pt-4">
         {existingConfigId && (
-          <Button type="button" variant="ghost" onClick={handleCancel} disabled={isPending}>
+          <Button type="button" variant="destructive" onClick={handleCancel} disabled={isPending}>
             <X className="mr-1.5 h-4 w-4" />
             Cancel
           </Button>
         )}
-        <Button type="button" onClick={handleSave} disabled={!isValid || isPending} isLoading={isPending}>
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={!isValid || isPending}
+          isLoading={isPending}>
           {existingConfigId ? "Save Changes" : "Create Config"}
         </Button>
       </div>

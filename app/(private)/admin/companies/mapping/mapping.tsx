@@ -400,7 +400,7 @@ export default function CompanyMapping() {
         </Card>
       )}
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
+      <Dialog open={showModal} onOpenChange={setShowModal} modal={false}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Location Mapping</DialogTitle>

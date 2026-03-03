@@ -226,6 +226,7 @@ export interface AuditPlan {
   audit_universe_item_id: string | null;
   audit_universe_item_ids?: string[]; // Array of universe item IDs
   working_paper_template_id: string;
+  general_work_paper_template_id?: string | null;
   working_paper_id: string | null;
   ref_no: string;
   audit_plan_date: string | null;

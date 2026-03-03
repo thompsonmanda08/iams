@@ -246,7 +246,7 @@ export function CreateReportDialog({
   const isLoadingEntities = entityType === "audit_plan" ? loadingAuditPlans : loadingRiskRegisters;
 
   return (
-    <Dialog open={openModal} onOpenChange={setOpenModal}>
+    <Dialog open={openModal} onOpenChange={setOpenModal} modal={false}>
       {showTrigger && (
         <DialogTrigger asChild>
           <Button size="sm" variant={triggerVariant} className="gap-2">

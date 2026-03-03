@@ -17,7 +17,8 @@ import { FileText, CheckCircle2, AlertCircle, FileType2, Plus } from "lucide-rea
 import type { WorkpaperTemplateDefinition } from "@/lib/types/audit-types";
 import {
   useWorkpaperTemplates,
-  useWorkpaperTemplateCategories
+  useWorkpaperTemplateCategories,
+  useGeneralWorkPaperConfigs
 } from "@/hooks/use-audit-query-data";
 import { getTemplateSummary } from "@/lib/utils/audit-helpers";
 import { Alert, AlertDescription } from "../../../../../../components/ui/alert";
@@ -55,20 +56,31 @@ export function TemplateSelectorSimple({
     frameworkType ? { framework_type: frameworkType } : undefined
   );
 
-  const templates: WorkpaperTemplateDefinition[] = Array.isArray(templateResponse?.data?.data)
-    ? templateResponse?.data?.data
-    : Array.isArray(templateResponse?.data)
-      ? templateResponse?.data
-      : Array.isArray(templateResponse)
-        ? templateResponse
-        : [];
+  const templates: WorkpaperTemplateDefinition[] = useMemo(
+    () =>
+      Array.isArray(templateResponse?.data?.data)
+        ? templateResponse?.data?.data
+        : Array.isArray(templateResponse?.data)
+          ? templateResponse?.data
+          : Array.isArray(templateResponse)
+            ? templateResponse
+            : [],
+    [templateResponse]
+  );
+
+  console.log("Fetched Templates:", templates);
 
   // Use value prop as the selected template ID (from parent state)
   const selectedTemplateId = value;
+  const isGeneralTemplate = frameworkType?.toUpperCase() === "GENERAL";
 
-  // Fetch categories for the selected template
+  // Fetch categories for the selected template (compliance frameworks only)
   const { data: categoriesResponse, isLoading: loadingCategories } =
-    useWorkpaperTemplateCategories(selectedTemplateId);
+    useWorkpaperTemplateCategories(!isGeneralTemplate ? selectedTemplateId : "");
+
+  // Fetch configuration for the selected template (GENERAL framework only)
+  const { data: configurationsResponse, isLoading: loadingConfigurations } =
+    useGeneralWorkPaperConfigs(isGeneralTemplate ? selectedTemplateId : "");
 
   const templateCategories: WorkpaperTemplateDefinition["categories"] = Array.isArray(
     categoriesResponse?.data?.data
@@ -79,6 +91,19 @@ export function TemplateSelectorSimple({
       : Array.isArray(categoriesResponse)
         ? categoriesResponse
         : [];
+
+  // Parse general config — handles multiple response shapes:
+  //   { data: [...] }  |  { configs: [...] }  |  [...]  |  { columns, keys }
+  const generalConfig = useMemo(() => {
+    const responseData = configurationsResponse?.data;
+    const configsArray =
+      responseData?.data?.configs ??
+      responseData?.data ??
+      responseData?.configs ??
+      responseData;
+    const raw = Array.isArray(configsArray) ? configsArray[0] : configsArray;
+    return raw?.columns ? raw : null;
+  }, [configurationsResponse]);
 
   const summary = useMemo(() => {
     // Find the full template object from templates array to ensure we have all template data
@@ -104,15 +129,30 @@ export function TemplateSelectorSimple({
     }
   }, [value, templates, templateResponse?.success, onChange]);
 
-  // Update callback when categories are loaded for the selected template
+  // Update callback when categories are loaded (compliance templates)
   useEffect(() => {
-    if (selectedTemplateId && templates.length > 0 && templateCategories.length > 0) {
+    if (
+      !isGeneralTemplate &&
+      selectedTemplateId &&
+      templates.length > 0 &&
+      templateCategories.length > 0
+    ) {
       const fullTemplate = templates.find((t) => t.id === selectedTemplateId);
       if (fullTemplate) {
         onChange({ ...fullTemplate, categories: templateCategories });
       }
     }
-  }, [selectedTemplateId, templateCategories, templates, onChange]);
+  }, [selectedTemplateId, templateCategories, templates, onChange, isGeneralTemplate]);
+
+  // Update callback when config is loaded (GENERAL templates)
+  useEffect(() => {
+    if (isGeneralTemplate && selectedTemplateId && templates.length > 0 && generalConfig) {
+      const fullTemplate = templates.find((t) => t.id === selectedTemplateId);
+      if (fullTemplate) {
+        onChange({ ...fullTemplate, categories: [] });
+      }
+    }
+  }, [selectedTemplateId, generalConfig, templates, onChange, isGeneralTemplate]);
 
   if (loadingTemplates) {
     return (
@@ -213,33 +253,73 @@ export function TemplateSelectorSimple({
                   </div>
                 </CardHeader>
 
-                {
-                  <CardContent className="">
-                    {loadingTemplateDetails || loadingCategories ? (
-                      <span className="flex gap-2">
-                        <Spinner
-                          className={cn("dark:text-primary-foreground text-primary size-4")}
-                        />{" "}
-                        Creating Template Summary...
-                      </span>
-                    ) : isSelected && summary && selectedTemplateId ? (
+                <CardContent>
+                  {loadingTemplateDetails ||
+                  (isGeneralTemplate ? loadingConfigurations : loadingCategories) ? (
+                    <span className="flex gap-2">
+                      <Spinner
+                        className={cn("dark:text-primary-foreground text-primary size-4")}
+                      />{" "}
+                      {isGeneralTemplate
+                        ? "Loading Config Preview..."
+                        : "Creating Template Summary..."}
+                    </span>
+                  ) : isSelected &&
+                    selectedTemplateId &&
+                    isGeneralTemplate &&
+                    generalConfig ? (
+                    <div className="space-y-2">
                       <div className="flex flex-wrap gap-2 text-xs">
-                        <Badge variant="secondary">{summary?.totalCategories} categories</Badge>
-                        <Badge variant="secondary">{summary?.mainClausesCount} main clauses</Badge>
                         <Badge variant="secondary">
-                          {summary?.annexAControlsCount} control groups
+                          {generalConfig.columns?.length ?? 0} columns
+                        </Badge>
+                        <Badge variant="secondary">
+                          {generalConfig.keys?.length ?? 0} audit test keys
                         </Badge>
                       </div>
-                    ) : (
-                      <Alert variant={"default"}>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Select This template to see category details.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </CardContent>
-                }
+                      <div className="flex flex-wrap gap-1.5">
+                        {(generalConfig.columns ?? []).map((col: any) => (
+                          <Badge key={col.key} variant="outline" className="font-mono text-xs">
+                            {col.name}
+                          </Badge>
+                        ))}
+                        {(generalConfig.keys ?? []).map((k: any) => (
+                          <Badge
+                            key={k.key}
+                            className="bg-amber-100 font-mono text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                            {k.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : isSelected &&
+                    selectedTemplateId &&
+                    isGeneralTemplate &&
+                    !generalConfig ? (
+                    <Alert variant="default">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No config defined for this template. Contact your administrator.
+                      </AlertDescription>
+                    </Alert>
+                  ) : isSelected && summary && selectedTemplateId && !isGeneralTemplate ? (
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <Badge variant="secondary">{summary?.totalCategories} categories</Badge>
+                      <Badge variant="secondary">{summary?.mainClausesCount} main clauses</Badge>
+                      <Badge variant="secondary">
+                        {summary?.annexAControlsCount} control groups
+                      </Badge>
+                    </div>
+                  ) : (
+                    <Alert variant="default">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Select this template to see{" "}
+                        {isGeneralTemplate ? "config" : "category"} details.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
               </Card>
             </Label>
           );

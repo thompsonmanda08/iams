@@ -164,7 +164,7 @@ export function CreatePlanItemDialog({
   }, [departments]);
 
   return (
-    <Dialog open={openModal} onOpenChange={setOpenModal}>
+    <Dialog open={openModal} onOpenChange={setOpenModal} modal={false}>
       {showTrigger && (
         <DialogTrigger asChild>
           <Button size="sm" className="gap-2">

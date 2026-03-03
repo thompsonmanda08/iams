@@ -38,6 +38,7 @@ import {
   deleteAnnualAuditPlanItem,
   createAnnualAuditPlan
 } from "@/app/_actions/audit-module-actions";
+import { getGeneralWorkPaperConfigsByTemplateId } from "@/app/_actions/audit-settings-actions";
 import type { WorkpaperInput, TemplateCategory, AuditPlan } from "@/lib/types/audit-types";
 import { useToast } from "./use-toast";
 import { useRouter } from "next/navigation";
@@ -307,6 +308,24 @@ export const useWorkpaperTemplateCategories = (templateId: string) => {
       return response;
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    enabled: !!templateId
+  });
+};
+
+/**
+ * Hook to fetch general work paper configs for a template
+ */
+export const useGeneralWorkPaperConfigs = (templateId: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GENERAL_WORK_PAPER_CONFIGS, templateId],
+    queryFn: async () => {
+      const response = await getGeneralWorkPaperConfigsByTemplateId(templateId);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    },
+    staleTime: 5 * 60 * 1000,
     enabled: !!templateId
   });
 };

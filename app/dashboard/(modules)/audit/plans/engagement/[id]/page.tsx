@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getAuditPlan, getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
+import {
+  getAuditPlan,
+  getWorkpaperByAuditPlanId,
+  getWorkpapers
+} from "@/app/_actions/audit-module-actions";
 import { getWorkflowInstances } from "@/app/_actions/task-actions";
 import { AuditPlan } from "@/lib/types/audit-types";
 import PageHeader from "@/components/page-header";
@@ -26,12 +30,12 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   const auditPlan = (auditResponse.data || {}) as AuditPlan;
 
   // Fetch workpaper which includes categories and findings
-  const workpapersResponse = await getWorkpaperByAuditPlanId(auditPlanId);
-
+  // const workpapersResponse = await getWorkpaperByAuditPlanId(auditPlanId);
+  const workpapersResponse = await getWorkpapers(auditPlanId);
   const workpaper = workpapersResponse?.success ? workpapersResponse.data : [];
 
   // Extract findings from workpaper response (they're already included)
-  const allFindings = workpaper?.findings || [];
+  const allFindings = workpaper?.findings || workpaper?.general_findings || [];
 
   // Fetch tasks for this audit plan
   const tasksResponse = await getWorkflowInstances({
@@ -41,8 +45,8 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   const tasks = tasksResponse.success ? tasksResponse.data : [];
 
   // console.log("Audit Plan:", auditPlan);
-  // console.log("Workpaper:", workpaper);
-  // console.log("Findings:", allFindings);
+  console.log("Workpaper:", workpaper);
+  console.log("Findings:", allFindings);
 
   return (
     <div className="bg-background min-h-screen">
@@ -77,6 +81,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
           findings={allFindings}
           tasks={tasks}
           auditPlanStatus={auditPlan.status}
+          workpaper={workpaper}
         />
       </div>
     </div>

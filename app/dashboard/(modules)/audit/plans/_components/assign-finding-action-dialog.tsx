@@ -35,7 +35,9 @@ export function AssignFindingActionDialog({
   const { checkPermission } = usePermissions();
   // Only allow if audit plan is COMPLETED, APPROVED, or REJECTED
   const canAssignAction =
-    auditPlanStatus === "COMPLETED" || auditPlanStatus === "APPROVED" || auditPlanStatus === "REJECTED";
+    auditPlanStatus === "COMPLETED" ||
+    auditPlanStatus === "APPROVED" ||
+    auditPlanStatus === "REJECTED";
 
   const [formData, setFormData] = useState({
     action_description: "",
@@ -92,7 +94,7 @@ export function AssignFindingActionDialog({
 
     // Format due_date as YYYY-MM-DD
     const dueDate = formData.due_date!;
-    const formattedDueDate = dueDate.toISOString().split('T')[0];
+    const formattedDueDate = dueDate.toISOString().split("T")[0];
 
     createActionMutation.mutate(
       {
@@ -131,7 +133,7 @@ export function AssignFindingActionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent
         onInteractOutside={(e) => {
           e.preventDefault();
@@ -141,25 +143,20 @@ export function AssignFindingActionDialog({
           <DialogTitle>Assign Action to Finding</DialogTitle>
           <DialogDescription>
             Assign a remediation action to{" "}
-            {finding?.category?.display_name ||
-              finding?.category_name ||
-              "this finding"}
+            {finding?.category?.display_name || finding?.category_name || "this finding"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Action Description */}
           <div className="space-y-2">
-            <Label htmlFor="action_description">
-              Action Description <span className="text-red-500">*</span>
-            </Label>
             <Textarea
               id="action_description"
+              label="Action Description "
+              required
               placeholder="Describe the remediation action required..."
               value={formData.action_description}
-              onChange={(e) =>
-                handleInputChange("action_description", e.target.value)
-              }
+              onChange={(e) => handleInputChange("action_description", e.target.value)}
               className={errors.action_description ? "border-red-500" : ""}
               rows={4}
             />
@@ -217,17 +214,11 @@ export function AssignFindingActionDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={createActionMutation.isPending}
-            >
+              disabled={createActionMutation.isPending}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createActionMutation.isPending}
-            >
-              {createActionMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button onClick={handleSubmit} disabled={createActionMutation.isPending}>
+              {createActionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Assign Action
             </Button>
           </div>

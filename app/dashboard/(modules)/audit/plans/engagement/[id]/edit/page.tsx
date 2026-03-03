@@ -81,12 +81,6 @@ type AuditPlanFormData = {
 
 type FieldErrors = Partial<Record<keyof AuditPlanFormData, string>>;
 
-const STEPS = [
-  { id: 1, name: "Basic Details", icon: Calendar },
-  { id: 2, name: "Template Selection", icon: FileText },
-  { id: 3, name: "Category Selection", icon: CheckCircle2 }
-];
-
 export default function EditAuditPlanPage() {
   const router = useRouter();
   const { checkPermission } = usePermissions();
@@ -128,6 +122,26 @@ export default function EditAuditPlanPage() {
     budget_item_ids: [],
     selectedCategories: []
   });
+
+  const isGeneralFramework = formData.management_standard?.toUpperCase() === "GENERAL";
+
+  const steps = useMemo(() => {
+    const base = [
+      { id: 1, name: "Basic Details", icon: Calendar },
+      { id: 2, name: "Template Selection", icon: FileText }
+    ];
+    if (!isGeneralFramework) {
+      base.push({ id: 3, name: "Category Selection", icon: CheckCircle2 });
+    }
+    return base;
+  }, [isGeneralFramework]);
+
+  // Clamp step when switching to GENERAL (which has fewer steps)
+  useEffect(() => {
+    if (currentStep > steps.length) {
+      setCurrentStep(steps.length);
+    }
+  }, [steps.length, currentStep]);
 
   // Fetch audit plan using hook
   const { data: auditPlan, isLoading, error: queryError } = useAuditPlans({ planId: auditPlanId });
@@ -371,7 +385,7 @@ export default function EditAuditPlanPage() {
 
     // Clear errors on successful validation
     setFieldErrors({});
-    setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+    setCurrentStep((prev) => Math.min(prev + 1, steps.length));
   };
 
   const handlePrevious = () => {
@@ -394,27 +408,29 @@ export default function EditAuditPlanPage() {
     if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
     setValidationError(null);
 
-    // Validate that all required categories are selected
-    const requiredCategoryIds =
-      selectedTemplate.categories?.filter((c) => c.is_required).map((c) => c.id) ?? [];
+    // Validate that all required categories are selected (compliance only)
+    if (!isGeneralFramework) {
+      const requiredCategoryIds =
+        selectedTemplate.categories?.filter((c) => c.is_required).map((c) => c.id) ?? [];
 
-    const missingRequired = requiredCategoryIds.filter(
-      (id) => !formData.selectedCategories.includes(id as string)
-    );
+      const missingRequired = requiredCategoryIds.filter(
+        (id) => !formData.selectedCategories.includes(id as string)
+      );
 
-    if (missingRequired.length > 0) {
-      const missingNames = missingRequired
-        .map((id) => selectedTemplate.categories?.find((c) => c.id === id)?.name)
-        .filter(Boolean)
-        .join(", ");
-      const errorMsg = `You must select all required categories. Missing: ${missingNames}`;
-      setValidationError(errorMsg);
-      notify({
-        title: "Validation Error",
-        description: errorMsg,
-        type: "error"
-      });
-      return;
+      if (missingRequired.length > 0) {
+        const missingNames = missingRequired
+          .map((id) => selectedTemplate.categories?.find((c) => c.id === id)?.name)
+          .filter(Boolean)
+          .join(", ");
+        const errorMsg = `You must select all required categories. Missing: ${missingNames}`;
+        setValidationError(errorMsg);
+        notify({
+          title: "Validation Error",
+          description: errorMsg,
+          type: "error"
+        });
+        return;
+      }
     }
 
     // Prepare data according to API structure
@@ -443,7 +459,10 @@ export default function EditAuditPlanPage() {
       closing_meeting_datetime: formData.closing_meeting_datetime
         ? formData.closing_meeting_datetime.toISOString().split("T")[0]
         : undefined,
-      working_paper_template_id: formData.working_paper_template_id,
+      working_paper_template_id: isGeneralFramework ? null : formData.working_paper_template_id,
+      general_work_paper_template_id: isGeneralFramework
+        ? formData.working_paper_template_id
+        : null,
       audit_universe_item_ids: formData.audit_universe_item_ids || [],
       budget_item_ids: formData.budget_item_ids || []
     };
@@ -554,8 +573,8 @@ export default function EditAuditPlanPage() {
         <div className="mx-auto max-w-4xl">
           {/* Progress Steps */}
           <div className="mb-4">
-            <div className="grid grid-cols-3 place-items-center justify-center gap-4">
-              {STEPS.map((step, index) => {
+            <div className={`grid place-items-center justify-center gap-4 ${steps.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+              {steps.map((step, index) => {
                 const Icon = step.icon;
                 const isActive = currentStep === step.id;
                 const isCompleted = currentStep > step.id;
@@ -576,7 +595,7 @@ export default function EditAuditPlanPage() {
                         {step.name}
                       </span>
                     </div>
-                    {index < STEPS.length - 1 && (
+                    {index < steps.length - 1 && (
                       <div
                         className={`absolute left-[90%] mx-4 h-0.5 w-full transition-colors ${isCompleted ? "bg-primary" : "bg-muted"} `}
                       />
@@ -983,7 +1002,7 @@ export default function EditAuditPlanPage() {
                     Cancel
                   </Button>
 
-                  {currentStep < STEPS.length ? (
+                  {currentStep < steps.length ? (
                     <div>
                       <Button type="button" onClick={handleNext} disabled={isSubmitting}>
                         Next

@@ -576,7 +576,7 @@ export function CreateOrUpdatePlanItem({
   }, [universeItemsData]);
 
   return (
-    <Dialog open={openModal} onOpenChange={setOpenModal}>
+    <Dialog open={openModal} onOpenChange={setOpenModal} modal={false}>
       {showTrigger && (
         <DialogTrigger asChild>
           <Button size="sm">
@@ -1116,7 +1116,7 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
         Generate Plan
       </Button>
 
-      <Dialog open={openModal} onOpenChange={setOpenModal}>
+      <Dialog open={openModal} onOpenChange={setOpenModal} modal={false}>
         <DialogContent className="max-h-[85vh] max-w-lg! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generate Audit Plan from Annual Item</DialogTitle>

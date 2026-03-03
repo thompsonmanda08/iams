@@ -46,6 +46,7 @@ interface AuditPlanWorkpaperViewProps {
   tasks?: Task[];
   isLoading?: boolean;
   auditPlanStatus?: string;
+  workpaper?: any;
 }
 
 // Helper function to check if a finding is completed
@@ -59,7 +60,8 @@ export function AuditPlanWorkpaperView({
   workpaperCategories,
   findings,
   tasks = [],
-  auditPlanStatus
+  auditPlanStatus,
+  workpaper
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
   const { checkPermission } = usePermissions();
@@ -383,8 +385,8 @@ export function AuditPlanWorkpaperView({
 
         {/* Workpaper Tab */}
         <TabsContent value="workpaper" className="space-y-4">
-          {auditPlan.framework_type?.toUpperCase() === "GENERAL" ? (
-            <GeneralAuditWorkpaperTab auditPlan={auditPlan} />
+          {(auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() === "GENERAL" ? (
+            <GeneralAuditWorkpaperTab auditPlan={auditPlan} workpaper={workpaper} />
           ) : (
             <ComplianceAuditWorkpaperTab
               auditPlan={auditPlan}

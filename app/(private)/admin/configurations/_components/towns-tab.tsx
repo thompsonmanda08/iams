@@ -407,6 +407,7 @@ function CreateTownDialog({
   return (
     <Dialog
       open={openModal}
+      modal={false}
       onOpenChange={(open) => {
         setOpenModal(open);
         if (!open) {

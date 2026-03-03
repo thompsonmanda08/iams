@@ -70,11 +70,10 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
     page_size: pageSize
   });
 
-  // Prefer server-side data on first load, then use React Query data for updates
-  const tasks =
-    tasksResponse && tasksResponse?.length > 0
-      ? tasksResponse?.data || tasksResponse
-      : initialTasks;
+  // Prefer React Query data when available, fall back to SSR initial data
+  const tasks = tasksResponse
+    ? tasksResponse?.data || tasksResponse
+    : initialTasks;
 
   // Calculate pagination info
   const pagination: Pagination = {

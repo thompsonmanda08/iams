@@ -115,7 +115,8 @@ export async function createAuditPlan(data: {
   audit_language: string;
   opening_meeting_datetime?: string;
   closing_meeting_datetime?: string;
-  working_paper_template_id: string;
+  working_paper_template_id?: string | null;
+  general_work_paper_template_id?: string | null;
   department_id: string;
   audit_universe_item_ids?: string[];
   budget_item_ids?: string[];
@@ -124,8 +125,10 @@ export async function createAuditPlan(data: {
     return handleBadRequest("Year, title, start date, end date, and reference number are required");
   }
 
-  if (!data?.working_paper_template_id) {
-    return handleBadRequest("Working paper template ID is required");
+  if (!data?.working_paper_template_id && !data?.general_work_paper_template_id) {
+    return handleBadRequest(
+      "A working paper template ID or general work paper template ID is required"
+    );
   }
 
   if (
@@ -179,9 +182,9 @@ export async function updateAuditPlan(
   try {
     const response = await authenticatedApiClient({ method: "PUT", url, data });
 
+    revalidatePath("/dashboard/home/audit");
     revalidatePath("/dashboard/audit/plans");
     revalidatePath(`/dashboard/audit/plans/engagement/${id}`);
-    revalidatePath("/dashboard/home/audit");
 
     return successResponse(response.data, "Audit plan updated successfully");
   } catch (error: any) {

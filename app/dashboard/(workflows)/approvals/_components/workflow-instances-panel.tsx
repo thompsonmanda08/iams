@@ -63,11 +63,10 @@ export function WorkflowInstancesPanel({
     page_size: pageSize
   });
 
-  // Prefer server-side data on first load, then use React Query data for updates
-  const instances =
-    instancesResponse && instancesResponse.length > 0
-      ? instancesResponse?.data || instancesResponse
-      : initialInstances;
+  // Prefer React Query data when available, fall back to SSR initial data
+  const instances = instancesResponse
+    ? instancesResponse?.data || instancesResponse
+    : initialInstances;
 
   // Calculate pagination info
   const pagination: Pagination = {

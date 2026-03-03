@@ -363,7 +363,7 @@ export default function AuditAnnualPlan({
       )}
 
       {/* Create Approval Dialog */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} modal={false}>
         <DialogContent
           onInteractOutside={(e) => {
             e.preventDefault();

@@ -154,6 +154,9 @@ export function useCompleteWorkflowTaskMutation() {
         queryKey: ["user-workflow-tasks"]
       });
       queryClient.invalidateQueries({
+        queryKey: ["workflow-instances"]
+      });
+      queryClient.invalidateQueries({
         queryKey: ["workflow-instance-tasks"]
       });
     },
@@ -188,6 +191,9 @@ export function useReassignWorkflowTaskMutation() {
       // Invalidate related queries to trigger refresh
       queryClient.invalidateQueries({
         queryKey: ["user-workflow-tasks"]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["workflow-instances"]
       });
       queryClient.invalidateQueries({
         queryKey: ["workflow-instance-tasks"]
