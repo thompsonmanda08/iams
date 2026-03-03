@@ -139,12 +139,17 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
     });
   };
 
-  // Reset form when dialog closes
+  // Reset form when dialog closes or actionId changes
   useEffect(() => {
     if (!open) {
       resetForm();
     }
   }, [open]);
+
+  // Sync finding_action_id when actionId prop changes
+  useEffect(() => {
+    setPayload((prev) => ({ ...prev, finding_action_id: actionId }));
+  }, [actionId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
