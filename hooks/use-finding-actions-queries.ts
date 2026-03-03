@@ -335,6 +335,10 @@ export function useCreateFindingActionEvidenceMutation() {
       queryClient.invalidateQueries({
         queryKey: FINDING_ACTION_QUERY_KEYS.byId(variables.finding_action_id)
       });
+      // Invalidate finding action lists so parent views reflect status changes
+      queryClient.invalidateQueries({
+        queryKey: FINDING_ACTION_QUERY_KEYS.lists()
+      });
 
       notify({
         title: "Success",

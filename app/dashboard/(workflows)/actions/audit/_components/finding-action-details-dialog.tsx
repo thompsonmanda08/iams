@@ -128,7 +128,9 @@ export function FindingActionDetailsDialog({
   const hasEvidence = evidence && evidence?.length > 0;
   const hasReviews = reviews && reviews?.length > 0;
 
-  // Can only create reassessment if user is the assigned reviewer (auditor)
+  // Role-based access checks
+  const isAssignedUser = currentUserId === action.assigned_to;
+  const isReviewer = currentUserId === action.reviewer_id;
   const isAssignedReviewer = currentUserId === action.auditor_id;
 
   // Hide reassessment button if finding is already compliant
@@ -149,10 +151,10 @@ export function FindingActionDetailsDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-        onInteractOutside={(e) => {
-          e.preventDefault();
-        }}
-        className="flex! h-[90vh] w-full! max-w-3xl! flex-col overflow-y-auto">
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+          className="flex! h-[90vh] w-full! max-w-3xl! flex-col overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Finding Action Details</DialogTitle>
           </DialogHeader>
@@ -396,7 +398,7 @@ export function FindingActionDetailsDialog({
                     </div>
 
                     {findingEvidenceData.evidence?.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {findingEvidenceData.evidence.map((item, index) => (
                           <Card key={item.id} className="bg-muted/30">
                             <CardContent className="">
@@ -492,16 +494,18 @@ export function FindingActionDetailsDialog({
                           {evidence?.length} evidence{evidence?.length !== 1 ? "s" : ""} submitted
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          if (!checkPermission("AUDIT_PLANS", "can_create")) return;
-                          setSubmitEvidenceOpen(true);
-                        }}
-                        className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Submit Action Evidence
-                      </Button>
+                      {isAssignedUser && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                            setSubmitEvidenceOpen(true);
+                          }}
+                          className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          Submit Action Evidence
+                        </Button>
+                      )}
                     </div>
 
                     {evidence?.length > 0 ? (
@@ -513,7 +517,7 @@ export function FindingActionDetailsDialog({
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1">
                                     <p className="text-sm font-medium">
-                                      {item?.title || `Evidence File #${index + 1}`}
+                                      {`Evidence File #${index + 1}`}
                                     </p>
                                     {item.evidence_summary && (
                                       <p className="text-muted-foreground mt-1 text-xs">
@@ -585,22 +589,24 @@ export function FindingActionDetailsDialog({
                           {reviews.length} review{reviews.length !== 1 ? "s" : ""} recorded
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
-                          setReviewEvidenceOpen(true);
-                        }}
-                        className="gap-2"
-                        disabled={!hasEvidence}>
-                        <Plus className="h-4 w-4" />
-                        Add Review
-                      </Button>
+                      {isReviewer && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                            setReviewEvidenceOpen(true);
+                          }}
+                          className="gap-2"
+                          disabled={!hasEvidence}>
+                          <Plus className="h-4 w-4" />
+                          Add Review
+                        </Button>
+                      )}
                     </div>
 
                     {reviews?.length > 0 ? (
                       <div className="space-y-3">
-                        {reviews.map((review) => (
+                        {reviews.map((review: any) => (
                           <Card key={review.id} className="bg-muted/50 border-border/50">
                             <CardContent className="">
                               <div className="space-y-2">

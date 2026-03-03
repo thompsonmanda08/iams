@@ -9,6 +9,7 @@ import { FindingActionsMenu } from "./finding-actions-menu";
 import { useFindingEvidence } from "@/hooks/use-evidence-queries";
 import { useFindingActionsByFinding } from "@/hooks/use-finding-actions-queries";
 import { AssignFindingActionDialog } from "./assign-finding-action-dialog";
+import { FindingDetailsDialog } from "./finding-details-dialog";
 import { RequiresApprovalState } from "./requires-approval-state";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -40,14 +41,17 @@ const STATUS_ICONS: Record<string, any> = {
 function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any) {
   const { checkPermission } = usePermissions();
   const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const { data: evidenceData } = useFindingEvidence(finding.id);
   const { data: actions } = useFindingActionsByFinding(finding.id);
   const evidenceList = evidenceData?.evidence || [];
   const actionsCount = actions?.length || 0;
+  const isFindingApproved = ["APPROVED", "CLOSED"].includes(finding.status);
+  const totalEvidence = evidenceData?.total_count || 0;
   const evidenceStats = {
-    total: evidenceData?.total_count || 0,
-    verified: evidenceData?.verified_count || 0,
-    unverified: evidenceData?.unverified_count || 0
+    total: totalEvidence,
+    verified: isFindingApproved ? totalEvidence : (evidenceData?.verified_count || 0),
+    unverified: isFindingApproved ? 0 : (evidenceData?.unverified_count || 0)
   };
 
   // Check if finding is editable (only in specific statuses)
@@ -57,7 +61,9 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
   const canAssignAction = ["COMPLETED", "APPROVED", "REJECTED", "CLOSED"].includes(finding.status);
 
   return (
-    <Card className="gap-2 transition-shadow hover:shadow-md">
+    <Card
+      className="cursor-pointer gap-2 transition-shadow hover:shadow-md"
+      onClick={() => setDetailsDialogOpen(true)}>
       <CardHeader className="">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -89,7 +95,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
             {canAssignAction && (
               <Button
                 size="sm"
@@ -214,6 +220,13 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
         onOpenChange={setAssignActionDialogOpen}
         finding={finding}
         auditPlanStatus={auditPlanStatus || ""}
+      />
+
+      {/* Finding Details Dialog */}
+      <FindingDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        finding={finding}
       />
     </Card>
   );

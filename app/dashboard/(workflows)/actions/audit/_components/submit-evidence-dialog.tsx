@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import UploadField, { ACCEPTABLE_FILE_TYPES } from "@/components/ui/file-dropzone";
 import {
   Dialog,
@@ -12,7 +11,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Loader2, Link2 } from "lucide-react";
+import { Loader2, Link2, Upload } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useCreateFindingActionEvidenceMutation } from "@/hooks/use-finding-actions-queries";
 import { Input } from "@/components/ui/input";
@@ -146,8 +146,6 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
     }
   }, [open]);
 
-  console.log({ payload, uploadedFile });
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -189,143 +187,114 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
             rows={3}
           />
 
-          {/* Submission Type Selector */}
-          <div className="space-y-2">
-            <Label>
-              Evidence Type <span className="text-red-500">*</span>
-            </Label>
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant={submissionType === "file" ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  setSubmissionType("file");
-                  const newErrors = { ...errors };
-                  delete newErrors.evidence_file_url;
-                  delete newErrors.file;
-                  setErrors(newErrors);
-                }}
-                className="gap-2">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
+          {/* Evidence Type Tabs */}
+          <Tabs
+            value={submissionType}
+            onValueChange={(value) => {
+              setSubmissionType(value as EvidenceSubmissionType);
+              const newErrors = { ...errors };
+              delete newErrors.file;
+              delete newErrors.evidence_file_url;
+              delete newErrors.fileLink;
+              setErrors(newErrors);
+            }}>
+            <TabsList className="w-full">
+              <TabsTrigger value="file" className="gap-2">
+                <Upload className="h-4 w-4" />
                 Upload File
-              </Button>
-              <Button
-                type="button"
-                variant={submissionType === "link" ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  setSubmissionType("link");
-                  const newErrors = { ...errors };
-                  delete newErrors.file;
-                  delete newErrors.evidence_file_url;
-                  setErrors(newErrors);
-                }}
-                className="gap-2">
+              </TabsTrigger>
+              <TabsTrigger value="link" className="gap-2">
                 <Link2 className="h-4 w-4" />
                 Provide Link
-              </Button>
-            </div>
-          </div>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* File Upload Option */}
-          {submissionType === "file" && (
-            <div className="space-y-2">
-              {!uploadedFile ? (
-                <UploadField
-                  label="Evidence File"
-                  isLoading={uploading}
-                  required
-                  handleFile={handleFileUpload}
-                  acceptedFiles={{
-                    ...ACCEPTABLE_FILE_TYPES.pdf,
-                    ...ACCEPTABLE_FILE_TYPES.word,
-                    ...ACCEPTABLE_FILE_TYPES.images,
-                    ...ACCEPTABLE_FILE_TYPES.excel
-                  }}
-                />
-              ) : (
-                <div className="space-y-2">
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                    <div className="flex items-center gap-3">
-                      <svg
-                        className="h-5 w-5 shrink-0 text-green-600"
-                        fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-green-900">
-                          {uploadedFile.file.name}
-                        </p>
-                        <p className="text-xs text-green-700">
-                          {(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleFileUpload(undefined)}
-                        disabled={uploading}
-                        className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50">
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+            <TabsContent value="file">
+              <div className="space-y-2">
+                {!uploadedFile ? (
+                  <UploadField
+                    label="Evidence File"
+                    isLoading={uploading}
+                    required
+                    handleFile={handleFileUpload}
+                    acceptedFiles={{
+                      ...ACCEPTABLE_FILE_TYPES.pdf,
+                      ...ACCEPTABLE_FILE_TYPES.word,
+                      ...ACCEPTABLE_FILE_TYPES.images,
+                      ...ACCEPTABLE_FILE_TYPES.excel
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className="h-5 w-5 shrink-0 text-green-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                             clipRule="evenodd"
                           />
                         </svg>
-                      </button>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-green-900">
+                            {uploadedFile.file.name}
+                          </p>
+                          <p className="text-xs text-green-700">
+                            {(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleFileUpload(undefined)}
+                          disabled={uploading}
+                          className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50">
+                          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleFileUpload(undefined)}
+                      disabled={uploading}
+                      className="w-full">
+                      Change File
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleFileUpload(undefined)}
-                    disabled={uploading}
-                    className="w-full">
-                    Change File
-                  </Button>
-                </div>
-              )}
+                )}
+                {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
+              </div>
+            </TabsContent>
 
-              {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
-            </div>
-          )}
-
-          {/* Link Option */}
-          {submissionType === "link" && (
-            <div className="space-y-2">
-              <Label htmlFor="evidence_link">
-                Evidence Link <span className="text-red-500">*</span>
-              </Label>
-              <input
-                id="evidence_link"
-                type="url"
-                placeholder="e.g., https://example.com/evidence or https://drive.google.com/file/..."
-                value={payload.evidence_file_url}
-                onChange={(e) => updatePayload("evidence_file_url", e.target.value)}
-                className={`w-full rounded-md border px-3 py-2 text-sm ${
-                  errors.fileLink ? "border-red-500" : "border-input"
-                }`}
-              />
-              {errors.fileLink && <p className="text-sm text-red-500">{errors.fileLink}</p>}
-              <p className="text-muted-foreground text-xs">
-                Provide a URL to an external document, Google Drive file, or other resource
-              </p>
-            </div>
-          )}
+            <TabsContent value="link">
+              <div className="space-y-2">
+                <Input
+                  id="evidence_link"
+                  type="url"
+                  label="Evidence Link"
+                  required
+                  placeholder="e.g., https://example.com/evidence or https://drive.google.com/file/..."
+                  value={payload.evidence_file_url}
+                  onChange={(e) => updatePayload("evidence_file_url", e.target.value)}
+                  isInvalid={!!errors.fileLink || !!errors.evidence_file_url}
+                  errorText={errors.fileLink || errors.evidence_file_url}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Provide a URL to an external document, Google Drive file, or other resource
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+
 import { Loader2 } from "lucide-react";
 import {
   useReviewFindingActionEvidenceMutation,
@@ -44,6 +44,7 @@ export function ReviewEvidenceDialog({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submittingStatus, setSubmittingStatus] = useState<"APPROVED" | "REJECTED" | null>(null);
 
   const createMutation = useReviewFindingActionEvidenceMutation();
   const updateMutation = useUpdateFindingActionReviewMutation();
@@ -56,9 +57,6 @@ export function ReviewEvidenceDialog({
 
     if (!formData.evidence_id) {
       newErrors.evidence_id = "Please select evidence to review";
-    }
-    if (!formData.review_status) {
-      newErrors.review_status = "Please select a review status";
     }
 
     setErrors(newErrors);
@@ -77,11 +75,12 @@ export function ReviewEvidenceDialog({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (status: "APPROVED" | "REJECTED") => {
     if (!validateForm()) {
       return;
     }
 
+    setSubmittingStatus(status);
     let mutation = isEditing && editingReview ? updateMutation : createMutation;
 
     // Create Or Update a review
@@ -89,7 +88,7 @@ export function ReviewEvidenceDialog({
       {
         evidence_id: formData.evidence_id,
         action_id: actionId,
-        status: formData.review_status,
+        status,
         comments: String(formData.comments || "")
       },
       {
@@ -100,8 +99,12 @@ export function ReviewEvidenceDialog({
             review_status: "APPROVED",
             comments: ""
           });
+          setSubmittingStatus(null);
           setErrors({});
           onOpenChange(false);
+        },
+        onError: () => {
+          setSubmittingStatus(null);
         }
       }
     );
@@ -131,7 +134,8 @@ export function ReviewEvidenceDialog({
             onValueChange={(value) => handleInputChange("evidence_id", value)}
             options={evidence.map((item, index) => ({
               id: item.id,
-              name: item?.title || `Evidence #${index + 1}`
+              // name: item?.evidence_summary || item?.evidence_file_name || `Evidence #${index + 1}`
+              name: `Evidence #${index + 1}`
             }))}
             placeholder="-- Select Evidence --"
             isInvalid={!!errors.evidence_id}
@@ -140,63 +144,32 @@ export function ReviewEvidenceDialog({
             disabled={isEditing}
           />
 
-          {/* Review Status */}
-          <div className="space-y-2">
-            <Label className={errors.review_status ? "text-red-500" : ""}>
-              Review Status <span className="text-red-500">*</span>
-            </Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={formData.review_status === "APPROVED" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => handleInputChange("review_status", "APPROVED")}>
-                Approve
-              </Button>
-              <Button
-                type="button"
-                variant={formData.review_status === "REJECTED" ? "destructive" : "outline"}
-                className="flex-1"
-                onClick={() => handleInputChange("review_status", "REJECTED")}>
-                Reject
-              </Button>
-            </div>
-            {errors.review_status && <p className="text-sm text-red-500">{errors.review_status}</p>}
-          </div>
-
           {/* Comments */}
-          <div className="space-y-2">
-            <Label htmlFor="review_comments">Comments</Label>
-            <Textarea
-              id="review_comments"
-              placeholder="Provide feedback on the evidence..."
-              value={formData.comments}
-              onChange={(e) => handleInputChange("comments", e.target.value)}
-              rows={3}
-            />
-          </div>
+          <Textarea
+            id="review_comments"
+            label="Comments"
+            placeholder="Provide feedback on the evidence..."
+            value={formData.comments}
+            onChange={(e) => handleInputChange("comments", e.target.value)}
+            rows={3}
+          />
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex gap-2 pt-4">
             <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
+              variant="destructive"
+              className="flex-1"
+              onClick={() => handleSubmit("REJECTED")}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              Cancel
+              {submittingStatus === "REJECTED" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Reject
             </Button>
             <Button
-              onClick={handleSubmit}
-              variant={formData.review_status === "REJECTED" ? "destructive" : "default"}
+              className="flex-1"
+              onClick={() => handleSubmit("APPROVED")}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              {(createMutation.isPending || updateMutation.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {isEditing
-                ? "Update Review"
-                : formData.review_status === "APPROVED"
-                  ? "Approve"
-                  : "Reject"}
+              {submittingStatus === "APPROVED" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Approve
             </Button>
           </div>
         </div>
