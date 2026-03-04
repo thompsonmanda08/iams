@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
-import { submitIncidentFindings } from "@/app/_actions/incident-actions";
+import { submitReviewIncidentFindings } from "@/app/_actions/incident-actions";
 import { Separator } from "@radix-ui/react-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SelectField } from "@/components/ui/select-field";
@@ -131,13 +131,14 @@ export function ActionIncidentReviewDialog({
     setIsSubmitting(true);
 
     try {
-      const response = await submitIncidentFindings(incidentId!, {
+      const response = await submitReviewIncidentFindings(incidentId!, {
+        status: formData.status,
         comment: formData.comment,
         file_urls: formData.file_urls
       });
 
       if (response.success) {
-        toast.success("Findings submitted successfully");
+        toast.success("Review findings submitted successfully");
         setFormData({ status: "", comment: "", file_urls: [] });
         onOpenChange(false);
       } else {
@@ -303,7 +304,6 @@ export function ActionIncidentReviewDialog({
                               </span>
                               <div className="space-y-2">
                                 {submission.file_urls.map((fileUrl: any, fileIdx: number) => {
-                                  const fileName = fileUrl.split("/").pop() || "File";
                                   return (
                                     <div className="rounded-lg border border-gray-200 p-4">
                                       <div className="flex items-center justify-between">
@@ -354,9 +354,7 @@ export function ActionIncidentReviewDialog({
                               </p>
                               <p className="text-muted-foreground text-xs">
                                 Reviewed{" "}
-                                {submission.reviewed_at
-                                  ? format(new Date(submission.reviewed_at), "PPP p")
-                                  : "N/A"}
+                                {format(new Date(submission.submitted_at), "PPP p") || "N/A"}
                               </p>
                             </div>
                             <Badge
@@ -377,6 +375,38 @@ export function ActionIncidentReviewDialog({
                               <p className="text-foreground text-sm leading-relaxed">
                                 {submission.comment}
                               </p>
+                            </div>
+                          )}
+                          {submission.file_urls && submission.file_urls.length > 0 && (
+                            <div className="space-y-2 border-t pt-3">
+                              <span className="text-muted-foreground text-xs font-semibold uppercase">
+                                Attached Files ({submission.file_urls.length})
+                              </span>
+                              <div className="space-y-2">
+                                {submission.file_urls.map((fileUrl: any, fileIdx: number) => {
+                                  return (
+                                    <div
+                                      key={fileIdx}
+                                      className="rounded-lg border border-gray-200 p-4">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                          <div>
+                                            <p className="text-xs text-gray-600">File</p>
+                                          </div>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => window.open(fileUrl, "_blank")}
+                                          className="gap-2">
+                                          <Download className="h-4 w-4" />
+                                          Download
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           )}
                         </div>

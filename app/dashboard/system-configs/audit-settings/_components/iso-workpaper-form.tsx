@@ -186,7 +186,6 @@ export function ComplianceWorkpaperTemplateForm({
               variant="destructive"
               onClick={() => {
                 onCancel?.();
-                router.back();
               }}
               disabled={isSubmitting}>
               Cancel

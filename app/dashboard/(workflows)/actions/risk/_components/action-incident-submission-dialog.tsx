@@ -294,7 +294,6 @@ export function ActionIncidentSubmissionDialog({
                               </span>
                               <div className="space-y-2">
                                 {submission.file_urls.map((fileUrl: any, fileIdx: number) => {
-                                  const fileName = fileUrl.split("/").pop() || "File";
                                   return (
                                     <div className="rounded-lg border border-gray-200 p-4">
                                       <div className="flex items-center justify-between">
@@ -345,9 +344,7 @@ export function ActionIncidentSubmissionDialog({
                               </p>
                               <p className="text-muted-foreground text-xs">
                                 Reviewed{" "}
-                                {submission.reviewed_at
-                                  ? format(new Date(submission.reviewed_at), "PPP p")
-                                  : "N/A"}
+                                {format(new Date(submission.submitted_at), "PPP p") || "N/A"}
                               </p>
                             </div>
                             <Badge
@@ -368,6 +365,37 @@ export function ActionIncidentSubmissionDialog({
                               <p className="text-foreground text-sm leading-relaxed">
                                 {submission.comment}
                               </p>
+                            </div>
+                          )}
+
+                          {submission.file_urls && submission.file_urls.length > 0 && (
+                            <div className="space-y-2 border-t pt-3">
+                              <span className="text-muted-foreground text-xs font-semibold uppercase">
+                                Attached Files ({submission.file_urls.length})
+                              </span>
+                              <div className="space-y-2">
+                                {submission.file_urls.map((fileUrl: any, fileIdx: number) => {
+                                  return (
+                                    <div key={fileIdx} className="rounded-lg border border-gray-200 p-4">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                          <div>
+                                            <p className="text-xs text-gray-600">File</p>
+                                          </div>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => window.open(fileUrl, "_blank")}
+                                          className="gap-2">
+                                          <Download className="h-4 w-4" />
+                                          Download
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           )}
                         </div>

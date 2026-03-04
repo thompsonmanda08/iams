@@ -203,6 +203,33 @@ export async function sendIncidentForReview(
   }
 }
 
+// Submit incident findings/logs from reviewer person
+export async function submitReviewIncidentFindings(
+  incidentId: string,
+  data: {
+    status: string;
+    comment: string;
+    file_urls: string[];
+  }
+): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/incidents/${incidentId}/logs/reviewer`,
+      method: "POST",
+      data
+    });
+
+    revalidatePath("/dashboard/(workflows)/actions/risk");
+    return successResponse(response?.data.data);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | SUBMIT INCIDENT FINDINGS",
+      `/api/v1/incidents/${incidentId}/logs/reviewer`
+    );
+  }
+}
+
 // Submit incident findings/logs from responsible person
 export async function submitIncidentFindings(
   incidentId: string,
