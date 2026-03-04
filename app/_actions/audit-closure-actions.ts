@@ -62,6 +62,11 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
 
     const auditPlan = auditResponse.data as AuditPlan;
 
+    // Detect GENERAL framework type
+    const isGeneralFramework =
+      auditPlan.framework_type?.toUpperCase() === "GENERAL" ||
+      auditPlan.management_standard?.toUpperCase() === "GENERAL";
+
     // Fetch workpaper and tasks in parallel
     const [workpaperRes, tasksRes] = await Promise.all([
       authenticatedApiClient({
@@ -78,9 +83,11 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
     const workpaper = workpaperRes?.data?.data || workpaperRes?.data;
     const workpapers = workpaper ? [workpaper] : [];
 
-    // Extract findings - check both nested format and direct array format
+    // Extract findings — GENERAL workpapers store findings under general_findings
     let findings: any[] = [];
-    if (Array.isArray(workpaper?.findings)) {
+    if (isGeneralFramework) {
+      findings = Array.isArray(workpaper?.general_findings) ? workpaper.general_findings : [];
+    } else if (Array.isArray(workpaper?.findings)) {
       findings = workpaper.findings;
     } else if (Array.isArray(workpaper?.categories)) {
       // If findings are nested in categories, flatten them
@@ -116,25 +123,36 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
     }
 
     // Calculate closure statistics
-    // A workpaper is considered completed if all its related findings are completed
     const completedWorkpapers = workpapers.filter((wp: any) => {
       // Check if workpaper has explicit status
       if (wp.status === "COMPLETED" || wp.status === "CLOSED") {
         return true;
       }
 
-      // Get all findings for this workpaper (from either direct array or categories)
+      if (isGeneralFramework) {
+        // GENERAL: metadata (work_done + conclusion) must be filled AND all general findings resolved
+        const metaFilled =
+          !!wp.metadata?.work_done?.trim() && !!wp.metadata?.conclusion?.trim();
+        const gFindings: any[] = Array.isArray(wp.general_findings) ? wp.general_findings : [];
+        const allResolved =
+          gFindings.length > 0 &&
+          gFindings.every(
+            (f: any) =>
+              f.status !== "OPEN" && f.status !== "" && f.status !== null && f.status !== undefined
+          );
+        return metaFilled && allResolved;
+      }
+
+      // Compliance: workpaper is completed if all findings are not OPEN
       let wpFindings: any[] = [];
       if (Array.isArray(wp.findings)) {
         wpFindings = wp.findings;
       } else if (Array.isArray(wp.categories)) {
-        // Flatten findings from categories
         wpFindings = wp.categories.flatMap((cat: any) =>
           Array.isArray(cat.findings) ? cat.findings : []
         );
       }
 
-      // Workpaper is completed if it has findings AND all findings are completed (not OPEN)
       return (
         wpFindings.length > 0 &&
         wpFindings.every(
@@ -168,7 +186,9 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
       {
         id: "all-workpapers",
         name: "All Workpapers Linked",
-        description: `${completedWorkpapers} of ${workpapers.length} workpapers completed`,
+        description: isGeneralFramework
+          ? `${completedWorkpapers} of ${workpapers.length} workpapers complete (metadata filled and all evidence rows resolved)`
+          : `${completedWorkpapers} of ${workpapers.length} workpapers completed`,
         completed: workpapers.length === 0 || completedWorkpapers === workpapers.length,
         required: true,
         category: "workpaper"

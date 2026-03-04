@@ -48,6 +48,9 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
   const [teamLeadSignOff, setTeamLeadSignOff] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
 
+  const isGeneralFramework =
+    (auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() === "GENERAL";
+
   // Check if current user is the audit team lead
   const isTeamLead =
     session?.user?.id === auditPlan?.audit_team_leader ||
@@ -217,6 +220,12 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
                   </div>
                 </div>
               ))}
+            {isGeneralFramework && (
+              <p className="text-muted-foreground mt-2 text-xs">
+                For general audits, workpaper completion requires both metadata (Work Done +
+                Conclusion) to be filled and all evidence rows resolved.
+              </p>
+            )}
           </CardContent>
         </Card>
 
