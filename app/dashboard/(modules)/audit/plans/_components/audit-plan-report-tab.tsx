@@ -21,6 +21,7 @@ interface AuditPlanReportTabProps {
     status: string;
     ref_no?: string;
     management_standard?: string;
+    framework_type?: string;
   };
 }
 
@@ -51,7 +52,7 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
       // This preserves user edits while filling gaps with template sections
       const mergedReport = mergeReportWithTemplate(
         record.report_content,
-        auditPlan.management_standard,
+        auditPlan.management_standard || auditPlan.framework_type,
         {
           id: record.id,
           title: record.title,
@@ -76,12 +77,14 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
   // Handle create report
   const handleCreateReport = () => {
     if (!checkPermission("AUDIT_REPORTS", "can_create")) return;
-    const managementStandard = normalizeManagementStandard(auditPlan.management_standard);
+    const managementStandard = normalizeManagementStandard(
+      auditPlan.management_standard || auditPlan.framework_type
+    );
 
     // Determine report type based on management standard
     // Compliance frameworks use compliance_audit type
     const isComplianceFramework =
-      managementStandard === "ISO 27001" || ["COSO", "COBIT", "NISIT"].includes(managementStandard);
+      managementStandard === "ISO 27001" || ["COSO", "COBIT", "NIST"].includes(managementStandard);
 
     const reportType: "general_audit" | "compliance_audit" | "risk" | "followup" =
       isComplianceFramework ? "compliance_audit" : "general_audit";
@@ -162,7 +165,7 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
     description: auditPlan.audit_scope,
     status: auditPlan.status,
     ref_no: auditPlan.ref_no,
-    management_standard: auditPlan.management_standard
+    management_standard: auditPlan.management_standard || auditPlan.framework_type
   };
 
   // Report exists - show ReportBuilder with read-only type
