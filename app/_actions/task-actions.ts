@@ -40,7 +40,7 @@ async function _getWorkflowInstances(filters?: {
 
     const response = await authenticatedApiClient({ method: "GET", url });
 
-    return successResponse(response.data?.data || [], "Tasks fetched successfully");
+    return successResponse(response.data, "Tasks fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | TASKS", "/api/v1/workflow/tasks");
   }
@@ -159,19 +159,21 @@ async function _getUserAssignedWorkflowTasks(filters?: {
   page?: string;
   page_size?: string;
   status?: string;
+  entity_id?: string;
 }): Promise<APIResponse> {
   try {
     const params = new URLSearchParams();
     if (filters?.page) params.append("page", filters.page);
     if (filters?.page_size) params.append("page_size", filters.page_size);
     if (filters?.status) params.append("status", filters.status);
+    if (filters?.entity_id) params.append("entity_id", filters.entity_id);
 
     const queryString = params.toString();
     const url = `/api/v1/workflow-tasks/user${queryString ? `?${queryString}` : ""}`;
 
     const response = await authenticatedApiClient({ method: "GET", url });
 
-    return successResponse(response.data?.data || [], "User workflow tasks fetched successfully");
+    return successResponse(response.data, "User workflow tasks fetched successfully");
   } catch (error: any) {
     return handleError(error, "GET | USER WORKFLOW TASKS", "/api/v1/workflow-tasks/user");
   }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -44,7 +45,8 @@ interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
   workpaperCategories: any[];
   findings: any[];
-  tasks?: Task[];
+  workflowInstance?: Task[];
+  userTasks?: any[];
   isLoading?: boolean;
   auditPlanStatus?: string;
   workpaper?: any;
@@ -60,12 +62,35 @@ export function AuditPlanWorkpaperView({
   auditPlan,
   workpaperCategories,
   findings,
-  tasks = [],
+  workflowInstance = [],
+  userTasks = [],
   auditPlanStatus,
   workpaper
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
   const { checkPermission } = usePermissions();
+
+  const isGeneralFramework =
+    (auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() === "GENERAL";
+
+  // For GENERAL workpapers — subscribe to the same query key used by GeneralFindingsList
+  // so the completion badge stays live without extra API calls (cache is shared).
+  const { data: generalFindings } = useQuery({
+    queryKey: [QUERY_KEYS.GENERAL_FINDINGS, workpaper?.id],
+    queryFn: async () => {
+      const result = await listGeneralFindings(workpaper!.id);
+      if (!result.success) throw new Error(result.message);
+      const arr = Array.isArray(result.data?.findings)
+        ? result.data.findings
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+      return arr as any[];
+    },
+    initialData: workpaper?.general_findings ?? [],
+    staleTime: 0,
+    enabled: isGeneralFramework && !!workpaper?.id
+  });
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("plan-details");
   const [findingsRefreshKey, setFindingsRefreshKey] = useState(0);
@@ -156,20 +181,24 @@ export function AuditPlanWorkpaperView({
   }, [categoriesFromFindings, selectedCategoryId]);
 
   const completionStats = useMemo(() => {
+    if (isGeneralFramework) {
+      const total = generalFindings?.length || 0;
+      const completed = generalFindings?.filter((f: any) => f.status === "APPROVED").length || 0;
+      return { completed, total, percentage: total > 0 ? Math.round((completed / total) * 100) : 0 };
+    }
+
     const total = categoriesFromFindings?.length || 0;
     const completed =
       categoriesFromFindings?.filter((cat: any) => {
         const catFindings =
           findings?.filter((f: any) => {
-            // Match by category ID - this is the primary and most reliable match
             return f.category?.id === cat.id;
           }) || [];
-        // A category is completed if it has at least one finding AND all findings are completed
         return catFindings.length > 0 && catFindings.every(isCompletedFinding);
       }).length || 0;
 
     return { completed, total, percentage: total > 0 ? Math.round((completed / total) * 100) : 0 };
-  }, [categoriesFromFindings, findings]);
+  }, [isGeneralFramework, generalFindings, categoriesFromFindings, findings]);
 
   const auditTeamLeaderId = auditPlan?.audit_team_leader;
   const teamMembersCount = auditPlan?.audit_team_members?.length || 0;
@@ -386,7 +415,8 @@ export function AuditPlanWorkpaperView({
 
         {/* Workpaper Tab */}
         <TabsContent value="workpaper" className="space-y-4">
-          {(auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() === "GENERAL" ? (
+          {(auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() ===
+          "GENERAL" ? (
             <GeneralAuditWorkpaperTab auditPlan={auditPlan} workpaper={workpaper} />
           ) : (
             <ComplianceAuditWorkpaperTab
@@ -447,7 +477,11 @@ export function AuditPlanWorkpaperView({
 
         {/* Approvals Tab */}
         <TabsContent value="approvals" className="space-y-4">
-          <AuditPlanTasksPanel auditPlanId={auditPlan.id} tasks={tasks} />
+          <AuditPlanTasksPanel
+            auditPlanId={auditPlan.id}
+            workflowInstance={workflowInstance}
+            userTasks={userTasks}
+          />
         </TabsContent>
 
         {/* Closure Tab */}

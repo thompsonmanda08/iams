@@ -57,7 +57,7 @@ interface WorkflowTasksPanelProps {
  */
 export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(15);
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
 
   // Use initial server-side fetched tasks, with React Query for pagination and updates
@@ -65,24 +65,30 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
     data: tasksResponse,
     isLoading,
     error
+  // Always fetch page 1 — backend returns all items; pagination is client-side
   } = useUserAssignedWorkflowTasks({
-    page: currentPage,
-    page_size: pageSize
+    page: 1
   });
 
   // Prefer React Query data when available, fall back to SSR initial data
-  const tasks = tasksResponse
+  const allTasks = tasksResponse
     ? tasksResponse?.data || tasksResponse
     : initialTasks;
+
+  const totalCount = allTasks?.length || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Client-side slice for current page (backend may return full list)
+  const tasks = (allTasks || []).slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Calculate pagination info
   const pagination: Pagination = {
     page: currentPage,
     page_size: pageSize,
-    total_pages: Math.ceil((tasks?.length || 0) / pageSize),
-    has_next: currentPage < Math.ceil((tasks?.length || 0) / pageSize),
+    total_pages: totalPages,
+    has_next: currentPage < totalPages,
     has_prev: currentPage > 1,
-    totalCount: tasks?.length || 0,
+    totalCount,
     ...(tasksResponse?.data?.pagination || tasksResponse?.pagination || {})
   };
 
@@ -97,12 +103,12 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
     }
   };
 
-  // Count tasks by status
+  // Count tasks by status across all tasks (not just current page)
   const taskStats = {
-    pending: (tasks || []).filter((t: WorkflowTask) => t.status === "PENDING").length,
-    completed: (tasks || []).filter((t: WorkflowTask) => t.status === "COMPLETED").length,
-    rejected: (tasks || []).filter((t: WorkflowTask) => t.status === "REJECTED").length,
-    reassigned: (tasks || []).filter((t: WorkflowTask) => t.status === "REASSIGNED").length
+    pending: (allTasks || []).filter((t: WorkflowTask) => t.status === "PENDING").length,
+    completed: (allTasks || []).filter((t: WorkflowTask) => t.status === "COMPLETED").length,
+    rejected: (allTasks || []).filter((t: WorkflowTask) => t.status === "REJECTED").length,
+    reassigned: (allTasks || []).filter((t: WorkflowTask) => t.status === "REASSIGNED").length
   };
 
   return (

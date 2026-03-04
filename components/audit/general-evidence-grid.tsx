@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants";
+import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -15,7 +18,17 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Trash2, SendHorizonal, Upload, FileText, X, UserPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Plus,
+  Trash2,
+  SendHorizonal,
+  Upload,
+  FileText,
+  X,
+  UserPlus,
+  ExternalLink
+} from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   useCreateGeneralFinding,
@@ -69,15 +82,31 @@ function generateLocalId() {
   return `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/**
+ * Normalize an array column/key entry from the API into a flat key→value map.
+ * The API stores entries in {key, value} format but the client may have
+ * previously written them in flat {[actualKey]: actualValue} format.
+ */
+function normalizeEntries(arr: any[]): Record<string, any> {
+  if (!Array.isArray(arr) || arr.length === 0) return {};
+  const first = arr[0];
+  // Detect canonical API format: each element has its own "key" and "value" props
+  if (first !== null && typeof first === "object" && "key" in first && "value" in first) {
+    return Object.fromEntries(arr.map((c: any) => [c.key, c.value]));
+  }
+  // Flat format: [{actualKey: actualValue}, …]  – just merge into one object
+  return Object.assign({}, ...arr);
+}
+
 /** Convert an API finding → local GridRow */
 function findingToRow(finding: any): GridRow {
   return {
     _localId: `row-${finding.id}`,
     findingId: finding.id,
     columns: Array.isArray(finding.columns)
-      ? Object.assign({}, ...finding.columns)
+      ? normalizeEntries(finding.columns)
       : (finding.columns ?? {}),
-    keys: Array.isArray(finding.keys) ? Object.assign({}, ...finding.keys) : (finding.keys ?? {}),
+    keys: Array.isArray(finding.keys) ? normalizeEntries(finding.keys) : (finding.keys ?? {}),
     audit_observation: finding.audit_observation ?? "",
     audit_comments: finding.audit_comments ?? "",
     evidence: finding.evidence ?? "",
@@ -219,6 +248,7 @@ function EvidenceUploadCell({
   disabled?: boolean;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -251,27 +281,90 @@ function EvidenceUploadCell({
     }
   }
 
+  function isImage(url: string) {
+    return /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(url);
+  }
+
   if (uploading) {
     return <Spinner className="text-primary size-4" />;
   }
 
   if (value) {
+    const fileName = getFileName(value);
     return (
-      <div className="flex items-center gap-1">
-        <a
-          href={value}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex max-w-[120px] items-center gap-1 truncate text-xs text-blue-600 hover:underline">
-          <FileText className="h-3 w-3 shrink-0" />
-          {getFileName(value)}
-        </a>
-        {!disabled && (
-          <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => onChange("")}>
-            <X className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
+      <>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            className="flex max-w-30 items-center gap-1 truncate text-xs text-blue-600 hover:underline">
+            <FileText className="h-3 w-3 shrink-0" />
+            {fileName}
+          </button>
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground"
+            title="Open in new tab">
+            <ExternalLink className="h-3 w-3" />
+          </a>
+          {!disabled && (
+            <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => onChange("")}>
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogContent className="flex h-[90vh] w-[92vw] max-w-5xl! flex-col gap-0 overflow-hidden p-0">
+            <DialogHeader className="shrink-0 flex-row items-center justify-between border-b px-4 py-3">
+              <DialogTitle className="max-w-[80%] truncate text-sm font-medium">
+                {fileName}
+              </DialogTitle>
+              <a
+                href={value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground mr-6"
+                title="Open in new tab">
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </DialogHeader>
+            <div className="min-h-0 flex-1">
+              {isImage(value) ? (
+                <div className="bg-muted/30 flex h-full items-center justify-center overflow-auto p-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={value}
+                    alt={fileName}
+                    className="max-h-full max-w-full rounded object-contain"
+                    crossOrigin="anonymous"
+                  />
+                </div>
+              ) : (
+                <object data={value} type="application/pdf" className="h-full w-full">
+                  {/* Fallback when browser can't embed the file */}
+                  <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+                    <FileText className="text-muted-foreground h-12 w-12" />
+                    <p className="text-muted-foreground text-sm">
+                      Preview is not available for this file.
+                    </p>
+                    <a
+                      href={value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline">
+                      <ExternalLink className="h-4 w-4" />
+                      Open file directly
+                    </a>
+                  </div>
+                </object>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
@@ -321,12 +414,58 @@ export function GeneralEvidenceGrid({
   const deleteMutation = useDeleteGeneralFinding();
   const submitMutation = useSubmitGeneralFinding();
 
-  // Initialize rows from findings
+  // Fetch findings directly so mutations (which invalidate this key) auto-refresh the grid.
+  // SSR-provided `findings` seeds the cache so there is no loading flash on first render.
+  const { data: liveFindings } = useQuery({
+    queryKey: [QUERY_KEYS.GENERAL_FINDINGS, workingPaperId],
+    queryFn: async () => {
+      const result = await listGeneralFindings(workingPaperId);
+      if (!result.success) throw new Error(result.message);
+
+      const findingsArray = Array.isArray(result.data?.findings)
+        ? result.data?.findings
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+      return findingsArray as any[];
+    },
+    initialData: findings,
+    staleTime: 0
+  });
+
+  // Sync server data into local rows.
+  // On initial mount (rows is empty) we take the server order directly.
+  // On subsequent re-fetches we merge data in-place so existing rows keep
+  // their position — preventing saved rows from jumping to the top.
   useEffect(() => {
-    if (findings && findings.length > 0) {
-      setRows(findings.map(findingToRow));
-    }
-  }, [findings]);
+    if (!liveFindings) return;
+
+    setRows((prev) => {
+      if (prev.length === 0) {
+        return [...liveFindings]
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          .map(findingToRow);
+      }
+
+      const serverMap = new Map<string, any>(liveFindings.map((f: any) => [f.id, f]));
+      const localFindingIds = new Set(prev.map((r) => r.findingId).filter(Boolean));
+
+      // Refresh data for saved rows that are not currently being edited
+      const merged = prev.map((row) => {
+        if (!row.findingId) return row; // unsaved local row — leave untouched
+        if (row.isDirty || row.isSaving) return row; // in-flight edit — don't overwrite
+        const fresh = serverMap.get(row.findingId);
+        return fresh ? findingToRow(fresh) : row;
+      });
+
+      // Append any server findings not yet represented locally
+      const extras = liveFindings
+        .filter((f: any) => !localFindingIds.has(f.id))
+        .map(findingToRow);
+
+      return extras.length > 0 ? [...merged, ...extras] : merged;
+    });
+  }, [liveFindings]);
 
   const configColumns = config?.columns ?? [];
   const configKeys = config?.keys ?? [];
@@ -681,7 +820,7 @@ export function GeneralEvidenceGrid({
                             <TooltipContent>Submit for approval</TooltipContent>
                           </Tooltip>
                         )}
-                        {row.findingId && row.status !== "DRAFT" && (
+                        {row.findingId && row.status === "APPROVED" && (
                           <>
                             <Badge variant="outline" className="text-xs">
                               {row.status}

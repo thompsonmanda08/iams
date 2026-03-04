@@ -4,7 +4,7 @@ import {
   getWorkpaperByAuditPlanId,
   getWorkpapers
 } from "@/app/_actions/audit-module-actions";
-import { getWorkflowInstances } from "@/app/_actions/task-actions";
+import { getWorkflowInstances, getUserAssignedWorkflowTasks } from "@/app/_actions/task-actions";
 import { AuditPlan } from "@/lib/types/audit-types";
 import PageHeader from "@/components/page-header";
 import { ClipboardListIcon } from "lucide-react";
@@ -37,12 +37,18 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   // Extract findings from workpaper response (they're already included)
   const allFindings = workpaper?.findings || workpaper?.general_findings || [];
 
-  // Fetch tasks for this audit plan
-  const tasksResponse = await getWorkflowInstances({
-    entity_id: auditPlanId
-  });
+  // Fetch workflow instances for this audit plan and user-assigned tasks in parallel
+  const [workflowInstancesResponse, userTasksResponse] = await Promise.all([
+    getWorkflowInstances({ entity_id: auditPlanId, page: "1", page_size: "10" }),
+    getUserAssignedWorkflowTasks({ entity_id: auditPlanId, page: "1", page_size: "10" })
+  ]);
 
-  const tasks = tasksResponse.success ? tasksResponse.data : [];
+  const workflowInstance = workflowInstancesResponse.success
+    ? workflowInstancesResponse.data?.data || workflowInstancesResponse.data
+    : [];
+  const userTasks = userTasksResponse.success
+    ? userTasksResponse.data?.data || userTasksResponse.data
+    : [];
 
   // console.log("Audit Plan:", auditPlan);
   console.log("Workpaper:", workpaper);
@@ -79,7 +85,8 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
           auditPlan={auditPlan}
           workpaperCategories={workpaper?.categories}
           findings={allFindings}
-          tasks={tasks}
+          workflowInstance={workflowInstance}
+          userTasks={userTasks}
           auditPlanStatus={auditPlan.status}
           workpaper={workpaper}
         />

@@ -2,13 +2,11 @@
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Info, AlertCircle, Calendar, User, ClipboardList, Save, Target } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info, AlertCircle, Save, Target } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GeneralEvidenceGrid } from "@/components/audit/general-evidence-grid";
 import type { AuditPlan } from "@/lib/types/audit-types";
-import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useUpdateWorkpaperMetadata } from "@/hooks/use-general-findings-mutations";

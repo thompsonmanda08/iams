@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants";
+import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,22 +46,34 @@ interface GeneralFindingsListProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Resolve a column value from either {key,value} or flat {[actualKey]:value} format */
 function getColumnValue(finding: any, colKey: string): string {
   if (!Array.isArray(finding.columns)) return "—";
-  const col = finding.columns.find((c: any) => c.key === colKey);
-  return col?.value ?? "—";
+  for (const col of finding.columns) {
+    // Canonical API format: {key: "po_no", value: "test 3"}
+    if (col.key === colKey) return col.value ?? "—";
+    // Flat format: {po_no: "test 3"}
+    if (col[colKey] !== undefined) return col[colKey] === "" ? "—" : String(col[colKey]);
+  }
+  return "—";
 }
 
+/** Resolve a key (audit test) value from either {key,value} or flat {[actualKey]:value} format */
 function getKeyValue(finding: any, keyKey: string): any {
   if (!Array.isArray(finding.keys)) return null;
-  const k = finding.keys.find((item: any) => item.key === keyKey);
-  return k?.value ?? null;
+  for (const k of finding.keys) {
+    // Canonical API format: {key: "a", value: true}
+    if (k.key === keyKey) return k.value ?? null;
+    // Flat format: {a: true}
+    if (k[keyKey] !== undefined) return k[keyKey];
+  }
+  return null;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function GeneralFindingsList({
-  findings,
+  findings: initialFindings,
   config,
   auditPlanStatus,
   auditPlan,
@@ -68,8 +83,33 @@ export function GeneralFindingsList({
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignFinding, setAssignFinding] = useState<any>(null);
 
+  // Subscribe to the same query key mutated by the workpaper grid so this list
+  // stays in sync whenever findings are created, updated, or deleted.
+  const { data: findings } = useQuery({
+    queryKey: [QUERY_KEYS.GENERAL_FINDINGS, workingPaperId],
+    queryFn: async () => {
+      const result = await listGeneralFindings(workingPaperId);
+      if (!result.success) throw new Error(result.message);
+
+      const findingsArray = Array.isArray(result.data?.findings)
+        ? result.data?.findings
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+      return findingsArray as any[];
+    },
+    initialData: initialFindings,
+    staleTime: 0,
+    enabled: !!workingPaperId
+  });
+
   const configColumns = config?.columns ?? [];
   const configKeys = config?.keys ?? [];
+
+  // Sort oldest → newest so the most recently created row always appears at the bottom
+  const sortedFindings = [...(findings ?? [])].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
 
   const totalColumns = 1 + configColumns.length + configKeys.length + 5; // # + columns + keys + obs + comments + evidence + status + actions
 
@@ -87,18 +127,24 @@ export function GeneralFindingsList({
     );
   }
 
-  if (!findings || findings.length === 0) {
+  if (!sortedFindings.length) {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-dashed p-6">
-        <AlertCircle className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
-        <div>
-          <p className="font-medium">No findings recorded</p>
-          <p className="text-muted-foreground mt-1 text-sm">
+      <Card className="bg-canvas/50 border-2 border-dashed">
+        <CardContent className="flex flex-col items-center justify-center px-8 py-16">
+          <div className="relative mb-4">
+            <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+            <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+              <AlertCircle className="text-primary h-16 w-16" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          <h3 className="text-foreground mb-2 text-2xl font-semibold">No Findings Recorded</h3>
+          <p className="text-muted-foreground mb-4 max-w-md text-center">
             No general workpaper findings have been recorded yet. Findings are created from the
             Workpaper tab.
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -110,7 +156,7 @@ export function GeneralFindingsList({
     <TooltipProvider>
       <div className="space-y-4">
         <Card className="overflow-x-auto">
-          <Table className="min-w-[1200px]">
+          <Table className="min-w-300">
             <TableHeader>
               {/* Group header row — spans "Audit Tests" over keys */}
               <TableRow className="border-b-0">
@@ -118,7 +164,7 @@ export function GeneralFindingsList({
                   #
                 </TableHead>
                 {configColumns.map((col) => (
-                  <TableHead key={col.key} rowSpan={2} className="min-w-[160px] border-b align-bottom">
+                  <TableHead key={col.key} rowSpan={2} className="min-w-40 border-b align-bottom">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="cursor-help">{col.name}</span>
@@ -138,16 +184,16 @@ export function GeneralFindingsList({
                     Audit Tests
                   </TableHead>
                 )}
-                <TableHead rowSpan={2} className="min-w-[200px] border-b align-bottom">
+                <TableHead rowSpan={2} className="min-w-50 border-b align-bottom">
                   Audit Observations
                 </TableHead>
-                <TableHead rowSpan={2} className="min-w-[200px] border-b align-bottom">
+                <TableHead rowSpan={2} className="min-w-50 border-b align-bottom">
                   Audit Comments
                 </TableHead>
-                <TableHead rowSpan={2} className="min-w-[120px] border-b align-bottom">
+                <TableHead rowSpan={2} className="min-w-30 border-b align-bottom">
                   Evidence
                 </TableHead>
-                <TableHead rowSpan={2} className="min-w-[80px] border-b align-bottom">
+                <TableHead rowSpan={2} className="min-w-20 border-b align-bottom">
                   Status
                 </TableHead>
                 <TableHead rowSpan={2} className="w-24 border-b align-bottom">
@@ -161,7 +207,7 @@ export function GeneralFindingsList({
                   {configKeys.map((key) => (
                     <TableHead
                       key={key.key}
-                      className="min-w-[100px] border-l bg-amber-50/50 text-center dark:bg-amber-950/20">
+                      className="min-w-25 border-l bg-amber-50/50 text-center dark:bg-amber-950/20">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span className="cursor-help text-xs font-medium">{key.name}</span>
@@ -179,7 +225,7 @@ export function GeneralFindingsList({
             </TableHeader>
 
             <TableBody>
-              {findings.map((finding: any, index: number) => (
+              {sortedFindings.map((finding: any, index: number) => (
                 <TableRow key={finding.id}>
                   {/* Row number */}
                   <TableCell className="font-medium">{index + 1}</TableCell>
@@ -214,12 +260,12 @@ export function GeneralFindingsList({
                   })}
 
                   {/* Audit Observations */}
-                  <TableCell className="max-w-[250px] text-sm">
+                  <TableCell className="max-w-62.5 text-sm">
                     {finding.audit_observation || "—"}
                   </TableCell>
 
                   {/* Audit Comments */}
-                  <TableCell className="max-w-[250px] text-sm">
+                  <TableCell className="max-w-62.5 text-sm">
                     {finding.audit_comments || "—"}
                   </TableCell>
 
@@ -268,7 +314,7 @@ export function GeneralFindingsList({
                           <TooltipContent>Submit for approval</TooltipContent>
                         </Tooltip>
                       )}
-                      {finding.status !== "DRAFT" && (
+                      {finding.status === "APPROVED" && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button

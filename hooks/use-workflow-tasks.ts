@@ -28,14 +28,16 @@ export function useUserAssignedWorkflowTasks(params?: {
   page?: number;
   page_size?: number;
   status?: string;
+  entity_id?: string;
 }) {
   return useQuery({
-    queryKey: ["user-workflow-tasks", params?.page, params?.page_size, params?.status],
+    queryKey: ["user-workflow-tasks", params?.page, params?.page_size, params?.status, params?.entity_id],
     queryFn: async () => {
       const response = await getUserAssignedWorkflowTasks({
         page: String(params?.page || 1),
-        page_size: String(params?.page_size || 10),
-        status: params?.status
+        page_size: String(params?.page_size || 15),
+        status: params?.status,
+        entity_id: params?.entity_id
       });
 
       if (!response.success) {
@@ -61,14 +63,16 @@ export function useWorkflowInstances(params?: {
   page?: number;
   page_size?: number;
   status?: string;
+  entity_id?: string;
 }) {
   return useQuery({
-    queryKey: ["workflow-instances", params?.page, params?.page_size, params?.status],
+    queryKey: ["workflow-instances", params?.page, params?.page_size, params?.status, params?.entity_id],
     queryFn: async () => {
       const response = await getWorkflowInstances({
         page: String(params?.page || 1),
-        page_size: String(params?.page_size || 20),
-        status: params?.status
+        page_size: String(params?.page_size || 15),
+        status: params?.status,
+        entity_id: params?.entity_id
       });
 
       if (!response.success) {

@@ -10,18 +10,16 @@ import { WorkflowInstancesPanel } from "./_components/workflow-instances-panel";
 
 export default async function TasksPage() {
   // Fetch workflow instances (SSR)
-  const instancesResponse = await getWorkflowInstances({ page: "1", page_size: "20" });
+  const instancesResponse = await getWorkflowInstances({ page: "1", page_size: "15" });
   const instances = instancesResponse.success
     ? instancesResponse?.data?.data || instancesResponse.data
     : [];
   const instancesPagination: any = instancesResponse?.data?.pagination || {};
 
   // Fetch user-assigned workflow tasks (SSR)
-  const tasksResponse = await getUserAssignedWorkflowTasks();
+  const tasksResponse = await getUserAssignedWorkflowTasks({ page: "1", page_size: "15" });
   const tasks = tasksResponse.success ? tasksResponse.data?.data || tasksResponse.data : [];
   const tasksPagination: any = tasksResponse?.data?.pagination || {};
-
-  console.log({ tasks });
 
   return (
     <div className="bg-background min-h-screen">

@@ -187,21 +187,17 @@ export async function getReportByEntityId(
       method: "GET"
     });
 
-    // Return the first report if exists
-    const reports = response?.data?.data || [];
-    // const fullReport = reports?.data[0];
+    // Handle both array and paginated response shapes
+    const reportsData = response?.data?.data;
+    const reportsList: ReportRecord[] = Array.isArray(reportsData)
+      ? reportsData
+      : Array.isArray(reportsData?.data)
+        ? reportsData.data
+        : [];
 
-    // if (reports.data.length > 0) {
-    //   // Fetch full report content
-    //   // const fullReport = await getReport(reports?.data[0].id);
-
-    //   console.log("getReportByEntityId:", fullReport);
-    //   return fullReport;
-    // }
-
-    if (reports.data.length > 0) {
-      const fullReport = reports?.data[0];
-      return successResponse(fullReport as ReportRecord, ` Report fetched for entity ${entityId}`);
+    if (reportsList.length > 0) {
+      const fullReport = reportsList[0];
+      return successResponse(fullReport, ` Report fetched for entity ${entityId}`);
     }
 
     return successResponse(null, ` No report found for entity ${entityId}`);

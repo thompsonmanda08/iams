@@ -40,7 +40,7 @@ export function WorkflowInstancesPanel({
 }: WorkflowInstancesPanelProps) {
   // Instances list pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(15);
 
   // Drawer state for instance details
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -57,25 +57,30 @@ export function WorkflowInstancesPanel({
     });
   const [isDrawerLoading, setIsDrawerLoading] = useState(false);
 
-  // Use query hook for instances with pagination
+  // Always fetch page 1 — backend returns all items; pagination is client-side
   const { data: instancesResponse, isLoading, error } = useWorkflowInstances({
-    page: currentPage,
-    page_size: pageSize
+    page: 1
   });
 
   // Prefer React Query data when available, fall back to SSR initial data
-  const instances = instancesResponse
+  const allInstances = instancesResponse
     ? instancesResponse?.data || instancesResponse
     : initialInstances;
+
+  const totalCount = allInstances?.length || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Client-side slice for current page (backend may return full list)
+  const instances = (allInstances || []).slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Calculate pagination info
   const pagination: Pagination = {
     page: currentPage,
     page_size: pageSize,
-    total_pages: Math.ceil((instances?.length || 0) / pageSize),
-    has_next: currentPage < Math.ceil((instances?.length || 0) / pageSize),
+    total_pages: totalPages,
+    has_next: currentPage < totalPages,
     has_prev: currentPage > 1,
-    totalCount: instances?.length || 0,
+    totalCount,
     ...(instancesResponse?.data?.pagination || instancesResponse?.pagination || {})
   };
 
@@ -116,7 +121,7 @@ export function WorkflowInstancesPanel({
 
     setIsDrawerLoading(true);
 
-    const newPageSize = pageSize || selectedInstanceApprovalsPage;
+    const newPageSize = pageSize || 10;
     const response = await getApprovalsLog(selectedInstance.instance.id, {
       page: String(page),
       page_size: String(newPageSize)
@@ -141,10 +146,10 @@ export function WorkflowInstancesPanel({
                 All active and pending workflow instances awaiting approval
               </p>
             </div>
-            {instances && instances.length > 0 && (
+            {totalCount > 0 && (
               <div className="text-right">
                 <p className="text-muted-foreground text-sm">
-                  Total: <span className="font-semibold text-foreground">{instances.length}</span>
+                  Total: <span className="font-semibold text-foreground">{totalCount}</span>
                 </p>
               </div>
             )}
@@ -167,7 +172,7 @@ export function WorkflowInstancesPanel({
           />
 
           {/* PAGINATION */}
-          {instances && instances.length > 0 && (
+          {totalCount > 0 && (
             <div className="border-t">
               <CustomPagination
                 pagination={pagination}

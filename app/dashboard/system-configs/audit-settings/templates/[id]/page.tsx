@@ -42,11 +42,8 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
     const categoriesResponse = await getTemplateCategories(id);
     categories = categoriesResponse.success ? categoriesResponse.data?.data || [] : [];
   } else {
-    
     const configsResponse = await getGeneralWorkPaperConfigsByTemplateId(id);
-    configurations = configsResponse.success ? configsResponse.data || [] : [];
-
-    console.log("General Configurations:", configurations);
+    configurations = configsResponse.success ? configsResponse.data.configs[0] || [] : [];
   }
 
   return (

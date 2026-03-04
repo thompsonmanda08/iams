@@ -127,7 +127,39 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
   }
 
   if (!closureData) {
-    return null;
+    return (
+      <Card className="bg-canvas/50 border-2 border-dashed">
+        <CardContent className="flex flex-col items-center justify-center px-8 py-16">
+          <div className="relative mb-4">
+            <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+            <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+              <Lock className="text-primary h-16 w-16" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          <h3 className="text-foreground mb-2 text-2xl font-semibold">Closure Not Available Yet</h3>
+          <p className="text-muted-foreground mb-8 max-w-md text-center">
+            Audit closure becomes available once the audit plan has been approved. Complete the
+            workpapers and submit for approval to unlock this section.
+          </p>
+
+          <div className="mb-4 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">1. COMPLETE WORKPAPERS</div>
+              <div className="text-muted-foreground">Finish all audit work</div>
+            </div>
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">2. SUBMIT FOR APPROVAL</div>
+              <div className="text-muted-foreground">Get plan approved</div>
+            </div>
+            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
+              <div className="text-primary mb-1 font-mono">3. REQUEST CLOSURE</div>
+              <div className="text-muted-foreground">Close the audit</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const canRequestClosure = closureData.readyForClosure;
