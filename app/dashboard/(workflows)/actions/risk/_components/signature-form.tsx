@@ -52,8 +52,6 @@ export default function SignatureForm({
     signature: ""
   });
 
-  console.log("FORM DATA:", formData);
-
   // Initialize canvas when modal opens
   useEffect(() => {
     if (showSignatureModal && canvasRef.current) {
@@ -319,7 +317,7 @@ export default function SignatureForm({
         </div>
 
         <div className="flex gap-3 border-t pt-6">
-          <Button onClick={onClose} variant="outline" className="flex-1" disabled={isSubmitting}>
+          <Button onClick={onClose} variant="destructive" className="flex-1" disabled={isSubmitting}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting} className="flex-1">

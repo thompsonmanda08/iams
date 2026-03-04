@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { ActionFindingsDialog } from "@/app/dashboard/(modules)/risks/_components/action-findings-dialog";
 import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_components/action-evidence-viewer-dialog";
 import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/action-review-dialog";
+import { ActionIncidentSubmissionDialog } from "./_components/action-incident-submission-dialog";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
@@ -42,6 +43,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { ActionIncidentReviewDialog } from "./_components/action-incident-review-dialog";
 
 interface ActionsTableProps {
   actions: ActionDefinition[];
@@ -67,6 +69,12 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const [selectedActionForSignature, setSelectedActionForSignature] =
     useState<ActionDefinition | null>(null);
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [selectedActionForIncidentSubmission, setSelectedActionForIncidentSubmission] =
+    useState<ActionDefinition | null>(null);
+  const [incidentSubmissionDialogOpen, setIncidentSubmissionDialogOpen] = useState(false);
+  const [selectedActionForIncidentReview, setSelectedActionForIncidentReview] =
+    useState<ActionDefinition | null>(null);
+  const [incidentReviewDialogOpen, setIncidentReviewDialogOpen] = useState(false);
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -86,7 +94,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   };
 
   console.log("LOG>>>>:", actions);
-  
 
   // Check if action is overdue
   const isOverdue = (dueDate: string, status: string) => {
@@ -143,7 +150,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
             <TableHeader className="uppercase">
               <TableRow>
                 <TableHead className="w-[300px]">Action Details</TableHead>
-                <TableHead>Risk</TableHead>
+                <TableHead>Risk/Incident</TableHead>
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Reviewer</TableHead>
                 <TableHead>Due Date</TableHead>
@@ -189,9 +196,12 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
 
                       <TableCell>
                         <div className="text-sm">
-                          <div className="font-medium">{actionDef.risk_name}</div>
+                          <div className="font-medium">{actionDef.risk_name || "Incident"}</div>
                           <div className="text-muted-foreground text-xs">
-                            ID: {action.risk_id.slice(0, 8)}...
+                            ID:{" "}
+                            {action?.risk_id?.slice(0, 8) ||
+                              actionDef.incident_log.incident_id?.slice(0, 8)}
+                            ...
                           </div>
                         </div>
                       </TableCell>
@@ -267,6 +277,18 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                                 <Signature className="h-3.5 w-3.5" />
                                 Approval Sign Off
                               </Button>
+                            ) : action.action_type === "INCIDENT" ? (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => {
+                                  setSelectedActionForIncidentSubmission(actionDef);
+                                  setIncidentSubmissionDialogOpen(true);
+                                }}
+                                className="h-8 gap-1.5">
+                                <Upload className="h-3.5 w-3.5" />
+                                Submit
+                              </Button>
                             ) : (
                               <Button
                                 size="sm"
@@ -309,18 +331,34 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                             {reminderSendingId === action.id ? "Sending..." : "Send Reminder"}
                           </Button>
 
-                          {isUserReviewer && (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedActionForReview(actionDef);
-                                setReviewDialogOpen(true);
-                              }}
-                              className="gap-1.5">
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Review
-                            </Button>
-                          )}
+                          {isUserReviewer &&
+                            action.action_type === "MITIGATION" &&
+                            action.status !== "COMPLETED" && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedActionForReview(actionDef);
+                                  setReviewDialogOpen(true);
+                                }}
+                                className="gap-1.5">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Review
+                              </Button>
+                            )}
+                          {isUserReviewer &&
+                            action.action_type === "INCIDENT" &&
+                            action.status !== "RESOLVED" && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedActionForIncidentReview(actionDef);
+                                  setIncidentReviewDialogOpen(true);
+                                }}
+                                className="gap-1.5">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Review
+                              </Button>
+                            )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -394,6 +432,23 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
             />
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Incident Submission Dialog - For viewing incident action submissions */}
+      {selectedActionForIncidentSubmission && (
+        <ActionIncidentSubmissionDialog
+          open={incidentSubmissionDialogOpen}
+          onOpenChange={setIncidentSubmissionDialogOpen}
+          actionDefinition={selectedActionForIncidentSubmission}
+        />
+      )}
+      {/* Incident Review Dialog - For reviewing incident action submissions */}
+      {selectedActionForIncidentReview && (
+        <ActionIncidentReviewDialog
+          open={incidentReviewDialogOpen}
+          onOpenChange={setIncidentReviewDialogOpen}
+          actionDefinition={selectedActionForIncidentReview}
+        />
       )}
     </Card>
   );
