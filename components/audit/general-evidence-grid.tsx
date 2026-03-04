@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -15,7 +15,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Trash2, SendHorizonal, Loader2 } from "lucide-react";
+import { Plus, Trash2, SendHorizonal, Upload, FileText, X, UserPlus } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   useCreateGeneralFinding,
@@ -23,6 +23,9 @@ import {
   useDeleteGeneralFinding,
   useSubmitGeneralFinding
 } from "@/hooks/use-general-findings-mutations";
+import { uploadFile } from "@/app/_actions/pocketbase-actions";
+import { notify } from "@/lib/utils";
+import { AssignFindingActionDialog } from "@/app/dashboard/(modules)/audit/plans/_components/assign-finding-action-dialog";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,6 +47,7 @@ interface GeneralEvidenceGridProps {
   workingPaperId: string;
   auditPlanId: string;
   disabled?: boolean;
+  auditPlanStatus?: string;
 }
 
 interface GridRow {
@@ -72,8 +76,8 @@ function findingToRow(finding: any): GridRow {
     findingId: finding.id,
     columns: Array.isArray(finding.columns)
       ? Object.assign({}, ...finding.columns)
-      : finding.columns ?? {},
-    keys: Array.isArray(finding.keys) ? Object.assign({}, ...finding.keys) : finding.keys ?? {},
+      : (finding.columns ?? {}),
+    keys: Array.isArray(finding.keys) ? Object.assign({}, ...finding.keys) : (finding.keys ?? {}),
     audit_observation: finding.audit_observation ?? "",
     audit_comments: finding.audit_comments ?? "",
     evidence: finding.evidence ?? "",
@@ -204,6 +208,96 @@ function FieldInput({
   }
 }
 
+/** Compact file upload for table cells */
+function EvidenceUploadCell({
+  value,
+  onChange,
+  disabled
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  disabled?: boolean;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const response = await uploadFile(file);
+      if (response?.success) {
+        onChange(response.data?.file_url || "");
+        notify({ type: "success", description: "File uploaded successfully" });
+      } else {
+        notify({ type: "error", description: response?.message || "Upload failed" });
+      }
+    } catch {
+      notify({ type: "error", description: "An error occurred while uploading" });
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  function getFileName(url: string) {
+    try {
+      const parts = url.split("/");
+      return decodeURIComponent(parts[parts.length - 1]) || "file";
+    } catch {
+      return "file";
+    }
+  }
+
+  if (uploading) {
+    return <Spinner className="text-primary size-4" />;
+  }
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-1">
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex max-w-[120px] items-center gap-1 truncate text-xs text-blue-600 hover:underline">
+          <FileText className="h-3 w-3 shrink-0" />
+          {getFileName(value)}
+        </a>
+        {!disabled && (
+          <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => onChange("")}>
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+        onChange={handleFileSelect}
+        disabled={disabled}
+      />
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-7 gap-1 text-xs"
+        onClick={() => inputRef.current?.click()}
+        disabled={disabled}>
+        <Upload className="h-3 w-3" />
+        Upload
+      </Button>
+    </>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function GeneralEvidenceGrid({
@@ -211,11 +305,16 @@ export function GeneralEvidenceGrid({
   findings,
   workingPaperId,
   auditPlanId,
-  disabled = false
+  disabled = false,
+  auditPlanStatus
 }: GeneralEvidenceGridProps) {
   const [rows, setRows] = useState<GridRow[]>([]);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+
+  // Assign action dialog state
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [assignFindingRow, setAssignFindingRow] = useState<GridRow | null>(null);
 
   const createMutation = useCreateGeneralFinding();
   const updateMutation = useUpdateGeneralFinding();
@@ -284,9 +383,7 @@ export function GeneralEvidenceGrid({
         {
           onSuccess: () => {
             setRows((prev) =>
-              prev.map((r) =>
-                r._localId === localId ? { ...r, status: "IN_REVIEW" } : r
-              )
+              prev.map((r) => (r._localId === localId ? { ...r, status: "IN_REVIEW" } : r))
             );
           }
         }
@@ -303,12 +400,12 @@ export function GeneralEvidenceGrid({
       if (!row || !row.isDirty || row.isSaving) return;
 
       // Check that at least one column has a value
-      const hasContent = Object.values(row.columns).some((v) => v !== "" && v !== null && v !== false);
+      const hasContent = Object.values(row.columns).some(
+        (v) => v !== "" && v !== null && v !== false
+      );
       if (!hasContent) return;
 
-      setRows((prev) =>
-        prev.map((r) => (r._localId === localId ? { ...r, isSaving: true } : r))
-      );
+      setRows((prev) => prev.map((r) => (r._localId === localId ? { ...r, isSaving: true } : r)));
 
       const payload = rowToPayload(row, auditPlanId, workingPaperId);
 
@@ -386,244 +483,269 @@ export function GeneralEvidenceGrid({
   const totalColumns = 1 + configColumns.length + configKeys.length + 4; // # + columns + keys + obs + comments + evidence + actions
 
   return (
-    <TooltipProvider>
+    <>
       <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">Evidence & Testing Grid</h3>
-            <Badge variant="secondary">{rows.length} rows</Badge>
-          </div>
-          <div className="flex gap-2">
-            {/* TODO: Uncomment when workpaper-level submission API is ready */}
-            {/* <Button size="sm" variant="outline" disabled={disabled}>
+        {/* Grid */}
+        <Card className="overflow-x-auto" ref={tableRef}>
+          {/* Header */}
+          <CardHeader className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Evidence & Testing Grid</h3>
+              <Badge variant="secondary">{rows.length} rows</Badge>
+            </div>
+            <div className="flex gap-2">
+              {/* TODO: Uncomment when workpaper-level submission API is ready */}
+              {/* <Button size="sm" variant="outline" disabled={disabled}>
               <SendHorizonal className="mr-2 h-4 w-4" />
               Submit All for Approval
             </Button> */}
-            <Button size="sm" onClick={addRow} variant="outline" disabled={disabled}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Row
-            </Button>
-          </div>
-        </div>
-
-        {/* Grid */}
-        <Card className="overflow-x-auto" ref={tableRef}>
-          <Table>
-            <TableHeader>
-              {/* Group header row — spans "Audit Tests" over keys */}
-              <TableRow className="border-b-0">
-                <TableHead rowSpan={2} className="w-8 border-b align-bottom">
-                  #
-                </TableHead>
-                {configColumns.map((col) => (
-                  <TableHead key={col.key} rowSpan={2} className="min-w-[120px] border-b align-bottom">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className={col.required ? "cursor-help font-semibold" : "cursor-help"}>
-                          {col.name}
-                          {col.required && <span className="text-destructive ml-0.5">*</span>}
-                        </span>
-                      </TooltipTrigger>
-                      {col.description && (
-                        <TooltipContent side="top" className="max-w-52 text-xs">
-                          {col.description}
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
+              <Button size="sm" onClick={addRow} variant="outline" disabled={disabled}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Row
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table className="min-w-7xl">
+              <TableHeader>
+                {/* Group header row — spans "Audit Tests" over keys */}
+                <TableRow className="border-b-0">
+                  <TableHead rowSpan={2} className="w-10 border-b align-bottom">
+                    #
                   </TableHead>
-                ))}
-                {configKeys.length > 0 && (
-                  <TableHead
-                    colSpan={configKeys.length}
-                    className="border-b border-l bg-amber-50 text-center text-xs font-semibold text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-                    Audit Tests
-                  </TableHead>
-                )}
-                <TableHead rowSpan={2} className="min-w-[150px] border-b align-bottom">
-                  Audit Observations
-                </TableHead>
-                <TableHead rowSpan={2} className="min-w-[150px] border-b align-bottom">
-                  Audit Comments
-                </TableHead>
-                <TableHead rowSpan={2} className="min-w-[100px] border-b align-bottom">
-                  Evidence
-                </TableHead>
-                <TableHead rowSpan={2} className="w-20 border-b align-bottom">
-                  Actions
-                </TableHead>
-              </TableRow>
-
-              {/* Sub-header row for individual key columns */}
-              {configKeys.length > 0 && (
-                <TableRow>
-                  {configKeys.map((key) => (
-                    <TableHead
-                      key={key.key}
-                      className="min-w-[80px] border-l bg-amber-50/50 text-center dark:bg-amber-950/20">
+                  {configColumns.map((col) => (
+                    <TableHead key={col.key} rowSpan={2} className="min-w-40 border-b align-bottom">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="cursor-help text-xs font-medium">{key.name}</span>
+                          <span
+                            className={col.required ? "cursor-help font-semibold" : "cursor-help"}>
+                            {col.name}
+                            {col.required && <span className="text-destructive ml-0.5">*</span>}
+                          </span>
                         </TooltipTrigger>
-                        {key.description && (
+                        {col.description && (
                           <TooltipContent side="top" className="max-w-52 text-xs">
-                            {key.description}
+                            {col.description}
                           </TooltipContent>
                         )}
                       </Tooltip>
                     </TableHead>
                   ))}
+                  {configKeys.length > 0 && (
+                    <TableHead
+                      colSpan={configKeys.length}
+                      className="border-b border-l bg-amber-50 text-center text-xs font-semibold text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+                      Audit Tests
+                    </TableHead>
+                  )}
+                  <TableHead rowSpan={2} className="min-w-50 border-b align-bottom">
+                    Audit Observations
+                  </TableHead>
+                  <TableHead rowSpan={2} className="min-w-50 border-b align-bottom">
+                    Audit Comments
+                  </TableHead>
+                  <TableHead rowSpan={2} className="min-w-50 border-b align-bottom">
+                    Evidence
+                  </TableHead>
+                  <TableHead rowSpan={2} className="w-28 border-b align-bottom">
+                    Actions
+                  </TableHead>
                 </TableRow>
-              )}
-            </TableHeader>
 
-            <TableBody>
-              {rows.map((row, index) => (
-                <TableRow
-                  key={row._localId}
-                  data-row-id={row._localId}
-                  className={
-                    row.isDirty
-                      ? "border-l-2 border-l-amber-400"
-                      : row.isSaving
-                        ? "border-l-2 border-l-blue-400 opacity-70"
-                        : ""
-                  }
-                  onFocus={() => setActiveRowId(row._localId)}
-                  onBlur={() => handleRowBlur(row._localId)}>
-                  {/* Row number */}
-                  <TableCell className="font-medium">{index + 1}</TableCell>
-
-                  {/* Dynamic columns */}
-                  {configColumns.map((col) => (
-                    <TableCell key={col.key}>
-                      <FieldInput
-                        type={col.type}
-                        value={row.columns[col.key]}
-                        onChange={(value) =>
-                          updateRowField(row._localId, "columns", col.key, value)
-                        }
-                        placeholder={col.name}
-                        disabled={disabled || row.status !== "DRAFT"}
-                      />
-                    </TableCell>
-                  ))}
-
-                  {/* Dynamic keys (audit tests) */}
-                  {configKeys.map((key) => (
-                    <TableCell key={key.key} className="border-l bg-amber-50/20 text-center dark:bg-amber-950/10">
-                      <FieldInput
-                        type={key.type}
-                        value={row.keys[key.key]}
-                        onChange={(value) =>
-                          updateRowField(row._localId, "keys", key.key, value)
-                        }
-                        placeholder={key.name}
-                        disabled={disabled || row.status !== "DRAFT"}
-                      />
-                    </TableCell>
-                  ))}
-
-                  {/* Audit Observations */}
-                  <TableCell>
-                    <Input
-                      value={row.audit_observation}
-                      onChange={(e) =>
-                        updateRowField(row._localId, "static", "audit_observation", e.target.value)
-                      }
-                      placeholder="Observations..."
-                      className="h-8 text-sm"
-                      disabled={disabled || row.status !== "DRAFT"}
-                    />
-                  </TableCell>
-
-                  {/* Audit Comments */}
-                  <TableCell>
-                    <Input
-                      value={row.audit_comments}
-                      onChange={(e) =>
-                        updateRowField(row._localId, "static", "audit_comments", e.target.value)
-                      }
-                      placeholder="Comments..."
-                      className="h-8 text-sm"
-                      disabled={disabled || row.status !== "DRAFT"}
-                    />
-                  </TableCell>
-
-                  {/* Evidence */}
-                  <TableCell>
-                    <Input
-                      value={row.evidence}
-                      onChange={(e) =>
-                        updateRowField(row._localId, "static", "evidence", e.target.value)
-                      }
-                      placeholder="filename.pdf"
-                      className="h-8 text-sm"
-                      disabled={disabled || row.status !== "DRAFT"}
-                    />
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {row.isSaving && (
-                        <Spinner className="text-primary size-4" />
-                      )}
-                      {row.findingId && row.status === "DRAFT" && !row.isSaving && (
+                {/* Sub-header row for individual key columns */}
+                {configKeys.length > 0 && (
+                  <TableRow>
+                    {configKeys.map((key) => (
+                      <TableHead
+                        key={key.key}
+                        className="min-w-24 border-l bg-amber-50/50 text-center dark:bg-amber-950/20">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
-                              onClick={() => submitRow(row._localId)}
-                              disabled={disabled || submitMutation.isPending}>
-                              <SendHorizonal className="h-3 w-3" />
-                            </Button>
+                            <span className="cursor-help text-xs font-medium">{key.name}</span>
                           </TooltipTrigger>
-                          <TooltipContent>Submit for approval</TooltipContent>
+                          {key.description && (
+                            <TooltipContent side="top" className="max-w-52 text-xs">
+                              {key.description}
+                            </TooltipContent>
+                          )}
                         </Tooltip>
-                      )}
-                      {row.status !== "DRAFT" && (
-                        <Badge variant="outline" className="text-xs">
-                          {row.status}
-                        </Badge>
-                      )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                )}
+              </TableHeader>
+
+              <TableBody>
+                {rows.map((row, index) => (
+                  <TableRow
+                    key={row._localId}
+                    data-row-id={row._localId}
+                    className={
+                      row.isDirty
+                        ? "border-l-2 border-l-amber-400"
+                        : row.isSaving
+                          ? "border-l-2 border-l-blue-400 opacity-70"
+                          : ""
+                    }
+                    onFocus={() => setActiveRowId(row._localId)}
+                    onBlur={() => handleRowBlur(row._localId)}>
+                    {/* Row number */}
+                    <TableCell className="font-medium">{index + 1}</TableCell>
+
+                    {/* Dynamic columns */}
+                    {configColumns.map((col) => (
+                      <TableCell key={col.key}>
+                        <FieldInput
+                          type={col.type}
+                          value={row.columns[col.key]}
+                          onChange={(value) =>
+                            updateRowField(row._localId, "columns", col.key, value)
+                          }
+                          placeholder={col.name}
+                          disabled={disabled || row.status !== "DRAFT"}
+                        />
+                      </TableCell>
+                    ))}
+
+                    {/* Dynamic keys (audit tests) */}
+                    {configKeys.map((key) => (
+                      <TableCell
+                        key={key.key}
+                        className="border-l bg-amber-50/20 text-center dark:bg-amber-950/10">
+                        <FieldInput
+                          type={key.type}
+                          value={row.keys[key.key]}
+                          onChange={(value) => updateRowField(row._localId, "keys", key.key, value)}
+                          placeholder={key.name}
+                          disabled={disabled || row.status !== "DRAFT"}
+                        />
+                      </TableCell>
+                    ))}
+
+                    {/* Audit Observations */}
+                    <TableCell>
+                      <Input
+                        value={row.audit_observation}
+                        onChange={(e) =>
+                          updateRowField(
+                            row._localId,
+                            "static",
+                            "audit_observation",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Observations..."
+                        className="h-8 text-sm"
+                        disabled={disabled || row.status !== "DRAFT"}
+                      />
+                    </TableCell>
+
+                    {/* Audit Comments */}
+                    <TableCell>
+                      <Input
+                        value={row.audit_comments}
+                        onChange={(e) =>
+                          updateRowField(row._localId, "static", "audit_comments", e.target.value)
+                        }
+                        placeholder="Comments..."
+                        className="h-8 text-sm"
+                        disabled={disabled || row.status !== "DRAFT"}
+                      />
+                    </TableCell>
+
+                    {/* Evidence */}
+                    <TableCell>
+                      <EvidenceUploadCell
+                        value={row.evidence}
+                        onChange={(url) => updateRowField(row._localId, "static", "evidence", url)}
+                        disabled={disabled || row.status !== "DRAFT"}
+                      />
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {row.isSaving && <Spinner className="text-primary size-4" />}
+                        {row.findingId && row.status === "DRAFT" && !row.isSaving && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
+                                onClick={() => submitRow(row._localId)}
+                                disabled={disabled || submitMutation.isPending}>
+                                <SendHorizonal className="h-3 w-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Submit for approval</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {row.findingId && row.status !== "DRAFT" && (
+                          <>
+                            <Badge variant="outline" className="text-xs">
+                              {row.status}
+                            </Badge>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-violet-600 hover:text-violet-700"
+                                  onClick={() => {
+                                    setAssignFindingRow(row);
+                                    setAssignDialogOpen(true);
+                                  }}>
+                                  <UserPlus className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Assign action</TooltipContent>
+                            </Tooltip>
+                          </>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive h-7 w-7 p-0"
+                          onClick={() => deleteRow(row._localId)}
+                          disabled={disabled || row.isSaving}
+                          title="Delete row">
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {/* Empty state */}
+                {rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={totalColumns} className="py-8 text-center">
+                      <p className="text-muted-foreground text-sm">No evidence rows added yet</p>
                       <Button
                         size="sm"
-                        variant="ghost"
-                        className="text-destructive h-7 w-7 p-0"
-                        onClick={() => deleteRow(row._localId)}
-                        disabled={disabled || row.isSaving}
-                        title="Delete row">
-                        <Trash2 className="h-3 w-3" />
+                        variant="outline"
+                        onClick={addRow}
+                        className="mt-2"
+                        disabled={disabled}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add First Row
                       </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-
-              {/* Empty state */}
-              {rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={totalColumns} className="py-8 text-center">
-                    <p className="text-muted-foreground text-sm">No evidence rows added yet</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={addRow}
-                      className="mt-2"
-                      disabled={disabled}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add First Row
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
         </Card>
+        {/* Assign Action Dialog */}
+        <AssignFindingActionDialog
+          open={assignDialogOpen}
+          onOpenChange={setAssignDialogOpen}
+          finding={assignFindingRow?.findingId ? ({ id: assignFindingRow.findingId } as any) : null}
+          auditPlanStatus={auditPlanStatus || ""}
+        />
       </div>
-    </TooltipProvider>
+    </>
   );
 }

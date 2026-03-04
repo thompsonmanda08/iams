@@ -2,14 +2,16 @@
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Info, AlertCircle, Calendar, User, ClipboardList, Save } from "lucide-react";
+import { Info, AlertCircle, Calendar, User, ClipboardList, Save, Target } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { GeneralEvidenceGrid } from "@/components/audit/general-evidence-grid";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useUpdateWorkpaperMetadata } from "@/hooks/use-general-findings-mutations";
 
 interface GeneralAuditWorkpaperTabProps {
   auditPlan: AuditPlan;
@@ -21,10 +23,27 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
   const findings = workpaper?.general_findings ?? [];
   const workingPaperId = workpaper?.id;
 
+  const updateMetadataMutation = useUpdateWorkpaperMetadata();
+
   const [metadata, setMetadata] = useState({
-    workDone: workpaper?.metadata?.work_done || "",
+    audit_process: workpaper?.metadata?.audit_process || auditPlan.title || "",
+    objective: workpaper?.metadata?.objective || auditPlan.audit_objective || "",
+    prepared_by: workpaper?.metadata?.prepared_by || auditPlan.audit_team_leader || "",
+    date: workpaper?.metadata?.date || auditPlan.start_date || "",
+    reviewed_by: workpaper?.metadata?.reviewed_by || "",
+    work_done: workpaper?.metadata?.work_done || "",
     conclusion: workpaper?.metadata?.conclusion || ""
   });
+
+  function handleSaveMetadata() {
+    if (!workingPaperId) return;
+    updateMetadataMutation.mutate({
+      workingPaperId,
+      metadata
+    });
+  }
+
+  const isDisabled = auditPlan.status !== "DRAFT";
 
   // ── No workpaper ─────────────────────────────────────────────────────────
 
@@ -62,40 +81,8 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
   // ── Full render ────────────────────────────────────────────────────────
 
   return (
-    <TooltipProvider>
+    <>
       <div className="space-y-4">
-        {/* Audit header info block */}
-        <Card className="bg-muted/20">
-          <CardContent className="p-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <InfoField
-                icon={<ClipboardList className="h-4 w-4" />}
-                label="Audit Process"
-                value={auditPlan.title}
-              />
-              <InfoField
-                icon={<User className="h-4 w-4" />}
-                label="Audit Team Leader"
-                value={auditPlan.audit_team_leader || "—"}
-              />
-              <InfoField
-                icon={<Calendar className="h-4 w-4" />}
-                label="Start Date"
-                value={
-                  auditPlan.start_date ? format(new Date(auditPlan.start_date), "dd MMM yyyy") : "—"
-                }
-              />
-              <InfoField
-                icon={<Calendar className="h-4 w-4" />}
-                label="End Date"
-                value={
-                  auditPlan.end_date ? format(new Date(auditPlan.end_date), "dd MMM yyyy") : "—"
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Column + key legend */}
         <Card>
           <CardHeader className="pb-2">
@@ -146,72 +133,91 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
           findings={findings}
           workingPaperId={workingPaperId}
           auditPlanId={auditPlan.id}
-          disabled={auditPlan.status !== "DRAFT"}
+          disabled={isDisabled}
+          auditPlanStatus={auditPlan.status}
         />
 
-        {/* Work done & Conclusion */}
-        {/* TODO: Add work done & conclusion with a mutation to PATCH the workpaper */}
-        <Card className="p-6">
+        {/* Work Done & Conclusion */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Work Done & Conclusion</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Target className="h-5 w-5" />
+              Workpaper Details
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Work Done */}
+            {/* <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                label="Audit Process"
+                value={metadata.audit_process}
+                onChange={(e) => setMetadata({ ...metadata, audit_process: e.target.value })}
+                placeholder="Audit process name..."
+                disabled={isDisabled}
+              />
+              <Input
+                label="Prepared By"
+                value={metadata.prepared_by}
+                onChange={(e) => setMetadata({ ...metadata, prepared_by: e.target.value })}
+                placeholder="Prepared by..."
+                disabled={isDisabled}
+              />
+              <Input
+                label="Date"
+                type="date"
+                value={metadata.date}
+                onChange={(e) => setMetadata({ ...metadata, date: e.target.value })}
+                disabled={isDisabled}
+              />
+              <Input
+                label="Reviewed By"
+                value={metadata.reviewed_by}
+                onChange={(e) => setMetadata({ ...metadata, reviewed_by: e.target.value })}
+                placeholder="Reviewed by..."
+                disabled={isDisabled}
+              />
+            </div> */}
+
             <Textarea
-              id="workDone"
+              label="Objective"
+              placeholder="Describe the audit objective..."
+              rows={3}
+              className="resize-none text-sm"
+              value={metadata.objective}
+              onChange={(e) => setMetadata({ ...metadata, objective: e.target.value })}
+              disabled={isDisabled}
+            />
+
+            <Textarea
               label="Work Done"
               placeholder="Describe the audit work performed, procedures executed, and evidence examined..."
               rows={4}
-              className="resize-none font-mono text-sm"
-              value={metadata.workDone}
-              onChange={(e) => setMetadata({...metadata, workDone: e.target.value})}
+              className="resize-none text-sm"
+              value={metadata.work_done}
+              onChange={(e) => setMetadata({ ...metadata, work_done: e.target.value })}
+              disabled={isDisabled}
             />
 
-            {/* Conclusion */}
             <Textarea
-              id="conclusion"
               label="Conclusion"
               placeholder="Summarize the overall findings, audit opinion, and key takeaways..."
               rows={4}
-              className="resize-none font-mono text-sm"
+              className="resize-none text-sm"
               value={metadata.conclusion}
-              onChange={(e) => setMetadata({...metadata, conclusion: e.target.value})}
+              onChange={(e) => setMetadata({ ...metadata, conclusion: e.target.value })}
+              disabled={isDisabled}
             />
           </CardContent>
           <CardFooter className="flex items-center justify-between border-t pt-4">
             <Button
-            // variant="outline"
-            // onClick={handleSaveDraft}
-            // isLoading={isLoading}
-            >
+              onClick={handleSaveMetadata}
+              isLoading={updateMetadataMutation.isPending}
+              disabled={isDisabled}>
               <Save className="mr-2 h-4 w-4" />
               Save
             </Button>
           </CardFooter>
         </Card>
       </div>
-    </TooltipProvider>
-  );
-}
-
-// ─── Small helper ─────────────────────────────────────────────────────────────
-
-function InfoField({
-  icon,
-  label,
-  value
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-start gap-2">
-      <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>
-      <div>
-        <p className="text-muted-foreground text-xs">{label}</p>
-        <p className="text-sm font-medium">{value}</p>
-      </div>
-    </div>
+    </>
   );
 }

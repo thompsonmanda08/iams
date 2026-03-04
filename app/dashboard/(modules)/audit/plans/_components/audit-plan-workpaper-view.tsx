@@ -38,6 +38,7 @@ import { GeneralAuditWorkpaperTab } from "./general-audit-workpaper-tab";
 import { AuditPlanReportTab } from "./audit-plan-report-tab";
 import { usePermissions } from "@/hooks/use-permissions";
 import { AuditPlanDetailsTab } from "./plan-details-tab";
+import { GeneralFindingsList } from "./general-findings-list";
 
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
@@ -406,21 +407,42 @@ export function AuditPlanWorkpaperView({
 
         {/* Findings Tab */}
         <TabsContent value="findings" className="space-y-4">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Audit Findings Summary</h2>
-            <p className="text-muted-foreground text-sm">
-              {findings?.length || 0} findings recorded
-            </p>
-          </div>
-          <FindingsList
-            key={findingsRefreshKey}
-            findings={findings || []}
-            onRefresh={() => setFindingsRefreshKey((prev) => prev + 1)}
-            onEditFinding={handleEditFinding}
-            auditPlanStatus={auditPlanStatus || auditPlan.status}
-            auditPlan={auditPlan}
-            onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
-          />
+          {(auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() ===
+          "GENERAL" ? (
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Audit Findings Summary</h2>
+                <p className="text-muted-foreground text-sm">
+                  {workpaper?.general_findings?.length || 0} findings recorded
+                </p>
+              </div>
+              <GeneralFindingsList
+                findings={workpaper?.general_findings ?? []}
+                config={workpaper?.config?.[0]}
+                auditPlanStatus={auditPlanStatus || auditPlan.status}
+                auditPlan={auditPlan}
+                workingPaperId={workpaper?.id}
+              />
+            </>
+          ) : (
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Audit Findings Summary</h2>
+                <p className="text-muted-foreground text-sm">
+                  {findings?.length || 0} findings recorded
+                </p>
+              </div>
+              <FindingsList
+                key={findingsRefreshKey}
+                findings={findings || []}
+                onRefresh={() => setFindingsRefreshKey((prev) => prev + 1)}
+                onEditFinding={handleEditFinding}
+                auditPlanStatus={auditPlanStatus || auditPlan.status}
+                auditPlan={auditPlan}
+                onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
+              />
+            </>
+          )}
         </TabsContent>
 
         {/* Approvals Tab */}

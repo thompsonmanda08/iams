@@ -197,3 +197,38 @@ export async function submitGeneralWorkpaperForApproval(
     "Workpaper-level submission is not yet supported. Submit individual findings instead."
   );
 }
+
+// ============================================================================
+// WORKPAPER METADATA
+// ============================================================================
+
+/**
+ * Update workpaper metadata (work done, conclusion, etc.)
+ */
+export async function updateWorkpaperMetadata(
+  workingPaperId: string,
+  metadata: Record<string, any>
+): Promise<APIResponse> {
+  if (!workingPaperId) {
+    return handleBadRequest("Working paper ID is required");
+  }
+
+  const url = `/api/v1/working-papers/${workingPaperId}/metadata`;
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url,
+      data: { metadata }
+    });
+
+    revalidatePath("/dashboard/audit/plans", "layout");
+
+    return successResponse(
+      response?.data?.data ?? response?.data,
+      "Workpaper metadata updated successfully"
+    );
+  } catch (error: any) {
+    return handleError(error, "PATCH", url);
+  }
+}

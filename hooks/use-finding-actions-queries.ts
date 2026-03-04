@@ -31,6 +31,7 @@ import {
   reviewFindingActionEvidence
 } from "@/app/_actions/finding-actions";
 import { getFinding } from "@/app/_actions/audit-module-actions";
+import { getGeneralFinding } from "@/app/_actions/general-findings-actions";
 import type {
   FindingAction,
   CreateFindingActionInput,
@@ -287,6 +288,25 @@ export function useFinding(findingId: string | null | undefined) {
   });
 }
 
+/**
+ * Hook to fetch a general workpaper finding by ID
+ */
+export function useGeneralFinding(findingId: string | null | undefined) {
+  return useQuery({
+    queryKey: findingId ? ["general-finding", findingId] : ["general-finding-disabled"],
+    queryFn: async () => {
+      if (!findingId) return null;
+      const response = await getGeneralFinding(findingId);
+      if (response.success) {
+        return response.data;
+      }
+      return null;
+    },
+    enabled: !!findingId,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+}
+
 // ============================================================================
 // EVIDENCE HOOKS
 // ============================================================================
@@ -522,7 +542,7 @@ export function useReviewFindingActionEvidenceMutation() {
       });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to approve evidence");
+        throw new Error(response.message || "Failed to perform operation");
       }
 
       return params;
@@ -540,14 +560,14 @@ export function useReviewFindingActionEvidenceMutation() {
 
       notify({
         title: "Success",
-        description: "Evidence approved successfully",
+        description: `Evidence ${params.status.toLowerCase()} successfully`,
         type: "success"
       });
     },
     onError: (error: any) => {
       notify({
         title: "Error",
-        description: error.message || "Failed to approve evidence",
+        description: error.message || "Failed to perform operation",
         type: "error"
       });
     }

@@ -8,7 +8,8 @@ import {
   updateGeneralFinding,
   deleteGeneralFinding,
   submitGeneralFinding,
-  submitGeneralWorkpaperForApproval
+  submitGeneralWorkpaperForApproval,
+  updateWorkpaperMetadata
 } from "@/app/_actions/general-findings-actions";
 
 // ============================================================================
@@ -179,6 +180,41 @@ export function useSubmitGeneralWorkpaper() {
       notify({
         title: "Error",
         description: error.message || "Failed to submit workpaper",
+        type: "error"
+      });
+    }
+  });
+}
+
+// ============================================================================
+// WORKPAPER METADATA MUTATION
+// ============================================================================
+
+/**
+ * Hook to update workpaper metadata (work done, conclusion, etc.)
+ */
+export function useUpdateWorkpaperMetadata() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { workingPaperId: string; metadata: Record<string, any> }) => {
+      const result = await updateWorkpaperMetadata(params.workingPaperId, params.metadata);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GENERAL_FINDINGS, variables.workingPaperId]
+      });
+      notify({
+        title: "Success",
+        description: "Workpaper metadata saved successfully"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to save workpaper metadata",
         type: "error"
       });
     }

@@ -14,12 +14,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Plus, SquareArrowOutUpRight } from "lucide-react";
+import { FileText, Plus, SquareArrowOutUpRight, CheckCircle2, XCircle } from "lucide-react";
 import type { FindingAction } from "@/lib/types/audit-types";
 import {
   useFindingActionEvidence,
   useFindingActionReviews,
-  useFinding
+  useFinding,
+  useGeneralFinding
 } from "@/hooks/use-finding-actions-queries";
 import { useFindingEvidence } from "@/hooks/use-evidence-queries";
 import { SubmitEvidenceDialog } from "./submit-evidence-dialog";
@@ -110,8 +111,15 @@ export function FindingActionDetailsDialog({
   const { data: evidence = [], isLoading: isLoadingEvidence } = useFindingActionEvidence(action.id);
   const { data: reviews = [], isLoading: isLoadingReviews } = useFindingActionReviews(action.id);
 
-  // Fetch finding details by ID
+  // Fetch finding details by ID (compliance endpoint)
   const { data: findingData, isLoading: isLoadingFinding } = useFinding(action.finding_id);
+
+  // Fetch general finding details (general workpaper endpoint)
+  const { data: generalFindingData, isLoading: isLoadingGeneralFinding } = useGeneralFinding(action.finding_id);
+
+  // Determine finding type
+  const isGeneralFinding = !findingData && !!generalFindingData;
+  const isLoadingAnyFinding = isLoadingFinding || isLoadingGeneralFinding;
 
   // Fetch finding evidence (evidence attached to the finding itself)
   const {
@@ -181,9 +189,111 @@ export function FindingActionDetailsDialog({
               {/* Action Overview */}
               <TabsContent value="overview" className="space-y-4">
                 {/* Finding Information Card */}
-                {isLoadingFinding ? (
+                {isLoadingAnyFinding ? (
                   <FindingInformationCardSkeleton />
+                ) : isGeneralFinding ? (
+                  /* General Workpaper Finding */
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Finding Information</CardTitle>
+                      <CardDescription>General Workpaper Finding</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Dynamic Columns */}
+                      {generalFindingData?.columns?.length > 0 && (
+                        <div className="grid grid-cols-2 gap-4">
+                          {generalFindingData.columns
+                            .filter((col: any) => col.value != null && col.value !== "")
+                            .map((col: any) => (
+                              <div key={col.key}>
+                                <p className="text-muted-foreground mb-1 text-xs font-medium capitalize">
+                                  {col.key.replace(/_/g, " ")}
+                                </p>
+                                <p className="text-sm font-medium">{col.value}</p>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+
+                      {/* Audit Tests (Keys) */}
+                      {generalFindingData?.keys?.length > 0 && (
+                        <div>
+                          <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+                            Audit Tests
+                          </p>
+                          <div className="rounded-md border bg-amber-50/50 p-3 dark:bg-amber-950/20">
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                              {generalFindingData.keys.map((k: any) => {
+                                const isBool =
+                                  typeof k.value === "boolean" ||
+                                  k.value === "true" ||
+                                  k.value === "false";
+                                const boolVal = k.value === true || k.value === "true";
+                                return (
+                                  <div key={k.key} className="flex items-center gap-2">
+                                    {isBool ? (
+                                      boolVal ? (
+                                        <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                                      ) : (
+                                        <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+                                      )
+                                    ) : null}
+                                    <span className="text-sm">
+                                      <span className="text-muted-foreground capitalize">
+                                        {k.key.replace(/_/g, " ")}
+                                      </span>
+                                      {!isBool && (
+                                        <span className="font-medium">: {k.value ?? "—"}</span>
+                                      )}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <Separator />
+
+                      {/* Static fields */}
+                      {generalFindingData?.audit_observation && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Audit Observation
+                          </p>
+                          <p className="text-sm">{generalFindingData.audit_observation}</p>
+                        </div>
+                      )}
+                      {generalFindingData?.audit_comments && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Audit Comments
+                          </p>
+                          <p className="text-sm">{generalFindingData.audit_comments}</p>
+                        </div>
+                      )}
+                      {generalFindingData?.evidence && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">Evidence</p>
+                          <a
+                            href={generalFindingData.evidence}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline dark:text-blue-400">
+                            <FileText className="h-3 w-3" />
+                            View Evidence
+                          </a>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-xs font-medium">Status</p>
+                        <StatusBadge status={generalFindingData?.status || "DRAFT"} />
+                      </div>
+                    </CardContent>
+                  </Card>
                 ) : (
+                  /* Compliance Finding */
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base">Finding Information</CardTitle>
@@ -289,7 +399,7 @@ export function FindingActionDetailsDialog({
                     </CardContent>
                   </Card>
                 )}
-                {isLoadingFinding ? (
+                {isLoadingAnyFinding ? (
                   <ActionOverviewCardSkeleton />
                 ) : (
                   <Card>

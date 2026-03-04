@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { IdleTimerContainer } from "@/components/screen-lock";
 import FirstLogin from "@/components/first-login";
 import { useNetwork } from "@/hooks/use-network";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,7 @@ function Providers({
   if (!mounted) return null;
 
   return (
-    <>
+    <TooltipProvider>
       <QueryClientProvider client={queryClient}>
         {!online && (
           <motion.div
@@ -50,7 +51,7 @@ function Providers({
         {session?.change_password && <FirstLogin open={session?.change_password} />}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
-    </>
+    </TooltipProvider>
   );
 }
 
