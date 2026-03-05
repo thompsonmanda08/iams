@@ -118,6 +118,7 @@ export async function createIncident(data: any): Promise<APIResponse> {
     });
 
     revalidatePath("/dashboard/risks/incidents");
+    revalidatePath("/dashboard/risks/incidents", "layout");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(error, "POST | CREATE INCIDENT", "/api/v1/incidents");
@@ -144,6 +145,7 @@ export async function updateIncident(
     });
 
     revalidatePath("/dashboard/risks/incidents");
+    revalidatePath("/dashboard/risks/incidents", "layout");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -163,6 +165,7 @@ export async function deleteIncident(incidentId: string): Promise<APIResponse> {
     });
 
     revalidatePath("/dashboard/risks/incidents");
+    revalidatePath("/dashboard/risks/incidents", "layout");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(

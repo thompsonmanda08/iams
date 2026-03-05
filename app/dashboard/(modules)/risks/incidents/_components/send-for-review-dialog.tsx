@@ -22,6 +22,7 @@ import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SendForReviewDialogProps {
   open: boolean;
@@ -39,6 +40,7 @@ interface FormData {
 }
 
 export function SendForReviewDialog({ open, onOpenChange, incident }: SendForReviewDialogProps) {
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<FormData>({
     responsible_person_id: "",
     reviewer_id: "",
@@ -162,6 +164,7 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
           comment: "",
           file_urls: []
         });
+        queryClient.invalidateQueries({ queryKey: ["incidents"] });
       } else {
         toast.error(response.message || "Failed to send for review");
       }
