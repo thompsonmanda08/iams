@@ -325,7 +325,7 @@ export async function createFindingAction(data: CreateFindingActionInput): Promi
   try {
     const response = await authenticatedApiClient({
       method: "POST",
-      url: `/api/v1/findings/${data.finding_id}/actions`,
+      url: `/api/v1/findings/${data.finding_id}/actions${data.framework_type === "GENERAL" ? "?framework_type=GENERAL" : ""}`,
       data: {
         action_description: data.action_description,
         assigned_to: data.assigned_to,

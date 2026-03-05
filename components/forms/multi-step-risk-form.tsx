@@ -11,7 +11,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { formatISO, parseISO } from "date-fns";
 import {
   getBusinessProcessesHierarchy,
@@ -168,7 +168,7 @@ export function MultiStepRiskForm({
         setDepartments(response.data.data);
       }
     } catch (error) {
-      toast.error("Error loading departments");
+      notify({ description: "Error loading departments", type: "error" });
     } finally {
       setLoadingDepartments(false);
     }
@@ -186,7 +186,7 @@ export function MultiStepRiskForm({
         setCategories(response.data);
       }
     } catch (error) {
-      toast.error("Error loading categories");
+      notify({ description: "Error loading categories", type: "error" });
     } finally {
       setLoadingCategories(false);
     }
@@ -206,7 +206,7 @@ export function MultiStepRiskForm({
         setPillars(response.data.data);
       }
     } catch (error) {
-      toast.error("Error loading strategic objectives");
+      notify({ description: "Error loading strategic objectives", type: "error" });
     } finally {
       setLoadingPillars(false);
     }
@@ -220,7 +220,7 @@ export function MultiStepRiskForm({
         setBusinessProcesses(response.data);
       }
     } catch (error) {
-      toast.error("Error loading business processes");
+      notify({ description: "Error loading business processes", type: "error" });
     } finally {
       setLoadingProcesses(false);
     }
@@ -236,7 +236,7 @@ export function MultiStepRiskForm({
         setUsers(response.data);
       }
     } catch (error) {
-      toast.error("Error loading users");
+      notify({ description: "Error loading users", type: "error" });
     } finally {
       setLoadingUsers(false);
     }
@@ -256,7 +256,7 @@ export function MultiStepRiskForm({
         }
       }
     } catch (error) {
-      toast.error("Error loading risk matrices");
+      notify({ description: "Error loading risk matrices", type: "error" });
     } finally {
       setLoadingMatrices(false);
     }
@@ -270,7 +270,7 @@ export function MultiStepRiskForm({
         setResponses(response.data.data);
       }
     } catch (error) {
-      toast.error("Error loading responses");
+      notify({ description: "Error loading responses", type: "error" });
     } finally {
       setLoadingResponses(false);
     }
@@ -284,7 +284,7 @@ export function MultiStepRiskForm({
         setControls(response.data.data);
       }
     } catch (error) {
-      toast.error("Error loading responses");
+      notify({ description: "Error loading responses", type: "error" });
     } finally {
       setLoadingControls(false);
     }
@@ -359,10 +359,10 @@ export function MultiStepRiskForm({
       if (mode === "edit" && createdRiskId) {
         const response = await updateRisk(createdRiskId, stepOneData);
         if (response.success) {
-          toast.success("Step 1 updated");
+          notify({ description: "Step 1 updated", type: "success" });
           setCurrentStep(2);
         } else {
-          toast.error(response.message || "Failed to update risk");
+          notify({ description: response.message || "Failed to update risk", type: "error" });
         }
       } else {
         const response = await createRiskStepOne({
@@ -371,14 +371,14 @@ export function MultiStepRiskForm({
         });
         if (response.success && response.data) {
           setCreatedRiskId(response.data.id);
-          toast.success("Step 1 completed");
+          notify({ description: "Step 1 completed", type: "success" });
           setCurrentStep(2);
         } else {
-          toast.error(response.message || "Failed to create risk");
+          notify({ description: response.message || "Failed to create risk", type: "error" });
         }
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -390,13 +390,13 @@ export function MultiStepRiskForm({
     try {
       const response = await updateRiskStepTwo(createdRiskId, stepTwoData);
       if (response.success) {
-        toast.success("Step 2 completed");
+        notify({ description: "Step 2 completed", type: "success" });
         setCurrentStep(3);
       } else {
-        toast.error(response.message || "Failed to update risk");
+        notify({ description: response.message || "Failed to update risk", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -408,14 +408,14 @@ export function MultiStepRiskForm({
     try {
       const response = await updateRiskStepThree(createdRiskId, stepThreeData);
       if (response.success) {
-        toast.success(mode === "edit" ? "Risk updated successfully" : "Risk created successfully");
+        notify({ description: mode === "edit" ? "Risk updated successfully" : "Risk created successfully", type: "success" });
         onOpenChange(false);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to complete risk");
+        notify({ description: response.message || "Failed to complete risk", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

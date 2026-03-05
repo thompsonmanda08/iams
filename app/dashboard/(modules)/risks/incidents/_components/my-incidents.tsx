@@ -46,7 +46,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { deleteIncident, getIncidents } from "@/app/_actions/incident-actions";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { CustomPagination } from "@/components/ui/pagination";
 import { IncidentData } from "@/lib/types/incidents-types";
 import Search from "@/components/ui/search-field";
@@ -107,11 +107,11 @@ export function MyIncidents() {
         setIncidents(response.data.data || []);
         setPagination(response.data.pagination || pagination);
       } else {
-        toast.error("Failed to load incidents");
+        notify({ description: "Failed to load incidents", type: "error" });
       }
     } catch (error) {
       console.error("Error fetching incidents:", error);
-      toast.error("Error loading incidents");
+      notify({ description: "Error loading incidents", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -145,15 +145,15 @@ export function MyIncidents() {
     try {
       const response = await deleteIncident(deleteDialog.incidentId);
       if (response.success) {
-        toast.success("Risk incident deleted successfully");
+        notify({ description: "Risk incident deleted successfully", type: "success" });
         router.refresh();
         await fetchIncidents();
         setDeleteDialog({ open: false, incidentId: null });
       } else {
-        toast.error(response.message || "Failed to delete incident");
+        notify({ description: response.message || "Failed to delete incident", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to delete incident");
+      notify({ description: "Failed to delete incident", type: "error" });
     }
   };
 

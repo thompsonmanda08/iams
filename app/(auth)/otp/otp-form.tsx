@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/input-otp";
 import Image from "next/image";
 import { verifyOTP, resendOTP } from "@/app/_actions/auth-actions";
-import { toast } from "sonner";
+
 import { Card } from "@/components/ui/card";
 
 export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
@@ -42,12 +42,12 @@ export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
     e.preventDefault();
 
     if (otp.length !== 6) {
-      toast.error("Please enter a complete 6-digit code");
+      notify({ description: "Please enter a complete 6-digit code", type: "error" });
       return;
     }
 
     if (!username) {
-      toast.error("Username not found. Please login again.");
+      notify({ description: "Username not found. Please login again.", type: "error" });
       router.push("/login");
       return;
     }
@@ -60,11 +60,11 @@ export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
     });
 
     if (response.success) {
-      toast.success("OTP verified successfully!");
+      notify({ description: "OTP verified successfully!", type: "success" });
       // Redirect to home page which will route based on user_type
       router.push("/");
     } else {
-      toast.error(response.message || "Invalid OTP. Please try again.");
+      notify({ description: response.message || "Invalid OTP. Please try again.", type: "error" });
       setOtp(""); // Clear OTP on error
       setIsLoading(false);
     }
@@ -72,7 +72,7 @@ export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
 
   const handleResend = async () => {
     if (!username) {
-      toast.error("Username not found. Please login again.");
+      notify({ description: "Username not found. Please login again.", type: "error" });
       router.push("/login");
       return;
     }
@@ -82,12 +82,12 @@ export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
     const response = await resendOTP({ username });
 
     if (response.success) {
-      toast.success(response.message || "OTP resent successfully!");
+      notify({ description: response.message || "OTP resent successfully!", type: "success" });
       // Reset countdown timer
       setCountdown(60);
       setCanResend(false);
     } else {
-      toast.error(response.message || "Failed to resend OTP. Please try again.");
+      notify({ description: response.message || "Failed to resend OTP. Please try again.", type: "error" });
     }
 
     setIsResending(false);

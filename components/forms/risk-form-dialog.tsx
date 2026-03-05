@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { getDepartments } from "@/app/_actions/config-actions";
 import { createRisk, updateRisk } from "@/app/_actions/risk-module-actions";
 
@@ -98,10 +98,10 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
       if (response.success && response.data?.data) {
         setDepartments(response.data?.data);
       } else {
-        toast.error("Failed to load departments");
+        notify({ description: "Failed to load departments", type: "error" });
       }
     } catch (error) {
-      toast.error("Error loading departments");
+      notify({ description: "Error loading departments", type: "error" });
     } finally {
       setLoadingDepartments(false);
     }
@@ -126,14 +126,14 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
       }
 
       if (response.success) {
-        toast.success(risk ? "Risk updated successfully" : "Risk created successfully");
+        notify({ description: risk ? "Risk updated successfully" : "Risk created successfully", type: "success" });
         onOpenChange(false);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to save risk");
+        notify({ description: response.message || "Failed to save risk", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { updateScale } from "@/app/_actions/config-actions";
 
 type Scale = {
@@ -44,7 +44,7 @@ export function EditScaleDialog({ open, onOpenChange, scale, onSuccess }: EditSc
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Scale name is required");
+      notify({ description: "Scale name is required", type: "error" });
       return;
     }
 
@@ -52,14 +52,14 @@ export function EditScaleDialog({ open, onOpenChange, scale, onSuccess }: EditSc
     try {
       const response = await updateScale(scale.id, formData);
       if (response.success) {
-        toast.success("Scale updated successfully");
+        notify({ description: "Scale updated successfully", type: "success" });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(response.message || "Failed to update scale");
+        notify({ description: response.message || "Failed to update scale", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

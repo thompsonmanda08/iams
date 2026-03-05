@@ -20,13 +20,12 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Notebook, Pencil, Trash2, View } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { format } from "date-fns";
 import { RiskRegister } from "@/lib/types/risk-types";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { toast } from "sonner";
 import { deleteRiskRegister } from "@/app/_actions/risk-module-actions";
 import EditRiskRegisterDialog from "@/components/forms/edit-risk-register-dialog";
 import { StatusBadge } from "@/components/status-badge";
@@ -126,14 +125,14 @@ export default function RiskRegistersTable({
     try {
       const response = await deleteRiskRegister(deleteDialog.registerId);
       if (response.success) {
-        toast.success("Risk register deleted successfully");
+        notify({ description: "Risk register deleted successfully", type: "success" });
         router.refresh();
         setDeleteDialog({ open: false, registerId: null, registerName: null });
       } else {
-        toast.error(response.message || "Failed to delete risk register");
+        notify({ description: response.message || "Failed to delete risk register", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to delete risk register");
+      notify({ description: "Failed to delete risk register", type: "error" });
     }
   };
 

@@ -19,8 +19,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Trash2, View, Pencil, UserPlus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { cn, notify } from "@/lib/utils";
 import { closeRisk, deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import Search from "@/components/ui/search-field";
@@ -230,15 +229,15 @@ export default function RisksTable({
     try {
       const response = await deleteRisk(riskToDelete.id);
       if (response.success) {
-        toast.success(response.message || "Risk deleted successfully");
+        notify({ description: response.message || "Risk deleted successfully", type: "success" });
         setDeleteDialogOpen(false);
         setRiskToDelete(null);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete risk");
+        notify({ description: response.message || "Failed to delete risk", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsDeleting(false);
     }
@@ -250,15 +249,15 @@ export default function RisksTable({
     try {
       const response = await closeRisk(riskToClose.id);
       if (response.success) {
-        toast.success(response.message || "Risk closed successfully");
+        notify({ description: response.message || "Risk closed successfully", type: "success" });
         setCloseDialogOpen(false);
         setRiskToClose(null);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete risk");
+        notify({ description: response.message || "Failed to delete risk", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsClosing(false);
     }

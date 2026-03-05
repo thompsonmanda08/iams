@@ -13,8 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Trash2, MapPin, Pencil } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -84,18 +83,18 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
       return response;
     },
     onSuccess: () => {
-      toast.success("Town deleted successfully");
+      notify({ description: "Town deleted successfully", type: "success" });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete town");
+      notify({ description: error.message || "Failed to delete town", type: "error" });
     }
   });
 
   const handleDeleteTown = async (id: string) => {
     if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
     if (true) {
-      return toast.warning("This action currently is disabled");
+      return notify({ description: "This action currently is disabled", type: "warning" });
     }
     deleteTownMutation.mutate(id);
   };
@@ -207,7 +206,7 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
                       variant="outline"
                       onClick={(e) => {
                         if (true) {
-                          return toast.warning("This action currently is disabled");
+                          return notify({ description: "This action currently is disabled", type: "warning" });
                         }
                         setEditingTown(town);
                         setOpenModal(true);
@@ -324,7 +323,7 @@ function CreateOrUpdateTownDialog({
       return response;
     },
     onSuccess: () => {
-      toast.success(`Town ${initialData ? "updated" : "created"} successfully`);
+      notify({ description: `Town ${initialData ? "updated" : "created"} successfully`, type: "success" });
       setOpenModal(false);
       setInitialData(null);
       setFormData(TOWN_INITIAL_STATE);
@@ -332,7 +331,7 @@ function CreateOrUpdateTownDialog({
     },
     onError: (error: Error) => {
       setError({ status: true, message: error.message });
-      toast.error(error.message);
+      notify({ description: error.message, type: "error" });
     }
   });
 

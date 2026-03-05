@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { createResidualRiskRating, updateResidualRiskRating } from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
 
@@ -72,7 +72,7 @@ export function ResidualRiskRatingDialog({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Residual risk rating name is required");
+      notify({ description: "Residual risk rating name is required", type: "error" });
       return;
     }
 
@@ -83,17 +83,18 @@ export function ResidualRiskRatingDialog({
         : await createResidualRiskRating(formData);
 
       if (result.success) {
-        toast.success(`Residual risk rating ${isEditMode ? "updated" : "created"} successfully`);
+        notify({ description: `Residual risk rating ${isEditMode ? "updated" : "created"} successfully`, type: "success" });
         setFormData({ name: "", description: "", value: 1, condition: "" });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(
-          result.message || `Failed to ${isEditMode ? "update" : "create"} residual risk rating`
-        );
+        notify({
+          description: result.message || `Failed to ${isEditMode ? "update" : "create"} residual risk rating`,
+          type: "error"
+        });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

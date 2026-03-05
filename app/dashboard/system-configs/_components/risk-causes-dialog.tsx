@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { createRiskCause, updateRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
 
@@ -65,7 +65,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
         setAvailableCauses(causes);
       }
     } catch (error) {
-      toast.error("Failed to load available risk causes");
+      notify({ description: "Failed to load available risk causes", type: "error" });
     }
   };
 
@@ -86,7 +86,7 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Risk cause name is required");
+      notify({ description: "Risk cause name is required", type: "error" });
       return;
     }
 
@@ -97,15 +97,15 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
         : await createRiskCause(formData);
 
       if (result.success) {
-        toast.success(`Risk cause ${isEditMode ? "updated" : "created"} successfully`);
+        notify({ description: `Risk cause ${isEditMode ? "updated" : "created"} successfully`, type: "success" });
         setFormData({ name: "", description: "", parent_id: null, is_active: true });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(result.message || `Failed to ${isEditMode ? "update" : "create"} risk cause`);
+        notify({ description: result.message || `Failed to ${isEditMode ? "update" : "create"} risk cause`, type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

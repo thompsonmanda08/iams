@@ -2,7 +2,7 @@
 import { use, useState } from "react";
 import BackButton from "@/components/back-button";
 import RiskAcceptanceForm, { FormData } from "@/components/forms/risk-acceptance-form";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { createRiskAcceptance, updateRiskAcceptance } from "@/app/_actions/risk-module-actions";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -19,16 +19,16 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
     try {
       const response = await createRiskAcceptance(id, data);
       if (response.success) {
-        toast.success(response.message || "Risk Acceptance Form created successfully!");
+        notify({ description: response.message || "Risk Acceptance Form created successfully!", type: "success" });
         setExistingFormData(data);
         setFormMode("edit");
         router.push("/dashboard/risks/risk-acceptances");
       } else {
-        toast.error(response.message || "Failed to create Risk Acceptance Form");
+        notify({ description: response.message || "Failed to create Risk Acceptance Form", type: "error" });
       }
     } catch (error) {
       console.error("Error creating risk acceptance:", error);
-      toast.error("Failed to create Risk Acceptance Form");
+      notify({ description: "Failed to create Risk Acceptance Form", type: "error" });
     }
   };
 
@@ -38,14 +38,14 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
       const response = await updateRiskAcceptance(id, data);
 
       if (response.success) {
-        toast.success(response.message || "Risk Acceptance Form updated successfully!");
+        notify({ description: response.message || "Risk Acceptance Form updated successfully!", type: "success" });
         setExistingFormData(data);
       } else {
-        toast.error(response.message || "Failed to update Risk Acceptance Form");
+        notify({ description: response.message || "Failed to update Risk Acceptance Form", type: "error" });
       }
     } catch (error) {
       console.error("Error updating risk acceptance:", error);
-      toast.error("Failed to update Risk Acceptance Form");
+      notify({ description: "Failed to update Risk Acceptance Form", type: "error" });
     }
   };
 

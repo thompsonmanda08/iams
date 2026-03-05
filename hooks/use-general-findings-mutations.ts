@@ -110,7 +110,8 @@ export function useDeleteGeneralFinding() {
       });
       notify({
         title: "Success",
-        description: "Finding deleted successfully"
+        description: "Finding deleted successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {
@@ -141,7 +142,8 @@ export function useSubmitGeneralFinding() {
       });
       notify({
         title: "Success",
-        description: "Finding submitted for approval"
+        description: "Finding submitted for approval",
+        type: "success"
       });
     },
     onError: (error: Error) => {
@@ -173,7 +175,8 @@ export function useSubmitGeneralWorkpaper() {
       });
       notify({
         title: "Success",
-        description: "Workpaper submitted for approval"
+        description: "Workpaper submitted for approval",
+        type: "success"
       });
     },
     onError: (error: Error) => {
@@ -208,7 +211,8 @@ export function useUpdateWorkpaperMetadata() {
       });
       notify({
         title: "Success",
-        description: "Workpaper metadata saved successfully"
+        description: "Workpaper metadata saved successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {

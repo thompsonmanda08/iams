@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2, FileText, Download, View } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { CustomPagination } from "@/components/ui/pagination";
@@ -31,7 +30,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { CreateReportDialog } from "./create-report-dialog";
 import { useReportMutations } from "@/hooks/use-report-queries";
-import { capitalize } from "@/lib/utils";
+import { capitalize, notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 interface ReportsTableProps {
@@ -58,7 +57,6 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
 
   // Ensure reports is always an array even when fetching fails
   const safeReports = Array.isArray(reports) ? reports : [];
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<ReportListItem | null>(null);
@@ -74,11 +72,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
   const handleDeleteClick = (report: ReportListItem) => {
     if (!checkPermission("AUDIT_REPORTS", "can_delete")) return;
     if (report.status !== "DRAFT") {
-      toast({
-        title: "Cannot Delete",
-        description: "Only draft reports can be deleted.",
-        variant: "destructive"
-      });
+      notify({ description: "Only draft reports can be deleted.", type: "error" });
       return;
     }
     setReportToDelete(report);

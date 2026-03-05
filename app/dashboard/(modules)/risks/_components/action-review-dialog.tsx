@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { submitActionReview, updateRiskStepTwo } from "@/app/_actions/risk-module-actions";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import type { StepTwoData } from "@/lib/types/risk-type";
@@ -175,15 +175,15 @@ export function ActionReviewDialog({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Review step 1 submitted");
+        notify({ description: "Review step 1 submitted", type: "success" });
         // Continue to Step 2 for risk assessment
         setStep(2);
       } else {
-        toast.error(response.message || "Failed to submit review");
+        notify({ description: response.message || "Failed to submit review", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("An error occurred while submitting review");
+      notify({ description: "An error occurred while submitting review", type: "error" });
       console.error("Error submitting review:", error);
     }
   });
@@ -208,7 +208,7 @@ export function ActionReviewDialog({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Risk assessment updated and review completed");
+        notify({ description: "Risk assessment updated and review completed", type: "success" });
         setFormData(INITIAL_FORM_DATA);
         setStep(1);
         onOpenChange(false);
@@ -216,11 +216,11 @@ export function ActionReviewDialog({
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTIONS] });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTION_LOGS] });
       } else {
-        toast.error(response.message || "Failed to update risk assessment");
+        notify({ description: response.message || "Failed to update risk assessment", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("An error occurred while updating risk assessment");
+      notify({ description: "An error occurred while updating risk assessment", type: "error" });
       console.error("Error updating risk:", error);
     }
   });

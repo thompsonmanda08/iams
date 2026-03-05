@@ -23,7 +23,6 @@ import {
   updateRole
 } from "@/app/_actions/config-actions";
 import { getRolePermissions, bulkUpdateRolePermissions } from "@/app/_actions/permissions-actions";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogClose,
@@ -33,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import {
   Empty,
   EmptyContent,
@@ -385,13 +384,15 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       // Show detailed success message
       const { successCount, failureCount } = response.data || {};
       if (failureCount && failureCount > 0) {
-        toast.warning(
-          `Updated ${successCount || 0} permissions successfully, ${failureCount} failed`
-        );
+        notify({
+          description: `Updated ${successCount || 0} permissions successfully, ${failureCount} failed`,
+          type: "warning"
+        });
       } else {
-        toast.success(
-          `Successfully updated permissions for ${successCount || modules.length} module(s)`
-        );
+        notify({
+          description: `Successfully updated permissions for ${successCount || modules.length} module(s)`,
+          type: "success"
+        });
       }
 
       // Reset the hasChanges flag immediately to show changes are saved
@@ -402,7 +403,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLE_PERMISSIONS, selectedRole] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update permissions");
+      notify({ description: error.message || "Failed to update permissions", type: "error" });
     }
   });
 
@@ -890,19 +891,19 @@ function CreateOrUpdateRoleDialog({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`Role ${initialData ? "updated" : "created"} successfully`);
+        notify({ description: `Role ${initialData ? "updated" : "created"} successfully`, type: "success" });
         // Invalidate roles query with matching params object
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.ROLES, { departmentId }]
         });
         setOpenModal(false);
       } else {
-        toast.error(response.message);
+        notify({ description: response.message, type: "error" });
         setError({ status: true, message: response.message });
       }
     },
     onError: (err: Error) => {
-      toast.error(err.message || "An error occurred");
+      notify({ description: err.message || "An error occurred", type: "error" });
       setError({ status: true, message: err.message });
     }
   });

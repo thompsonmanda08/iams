@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { deleteWorkpaper } from "@/app/_actions/audit-module-actions";
 import { useToast } from "@/hooks/use-toast";
 import { CustomPagination } from "../ui/pagination";
@@ -78,25 +78,26 @@ export function WorkpapersTable({
       const result = await deleteWorkpaper(workpaperToDelete.id);
 
       if (result.success) {
-        toast({
+        notify({
           title: "Success",
-          description: "Workpaper deleted successfully"
+          description: "Workpaper deleted successfully",
+          type: "success"
         });
         setDeleteDialogOpen(false);
         setWorkpaperToDelete(null);
         router.refresh();
       } else {
-        toast({
+        notify({
           title: "Error",
           description: result.message || "Failed to delete workpaper",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsDeleting(false);

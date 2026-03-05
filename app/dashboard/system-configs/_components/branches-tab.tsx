@@ -20,8 +20,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Trash2, MapPin, Pencil, TriangleAlert } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -106,7 +105,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
       return response;
     },
     onSuccess: () => {
-      toast.success("Branch deleted successfully");
+      notify({ description: "Branch deleted successfully", type: "success" });
       setOpenModal(false);
       setDeleteDialogOpen(false);
       setOpenModal(false);
@@ -114,7 +113,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete branch");
+      notify({ description: error.message || "Failed to delete branch", type: "error" });
     }
   });
 
@@ -420,7 +419,7 @@ function CreateOrUpdateBranchDialog({
       return response;
     },
     onSuccess: () => {
-      toast.success(`Branch ${initialData ? "updated" : "created"} successfully`);
+      notify({ description: `Branch ${initialData ? "updated" : "created"} successfully`, type: "success" });
       setOpenModal(false);
       setInitialData(null);
       setFormData(BRANCH_INITIAL_STATE);
@@ -428,7 +427,7 @@ function CreateOrUpdateBranchDialog({
     },
     onError: (error: Error) => {
       setError({ status: true, message: error.message });
-      toast.error(error.message);
+      notify({ description: error.message, type: "error" });
     }
   });
 

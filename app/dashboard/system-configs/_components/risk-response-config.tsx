@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Edit2, Save, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 type ResponseStrategy = {
@@ -24,7 +24,6 @@ type TreatmentStatus = {
 };
 
 export function RiskResponseConfig() {
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [editingStrategies, setEditingStrategies] = useState(false);
   const [editingStatuses, setEditingStatuses] = useState(false);
@@ -72,17 +71,19 @@ export function RiskResponseConfig() {
 
   const handleSaveStrategies = () => {
     setEditingStrategies(false);
-    toast({
+    notify({
       title: "Response strategies updated",
-      description: "Risk response strategies have been saved successfully."
+      description: "Risk response strategies have been saved successfully.",
+      type: "success"
     });
   };
 
   const handleSaveStatuses = () => {
     setEditingStatuses(false);
-    toast({
+    notify({
       title: "Treatment statuses updated",
-      description: "Treatment statuses have been saved successfully."
+      description: "Treatment statuses have been saved successfully.",
+      type: "success"
     });
   };
 

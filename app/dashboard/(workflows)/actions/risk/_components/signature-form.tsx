@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { submitRiskAcceptanceSignature } from "@/app/_actions/risk-module-actions";
 
@@ -124,7 +123,7 @@ export default function SignatureForm({
       // Convert canvas to blob
       canvas.toBlob(async (blob) => {
         if (!blob) {
-          toast.error("Failed to create signature image");
+          notify({ description: "Failed to create signature image", type: "error" });
           setIsUploadingSignature(false);
           return;
         }
@@ -138,13 +137,13 @@ export default function SignatureForm({
         if (uploadResponse.success && uploadResponse.data?.file_url) {
           setFormData((prev) => ({ ...prev, signature: uploadResponse.data.file_url }));
           setShowSignatureModal(false);
-          toast.success("Signature saved");
+          notify({ description: "Signature saved", type: "success" });
         } else {
-          toast.error(uploadResponse.message || "Failed to upload signature");
+          notify({ description: uploadResponse.message || "Failed to upload signature", type: "error" });
         }
       });
     } catch (error: any) {
-      toast.error(error.message || "Failed to save signature");
+      notify({ description: error.message || "Failed to save signature", type: "error" });
     } finally {
       setIsUploadingSignature(false);
     }
@@ -152,11 +151,11 @@ export default function SignatureForm({
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      toast.error("Please enter your name");
+      notify({ description: "Please enter your name", type: "error" });
       return;
     }
     if (!formData.designation.trim()) {
-      toast.error("Please enter your designation");
+      notify({ description: "Please enter your designation", type: "error" });
       return;
     }
 
@@ -177,10 +176,10 @@ export default function SignatureForm({
 
       // Call the onSubmit callback
       await onSubmit(formData);
-      toast.success("Signature submitted successfully");
+      notify({ description: "Signature submitted successfully", type: "success" });
       onClose();
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit signature");
+      notify({ description: error.message || "Failed to submit signature", type: "error" });
     } finally {
       setIsSubmitting(false);
     }

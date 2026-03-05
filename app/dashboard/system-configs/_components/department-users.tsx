@@ -21,7 +21,7 @@ import {
   View,
   Pencil
 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department, DepartmentUser } from "@/lib/types";
 import {
@@ -274,14 +274,14 @@ export default function DepartmentUsersConfig() {
             });
 
             if (response.success) {
-              toast.success("User removed from department successfully");
+              notify({ description: "User removed from department successfully", type: "success" });
               queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USERS] });
               router.refresh();
             } else {
-              toast.error(response.message || "Failed to remove user");
+              notify({ description: response.message || "Failed to remove user", type: "error" });
             }
           } catch (error) {
-            toast.error("An error occurred while removing the user");
+            notify({ description: "An error occurred while removing the user", type: "error" });
           } finally {
             setOpenRemoveDialog(false);
             setUserToRemove(null);
@@ -337,16 +337,16 @@ function EditUserRoleDialog({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("User role updated successfully");
+        notify({ description: "User role updated successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USERS] });
         router.refresh();
         setOpen(false);
       } else {
-        toast.error(response.message || "Failed to update user role");
+        notify({ description: response.message || "Failed to update user role", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("An error occurred while updating the user role");
+      notify({ description: "An error occurred while updating the user role", type: "error" });
       console.error("Error updating user role:", error);
     }
   });
@@ -357,7 +357,7 @@ function EditUserRoleDialog({
     if (selectedRoleId && selectedRoleId !== user?.role?.id) {
       updateRoleMutation.mutate(selectedRoleId);
     } else {
-      toast.info("No changes detected");
+      notify({ description: "No changes detected", type: "info" });
     }
   };
 
@@ -518,19 +518,19 @@ export function CreateOrUpdateDepartment({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`Department ${initialData ? "updated" : "created"} successfully`);
+        notify({ description: `Department ${initialData ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         setOpenModal?.(false);
         setInitialData?.(null);
         setFormData(INIT_DEPARTMENT);
         setError({ status: false, message: "" });
       } else {
-        toast.error(response.message);
+        notify({ description: response.message, type: "error" });
         setError({ status: true, message: response.message });
       }
     },
     onError: (error) => {
-      toast.error("An error occurred");
+      notify({ description: "An error occurred", type: "error" });
       setError({ status: true, message: "An unexpected error occurred" });
       console.error("Error saving department:", error);
     }

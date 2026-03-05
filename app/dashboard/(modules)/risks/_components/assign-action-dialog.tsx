@@ -16,7 +16,7 @@ import {
 import { MultiSelectField } from "@/components/ui/multi-select-field";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { createRiskAction } from "@/app/_actions/risk-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -117,7 +117,7 @@ export function AssignActionDialog({
     mutationFn: createRiskAction,
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Action assigned successfully");
+        notify({ description: "Action assigned successfully", type: "success" });
 
         // Reset form
         setFormData(INIT_FORM_DATA);
@@ -129,11 +129,11 @@ export function AssignActionDialog({
         // Optionally invalidate related queries
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.RISKS] });
       } else {
-        toast.error(response.message || "Failed to assign action");
+        notify({ description: response.message || "Failed to assign action", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to assign action");
+      notify({ description: "Failed to assign action", type: "error" });
       console.error("Error assigning action:", error);
     }
   });

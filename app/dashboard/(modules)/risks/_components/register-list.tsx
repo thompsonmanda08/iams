@@ -23,14 +23,13 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, FileText, Archive, FolderOpen, View, Pencil, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createKRIRegister,
   updateKRIRegister,
   deleteKRIRegister
 } from "@/app/_actions/risk-module-actions";
-import { toast } from "sonner";
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -163,14 +162,14 @@ export default function KRIRegistersClient({
         setDialogOpen(false);
         setFormData({ name: "", description: "" });
         setErrors({});
-        toast.success(response.message || "KRI Register created successfully");
+        notify({ description: response.message || "KRI Register created successfully", type: "success" });
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to create register");
+        notify({ description: response.message || "Failed to create register", type: "error" });
       }
     } catch (error) {
       console.error("Failed to create register:", error);
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -205,14 +204,14 @@ export default function KRIRegistersClient({
         setEditingRegister(null);
         setFormData({ name: "", description: "", is_active: true });
         setErrors({});
-        toast.success(response.message || "KRI Register updated successfully");
+        notify({ description: response.message || "KRI Register updated successfully", type: "success" });
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to update register");
+        notify({ description: response.message || "Failed to update register", type: "error" });
       }
     } catch (error) {
       console.error("Failed to update register:", error);
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -233,14 +232,14 @@ export default function KRIRegistersClient({
       if (response.success) {
         setDeleteDialogOpen(false);
         setRegisterToDelete(null);
-        toast.success(response.message || "KRI Register deleted successfully");
+        notify({ description: response.message || "KRI Register deleted successfully", type: "success" });
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete register");
+        notify({ description: response.message || "Failed to delete register", type: "error" });
       }
     } catch (error) {
       console.error("Failed to delete register:", error);
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsDeleting(false);
     }

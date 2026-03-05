@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Loader2, Shield } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateRiskResponseDialog } from "./create-risk-response-dialog";
 import { EditRiskResponseDialog } from "./edit-risk-response-dialog";
@@ -88,7 +88,7 @@ export function RiskResponsesList() {
         }
       }
     } catch (error) {
-      toast.error("Failed to load risk responses");
+      notify({ description: "Failed to load risk responses", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -124,14 +124,14 @@ export function RiskResponsesList() {
     try {
       const response = await deleteRiskResponse(deleteDialog.responseId);
       if (response.success) {
-        toast.success("Risk response deleted successfully");
+        notify({ description: "Risk response deleted successfully", type: "success" });
         await fetchResponses();
         setDeleteDialog({ open: false, responseId: null, responseName: null });
       } else {
-        toast.error(response.message || "Failed to delete risk response");
+        notify({ description: response.message || "Failed to delete risk response", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to delete risk response");
+      notify({ description: "Failed to delete risk response", type: "error" });
     }
   };
 

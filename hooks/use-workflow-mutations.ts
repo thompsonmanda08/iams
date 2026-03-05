@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import type { WorkflowItem, State, Transition } from "@/lib/types/workflow";
 import {
@@ -73,7 +73,7 @@ export function useWorkflowMutations() {
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to save workflow";
       setState({ isLoading: false, error: errorMessage });
-      toast.error(errorMessage);
+      notify({ description: errorMessage, type: "error" });
 
       return {
         success: false,
@@ -112,7 +112,7 @@ export function useWorkflowMutations() {
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to update workflow";
       setState({ isLoading: false, error: errorMessage });
-      toast.error(errorMessage);
+      notify({ description: errorMessage, type: "error" });
 
       return {
         success: false,
@@ -527,7 +527,7 @@ export function useWorkflowMutations() {
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to save workflow";
       setState({ isLoading: false, error: errorMessage });
-      toast.error(errorMessage);
+      notify({ description: errorMessage, type: "error" });
 
       return {
         success: false,

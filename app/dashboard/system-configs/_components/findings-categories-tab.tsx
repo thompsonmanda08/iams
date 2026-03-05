@@ -12,7 +12,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { AuditConfigurableItem, Pagination } from "@/lib/types";
 import {
@@ -73,14 +73,14 @@ export default function FindingsCategoryTab({
     mutationFn: (id: string) => deleteDepartment(id),
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("AuditConfigurableItem deleted successfully");
+        notify({ description: "AuditConfigurableItem deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
       } else {
-        toast.error(response.message || "Failed to delete item");
+        notify({ description: response.message || "Failed to delete item", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete item");
+      notify({ description: "Failed to delete item", type: "error" });
       console.error("Error deleting item:", error);
     },
     onSettled: () => {
@@ -361,19 +361,19 @@ export function CreateOrUpdateArea({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`AuditConfigurableItem ${initialData ? "updated" : "created"} successfully`);
+        notify({ description: `AuditConfigurableItem ${initialData ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         setOpenModal?.(false);
         setInitialData?.(null);
         setFormData(INIT_AREA);
         setError({ status: false, message: "" });
       } else {
-        toast.error(response.message);
+        notify({ description: response.message, type: "error" });
         setError({ status: true, message: response.message });
       }
     },
     onError: (error) => {
-      toast.error("An error occurred");
+      notify({ description: "An error occurred", type: "error" });
       setError({ status: true, message: "An unexpected error occurred" });
       console.error("Error saving item:", error);
     }

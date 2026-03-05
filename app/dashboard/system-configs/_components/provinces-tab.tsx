@@ -12,8 +12,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Trash2, MapPin, Pencil } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -78,19 +77,19 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
       return response;
     },
     onSuccess: () => {
-      toast.success("Province deleted successfully");
+      notify({ description: "Province deleted successfully", type: "success" });
       // Refetch provinces
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BRANCHES] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete province");
+      notify({ description: error.message || "Failed to delete province", type: "error" });
     }
   });
 
   const handleDeleteProvince = async (id: string) => {
     if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
     if (true) {
-      return toast.warning("This action currently is disabled");
+      return notify({ description: "This action currently is disabled", type: "warning" });
     }
     deleteProvinceMutation.mutate(id);
   };
@@ -203,7 +202,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
                       variant="outline"
                       onClick={(e) => {
                         if (true) {
-                          return toast.warning("This action currently is disabled");
+                          return notify({ description: "This action currently is disabled", type: "warning" });
                         }
                         setEditingProvince(province);
                         setOpenModal(true);
@@ -295,7 +294,7 @@ function CreateOrUpdateProvinceDialog({
       return response;
     },
     onSuccess: () => {
-      toast.success(`Province ${initialData ? "updated" : "created"} successfully`);
+      notify({ description: `Province ${initialData ? "updated" : "created"} successfully`, type: "success" });
       setOpenModal(false);
       setInitialData(null);
       setFormData(PROVINCE_INITIAL_STATE);
@@ -303,7 +302,7 @@ function CreateOrUpdateProvinceDialog({
     },
     onError: (error: Error) => {
       setError({ status: true, message: error.message });
-      toast.error(error.message);
+      notify({ description: error.message, type: "error" });
     }
   });
 

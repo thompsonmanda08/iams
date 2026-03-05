@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectField } from "@/components/ui/select-field";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { getDepartments } from "@/app/_actions/config-actions";
 import { getRiskCategories, KRIFrequency } from "@/app/_actions/risk-module-actions";
 import { getUsers } from "@/app/_actions/user-actions";
@@ -152,10 +152,10 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
       if (response.success && response.data?.data) {
         setDepartments(response.data?.data);
       } else {
-        toast.error("Failed to load departments");
+        notify({ description: "Failed to load departments", type: "error" });
       }
     } catch (error) {
-      toast.error("Error loading departments");
+      notify({ description: "Error loading departments", type: "error" });
     } finally {
       setLoadingDepartments(false);
     }
@@ -172,7 +172,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
         setCategories(response.data?.data);
       }
     } catch (error) {
-      toast.error("Error loading risk categories");
+      notify({ description: "Error loading risk categories", type: "error" });
     } finally {
       setLoadingCategories(false);
     }
@@ -191,7 +191,7 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
         setUsers([]);
       }
     } catch (error) {
-      toast.error("Error loading users");
+      notify({ description: "Error loading users", type: "error" });
       setUsers([]);
     } finally {
       setLoadingUsers(false);

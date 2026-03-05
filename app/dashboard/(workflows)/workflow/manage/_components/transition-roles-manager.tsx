@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 interface TransitionRolesManagerProps {
@@ -44,10 +44,10 @@ export const TransitionRolesManager = ({
       if (response.success) {
         setAssignedRoles(response.data || []);
       } else {
-        toast.error("Failed to fetch transition roles");
+        notify({ description: "Failed to fetch transition roles", type: "error" });
       }
     } catch (error) {
-      toast.error("Error fetching transition roles");
+      notify({ description: "Error fetching transition roles", type: "error" });
     } finally {
       setIsFetching(false);
     }
@@ -56,7 +56,7 @@ export const TransitionRolesManager = ({
   const handleAssignRole = async () => {
     if (!checkPermission("WORKFLOW_CONFIG", "can_edit")) return;
     if (!selectedRoleId) {
-      toast.error("Please select a role");
+      notify({ description: "Please select a role", type: "error" });
       return;
     }
 
@@ -64,14 +64,14 @@ export const TransitionRolesManager = ({
     try {
       const response = await assignRoleToTransition(transitionId, selectedRoleId);
       if (response.success) {
-        toast.success("Role assigned successfully");
+        notify({ description: "Role assigned successfully", type: "success" });
         setSelectedRoleId("");
         await fetchRoles();
       } else {
-        toast.error(response.message || "Failed to assign role");
+        notify({ description: response.message || "Failed to assign role", type: "error" });
       }
     } catch (error) {
-      toast.error("Error assigning role");
+      notify({ description: "Error assigning role", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -85,13 +85,13 @@ export const TransitionRolesManager = ({
     try {
       const response = await removeRoleFromTransition(transitionId, roleId);
       if (response.success) {
-        toast.success("Role removed successfully");
+        notify({ description: "Role removed successfully", type: "success" });
         await fetchRoles();
       } else {
-        toast.error(response.message || "Failed to remove role");
+        notify({ description: response.message || "Failed to remove role", type: "error" });
       }
     } catch (error) {
-      toast.error("Error removing role");
+      notify({ description: "Error removing role", type: "error" });
     } finally {
       setIsLoading(false);
     }

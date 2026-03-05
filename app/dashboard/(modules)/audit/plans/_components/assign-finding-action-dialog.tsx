@@ -18,6 +18,7 @@ import { useCreateFindingActionMutation } from "@/hooks/use-finding-actions-quer
 import type { WorkpaperFinding } from "@/lib/types/audit-types";
 import { Loader2 } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
+import { notify } from "@/lib/utils";
 
 interface AssignFindingActionDialogProps {
   open: boolean;
@@ -87,8 +88,22 @@ export function AssignFindingActionDialog({
   };
 
   const handleSubmit = () => {
-    if (!checkPermission("AUDIT_PLANS", "can_assign")) return;
-    if (!finding || !canAssignAction || !validateForm()) {
+    if (!checkPermission("AUDIT_PLANS", "can_assign")) {
+      notify({ type: "error", description: "You do not have permission to assign actions" });
+      return;
+    }
+    if (!finding) {
+      notify({ type: "error", description: "No finding selected" });
+      return;
+    }
+    if (!canAssignAction) {
+      notify({
+        type: "error",
+        description: `Cannot assign actions while audit plan is "${auditPlanStatus}". Plan must be Completed, Approved, or Rejected.`
+      });
+      return;
+    }
+    if (!validateForm()) {
       return;
     }
 
@@ -102,7 +117,8 @@ export function AssignFindingActionDialog({
         action_description: formData.action_description,
         assigned_to: formData.assigned_to,
         reviewer_id: formData.reviewer_id,
-        due_date: formattedDueDate
+        due_date: formattedDueDate,
+        ...(finding.framework === "GENERAL" && { framework_type: "GENERAL" })
       },
       {
         onSuccess: () => {

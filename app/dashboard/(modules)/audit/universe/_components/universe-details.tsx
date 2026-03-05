@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Plus, Globe, Send, Pencil, Trash2, User, UserCheckIcon } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { submitUniverseForApproval, deleteUniverseItem } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -85,17 +85,17 @@ const UniverseDetails = ({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(response.message || "Universe item deleted successfully");
+        notify({ description: response.message || "Universe item deleted successfully", type: "success" });
         queryClient.invalidateQueries();
         setDeleteConfirmOpen(false);
         setItemToDelete(null);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete universe item");
+        notify({ description: response.message || "Failed to delete universe item", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete universe item. Please try again.");
+      notify({ description: "Failed to delete universe item. Please try again.", type: "error" });
       console.error("Error:", error);
     }
   });
@@ -162,14 +162,14 @@ const UniverseDetails = ({
     try {
       const result = await submitUniverseForApproval(universe.id);
       if (result.success) {
-        toast.success("Universe submitted for approval successfully");
+        notify({ description: "Universe submitted for approval successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: ["universes"] });
         router.refresh();
       } else {
-        toast.error(result.message || "Failed to submit universe for approval");
+        notify({ description: result.message || "Failed to submit universe for approval", type: "error" });
       }
     } catch (error) {
-      toast.error("An error occurred while submitting the universe");
+      notify({ description: "An error occurred while submitting the universe", type: "error" });
       console.error(error);
     } finally {
       setIsSubmitting(false);

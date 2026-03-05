@@ -31,7 +31,7 @@ import {
   checkScreenLockState
 } from "@/app/_actions/auth-actions";
 import { AuthSession } from "@/lib/types";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import {
   SESSION_CONFIG,
   SCREEN_LOCK_COUNTDOWN_SECONDS,
@@ -452,10 +452,10 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
       logger.error("🔄 Background token refresh failed - session may be expiring", refreshError, {
         component: "IdleTimerContainer"
       });
-      toast.warning(
-        "⚠️ Your session may be expiring. Please save your work and log back in if needed.",
-        { duration: 10000 }
-      );
+      notify({
+        description: "⚠️ Your session may be expiring. Please save your work and log back in if needed.",
+        type: "warning"
+      });
     }
   }, [refreshError]);
 
@@ -562,7 +562,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         setIsDialogOpen(false);
         broadcastState(false);
         idleTimer.reset();
-        toast.success("Session extended. Welcome back!");
+        notify({ description: "Session extended. Welcome back!", type: "success" });
         return;
       }
 
@@ -581,7 +581,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         setIsDialogOpen(false);
         broadcastState(false);
         idleTimer.reset();
-        toast.success("Session restored. You're all set!");
+        notify({ description: "Session restored. You're all set!", type: "success" });
         return;
       }
 
@@ -589,13 +589,13 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         component: "IdleTimerContainer.handleStillHere"
       });
 
-      toast.error("Session expired. Please log in again.");
+      notify({ description: "Session expired. Please log in again.", type: "error" });
       await handleUserLogOut();
     } catch (error) {
       logger.error("❌ Critical error in handleStillHere", error, {
         component: "IdleTimerContainer.handleStillHere"
       });
-      toast.error("An unexpected error occurred. Logging out...");
+      notify({ description: "An unexpected error occurred. Logging out...", type: "error" });
       await handleUserLogOut();
     } finally {
       setIsLoading(false);

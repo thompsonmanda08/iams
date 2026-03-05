@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, CheckSquare } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import {
   createAuditCriteriaRating,
@@ -53,13 +53,13 @@ export function AuditCriteriaRatingSection({
     try {
       const response = await createAuditCriteriaRating(reportGuideId, data);
       if (response.success) {
-        toast.success("Audit criteria rating created successfully");
+        notify({ description: "Audit criteria rating created successfully", type: "success" });
         onDataUpdated();
       } else {
-        toast.error(response.message || "Failed to create audit criteria rating");
+        notify({ description: response.message || "Failed to create audit criteria rating", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to create audit criteria rating");
+      notify({ description: error?.message || "Failed to create audit criteria rating", type: "error" });
     }
   };
 
@@ -68,13 +68,13 @@ export function AuditCriteriaRatingSection({
     try {
       const response = await updateAuditCriteriaRating(reportGuideId, itemId, data);
       if (response.success) {
-        toast.success("Audit criteria rating updated successfully");
+        notify({ description: "Audit criteria rating updated successfully", type: "success" });
         onDataUpdated();
       } else {
-        toast.error(response.message || "Failed to update audit criteria rating");
+        notify({ description: response.message || "Failed to update audit criteria rating", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to update audit criteria rating");
+      notify({ description: error?.message || "Failed to update audit criteria rating", type: "error" });
     }
   };
 
@@ -94,14 +94,14 @@ export function AuditCriteriaRatingSection({
     try {
       const response = await deleteAuditCriteriaRating(reportGuideId, deleteDialog.itemId);
       if (response.success) {
-        toast.success("Audit criteria rating deleted successfully");
+        notify({ description: "Audit criteria rating deleted successfully", type: "success" });
         onDataUpdated();
         setDeleteDialog({ open: false, itemId: null, itemName: null });
       } else {
-        toast.error(response.message || "Failed to delete audit criteria rating");
+        notify({ description: response.message || "Failed to delete audit criteria rating", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to delete audit criteria rating");
+      notify({ description: error?.message || "Failed to delete audit criteria rating", type: "error" });
     } finally {
       setIsDeleting(false);
     }

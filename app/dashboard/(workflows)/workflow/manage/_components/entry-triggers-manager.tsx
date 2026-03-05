@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 interface EntryTrigger {
@@ -66,10 +66,10 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
       if (response.success) {
         setTriggers(response.data || []);
       } else {
-        toast.error("Failed to fetch entry triggers");
+        notify({ description: "Failed to fetch entry triggers", type: "error" });
       }
     } catch (error) {
-      toast.error("Error fetching entry triggers");
+      notify({ description: "Error fetching entry triggers", type: "error" });
     } finally {
       setIsFetching(false);
     }
@@ -98,7 +98,7 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
 
   const handleSaveTrigger = async () => {
     if (!triggerName.trim() || !triggerType) {
-      toast.error("Please fill in all required fields");
+      notify({ description: "Please fill in all required fields", type: "error" });
       return;
     }
 
@@ -110,11 +110,11 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
           trigger_name: triggerName
         });
         if (response.success) {
-          toast.success("Entry trigger updated successfully");
+          notify({ description: "Entry trigger updated successfully", type: "success" });
           handleCloseDialog();
           await fetchTriggers();
         } else {
-          toast.error(response.message || "Failed to update entry trigger");
+          notify({ description: response.message || "Failed to update entry trigger", type: "error" });
         }
       } else {
         // Create new trigger
@@ -123,15 +123,15 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
           trigger_type: triggerType
         });
         if (response.success) {
-          toast.success("Entry trigger created successfully");
+          notify({ description: "Entry trigger created successfully", type: "success" });
           handleCloseDialog();
           await fetchTriggers();
         } else {
-          toast.error(response.message || "Failed to create entry trigger");
+          notify({ description: response.message || "Failed to create entry trigger", type: "error" });
         }
       }
     } catch (error) {
-      toast.error("Error saving entry trigger");
+      notify({ description: "Error saving entry trigger", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -145,13 +145,13 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
     try {
       const response = await deleteEntryTrigger(triggerId);
       if (response.success) {
-        toast.success("Entry trigger deleted successfully");
+        notify({ description: "Entry trigger deleted successfully", type: "success" });
         await fetchTriggers();
       } else {
-        toast.error(response.message || "Failed to delete entry trigger");
+        notify({ description: response.message || "Failed to delete entry trigger", type: "error" });
       }
     } catch (error) {
-      toast.error("Error deleting entry trigger");
+      notify({ description: "Error deleting entry trigger", type: "error" });
     } finally {
       setIsLoading(false);
     }

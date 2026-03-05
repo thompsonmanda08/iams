@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 interface TransitionTrigger {
@@ -70,10 +70,10 @@ export const TransitionTriggersManager = ({
       if (response.success) {
         setTriggers(response.data || []);
       } else {
-        toast.error("Failed to fetch transition triggers");
+        notify({ description: "Failed to fetch transition triggers", type: "error" });
       }
     } catch (error) {
-      toast.error("Error fetching transition triggers");
+      notify({ description: "Error fetching transition triggers", type: "error" });
     } finally {
       setIsFetching(false);
     }
@@ -105,7 +105,7 @@ export const TransitionTriggersManager = ({
 
   const handleSaveTrigger = async () => {
     if (!triggerName.trim() || !triggerType) {
-      toast.error("Please fill in all required fields");
+      notify({ description: "Please fill in all required fields", type: "error" });
       return;
     }
 
@@ -118,11 +118,11 @@ export const TransitionTriggersManager = ({
           delay_duration: delayDuration || undefined
         });
         if (response.success) {
-          toast.success("Trigger updated successfully");
+          notify({ description: "Trigger updated successfully", type: "success" });
           handleCloseDialog();
           await fetchTriggers();
         } else {
-          toast.error(response.message || "Failed to update trigger");
+          notify({ description: response.message || "Failed to update trigger", type: "error" });
         }
       } else {
         // Create new trigger
@@ -132,15 +132,15 @@ export const TransitionTriggersManager = ({
           delay_duration: delayDuration || undefined
         });
         if (response.success) {
-          toast.success("Trigger created successfully");
+          notify({ description: "Trigger created successfully", type: "success" });
           handleCloseDialog();
           await fetchTriggers();
         } else {
-          toast.error(response.message || "Failed to create trigger");
+          notify({ description: response.message || "Failed to create trigger", type: "error" });
         }
       }
     } catch (error) {
-      toast.error("Error saving trigger");
+      notify({ description: "Error saving trigger", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -154,13 +154,13 @@ export const TransitionTriggersManager = ({
     try {
       const response = await deleteTransitionTrigger(triggerId);
       if (response.success) {
-        toast.success("Trigger deleted successfully");
+        notify({ description: "Trigger deleted successfully", type: "success" });
         await fetchTriggers();
       } else {
-        toast.error(response.message || "Failed to delete trigger");
+        notify({ description: response.message || "Failed to delete trigger", type: "error" });
       }
     } catch (error) {
-      toast.error("Error deleting trigger");
+      notify({ description: "Error deleting trigger", type: "error" });
     } finally {
       setIsLoading(false);
     }

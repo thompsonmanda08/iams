@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Edit2, Save, X, TrendingUp, TrendingDown } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 type KRI = {
@@ -28,7 +28,6 @@ type KRICategory = {
 };
 
 export function KRIConfig() {
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
@@ -246,9 +245,10 @@ export function KRIConfig() {
 
   const handleSaveCategory = (categoryId: string) => {
     setEditingCategory(null);
-    toast({
+    notify({
       title: "KRIs updated",
-      description: "Key Risk Indicators have been saved successfully."
+      description: "Key Risk Indicators have been saved successfully.",
+      type: "success"
     });
   };
 

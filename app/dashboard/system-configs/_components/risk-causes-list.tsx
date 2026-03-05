@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Loader2, AlertCircle, Cable } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
 import { RiskCauseDialog } from "./risk-causes-dialog";
@@ -89,7 +89,7 @@ export function RiskCausesList() {
       }
     } catch (error) {
       console.error("Error fetching risk causes:", error);
-      toast.error("Failed to load risk causes");
+      notify({ description: "Failed to load risk causes", type: "error" });
       setCauses([]);
     } finally {
       setIsLoading(false);
@@ -126,15 +126,15 @@ export function RiskCausesList() {
     try {
       const response = await deleteRiskCause(deleteDialog.causeId);
       if (response.success) {
-        toast.success("Risk cause deleted successfully");
+        notify({ description: "Risk cause deleted successfully", type: "success" });
         await fetchCauses();
         setDeleteDialog({ open: false, causeId: null, causeName: null });
       } else {
-        toast.error(response.message || "Failed to delete risk cause");
+        notify({ description: response.message || "Failed to delete risk cause", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting risk cause:", error);
-      toast.error("Failed to delete risk cause");
+      notify({ description: "Failed to delete risk cause", type: "error" });
     }
   };
 

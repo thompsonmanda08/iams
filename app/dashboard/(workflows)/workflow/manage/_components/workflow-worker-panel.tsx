@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 
 interface WorkerStatus {
   status: string;
@@ -43,12 +43,12 @@ export const WorkflowWorkerPanel = () => {
         setLastUpdated(new Date());
       } else {
         if (!silent) {
-          toast.error("Failed to fetch worker status");
+          notify({ description: "Failed to fetch worker status", type: "error" });
         }
       }
     } catch (error) {
       if (!silent) {
-        toast.error("Error fetching worker status");
+        notify({ description: "Error fetching worker status", type: "error" });
       }
     } finally {
       if (!silent) setIsFetching(false);
@@ -60,16 +60,16 @@ export const WorkflowWorkerPanel = () => {
     try {
       const response = await triggerBackgroundWorker();
       if (response.success) {
-        toast.success("Background worker triggered successfully");
+        notify({ description: "Background worker triggered successfully", type: "success" });
         // Wait a moment for the worker to start, then refresh status
         setTimeout(() => {
           fetchWorkerStatus();
         }, 1000);
       } else {
-        toast.error(response.message || "Failed to trigger worker");
+        notify({ description: response.message || "Failed to trigger worker", type: "error" });
       }
     } catch (error) {
-      toast.error("Error triggering worker");
+      notify({ description: "Error triggering worker", type: "error" });
     } finally {
       setIsLoading(false);
     }

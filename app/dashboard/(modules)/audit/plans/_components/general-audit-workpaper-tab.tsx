@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Info, AlertCircle, Save, Target } from "lucide-react";
+import { Info, AlertCircle, Save, Target, Lock } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GeneralEvidenceGrid } from "@/components/audit/general-evidence-grid";
 import type { AuditPlan } from "@/lib/types/audit-types";
@@ -41,7 +41,7 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
     });
   }
 
-  const isDisabled = auditPlan.status !== "DRAFT";
+  const isDisabled = auditPlan.status?.toUpperCase() !== "APPROVED";
 
   // ── No workpaper ─────────────────────────────────────────────────────────
 
@@ -73,6 +73,32 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
           </p>
         </div>
       </div>
+    );
+  }
+
+  // ── Audit plan not approved — show empty state ───────────────────────
+
+  if (isDisabled) {
+    return (
+      <Card className="border-2 border-dashed">
+        <CardContent className="flex flex-col items-center justify-center px-8 py-16">
+          <div className="relative mb-4">
+            <div className="bg-muted/40 absolute inset-0 rounded-full blur-2xl" />
+            <div className="bg-card relative rounded-2xl border-2 p-6">
+              <Lock className="text-muted-foreground h-16 w-16" strokeWidth={1.5} />
+            </div>
+          </div>
+          <h3 className="text-foreground mb-2 text-2xl font-semibold">Workpaper Locked</h3>
+          <p className="text-muted-foreground mb-2 max-w-md text-center">
+            The audit plan must be <span className="font-medium">approved</span> before you can begin
+            filling in the workpaper. The current status is{" "}
+            <Badge variant="outline" className="text-xs">{auditPlan.status}</Badge>.
+          </p>
+          <p className="text-muted-foreground text-center text-sm">
+            Submit the audit plan for approval to unlock the evidence grid and workpaper details.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -131,7 +157,7 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
           findings={findings}
           workingPaperId={workingPaperId}
           auditPlanId={auditPlan.id}
-          disabled={isDisabled}
+          disabled={false}
           auditPlanStatus={auditPlan.status}
         />
 
@@ -150,28 +176,24 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
                 value={metadata.audit_process}
                 onChange={(e) => setMetadata({ ...metadata, audit_process: e.target.value })}
                 placeholder="Audit process name..."
-                disabled={isDisabled}
               />
               <Input
                 label="Prepared By"
                 value={metadata.prepared_by}
                 onChange={(e) => setMetadata({ ...metadata, prepared_by: e.target.value })}
                 placeholder="Prepared by..."
-                disabled={isDisabled}
               />
               <Input
                 label="Date"
                 type="date"
                 value={metadata.date}
                 onChange={(e) => setMetadata({ ...metadata, date: e.target.value })}
-                disabled={isDisabled}
               />
               <Input
                 label="Reviewed By"
                 value={metadata.reviewed_by}
                 onChange={(e) => setMetadata({ ...metadata, reviewed_by: e.target.value })}
                 placeholder="Reviewed by..."
-                disabled={isDisabled}
               />
             </div> */}
 
@@ -182,7 +204,6 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
               className="resize-none text-sm"
               value={metadata.objective}
               onChange={(e) => setMetadata({ ...metadata, objective: e.target.value })}
-              disabled={isDisabled}
             />
 
             <Textarea
@@ -192,7 +213,6 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
               className="resize-none text-sm"
               value={metadata.work_done}
               onChange={(e) => setMetadata({ ...metadata, work_done: e.target.value })}
-              disabled={isDisabled}
             />
 
             <Textarea
@@ -202,14 +222,12 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
               className="resize-none text-sm"
               value={metadata.conclusion}
               onChange={(e) => setMetadata({ ...metadata, conclusion: e.target.value })}
-              disabled={isDisabled}
             />
           </CardContent>
           <CardFooter className="flex items-center justify-between border-t pt-4">
             <Button
               onClick={handleSaveMetadata}
-              isLoading={updateMetadataMutation.isPending}
-              disabled={isDisabled}>
+              isLoading={updateMetadataMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
               Save
             </Button>

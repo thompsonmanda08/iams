@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Loader2, MonitorCog } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteEffectivenessLevel, getEffectivenessLevels } from "@/app/_actions/config-actions";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +89,7 @@ export function ControlEffectivenessList() {
       }
     } catch (error) {
       console.error("Error fetching control effectiveness:", error);
-      toast.error("Failed to load control effectiveness");
+      notify({ description: "Failed to load control effectiveness", type: "error" });
       setControls([]);
     } finally {
       setIsLoading(false);
@@ -126,15 +126,15 @@ export function ControlEffectivenessList() {
     try {
       const response = await deleteEffectivenessLevel(deleteDialog.controlId);
       if (response.success) {
-        toast.success("Control effectiveness deleted successfully");
+        notify({ description: "Control effectiveness deleted successfully", type: "success" });
         await fetchControls();
         setDeleteDialog({ open: false, controlId: null, controlName: null });
       } else {
-        toast.error(response.message || "Failed to delete control effectiveness");
+        notify({ description: response.message || "Failed to delete control effectiveness", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting control effectiveness:", error);
-      toast.error("Failed to delete control effectiveness");
+      notify({ description: "Failed to delete control effectiveness", type: "error" });
     }
   };
 

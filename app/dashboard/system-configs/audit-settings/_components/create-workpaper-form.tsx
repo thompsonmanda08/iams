@@ -39,11 +39,11 @@ import type {
   EvidenceInput,
   WorkpaperInput
 } from "@/lib/types/audit-types";
-import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SelectField } from "../../../../../components/ui/select-field";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
+import { notify } from "@/lib/utils";
 
 interface CreateWorkpaperFormProps {
   auditId?: string; // Now optional - can be attached to audit plan later
@@ -63,7 +63,6 @@ export function CreateWorkpaperForm({
   templateId
 }: CreateWorkpaperFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const createMutation = useCreateWorkpaper();
   const { data: teamMembersResponse, isLoading: loadingTeam } = useUsers({ page_size: 100 });
   const teamMembers = (teamMembersResponse?.data?.data || []) as User[];
@@ -155,12 +154,13 @@ export function CreateWorkpaperForm({
         samplingMethodology: (draft as any)?.samplingMethodology || ""
       });
       setLastSaved(draft.lastSaved || null);
-      toast({
+      notify({
         title: "Draft Restored",
-        description: "Your previous work has been restored."
+        description: "Your previous work has been restored.",
+        type: "success"
       });
     }
-  }, [auditId, getDraft, initialData, currentUser, toast]);
+  }, [auditId, getDraft, initialData, currentUser]);
 
   // Auto-save draft with debounce
   const debouncedFormData = useDebounce(formData, 30000); // 30 seconds
@@ -231,19 +231,20 @@ export function CreateWorkpaperForm({
   // Handle save draft manually
   const handleSaveDraft = () => {
     if (!auditId) {
-      toast({
+      notify({
         title: "Cannot Save Draft",
         description: "Drafts can only be saved when attached to an audit plan.",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
     saveDraft(auditId, formData);
     setLastSaved(new Date());
     setHasUnsavedChanges(false);
-    toast({
+    notify({
       title: "Draft Saved",
-      description: "Your work has been saved as a draft."
+      description: "Your work has been saved as a draft.",
+      type: "success"
     });
   };
 
@@ -251,10 +252,10 @@ export function CreateWorkpaperForm({
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
-      toast({
+      notify({
         title: "Validation Error",
         description: error,
-        variant: "destructive"
+        type: "error"
       });
       return;
     }

@@ -13,7 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, Target } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department, ErrorState, Pagination } from "@/lib/types";
 import {

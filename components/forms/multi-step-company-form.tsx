@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import {
   createOrganization,
   getTownsByProvince,
@@ -259,19 +258,19 @@ export function MultiStepCompanyForm({
 
   const validateStepOne = (): boolean => {
     if (!stepOneData.name.trim()) {
-      toast.error("Company name is required");
+      notify({ description: "Company name is required", type: "error" });
       return false;
     }
     if (!stepOneData.code.trim()) {
-      toast.error("Company code is required");
+      notify({ description: "Company code is required", type: "error" });
       return false;
     }
     if (!stepOneData.contact_email.trim()) {
-      toast.error("Contact email is required");
+      notify({ description: "Contact email is required", type: "error" });
       return false;
     }
     if (!stepOneData.contact_phone.trim()) {
-      toast.error("Contact phone is required");
+      notify({ description: "Contact phone is required", type: "error" });
       return false;
     }
     return true;
@@ -279,15 +278,15 @@ export function MultiStepCompanyForm({
 
   const validateStepTwo = (): boolean => {
     if (!stepTwoData.country_id) {
-      toast.error("Please select a country");
+      notify({ description: "Please select a country", type: "error" });
       return false;
     }
     if (!stepTwoData.province_id) {
-      toast.error("Please select a province/state");
+      notify({ description: "Please select a province/state", type: "error" });
       return false;
     }
     if (!stepTwoData.town_id) {
-      toast.error("Please select a town/city");
+      notify({ description: "Please select a town/city", type: "error" });
       return false;
     }
     return true;
@@ -297,31 +296,31 @@ export function MultiStepCompanyForm({
     if (isEditMode) return true;
 
     if (!stepThreeData.admin_username.trim()) {
-      toast.error("Admin username is required");
+      notify({ description: "Admin username is required", type: "error" });
       return false;
     }
     if (!stepThreeData.admin_email.trim()) {
-      toast.error("Admin email is required");
+      notify({ description: "Admin email is required", type: "error" });
       return false;
     }
     if (!stepThreeData.admin_first_name.trim()) {
-      toast.error("Admin first name is required");
+      notify({ description: "Admin first name is required", type: "error" });
       return false;
     }
     if (!stepThreeData.admin_last_name.trim()) {
-      toast.error("Admin last name is required");
+      notify({ description: "Admin last name is required", type: "error" });
       return false;
     }
     if (!stepThreeData.admin_password.trim()) {
-      toast.error("Admin password is required");
+      notify({ description: "Admin password is required", type: "error" });
       return false;
     }
     if (stepThreeData.admin_password.length < 8) {
-      toast.error("Admin password must be at least 8 characters");
+      notify({ description: "Admin password must be at least 8 characters", type: "error" });
       return false;
     }
     if (stepThreeData.max_users < 1) {
-      toast.error("Maximum users must be at least 1");
+      notify({ description: "Maximum users must be at least 1", type: "error" });
       return false;
     }
     return true;
@@ -388,16 +387,16 @@ export function MultiStepCompanyForm({
         : await createOrganization(payload);
 
       if (response.success) {
-        toast.success(`Company ${isEditMode ? "updated" : "created"} successfully!`);
+        notify({ description: `Company ${isEditMode ? "updated" : "created"} successfully!`, type: "success" });
         onSuccess?.(); // This will invalidate cache and trigger refetch
         handleCloseModal(); // Close dialog
         router.refresh();
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COMPANIES] });
       } else {
-        toast.error(response.message || `Failed to ${isEditMode ? "update" : "create"} company`);
+        notify({ description: response.message || `Failed to ${isEditMode ? "update" : "create"} company`, type: "error" });
       }
     } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred");
+      notify({ description: error.message || "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

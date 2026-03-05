@@ -13,8 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Edit, MapPin } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -157,7 +156,7 @@ export function TownsTab({ countries }: TownsTabProps) {
             size="sm"
             onClick={() => {
               if (!selectedProvince) {
-                toast.warning("Please select a country and province first");
+                notify({ description: "Please select a country and province first", type: "warning" });
                 return;
               }
               setOpenModal(true);
@@ -285,7 +284,7 @@ export function TownsTab({ countries }: TownsTabProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          toast.warning("Update functionality coming soon");
+                          notify({ description: "Update functionality coming soon", type: "warning" });
                         }}
                         className="h-8 gap-1.5">
                         <Edit className="h-3.5 w-3.5" />
@@ -382,14 +381,14 @@ function CreateTownDialog({
       return response;
     },
     onSuccess: () => {
-      toast.success("Town created successfully");
+      notify({ description: "Town created successfully", type: "success" });
       setOpenModal(false);
       setFormData({ ...TOWN_INITIAL_STATE, province_id: selectedProvince });
       onSuccess();
     },
     onError: (error: Error) => {
       setError({ status: true, message: error.message });
-      toast.error(error.message);
+      notify({ description: error.message, type: "error" });
     }
   });
 

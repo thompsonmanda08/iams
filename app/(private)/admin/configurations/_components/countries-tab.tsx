@@ -13,8 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Edit, Globe } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -290,7 +289,7 @@ function CreateOrUpdateCountryDialog({
       return response;
     },
     onSuccess: () => {
-      toast.success(`Country ${initialData ? "updated" : "created"} successfully`);
+      notify({ description: `Country ${initialData ? "updated" : "created"} successfully`, type: "success" });
       setOpenModal(false);
       setInitialData(null);
       setFormData(COUNTRY_INITIAL_STATE);
@@ -299,7 +298,7 @@ function CreateOrUpdateCountryDialog({
     },
     onError: (error: Error) => {
       setError({ status: true, message: error.message });
-      toast.error(error.message);
+      notify({ description: error.message, type: "error" });
     }
   });
 

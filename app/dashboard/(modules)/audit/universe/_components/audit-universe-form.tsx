@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -181,9 +181,10 @@ export default function AuditUniverseForm({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(
-          response.message || `Universe ${isEditing ? "updated" : "created"} successfully`
-        );
+        notify({
+          description: response.message || `Universe ${isEditing ? "updated" : "created"} successfully`,
+          type: "success"
+        });
 
         // Switch to item tab for both creating and editing to allow item management
         if (onSwitchToItemTab) {
@@ -198,11 +199,11 @@ export default function AuditUniverseForm({
         // Invalidate all relevant query caches
         queryClient.invalidateQueries();
       } else {
-        toast.error(response.message || `Failed to ${isEditing ? "update" : "create"} universe`);
+        notify({ description: response.message || `Failed to ${isEditing ? "update" : "create"} universe`, type: "error" });
       }
     },
     onError: (error) => {
-      toast.error(`Failed to ${isEditing ? "update" : "create"} universe. Please try again.`);
+      notify({ description: `Failed to ${isEditing ? "update" : "create"} universe. Please try again.`, type: "error" });
       console.error("Error:", error);
     }
   });
@@ -218,9 +219,10 @@ export default function AuditUniverseForm({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(
-          response.message || `Universe item ${editingItemId ? "updated" : "created"} successfully`
-        );
+        notify({
+          description: response.message || `Universe item ${editingItemId ? "updated" : "created"} successfully`,
+          type: "success"
+        });
         // Invalidate all relevant query caches
         queryClient.invalidateQueries();
         // Reset form except universe selection
@@ -231,15 +233,17 @@ export default function AuditUniverseForm({
         setEditingItemId(null);
         router.refresh();
       } else {
-        toast.error(
-          response.message || `Failed to ${editingItemId ? "update" : "create"} universe item`
-        );
+        notify({
+          description: response.message || `Failed to ${editingItemId ? "update" : "create"} universe item`,
+          type: "error"
+        });
       }
     },
     onError: (error) => {
-      toast.error(
-        `Failed to ${editingItemId ? "update" : "create"} universe item. Please try again.`
-      );
+      notify({
+        description: `Failed to ${editingItemId ? "update" : "create"} universe item. Please try again.`,
+        type: "error"
+      });
       console.error("Error:", error);
     }
   });
@@ -251,18 +255,18 @@ export default function AuditUniverseForm({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(response.message || "Universe item deleted successfully");
+        notify({ description: response.message || "Universe item deleted successfully", type: "success" });
         // Invalidate all relevant query caches
         queryClient.invalidateQueries();
         setDeleteConfirmOpen(false);
         setItemToDelete(null);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete universe item");
+        notify({ description: response.message || "Failed to delete universe item", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete universe item. Please try again.");
+      notify({ description: "Failed to delete universe item. Please try again.", type: "error" });
       console.error("Error:", error);
     }
   });
@@ -429,12 +433,12 @@ export default function AuditUniverseForm({
     e.preventDefault();
 
     if (!universeData.universe_name.trim()) {
-      toast.error("Please enter a universe name");
+      notify({ description: "Please enter a universe name", type: "error" });
       return;
     }
 
     if (!universeData.start_date || !universeData.end_date) {
-      toast.error("Please select start and end dates");
+      notify({ description: "Please select start and end dates", type: "error" });
       return;
     }
 
@@ -452,12 +456,12 @@ export default function AuditUniverseForm({
     e.preventDefault();
 
     if (!itemData.audit_universe_id) {
-      toast.error("Please select a universe");
+      notify({ description: "Please select a universe", type: "error" });
       return;
     }
 
     if (!itemData.process_activity_id) {
-      toast.error("Please select a process/activity");
+      notify({ description: "Please select a process/activity", type: "error" });
       return;
     }
 

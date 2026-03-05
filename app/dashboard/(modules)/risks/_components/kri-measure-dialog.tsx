@@ -5,10 +5,9 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { useState } from "react";
 import { addKRIMeasurement } from "@/app/_actions/risk-module-actions";
 import { Label } from "@/components/ui/label";
@@ -46,15 +45,15 @@ export function KRIMeasureDialog({
         measurement_date: formData.measurement_date
       });
       if (response.success) {
-        toast.success(response.message || "Measure added successfully");
+        notify({ description: response.message || "Measure added successfully", type: "success" });
         onClose();
         setFormData({ measured_value: 0, measurement_date: undefined });
         queryClient.invalidateQueries(["kri-measurements", kri_id] as any);
       } else {
-        toast.error(response.message || "Failed to add measure");
+        notify({ description: response.message || "Failed to add measure", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to add measure");
+      notify({ description: "Failed to add measure", type: "error" });
     } finally {
       setIsSaving(false);
     }

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { getPasswordPolicy, updatePasswordPolicy } from "@/app/_actions/config-actions";
 
@@ -55,11 +55,11 @@ export default function PasswordPolicyPage() {
       return response;
     },
     onSuccess: (response) => {
-      toast.success(response.message || "Password policy updated successfully");
+      notify({ description: response.message || "Password policy updated successfully", type: "success" });
       setHasChanges(false);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to save password policy");
+      notify({ description: error.message || "Failed to save password policy", type: "error" });
     }
   });
 

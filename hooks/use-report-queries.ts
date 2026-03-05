@@ -19,7 +19,7 @@ import {
 } from "@/app/_actions/reports-actions";
 import type { ReportContent, ReportEntityType, ReportRecord } from "@/lib/types/report-types";
 import { QUERY_KEYS } from "@/lib/constants";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { en } from "zod/v4/locales";
 
 // Extend QUERY_KEYS if not already present
@@ -125,7 +125,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       return result.data;
     },
     onSuccess: (_data, variables) => {
-      toast.success("Report saved successfully!");
+      notify({ description: "Report saved successfully!", type: "success" });
       // Invalidate all report queries
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
@@ -145,7 +145,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       refetchReport();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to save report");
+      notify({ description: error.message || "Failed to save report", type: "error" });
     }
   });
 
@@ -159,7 +159,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       return result.data;
     },
     onSuccess: (_data, reportId) => {
-      toast.success("Report submitted successfully!");
+      notify({ description: "Report submitted successfully!", type: "success" });
       // Invalidate all report queries
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT] });
@@ -175,7 +175,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       refetchReport();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to submit report");
+      notify({ description: error.message || "Failed to submit report", type: "error" });
     }
   });
 
@@ -281,7 +281,7 @@ export function useReportMutations() {
       return result.data as ReportRecord;
     },
     onSuccess: (_data, variables) => {
-      toast.success("Report created successfully!");
+      notify({ description: "Report created successfully!", type: "success" });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
       // Invalidate specific entity report queries
       queryClient.invalidateQueries({
@@ -289,7 +289,7 @@ export function useReportMutations() {
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to create report");
+      notify({ description: error.message || "Failed to create report", type: "error" });
     }
   });
 
@@ -302,11 +302,11 @@ export function useReportMutations() {
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Report updated successfully!");
+      notify({ description: "Report updated successfully!", type: "success" });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update report");
+      notify({ description: error.message || "Failed to update report", type: "error" });
     }
   });
 
@@ -319,11 +319,11 @@ export function useReportMutations() {
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Report deleted successfully!");
+      notify({ description: "Report deleted successfully!", type: "success" });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete report");
+      notify({ description: error.message || "Failed to delete report", type: "error" });
     }
   });
 

@@ -35,10 +35,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { User, UserType } from "@/lib/types/account";
-import { generateRandomString } from "@/lib/utils";
+import { generateRandomString, notify } from "@/lib/utils";
 import { useBranches, useDepartments, useRoles } from "@/hooks/use-query-data";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users-query-data";
 import { Branch, Department } from "@/lib/types";
@@ -180,10 +179,10 @@ export function SignUpForm({ user, isOpen, onClose, userType: user_type }: SignU
     try {
       await navigator.clipboard.writeText(password);
       setCopied(true);
-      toast.info("Password copied to clipboard. ");
+      notify({ description: "Password copied to clipboard.", type: "info" });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast.error("Failed to copy password");
+      notify({ description: "Failed to copy password", type: "error" });
     }
   };
 
@@ -255,16 +254,16 @@ export function SignUpForm({ user, isOpen, onClose, userType: user_type }: SignU
       }
 
       if (response.success) {
-        toast.success(`User ${isEdit ? "updated" : "created"} successfully`);
+        notify({ description: `User ${isEdit ? "updated" : "created"} successfully`, type: "success" });
         handleCancel();
         router.refresh();
       } else {
         console.error("Form submission failed:", response);
-        toast.error(response.message || `Failed to ${isEdit ? "update" : "create"} user`);
+        notify({ description: response.message || `Failed to ${isEdit ? "update" : "create"} user`, type: "error" });
       }
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     }
   };
 
@@ -275,7 +274,7 @@ export function SignUpForm({ user, isOpen, onClose, userType: user_type }: SignU
     },
     (errors) => {
       console.error("Form validation failed:", errors);
-      toast.error("Please fix the validation errors before submitting");
+      notify({ description: "Please fix the validation errors before submitting", type: "error" });
     }
   );
 

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import {
   getUserAssignedWorkflowTasks,
   getWorkflowInstanceTasks,
@@ -151,7 +151,7 @@ export function useCompleteWorkflowTaskMutation() {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Workflow task completed successfully");
+      notify({ description: "Workflow task completed successfully", type: "success" });
 
       // Invalidate related queries to trigger refresh
       queryClient.invalidateQueries({
@@ -165,7 +165,7 @@ export function useCompleteWorkflowTaskMutation() {
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to complete workflow task");
+      notify({ description: error.message || "Failed to complete workflow task", type: "error" });
     }
   });
 }
@@ -190,7 +190,7 @@ export function useReassignWorkflowTaskMutation() {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Workflow task reassigned successfully");
+      notify({ description: "Workflow task reassigned successfully", type: "success" });
 
       // Invalidate related queries to trigger refresh
       queryClient.invalidateQueries({
@@ -204,7 +204,7 @@ export function useReassignWorkflowTaskMutation() {
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to reassign workflow task");
+      notify({ description: error.message || "Failed to reassign workflow task", type: "error" });
     }
   });
 }

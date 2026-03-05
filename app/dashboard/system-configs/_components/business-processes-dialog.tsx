@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import {
   createBusinessProcess,
@@ -73,7 +73,7 @@ export function BusinessProcessesDialog({
       }
     } catch (error) {
       console.error("Error fetching processes:", error);
-      toast.error("Failed to load business processes");
+      notify({ description: "Failed to load business processes", type: "error" });
     } finally {
       setLoadingProcesses(false);
     }
@@ -95,7 +95,7 @@ export function BusinessProcessesDialog({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Process name is required");
+      notify({ description: "Process name is required", type: "error" });
       return;
     }
 
@@ -112,20 +112,22 @@ export function BusinessProcessesDialog({
         : await createBusinessProcess(payload);
 
       if (result.success) {
-        toast.success(
-          result.message || `Business process ${isEditMode ? "updated" : "created"} successfully`
-        );
+        notify({
+          description: result.message || `Business process ${isEditMode ? "updated" : "created"} successfully`,
+          type: "success"
+        });
         setFormData({ name: "", description: "", parent_id: "" });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(
-          result.message || `Failed to ${isEditMode ? "update" : "create"} business process`
-        );
+        notify({
+          description: result.message || `Failed to ${isEditMode ? "update" : "create"} business process`,
+          type: "error"
+        });
       }
     } catch (error) {
       console.error("Error saving process:", error);
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

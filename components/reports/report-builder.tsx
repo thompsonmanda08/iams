@@ -34,7 +34,7 @@ import CustomAlert from "../ui/custom-alert";
 import Loader from "../ui/loader";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
 import { transformWidgetData } from "@/hooks/shared/use-widget-data";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
 
 // Re-export for convenience
@@ -250,7 +250,7 @@ export function ReportBuilder({
 
       try {
         // Fetch real data from the API
-        toast.loading("Fetching data...", { id: "fetch-data" });
+        notify({ description: "Fetching data...", type: "info" });
         console.log("🔍 [handleWidgetDataSourceChange] Fetching data from API...");
 
         const widgetType = widget.widget_type as
@@ -293,11 +293,11 @@ export function ReportBuilder({
         console.log("🔍 [handleWidgetDataSourceChange] Updating widget data in store...");
         updateWidgetData(sectionId, widgetId, { ...transformedData, is_manual_override: false });
 
-        toast.success("Data loaded successfully", { id: "fetch-data" });
+        notify({ description: "Data loaded successfully", type: "success" });
         console.log("✅ [handleWidgetDataSourceChange] Data source change completed successfully");
       } catch (error: any) {
         console.error("❌ [handleWidgetDataSourceChange] Failed to fetch widget data:", error);
-        toast.error(error.message || "Failed to fetch data", { id: "fetch-data" });
+        notify({ description: error.message || "Failed to fetch data", type: "error" });
 
         // Still update the data source reference even if fetch fails
         updateWidgetDataSource(sectionId, widgetId, dataSource);
@@ -332,7 +332,7 @@ export function ReportBuilder({
       // If widget has a data source, fetch new data for the new type
       if (widget.data?.data_source_id) {
         try {
-          toast.loading("Changing widget type and fetching data...", { id: "change-type" });
+          notify({ description: "Changing widget type and fetching data...", type: "info" });
           console.log("🔍 [handleWidgetTypeChange] Fetching data for new type...");
 
           const widgetType = newType as
@@ -370,11 +370,11 @@ export function ReportBuilder({
             data: transformedData
           });
 
-          toast.success("Widget type changed successfully", { id: "change-type" });
+          notify({ description: "Widget type changed successfully", type: "success" });
           console.log("✅ [handleWidgetTypeChange] Widget type change completed successfully");
         } catch (error: any) {
           console.error("❌ [handleWidgetTypeChange] Failed:", error);
-          toast.error(error.message || "Failed to change widget type", { id: "change-type" });
+          notify({ description: error.message || "Failed to change widget type", type: "error" });
         }
       } else {
         // No data source, just change the type without fetching data
@@ -382,7 +382,7 @@ export function ReportBuilder({
         updateWidget(sectionId, widgetId, {
           widget_type: newType
         });
-        toast.success("Widget type changed", { id: "change-type" });
+        notify({ description: "Widget type changed", type: "success" });
       }
     },
     [report, entity.id, updateWidget, entityType]
@@ -400,13 +400,13 @@ export function ReportBuilder({
 
       if (!widget || !widget.data.data_source_id) {
         console.error("❌ [handleRetryWidget] Widget not found or no data source");
-        toast.error("Cannot retry: widget has no data source");
+        notify({ description: "Cannot retry: widget has no data source", type: "error" });
         setRetryingWidget(null);
         return;
       }
 
       try {
-        toast.loading("Retrying data fetch...", { id: "retry-fetch" });
+        notify({ description: "Retrying data fetch...", type: "info" });
 
         const widgetType = widget.widget_type as
           | "pie_chart"
@@ -437,11 +437,11 @@ export function ReportBuilder({
         );
 
         updateWidgetData(sectionId, widgetId, transformedData);
-        toast.success("Data loaded successfully", { id: "retry-fetch" });
+        notify({ description: "Data loaded successfully", type: "success" });
         console.log("✅ [handleRetryWidget] Retry successful");
       } catch (error: any) {
         console.error("❌ [handleRetryWidget] Retry failed:", error);
-        toast.error(error.message || "Failed to fetch data", { id: "retry-fetch" });
+        notify({ description: error.message || "Failed to fetch data", type: "error" });
       } finally {
         setRetryingWidget(null);
       }
@@ -466,7 +466,7 @@ export function ReportBuilder({
         }
 
         try {
-          toast.loading("Reverting to data source...", { id: "revert-table" });
+          notify({ description: "Reverting to data source...", type: "info" });
 
           const result = await getDataSourceData(
             widget.data.data_source_id,
@@ -491,10 +491,10 @@ export function ReportBuilder({
             is_manual_override: false
           });
 
-          toast.success("Reverted to data source", { id: "revert-table" });
+          notify({ description: "Reverted to data source", type: "success" });
         } catch (error: any) {
           console.error("Failed to revert table:", error);
-          toast.error(error.message || "Failed to revert", { id: "revert-table" });
+          notify({ description: error.message || "Failed to revert", type: "error" });
         }
       }
     },

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit2, Loader2, FolderTree } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { getRiskCategories } from "@/app/_actions/risk-module-actions";
 import { deleteRiskCategory, getDepartments } from "@/app/_actions/config-actions";
 import { useRouter } from "next/navigation";
@@ -130,7 +130,7 @@ export function RiskCategoriesConfig() {
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
-      toast.error("Failed to load risk categories");
+      notify({ description: "Failed to load risk categories", type: "error" });
       setCategories([]);
     } finally {
       setIsLoading(false);
@@ -151,7 +151,7 @@ export function RiskCategoriesConfig() {
       }
     } catch (error) {
       console.error("Error fetching departments:", error);
-      toast.error("Failed to load departments");
+      notify({ description: "Failed to load departments", type: "error" });
       setDepartments([]);
     } finally {
       setLoadingDepartments(false);
@@ -199,16 +199,16 @@ export function RiskCategoriesConfig() {
     try {
       const response = await deleteRiskCategory(deleteDialog.categoryId);
       if (response.success) {
-        toast.success("Risk category deleted successfully");
+        notify({ description: "Risk category deleted successfully", type: "success" });
         await fetchCategories();
         router.refresh();
         setDeleteDialog({ open: false, categoryId: null, categoryName: null });
       } else {
-        toast.error(response.message || "Failed to delete category");
+        notify({ description: response.message || "Failed to delete category", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting category:", error);
-      toast.error("Failed to delete risk category");
+      notify({ description: "Failed to delete risk category", type: "error" });
     }
   };
 

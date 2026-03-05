@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, X, Upload, CloudUpload } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { IncidentData } from "@/lib/types/incidents-types";
 import { sendIncidentForReview } from "@/app/_actions/incident-actions";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
@@ -115,13 +115,13 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
               ...prev,
               file_urls: [...prev.file_urls, fileUrl]
             }));
-            toast.success(`${file.name} uploaded successfully`);
+            notify({ description: `${file.name} uploaded successfully`, type: "success" });
           } else {
-            toast.error(`Failed to get URL for ${file.name}`);
+            notify({ description: `Failed to get URL for ${file.name}`, type: "error" });
           }
         }
       } catch (error) {
-        toast.error(`Failed to upload ${file.name}`);
+        notify({ description: `Failed to upload ${file.name}`, type: "error" });
         console.error("Upload error:", error);
       } finally {
         setUploadingFiles((prev) => prev.filter((id) => id !== fileId));
@@ -155,7 +155,7 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
       });
 
       if (response.success) {
-        toast.success("Incident sent for review successfully");
+        notify({ description: "Incident sent for review successfully", type: "success" });
         onOpenChange(false);
         setFormData({
           responsible_person_id: "",
@@ -166,10 +166,10 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
           file_urls: []
         });
       } else {
-        toast.error(response.message || "Failed to send for review");
+        notify({ description: response.message || "Failed to send for review", type: "error" });
       }
     } catch (error) {
-      toast.error("Error sending incident for review");
+      notify({ description: "Error sending incident for review", type: "error" });
       console.error(error);
     } finally {
       setIsSubmitting(false);

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { AppModule, Department, ErrorState } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,7 @@ import { useParams } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FolderCode, PuzzleIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 
@@ -63,9 +62,9 @@ export const AddNewRoleForm = () => {
 
     const res = await updateDepartment({ ...formData, id: departmentId });
     if (res.success) {
-      toast.success(`Department updated successfully`);
+      notify({ description: "Department updated successfully", type: "success" });
     } else {
-      toast.error(res.message);
+      notify({ description: res.message, type: "error" });
       setError({ status: true, message: res.message });
     }
 
@@ -336,9 +335,9 @@ export function ModuleSelection({
           message = `Removed ${results.removed} module(s)`;
         }
 
-        toast.success(message);
+        notify({ description: message, type: "success" });
       } else {
-        toast.error(`Some operations failed: ${results.errors.join(", ")}`);
+        notify({ description: `Some operations failed: ${results.errors.join(", ")}`, type: "error" });
       }
 
       // Invalidate queries to refresh data
@@ -348,7 +347,7 @@ export function ModuleSelection({
       setInitialModules(selectedModules);
     },
     onError: (error) => {
-      toast.error("Failed to save module assignments");
+      notify({ description: "Failed to save module assignments", type: "error" });
     }
   });
 

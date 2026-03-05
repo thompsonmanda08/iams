@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { createScale } from "@/app/_actions/config-actions";
 
 type CreateScaleDialogProps = {
@@ -44,12 +44,12 @@ export function CreateScaleDialog({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Scale name is required");
+      notify({ description: "Scale name is required", type: "error" });
       return;
     }
 
     if (formData.level < 1 || formData.level > 10) {
-      toast.error("Level must be between 1 and 10");
+      notify({ description: "Level must be between 1 and 10", type: "error" });
       return;
     }
 
@@ -63,15 +63,15 @@ export function CreateScaleDialog({
         matrix_id: matrixId
       });
       if (response.success) {
-        toast.success(response.message || "Scale created successfully");
+        notify({ description: response.message || "Scale created successfully", type: "success" });
         setFormData({ level: 1, name: "", description: "", matrix_id: matrixId });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(response.message || "Failed to create scale");
+        notify({ description: response.message || "Failed to create scale", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

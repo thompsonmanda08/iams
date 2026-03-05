@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { createRating } from "@/app/_actions/config-actions";
 import { ColorPicker } from "@/components/color-picker";
 
@@ -45,12 +45,12 @@ export function CreateRatingDialog({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Rating name is required");
+      notify({ description: "Rating name is required", type: "error" });
       return;
     }
 
     if (formData.min_score >= formData.max_score) {
-      toast.error("Min score must be less than max score");
+      notify({ description: "Min score must be less than max score", type: "error" });
       return;
     }
 
@@ -58,7 +58,7 @@ export function CreateRatingDialog({
     try {
       const response = await createRating(matrixId, formData);
       if (response.success) {
-        toast.success("Rating level created successfully");
+        notify({ description: "Rating level created successfully", type: "success" });
         setFormData({
           name: "",
           min_score: 1,
@@ -70,10 +70,10 @@ export function CreateRatingDialog({
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(response.message || "Failed to create rating level");
+        notify({ description: response.message || "Failed to create rating level", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

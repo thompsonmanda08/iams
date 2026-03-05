@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRoles } from "@/hooks/use-query-data";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import {
   createWorkflowTransition,
   updateWorkflowTransition
@@ -126,19 +126,19 @@ export const TransitionPanel = ({
 
     // Validation: Prevent saving if from_status and to_status are the same
     if (selectedFromStatus && selectedToStatus && selectedFromStatus === selectedToStatus) {
-      toast.error("From State and To State cannot be the same");
+      notify({ description: "From State and To State cannot be the same", type: "error" });
       return;
     }
 
     // Validation: Both states must be selected
     if (!selectedFromStatus || !selectedToStatus) {
-      toast.error("Both From State and To State must be selected");
+      notify({ description: "Both From State and To State must be selected", type: "error" });
       return;
     }
 
     // Validation: Role must be selected
     if (!selectedRoleId) {
-      toast.error("A role must be selected for this transition");
+      notify({ description: "A role must be selected for this transition", type: "error" });
       return;
     }
 

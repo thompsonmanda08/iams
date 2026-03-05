@@ -30,7 +30,7 @@ import {
   Save,
   Send
 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { CURRENCIES } from "@/lib/constants";
@@ -222,19 +222,21 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
       }
 
       if (response.success) {
-        toast.success(
-          response.message || `Budget line ${editingLine ? "updated" : "created"} successfully`
-        );
+        notify({
+          description: response.message || `Budget line ${editingLine ? "updated" : "created"} successfully`,
+          type: "success"
+        });
         setShowLineForm(false);
         resetForm();
         router.refresh();
       } else {
-        toast.error(
-          response.message || `Failed to ${editingLine ? "update" : "create"} budget line`
-        );
+        notify({
+          description: response.message || `Failed to ${editingLine ? "update" : "create"} budget line`,
+          type: "error"
+        });
       }
     } catch (error) {
-      toast.error(`Failed to ${editingLine ? "update" : "create"} budget line. Please try again.`);
+      notify({ description: `Failed to ${editingLine ? "update" : "create"} budget line. Please try again.`, type: "error" });
     } finally {
       setIsCreating(false);
     }
@@ -271,15 +273,15 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
       const response = await deleteBudgetLine(budget.id, lineToDelete.id);
 
       if (response.success) {
-        toast.success(response.message || "Budget line deleted successfully");
+        notify({ description: response.message || "Budget line deleted successfully", type: "success" });
         setShowDeleteModal(false);
         setLineToDelete(null);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete budget line");
+        notify({ description: response.message || "Failed to delete budget line", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to delete budget line. Please try again.");
+      notify({ description: "Failed to delete budget line. Please try again.", type: "error" });
     } finally {
       setIsDeleting(false);
     }
@@ -305,14 +307,14 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
     try {
       const response = await submitBudgetForApproval(budget.id);
       if (response.success) {
-        toast.success(response.message || "Budget submitted for approval successfully");
+        notify({ description: response.message || "Budget submitted for approval successfully", type: "success" });
         setSubmitConfirmationOpen(false);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to submit budget for approval");
+        notify({ description: response.message || "Failed to submit budget for approval", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred while submitting budget");
+      notify({ description: error.message || "An error occurred while submitting budget", type: "error" });
     } finally {
       setIsSubmitting(false);
     }

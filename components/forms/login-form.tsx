@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Eye, EyeOff, Lock, Mail } from "lucide-react";
 
-import { toast } from "sonner";
 import { loginUser } from "@/app/_actions/auth-actions";
 import { ErrorState } from "@/lib/types";
 import Link from "next/link";
 import CustomAlert from "../ui/custom-alert";
-import { capitalize } from "@/lib/utils";
+import { capitalize, notify } from "@/lib/utils";
 
 
 export default function LoginForm() {
@@ -35,12 +34,12 @@ export default function LoginForm() {
     if (response.success) {
       // Check if MFA is required
       if (response.data?.mfa_required) {
-        toast.info("Please enter the OTP sent to your email");
+        notify({ description: "Please enter the OTP sent to your email", type: "info" });
         // Redirect to OTP page with username
         setError({ status: true, redirecting: true, message: "Redirection to OTP screen..." });
         router.push(`/otp?username=${encodeURIComponent(email)}`);
       } else {
-        toast.success(response.message || "Login successful");
+        notify({ description: response.message || "Login successful", type: "success" });
         setError({ status: true, redirecting: true, message: "Redirecting to dashboard..." });
 
         // Determine target route based on user_type
@@ -53,7 +52,7 @@ export default function LoginForm() {
       }
     } else {
       setError({ status: true, message: response.message });
-      toast.error(response.message || "Invalid credentials");
+      notify({ description: response.message || "Invalid credentials", type: "error" });
       setIsLoading(false);
     }
   };

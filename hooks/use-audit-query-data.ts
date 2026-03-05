@@ -118,16 +118,17 @@ export const useCreateWorkpaper = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPERS] });
-      toast({
+      notify({
         title: "Success",
-        description: "Workpaper created successfully"
+        description: "Workpaper created successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {
-      toast({
+      notify({
         title: "Error",
         description: error.message || "Failed to create workpaper",
-        variant: "destructive"
+        type: "error"
       });
     }
   });
@@ -151,16 +152,17 @@ export const useUpdateWorkpaper = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPERS] });
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER, variables.id] });
-      toast({
+      notify({
         title: "Success",
-        description: "Workpaper updated successfully"
+        description: "Workpaper updated successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {
-      toast({
+      notify({
         title: "Error",
         description: error.message || "Failed to update workpaper",
-        variant: "destructive"
+        type: "error"
       });
     }
   });
@@ -406,16 +408,17 @@ export const useCreateTemplateCategory = () => {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.TEMPLATE_CATEGORIES] });
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
-      toast({
+      notify({
         title: "Success",
-        description: "Template category created successfully"
+        description: "Template category created successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {
-      toast({
+      notify({
         title: "Error",
         description: error.message || "Failed to create template category",
-        variant: "destructive"
+        type: "error"
       });
     }
   });
@@ -448,16 +451,17 @@ export const useUpdateTemplateCategory = () => {
         queryKey: [AUDIT_QUERY_KEYS.TEMPLATE_CATEGORY, variables.categoryId]
       });
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
-      toast({
+      notify({
         title: "Success",
-        description: "Template category updated successfully"
+        description: "Template category updated successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {
-      toast({
+      notify({
         title: "Error",
         description: error.message || "Failed to update template category",
-        variant: "destructive"
+        type: "error"
       });
     }
   });
@@ -481,16 +485,17 @@ export const useDeleteTemplateCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.TEMPLATE_CATEGORIES] });
       queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
-      toast({
+      notify({
         title: "Success",
-        description: "Template category deleted successfully"
+        description: "Template category deleted successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {
-      toast({
+      notify({
         title: "Error",
         description: error.message || "Failed to delete template category",
-        variant: "destructive"
+        type: "error"
       });
     }
   });
@@ -521,7 +526,8 @@ export const useUpdateAuditPlan = () => {
       });
       notify({
         title: "Success",
-        description: "Audit plan updated successfully"
+        description: "Audit plan updated successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {
@@ -965,7 +971,8 @@ export const useCreateOrUpdateAnnualAuditPlanItem = (
     onSuccess: (response) => {
       if (response.success) {
         notify({
-          description: `Plan item ${selectedItemId ? "updated" : "created"} successfully`
+          description: `Plan item ${selectedItemId ? "updated" : "created"} successfully`,
+          type: "success"
         });
         queryClient.invalidateQueries({
           queryKey: [AUDIT_QUERY_KEYS.ANNUAL_AUDIT_PLAN, planId, "items"]

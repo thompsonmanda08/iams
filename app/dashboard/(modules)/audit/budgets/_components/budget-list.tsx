@@ -16,7 +16,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { deleteBudget } from "@/app/_actions/audit-module-actions";
 import { BudgetEditModal } from "./budget-edit-modal";
 import { StatusBadge } from "@/components/status-badge";
@@ -148,15 +148,15 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
       const response = await deleteBudget(budgetToDelete.id);
 
       if (response.success) {
-        toast.success(response.message || "Budget deleted successfully");
+        notify({ description: response.message || "Budget deleted successfully", type: "success" });
         setShowDeleteModal(false);
         setBudgetToDelete(null);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete budget");
+        notify({ description: response.message || "Failed to delete budget", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to delete budget. Please try again.");
+      notify({ description: "Failed to delete budget. Please try again.", type: "error" });
     } finally {
       setIsDeleting(false);
     }
@@ -170,7 +170,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
 
   const handleEditSuccess = () => {
     router.refresh();
-    toast.success("Budget updated successfully");
+    notify({ description: "Budget updated successfully", type: "success" });
   };
 
   if (budgets.length === 0) {

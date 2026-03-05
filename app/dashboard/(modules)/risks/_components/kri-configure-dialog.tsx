@@ -5,7 +5,7 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KRIConfigureForm } from "@/components/forms/kri-configuration-form";
 import { createKRI, KRIFrequency } from "@/app/_actions/risk-module-actions";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -48,15 +48,15 @@ export function KRIConfigureDialog({ registerId }: KRIConfigureDialogProps) {
       const response = await createKRI(data);
 
       if (response.success && response.data) {
-        toast.success(response.message || "KRI created successfully");
+        notify({ description: response.message || "KRI created successfully", type: "success" });
         setConfigureOpen(false);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to create KRI");
+        notify({ description: response.message || "Failed to create KRI", type: "error" });
       }
     } catch (error) {
       console.error("Failed to create KRI:", error);
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     }
   };
 

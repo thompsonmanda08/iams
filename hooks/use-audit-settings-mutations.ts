@@ -14,7 +14,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import {
   createIndicativeTarget,
   updateIndicativeTarget,
@@ -56,15 +56,15 @@ export const useIndicativeTargetsMutations = () => {
     onSuccess: (response, payload) => {
       const onSuccess = typeof payload === 'object' ? payload.onSuccess : undefined;
       if (response.success) {
-        toast.success("Indicative Target deleted successfully");
+        notify({ description: "Indicative Target deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INDICATIVE_TARGETS] });
         onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to delete item");
+        notify({ description: response.message || "Failed to delete item", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete item");
+      notify({ description: "Failed to delete item", type: "error" });
       console.error("Error deleting item:", error);
     }
   });
@@ -80,7 +80,7 @@ export const useIndicativeTargetsMutations = () => {
       const onSuccess = payload?.onSuccess;
       const onError = payload?.onError;
       if (response.success) {
-        toast.success(`Indicative Target ${response.data?.id ? "updated" : "created"} successfully`);
+        notify({ description: `Indicative Target ${response.data?.id ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INDICATIVE_TARGETS] });
         onSuccess?.();
       } else {
@@ -117,15 +117,15 @@ export const useAuditableAreasMutations = () => {
     onSuccess: (response, payload) => {
       const onSuccess = typeof payload === 'object' ? payload.onSuccess : undefined;
       if (response.success) {
-        toast.success("Auditable Area deleted successfully");
+        notify({ description: "Auditable Area deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDITABLE_AREAS] });
         onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to delete item");
+        notify({ description: response.message || "Failed to delete item", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete item");
+      notify({ description: "Failed to delete item", type: "error" });
       console.error("Error deleting item:", error);
     }
   });
@@ -141,7 +141,7 @@ export const useAuditableAreasMutations = () => {
       const onSuccess = payload?.onSuccess;
       const onError = payload?.onError;
       if (response.success) {
-        toast.success(`Auditable Area ${response.data?.id ? "updated" : "created"} successfully`);
+        notify({ description: `Auditable Area ${response.data?.id ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDITABLE_AREAS] });
         onSuccess?.();
       } else {
@@ -178,15 +178,15 @@ export const useStrategicPillarsMutations = () => {
     onSuccess: (response, payload) => {
       const onSuccess = typeof payload === 'object' ? payload.onSuccess : undefined;
       if (response.success) {
-        toast.success("Strategic Pillar deleted successfully");
+        notify({ description: "Strategic Pillar deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_PILLARS] });
         onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to delete pillar");
+        notify({ description: response.message || "Failed to delete pillar", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete pillar");
+      notify({ description: "Failed to delete pillar", type: "error" });
       console.error("Error deleting pillar:", error);
     }
   });
@@ -202,7 +202,7 @@ export const useStrategicPillarsMutations = () => {
       const onSuccess = payload?.onSuccess;
       const onError = payload?.onError;
       if (response.success) {
-        toast.success(`Strategic Pillar ${response.data?.id ? "updated" : "created"} successfully`);
+        notify({ description: `Strategic Pillar ${response.data?.id ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_PILLARS] });
         onSuccess?.();
       } else {
@@ -239,15 +239,15 @@ export const useStrategicInitiativesMutations = () => {
     onSuccess: (response, payload) => {
       const onSuccess = typeof payload === 'object' ? payload.onSuccess : undefined;
       if (response.success) {
-        toast.success("Strategic Initiative deleted successfully");
+        notify({ description: "Strategic Initiative deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES] });
         onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to delete initiative");
+        notify({ description: response.message || "Failed to delete initiative", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete initiative");
+      notify({ description: "Failed to delete initiative", type: "error" });
       console.error("Error deleting initiative:", error);
     }
   });
@@ -263,7 +263,7 @@ export const useStrategicInitiativesMutations = () => {
       const onSuccess = payload?.onSuccess;
       const onError = payload?.onError;
       if (response.success) {
-        toast.success(`Strategic Initiative ${response.data?.id ? "updated" : "created"} successfully`);
+        notify({ description: `Strategic Initiative ${response.data?.id ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRATEGIC_INITIATIVES] });
         onSuccess?.();
       } else {
@@ -300,15 +300,15 @@ export const useProcessActivitiesMutations = () => {
     onSuccess: (response, payload) => {
       const onSuccess = typeof payload === 'object' ? payload.onSuccess : undefined;
       if (response.success) {
-        toast.success("Process Activity deleted successfully");
+        notify({ description: "Process Activity deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROCESS_ACTIVITIES] });
         onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to delete item");
+        notify({ description: response.message || "Failed to delete item", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete item");
+      notify({ description: "Failed to delete item", type: "error" });
       console.error("Error deleting item:", error);
     }
   });
@@ -324,7 +324,7 @@ export const useProcessActivitiesMutations = () => {
       const onSuccess = payload?.onSuccess;
       const onError = payload?.onError;
       if (response.success) {
-        toast.success(`Process Activity ${response.data?.id ? "updated" : "created"} successfully`);
+        notify({ description: `Process Activity ${response.data?.id ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROCESS_ACTIVITIES] });
         onSuccess?.();
       } else {
@@ -360,16 +360,16 @@ export const useGeneralWorkPaperConfigMutations = () => {
     },
     onSuccess: (response, payload) => {
       if (response.success) {
-        toast.success("Work paper config created successfully");
+        notify({ description: "Work paper config created successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GENERAL_WORK_PAPER_CONFIGS] });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_TEMPLATES] });
         payload.onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to create config");
+        notify({ description: response.message || "Failed to create config", type: "error" });
       }
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to create work paper config");
+      notify({ description: error.message || "Failed to create work paper config", type: "error" });
       console.error("Error creating work paper config:", error);
     }
   });
@@ -381,16 +381,16 @@ export const useGeneralWorkPaperConfigMutations = () => {
     },
     onSuccess: (response, payload) => {
       if (response.success) {
-        toast.success("Work paper config updated successfully");
+        notify({ description: "Work paper config updated successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GENERAL_WORK_PAPER_CONFIGS] });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_TEMPLATES] });
         payload.onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to update config");
+        notify({ description: response.message || "Failed to update config", type: "error" });
       }
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to update work paper config");
+      notify({ description: error.message || "Failed to update work paper config", type: "error" });
       console.error("Error updating work paper config:", error);
     }
   });
@@ -403,16 +403,16 @@ export const useGeneralWorkPaperConfigMutations = () => {
     onSuccess: (response, payload) => {
       const onSuccess = typeof payload === "object" ? payload.onSuccess : undefined;
       if (response.success) {
-        toast.success("Work paper config deleted successfully");
+        notify({ description: "Work paper config deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GENERAL_WORK_PAPER_CONFIGS] });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKPAPER_TEMPLATES] });
         onSuccess?.();
       } else {
-        toast.error(response.message || "Failed to delete config");
+        notify({ description: response.message || "Failed to delete config", type: "error" });
       }
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to delete work paper config");
+      notify({ description: error.message || "Failed to delete work paper config", type: "error" });
       console.error("Error deleting work paper config:", error);
     }
   });

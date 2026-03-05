@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
 import { createModule } from "@/app/_actions/config-actions";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -307,11 +307,11 @@ export function CreateOrUpdateModuleDialog({
       if (!response.success) {
         throw new Error(response.message);
       }
-      toast.success(`Module ${initialData ? "updated" : "created"} successfully`);
+      notify({ description: `Module ${initialData ? "updated" : "created"} successfully`, type: "success" });
       return response;
     },
     onSuccess: () => {
-      toast.success(`Module ${initialData ? "updated" : "created"} successfully`);
+      notify({ description: `Module ${initialData ? "updated" : "created"} successfully`, type: "success" });
       // setOpenModal(false);
       // setInitialData(null);
       // setFormData(PROVINCE_INITIAL_STATE);
@@ -319,7 +319,7 @@ export function CreateOrUpdateModuleDialog({
     },
     onError: (error: Error) => {
       setError({ status: true, message: error.message });
-      toast.error(error.message);
+      notify({ description: error.message, type: "error" });
     }
   });
 

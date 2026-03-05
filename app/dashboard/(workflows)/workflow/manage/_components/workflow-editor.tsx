@@ -17,7 +17,7 @@ import {
   getWorkflowStates,
   getWorkflowTransitions
 } from "@/app/_actions/workflow-actions";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -334,7 +334,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       states: [...currentStates, newState]
     });
 
-    toast.success("State added");
+    notify({ description: "State added", type: "success" });
   };
 
   const handleStateUpdate = (updatedState: State) => {
@@ -351,7 +351,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       updatedState.isInitial &&
       states.some((s) => s.id !== updatedState.id && s.isInitial && s._changeType !== "deleted")
     ) {
-      toast.error("Only one initial state is allowed");
+      notify({ description: "Only one initial state is allowed", type: "error" });
       return;
     }
 
@@ -387,7 +387,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       states: newStates
     });
 
-    toast.success("State updated");
+    notify({ description: "State updated", type: "success" });
   };
 
   const handleStatePositionChange = (stateId: string, position: { x: number; y: number }) => {
@@ -454,7 +454,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       transitions: updatedTransitions
     });
 
-    toast.success("State marked for deletion");
+    notify({ description: "State marked for deletion", type: "success" });
   };
 
   const handleTransitionClick = (transition: Transition) => {
@@ -484,15 +484,13 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     // Update selectedTransition to keep the panel in sync
     setSelectedTransition(transitionToUpdate);
 
-    toast.success("Transition updated");
+    notify({ description: "Transition updated", type: "success" });
   };
 
   const handleTransitionAdd = (from_state_id: string, to_state_id: string) => {
     // Don't allow self-loops through the UI
     if (from_state_id === to_state_id) {
-      toast.error(
-        "Cannot create self-loop transitions via connection. Use the right-click menu instead."
-      );
+      notify({ description: "Cannot create self-loop transitions via connection. Use the right-click menu instead.", type: "error" });
       return;
     }
 
@@ -526,7 +524,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
 
     setSelectedTransition(newTransition);
     setIsPanelOpen(true);
-    toast.success("Transition added - configure it now");
+    notify({ description: "Transition added - configure it now", type: "success" });
   };
 
   const handleTransitionDelete = (transitionId: string) => {
@@ -539,7 +537,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       transitions: updatedTransitions
     });
 
-    toast.success("Transition marked for deletion");
+    notify({ description: "Transition marked for deletion", type: "success" });
   };
 
   const handleSave = async () => {
@@ -547,7 +545,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     if (!checkPermission("WORKFLOW_CONFIG", isExistingWorkflow ? "can_edit" : "can_create")) return;
 
     if (!workflow.name.trim()) {
-      toast.error("Workflow name is required");
+      notify({ description: "Workflow name is required", type: "error" });
       return;
     }
 
@@ -559,7 +557,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     );
 
     if (activeStates.length === 0) {
-      toast.error("Workflow must have at least one state");
+      notify({ description: "Workflow must have at least one state", type: "error" });
       return;
     }
 
@@ -567,25 +565,25 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     const displayOrders = activeStates.map((s: State) => s.display_order ?? 0);
     const uniqueDisplayOrders = new Set(displayOrders);
     if (uniqueDisplayOrders.size !== activeStates.length) {
-      toast.error("Each state must have a unique display order");
+      notify({ description: "Each state must have a unique display order", type: "error" });
       return;
     }
 
     const hasInitialState = activeStates.some((s) => s.isInitial);
     if (!hasInitialState) {
-      toast.error("Workflow must have exactly one initial state");
+      notify({ description: "Workflow must have exactly one initial state", type: "error" });
       return;
     }
 
     const initialStateCount = activeStates.filter((s) => s.isInitial).length;
     if (initialStateCount > 1) {
-      toast.error("Workflow can only have one initial state");
+      notify({ description: "Workflow can only have one initial state", type: "error" });
       return;
     }
 
     const hasFinalState = activeStates.some((s) => s.isFinal);
     if (!hasFinalState) {
-      toast.error("Workflow must have at least one final state");
+      notify({ description: "Workflow must have at least one final state", type: "error" });
       return;
     }
 
@@ -598,9 +596,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       );
 
       if (existingWorkflowWithTrigger) {
-        toast.error(
-          `A workflow for "${workflowToSave.trigger_type.replace(/_/g, " ")}" already exists. Only one workflow per trigger type is allowed.`
-        );
+        notify({ description: `A workflow for "${workflowToSave.trigger_type.replace(/_/g, " ")}" already exists. Only one workflow per trigger type is allowed.`, type: "error" });
         return;
       }
     }
@@ -609,9 +605,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
     const result = await saveOrUpdateWorkflow(workflowToSave, isExisting);
 
     if (result.success) {
-      toast.success(
-        isExisting ? "Workflow updated successfully" : "WorkflowItem created successfully"
-      );
+      notify({ description: isExisting ? "Workflow updated successfully" : "WorkflowItem created successfully", type: "success" });
 
       // Invalidate workflow queries to trigger refetch
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.WORKFLOWS] });
@@ -619,7 +613,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
       // Close the editor
       onBack();
     } else {
-      toast.error(result.error || "Failed to save workflow");
+      notify({ description: result.error || "Failed to save workflow", type: "error" });
       setIsSavingLocal(false);
     }
   };

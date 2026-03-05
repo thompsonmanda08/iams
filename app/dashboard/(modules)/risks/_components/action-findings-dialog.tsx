@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import UploadField, { ACCEPTABLE_FILE_TYPES } from "@/components/ui/file-dropzone";
-import { toast } from "sonner";
 import { submitActionFindings } from "@/app/_actions/risk-module-actions";
 import type { Risk, ActionFindingsInput } from "@/app/_actions/risk-module-actions";
 import { notify } from "@/lib/utils";
@@ -101,7 +100,7 @@ export function ActionFindingsDialog({
     mutationFn: submitActionFindings,
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Action findings submitted successfully");
+        notify({ description: "Action findings submitted successfully", type: "success" });
         setFormData({
           evidence_description: "",
           evidence_file_url: null,
@@ -116,12 +115,12 @@ export function ActionFindingsDialog({
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTIONS] });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTION_LOGS] });
       } else {
-        toast.error(response.message || "Failed to submit action findings");
+        notify({ description: response.message || "Failed to submit action findings", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("An error occurred while submitting findings");
-      toast.error(error.message || "Failed to submit action findings");
+      notify({ description: "An error occurred while submitting findings", type: "error" });
+      notify({ description: error.message || "Failed to submit action findings", type: "error" });
       console.error("Error submitting findings:", error);
     }
   });
@@ -131,7 +130,7 @@ export function ActionFindingsDialog({
 
     // Validation
     if (!formData.evidence_description.trim()) {
-      toast.error("Please provide evidence description");
+      notify({ description: "Please provide evidence description", type: "error" });
       return;
     }
 

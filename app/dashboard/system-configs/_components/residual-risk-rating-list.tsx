@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Loader2, Columns3Cog } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteResidualRiskRating, getResidualRiskRatings } from "@/app/_actions/config-actions";
 import { ResidualRiskRatingDialog } from "./residual-risk-rating-dialog";
@@ -90,7 +90,7 @@ export function ResidualRiskRatingList() {
       }
     } catch (error) {
       console.error("Error fetching residual risk ratings:", error);
-      toast.error("Failed to load residual risk ratings");
+      notify({ description: "Failed to load residual risk ratings", type: "error" });
       setRatings([]);
     } finally {
       setIsLoading(false);
@@ -127,15 +127,15 @@ export function ResidualRiskRatingList() {
     try {
       const response = await deleteResidualRiskRating(deleteDialog.ratingId);
       if (response.success) {
-        toast.success("Residual risk rating deleted successfully");
+        notify({ description: "Residual risk rating deleted successfully", type: "success" });
         await fetchRatings();
         setDeleteDialog({ open: false, ratingId: null, ratingName: null });
       } else {
-        toast.error(response.message || "Failed to delete residual risk rating");
+        notify({ description: response.message || "Failed to delete residual risk rating", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting residual risk rating:", error);
-      toast.error("Failed to delete residual risk rating");
+      notify({ description: "Failed to delete residual risk rating", type: "error" });
     }
   };
 

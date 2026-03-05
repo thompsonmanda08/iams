@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/use-permissions";
+import { notify } from "@/lib/utils";
 
 interface WorkingPaperTemplate {
   id: string;
@@ -89,26 +90,27 @@ export function WorkpaperTemplatesTable({
       const result = await deleteWorkingPaperTemplate(templateToDelete.id);
 
       if (result.success) {
-        toast({
+        notify({
           title: "Success",
-          description: "Template deleted successfully"
+          description: "Template deleted successfully",
+          type: "success"
         });
         queryClient.invalidateQueries({ queryKey: [AUDIT_QUERY_KEYS.WORKPAPER_TEMPLATES] });
         setDeleteDialogOpen(false);
         setTemplateToDelete(null);
         router.refresh();
       } else {
-        toast({
+        notify({
           title: "Error",
           description: result.message || "Failed to delete template",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsDeleting(false);

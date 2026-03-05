@@ -7,7 +7,7 @@ import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useRoles } from "@/hooks/use-query-data";
 import { MultiSelectField } from "@/components/ui/multi-select-field";
@@ -70,11 +70,11 @@ export default function RiskAcceptanceSignatoriesPage() {
       return response;
     },
     onSuccess: (response) => {
-      toast.success(response.message || "Risk acceptance configuration updated successfully");
+      notify({ description: response.message || "Risk acceptance configuration updated successfully", type: "success" });
       setHasChanges(false);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to save configuration");
+      notify({ description: error.message || "Failed to save configuration", type: "error" });
     }
   });
 

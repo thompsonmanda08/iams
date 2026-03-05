@@ -26,8 +26,7 @@ import {
   Loader2,
   CloudUpload
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { cn, notify } from "@/lib/utils";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { submitIncidentFindings } from "@/app/_actions/incident-actions";
@@ -98,13 +97,13 @@ export function ActionIncidentSubmissionDialog({
               ...prev,
               file_urls: [...prev.file_urls, fileUrl]
             }));
-            toast.success(`${file.name} uploaded successfully`);
+            notify({ description: `${file.name} uploaded successfully`, type: "success" });
           } else {
-            toast.error(`Failed to get URL for ${file.name}`);
+            notify({ description: `Failed to get URL for ${file.name}`, type: "error" });
           }
         }
       } catch (error) {
-        toast.error(`Failed to upload ${file.name}`);
+        notify({ description: `Failed to upload ${file.name}`, type: "error" });
         console.error("Upload error:", error);
       } finally {
         setUploadingFiles((prev) => prev.filter((id) => id !== fileId));
@@ -121,7 +120,7 @@ export function ActionIncidentSubmissionDialog({
 
   const handleSubmit = async () => {
     if (!formData.comment.trim()) {
-      toast.error("Please add a comment before submitting");
+      notify({ description: "Please add a comment before submitting", type: "error" });
       return;
     }
 
@@ -134,14 +133,14 @@ export function ActionIncidentSubmissionDialog({
       });
 
       if (response.success) {
-        toast.success("Findings submitted successfully");
+        notify({ description: "Findings submitted successfully", type: "success" });
         setFormData({ comment: "", file_urls: [] });
         onOpenChange(false);
       } else {
-        toast.error(response.message || "Failed to submit findings");
+        notify({ description: response.message || "Failed to submit findings", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit findings");
+      notify({ description: error.message || "Failed to submit findings", type: "error" });
       console.error("Submission error:", error);
     } finally {
       setIsSubmitting(false);

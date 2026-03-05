@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Loader2, GitBranch, Cable } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteBusinessProcess, getBusinessProcesses } from "@/app/_actions/config-actions";
 import { BusinessProcessesDialog } from "./business-processes-dialog";
@@ -89,7 +89,7 @@ export function BusinessProcessList() {
       }
     } catch (error) {
       console.error("Error fetching business processes:", error);
-      toast.error("Failed to load business processes");
+      notify({ description: "Failed to load business processes", type: "error" });
       setProcesses([]);
     } finally {
       setIsLoading(false);
@@ -126,15 +126,15 @@ export function BusinessProcessList() {
     try {
       const response = await deleteBusinessProcess(deleteDialog.processId);
       if (response.success) {
-        toast.success("Business process deleted successfully");
+        notify({ description: "Business process deleted successfully", type: "success" });
         await fetchProcesses();
         setDeleteDialog({ open: false, processId: null, processName: null });
       } else {
-        toast.error(response.message || "Failed to delete business process");
+        notify({ description: response.message || "Failed to delete business process", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting process:", error);
-      toast.error("Failed to delete business process");
+      notify({ description: "Failed to delete business process", type: "error" });
     }
   };
 

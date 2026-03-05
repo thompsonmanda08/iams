@@ -10,9 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Save, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
 import { getClauseByNumber } from "@/lib/config/iso27001-clauses";
 import type { TestResult, Workpaper } from "@/lib/types/audit-types";
-import { useToast } from "@/hooks/use-toast";
 import { createWorkpaper, updateWorkpaper } from "@/app/_actions/audit-module-actions";
 import { useRouter } from "next/navigation";
+import { notify } from "@/lib/utils";
 
 interface WorkpaperFormProps {
   auditPlanId: string;
@@ -27,7 +27,6 @@ export function WorkpaperForm({
   existingWorkpaper,
   onSuccess
 }: WorkpaperFormProps) {
-  const { toast } = useToast();
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -43,10 +42,10 @@ export function WorkpaperForm({
 
   const handleSave = async () => {
     if (!objectives || !testProcedures || !preparedBy) {
-      toast({
+      notify({
         title: "Missing required fields",
         description: "Please fill in all required fields",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -70,8 +69,9 @@ export function WorkpaperForm({
         : await createWorkpaper(workpaperData);
 
       if (result.success) {
-        toast({
+        notify({
           title: "Success",
+          type: "success",
           description: existingWorkpaper
             ? "Workpaper updated successfully"
             : "Workpaper created successfully"
@@ -79,17 +79,17 @@ export function WorkpaperForm({
         router.refresh();
         onSuccess?.();
       } else {
-        toast({
+        notify({
           title: "Error",
-          description: result.message || "Failed to save workpaper",
-          variant: "destructive"
+          type: "error",
+          description: result.message || "Failed to save workpaper"
         });
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
+        type: "error",
+        description: "An unexpected error occurred"
       });
     } finally {
       setIsSaving(false);

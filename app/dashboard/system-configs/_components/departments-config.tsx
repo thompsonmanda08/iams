@@ -13,7 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Trash2, Building, Pencil, View } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department } from "@/lib/types";
 import { deleteDepartment } from "@/app/_actions/config-actions";
@@ -89,15 +89,15 @@ export default function DepartmentsConfig({
     mutationFn: (id: string) => deleteDepartment(id),
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Department deleted successfully");
+        notify({ description: "Department deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete department");
+        notify({ description: response.message || "Failed to delete department", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete department");
+      notify({ description: "Failed to delete department", type: "error" });
       console.error("Error deleting department:", error);
     },
     onSettled: () => {

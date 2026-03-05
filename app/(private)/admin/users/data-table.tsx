@@ -45,8 +45,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { generateAvatarFallback, generateRandomString, getAvatarSrc } from "@/lib/utils";
-import { toast } from "sonner";
+import { generateAvatarFallback, generateRandomString, getAvatarSrc, notify } from "@/lib/utils";
 import { User } from "@/lib/types/account";
 import {
   activateUser,
@@ -265,7 +264,7 @@ export default function UsersDataTable({
     try {
       const response = await deleteUser(deleteDialog.userId);
       if (response.success) {
-        toast.success(response.message || "User deleted successfully");
+        notify({ description: response.message || "User deleted successfully", type: "success" });
         router.refresh();
         // Close dialog first, then reset state after animation
         setDeleteDialog((prev) => ({ ...prev, open: false }));
@@ -273,10 +272,10 @@ export default function UsersDataTable({
           setDeleteDialog({ open: false, userId: null, userName: null });
         }, 300);
       } else {
-        toast.error(response.message || "Failed to delete user");
+        notify({ description: response.message || "Failed to delete user", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     }
   };
 
@@ -314,7 +313,7 @@ export default function UsersDataTable({
 
       if (response.success) {
         const statusText = toggleStatusDialog.activate ? "activated" : "deactivated";
-        toast.success(`User ${statusText} successfully`);
+        notify({ description: `User ${statusText} successfully`, type: "success" });
 
         router.refresh();
 
@@ -329,7 +328,7 @@ export default function UsersDataTable({
           });
         }, 300);
       } else {
-        toast.error(response.message || "Failed to update user status");
+        notify({ description: response.message || "Failed to update user status", type: "error" });
       }
     } catch (error) {
       console.error("Error toggling user status:", error);
@@ -354,9 +353,9 @@ export default function UsersDataTable({
 
     const response = await resetUserPassword(resetPasswordDialog.userId, password);
     if (response.success) {
-      toast.success(response.message || "Password reset successfully");
+      notify({ description: response.message || "Password reset successfully", type: "success" });
     } else {
-      toast.error(response.message || "Failed to reset password");
+      notify({ description: response.message || "Failed to reset password", type: "error" });
     }
     // Close dialog first, then reset state after animation
     setResetPasswordDialog((prev) => ({ ...prev, open: false }));

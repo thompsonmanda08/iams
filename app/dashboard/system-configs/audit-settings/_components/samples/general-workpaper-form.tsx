@@ -141,7 +141,8 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
 
       notify({
         title: "Success",
-        description: "General workpaper created successfully"
+        description: "General workpaper created successfully",
+        type: "success"
       });
 
       // Check if there are any rows with observations that might need findings

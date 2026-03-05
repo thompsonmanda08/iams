@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectField } from "@/components/ui/select-field";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { createRiskCategory, updateRiskCategory } from "@/app/_actions/risk-module-actions";
 
 type Department = {
@@ -83,15 +83,15 @@ export function RiskCategoryFormDialog({
 
     // Validation
     if (!formData.name.trim()) {
-      toast.error("Category name is required");
+      notify({ description: "Category name is required", type: "error" });
       return;
     }
     if (!formData.code.trim()) {
-      toast.error("Category code is required");
+      notify({ description: "Category code is required", type: "error" });
       return;
     }
     if (!formData.department_id) {
-      toast.error("Department is required");
+      notify({ description: "Department is required", type: "error" });
       return;
     }
 
@@ -114,15 +114,15 @@ export function RiskCategoryFormDialog({
       }
 
       if (response.success) {
-        toast.success(`Risk category ${mode === "edit" ? "updated" : "created"} successfully`);
+        notify({ description: `Risk category ${mode === "edit" ? "updated" : "created"} successfully`, type: "success" });
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(response.message || `Failed to ${mode} category`);
+        notify({ description: response.message || `Failed to ${mode} category`, type: "error" });
       }
     } catch (error) {
       console.error(`Error ${mode}ing category:`, error);
-      toast.error(`Failed to ${mode} category. Please try again.`);
+      notify({ description: `Failed to ${mode} category. Please try again.`, type: "error" });
     } finally {
       setIsSubmitting(false);
     }

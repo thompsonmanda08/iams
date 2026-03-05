@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronLeft, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { getReportGuideById } from "@/app/_actions/config-actions";
 import BackButton from "@/components/back-button";
 
@@ -82,11 +82,11 @@ export function ReportGuideDetail({ guideId }: ReportGuideDetailProps) {
       if (response.success && response.data) {
         setGuide(response.data);
       } else {
-        toast.error(response.message || "Failed to load report guide");
+        notify({ description: response.message || "Failed to load report guide", type: "error" });
         router.push("/dashboard/system-configs/report-guides");
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to load report guide");
+      notify({ description: error?.message || "Failed to load report guide", type: "error" });
       router.push("/dashboard/system-configs/report-guides");
     } finally {
       setIsLoading(false);

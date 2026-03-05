@@ -434,7 +434,8 @@ export default function NewAuditPlanPage() {
         notify({
           title: "Success",
           description:
-            "Audit plan created successfully as Draft. You can submit it for approval when ready."
+            "Audit plan created successfully as Draft. You can submit it for approval when ready.",
+          type: "success"
         });
         const createdPlanId = result.data?.id;
         router.push(
@@ -511,7 +512,8 @@ export default function NewAuditPlanPage() {
         <div className="mx-auto max-w-4xl">
           {/* Progress Steps */}
           <div className="mb-4">
-            <div className={`grid place-items-center justify-center gap-4 ${steps.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+            <div
+              className={`grid place-items-center justify-center gap-4 ${steps.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
               {steps.map((step, index) => {
                 const Icon = step.icon;
                 const isActive = currentStep === step.id;

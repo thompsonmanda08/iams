@@ -1449,6 +1449,7 @@ export interface CreateFindingActionInput {
   assigned_to: string;
   reviewer_id: string;
   due_date: string;
+  framework_type?: string;
 }
 
 /**

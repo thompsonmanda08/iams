@@ -16,7 +16,14 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { SendHorizonal, UserPlus, FileText, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import {
+  SendHorizonal,
+  UserPlus,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  AlertCircle
+} from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useSubmitGeneralFinding } from "@/hooks/use-general-findings-mutations";
 import { AssignFindingActionDialog } from "./assign-finding-action-dialog";
@@ -295,20 +302,21 @@ export function GeneralFindingsList({
                   {/* Actions */}
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      {finding.status === "DRAFT" && (
+                      {finding.status === "DRAFT" && auditPlanStatus?.toUpperCase() === "APPROVED" && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
+                              variant="outline"
+                              className="text-blue-600 hover:text-blue-700"
                               onClick={() => handleSubmit(finding.id)}
                               disabled={submitMutation.isPending}>
                               {submitMutation.isPending ? (
                                 <Spinner className="size-3" />
                               ) : (
                                 <SendHorizonal className="h-3 w-3" />
-                              )}
+                              )}{" "}
+                              Submit
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Submit for approval</TooltipContent>
@@ -319,13 +327,14 @@ export function GeneralFindingsList({
                           <TooltipTrigger asChild>
                             <Button
                               size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 text-violet-600 hover:text-violet-700"
+                              variant="outline"
+                              className="text-violet-600 hover:text-violet-700"
                               onClick={() => {
                                 setAssignFinding(finding);
                                 setAssignDialogOpen(true);
                               }}>
                               <UserPlus className="h-3 w-3" />
+                              Assign
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Assign action</TooltipContent>

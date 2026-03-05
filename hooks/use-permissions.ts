@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
 import type { ModulePermissions, PermissionAction } from "@/lib/types";
 
@@ -108,7 +108,7 @@ export function usePermissions() {
         const message =
           customMessage ||
           `Access denied: You do not have permission to ${actionLabel} this resource. Please contact your administrator if you need access.`;
-        toast.error(message);
+        notify({ description: message, type: "error" });
         return false;
       }
       return true;

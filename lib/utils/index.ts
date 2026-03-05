@@ -19,7 +19,7 @@ export const notify = ({
     label: string;
     onClick: () => void;
   };
-  type?: "default" | "success" | "warning" | "error";
+  type?: "default" | "success" | "warning" | "error" | "info";
 }) => {
   const options = {
     description,
@@ -33,6 +33,8 @@ export const notify = ({
       return toast.warning(title ?? "", options);
     case "error":
       return toast.error(title ?? "", options);
+    case "info":
+      return toast.info(title ?? "", options);
     default:
       return toast(title ?? "", options);
   }

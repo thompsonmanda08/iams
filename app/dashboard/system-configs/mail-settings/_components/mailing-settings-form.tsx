@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, Mail, AlertCircle, SlidersHorizontal } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SelectField } from "@/components/ui/select-field";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { createSmtpConfig, updateSmtpConfig } from "@/app/_actions/smtp-actions";
 import { Spinner } from "@/components/ui/spinner";
 import BackButton from "@/components/back-button";
@@ -108,7 +108,7 @@ export function MailingSettingsForm({
   const handleSave = async () => {
     if (!checkPermission("USER_MGMT", "can_configure")) return;
     if (!validateForm()) {
-      toast.error("Please fix the validation errors");
+      notify({ description: "Please fix the validation errors", type: "error" });
       return;
     }
 
@@ -132,12 +132,12 @@ export function MailingSettingsForm({
         : await createSmtpConfig(payload);
 
       if (response.success) {
-        toast.success(`SMTP configuration ${initialData?.id ? "updated" : "created"} successfully`);
+        notify({ description: `SMTP configuration ${initialData?.id ? "updated" : "created"} successfully`, type: "success" });
       } else {
-        toast.error(response.message || "Failed to save SMTP configuration");
+        notify({ description: response.message || "Failed to save SMTP configuration", type: "error" });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "An error occurred");
+      notify({ description: error instanceof Error ? error.message : "An error occurred", type: "error" });
     } finally {
       setIsSaving(false);
     }

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { updateReportGuide } from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
 
@@ -58,12 +58,12 @@ export function EditReportGuideDialog({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Please enter a guide name");
+      notify({ description: "Please enter a guide name", type: "error" });
       return;
     }
 
     if (!formData.report_type) {
-      toast.error("Please select a report type");
+      notify({ description: "Please select a report type", type: "error" });
       return;
     }
 
@@ -76,14 +76,14 @@ export function EditReportGuideDialog({
       });
 
       if (response.success) {
-        toast.success("Report guide updated successfully");
+        notify({ description: "Report guide updated successfully", type: "success" });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(response.message || "Failed to update report guide");
+        notify({ description: response.message || "Failed to update report guide", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to update report guide");
+      notify({ description: error?.message || "Failed to update report guide", type: "error" });
     } finally {
       setIsLoading(false);
     }

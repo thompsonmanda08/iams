@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, Loader2, TrendingUp } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteRiskAppetiteStatus, getRiskAppetiteStatuses } from "@/app/_actions/config-actions";
 import { RiskAppetiteStatusDialog } from "./risk-appetite-dialog";
@@ -90,7 +90,7 @@ export function RiskAppetiteStatusList() {
       }
     } catch (error) {
       console.error("Error fetching risk appetite status:", error);
-      toast.error("Failed to load risk appetite status");
+      notify({ description: "Failed to load risk appetite status", type: "error" });
       setAppetites([]);
     } finally {
       setIsLoading(false);
@@ -127,15 +127,15 @@ export function RiskAppetiteStatusList() {
     try {
       const response = await deleteRiskAppetiteStatus(deleteDialog.appetiteId);
       if (response.success) {
-        toast.success("Risk Appetite Status deleted successfully");
+        notify({ description: "Risk Appetite Status deleted successfully", type: "success" });
         await fetchAppetites();
         setDeleteDialog({ open: false, appetiteId: null, appetiteName: null });
       } else {
-        toast.error(response.message || "Failed to delete risk appetite status");
+        notify({ description: response.message || "Failed to delete risk appetite status", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting risk appetite status:", error);
-      toast.error("Failed to delete risk appetite status");
+      notify({ description: "Failed to delete risk appetite status", type: "error" });
     }
   };
 

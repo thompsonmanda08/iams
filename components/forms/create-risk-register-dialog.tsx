@@ -24,9 +24,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Plus, Building2, CalendarIcon } from "lucide-react";
-import { toast } from "sonner";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { getBranches, getDepartments } from "@/app/_actions/config-actions";
 import { createRiskRegister } from "@/app/_actions/risk-module-actions";
 import { SearchSelectField } from "../ui/search-select-field";
@@ -66,7 +65,7 @@ export default function CreateRiskRegisterDialog() {
         setDepartments(response.data.data);
       }
     } catch (error) {
-      toast.error("Error loading departments");
+      notify({ description: "Error loading departments", type: "error" });
     } finally {
       setLoadingDepartments(false);
     }
@@ -77,13 +76,13 @@ export default function CreateRiskRegisterDialog() {
 
     // Validate dates are selected
     if (!startDate || !dueDate) {
-      toast.error("Please select both start date and due date");
+      notify({ description: "Please select both start date and due date", type: "error" });
       return;
     }
 
     // Validate dates
     if (startDate > dueDate) {
-      toast.error("Due date must be after start date");
+      notify({ description: "Due date must be after start date", type: "error" });
       return;
     }
 
@@ -98,7 +97,7 @@ export default function CreateRiskRegisterDialog() {
       });
 
       if (response.success) {
-        toast.success(response.message || "Risk register created successfully");
+        notify({ description: response.message || "Risk register created successfully", type: "success" });
         setFormData({
           department_id: "",
           name: ""
@@ -108,10 +107,10 @@ export default function CreateRiskRegisterDialog() {
         setIsOpen(false);
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to create risk register");
+        notify({ description: response.message || "Failed to create risk register", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

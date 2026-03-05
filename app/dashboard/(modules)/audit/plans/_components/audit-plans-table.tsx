@@ -28,12 +28,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
 import { deleteAuditPlan } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
+import { notify } from "@/lib/utils";
 
 interface AuditPlansTableProps {
   plans: AuditPlan[];
@@ -43,7 +43,6 @@ interface AuditPlansTableProps {
 
 export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTableProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<AuditPlan | null>(null);
@@ -58,10 +57,10 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
     if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
     // Only allow deletion for DRAFT plans
     if (plan.status !== "DRAFT") {
-      toast({
+      notify({
         title: "Cannot Delete",
         description: "Only draft audit plans can be deleted.",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -77,25 +76,26 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
       const result = await deleteAuditPlan(planToDelete.id);
 
       if (result.success) {
-        toast({
+        notify({
           title: "Success",
-          description: "Audit plan deleted successfully"
+          description: "Audit plan deleted successfully",
+          type: "success"
         });
         setDeleteDialogOpen(false);
         setPlanToDelete(null);
         router.refresh();
       } else {
-        toast({
+        notify({
           title: "Error",
           description: result.message || "Failed to delete audit plan",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsDeleting(false);

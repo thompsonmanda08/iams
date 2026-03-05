@@ -12,7 +12,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, AlertCircle, PencilLine, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { AuditConfigurableItem, ErrorState, Pagination } from "@/lib/types";
 import {
@@ -83,15 +83,15 @@ export default function FindingsCategoryTab({
     mutationFn: (id: string) => deleteFindingsCategory(id),
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Findings Category deleted successfully");
+        notify({ description: "Findings Category deleted successfully", type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         router.refresh();
       } else {
-        toast.error(response.message || "Failed to delete category");
+        notify({ description: response.message || "Failed to delete category", type: "error" });
       }
     },
     onError: (error) => {
-      toast.error("Failed to delete category");
+      notify({ description: "Failed to delete category", type: "error" });
       console.error("Error deleting category:", error);
     },
     onSettled: () => {
@@ -312,7 +312,7 @@ function CreateOrUpdate({
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success(`Findings Category ${initialData ? "updated" : "created"} successfully`);
+        notify({ description: `Findings Category ${initialData ? "updated" : "created"} successfully`, type: "success" });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.FINDINGS_CATEGORIES] });
         router.refresh();
         setOpenModal?.(false);
@@ -320,12 +320,12 @@ function CreateOrUpdate({
         setFormData(INIT_FORM_DATA);
         setError({ status: false, message: "" });
       } else {
-        toast.error(response.message);
+        notify({ description: response.message, type: "error" });
         setError({ status: true, message: response.message });
       }
     },
     onError: (error) => {
-      toast.error("An error occurred");
+      notify({ description: "An error occurred", type: "error" });
       setError({ status: true, message: "An unexpected error occurred" });
       console.error("Error saving category:", error);
     }

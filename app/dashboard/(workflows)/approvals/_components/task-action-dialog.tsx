@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -85,7 +85,7 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
   const handleSubmit = () => {
     if (!checkPermission("WORKFLOW_CONFIG", "can_approve")) return;
     if (action === "REJECTED" && !comment.trim()) {
-      toast.error("Comment is required when rejecting a task");
+      notify({ description: "Comment is required when rejecting a task", type: "error" });
       return;
     }
 

@@ -23,9 +23,8 @@ import {
   Logs,
   ClipboardList
 } from "lucide-react";
-import { toast } from "sonner";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import BackButton from "@/components/back-button";
 import { ActionLog } from "./[id]/_components/action-log";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -114,7 +113,7 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
   const [activeTab, setActiveTab] = useState("risk-details");
 
   const handleMitigationSelect = (option: string) => {
-    toast.success(`Risk response changed to: ${option}`);
+    notify({ description: `Risk response changed to: ${option}`, type: "success" });
   };
 
   // Calculate risk scores

@@ -11,13 +11,12 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { getMatrixScales, deleteScale } from "@/app/_actions/config-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateScaleDialog } from "./create-scale-dialog";
 import { EditScaleDialog } from "./edit-scale-dialog";
 import { CustomPagination } from "@/components/ui/pagination";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { Pagination } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -90,7 +89,7 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
       }
     } catch (error) {
       console.error("Error fetching scales:", error);
-      toast.error("Failed to load scales");
+      notify({ description: "Failed to load scales", type: "error" });
       setScales([]);
     } finally {
       setIsLoading(false);
@@ -141,15 +140,15 @@ export function ScalesList({ matrixId, scaleType }: ScalesListProps) {
     try {
       const response = await deleteScale(deleteDialog.scaleId);
       if (response.success) {
-        toast.success("Scale deleted successfully");
+        notify({ description: "Scale deleted successfully", type: "success" });
         setDeleteDialog({ open: false, scaleId: null, scaleName: null });
         await fetchScales();
       } else {
-        toast.error(response.message || "Failed to delete scale");
+        notify({ description: response.message || "Failed to delete scale", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting scale:", error);
-      toast.error("Failed to delete scale. Please try again.");
+      notify({ description: "Failed to delete scale. Please try again.", type: "error" });
     }
   };
 

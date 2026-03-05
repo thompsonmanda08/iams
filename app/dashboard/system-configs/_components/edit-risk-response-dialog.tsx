@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { updateRiskResponse } from "@/app/_actions/config-actions";
 
 
@@ -46,7 +46,7 @@ export function EditRiskResponseDialog({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Response name is required");
+      notify({ description: "Response name is required", type: "error" });
       return;
     }
 
@@ -54,14 +54,14 @@ export function EditRiskResponseDialog({
     try {
       const result = await updateRiskResponse(response.id, formData);
       if (result.success) {
-        toast.success("Risk response updated successfully");
+        notify({ description: "Risk response updated successfully", type: "success" });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(result.message || "Failed to update risk response");
+        notify({ description: result.message || "Failed to update risk response", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

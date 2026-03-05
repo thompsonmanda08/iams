@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import {
   createControlsAssessmentGuide,
@@ -50,13 +50,13 @@ export function ControlsAssessmentSection({
     try {
       const response = await createControlsAssessmentGuide(reportGuideId, data);
       if (response.success) {
-        toast.success("Controls assessment guide created successfully");
+        notify({ description: "Controls assessment guide created successfully", type: "success" });
         onDataUpdated();
       } else {
-        toast.error(response.message || "Failed to create controls assessment guide");
+        notify({ description: response.message || "Failed to create controls assessment guide", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to create controls assessment guide");
+      notify({ description: error?.message || "Failed to create controls assessment guide", type: "error" });
     }
   };
 
@@ -64,13 +64,13 @@ export function ControlsAssessmentSection({
     try {
       const response = await updateControlsAssessmentGuide(reportGuideId, itemId, data);
       if (response.success) {
-        toast.success("Controls assessment guide updated successfully");
+        notify({ description: "Controls assessment guide updated successfully", type: "success" });
         onDataUpdated();
       } else {
-        toast.error(response.message || "Failed to update controls assessment guide");
+        notify({ description: response.message || "Failed to update controls assessment guide", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to update controls assessment guide");
+      notify({ description: error?.message || "Failed to update controls assessment guide", type: "error" });
     }
   };
 
@@ -89,14 +89,14 @@ export function ControlsAssessmentSection({
     try {
       const response = await deleteControlsAssessmentGuide(reportGuideId, deleteDialog.itemId);
       if (response.success) {
-        toast.success("Controls assessment guide deleted successfully");
+        notify({ description: "Controls assessment guide deleted successfully", type: "success" });
         onDataUpdated();
         setDeleteDialog({ open: false, itemId: null, itemName: null });
       } else {
-        toast.error(response.message || "Failed to delete controls assessment guide");
+        notify({ description: response.message || "Failed to delete controls assessment guide", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to delete controls assessment guide");
+      notify({ description: error?.message || "Failed to delete controls assessment guide", type: "error" });
     } finally {
       setIsDeleting(false);
     }

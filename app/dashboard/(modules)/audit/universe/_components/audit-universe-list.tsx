@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { AuditUniverse, AuditUniverseStatus } from "@/lib/types/audit-types";
 import { Badge } from "@/components/ui/badge";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -122,11 +122,11 @@ export default function AuditUniverseList({
     const result = await deleteUniverse(selectedUniverse.id);
 
     if (result.success) {
-      toast.success("Universe deleted successfully");
+      notify({ description: "Universe deleted successfully", type: "success" });
       router.refresh();
       setDeleteConfirmOpen(false);
     } else {
-      toast.error(result.message || "Failed to delete universe");
+      notify({ description: result.message || "Failed to delete universe", type: "error" });
     }
     setIsDeleting(false);
   };
@@ -154,14 +154,14 @@ export default function AuditUniverseList({
     try {
       const result = await submitUniverseForApproval(universeToSubmit.id);
       if (result.success) {
-        toast.success("Universe submitted for approval successfully");
+        notify({ description: "Universe submitted for approval successfully", type: "success" });
         router.refresh();
         setSubmitConfirmOpen(false);
       } else {
-        toast.error(result.message || "Failed to submit universe for approval");
+        notify({ description: result.message || "Failed to submit universe for approval", type: "error" });
       }
     } catch (error) {
-      toast.error("An error occurred while submitting the universe");
+      notify({ description: "An error occurred while submitting the universe", type: "error" });
       console.error(error);
     } finally {
       setIsSubmitting(false);

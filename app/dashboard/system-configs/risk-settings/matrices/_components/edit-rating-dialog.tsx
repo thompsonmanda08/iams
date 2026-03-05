@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { updateRating } from "@/app/_actions/config-actions";
 import { ColorPicker } from "@/components/color-picker";
 
@@ -49,12 +49,12 @@ export function EditRatingDialog({ open, onOpenChange, rating, onSuccess }: Edit
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Rating name is required");
+      notify({ description: "Rating name is required", type: "error" });
       return;
     }
 
     if (formData.min_score >= formData.max_score) {
-      toast.error("Min score must be less than max score");
+      notify({ description: "Min score must be less than max score", type: "error" });
       return;
     }
 
@@ -62,14 +62,14 @@ export function EditRatingDialog({ open, onOpenChange, rating, onSuccess }: Edit
     try {
       const response = await updateRating(rating.id, formData);
       if (response.success) {
-        toast.success("Rating level updated successfully");
+        notify({ description: "Rating level updated successfully", type: "success" });
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(response.message || "Failed to update rating level");
+        notify({ description: response.message || "Failed to update rating level", type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsLoading(false);
     }

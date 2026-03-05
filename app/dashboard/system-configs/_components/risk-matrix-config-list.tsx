@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Settings, Loader2, Grid3x3 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateRiskMatrixDialog } from "./create-risk-matrix-dialog";
@@ -93,7 +93,7 @@ export function RiskMatrixConfigList() {
         }
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to load risk matrices");
+      notify({ description: error?.message || "Failed to load risk matrices", type: "error" });
       setMatrices([]);
     } finally {
       setIsLoading(false);
@@ -130,14 +130,14 @@ export function RiskMatrixConfigList() {
     try {
       const response = await deleteRiskMatrix(deleteDialog.matrixId);
       if (response.success) {
-        toast.success("Risk matrix deleted successfully");
+        notify({ description: "Risk matrix deleted successfully", type: "success" });
         await fetchMatrices();
         setDeleteDialog({ open: false, matrixId: null, matrixName: null });
       } else {
-        toast.error(response.message || "Failed to delete risk matrix");
+        notify({ description: response.message || "Failed to delete risk matrix", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to delete risk matrix");
+      notify({ description: "Failed to delete risk matrix", type: "error" });
     }
   };
 

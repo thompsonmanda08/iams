@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Edit2, Save, X, Plus, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 type RegisterType = {
@@ -33,7 +33,6 @@ type AutoArchivalRule = {
 };
 
 export function RiskRegisterConfig() {
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [editingTypes, setEditingTypes] = useState(false);
   const [editingLifecycle, setEditingLifecycle] = useState(false);
@@ -113,25 +112,28 @@ export function RiskRegisterConfig() {
 
   const handleSaveTypes = () => {
     setEditingTypes(false);
-    toast({
+    notify({
       title: "Register types updated",
-      description: "Risk register types have been saved successfully."
+      description: "Risk register types have been saved successfully.",
+      type: "success"
     });
   };
 
   const handleSaveLifecycle = () => {
     setEditingLifecycle(false);
-    toast({
+    notify({
       title: "Lifecycle statuses updated",
-      description: "Register lifecycle statuses have been saved successfully."
+      description: "Register lifecycle statuses have been saved successfully.",
+      type: "success"
     });
   };
 
   const handleSaveRules = () => {
     setEditingRules(false);
-    toast({
+    notify({
       title: "Archival rules updated",
-      description: "Auto-archival rules have been saved successfully."
+      description: "Auto-archival rules have been saved successfully.",
+      type: "success"
     });
   };
 

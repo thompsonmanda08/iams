@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Edit2, Save, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 type ScaleItem = {
@@ -16,7 +16,6 @@ type ScaleItem = {
 };
 
 export function RiskMatrixConfig() {
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [editingLikelihood, setEditingLikelihood] = useState(false);
   const [editingImpact, setEditingImpact] = useState(false);
@@ -62,17 +61,19 @@ export function RiskMatrixConfig() {
 
   const handleSaveLikelihood = () => {
     setEditingLikelihood(false);
-    toast({
+    notify({
       title: "Likelihood scale updated",
-      description: "Risk likelihood scale has been saved successfully."
+      description: "Risk likelihood scale has been saved successfully.",
+      type: "success"
     });
   };
 
   const handleSaveImpact = () => {
     setEditingImpact(false);
-    toast({
+    notify({
       title: "Impact scale updated",
-      description: "Risk impact scale has been saved successfully."
+      description: "Risk impact scale has been saved successfully.",
+      type: "success"
     });
   };
 

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Edit2, Save, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 type AppetiteLevel = {
@@ -24,7 +24,6 @@ type AppetiteLevel = {
 };
 
 export function RiskAppetiteConfig() {
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [editing, setEditing] = useState(false);
 
@@ -70,9 +69,10 @@ export function RiskAppetiteConfig() {
 
   const handleSave = () => {
     setEditing(false);
-    toast({
+    notify({
       title: "Risk appetite updated",
-      description: "Risk appetite levels have been saved successfully."
+      description: "Risk appetite levels have been saved successfully.",
+      type: "success"
     });
   };
 

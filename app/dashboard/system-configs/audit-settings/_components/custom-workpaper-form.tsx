@@ -17,12 +17,12 @@ import type {
   CustomField,
   EvidenceRow
 } from "@/lib/types/audit-types";
-import { useToast } from "@/hooks/use-toast";
 import { TICK_MARKS } from "@/lib/config/tick-marks";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { SelectField } from "@/components/ui/select-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { User } from "@/lib/types/account";
+import { notify } from "@/lib/utils";
 
 interface CustomWorkpaperFormProps {
   // auditId?: string; // Optional - can be attached to audit plan later
@@ -34,7 +34,6 @@ interface CustomWorkpaperFormProps {
 
 export function CustomWorkpaperForm({ auditId, auditTitle, template, onSuccess, onCancel }: any) {
   const router = useRouter();
-  const { toast } = useToast();
   const { data: teamMembersResponse } = useUsers({ page_size: 100 });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -184,10 +183,10 @@ export function CustomWorkpaperForm({ auditId, auditTitle, template, onSuccess, 
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
-      toast({
+      notify({
         title: "Validation Error",
         description: error,
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -210,18 +209,19 @@ export function CustomWorkpaperForm({ auditId, auditTitle, template, onSuccess, 
       // TODO: Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast({
+      notify({
         title: "Success",
-        description: "Workpaper created successfully"
+        description: "Workpaper created successfully",
+        type: "success"
       });
 
       router.refresh();
       onSuccess?.();
     } catch (error) {
-      toast({
+      notify({
         title: "Error",
         description: "Failed to create workpaper",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsSaving(false);

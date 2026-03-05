@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2,BookOpen, Settings } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateReportGuideDialog } from "./create-report-guide-dialog";
 import { EditReportGuideDialog } from "./edit-report-guide-dialog";
@@ -90,7 +90,7 @@ export function ReportGuides() {
         }
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to load report guides");
+      notify({ description: error?.message || "Failed to load report guides", type: "error" });
       setGuides([]);
     } finally {
       setIsLoading(false);
@@ -138,14 +138,14 @@ export function ReportGuides() {
     try {
       const response = await deleteReportGuide(deleteDialog.guideId);
       if (response.success) {
-        toast.success("Report guide deleted successfully");
+        notify({ description: "Report guide deleted successfully", type: "success" });
         await fetchGuides();
         setDeleteDialog({ open: false, guideId: null, guideName: null });
       } else {
-        toast.error(response.message || "Failed to delete report guide");
+        notify({ description: response.message || "Failed to delete report guide", type: "error" });
       }
     } catch (error) {
-      toast.error("Failed to delete report guide");
+      notify({ description: "Failed to delete report guide", type: "error" });
     }
   };
 

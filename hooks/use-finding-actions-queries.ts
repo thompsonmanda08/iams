@@ -336,7 +336,8 @@ export function useUpdateGeneralFindingReassessment() {
       });
       notify({
         title: "Success",
-        description: "Finding updated successfully"
+        description: "Finding updated successfully",
+        type: "success"
       });
     },
     onError: (error: Error) => {

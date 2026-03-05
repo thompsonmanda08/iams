@@ -26,10 +26,10 @@ import { Badge } from "@/components/ui/badge";
 import { deleteTemplateCategory } from "@/app/_actions/audit-module-actions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../../../../components/ui/tooltip";
 import { TemplateCategory } from "@/lib/types/audit-types";
-import { toast } from "sonner";
 import Link from "next/link";
 import { MetadataDisplay } from "@/components/audit/metadata-display";
 import { usePermissions } from "@/hooks/use-permissions";
+import { notify } from "@/lib/utils";
 
 interface TemplateCategoriesTableProps {
   categories: TemplateCategory[];
@@ -69,30 +69,27 @@ export function TemplateCategoriesTable({
       const result = await deleteTemplateCategory(categoryToDelete?.id as string);
 
       if (result.success) {
-        toast.success("Category deleted successfully");
-        // toast({
-        //   title: "Success",
-        //   description: "Category deleted successfully"
-        // });
+        notify({
+          title: "Success",
+          description: "Category deleted successfully",
+          type: "success"
+        });
         setDeleteDialogOpen(false);
         setCategoryToDelete(null);
         router.refresh();
       } else {
-        toast.error(result.message || "Failed to delete category");
-
-        // toast({
-        //   title: "Error",
-        //   description: result.message || "Failed to delete category",
-        //   variant: "destructive"
-        // });
+        notify({
+          title: "Error",
+          description: result.message || "Failed to delete category",
+          type: "error"
+        });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
-      // toast({
-      //   title: "Error",
-      //   description: "An unexpected error occurred",
-      //   variant: "destructive"
-      // });
+      notify({
+        title: "Error",
+        description: "An unexpected error occurred",
+        type: "error"
+      });
     } finally {
       setIsDeleting(false);
     }

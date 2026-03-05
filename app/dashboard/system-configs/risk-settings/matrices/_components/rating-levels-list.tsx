@@ -13,7 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/utils";
 import { deleteRating, getMatrixRatingsById } from "@/app/_actions/config-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateRatingDialog } from "./create-rating-dialog";
@@ -82,7 +82,7 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
       }
     } catch (error) {
       console.error("Error fetching ratings:", error);
-      toast.error("Failed to load rating levels");
+      notify({ description: "Failed to load rating levels", type: "error" });
       setRatings([]);
     } finally {
       setIsLoading(false);
@@ -133,15 +133,15 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
     try {
       const response = await deleteRating(deleteDialog.ratingId);
       if (response.success) {
-        toast.success("Rating level deleted successfully");
+        notify({ description: "Rating level deleted successfully", type: "success" });
         setDeleteDialog({ open: false, ratingId: null, ratingName: null });
         await fetchRatings();
       } else {
-        toast.error(response.message || "Failed to delete rating level");
+        notify({ description: response.message || "Failed to delete rating level", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting rating:", error);
-      toast.error("Failed to delete rating level. Please try again.");
+      notify({ description: "Failed to delete rating level. Please try again.", type: "error" });
     }
   };
 

@@ -12,12 +12,11 @@ import {
   updateTemplateCategory
 } from "@/app/_actions/audit-module-actions";
 import { TemplateCategory } from "@/lib/types/audit-types";
-import { toast } from "sonner";
 import BackButton from "@/components/back-button";
 import PageHeader from "@/components/page-header";
 import { useWorkpaperTemplate } from "@/hooks/use-audit-query-data";
 import Loader from "@/components/ui/loader";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
 // Framework field configurations
@@ -149,7 +148,7 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
     e.preventDefault();
 
     if (!formData.name) {
-      toast.error("Category name is required");
+      notify({ description: "Category name is required", type: "error" });
       return;
     }
 
@@ -176,13 +175,13 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
           : await createTemplateCategory(newData);
 
       if (result.success) {
-        toast.success(`Category ${isUpdating ? "updated" : "created"} successfully`);
+        notify({ description: `Category ${isUpdating ? "updated" : "created"} successfully`, type: "success" });
         router.push(`/dashboard/system-configs/audit-settings/templates/${templateId}`);
       } else {
-        toast.error(result.message || `Failed to ${isUpdating ? "update" : "create"} category`);
+        notify({ description: result.message || `Failed to ${isUpdating ? "update" : "create"} category`, type: "error" });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      notify({ description: "An unexpected error occurred", type: "error" });
     } finally {
       setIsSubmitting(false);
     }

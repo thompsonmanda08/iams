@@ -25,7 +25,7 @@ import {
 import Search from "@/components/ui/search-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { ActionFindingsDialog } from "@/app/dashboard/(modules)/risks/_components/action-findings-dialog";
 import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_components/action-evidence-viewer-dialog";
 import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/action-review-dialog";
@@ -34,7 +34,6 @@ import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import { sendRiskActionReminder } from "@/app/_actions/task-actions";
-import { toast } from "sonner";
 import SignatureForm, { type ApproverSignature } from "./_components/signature-form";
 import {
   Dialog,
@@ -106,12 +105,12 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     try {
       const response = await sendRiskActionReminder(actionId);
       if (response.success) {
-        toast.success(response.message || "Reminder sent successfully");
+        notify({ description: response.message || "Reminder sent successfully", type: "success" });
       } else {
-        toast.error(response.message || "Failed to send reminder");
+        notify({ description: response.message || "Failed to send reminder", type: "error" });
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to send reminder");
+      notify({ description: error.message || "Failed to send reminder", type: "error" });
     } finally {
       setReminderSendingId(null);
     }
@@ -122,7 +121,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
       setSignatureDialogOpen(false);
       setSelectedActionForSignature(null);
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit signature");
+      notify({ description: error.message || "Failed to submit signature", type: "error" });
     }
   };
 
