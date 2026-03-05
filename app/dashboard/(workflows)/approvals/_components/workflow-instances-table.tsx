@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -10,19 +9,13 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, UserCog, MoreVertical } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { Info } from "lucide-react";
 import type { Task } from "@/lib/types/task";
-import { TaskReassignDialog } from "./task-reassign-dialog";
 import { formatDistanceToNow } from "date-fns";
-import { getStatusLabel } from "@/lib/statuses";
 import { StatusBadge } from "@/components/status-badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import NextLink from "next/link";
+import { getEntityDetailRoute, normalizeEntityType } from "@/lib/utils/entity-preview-utils";
 
 interface WorkflowInstancesTableProps {
   instances: Task[];
@@ -45,34 +38,67 @@ export function WorkflowInstancesTable({
   onInstanceSelect,
   isLoading
 }: WorkflowInstancesTableProps) {
-  const [selectedInstance, setSelectedInstance] = useState<Task | null>(null);
-  const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
-
-  const handleInstanceReassign = (instance: Task, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setSelectedInstance(instance);
-    setReassignDialogOpen(true);
+  const getEntityRoute = (instance: Task) => {
+    const entityType = instance.instance?.entity_type || "";
+    const entityId = instance.instance?.entity_id || instance.entity?.entity_id || "";
+    const normalizedType = normalizeEntityType(entityType);
+    return getEntityDetailRoute(normalizedType, entityId, {
+      ...instance.entity,
+      original_entity_type: entityType
+    });
   };
 
-  const getInstanceStatusBadge = (status: string) => {
-    const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      DRAFT: "outline",
-      PENDING: "outline",
-      IN_REVIEW: "default",
-      REVIEW: "default",
-      APPROVED: "default",
-      REJECTED: "destructive",
-      COMPLETED: "default",
-      ON_HOLD: "secondary",
-      OPEN: "default",
-      CLOSED: "destructive",
-      ARCHIVED: "outline"
-    };
+  const renderEntityContext = (instance: Task) => {
+    const entityType = instance.instance?.entity_type || "";
 
-    const label = getStatusLabel(status);
-    const variant = statusVariants[status] || "outline";
+    if (entityType === "FINDINGS" || entityType === "FINDING") {
+      if (instance.entity?.audit_plan_name) {
+        const route = instance.entity?.audit_plan_id
+          ? `/dashboard/audit/plans/engagement/${instance.entity.audit_plan_id}`
+          : null;
+        return route ? (
+          <NextLink
+            href={route}
+            className="text-primary hover:underline text-sm font-medium"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {instance.entity.audit_plan_name}
+          </NextLink>
+        ) : (
+          <span className="text-sm">{instance.entity.audit_plan_name}</span>
+        );
+      }
+      return <span className="text-muted-foreground text-sm">-</span>;
+    }
 
-    return <Badge variant={variant}>{label}</Badge>;
+    if (entityType === "BUDGET" || entityType === "ANNUAL_AUDIT_PLAN") {
+      return instance.entity?.year ? (
+        <span className="text-sm font-medium">{instance.entity.year}</span>
+      ) : (
+        <span className="text-muted-foreground text-sm">-</span>
+      );
+    }
+
+    if (entityType === "UNIVERSE" || entityType === "AUDIT_UNIVERSE") {
+      const universeName = instance.entity?.universe_name || instance.entity?.entity_name;
+      const universeId = instance.instance?.entity_id || instance.entity?.entity_id;
+      if (universeName) {
+        return universeId ? (
+          <NextLink
+            href={`/dashboard/audit/universe/${universeId}`}
+            className="text-primary hover:underline text-sm font-medium"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {universeName}
+          </NextLink>
+        ) : (
+          <span className="text-sm">{universeName}</span>
+        );
+      }
+      return <span className="text-muted-foreground text-sm">-</span>;
+    }
+
+    return <span className="text-muted-foreground text-sm">-</span>;
   };
 
   const getEntityTypeBadge = (entityType: string) => {
@@ -89,6 +115,10 @@ export function WorkflowInstancesTable({
         label: "Finding",
         className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
       },
+      FINDINGS: {
+        label: "Finding",
+        className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+      },
       RECOMMENDATION: {
         label: "Recommendation",
         className: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
@@ -100,6 +130,22 @@ export function WorkflowInstancesTable({
       CONTRACT: {
         label: "Contract",
         className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400"
+      },
+      UNIVERSE: {
+        label: "Audit Universe",
+        className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400"
+      },
+      AUDIT_UNIVERSE: {
+        label: "Audit Universe",
+        className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400"
+      },
+      AUDIT_CLOSURE: {
+        label: "Audit Closure",
+        className: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+      },
+      ANNUAL_AUDIT_PLAN: {
+        label: "Annual Audit Plan",
+        className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400"
       }
     };
 
@@ -135,17 +181,89 @@ export function WorkflowInstancesTable({
   }
 
   return (
-    <>
+    <TooltipProvider>
       <div className="bg-card rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Entity Name/Title</TableHead>
-              <TableHead>Entity Type</TableHead>
-              <TableHead>Workflow State</TableHead>
-              <TableHead>Instance Status</TableHead>
-              <TableHead>Date Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  ENTITY NAME
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      The name of the document or record in this workflow
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  ENTITY TYPE
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      The category or classification of this entity
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  CONTEXT
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Additional context about this entity (e.g., parent plan, year)
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  WORKFLOW STATE
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Current stage in the workflow process
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  INSTANCE STATUS
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Current status of the entity in its lifecycle
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  DATE CREATED
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      When this workflow instance was created
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -156,50 +274,61 @@ export function WorkflowInstancesTable({
                 className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* ENTITY NAME */}
                 <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{instance.entity_name}</span>
-                    <span className="text-muted-foreground text-[9px]">
-                      ID: {instance.instance.entity_id}
-                    </span>
-                  </div>
+                  {(() => {
+                    const route = getEntityRoute(instance);
+                    const name = instance.entity_name || instance.entity?.entity_name || instance.entity?.title || "Unknown";
+                    return route ? (
+                      <NextLink
+                        href={route}
+                        className="text-primary hover:underline text-base font-semibold"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {name}
+                      </NextLink>
+                    ) : (
+                      <p className="text-base font-semibold">{name}</p>
+                    );
+                  })()}
                 </TableCell>
                 {/* ENTITY TYPE */}
                 <TableCell>{getEntityTypeBadge(instance.instance.entity_type)}</TableCell>
-
+                {/* CONTEXT */}
+                <TableCell>{renderEntityContext(instance)}</TableCell>
                 {/* WORKFLOW STATE */}
-                <TableCell>{getInstanceStatusBadge(instance.instance.status)}</TableCell>
+                <TableCell>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline">{instance.instance.status || "Unknown"}</Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Current position in workflow: {instance.instance.status || "Unknown"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TableCell>
                 {/* INSTANCE STATUS */}
                 <TableCell>
                   <StatusBadge status={String(instance.entity?.status || "IN_REVIEW")} />
                 </TableCell>
                 {/* CREATED DATE */}
                 <TableCell>
-                  <span className="text-muted-foreground text-sm">
-                    {formatDistanceToNow(new Date(instance.instance.created_at), {
-                      addSuffix: true
-                    })}
-                  </span>
-                </TableCell>
-
-                {/* ACTIONS */}
-                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-muted-foreground text-sm">Manage via Tasks tab</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-muted-foreground cursor-help text-sm">
+                        {formatDistanceToNow(new Date(instance.instance.created_at), {
+                          addSuffix: true
+                        })}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Created on: {new Date(instance.instance.created_at).toLocaleString()}
+                    </TooltipContent>
+                  </Tooltip>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-
-      {selectedInstance && (
-        <>
-          <TaskReassignDialog
-            task={selectedInstance}
-            open={reassignDialogOpen}
-            onOpenChange={setReassignDialogOpen}
-          />
-        </>
-      )}
-    </>
+    </TooltipProvider>
   );
 }

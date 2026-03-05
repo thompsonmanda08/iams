@@ -17,7 +17,7 @@ export interface WorkflowInstance {
   id: string;
   workflow_id: string;
   organization_id: string;
-  entity_type: WorkflowTriggerType;
+  entity_type: WorkflowTriggerType | (string & {});
   entity_id: string;
   status: StandardStatus;
   created_by: string;
