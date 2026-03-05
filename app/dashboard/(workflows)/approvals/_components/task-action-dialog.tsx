@@ -24,37 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCompleteWorkflowTaskMutation } from "@/hooks/use-task-mutations";
 import { usePermissions } from "@/hooks/use-permissions";
-
-interface WorkflowTask {
-  id: string;
-  instance_id: string;
-  required_role_name?: string;
-  assigned_to_name?: string;
-  assigned_to_email?: string;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
-  created_at: string;
-  updated_at: string;
-  instance: {
-    entity_type: string;
-    status: string;
-    id?: string;
-    workflow_id?: string;
-    organization_id?: string;
-    entity_id?: string;
-    is_finalized?: boolean;
-    created_by?: string;
-    created_at?: string;
-    updated_at?: string;
-  };
-  entity: {
-    entity_id?: string;
-    entity_name?: string;
-    entity_type?: string;
-    id?: string;
-    status?: string;
-    title?: string;
-  };
-}
+import type { WorkflowTask } from "@/lib/types/task";
 
 interface TaskActionDialogProps {
   task: WorkflowTask | null;
@@ -285,6 +255,45 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
                       : "Unknown"}
                   </p>
                 </div>
+
+                {/* Completed By - shown for completed tasks */}
+                {task?.completed_at && (
+                  <>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground text-xs font-semibold">Completed By:</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-blue-500 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-xs">
+                            The user who completed this task
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <p className="font-medium text-gray-700 dark:text-gray-300">
+                        {task?.completed_by_name || "Unknown"}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground text-xs font-semibold">Completed At:</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-blue-500 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-xs">
+                            When this task was completed
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <p className="font-medium text-gray-700 dark:text-gray-300">
+                        {formatDistanceToNow(new Date(task.completed_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

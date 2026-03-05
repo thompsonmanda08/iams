@@ -181,7 +181,11 @@ export function AuditPlanWorkpaperView({
     if (isGeneralFramework) {
       const total = generalFindings?.length || 0;
       const completed = generalFindings?.filter((f: any) => f.status === "APPROVED").length || 0;
-      return { completed, total, percentage: total > 0 ? Math.round((completed / total) * 100) : 0 };
+      return {
+        completed,
+        total,
+        percentage: total > 0 ? Math.round((completed / total) * 100) : 0
+      };
     }
 
     const total = categoriesFromFindings?.length || 0;
@@ -360,7 +364,7 @@ export function AuditPlanWorkpaperView({
           className="overflow-x-auto"
           // className="-mx-4 overflow-x-auto px-4 lg:overflow-visible md:mx-0 md:px-0"
         >
-          <TabsList className="inline-flex h-14 w-max gap-1 md:grid md:w-full md:grid-cols-6">
+          <TabsList className="inline-flex h-14 w-max gap-1 md:grid md:w-full md:grid-cols-5">
             <TabsTrigger
               value="plan-details"
               className="w-full min-w-max text-nowrap whitespace-nowrap">
@@ -388,12 +392,12 @@ export function AuditPlanWorkpaperView({
               <span className="hidden sm:inline">Audit Execution</span>
               <span className="sm:hidden">Findings</span>
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="approvals"
               className="w-full min-w-max text-nowrap whitespace-nowrap">
               <CircleCheckBig className="h-5 w-5 text-green-600" />
               <span className="inline">Approvals</span>
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="closure" className="w-full min-w-max text-nowrap whitespace-nowrap">
               <CheckCircle2 className="h-5 w-5 text-blue-600" />
               Closure
@@ -474,10 +478,7 @@ export function AuditPlanWorkpaperView({
 
         {/* Approvals Tab */}
         <TabsContent value="approvals" className="space-y-4">
-          <AuditPlanTasksPanel
-            auditPlanId={auditPlan.id}
-            userTasks={userTasks}
-          />
+          <AuditPlanTasksPanel auditPlanId={auditPlan.id} userTasks={userTasks} />
         </TabsContent>
 
         {/* Closure Tab */}

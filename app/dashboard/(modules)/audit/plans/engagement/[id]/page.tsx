@@ -51,7 +51,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   // console.log("Audit Plan:", auditPlan);
   // console.log("Workpaper:", workpaper);
   // console.log("Findings:", allFindings);
-  console.log("userTasks:", userTasks[2]);
+  // console.log("userTasks:", userTasks[2]);
 
   return (
     <div className="bg-background min-h-screen">

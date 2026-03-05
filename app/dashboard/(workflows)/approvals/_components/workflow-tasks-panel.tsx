@@ -6,40 +6,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { WorkflowTasksTable } from "./workflow-tasks-table";
 import { useUserAssignedWorkflowTasks } from "@/hooks/use-workflow-tasks";
 import type { Pagination } from "@/lib/types";
-
-interface WorkflowTask {
-  id: string;
-  instance_id: string;
-  organization_id?: string;
-  required_role_id?: string;
-  required_role_name?: string;
-  assigned_to_user_id: string;
-  assigned_to_name?: string;
-  assigned_to_email?: string;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
-  created_at: string;
-  updated_at: string;
-  instance: {
-    id?: string;
-    workflow_id?: string;
-    organization_id?: string;
-    entity_type: string;
-    entity_id?: string;
-    status: string;
-    is_finalized?: boolean;
-    created_by?: string;
-    created_at?: string;
-    updated_at?: string;
-  };
-  entity: {
-    entity_id?: string;
-    entity_name?: string;
-    entity_type?: string;
-    id?: string;
-    status?: string;
-    title?: string;
-  };
-}
+import type { WorkflowTask } from "@/lib/types/task";
 
 interface WorkflowTasksPanelProps {
   initialTasks?: WorkflowTask[];

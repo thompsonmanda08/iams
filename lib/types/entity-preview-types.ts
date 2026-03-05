@@ -59,7 +59,9 @@ export interface EntityPreviewData {
   severity?: string;
   recommendation?: string;
   audit_plan_id?: string;
+  audit_plan_name?: string;
   working_paper_id?: string;
+  working_paper_name?: string;
   management_response?: string;
   objectives?: string;
   conclusion?: string;

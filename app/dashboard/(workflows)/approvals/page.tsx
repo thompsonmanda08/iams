@@ -16,6 +16,8 @@ export default async function TasksPage() {
     : [];
   const instancesPagination: any = instancesResponse?.data?.pagination || {};
 
+  console.log("Instances:", instances);
+
   // Fetch user-assigned workflow tasks (SSR)
   const tasksResponse = await getUserAssignedWorkflowTasks({ page: "1", page_size: "15" });
   const tasks = tasksResponse.success ? tasksResponse.data?.data || tasksResponse.data : [];

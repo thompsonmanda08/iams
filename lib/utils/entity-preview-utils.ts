@@ -65,6 +65,10 @@ export function normalizeEntityType(entityType: string): EntityType {
   if (entityType.includes("RISK")) {
     return "RISK";
   }
+  // Check ANNUAL_AUDIT_PLAN before AUDIT_PLAN since includes("AUDIT_PLAN") would match both
+  if (entityType.includes("ANNUAL_AUDIT_PLAN")) {
+    return "ANNUAL_AUDIT_PLAN";
+  }
   if (entityType.includes("AUDIT_PLAN")) {
     return "AUDIT_PLAN";
   }
@@ -76,9 +80,6 @@ export function normalizeEntityType(entityType: string): EntityType {
   }
   if (entityType.includes("UNIVERSE")) {
     return "UNIVERSE";
-  }
-  if (entityType.includes("ANNUAL_AUDIT_PLAN")) {
-    return "ANNUAL_AUDIT_PLAN";
   }
   if (entityType === "AUDIT_CLOSURE") {
     return "AUDIT_PLAN";

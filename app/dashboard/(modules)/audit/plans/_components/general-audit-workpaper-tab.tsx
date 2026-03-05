@@ -80,25 +80,74 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
 
   if (isDisabled) {
     return (
-      <Card className="border-2 border-dashed">
-        <CardContent className="flex flex-col items-center justify-center px-8 py-16">
-          <div className="relative mb-4">
-            <div className="bg-muted/40 absolute inset-0 rounded-full blur-2xl" />
-            <div className="bg-card relative rounded-2xl border-2 p-6">
-              <Lock className="text-muted-foreground h-16 w-16" strokeWidth={1.5} />
+      <div className="space-y-4">
+        {/* Column + key legend */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Info className="h-4 w-4" />
+              Evidence Grid Structure
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2 pb-3">
+            {(config.columns ?? []).map((col: any) => (
+              <Tooltip key={col.key}>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="cursor-help font-mono text-xs">
+                    {col.name}
+                  </Badge>
+                </TooltipTrigger>
+                {col.description && (
+                  <TooltipContent side="top" className="max-w-52 text-xs">
+                    {col.description}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            ))}
+            <span className="text-muted-foreground self-center text-xs">→ Audit Tests:</span>
+            {(config.keys ?? []).map((k: any) => (
+              <Tooltip key={k.key}>
+                <TooltipTrigger asChild>
+                  <Badge className="cursor-help bg-amber-100 font-mono text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                    {k.name}
+                  </Badge>
+                </TooltipTrigger>
+                {k.description && (
+                  <TooltipContent side="top" className="max-w-52 text-xs">
+                    {k.description}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            ))}
+            <span className="text-muted-foreground self-center text-xs">
+              → Observations · Comments · Evidence
+            </span>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center px-8 py-16">
+            <div className="relative mb-4">
+              <div className="bg-primary/10 absolute inset-0 rounded-full blur-2xl" />
+              <div className="bg-canvas border-primary/20 relative rounded-2xl border-2 p-6">
+                <Lock className="text-primary h-16 w-16" strokeWidth={1.5} />
+              </div>
             </div>
-          </div>
-          <h3 className="text-foreground mb-2 text-2xl font-semibold">Workpaper Locked</h3>
-          <p className="text-muted-foreground mb-2 max-w-md text-center">
-            The audit plan must be <span className="font-medium">approved</span> before you can begin
-            filling in the workpaper. The current status is{" "}
-            <Badge variant="outline" className="text-xs">{auditPlan.status}</Badge>.
-          </p>
-          <p className="text-muted-foreground text-center text-sm">
-            Submit the audit plan for approval to unlock the evidence grid and workpaper details.
-          </p>
-        </CardContent>
-      </Card>
+            <h3 className="text-foreground mb-2 text-2xl font-semibold">Workpaper Locked</h3>
+            <p className="text-muted-foreground mb-2 max-w-md text-center">
+              The audit plan must be <span className="font-medium">approved</span> before you can
+              begin filling in the workpaper. The current status is{" "}
+              <Badge variant="outline" className="text-xs">
+                {auditPlan.status}
+              </Badge>
+              .
+            </p>
+            <p className="text-muted-foreground text-center text-sm">
+              Submit the audit plan for approval to unlock the evidence grid and workpaper details.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -225,9 +274,7 @@ export function GeneralAuditWorkpaperTab({ auditPlan, workpaper }: GeneralAuditW
             />
           </CardContent>
           <CardFooter className="flex items-center justify-between border-t pt-4">
-            <Button
-              onClick={handleSaveMetadata}
-              isLoading={updateMetadataMutation.isPending}>
+            <Button onClick={handleSaveMetadata} isLoading={updateMetadataMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
               Save
             </Button>

@@ -286,6 +286,16 @@ function FindingSummaryContent({ data }: { data: EntityPreviewData }) {
   return (
     <>
       <div className="space-y-3">
+        {/* Parent Audit Plan */}
+        {data.audit_plan_name && (
+          <SummaryField label="Audit Plan" value={data.audit_plan_name} />
+        )}
+
+        {/* Working Paper */}
+        {data.working_paper_name && (
+          <SummaryField label="Working Paper" value={data.working_paper_name} />
+        )}
+
         {/* Category information */}
         <SummaryField label="Category" value={data.category_name} />
 

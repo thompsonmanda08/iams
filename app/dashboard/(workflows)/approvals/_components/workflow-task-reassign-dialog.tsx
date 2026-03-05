@@ -31,34 +31,7 @@ import { SelectField } from "@/components/ui/select-field";
 import { id } from "date-fns/locale";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { usePermissions } from "@/hooks/use-permissions";
-
-interface WorkflowTask {
-  id: string;
-  instance_id: string;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED";
-  created_at: string;
-  updated_at: string;
-  instance: {
-    id?: string;
-    workflow_id?: string;
-    organization_id?: string;
-    entity_type: string;
-    entity_id?: string;
-    status: string;
-    is_finalized?: boolean;
-    created_by?: string;
-    created_at?: string;
-    updated_at?: string;
-  };
-  entity: {
-    entity_id?: string;
-    entity_name?: string;
-    entity_type?: string;
-    id?: string;
-    status?: string;
-    title?: string;
-  };
-}
+import type { WorkflowTask } from "@/lib/types/task";
 
 interface WorkflowTaskReassignDialogProps {
   task: WorkflowTask | null;

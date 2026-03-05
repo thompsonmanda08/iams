@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Eye, Info, Repeat2 } from "lucide-react";
-import type { Task } from "@/lib/types/task";
+import type { WorkflowTask } from "@/lib/types/task";
 import type { EntityType } from "@/lib/types/entity-preview-types";
 import { TaskActionDialog } from "./task-action-dialog";
 import { WorkflowTaskReassignDialog } from "./workflow-task-reassign-dialog";
@@ -21,40 +21,8 @@ import { formatDistanceToNow } from "date-fns";
 import { getStatusLabel } from "@/lib/statuses";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { StatusBadge } from "@/components/status-badge";
-
-interface WorkflowTask {
-  id: string;
-  instance_id: string;
-  organization_id?: string;
-  required_role_id?: string;
-  required_role_name?: string;
-  assigned_to_user_id: string;
-  assigned_to_name?: string;
-  assigned_to_email?: string;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "REASSIGNED" | "APPROVED";
-  created_at: string;
-  updated_at: string;
-  instance: {
-    id?: string;
-    workflow_id?: string;
-    organization_id?: string;
-    entity_type: string;
-    entity_id?: string;
-    status: string;
-    is_finalized?: boolean;
-    created_by?: string;
-    created_at?: string;
-    updated_at?: string;
-  };
-  entity: {
-    entity_id?: string;
-    entity_name?: string;
-    entity_type?: string;
-    id?: string;
-    status?: string;
-    title?: string;
-  };
-}
+import NextLink from "next/link";
+import { getEntityDetailRoute, normalizeEntityType } from "@/lib/utils/entity-preview-utils";
 
 interface WorkflowTasksTableProps {
   tasks: WorkflowTask[];
@@ -123,6 +91,69 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
     const variant = statusVariants[status] || "outline";
 
     return <Badge variant={variant}>{label}</Badge>;
+  };
+
+  const getEntityRoute = (task: WorkflowTask) => {
+    const entityType = task.instance?.entity_type || "";
+    const entityId = task.instance?.entity_id || task.entity?.entity_id || "";
+    const normalizedType = normalizeEntityType(entityType);
+    return getEntityDetailRoute(normalizedType, entityId, {
+      ...task.entity,
+      original_entity_type: entityType
+    });
+  };
+
+  const renderEntityContext = (task: WorkflowTask) => {
+    const entityType = task.instance?.entity_type || "";
+
+    if (entityType === "FINDINGS" || entityType === "FINDING") {
+      if (task.entity?.audit_plan_name) {
+        const route = task.entity?.audit_plan_id
+          ? `/dashboard/audit/plans/engagement/${task.entity.audit_plan_id}`
+          : null;
+        return route ? (
+          <NextLink
+            href={route}
+            className="text-primary hover:underline text-sm font-medium"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {task.entity.audit_plan_name}
+          </NextLink>
+        ) : (
+          <span className="text-sm">{task.entity.audit_plan_name}</span>
+        );
+      }
+      return <span className="text-muted-foreground text-sm">-</span>;
+    }
+
+    if (entityType === "BUDGET" || entityType === "ANNUAL_AUDIT_PLAN") {
+      return task.entity?.year ? (
+        <span className="text-sm font-medium">{task.entity.year}</span>
+      ) : (
+        <span className="text-muted-foreground text-sm">-</span>
+      );
+    }
+
+    if (entityType === "UNIVERSE" || entityType === "AUDIT_UNIVERSE") {
+      const universeName = task.entity?.universe_name || task.entity?.entity_name;
+      const universeId = task.instance?.entity_id || task.entity?.entity_id;
+      if (universeName) {
+        return universeId ? (
+          <NextLink
+            href={`/dashboard/audit/universe/${universeId}`}
+            className="text-primary hover:underline text-sm font-medium"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {universeName}
+          </NextLink>
+        ) : (
+          <span className="text-sm">{universeName}</span>
+        );
+      }
+      return <span className="text-muted-foreground text-sm">-</span>;
+    }
+
+    return <span className="text-muted-foreground text-sm">-</span>;
   };
 
   const getEntityTypeBadge = (entityType: string) => {
@@ -235,6 +266,19 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
               </TableHead>
               <TableHead>
                 <div className="flex items-center gap-1">
+                  CONTEXT
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      Additional context about this entity (e.g., parent plan, year)
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
                   WORKFLOW STATE
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -283,12 +327,26 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                 className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* ENTITY NAME */}
                 <TableCell>
-                  <p className="text-base font-semibold">
-                    {task.entity?.entity_name || task.entity?.title || "Unknown"}
-                  </p>
+                  {(() => {
+                    const route = getEntityRoute(task);
+                    const name = task.entity?.entity_name || task.entity?.title || "Unknown";
+                    return route ? (
+                      <NextLink
+                        href={route}
+                        className="text-primary hover:underline text-base font-semibold"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {name}
+                      </NextLink>
+                    ) : (
+                      <p className="text-base font-semibold">{name}</p>
+                    );
+                  })()}
                 </TableCell>
                 {/* ENTITY TYPE */}
                 <TableCell>{getEntityTypeBadge(task.instance?.entity_type || "")}</TableCell>
+                {/* CONTEXT */}
+                <TableCell>{renderEntityContext(task)}</TableCell>
                 {/* WORKFLOW STATE */}
                 <TableCell>
                   <Tooltip>
@@ -320,7 +378,19 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
-                      Assigned on: {new Date(task.created_at).toLocaleString()}
+                      <span>Assigned on: {new Date(task.created_at).toLocaleString()}</span>
+                      {task.completed_at && (
+                        <>
+                          <br />
+                          <span>Completed on: {new Date(task.completed_at).toLocaleString()}</span>
+                          {task.completed_by_name && (
+                            <>
+                              <br />
+                              <span>By: {task.completed_by_name}</span>
+                            </>
+                          )}
+                        </>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TableCell>
