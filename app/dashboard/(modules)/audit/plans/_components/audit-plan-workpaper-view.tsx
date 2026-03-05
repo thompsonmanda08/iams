@@ -22,7 +22,6 @@ import {
   PencilLineIcon
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
-import type { Task } from "@/lib/types/task";
 import { FindingsList } from "./findings-list";
 import { cn } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -45,7 +44,6 @@ interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
   workpaperCategories: any[];
   findings: any[];
-  workflowInstance?: Task[];
   userTasks?: any[];
   isLoading?: boolean;
   auditPlanStatus?: string;
@@ -62,7 +60,6 @@ export function AuditPlanWorkpaperView({
   auditPlan,
   workpaperCategories,
   findings,
-  workflowInstance = [],
   userTasks = [],
   auditPlanStatus,
   workpaper
@@ -479,7 +476,6 @@ export function AuditPlanWorkpaperView({
         <TabsContent value="approvals" className="space-y-4">
           <AuditPlanTasksPanel
             auditPlanId={auditPlan.id}
-            workflowInstance={workflowInstance}
             userTasks={userTasks}
           />
         </TabsContent>

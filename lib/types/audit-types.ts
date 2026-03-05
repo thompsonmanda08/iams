@@ -1408,6 +1408,14 @@ export interface FindingAction {
     email: string;
   };
   assigned_to_name?: string; // Display name for assigned user
+  audit_plan?: {
+    id: string;
+    title: string;
+    description: string;
+    ref_no: string;
+    year: number;
+    status: string;
+  };
   reviewer_user?: {
     id: string;
     first_name: string;
@@ -1426,6 +1434,7 @@ export interface FindingAction {
   // Finding details (from WorkpaperFinding)
   clause_number?: string;
   clause_description?: string;
+  framework_type?: string;
 
   evidence_count?: number;
   reviews_count?: number;

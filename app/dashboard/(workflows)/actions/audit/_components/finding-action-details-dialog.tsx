@@ -26,6 +26,7 @@ import { useFindingEvidence } from "@/hooks/use-evidence-queries";
 import { SubmitEvidenceDialog } from "./submit-evidence-dialog";
 import { ReviewEvidenceDialog } from "./review-evidence-dialog";
 import { CreateReassessmentDialog } from "./create-reassessment-dialog";
+import { UpdateGeneralFindingDialog } from "./update-general-finding-dialog";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSession } from "@/store/session-store";
@@ -111,14 +112,17 @@ export function FindingActionDetailsDialog({
   const { data: evidence = [], isLoading: isLoadingEvidence } = useFindingActionEvidence(action.id);
   const { data: reviews = [], isLoading: isLoadingReviews } = useFindingActionReviews(action.id);
 
-  // Fetch finding details by ID (compliance endpoint)
-  const { data: findingData, isLoading: isLoadingFinding } = useFinding(action.finding_id);
+  // Determine finding type from the action's framework_type field
+  const isGeneralFinding = action.framework_type === "GENERAL";
 
-  // Fetch general finding details (general workpaper endpoint)
-  const { data: generalFindingData, isLoading: isLoadingGeneralFinding } = useGeneralFinding(action.finding_id);
+  // Conditionally fetch: only call the hook that matches the finding type
+  const { data: findingData, isLoading: isLoadingFinding } = useFinding(
+    !isGeneralFinding ? action.finding_id : undefined
+  );
+  const { data: generalFindingData, isLoading: isLoadingGeneralFinding } = useGeneralFinding(
+    isGeneralFinding ? action.finding_id : undefined
+  );
 
-  // Determine finding type
-  const isGeneralFinding = !findingData && !!generalFindingData;
   const isLoadingAnyFinding = isLoadingFinding || isLoadingGeneralFinding;
 
   // Fetch finding evidence (evidence attached to the finding itself)
@@ -399,6 +403,46 @@ export function FindingActionDetailsDialog({
                     </CardContent>
                   </Card>
                 )}
+                {/* Audit Plan Information */}
+                {action.audit_plan && (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <CardTitle className="text-base">Audit Plan</CardTitle>
+                          <CardDescription>
+                            Ref. {action.audit_plan.ref_no} &middot; {action.audit_plan.year}
+                          </CardDescription>
+                        </div>
+                        <StatusBadge status={action.audit_plan.status} />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-xs font-medium">Title</p>
+                        <p className="text-sm font-medium">{action.audit_plan.title}</p>
+                      </div>
+                      {action.audit_plan.description && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs font-medium">
+                            Description
+                          </p>
+                          <p className="text-muted-foreground text-sm">
+                            {action.audit_plan.description}
+                          </p>
+                        </div>
+                      )}
+                      <Separator />
+                      <Link
+                        href={`/dashboard/audit/plans/engagement/${action.audit_plan.id}`}
+                        className="text-primary inline-flex items-center gap-1.5 text-sm font-medium hover:underline">
+                        View Audit Plan
+                        <SquareArrowOutUpRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {isLoadingAnyFinding ? (
                   <ActionOverviewCardSkeleton />
                 ) : (
@@ -759,16 +803,15 @@ export function FindingActionDetailsDialog({
               </TabsContent>
             </Tabs>
 
-            {/* Create Reassessment Button */}
-            {hasEvidence && isAssignedReviewer && !isCompliant && (
+            {/* Create Reassessment / Update Finding Button */}
+            {hasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
               <Button
                 onClick={() => {
                   if (!checkPermission("AUDIT_PLANS", "can_create")) return;
                   setCreateReassessmentOpen(true);
                 }}
-                // variant="outline"
                 className="w-full">
-                Create Reassessment
+                {isGeneralFinding ? "Update Finding" : "Create Reassessment"}
               </Button>
             )}
           </div>
@@ -790,13 +833,22 @@ export function FindingActionDetailsDialog({
         evidence={evidence}
       />
 
-      {/* Create Reassessment Dialog */}
-      <CreateReassessmentDialog
-        open={createReassessmentOpen}
-        onOpenChange={setCreateReassessmentOpen}
-        findingId={action.finding_id}
-        actionId={action.id}
-      />
+      {/* Create Reassessment / Update General Finding Dialog */}
+      {isGeneralFinding ? (
+        <UpdateGeneralFindingDialog
+          open={createReassessmentOpen}
+          onOpenChange={setCreateReassessmentOpen}
+          findingId={action.finding_id}
+          generalFindingData={generalFindingData}
+        />
+      ) : (
+        <CreateReassessmentDialog
+          open={createReassessmentOpen}
+          onOpenChange={setCreateReassessmentOpen}
+          findingId={action.finding_id}
+          actionId={action.id}
+        />
+      )}
     </>
   );
 }

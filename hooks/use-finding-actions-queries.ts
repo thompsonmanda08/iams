@@ -31,7 +31,7 @@ import {
   reviewFindingActionEvidence
 } from "@/app/_actions/finding-actions";
 import { getFinding } from "@/app/_actions/audit-module-actions";
-import { getGeneralFinding } from "@/app/_actions/general-findings-actions";
+import { getGeneralFinding, updateGeneralFinding } from "@/app/_actions/general-findings-actions";
 import type {
   FindingAction,
   CreateFindingActionInput,
@@ -304,6 +304,48 @@ export function useGeneralFinding(findingId: string | null | undefined) {
     },
     enabled: !!findingId,
     staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+}
+
+/**
+ * Hook to update a general finding in the reassessment context.
+ * Separate from useUpdateGeneralFinding (in use-general-findings-mutations.ts)
+ * because that hook requires workingPaperId and is silent (no toast).
+ */
+export function useUpdateGeneralFindingReassessment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      findingId: string;
+      data: {
+        columns?: Record<string, any>[];
+        keys?: Record<string, any>[];
+        audit_observation?: string;
+        audit_comments?: string;
+        evidence?: string;
+      };
+    }) => {
+      const result = await updateGeneralFinding(params.findingId, params.data);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["general-finding", variables.findingId]
+      });
+      notify({
+        title: "Success",
+        description: "Finding updated successfully"
+      });
+    },
+    onError: (error: Error) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to update finding",
+        type: "error"
+      });
+    }
   });
 }
 

@@ -1,5 +1,6 @@
 import { AUTH_SESSION } from "@/lib/constants";
-import { verifySession } from "@/lib/session";
+import { SESSION_CONFIG } from "@/lib/session-config";
+import { updateAuthSession, verifySession } from "@/lib/session";
 import { APIResponse } from "@/lib/types";
 import axiosClient, { AxiosRequestConfig, AxiosRequestHeaders } from "axios";
 
@@ -69,6 +70,43 @@ export type RequestType = AxiosRequestConfig & {
   contentType?: AxiosRequestHeaders["Content-Type"];
 };
 
+// Deduplicator: concurrent 403s share one refresh call instead of triggering multiple refreshes
+let _refreshPromise: Promise<string> | null = null;
+
+const _refreshAccessToken = async (): Promise<string> => {
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    try {
+      const { session } = await verifySession();
+      if (!session?.accessToken) throw new Error("No session available for token refresh");
+
+      const response = await axios({
+        method: "GET",
+        url: "/api/v1/auth/refresh-token",
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+          Cookie: `${AUTH_SESSION}=${session.accessToken}`
+        },
+        withCredentials: true
+      });
+
+      const newToken = response.data?.access_token as string;
+      await updateAuthSession({
+        access_token: newToken,
+        expiresAt: new Date(Date.now() + SESSION_CONFIG.SESSION_TTL)
+      });
+
+      return newToken;
+    } finally {
+      _refreshPromise = null;
+    }
+  })();
+
+  return _refreshPromise;
+};
+
 const authenticatedApiClient = async (request: RequestType) => {
   const { session } = await verifySession();
 
@@ -76,18 +114,32 @@ const authenticatedApiClient = async (request: RequestType) => {
     throw new Error("No valid session found");
   }
 
-  const config = {
+  const buildConfig = (token: string) => ({
     method: "GET",
     headers: {
-      "Content-type": request.contentType ? request.contentType : "application/json",
-      Authorization: `Bearer ${session?.accessToken}`,
-      Cookie: `${AUTH_SESSION}=${session.accessToken}` // Forward the session cookie to API
+      "Content-type": request.contentType ?? "application/json",
+      Authorization: `Bearer ${token}`,
+      Cookie: `${AUTH_SESSION}=${token}` // Forward the session cookie to API
     },
     withCredentials: true,
     ...request
-  };
+  });
 
-  return await axios(config);
+  try {
+    return await axios(buildConfig(session.accessToken));
+  } catch (error: any) {
+    // On 403 with any token-expired message, refresh the token and retry once.
+    // Covers all variants: "token has expired", "token is expired", "token expired", etc.
+    const msg: string = (error.message ?? error.response?.data?.error ?? "").toLowerCase();
+    const isTokenExpired = error.status === 403 && msg.includes("token") && msg.includes("expired");
+
+    if (isTokenExpired) {
+      const newToken = await _refreshAccessToken();
+      return await axios(buildConfig(newToken));
+    }
+
+    throw error;
+  }
 };
 
 export default authenticatedApiClient;

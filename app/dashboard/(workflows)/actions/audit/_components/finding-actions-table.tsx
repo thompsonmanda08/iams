@@ -16,6 +16,7 @@ import { AlertCircle, View, Send, Loader2 } from "lucide-react";
 import type { FindingAction } from "@/lib/types/audit-types";
 import { FindingActionDetailsDialog } from "./finding-action-details-dialog";
 import { StatusBadge } from "@/components/status-badge";
+import Link from "next/link";
 
 interface FindingActionsTableProps {
   actions: FindingAction[];
@@ -55,9 +56,11 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
             <TableHeader className="bg-muted/50 text-muted-foreground uppercase">
               <TableRow>
                 <TableHead>Finding</TableHead>
+                <TableHead>Audit Plan</TableHead>
                 <TableHead>Action Description</TableHead>
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Reviewer</TableHead>
+                <TableHead>Date </TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -69,16 +72,27 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
                   {/* Finding */}
                   <TableCell>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">
-                        {action.engagement_name || action.finding?.audit_plan_name || "Audit Plan"}
-                      </p>
-                      <p className="text-sm font-medium">
-                        Clause No. {action.clause_number || action.finding?.clause_number || "N/A"}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
+                      <p className="truncate font-medium">
                         {action.clause_description
                           ? action.clause_description.substring(0, 60) + "..."
                           : action.finding?.category_name || "Unknown"}
+                      </p>
+                      <p className="text-xs font-medium">
+                        Clause No. {action.clause_number || action.finding?.clause_number || "N/A"}
+                      </p>
+                    </div>
+                  </TableCell>
+                  {/* Audit Plan */}
+                  <TableCell>
+                    <div className="space-y-1">
+                      <Link
+                        href={`/dashboard/audit/plans/engagement/${action.audit_plan?.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-primary font-medium hover:underline">
+                        {`${action.audit_plan?.title || "Unknown Audit Plan"} (${action.audit_plan?.year})`}
+                      </Link>
+                      <p className="truncate text-sm font-medium italic">
+                        Ref No. {action.audit_plan?.ref_no || "N/A"}
                       </p>
                     </div>
                   </TableCell>
@@ -116,6 +130,12 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
                     </div>
                   </TableCell>
 
+                  {/* Created At Date */}
+                  <TableCell>
+                    <p className="text-sm">
+                      {action.created_at ? format(new Date(action.created_at), "MMM d, yyyy") : "-"}
+                    </p>
+                  </TableCell>
                   {/* Due Date */}
                   <TableCell>
                     <p className="text-sm">

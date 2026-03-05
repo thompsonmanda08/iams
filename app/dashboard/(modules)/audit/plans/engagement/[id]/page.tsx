@@ -4,7 +4,7 @@ import {
   getWorkpaperByAuditPlanId,
   getWorkpapers
 } from "@/app/_actions/audit-module-actions";
-import { getWorkflowInstances, getUserAssignedWorkflowTasks } from "@/app/_actions/task-actions";
+import { getUserAssignedWorkflowTasks } from "@/app/_actions/task-actions";
 import { AuditPlan } from "@/lib/types/audit-types";
 import PageHeader from "@/components/page-header";
 import { ClipboardListIcon } from "lucide-react";
@@ -37,22 +37,21 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
   // Extract findings from workpaper response (they're already included)
   const allFindings = workpaper?.findings || workpaper?.general_findings || [];
 
-  // Fetch workflow instances for this audit plan and user-assigned tasks in parallel
-  const [workflowInstancesResponse, userTasksResponse] = await Promise.all([
-    getWorkflowInstances({ entity_id: auditPlanId, page: "1", page_size: "10" }),
-    getUserAssignedWorkflowTasks({ entity_id: auditPlanId, page: "1", page_size: "10" })
-  ]);
+  // Fetch user-assigned tasks for this audit plan
+  const userTasksResponse = await getUserAssignedWorkflowTasks({
+    entity_id: auditPlanId,
+    page: "1",
+    page_size: "15"
+  });
 
-  const workflowInstance = workflowInstancesResponse.success
-    ? workflowInstancesResponse.data?.data || workflowInstancesResponse.data
-    : [];
   const userTasks = userTasksResponse.success
     ? userTasksResponse.data?.data || userTasksResponse.data
     : [];
 
   // console.log("Audit Plan:", auditPlan);
-  console.log("Workpaper:", workpaper);
-  console.log("Findings:", allFindings);
+  // console.log("Workpaper:", workpaper);
+  // console.log("Findings:", allFindings);
+  console.log("userTasks:", userTasks);
 
   return (
     <div className="bg-background min-h-screen">
@@ -85,7 +84,6 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
           auditPlan={auditPlan}
           workpaperCategories={workpaper?.categories}
           findings={allFindings}
-          workflowInstance={workflowInstance}
           userTasks={userTasks}
           auditPlanStatus={auditPlan.status}
           workpaper={workpaper}
