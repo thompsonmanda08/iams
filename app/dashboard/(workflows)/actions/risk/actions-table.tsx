@@ -198,7 +198,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                           <div className="text-muted-foreground text-xs">
                             ID:{" "}
                             {action?.risk_id?.slice(0, 8) ||
-                              actionDef.incident_log.incident_id?.slice(0, 8)}
+                              actionDef?.incident_log?.incident_id?.slice(0, 8)}
                             ...
                           </div>
                         </div>
