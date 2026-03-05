@@ -117,7 +117,7 @@ export async function createIncident(data: any): Promise<APIResponse> {
       data
     });
 
-    revalidatePath("/dashboard/(modules)/risks/incidents");
+    revalidatePath("/dashboard/risks/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(error, "POST | CREATE INCIDENT", "/api/v1/incidents");
@@ -143,7 +143,7 @@ export async function updateIncident(
       data
     });
 
-    revalidatePath("/dashboard/(modules)/risks/incidents");
+    revalidatePath("/dashboard/risks/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -162,7 +162,7 @@ export async function deleteIncident(incidentId: string): Promise<APIResponse> {
       method: "DELETE"
     });
 
-    revalidatePath("/dashboard/(modules)/risks/incidents");
+    revalidatePath("/dashboard/risks/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -192,7 +192,7 @@ export async function sendIncidentForReview(
       data
     });
 
-    revalidatePath("/dashboard/(modules)/risks/incidents");
+    revalidatePath("/dashboard/risks/incidents");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -219,7 +219,7 @@ export async function submitReviewIncidentFindings(
       data
     });
 
-    revalidatePath("/dashboard/(workflows)/actions/risk");
+    revalidatePath("/dashboard/actions/risk");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(
@@ -245,7 +245,7 @@ export async function submitIncidentFindings(
       data
     });
 
-    revalidatePath("/dashboard/(workflows)/actions/risk");
+    revalidatePath("/dashboard/actions/risk");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(

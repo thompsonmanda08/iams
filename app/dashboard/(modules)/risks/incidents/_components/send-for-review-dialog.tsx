@@ -11,18 +11,15 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, X, Upload, CloudUpload } from "lucide-react";
+import { Loader2, X, CloudUpload } from "lucide-react";
 import { toast } from "sonner";
 import { IncidentData } from "@/lib/types/incidents-types";
 import { sendIncidentForReview } from "@/app/_actions/incident-actions";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useUsers } from "@/hooks/use-users-query-data";
-
-import { format } from "date-fns";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
 
