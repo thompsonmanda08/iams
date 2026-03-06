@@ -121,7 +121,7 @@ export async function createAuthSession({
   mfa_required?: boolean;
   organization_id?: string;
 }): Promise<void> {
-  // Use centralized session config for 30-minute session
+  // Use centralized session config (60-minute session)
   const expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
 
   const newSession: AuthSession = {
@@ -134,8 +134,9 @@ export async function createAuthSession({
     expiresAt
   };
 
-  // Call `encrypt` to generate the session token (30 minutes)
-  const token = await encrypt(newSession, "30m");
+  // Encrypt JWT with same TTL as cookie to prevent silent JWT expiry before cookie expires
+  const jwtExpirationSeconds = Math.ceil(SESSION_CONFIG.SESSION_TTL / 1000);
+  const token = await encrypt(newSession, `${jwtExpirationSeconds}s`);
 
   // Ensure `session` is successfully created before setting the cookie
   if (token) {

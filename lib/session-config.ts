@@ -2,9 +2,9 @@
  * Centralized session configuration
  * All timeout values are defined here for consistency and easy adjustment
  *
- * IMPORTANT: Backend tokens are valid for 1 hour, but we use 30-minute SESSION_TTL for UX
- * - Token refresh happens every 25 minutes to keep sessions alive
- * - Both JWT payload expiry and cookie expiry are synchronized to SESSION_TTL
+ * IMPORTANT: Backend tokens are valid for 1 hour.
+ * - SESSION_TTL is 60 minutes — both JWT payload and cookie expiry are synchronized
+ * - Token refresh happens every 30 minutes to keep sessions alive before the 60-minute expiry
  * - This prevents "token has expired" errors during active use
  */
 export const SESSION_CONFIG = {
@@ -15,11 +15,10 @@ export const SESSION_CONFIG = {
   SCREEN_LOCK_COUNTDOWN: 90 * 1000,
 
   // Session TTL: Maximum session duration is 60 minutes
-  // Note: Both JWT and cookie expirations are synchronized to this value
+  // Both JWT and cookie expirations are synchronized to this value
   SESSION_TTL: 60 * 60 * 1000,
 
-  // Token refresh: Refresh at 30 minutes (before 60-minute expiry)
-  // This ensures tokens are refreshed before they expire
+  // Token refresh: Refresh every 30 minutes (before 60-minute expiry)
   TOKEN_REFRESH_INTERVAL: 30 * 60 * 1000
 } as const;
 

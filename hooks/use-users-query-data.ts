@@ -51,13 +51,13 @@ export const useHeadsOfDepartments = (
 /**
  * Hook to refresh authentication token
  * Configuration:
- * - When enabled=true: Automatically refreshes token every 25 minutes
+ * - When enabled=true: Automatically refreshes token every 30 minutes
  * - When enabled=false: No automatic refresh
  *
- * This prevents token expiry at 30 minutes by refreshing at 25 minutes
+ * This prevents token expiry at 60 minutes by refreshing at 30 minutes
  * User must be active (not idle) for auto-refresh to happen
  */
-const REFRESH_INTERVAL = SESSION_CONFIG.TOKEN_REFRESH_INTERVAL; // Refresh at 25 minutes (before 30-min expiry)
+const REFRESH_INTERVAL = SESSION_CONFIG.TOKEN_REFRESH_INTERVAL; // Refresh every 30 minutes (before 60-min expiry)
 
 export const useRefreshToken = (enabled: boolean = false) =>
   useQuery({

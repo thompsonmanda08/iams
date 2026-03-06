@@ -2,15 +2,13 @@
 /**
  * Screen Lock Component
  *
- * IMPROVED: Multi-tab synchronization now only locks OTHER tabs when one tab idles
- * - Each tab has a unique ID (tabIdRef)
- * - When a tab locks, it broadcasts its ID
- * - Other tabs only apply the lock if it came from a DIFFERENT tab
- * - This prevents active tabs from being locked due to another tab's inactivity
- *
- * This solves the issue where having an unused tab open would lock your active work
+ * Multi-tab idle detection using react-idle-timer's built-in crossTab support.
+ * - crossTab: true + syncTimers: true shares activity events across all tabs
+ * - If ANY tab is active, ALL tabs' idle timers reset (prevents false idle on active tabs)
+ * - BroadcastChannel is used only for UNLOCK sync (when user clicks "I'm still here")
+ * - Lock events are NOT broadcast — only the tab that goes idle shows its own dialog
+ * - Persisted lock state (cookie) restores dialog on page reload WITHOUT broadcasting
  */
-import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useIdleTimer } from "react-idle-timer";
 
@@ -54,8 +52,7 @@ interface ScreenLockProps {
  * Custom hook for countdown timer logic
  * Handles timer state, interval cleanup, and timeout callbacks
  *
- * IMPROVED: Only executes timeout if dialog is still open (prevents logout from hidden dialogs)
- * This prevents inactive tabs from logging out the user if their dialog wasn't actually shown
+ * Only executes timeout if dialog is still open (prevents logout from hidden dialogs)
  */
 const useCountdownTimer = (
   open: boolean,
@@ -67,12 +64,10 @@ const useCountdownTimer = (
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Reset state and flag when dialog opens/closes
     if (open) {
       setSeconds(timeoutSeconds);
       hasLoggedOutRef.current = false;
     } else {
-      // Clear interval when dialog closes
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -80,7 +75,6 @@ const useCountdownTimer = (
       return;
     }
 
-    // Clear any existing interval before starting new one
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -101,7 +95,6 @@ const useCountdownTimer = (
       });
     }, 1000);
 
-    // ✅ Ensure cleanup on unmount
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -110,8 +103,6 @@ const useCountdownTimer = (
     };
   }, [open, timeoutSeconds]);
 
-  // ✅ IMPROVED: Separate effect to handle timeout when seconds reach 0
-  // This ensures we check the current 'open' state before executing logout
   useEffect(() => {
     if (seconds <= 0 && open && !hasLoggedOutRef.current) {
       onTimeout();
@@ -132,20 +123,16 @@ function ScreenLock({
 
   const handleRefreshAuthToken = useCallback(async () => {
     try {
-      // Call the parent's onStillHere callback if provided
       if (onStillHere) {
         await onStillHere();
       } else {
-        // Fallback to original behavior
         await lockScreenOnUserIdle(false);
       }
     } catch (error) {
       logger.error("Error in handleRefreshAuthToken", error, {
         component: "ScreenLock"
       });
-      // Error is handled by parent's handleStillHere callback
-      // This just ensures we don't throw unhandled errors
-      throw error; // Re-throw for parent to handle
+      throw error;
     }
   }, [onStillHere]);
 
@@ -208,64 +195,33 @@ function ScreenLock({
 }
 
 /**
- * Custom hook for multi-tab synchronization
- * Handles BroadcastChannel with localStorage fallback
+ * Custom hook for multi-tab UNLOCK synchronization.
  *
- * IMPROVED: Separates "this tab is idle" from "should show lock dialog"
- * - isIdle = THIS tab detected idle (only set by THIS tab's idle timer)
- * - isDialogOpen = Whether to show the dialog (can be from any tab)
- * - This prevents idle timers from being triggered by other tabs' lock events
+ * KEY DESIGN: This hook ONLY handles unlock broadcasts.
+ * Lock events are NOT broadcast — react-idle-timer's crossTab handles activity sharing.
+ * When one tab unlocks (user clicks "I'm still here"), all tabs unlock.
  */
-const useScreenLockSync = (loggedIn: boolean) => {
-  const [isIdle, setIsIdle] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+const useUnlockSync = (loggedIn: boolean) => {
+  const [isLocked, setIsLocked] = useState(false);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
-  const tabIdRef = useRef(Math.random().toString(36).substring(7)); // Unique tab ID
-  const thisTabInitiatedLock = useRef(false); // Track if THIS tab initiated the lock
 
   useEffect(() => {
     if (!loggedIn || typeof window === "undefined") return;
 
     let storageListener: ((e: StorageEvent) => void) | null = null;
 
-    const syncState = (isLocked: boolean, sourceTabId?: string) => {
-      // ✅ IMPROVED: Only lock dialog if the lock came from a DIFFERENT tab
-      // This prevents active tabs from showing dialogs due to other tabs' inactivity
-      const isFromOtherTab = sourceTabId && sourceTabId !== tabIdRef.current;
-
-      logger.info("🔄 Screen lock state sync received", {
-        component: "useScreenLockSync",
-        isLocked,
-        sourceTabId: sourceTabId || "unknown",
-        currentTabId: tabIdRef.current,
-        isFromOtherTab,
-        willApplyDialogLock: isFromOtherTab || !sourceTabId,
-        thisTabInitiatedLock: thisTabInitiatedLock.current
-      });
-
-      // ✅ CRITICAL: Only show dialog if lock came from ANOTHER tab AND this tab didn't initiate it
-      // Never apply isIdle=true from other tabs - only THIS tab's idle timer can set that
-      if ((isFromOtherTab || !sourceTabId) && !isLocked) {
-        // Clear dialog if other tab unlocked
-        setIsDialogOpen(false);
-      } else if (isFromOtherTab && isLocked && !thisTabInitiatedLock.current) {
-        // Show dialog only if another tab locked AND this tab didn't initiate
-        setIsDialogOpen(true);
-      } else if (!sourceTabId && isLocked) {
-        // Fallback: if no sourceTabId, show dialog (backward compatibility)
-        setIsDialogOpen(true);
-      } else {
-        logger.debug("⏭️ Ignoring lock event (same tab or already locked)", {
-          component: "useScreenLockSync",
-          isFromOtherTab,
-          thisTabInitiatedLock: thisTabInitiatedLock.current
+    const handleUnlockMessage = (isUnlocked: boolean) => {
+      if (isUnlocked) {
+        logger.info("Received unlock broadcast from another tab", {
+          component: "useUnlockSync"
         });
+        setIsLocked(false);
       }
     };
 
     const handleBroadcastMessage = (event: MessageEvent) => {
-      if (event.data.type === "SCREEN_LOCK_CHANGED") {
-        syncState(event.data.isLocked, event.data.sourceTabId);
+      if (event.data.type === "SCREEN_UNLOCK") {
+        handleUnlockMessage(true);
       }
     };
 
@@ -273,35 +229,29 @@ const useScreenLockSync = (loggedIn: boolean) => {
       if (event.key === SCREEN_LOCK_CHANNEL) {
         try {
           const data = event.newValue ? JSON.parse(event.newValue) : null;
-          if (data?.type === "SCREEN_LOCK_CHANGED") {
-            syncState(data.isLocked, data.sourceTabId);
+          if (data?.type === "SCREEN_UNLOCK") {
+            handleUnlockMessage(true);
           }
-        } catch (error) {
+        } catch {
           logger.debug("Failed to parse storage event data", {
-            component: "useScreenLockSync"
+            component: "useUnlockSync"
           });
         }
       }
     };
 
     try {
-      // Try BroadcastChannel first
       broadcastChannelRef.current = new BroadcastChannel(SCREEN_LOCK_CHANNEL);
       broadcastChannelRef.current.addEventListener("message", handleBroadcastMessage);
-      logger.debug("✅ BroadcastChannel initialized for multi-tab sync", {
-        component: "useScreenLockSync"
+      logger.debug("BroadcastChannel initialized for unlock sync", {
+        component: "useUnlockSync"
       });
-    } catch (error) {
-      logger.warn(
-        "⚠️ BroadcastChannel not supported, using localStorage fallback for multi-tab sync",
-        {
-          component: "useScreenLockSync",
-          error: (error as Error)?.message
-        }
-      );
+    } catch {
+      logger.warn("BroadcastChannel not supported, using localStorage fallback", {
+        component: "useUnlockSync"
+      });
     }
 
-    // Add localStorage listener as fallback (works even if BroadcastChannel fails)
     window.addEventListener("storage", handleStorageChange);
     storageListener = handleStorageChange;
 
@@ -318,122 +268,95 @@ const useScreenLockSync = (loggedIn: boolean) => {
     };
   }, [loggedIn]);
 
-  const broadcastState = useCallback((isLocked: boolean) => {
-    // ✅ CRITICAL: Track if THIS tab initiated the lock
-    // This prevents our own lock message from triggering dialog on this tab again
-    if (isLocked) {
-      thisTabInitiatedLock.current = true;
-    } else {
-      thisTabInitiatedLock.current = false;
-    }
-
+  const broadcastUnlock = useCallback(() => {
     const message = {
-      type: "SCREEN_LOCK_CHANGED",
-      isLocked,
-      sourceTabId: tabIdRef.current,  // ✅ IMPROVED: Include source tab ID
+      type: "SCREEN_UNLOCK",
       timestamp: Date.now()
     };
 
-    // Try BroadcastChannel first
+    // Try BroadcastChannel first, fall back to localStorage
     if (broadcastChannelRef.current) {
       try {
         broadcastChannelRef.current.postMessage(message);
-        logger.debug("📢 Broadcasted screen lock state change via BroadcastChannel", {
-          component: "useScreenLockSync",
-          isLocked,
-          sourceTabId: tabIdRef.current,
-          thisTabInitiatedLock: thisTabInitiatedLock.current,
-          method: "BroadcastChannel"
+        logger.debug("Broadcasted unlock via BroadcastChannel", {
+          component: "useUnlockSync"
         });
-        return;
-      } catch (error) {
-        logger.debug("Failed to broadcast via BroadcastChannel, falling back to localStorage", {
-          component: "useScreenLockSync",
-          error: (error as Error)?.message
-        });
+      } catch {
+        // Fall through to localStorage
+        _broadcastViaLocalStorage(message);
       }
-    }
-
-    // Fallback: Use localStorage for browsers without BroadcastChannel
-    try {
-      localStorage.setItem(SCREEN_LOCK_CHANNEL, JSON.stringify(message));
-      logger.debug("📢 Broadcasted screen lock state change via localStorage", {
-        component: "useScreenLockSync",
-        isLocked,
-        sourceTabId: tabIdRef.current,
-        thisTabInitiatedLock: thisTabInitiatedLock.current,
-        method: "localStorage"
-      });
-    } catch (error) {
-      logger.debug("Failed to broadcast via localStorage", {
-        component: "useScreenLockSync",
-        error: (error as Error)?.message
-      });
+    } else {
+      _broadcastViaLocalStorage(message);
     }
   }, []);
 
-  return { isIdle, isDialogOpen, setIsIdle, setIsDialogOpen, broadcastState };
+  return { isLocked, setIsLocked, broadcastUnlock };
 };
 
+function _broadcastViaLocalStorage(message: Record<string, unknown>) {
+  try {
+    localStorage.setItem(SCREEN_LOCK_CHANNEL, JSON.stringify(message));
+    // Clean up localStorage after a short delay to avoid stale data
+    setTimeout(() => {
+      try {
+        localStorage.removeItem(SCREEN_LOCK_CHANNEL);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }, 1000);
+  } catch {
+    logger.debug("Failed to broadcast via localStorage", {
+      component: "useUnlockSync"
+    });
+  }
+}
+
 export function IdleTimerContainer({ session }: { session: AuthSession | null }) {
-  const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(false);
   const hasLoggedOutRef = useRef(false);
+  const idleTimerRef = useRef<ReturnType<typeof useIdleTimer> | null>(null);
 
   const loggedIn = !!session?.accessToken;
 
-  // Use custom hook for multi-tab synchronization and state management
-  const { isIdle, isDialogOpen, setIsIdle, setIsDialogOpen, broadcastState } =
-    useScreenLockSync(loggedIn);
+  // Unlock sync hook — only broadcasts/receives UNLOCK events across tabs
+  const { isLocked, setIsLocked, broadcastUnlock } = useUnlockSync(loggedIn);
 
-  /**
-   * State Synchronization Pattern:
-   * - isIdle: Indicates if user is in locked state (always synced with isDialogOpen locally)
-   * - isDialogOpen: Controls dialog visibility and enables multi-tab broadcast
-   * - broadcastState(): Broadcasts state changes to other tabs via BroadcastChannel/localStorage
-   *
-   * When idle: setIsIdle(true), setIsDialogOpen(true), broadcastState(true)
-   * When unlocking: setIsIdle(false), setIsDialogOpen(false), broadcastState(false)
-   */
+  // Token refresh is paused when locked (uses isLocked, not a separate isIdle)
+  const { error: refreshError } = useRefreshToken(Boolean(loggedIn && !isLocked));
 
-  // ✅ Debug: Log when loggedIn status changes
   useEffect(() => {
-    logger.debug("📋 IdleTimerContainer logged-in status", {
-      component: "IdleTimerContainer",
-      loggedIn,
-      hasAccessToken: !!session?.accessToken,
-      session: session
-        ? { user_id: (session as any)?.user_id, user_type: (session as any)?.user_type }
-        : null
-    });
-  }, [loggedIn, session]);
+    if (refreshError) {
+      logger.error("Background token refresh failed - session may be expiring", refreshError, {
+        component: "IdleTimerContainer"
+      });
+      notify({
+        description: "Your session may be expiring. Please save your work and log back in if needed.",
+        type: "warning"
+      });
+    }
+  }, [refreshError]);
 
-  // ✅ Check for persisted lock state on mount (survives page reload)
+  // Check for persisted lock state on mount (survives page reload)
+  // Does NOT broadcast — only restores this tab's own dialog
   useEffect(() => {
     const checkPersistedLockState = async () => {
       try {
-        const isLocked = await checkScreenLockState();
-        logger.debug("🔍 Checking persisted lock state on mount", {
+        const persistedLock = await checkScreenLockState();
+        logger.debug("Checking persisted lock state on mount", {
           component: "IdleTimerContainer",
-          isLocked,
+          isLocked: persistedLock,
           loggedIn
         });
 
-        if (isLocked && loggedIn) {
-          logger.info("🔒 Screen lock state detected from cookie, restoring lock", {
-            component: "IdleTimerContainer",
-            isLocked
-          });
-          setIsIdle(true);
-          setIsDialogOpen(true);
-          broadcastState(true);
-        } else if (!isLocked) {
-          logger.debug("✅ No persisted lock state, starting fresh", {
+        if (persistedLock && loggedIn) {
+          logger.info("Screen lock state detected from cookie, restoring lock locally", {
             component: "IdleTimerContainer"
           });
+          setIsLocked(true);
+          // Do NOT broadcast — other tabs manage their own state
         }
       } catch (error) {
-        logger.error("❌ Error checking persisted lock state", error, {
+        logger.error("Error checking persisted lock state", error, {
           component: "IdleTimerContainer"
         });
       }
@@ -442,126 +365,107 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     if (loggedIn) {
       checkPersistedLockState();
     }
-  }, [loggedIn, setIsIdle, setIsDialogOpen, broadcastState]);
+  }, [loggedIn, setIsLocked]);
 
-  // ✅ Handle background token refresh errors
-  const { error: refreshError } = useRefreshToken(Boolean(loggedIn && !isIdle));
-
-  useEffect(() => {
-    if (refreshError) {
-      logger.error("🔄 Background token refresh failed - session may be expiring", refreshError, {
-        component: "IdleTimerContainer"
-      });
-      notify({
-        description: "⚠️ Your session may be expiring. Please save your work and log back in if needed.",
-        type: "warning"
-      });
-    }
-  }, [refreshError]);
-
-  // ✅ Idle timeout callback - show modal regardless of cookie success
+  // Idle timeout callback — only locks THIS tab, no cross-tab broadcast
   const onIdle = useCallback(async () => {
-    logger.debug("🔒 Idle timeout detected, attempting to lock screen", {
+    logger.debug("Idle timeout detected, locking screen", {
       component: "IdleTimerContainer.onIdle"
     });
 
-    // ✅ CRITICAL: Update local state immediately to prevent multiple triggers
-    setIsIdle(true);
-    setIsDialogOpen(true);
-    broadcastState(true);
+    // Lock this tab immediately
+    setIsLocked(true);
 
+    // Persist to server cookie (async, dialog already shown)
     try {
       const lockSuccess = await lockScreenOnUserIdle(true);
       if (!lockSuccess) {
-        logger.warn("Screen lock cookie not set, but showing modal anyway (user requirement)", {
+        logger.warn("Screen lock cookie not set, but showing modal anyway", {
           component: "IdleTimerContainer.onIdle"
         });
       } else {
-        logger.info("✅ Screen lock activated successfully", {
+        logger.info("Screen lock activated successfully", {
           component: "IdleTimerContainer.onIdle"
         });
       }
     } catch (lockError) {
-      logger.error(
-        "Exception while setting screen lock cookie - will show modal anyway",
-        lockError,
-        {
-          component: "IdleTimerContainer.onIdle"
-        }
-      );
+      logger.error("Exception while setting screen lock cookie", lockError, {
+        component: "IdleTimerContainer.onIdle"
+      });
     }
-  }, [broadcastState, setIsIdle]);
+  }, [setIsLocked]);
 
   const onActive = useCallback(() => {
-    // Don't reset idle state while dialog is open
-    if (isIdle) return;
-    idleTimer.reset();
-  }, [isIdle]);
+    // No-op: we don't need to manually reset because crossTab + syncTimers
+    // handles activity propagation automatically. The timer only fires onIdle
+    // once all tabs are idle.
+  }, []);
 
   const idleTimer = useIdleTimer({
     onIdle,
     onActive,
     timeout: SESSION_CONFIG.IDLE_TIMEOUT,
     throttle: 500,
-    disabled: !loggedIn || isIdle
+    crossTab: true,
+    syncTimers: 200,
+    disabled: !loggedIn || isLocked
   });
+
+  // Keep ref in sync for use in callbacks
+  idleTimerRef.current = idleTimer;
 
   const handleUserLogOut = useCallback(async () => {
     if (hasLoggedOutRef.current) return;
     hasLoggedOutRef.current = true;
 
     setIsLoading(true);
-    // ✅ CRITICAL: Reset all idle-related state consistently
-    setIsIdle(false);
-    setIsDialogOpen(false);
-    broadcastState(false);
 
     try {
-      logger.info("🚪 Logging user out - session timed out", {
+      logger.info("Logging user out - session timed out", {
         component: "IdleTimerContainer.handleUserLogOut"
       });
 
+      // Perform logout FIRST before clearing state
       const response = await logUserOut("User session timed out.");
 
       if (response.success) {
-        logger.info("✅ Logout successful", {
+        logger.info("Logout successful", {
           component: "IdleTimerContainer.handleUserLogOut"
         });
       } else {
-        logger.warn("⚠️ Logout response indicated failure, but proceeding with redirect", {
+        logger.warn("Logout response indicated failure, proceeding with redirect", {
           component: "IdleTimerContainer.handleUserLogOut"
         });
       }
-
-      window.location.replace("/login");
     } catch (error) {
-      logger.error("❌ Logout error", error, {
+      logger.error("Logout error", error, {
         component: "IdleTimerContainer.handleUserLogOut"
       });
-      window.location.replace("/login");
     } finally {
+      // Clear state and broadcast unlock AFTER logout completes
+      setIsLocked(false);
+      broadcastUnlock();
       setIsLoading(false);
+      window.location.replace("/login");
     }
-  }, [broadcastState, setIsIdle]);
+  }, [broadcastUnlock, setIsLocked]);
 
   const handleStillHere = useCallback(async () => {
     setIsLoading(true);
     try {
-      logger.debug("🔓 User clicked 'I'm still here' - attempting to unlock screen", {
+      logger.debug("User clicked 'I'm still here' - attempting to unlock screen", {
         component: "IdleTimerContainer.handleStillHere"
       });
 
       const success = await lockScreenOnUserIdle(false);
 
       if (success) {
-        logger.info("✅ Screen unlocked and session refreshed", {
+        logger.info("Screen unlocked and session refreshed", {
           component: "IdleTimerContainer.handleStillHere"
         });
-        // ✅ CRITICAL: Reset all idle state when unlocking
-        setIsIdle(false);
-        setIsDialogOpen(false);
-        broadcastState(false);
-        idleTimer.reset();
+        setIsLocked(false);
+        broadcastUnlock();
+        idleTimerRef.current?.reset();
         notify({ description: "Session extended. Welcome back!", type: "success" });
         return;
       }
@@ -573,14 +477,12 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
       const refreshResponse = await getRefreshToken();
 
       if (refreshResponse.success) {
-        logger.info("✅ Fallback: Token refreshed successfully", {
+        logger.info("Fallback: Token refreshed successfully", {
           component: "IdleTimerContainer.handleStillHere"
         });
-        // ✅ CRITICAL: Reset all idle state when unlocking
-        setIsIdle(false);
-        setIsDialogOpen(false);
-        broadcastState(false);
-        idleTimer.reset();
+        setIsLocked(false);
+        broadcastUnlock();
+        idleTimerRef.current?.reset();
         notify({ description: "Session restored. You're all set!", type: "success" });
         return;
       }
@@ -592,7 +494,7 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
       notify({ description: "Session expired. Please log in again.", type: "error" });
       await handleUserLogOut();
     } catch (error) {
-      logger.error("❌ Critical error in handleStillHere", error, {
+      logger.error("Critical error in handleStillHere", error, {
         component: "IdleTimerContainer.handleStillHere"
       });
       notify({ description: "An unexpected error occurred. Logging out...", type: "error" });
@@ -600,24 +502,22 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     } finally {
       setIsLoading(false);
     }
-  }, [idleTimer, handleUserLogOut, broadcastState, setIsIdle]);
+  }, [handleUserLogOut, broadcastUnlock, setIsLocked]);
 
   // Debug logging for state changes
   useEffect(() => {
-    logger.debug("🔍 Screen lock state changed", {
+    logger.debug("Screen lock state changed", {
       component: "IdleTimerContainer.render",
-      isIdle,
-      isDialogOpen,
+      isLocked,
       loggedIn
     });
-  }, [isIdle, isDialogOpen, loggedIn]);
+  }, [isLocked, loggedIn]);
 
-  // Render the ScreenLock component when dialog should be open
-  if (!isDialogOpen) return null;
+  if (!isLocked) return null;
 
   return (
     <ScreenLock
-      open={isDialogOpen}
+      open={isLocked}
       onStillHere={handleStillHere}
       isLoading={isLoading}
       handleUserLogOut={handleUserLogOut}
