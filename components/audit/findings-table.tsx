@@ -36,7 +36,6 @@ import {
 import { cn, notify } from "@/lib/utils";
 import { deleteFinding } from "@/app/_actions/audit-module-actions";
 
-
 interface FindingsTableProps {
   findings: Finding[];
   isLoading?: boolean;
