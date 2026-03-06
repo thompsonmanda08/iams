@@ -40,7 +40,6 @@ import {
 } from "@/app/_actions/audit-module-actions";
 import { getGeneralWorkPaperConfigsByTemplateId } from "@/app/_actions/audit-settings-actions";
 import type { WorkpaperInput, TemplateCategory, AuditPlan } from "@/lib/types/audit-types";
-import { useToast } from "./use-toast";
 import { useRouter } from "next/navigation";
 import { Pagination } from "@/lib/types";
 import { capitalize, notify } from "@/lib/utils";
@@ -106,7 +105,6 @@ export const useWorkpaper = (id: string) => {
  */
 export const useCreateWorkpaper = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (input: WorkpaperInput) => {
@@ -139,7 +137,6 @@ export const useCreateWorkpaper = () => {
  */
 export const useUpdateWorkpaper = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<WorkpaperInput> }) => {
@@ -395,7 +392,6 @@ export const useTemplateCategory = (categoryId: string) => {
  */
 export const useCreateTemplateCategory = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (data: TemplateCategory) => {
@@ -429,7 +425,6 @@ export const useCreateTemplateCategory = () => {
  */
 export const useUpdateTemplateCategory = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({
@@ -472,7 +467,6 @@ export const useUpdateTemplateCategory = () => {
  */
 export const useDeleteTemplateCategory = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (categoryId: string) => {

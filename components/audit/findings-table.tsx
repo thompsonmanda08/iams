@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn, notify } from "@/lib/utils";
 import { deleteFinding } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
+
 
 interface FindingsTableProps {
   findings: Finding[];
@@ -84,7 +84,6 @@ const statusConfig = {
 
 export function FindingsTable({ findings, isLoading, onCreateClick }: FindingsTableProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [findingToDelete, setFindingToDelete] = useState<Finding | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);

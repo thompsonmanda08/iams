@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn, notify } from "@/lib/utils";
 import { deleteWorkpaper } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
+
 import { CustomPagination } from "../ui/pagination";
 import { Pagination } from "@/lib/types";
 
@@ -60,7 +60,6 @@ export function WorkpapersTable({
   pagination
 }: WorkpapersTableProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [workpaperToDelete, setWorkpaperToDelete] = useState<Workpaper | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);

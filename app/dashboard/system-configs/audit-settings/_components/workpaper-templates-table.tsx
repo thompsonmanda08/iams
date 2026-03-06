@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { deleteWorkingPaperTemplate } from "@/app/_actions/audit-module-actions";
-import { useToast } from "@/hooks/use-toast";
+
 import { StatusBadge } from "@/components/status-badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
@@ -50,7 +50,6 @@ export function WorkpaperTemplatesTable({
 }: WorkpaperTemplatesTableProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const { checkPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<WorkingPaperTemplate | null>(null);

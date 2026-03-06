@@ -34,7 +34,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
-import { useToast } from "@/hooks/use-toast";
+
 import { StatusBadge } from "@/components/status-badge";
 import {
   AUDIT_QUERY_KEYS,
@@ -182,7 +182,6 @@ export function AnnualPlanItems({
   annualPlan
 }: AnnualAuditPlanItemsTableProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<AnnualPlanItem | null>(INIT_FORM_DATA);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
