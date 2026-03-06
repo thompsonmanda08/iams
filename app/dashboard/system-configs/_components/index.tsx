@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { AppModule, Department, ErrorState } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -19,6 +19,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn, notify } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
+import { useModuleHierarchy } from "@/hooks/use-module-hierarchy";
 
 import { ArrowUpRightIcon } from "lucide-react";
 import {
@@ -181,8 +182,9 @@ const ModuleItem = ({
       key={name}
       htmlFor={backendKey}
       className={cn(
-        "hover:bg-primary/10 border-primary/10 bg-primary/5 relative flex w-full cursor-pointer justify-start gap-2 gap-x-2 rounded-lg border p-3",
-        isParent && "border-primary/30 bg-primary/10 font-semibold"
+        "hover:bg-primary/10 border-primary/10 bg-primary/5 dark:hover:bg-primary/25 dark:border-primary/30 dark:bg-primary/15 relative flex w-full cursor-pointer justify-start gap-2 gap-x-2 rounded-lg border p-3",
+        isParent &&
+          "border-primary/30 bg-primary/10 dark:border-primary/50 dark:bg-primary/25 font-semibold"
       )}>
       <Checkbox
         id={backendKey}
@@ -203,10 +205,14 @@ const ModuleItem = ({
           <PuzzleIcon className="h-4 w-4 text-white" />
         </div>
         <div className="flex w-max flex-col items-start justify-start">
-          <span className={cn("text-sm font-medium text-gray-900", isParent && "text-base")}>
+          <span
+            className={cn(
+              "text-sm font-medium text-gray-900 dark:text-gray-100",
+              isParent && "text-base"
+            )}>
             {displayName}
           </span>
-          <span className="text-xs text-gray-500">{description}</span>
+          <span className="text-xs text-gray-600 dark:text-gray-300">{description}</span>
         </div>
       </div>
     </Label>
@@ -226,13 +232,10 @@ export function ModuleSelection({
   const queryClient = useQueryClient();
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [initialModules, setInitialModules] = useState<string[]>([]);
+  const hasInitialized = useRef(false);
 
-  // Fetch all available modules
-  const { data: modulesResponse, isLoading: modulesLoading } = useQuery({
-    queryKey: [QUERY_KEYS.MODULES],
-    queryFn: () => getModules(),
-    staleTime: 5 * 60 * 1000 // 5 minutes
-  });
+  // Use the new module hierarchy hook
+  const { allGroups, flatModules, isLoading: modulesLoading } = useModuleHierarchy();
 
   // Fetch department modules if departmentId is provided
   const { data: departmentModulesResponse, isLoading: departmentModulesLoading } = useQuery({
@@ -242,23 +245,21 @@ export function ModuleSelection({
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
 
-  // Transform API modules to AppModule format
+  // Map flatModules to AppModule shape — parent_module_id is correct from the store
   const modules: AppModule[] = useMemo(
     () =>
-      modulesResponse?.success && modulesResponse?.data
-        ? (modulesResponse.data?.data as any[]).map((module: any) => ({
-            id: module.id,
-            name: module.name,
-            module_code: module.module_code || module.code || "",
-            href: module.href || "",
-            parent_module_id: module.parent_module_id || null,
-            description: module.description || "",
-            department: "",
-            backendKey: module.id,
-            isActive: module.is_active ?? true
-          }))
-        : [],
-    [modulesResponse]
+      flatModules.map((module) => ({
+        id: module.id,
+        name: module.name,
+        module_code: module.module_code || "",
+        href: module.href || "",
+        parent_module_id: module.parent_module_id,
+        description: module.description || "",
+        department: "",
+        backendKey: module.id,
+        isActive: module.is_active ?? true
+      })),
+    [flatModules]
   );
 
   // Update selected modules when department modules are loaded
@@ -267,11 +268,18 @@ export function ModuleSelection({
       const assignedIds = (departmentModulesResponse.data as any[]).map((module: any) => module.id);
       setSelectedModules(assignedIds);
       setInitialModules(assignedIds);
-    } else if (!departmentId && modules.length > 0 && selectedModules.length === 0) {
-      // If no departmentId, select all modules by default
+      hasInitialized.current = true;
+    } else if (
+      !departmentId &&
+      modules.length > 0 &&
+      selectedModules.length === 0 &&
+      !hasInitialized.current
+    ) {
+      // If no departmentId, select all modules by default (only once)
       const allIds = modules.map((m) => m.backendKey);
       setSelectedModules(allIds);
       setInitialModules(allIds);
+      hasInitialized.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departmentModulesResponse, departmentId, modules.length]);
@@ -283,9 +291,48 @@ export function ModuleSelection({
         throw new Error("Department ID is required to save module assignments");
       }
 
+      console.log("💾 Starting module save:", {
+        departmentId,
+        selectedCount: selectedModules.length,
+        initialCount: initialModules.length
+      });
+
+      // Validate state before saving
+      const validationErrors: string[] = [];
+
+      // Check for orphaned children (child selected without parent)
+      selectedModules.forEach((moduleId) => {
+        const module = modules.find((m) => m.backendKey === moduleId);
+        if (module?.parent_module_id && !selectedModules.includes(module.parent_module_id)) {
+          const parentModule = modules.find((m) => m.backendKey === module.parent_module_id);
+          validationErrors.push(
+            `Child module "${module.name}" is selected but parent "${parentModule?.name || "Unknown"}" is not`
+          );
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        console.error("❌ Validation failed:", validationErrors);
+        throw new Error(`Validation failed:\n${validationErrors.join("\n")}`);
+      }
+
       // Determine which modules to add and which to remove
       const modulesToAdd = selectedModules.filter((id) => !initialModules.includes(id));
       const modulesToRemove = initialModules.filter((id) => !selectedModules.includes(id));
+
+      console.log("📋 Module changes:", {
+        toAdd: modulesToAdd.length,
+        toRemove: modulesToRemove.length,
+        total: selectedModules.length,
+        modulesToAddDetails: modulesToAdd.map((id) => {
+          const m = modules.find((mod) => mod.backendKey === id);
+          return { id, name: m?.name, parent: m?.parent_module_id };
+        }),
+        modulesToRemoveDetails: modulesToRemove.map((id) => {
+          const m = modules.find((mod) => mod.backendKey === id);
+          return { id, name: m?.name, parent: m?.parent_module_id };
+        })
+      });
 
       const results = {
         added: 0,
@@ -295,6 +342,9 @@ export function ModuleSelection({
 
       // Add new module assignments
       for (const moduleId of modulesToAdd) {
+        const module = modules.find((m) => m.backendKey === moduleId);
+        console.log(`  ➕ Adding module: ${module?.name} (${moduleId})`);
+
         const response = await assignModuleToDepartment({
           departmentId,
           moduleId
@@ -302,13 +352,18 @@ export function ModuleSelection({
 
         if (response.success) {
           results.added++;
+          console.log(`    ✅ Added successfully`);
         } else {
           results.errors.push(`Failed to add module: ${response.message}`);
+          console.error(`    ❌ Failed:`, response.message);
         }
       }
 
       // Remove module assignments
       for (const moduleId of modulesToRemove) {
+        const module = modules.find((m) => m.backendKey === moduleId);
+        console.log(`  ➖ Removing module: ${module?.name} (${moduleId})`);
+
         const response = await removeModuleFromDepartment({
           departmentId,
           moduleId
@@ -316,11 +371,14 @@ export function ModuleSelection({
 
         if (response.success) {
           results.removed++;
+          console.log(`    ✅ Removed successfully`);
         } else {
           results.errors.push(`Failed to remove module: ${response.message}`);
+          console.error(`    ❌ Failed:`, response.message);
         }
       }
 
+      console.log("✅ Save complete:", results);
       return results;
     },
     onSuccess: (results) => {
@@ -337,7 +395,10 @@ export function ModuleSelection({
 
         notify({ description: message, type: "success" });
       } else {
-        notify({ description: `Some operations failed: ${results.errors.join(", ")}`, type: "error" });
+        notify({
+          description: `Some operations failed: ${results.errors.join(", ")}`,
+          type: "error"
+        });
       }
 
       // Invalidate queries to refresh data
@@ -359,88 +420,62 @@ export function ModuleSelection({
   const isLoading = modulesLoading || departmentModulesLoading;
   const isSaving = saveModulesMutation.isPending;
 
-  // Helper to categorize modules based on their route and parent-child relationships
+  // Use the module groups from the store instead of local categorization
   const categorizeModules = useMemo(() => {
-    // Initialize categories in the desired order
     const categorized: Record<
       string,
       { parent: AppModule | null; children: AppModule[]; parentId?: string; order: number }
     > = {
       Risk: { parent: null, children: [], order: 1 },
       Audit: { parent: null, children: [], order: 2 },
-      "System Configuration": { parent: null, children: [], order: 3 },
-      Other: { parent: null, children: [], order: 4 }
+      "Module Settings": { parent: null, children: [], order: 3 },
+      "System Configuration": { parent: null, children: [], order: 4 }
     };
 
-    // First pass: identify parent modules (modules with no parent_module_id)
-    const parentModules = modules.filter((m) => !m.parent_module_id);
-    const childModules = modules.filter((m) => m.parent_module_id);
+    // Map store groups to the categorized format
+    allGroups.forEach((group) => {
+      let categoryName = "Module Settings"; // default fallback
 
-    // Categorize parent modules based on their href
-    parentModules.forEach((module) => {
-      const hrefValue = (module.href || "").toLowerCase();
-      const moduleCodeValue = (module.module_code || "").toLowerCase();
-
-      let category = "Other";
-
-      // Determine category based on href path
-      if (hrefValue.includes("/risk")) {
-        category = "Risk";
-      } else if (hrefValue.includes("/audit")) {
-        category = "Audit";
-      } else if (hrefValue.includes("/system-config")) {
-        category = "System Configuration";
-      }
-      // Fallback to module_code if no href match
-      else if (moduleCodeValue.includes("risk")) {
-        category = "Risk";
-      } else if (moduleCodeValue.includes("audit")) {
-        category = "Audit";
-      } else if (
-        moduleCodeValue.includes("system") ||
-        moduleCodeValue.includes("config") ||
-        moduleCodeValue.includes("setting")
-      ) {
-        category = "System Configuration";
+      if (group.category === "risk") {
+        categoryName = "Risk";
+      } else if (group.category === "audit") {
+        categoryName = "Audit";
+      } else if (group.category === "module-settings") {
+        categoryName = "Module Settings";
+      } else if (group.category === "core-settings") {
+        categoryName = "System Configuration";
       }
 
-      categorized[category].parent = module;
-      categorized[category].parentId = module.id;
-    });
-
-    // Categorize child modules based on their parent's category
-    childModules.forEach((module) => {
-      const hrefValue = (module.href || "").toLowerCase();
-      const moduleCodeValue = (module.module_code || "").toLowerCase();
-
-      // Find parent's category
-      let category = "Other";
-      const parentId = module.parent_module_id;
-
-      // Check if this child belongs to any of our identified parents
-      for (const [catName, catData] of Object.entries(categorized)) {
-        if (catData.parentId === parentId) {
-          category = catName;
-          break;
-        }
+      if (group.parent) {
+        categorized[categoryName].parent = {
+          id: group.parent.id,
+          name: group.parent.name,
+          module_code: group.parent.module_code || "",
+          href: group.parent.href || "",
+          parent_module_id: group.parent.parent_module_id,
+          description: group.parent.description || "",
+          department: "",
+          backendKey: group.parent.id,
+          isActive: group.parent.is_active
+        };
+        categorized[categoryName].parentId = group.parent.id;
       }
 
-      // If parent not found in our categories, determine by href/module_code
-      if (category === "Other") {
-        if (hrefValue.includes("/risk") || moduleCodeValue.includes("risk")) {
-          category = "Risk";
-        } else if (hrefValue.includes("/audit") || moduleCodeValue.includes("audit")) {
-          category = "Audit";
-        } else if (hrefValue.includes("/system-config")) {
-          category = "System Configuration";
-        }
-      }
-
-      categorized[category].children.push(module);
+      categorized[categoryName].children = group.children.map((child) => ({
+        id: child.id,
+        name: child.name,
+        module_code: child.module_code || "",
+        href: child.href || "",
+        parent_module_id: child.parent_module_id,
+        description: child.description || "",
+        department: "",
+        backendKey: child.id,
+        isActive: child.is_active
+      }));
     });
 
     return categorized;
-  }, [modules]);
+  }, [allGroups]);
 
   const handleModuleToggle = (moduleId: string) => {
     setSelectedModules((prev) => {
@@ -452,14 +487,20 @@ export function ModuleSelection({
       // Check if this is a parent module (no parent_module_id)
       const isParentModule = !clickedModule.parent_module_id;
 
-      // Find children from categorizeModules — consistent with what is rendered in the UI.
-      // Avoids mismatches when children were matched via href/module_code fallback rather
-      // than by a strict parent_module_id relationship.
+      // Find children using ONLY parent_module_id relationship (not href/module_code fallback)
+      // This ensures consistency between state and what's sent to API
       const childModuleIds = isParentModule
-        ? (Object.values(categorizeModules).find(
-            (cat) => cat.parent?.backendKey === moduleId
-          )?.children.map((c) => c.backendKey) ?? [])
+        ? modules.filter((m) => m.parent_module_id === moduleId).map((m) => m.backendKey)
         : [];
+
+      console.log("🔄 Module Toggle:", {
+        moduleId,
+        moduleName: clickedModule.name,
+        isParentModule,
+        childrenCount: childModuleIds.length,
+        children: childModuleIds,
+        isCurrentlySelected
+      });
 
       // Find the parent of this module (if it's a child)
       const parentModuleId = clickedModule.parent_module_id;
@@ -468,19 +509,23 @@ export function ModuleSelection({
         // DESELECTING
         if (isParentModule) {
           // Deselecting a parent: remove parent and ALL its children
+          console.log("  → Deselecting parent and", childModuleIds.length, "children");
           return prev.filter((id) => id !== moduleId && !childModuleIds.includes(id));
         } else {
           // Deselecting a child: only remove this child (keep parent and other children)
+          console.log("  → Deselecting child only");
           return prev.filter((id) => id !== moduleId);
         }
       } else {
         // SELECTING
         if (isParentModule) {
           // Selecting a parent: add parent and ALL its children
-          const newSelection = [moduleId, ...childModuleIds.filter((id) => !prev.includes(id))];
+          console.log("  → Selecting parent and", childModuleIds.length, "children");
+          const newSelection = [moduleId, ...childModuleIds];
           return [...prev, ...newSelection.filter((id) => !prev.includes(id))];
         } else {
           // Selecting a child: add child AND ensure parent is selected
+          console.log("  → Selecting child and ensuring parent is selected");
           const newSelection = [moduleId];
 
           // Always include the parent if not already selected
@@ -503,7 +548,7 @@ export function ModuleSelection({
         </div>
         <div className="flex w-full flex-col gap-4">
           {/* Info Banner Skeleton */}
-          <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
             <Skeleton className="mb-2 h-5 w-64" />
             <div className="space-y-1">
               <Skeleton className="h-4 w-full" />
@@ -527,7 +572,7 @@ export function ModuleSelection({
                 <div className="border-primary/20 rounded-lg border-2 border-dashed p-4">
                   {/* Parent Module Item */}
                   <div className="hover:bg-primary/10 border-primary/30 bg-primary/10 relative flex w-full gap-2 rounded-lg border p-3">
-                    <Skeleton className="h-4 w-4 absolute top-3 right-2 rounded" />
+                    <Skeleton className="absolute top-3 right-2 h-4 w-4 rounded" />
                     <div className="flex items-center justify-center gap-3 rounded">
                       <Skeleton className="h-8 w-8 rounded" />
                       <div className="flex w-max flex-col items-start justify-start gap-1">
@@ -539,13 +584,13 @@ export function ModuleSelection({
 
                   {/* Child Modules */}
                   <div className="border-primary/20 mt-3 ml-4 space-y-2 border-l-2 pl-4">
-                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="mb-2 h-4 w-24" />
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {[...Array(4)].map((_, childIndex) => (
                         <div
                           key={childIndex}
                           className="hover:bg-primary/10 border-primary/10 bg-primary/5 relative flex w-full gap-2 rounded-lg border p-3">
-                          <Skeleton className="h-4 w-4 absolute top-3 right-2 rounded" />
+                          <Skeleton className="absolute top-3 right-2 h-4 w-4 rounded" />
                           <div className="flex items-center justify-center gap-3 rounded">
                             <Skeleton className="h-8 w-8 rounded" />
                             <div className="flex w-max flex-col items-start justify-start gap-1">
@@ -584,17 +629,17 @@ export function ModuleSelection({
       </div>
       <div className="flex w-full flex-col gap-4">
         {isSaving && (
-          <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-3">
-            <Spinner className="h-4 w-4 text-blue-600" />
-            <span className="text-sm text-blue-600">Saving changes...</span>
+          <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
+            <Spinner className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm text-blue-600 dark:text-blue-400">Saving changes...</span>
           </div>
         )}
 
-        <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
-          <h4 className="mb-2 text-sm font-medium text-blue-900">
+        <div className="rounded-md border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+          <h4 className="mb-2 text-sm font-medium text-blue-900 dark:text-blue-200">
             About Department Module Assignment
           </h4>
-          <div className="space-y-1 text-sm text-blue-700">
+          <div className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
             <p>• Modules assigned here will be available for roles within this department</p>
             <p>• Roles can only receive permissions for modules assigned to their department</p>
             <p>• This implements the department-constrained RBAC system</p>

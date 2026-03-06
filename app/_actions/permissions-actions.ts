@@ -116,6 +116,8 @@ export async function grantOrUpdateRolePermission({
  * Revoke all permissions for a role on a specific module
  * Endpoint: DELETE /api/v1/roles/{role_id}/permissions/{module_id}
  * Status: ✅ Documented in API
+ *
+ * Note: If permission doesn't exist, treats as success (idempotent operation)
  */
 export async function revokeRolePermission({
   roleId,
@@ -131,10 +133,22 @@ export async function revokeRolePermission({
   }
 
   try {
-    // Fixed: Use authenticatedApiClient instead of axios.delete() to ensure proper authentication
     await authenticatedApiClient({ url, method: "DELETE" });
     return successResponse(null, "Permission revoked successfully");
   } catch (error: Error | any) {
+    // If permission doesn't exist (404 or "permission not found"), treat as success
+    // since the goal is to have no permission, and it doesn't exist
+    const errorMessage = error?.response?.data?.error || error?.message || "";
+    const is404 = error?.response?.status === 404 || error?.status === 404;
+    const isNotFound = errorMessage.toLowerCase().includes("not found");
+
+    if (is404 || isNotFound) {
+      console.log(
+        `ℹ️ Permission already doesn't exist for module ${moduleId}, treating as success`
+      );
+      return successResponse(null, "Permission already revoked (didn't exist)");
+    }
+
     return handleError(error, "DELETE", url);
   }
 }
@@ -192,36 +206,75 @@ export async function bulkUpdateRolePermissions({
     return handleBadRequest("Role ID and permissions array are required");
   }
 
-  const results: Array<{ moduleId: string; success: boolean; error?: string }> = [];
+  const results: Array<{
+    moduleId: string;
+    success: boolean;
+    error?: string;
+    action: "grant" | "revoke";
+  }> = [];
 
   try {
     // Process all permissions sequentially to avoid race conditions
     for (const perm of permissions) {
-      const result = await grantOrUpdateRolePermission({
-        roleId,
-        ...perm
-      });
+      // Check if all permissions are false - if so, revoke instead of grant
+      const hasAnyPermission =
+        perm.canView ||
+        perm.canCreate ||
+        perm.canEdit ||
+        perm.canDelete ||
+        perm.canApprove ||
+        perm.canExport ||
+        perm.canAssign ||
+        perm.canConfigure;
 
-      results.push({
-        moduleId: perm.moduleId,
-        success: result.success,
-        error: result.success ? undefined : result.message
-      });
+      let result: APIResponse;
+
+      if (!hasAnyPermission) {
+        // All permissions are false - explicitly revoke
+        console.log(`🗑️ Revoking permission for module: ${perm.moduleId}`);
+        result = await revokeRolePermission({
+          roleId,
+          moduleId: perm.moduleId
+        });
+
+        results.push({
+          moduleId: perm.moduleId,
+          success: result.success,
+          error: result.success ? undefined : result.message,
+          action: "revoke"
+        });
+      } else {
+        // At least one permission is true - grant/update
+        console.log(`✅ Granting permission for module: ${perm.moduleId}`);
+        result = await grantOrUpdateRolePermission({
+          roleId,
+          ...perm
+        });
+
+        results.push({
+          moduleId: perm.moduleId,
+          success: result.success,
+          error: result.success ? undefined : result.message,
+          action: "grant"
+        });
+      }
     }
 
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
+    const revokedCount = results.filter((r) => r.success && r.action === "revoke").length;
+    const grantedCount = results.filter((r) => r.success && r.action === "grant").length;
 
     if (failureCount === 0) {
       return successResponse(
-        { results, successCount, failureCount },
-        `Successfully updated ${successCount} permissions`
+        { results, successCount, failureCount, revokedCount, grantedCount },
+        `Successfully updated ${successCount} permissions (${grantedCount} granted, ${revokedCount} revoked)`
       );
     } else {
       return {
         success: false,
         message: `Updated ${successCount} permissions, ${failureCount} failed`,
-        data: { results, successCount, failureCount },
+        data: { results, successCount, failureCount, revokedCount, grantedCount },
         status: 207, // Multi-Status
         statusText: "PARTIAL_SUCCESS"
       };
@@ -315,7 +368,6 @@ export async function copyRolePermissions({
   sourceRoleId: string;
   targetRoleId: string;
 }): Promise<APIResponse> {
-  
   if (!sourceRoleId || !targetRoleId) {
     return handleBadRequest("Source and target role IDs are required");
   }

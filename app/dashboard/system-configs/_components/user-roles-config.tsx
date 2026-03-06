@@ -17,11 +17,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
-import {
-  getDepartmentModules,
-  createRole,
-  updateRole
-} from "@/app/_actions/config-actions";
+import { getDepartmentModules, createRole, updateRole } from "@/app/_actions/config-actions";
 import { getRolePermissions, bulkUpdateRolePermissions } from "@/app/_actions/permissions-actions";
 import {
   Dialog,
@@ -47,6 +43,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useRoles } from "@/hooks/use-query-data";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useModuleHierarchy } from "@/hooks/use-module-hierarchy";
+import { ModuleGroupCard } from "./module-group-card";
+import type { ModuleGroup } from "@/lib/stores/modules-store";
 
 interface RolesPermissionsProps {
   departmentId: string;
@@ -133,20 +132,67 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     [rolesResponse]
   );
 
-  // Fetch modules assigned to this department
-  const { data: modulesResponse, isLoading: modulesLoading } = useQuery({
+  // Use the new module hierarchy hook
+  const { allGroups, flatModules, isLoading: modulesLoading } = useModuleHierarchy();
+
+  // Fetch department modules to filter only assigned modules
+  const { data: departmentModulesResponse, isLoading: departmentModulesLoading } = useQuery({
     queryKey: [QUERY_KEYS.DEPARTMENT_MODULES, departmentId],
-    queryFn: () => getDepartmentModules(departmentId!),
+    queryFn: () => getDepartmentModules(departmentId),
     enabled: !!departmentId,
     staleTime: 5 * 60 * 1000
   });
 
+  // Get list of module IDs assigned to this department
+  const departmentModuleIds = useMemo(() => {
+    if (departmentModulesResponse?.success && departmentModulesResponse?.data) {
+      return (departmentModulesResponse.data as any[]).map((m: any) => m.id);
+    }
+    return [];
+  }, [departmentModulesResponse]);
+
+  // Filter allGroups to only show modules assigned to this department.
+  // Also prepend the group's parent module as the first row if it is assigned,
+  // so all 22 modules (including the 4 root containers) can have permissions configured.
+  const filteredGroups = useMemo(() => {
+    if (departmentModuleIds.length === 0) {
+      return [];
+    }
+
+    return allGroups
+      .map((group) => {
+        const filteredChildren = group.children.filter((child) =>
+          departmentModuleIds.includes(child.id)
+        );
+        // Include the parent container itself if it's assigned to the department
+        const parentRow =
+          group.parent && departmentModuleIds.includes(group.parent.id) ? [group.parent] : [];
+        return {
+          ...group,
+          children: [...parentRow, ...filteredChildren]
+        };
+      })
+      .filter((group) => group.children.length > 0);
+  }, [allGroups, departmentModuleIds]);
+
+  // Flat list of all modules assigned to this department for permissions matrix initialization
   const modules: Module[] = useMemo(() => {
-    if (!modulesResponse?.success || !modulesResponse?.data) return [];
-    // Handle both modulesResponse.data.data and modulesResponse.data as array
-    const data = modulesResponse.data.data || modulesResponse.data;
-    return Array.isArray(data) ? data : [];
-  }, [modulesResponse]);
+    // If no department modules loaded yet, return empty array
+    if (departmentModuleIds.length === 0) {
+      return [];
+    }
+
+    // All modules assigned to this department (including root containers for permission assignment)
+    return flatModules
+      .filter((m) => departmentModuleIds.includes(m.id))
+      .map((m) => ({
+        id: m.id,
+        name: m.name,
+        description: m.description,
+        parent_module_id: m.parent_module_id,
+        module_code: m.module_code
+      }));
+  }, [flatModules, departmentModuleIds]);
 
   // Fetch permissions for selected role
   const { data: permissionsResponse, isLoading: permissionsLoading } = useQuery({
@@ -256,10 +302,57 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     setHasChanges(true);
   };
 
-  const grantAllPermissions = () => {
+  const grantAllPermissions = useCallback(() => {
     setPermissionsMatrix((prev) => {
       const updated = { ...prev };
-      modules.forEach((module) => {
+      // Grant all for ALL modules across ALL filtered groups
+      filteredGroups.forEach((group) => {
+        group.children.forEach((module) => {
+          updated[module.id] = {
+            can_view: true,
+            can_create: true,
+            can_edit: true,
+            can_delete: true,
+            can_approve: true,
+            can_export: true,
+            can_assign: true,
+            can_configure: true
+          };
+        });
+      });
+      return updated;
+    });
+    setHasChanges(true);
+  }, [filteredGroups]);
+
+  const revokeAllPermissions = useCallback(() => {
+    setPermissionsMatrix((prev) => {
+      const updated = { ...prev };
+      // Revoke all for ALL modules across ALL filtered groups
+      filteredGroups.forEach((group) => {
+        group.children.forEach((module) => {
+          updated[module.id] = {
+            can_view: false,
+            can_create: false,
+            can_edit: false,
+            can_delete: false,
+            can_approve: false,
+            can_export: false,
+            can_assign: false,
+            can_configure: false
+          };
+        });
+      });
+      return updated;
+    });
+    setHasChanges(true);
+  }, [filteredGroups]);
+
+  // Grant all permissions for a specific group
+  const handleGroupGrantAll = useCallback((group: ModuleGroup) => {
+    setPermissionsMatrix((prev) => {
+      const updated = { ...prev };
+      group.children.forEach((module) => {
         updated[module.id] = {
           can_view: true,
           can_create: true,
@@ -274,12 +367,13 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       return updated;
     });
     setHasChanges(true);
-  };
+  }, []);
 
-  const revokeAllPermissions = () => {
+  // Revoke all permissions for a specific group
+  const handleGroupRevokeAll = useCallback((group: ModuleGroup) => {
     setPermissionsMatrix((prev) => {
       const updated = { ...prev };
-      modules.forEach((module) => {
+      group.children.forEach((module) => {
         updated[module.id] = {
           can_view: false,
           can_create: false,
@@ -294,12 +388,52 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       return updated;
     });
     setHasChanges(true);
-  };
+  }, []);
+
+  // Toggle column permissions for a specific group
+  const handleGroupColumnToggle = useCallback(
+    (group: ModuleGroup, permType: PermissionType) => {
+      setPermissionsMatrix((prev) => {
+        // Calculate enabled count from previous state
+        const enabledCount = group.children.filter(
+          (module) => prev[module.id]?.[permType] === true
+        ).length;
+
+        const shouldEnable = enabledCount < group.children.length;
+
+        const updated = { ...prev };
+        group.children.forEach((module) => {
+          updated[module.id] = {
+            ...(updated[module.id] || {
+              can_view: false,
+              can_create: false,
+              can_edit: false,
+              can_delete: false,
+              can_approve: false,
+              can_export: false,
+              can_assign: false,
+              can_configure: false
+            }),
+            [permType]: shouldEnable
+          };
+        });
+        return updated;
+      });
+      setHasChanges(true);
+    },
+    [] // No dependencies needed since we use functional updates
+  );
 
   const toggleColumnPermissions = (permType: PermissionType) => {
-    const allEnabled = modules.every(
+    // Count how many modules have this permission enabled
+    const enabledCount = modules.filter(
       (module) => permissionsMatrix[module.id]?.[permType] === true
-    );
+    ).length;
+
+    // If all are enabled, disable all
+    // Otherwise, enable all (handles both "none enabled" and "some enabled" cases)
+    const shouldEnable = enabledCount < modules.length;
+
     setPermissionsMatrix((prev) => {
       const updated = { ...prev };
       modules.forEach((module) => {
@@ -314,7 +448,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
             can_assign: false,
             can_configure: false
           }),
-          [permType]: !allEnabled
+          [permType]: shouldEnable
         };
       });
       return updated;
@@ -329,43 +463,37 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
         throw new Error("No role selected");
       }
 
-      const permissions = modules
-        .map((module) => {
-          const modulePerms = permissionsMatrix[module.id];
-          return {
-            moduleId: module.id,
-            parentModuleId: module.parent_module_id || null,
-            canView: modulePerms?.can_view || false,
-            canCreate: modulePerms?.can_create || false,
-            canEdit: modulePerms?.can_edit || false,
-            canDelete: modulePerms?.can_delete || false,
-            canApprove: modulePerms?.can_approve || false,
-            canExport: modulePerms?.can_export || false,
-            canAssign: modulePerms?.can_assign || false,
-            canConfigure: modulePerms?.can_configure || false
-          };
-        })
-        .filter((perm) => {
-          // Filter out modules where all permissions are false
-          // API requires at least one permission to be true
-          return (
-            perm.canView ||
-            perm.canCreate ||
-            perm.canEdit ||
-            perm.canDelete ||
-            perm.canApprove ||
-            perm.canExport ||
-            perm.canAssign ||
-            perm.canConfigure
-          );
-        });
+      // Build permissions array - include ALL modules, even those with all false permissions
+      // This allows explicit revocation of permissions
+      const permissions = modules.map((module) => {
+        const modulePerms = permissionsMatrix[module.id] || {
+          can_view: false,
+          can_create: false,
+          can_edit: false,
+          can_delete: false,
+          can_approve: false,
+          can_export: false,
+          can_assign: false,
+          can_configure: false
+        };
+
+        return {
+          moduleId: module.id,
+          parentModuleId: module.parent_module_id || null,
+          canView: modulePerms.can_view || false,
+          canCreate: modulePerms.can_create || false,
+          canEdit: modulePerms.can_edit || false,
+          canDelete: modulePerms.can_delete || false,
+          canApprove: modulePerms.can_approve || false,
+          canExport: modulePerms.can_export || false,
+          canAssign: modulePerms.can_assign || false,
+          canConfigure: modulePerms.can_configure || false
+        };
+      });
 
       console.log("💾 Saving permissions for role:", selectedRole);
-      console.log("📋 Permissions to save:", JSON.stringify(permissions, null, 2));
-
-      if (permissions.length === 0) {
-        throw new Error("At least one module must have permissions enabled");
-      }
+      console.log("📋 Total modules:", modules.length);
+      console.log("📋 Permissions payload:", JSON.stringify(permissions, null, 2));
 
       const response = await bulkUpdateRolePermissions({
         roleId: selectedRole,
@@ -382,15 +510,31 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       console.log("✅ Permissions saved successfully:", response);
 
       // Show detailed success message
-      const { successCount, failureCount } = response.data || {};
+      const { successCount, failureCount, revokedCount, grantedCount, results } =
+        response.data || {};
+
       if (failureCount && failureCount > 0) {
+        // Show which modules failed
+        const failedModules = results
+          ?.filter((r: any) => !r.success)
+          .map((r: any) => {
+            const module = modules.find((m) => m.id === r.moduleId);
+            return `${module?.name || r.moduleId}: ${r.error}`;
+          })
+          .join(", ");
+
         notify({
-          description: `Updated ${successCount || 0} permissions successfully, ${failureCount} failed`,
+          description: `Updated ${successCount || 0} permissions successfully. ${failureCount} failed: ${failedModules}`,
           type: "warning"
         });
       } else {
+        const message =
+          revokedCount && grantedCount
+            ? `Successfully updated ${successCount || modules.length} module(s): ${grantedCount} granted, ${revokedCount} revoked`
+            : `Successfully updated permissions for ${successCount || modules.length} module(s)`;
+
         notify({
-          description: `Successfully updated permissions for ${successCount || modules.length} module(s)`,
+          description: message,
           type: "success"
         });
       }
@@ -403,6 +547,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLE_PERMISSIONS, selectedRole] });
     },
     onError: (error: Error) => {
+      console.error("❌ Failed to save permissions:", error);
       notify({ description: error.message || "Failed to update permissions", type: "error" });
     }
   });
@@ -421,7 +566,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     setConfirmSwitchRole(false);
   };
 
-  const isLoading = rolesLoading || modulesLoading;
+  const isLoading = rolesLoading || modulesLoading || departmentModulesLoading;
   const isSaving = savePermissionsMutation.isPending;
 
   if (!departmentId) {
@@ -670,139 +815,77 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
             </CardContent>
           </Card>
 
-          {/* Permissions Matrix */}
+          {/* Permissions Matrix - Grouped by Module Category */}
           {selectedRole && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <CardTitle>
-                      Permissions for {roles.find((r) => r.id === selectedRole)?.name}
-                    </CardTitle>
-                    <CardDescription>
-                      Configure which modules and actions this role can access
-                    </CardDescription>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={grantAllPermissions}
-                      disabled={isSaving}
-                      className="gap-1.5">
-                      <ShieldCheck className="h-4 w-4 text-green-600" />
-                      Grant All
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={revokeAllPermissions}
-                      disabled={isSaving}
-                      className="gap-1.5">
-                      <ShieldX className="h-4 w-4 text-destructive" />
-                      Revoke All
-                    </Button>
-                  </div>
+            <div className="space-y-6">
+              {/* Header with global actions */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">
+                    Permissions for {roles.find((r) => r.id === selectedRole)?.name}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    Configure which modules and actions this role can access
+                  </p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {permissionsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Spinner className="h-6 w-6" />
-                    <span className="text-muted-foreground ml-2">Loading permissions...</span>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Module</TableHead>
-                          {Object.entries(PERMISSION_LABELS).map(([key, label]) => {
-                            const permType = key as PermissionType;
-                            const allEnabled = modules.every(
-                              (m) => permissionsMatrix[m.id]?.[permType] === true
-                            );
-                            const someEnabled = modules.some(
-                              (m) => permissionsMatrix[m.id]?.[permType] === true
-                            );
-                            return (
-                              <TableHead key={key} className="text-center">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div
-                                        role="button"
-                                        tabIndex={isSaving ? -1 : 0}
-                                        onClick={() => !isSaving && toggleColumnPermissions(permType)}
-                                        onKeyDown={(e) => e.key === "Enter" && !isSaving && toggleColumnPermissions(permType)}
-                                        className="hover:text-primary mx-auto flex cursor-pointer flex-col items-center gap-1 transition-colors aria-disabled:opacity-50"
-                                        aria-disabled={isSaving}>
-                                        <div className="flex items-center gap-1">
-                                          {label}
-                                          <InfoIcon className="text-muted-foreground h-3 w-3" />
-                                        </div>
-                                        <Checkbox
-                                          checked={allEnabled}
-                                          data-state={
-                                            allEnabled
-                                              ? "checked"
-                                              : someEnabled
-                                                ? "indeterminate"
-                                                : "unchecked"
-                                          }
-                                          className="pointer-events-none h-3.5 w-3.5"
-                                          aria-label={`Toggle all ${label} permissions`}
-                                        />
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{allEnabled ? "Disable" : "Enable"} all {label} permissions</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </TableHead>
-                            );
-                          })}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {modules.map((module) => (
-                          <TableRow key={module.id}>
-                            <TableCell className="font-medium">
-                              {formatModuleName(module.name, module.module_code)}
-                            </TableCell>
-                            {Object.keys(PERMISSION_LABELS).map((permType) => (
-                              <TableCell key={permType} className="text-center">
-                                <Switch
-                                  checked={
-                                    permissionsMatrix[module.id]?.[permType as PermissionType] ||
-                                    false
-                                  }
-                                  onCheckedChange={() =>
-                                    togglePermission(module.id, permType as PermissionType)
-                                  }
-                                  disabled={isSaving}
-                                />
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={grantAllPermissions}
+                    disabled={isSaving}
+                    className="gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-green-600" />
+                    Grant All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={revokeAllPermissions}
+                    disabled={isSaving}
+                    className="gap-1.5">
+                    <ShieldX className="text-destructive h-4 w-4" />
+                    Revoke All
+                  </Button>
+                </div>
+              </div>
+
+              {/* Loading State */}
+              {permissionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Spinner className="h-6 w-6" />
+                  <span className="text-muted-foreground ml-2">Loading permissions...</span>
+                </div>
+              ) : (
+                /* Grouped Module Cards */
+                <div className="space-y-6">
+                  {filteredGroups.map((group) => (
+                    <ModuleGroupCard
+                      key={group.id}
+                      group={group}
+                      permissionsMatrix={permissionsMatrix}
+                      onTogglePermission={togglePermission}
+                      onToggleColumnPermissions={(permType) =>
+                        handleGroupColumnToggle(group, permType)
+                      }
+                      onGrantAll={() => handleGroupGrantAll(group)}
+                      onRevokeAll={() => handleGroupRevokeAll(group)}
+                      disabled={isSaving}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Save Button */}
           {selectedRole && (
-            <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
               <div>
-                <p className="text-sm font-medium text-amber-900">
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
                   {hasChanges ? "You have unsaved changes" : "All changes saved"}
                 </p>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-sm text-amber-700 dark:text-amber-300">
                   {hasChanges
                     ? "Click 'Save Permissions' to apply your changes"
                     : "Permissions are up to date"}
@@ -891,7 +974,10 @@ function CreateOrUpdateRoleDialog({
     },
     onSuccess: (response) => {
       if (response.success) {
-        notify({ description: `Role ${initialData ? "updated" : "created"} successfully`, type: "success" });
+        notify({
+          description: `Role ${initialData ? "updated" : "created"} successfully`,
+          type: "success"
+        });
         // Invalidate roles query with matching params object
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.ROLES, { departmentId }]
