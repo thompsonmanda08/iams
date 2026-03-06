@@ -23,7 +23,7 @@ export const ReportHeader = () => {
       console.log("Report data:", report);
 
       // Generate PDF directly on client side
-      const blob = await pdf(<PDFDocument report={report} findings={[]} />).toBlob();
+      const blob = await pdf(<PDFDocument report={report} findings={[]} generalFindings={[]} generalFindingsConfig={null} />).toBlob();
 
       console.log("PDF blob generated, size:", blob.size);
 

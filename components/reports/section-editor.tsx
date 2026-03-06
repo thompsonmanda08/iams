@@ -11,11 +11,15 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Monitor,
+  Smartphone
 } from "lucide-react";
 import {
   ReportSection,
   FindingSummary,
+  GeneralFindingSummary,
+  GeneralFindingsConfig,
   TableColumn,
   DataSource,
   SectionType,
@@ -33,6 +37,9 @@ import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog"
 import { BarChartWidget } from "./bar-chart-widget";
 import { RiskObjectiveMappingTable } from "./risk-objective-mapping-table";
 import { WidgetManager } from "./widget-manager";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getEffectiveOrientation } from "@/lib/utils/report-utils";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -45,6 +52,9 @@ interface SectionEditorProps {
   onSubHeaderChange: (subHeader: string) => void;
   onContentChange: (content: string) => void;
   onFindingsSelectionChange?: (selectedIds: string[]) => void;
+  generalFindings?: GeneralFindingSummary[];
+  generalFindingsConfig?: GeneralFindingsConfig | null;
+  isGeneralFramework?: boolean;
   onFieldValuesChange?: (fieldValues: DynamicSectionData) => void;
   onSchemaChange?: (fields: ReportField[]) => void;
   // Widget management props
@@ -64,6 +74,7 @@ interface SectionEditorProps {
   entityId?: string;
   entityType?: ReportEntityType;
   // Section management
+  onOrientationChange?: (orientation: "portrait" | "landscape" | undefined) => void;
   onMove?: (direction: "up" | "down") => void;
   onDelete?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
@@ -79,6 +90,9 @@ export const SectionEditor = ({
   onSubHeaderChange,
   onContentChange,
   onFindingsSelectionChange,
+  generalFindings,
+  generalFindingsConfig,
+  isGeneralFramework,
   onFieldValuesChange,
   onSchemaChange,
   onWidgetColumnsChange,
@@ -94,6 +108,7 @@ export const SectionEditor = ({
   onToggleTableManualOverride,
   entityId,
   entityType,
+  onOrientationChange,
   onMove,
   onDelete,
   onDragStart,
@@ -197,6 +212,39 @@ export const SectionEditor = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {section.section_type !== "cover_page" && onOrientationChange && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const next = !section.page_orientation
+                      ? "portrait"
+                      : section.page_orientation === "portrait"
+                        ? "landscape"
+                        : undefined;
+                    onOrientationChange(next);
+                  }}
+                  className={cn(
+                    "mr-2 rounded p-1 hover:bg-card hover:shadow-sm",
+                    section.page_orientation
+                      ? "text-primary hover:text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}>
+                  {(section.page_orientation || getEffectiveOrientation(section)) === "landscape" ? (
+                    <Monitor className="h-4 w-4" />
+                  ) : (
+                    <Smartphone className="h-4 w-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {section.page_orientation
+                  ? `${section.page_orientation === "landscape" ? "Landscape" : "Portrait"} (manual)`
+                  : `${getEffectiveOrientation(section) === "landscape" ? "Landscape" : "Portrait"} (auto)`}
+              </TooltipContent>
+            </Tooltip>
+          )}
           {onMove && (
             <div className="mr-2 flex gap-1 border-r border-border pr-2">
               <button
@@ -284,6 +332,9 @@ export const SectionEditor = ({
                 findings={validFindings}
                 selectedIds={section.selected_finding_ids || []}
                 onSelectionChange={onFindingsSelectionChange || (() => {})}
+                generalFindings={generalFindings}
+                generalFindingsConfig={generalFindingsConfig}
+                isGeneralFramework={isGeneralFramework}
               />
             )}
 

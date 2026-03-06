@@ -1,6 +1,13 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet, Svg, Path } from "@react-pdf/renderer";
-import { ReportContent, FindingSummary } from "@/lib/types/report-types";
+import {
+  ReportContent,
+  FindingSummary,
+  GeneralFindingSummary,
+  GeneralFindingsConfig,
+  ReportSection
+} from "@/lib/types/report-types";
+import { getEffectiveOrientation } from "@/lib/utils/report-utils";
 import { DetailedCoverPage } from "./cover-page";
 
 // Define styles
@@ -164,9 +171,34 @@ const createStyles = (primaryColor: string, secondaryColor: string) =>
 interface PDFDocumentProps {
   report: ReportContent;
   findings: FindingSummary[];
+  generalFindings?: GeneralFindingSummary[];
+  generalFindingsConfig?: GeneralFindingsConfig | null;
 }
 
-export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) => {
+// ─── General Findings PDF Helpers ────────────────────────────────────────────
+
+function getColumnValuePdf(finding: GeneralFindingSummary, colKey: string): string {
+  for (const col of finding.columns ?? []) {
+    if (col.key === colKey) return col.value ?? "—";
+    if ((col as any)[colKey] !== undefined) return String((col as any)[colKey]) || "—";
+  }
+  return "—";
+}
+
+function getKeyValuePdf(finding: GeneralFindingSummary, keyKey: string): any {
+  for (const k of finding.keys ?? []) {
+    if (k.key === keyKey) return k.value ?? null;
+    if ((k as any)[keyKey] !== undefined) return (k as any)[keyKey];
+  }
+  return null;
+}
+
+export const PDFDocument: React.FC<PDFDocumentProps> = ({
+  report,
+  findings,
+  generalFindings = [],
+  generalFindingsConfig
+}) => {
   const primaryColor = report.branding?.primary_color || "#1e40af";
   const secondaryColor = report.branding?.secondary_color || "#64748b";
   const styles = createStyles(primaryColor, secondaryColor);
@@ -220,6 +252,19 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
     }
   };
 
+  // Group consecutive content sections by effective page orientation
+  const sectionGroups: { orientation: "portrait" | "landscape"; sections: typeof contentSections }[] =
+    [];
+  contentSections.forEach((section) => {
+    const orientation = getEffectiveOrientation(section);
+    const lastGroup = sectionGroups[sectionGroups.length - 1];
+    if (lastGroup && lastGroup.orientation === orientation) {
+      lastGroup.sections.push(section);
+    } else {
+      sectionGroups.push({ orientation, sections: [section] });
+    }
+  });
+
   const Watermark = () => {
     return (
       <View style={styles.watermark} fixed>
@@ -247,14 +292,17 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
         </Page>
       )}
 
-      {/* All Content Sections on Same Page (flows naturally) */}
-      <Page size="A4" style={styles.page}>
-        <Watermark />
-        {contentSections.map((section, sectionIndex) => (
-          <View key={section.section_id} style={{ marginBottom: 30 }}>
-            <Text style={styles.sectionTitle}>
-              {sectionIndex + 1}. {section.header}
-            </Text>
+      {/* Content Sections — grouped by page orientation */}
+      {sectionGroups.map((group, groupIndex) => (
+        <Page key={groupIndex} size="A4" orientation={group.orientation} style={styles.page}>
+          <Watermark />
+          {group.sections.map((section) => {
+            const globalIndex = contentSections.indexOf(section);
+            return (
+              <View key={section.section_id} style={{ marginBottom: 30 }}>
+                <Text style={styles.sectionTitle}>
+                  {globalIndex + 1}. {section.header}
+                </Text>
             <View style={styles.sectionContent}>
               {/* Section content */}
               {section.content && <Text style={styles.textContent}>{section.content}</Text>}
@@ -262,49 +310,135 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
               {/* Findings table for findings_selector sections */}
               {(section.section_type === "compliance_findings" ||
                 section.section_type === "findings_selector") &&
-                section.selected_finding_ids && (
-                  <View style={styles.table} wrap>
-                    <View style={[styles.tableRow, styles.tableHeader]} minPresenceAhead={50}>
-                      <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Ref</Text>
-                      <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Clause</Text>
-                      <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Finding</Text>
-                      <Text style={[styles.tableCellHeader, { flex: 1.25 }]}>Status</Text>
-                      <Text style={[styles.tableCellHeader, { flex: 2 }]}>Observation</Text>
-                    </View>
-                    {findings
-                      .filter((f) => section.selected_finding_ids?.includes(f.id))
-                      .map((finding) => (
-                        <View key={finding.id} style={styles.tableRow} wrap={false}>
-                          <Text style={[styles.tableCell, { flex: 0.25 }]}>
-                            {finding.reference_code}
-                          </Text>
-                          <Text style={[styles.tableCell, { flex: 0.25 }]}>
-                            {finding.clause_number || ""}
-                          </Text>
-                          <View style={[styles.tableCell, { flex: 1.5 }]}>
-                            <Text style={{ fontSize: 10 }}>{finding.title}</Text>
-                            {finding.clause_description && (
-                              <Text style={{ fontSize: 8, color: "#6b7280", marginTop: 2 }}>
-                                {finding.clause_description}
+                section.selected_finding_ids &&
+                (report.management_standard?.toUpperCase() === "GENERAL"
+                  ? /* General findings table */
+                    (() => {
+                      const selectedGeneral = generalFindings.filter((f) =>
+                        section.selected_finding_ids?.includes(f.id)
+                      );
+                      const cfgColumns = generalFindingsConfig?.columns ?? [];
+                      const cfgKeys = generalFindingsConfig?.keys ?? [];
+                      const totalCols = cfgColumns.length + cfgKeys.length + 4;
+                      const fs = totalCols > 8 ? 7 : totalCols > 6 ? 8 : 9;
+
+                      return (
+                        <View style={styles.table} wrap>
+                          <View style={[styles.tableRow, styles.tableHeader]} minPresenceAhead={50}>
+                            <Text style={[styles.tableCellHeader, { flex: 0.3, fontSize: fs }]}>
+                              #
+                            </Text>
+                            {cfgColumns.map((col) => (
+                              <Text
+                                key={col.key}
+                                style={[styles.tableCellHeader, { flex: 1, fontSize: fs }]}>
+                                {col.name}
                               </Text>
-                            )}
-                          </View>
-                          <View style={[styles.tableCell, { flex: 1.25 }]}>
-                            <Text
-                              style={[
-                                styles.badge,
-                                getConformityStyle(finding.conformity_status || "")
-                              ]}>
-                              {getConformityLabel(finding.conformity_status || "")}
+                            ))}
+                            {cfgKeys.map((k) => (
+                              <Text
+                                key={k.key}
+                                style={[
+                                  styles.tableCellHeader,
+                                  { flex: 0.6, fontSize: fs, backgroundColor: "#fef3c7" }
+                                ]}>
+                                {k.name}
+                              </Text>
+                            ))}
+                            <Text style={[styles.tableCellHeader, { flex: 1.5, fontSize: fs }]}>
+                              Observation
+                            </Text>
+                            <Text style={[styles.tableCellHeader, { flex: 1.5, fontSize: fs }]}>
+                              Comments
+                            </Text>
+                            <Text style={[styles.tableCellHeader, { flex: 0.6, fontSize: fs }]}>
+                              Status
                             </Text>
                           </View>
-                          <Text style={[styles.tableCell, { flex: 2 }]}>
-                            {finding.observation || ""}
-                          </Text>
+                          {selectedGeneral.map((finding, idx) => (
+                            <View key={finding.id} style={styles.tableRow} wrap={false}>
+                              <Text style={[styles.tableCell, { flex: 0.3, fontSize: fs }]}>
+                                {idx + 1}
+                              </Text>
+                              {cfgColumns.map((col) => (
+                                <Text
+                                  key={col.key}
+                                  style={[styles.tableCell, { flex: 1, fontSize: fs }]}>
+                                  {getColumnValuePdf(finding, col.key)}
+                                </Text>
+                              ))}
+                              {cfgKeys.map((k) => {
+                                const val = getKeyValuePdf(finding, k.key);
+                                return (
+                                  <Text
+                                    key={k.key}
+                                    style={[styles.tableCell, { flex: 0.6, fontSize: fs }]}>
+                                    {typeof val === "boolean"
+                                      ? val
+                                        ? "Yes"
+                                        : "No"
+                                      : (val ?? "—")}
+                                  </Text>
+                                );
+                              })}
+                              <Text style={[styles.tableCell, { flex: 1.5, fontSize: fs }]}>
+                                {finding.audit_observation || "—"}
+                              </Text>
+                              <Text style={[styles.tableCell, { flex: 1.5, fontSize: fs }]}>
+                                {finding.audit_comments || "—"}
+                              </Text>
+                              <Text style={[styles.tableCell, { flex: 0.6, fontSize: fs }]}>
+                                {finding.status || "—"}
+                              </Text>
+                            </View>
+                          ))}
                         </View>
-                      ))}
-                  </View>
-                )}
+                      );
+                    })()
+                  : /* Compliance findings table */
+                    (
+                      <View style={styles.table} wrap>
+                        <View style={[styles.tableRow, styles.tableHeader]} minPresenceAhead={50}>
+                          <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Ref</Text>
+                          <Text style={[styles.tableCellHeader, { flex: 0.25 }]}>Clause</Text>
+                          <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Finding</Text>
+                          <Text style={[styles.tableCellHeader, { flex: 1.25 }]}>Status</Text>
+                          <Text style={[styles.tableCellHeader, { flex: 2 }]}>Observation</Text>
+                        </View>
+                        {findings
+                          .filter((f) => section.selected_finding_ids?.includes(f.id))
+                          .map((finding) => (
+                            <View key={finding.id} style={styles.tableRow} wrap={false}>
+                              <Text style={[styles.tableCell, { flex: 0.25 }]}>
+                                {finding.reference_code}
+                              </Text>
+                              <Text style={[styles.tableCell, { flex: 0.25 }]}>
+                                {finding.clause_number || ""}
+                              </Text>
+                              <View style={[styles.tableCell, { flex: 1.5 }]}>
+                                <Text style={{ fontSize: 10 }}>{finding.title}</Text>
+                                {finding.clause_description && (
+                                  <Text style={{ fontSize: 8, color: "#6b7280", marginTop: 2 }}>
+                                    {finding.clause_description}
+                                  </Text>
+                                )}
+                              </View>
+                              <View style={[styles.tableCell, { flex: 1.25 }]}>
+                                <Text
+                                  style={[
+                                    styles.badge,
+                                    getConformityStyle(finding.conformity_status || "")
+                                  ]}>
+                                  {getConformityLabel(finding.conformity_status || "")}
+                                </Text>
+                              </View>
+                              <Text style={[styles.tableCell, { flex: 2 }]}>
+                                {finding.observation || ""}
+                              </Text>
+                            </View>
+                          ))}
+                      </View>
+                    ))}
 
               {/* Widgets */}
               {section.widgets?.map((widget) => (
@@ -1327,8 +1461,10 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ report, findings }) =>
               ))}
             </View>
           </View>
-        ))}
-      </Page>
+            );
+          })}
+        </Page>
+      ))}
     </Document>
   );
 };

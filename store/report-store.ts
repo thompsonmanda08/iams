@@ -3,6 +3,8 @@ import type {
   ReportContent,
   ReportSection,
   FindingSummary,
+  GeneralFindingSummary,
+  GeneralFindingsConfig,
   TableColumn,
   DataSource,
   ReportEntityType,
@@ -28,6 +30,8 @@ interface ReportState {
   // Data State
   report: ReportContent | null;
   findings: FindingSummary[];
+  generalFindings: GeneralFindingSummary[];
+  generalFindingsConfig: GeneralFindingsConfig | null;
   dataSources: DataSource[];
   isLoading: boolean;
   entityId: string | null;
@@ -42,6 +46,7 @@ interface ReportState {
   setReport: (report: ReportContent) => void;
   updateReportMetadata: (updates: Partial<ReportContent>) => void;
   setFindings: (findings: FindingSummary[]) => void;
+  setGeneralFindings: (findings: GeneralFindingSummary[], config: GeneralFindingsConfig | null) => void;
   setDataSources: (dataSources: DataSource[]) => void;
   setLoading: (isLoading: boolean) => void;
   setEntityId: (id: string | null) => void;
@@ -82,6 +87,8 @@ interface ReportState {
 const initialState = {
   report: null,
   findings: [],
+  generalFindings: [],
+  generalFindingsConfig: null,
   dataSources: [],
   isLoading: false,
   entityId: null,
@@ -102,6 +109,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
     })),
 
   setFindings: (findings) => set({ findings }),
+  setGeneralFindings: (generalFindings, generalFindingsConfig) =>
+    set({ generalFindings, generalFindingsConfig }),
   setDataSources: (dataSources) => set({ dataSources }),
   setLoading: (isLoading) => set({ isLoading }),
   setEntityId: (entityId) => set({ entityId }),

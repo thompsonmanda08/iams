@@ -1,4 +1,4 @@
-import type { ReportSection } from "@/lib/types/report-types";
+import type { ReportSection, PieChartSlice } from "@/lib/types/report-types";
 import { buildSectionTree, flattenSectionTree } from "./report-hierarchy-utils";
 
 /**
@@ -13,12 +13,6 @@ export interface BarChartData {
   }>;
 }
 
-export interface PieChartSlice {
-  label: string;
-  value: number;
-  color: string;
-}
-
 export interface RiskObjectiveMappingData {
   objectives: Array<{
     id: string;
@@ -31,6 +25,44 @@ export interface RiskObjectiveMappingData {
     description: string;
     mappedObjectives: string[];
   }>;
+}
+
+/**
+ * Determines the effective page orientation for a report section.
+ * Manual override takes priority. Otherwise, auto-detects from content:
+ * - Wide tables (5+ columns) → landscape
+ * - Charts (bar, pie, line, area) → landscape
+ * - Risk objective mapping → landscape
+ * - Findings selector / compliance findings → landscape
+ * - Everything else → portrait
+ */
+export function getEffectiveOrientation(section: ReportSection): "portrait" | "landscape" {
+  if (section.page_orientation) return section.page_orientation;
+
+  if (section.widgets?.length > 0) {
+    for (const widget of section.widgets) {
+      if (widget.widget_type === "table" && widget.data?.columns?.length >= 5) {
+        return "landscape";
+      }
+      if (
+        ["bar_chart", "pie_chart", "line_chart", "area_chart"].includes(widget.widget_type)
+      ) {
+        return "landscape";
+      }
+      if (widget.widget_type === "risk_objective_mapping") {
+        return "landscape";
+      }
+    }
+  }
+
+  if (
+    section.section_type === "findings_selector" ||
+    section.section_type === "compliance_findings"
+  ) {
+    return "landscape";
+  }
+
+  return "portrait";
 }
 
 /**

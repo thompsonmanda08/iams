@@ -17,10 +17,10 @@ import {
   fetchWidgetData as fetchWidgetDataAction,
   getReportByEntityId
 } from "@/app/_actions/reports-actions";
+import { getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
 import type { ReportContent, ReportEntityType, ReportRecord } from "@/lib/types/report-types";
 import { QUERY_KEYS } from "@/lib/constants";
 import { notify } from "@/lib/utils";
-import { en } from "zod/v4/locales";
 
 // Extend QUERY_KEYS if not already present
 const REPORT_QUERY_KEYS = {
@@ -38,7 +38,8 @@ const REPORT_QUERY_KEYS = {
  */
 export function useReportFetching(entityId?: string, entityType?: ReportEntityType) {
   const queryClient = useQueryClient();
-  const { setFindings, setDataSources, setLoading, setEntityId, setEntityType } = useReportStore();
+  const { setFindings, setGeneralFindings, setDataSources, setLoading, setEntityId, setEntityType } =
+    useReportStore();
 
   // Set entity ID and type in store
   useEffect(() => {
@@ -71,6 +72,26 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
     enabled: entityType === "audit_plan" && !!entityId
   });
 
+  // Fetch general findings for the entity (only for audit plans)
+  const { data: generalFindingsResult, isLoading: isGeneralFindingsLoading } = useQuery({
+    queryKey: [REPORT_QUERY_KEYS.REPORT_FINDINGS, "general", entityId],
+    queryFn: async () => {
+      if (entityType !== "audit_plan" || !entityId) return null;
+      const result = await getWorkpaperByAuditPlanId(entityId);
+      if (!result.success) return null;
+
+      const workpaper = result.data;
+      const generalFindings = workpaper?.general_findings ?? [];
+      const config = workpaper?.config?.[0] ?? null;
+
+      return {
+        findings: generalFindings,
+        config: config ? { columns: config.columns ?? [], keys: config.keys ?? [] } : null
+      };
+    },
+    enabled: entityType === "audit_plan" && !!entityId
+  });
+
   // Fetch data sources
   const { data: dataSourcesResult, isLoading: isDataSourcesLoading } = useQuery({
     queryKey: [REPORT_QUERY_KEYS.REPORT_DATA_SOURCES],
@@ -90,12 +111,23 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
   }, [findingsResult, setFindings]);
 
   useEffect(() => {
+    if (generalFindingsResult) {
+      setGeneralFindings(
+        generalFindingsResult.findings ?? [],
+        generalFindingsResult.config ?? null
+      );
+    }
+  }, [generalFindingsResult, setGeneralFindings]);
+
+  useEffect(() => {
     if (dataSourcesResult) setDataSources(dataSourcesResult);
   }, [dataSourcesResult, setDataSources]);
 
   useEffect(() => {
-    setLoading(isReportLoading || isFindingsLoading || isDataSourcesLoading);
-  }, [isReportLoading, isFindingsLoading, isDataSourcesLoading, setLoading]);
+    setLoading(
+      isReportLoading || isFindingsLoading || isGeneralFindingsLoading || isDataSourcesLoading
+    );
+  }, [isReportLoading, isFindingsLoading, isGeneralFindingsLoading, isDataSourcesLoading, setLoading]);
 
   // Save mutation - now passes entityId and entityType separately since they're not in ReportContent
   const saveMutation = useMutation({
@@ -180,7 +212,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
   });
 
   return {
-    isLoading: isReportLoading || isFindingsLoading || isDataSourcesLoading,
+    isLoading: isReportLoading || isFindingsLoading || isGeneralFindingsLoading || isDataSourcesLoading,
     saveReport: saveMutation.mutate,
     isSaving: saveMutation.isPending,
     publishReport: publishMutation.mutate,

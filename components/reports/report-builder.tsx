@@ -114,6 +114,8 @@ export function ReportBuilder({
   const {
     report,
     findings,
+    generalFindings,
+    generalFindingsConfig,
     isLoading,
     expandedSections,
     isAddSectionModalOpen,
@@ -136,6 +138,8 @@ export function ReportBuilder({
     toggleTableManualOverride,
     changeManagementStandard
   } = useReportStore();
+
+  const isGeneralFramework = report?.management_standard?.toUpperCase() === "GENERAL";
 
   // Pass the entity ID and type for findings fetching
   const entityIdForFetching = entityType === "audit_plan" ? entity.id : undefined;
@@ -516,7 +520,7 @@ export function ReportBuilder({
     setExportError(null);
 
     try {
-      const blob = await pdf(<PDFDocument report={report} findings={findings} />).toBlob();
+      const blob = await pdf(<PDFDocument report={report} findings={findings} generalFindings={generalFindings} generalFindingsConfig={generalFindingsConfig} />).toBlob();
 
       if (blob.size === 0) {
         throw new Error("Generated PDF is empty");
@@ -940,9 +944,15 @@ export function ReportBuilder({
                     updateSection(section.section_id, { sub_header })
                   }
                   onContentChange={(content) => updateSection(section.section_id, { content })}
+                  onOrientationChange={(page_orientation) =>
+                    updateSection(section.section_id, { page_orientation })
+                  }
                   onFindingsSelectionChange={(selected_finding_ids) =>
                     updateSection(section.section_id, { selected_finding_ids })
                   }
+                  generalFindings={generalFindings}
+                  generalFindingsConfig={generalFindingsConfig}
+                  isGeneralFramework={isGeneralFramework}
                   onFieldValuesChange={(field_values: DynamicSectionData) =>
                     updateSection(section.section_id, { field_values })
                   }

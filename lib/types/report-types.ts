@@ -112,6 +112,24 @@ export interface FindingSummary {
   updated_by?: string;
 }
 
+/** General finding as returned from the general workpaper findings API */
+export interface GeneralFindingSummary {
+  id: string;
+  columns: { key: string; value: any }[];
+  keys: { key: string; value: any }[];
+  audit_observation?: string;
+  audit_comments?: string;
+  evidence?: string;
+  status: string;
+  created_at?: string;
+}
+
+/** Config describing the dynamic column/key structure for general findings */
+export interface GeneralFindingsConfig {
+  columns: { key: string; name: string; type: string; description?: string }[];
+  keys: { key: string; name: string; type: string; description?: string }[];
+}
+
 export interface ReportSection {
   section_id: string;
   section_type: SectionType;
@@ -126,6 +144,8 @@ export interface ReportSection {
   fields?: ReportField[];
   field_values?: DynamicSectionData;
   parent_section_id?: string | null;
+  /** Page orientation for PDF rendering. undefined = auto-detect from content. */
+  page_orientation?: "portrait" | "landscape";
 }
 
 export interface SectionTreeNode extends ReportSection {

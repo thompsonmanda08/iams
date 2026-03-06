@@ -34,7 +34,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
   onClose,
   reportTitle
 }) => {
-  const { report, findings } = useReportStore();
+  const { report, findings, generalFindings, generalFindingsConfig } = useReportStore();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +84,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
       console.log("Generating PDF with report:", report.title);
 
       // Generate PDF directly on client side
-      const blob = await pdf(<PDFDocument report={report} findings={findings} />).toBlob();
+      const blob = await pdf(<PDFDocument report={report} findings={findings} generalFindings={generalFindings} generalFindingsConfig={generalFindingsConfig} />).toBlob();
 
       console.log("PDF blob generated, size:", blob.size);
 
