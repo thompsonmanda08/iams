@@ -92,8 +92,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     });
   };
 
-  console.log("LOG>>>>:", actions);
-
   // Check if action is overdue
   const isOverdue = (dueDate: string, status: string) => {
     if (status === "COMPLETED" || status === "CANCELLED") return false;
@@ -199,7 +197,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                           <div className="text-muted-foreground text-xs">
                             ID:{" "}
                             {action?.risk_id?.slice(0, 8) ||
-                              actionDef.incident_log.incident_id?.slice(0, 8)}
+                              actionDef?.incident_log?.incident_id?.slice(0, 8)}
                             ...
                           </div>
                         </div>

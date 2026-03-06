@@ -11,20 +11,19 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, X, Upload, CloudUpload } from "lucide-react";
-import { notify } from "@/lib/utils";
+import { Loader2, X, CloudUpload } from "lucide-react";
+
 import { IncidentData } from "@/lib/types/incidents-types";
 import { sendIncidentForReview } from "@/app/_actions/incident-actions";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { useUsers } from "@/hooks/use-users-query-data";
-
-import { format } from "date-fns";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useQueryClient } from "@tanstack/react-query";
+import { notify } from "@/lib/utils";
 
 interface SendForReviewDialogProps {
   open: boolean;
@@ -42,6 +41,7 @@ interface FormData {
 }
 
 export function SendForReviewDialog({ open, onOpenChange, incident }: SendForReviewDialogProps) {
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<FormData>({
     responsible_person_id: "",
     reviewer_id: "",
@@ -165,6 +165,7 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
           comment: "",
           file_urls: []
         });
+        queryClient.invalidateQueries({ queryKey: ["incidents"] });
       } else {
         notify({ description: response.message || "Failed to send for review", type: "error" });
       }

@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -51,20 +52,19 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { IncidentData } from "@/lib/types/incidents-types";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { SendForReviewDialog } from "./send-for-review-dialog";
 
 export function MyIncidents() {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [incidents, setIncidents] = useState<IncidentData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIncident, setSelectedIncident] = useState<IncidentData | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [sendForReviewDialogOpen, setSendForReviewDialogOpen] = useState(false);
-  const [selectedIncidentForReview, setSelectedIncidentForReview] = useState<IncidentData | null>(null);
+  const [selectedIncidentForReview, setSelectedIncidentForReview] = useState<IncidentData | null>(
+    null
+  );
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -82,40 +82,30 @@ export function MyIncidents() {
     incidentId: null
   });
 
-  useEffect(() => {
-    fetchIncidents();
-  }, [pagination.page, pagination.page_size]);
-
-  const fetchIncidents = async () => {
-    setIsLoading(true);
-    try {
-      // Build query parameters conditionally
+  // React Query hook for fetching incidents
+  const { data: response, isLoading } = useQuery({
+    queryKey: ["incidents", pagination.page, pagination.page_size, dateRange],
+    queryFn: async () => {
       const queryParams: any = {
         page: pagination.page,
         page_size: pagination.page_size
       };
 
-      // Only add date filters if dateRange is defined and has both from and to
       if (dateRange?.from && dateRange?.to) {
         queryParams.start_date = format(dateRange.from, "yyyy-MM-dd");
         queryParams.end_date = format(dateRange.to, "yyyy-MM-dd");
       }
 
-      const response = await getIncidents(queryParams);
-
-      if (response.success && response.data) {
-        setIncidents(response.data.data || []);
-        setPagination(response.data.pagination || pagination);
-      } else {
+      const result = await getIncidents(queryParams);
+      if (!result.success) {
         notify({ description: "Failed to load incidents", type: "error" });
       }
-    } catch (error) {
-      console.error("Error fetching incidents:", error);
-      notify({ description: "Error loading incidents", type: "error" });
-    } finally {
-      setIsLoading(false);
+      return result;
     }
-  };
+  });
+
+  const incidents = response?.data?.data || [];
+  const paginationData = response?.data?.pagination || pagination;
 
   const handleViewDetails = (incident: IncidentData) => {
     setSelectedIncident(incident);
@@ -124,7 +114,6 @@ export function MyIncidents() {
 
   const handleClearDates = () => {
     setDateRange(undefined);
-    fetchIncidents();
   };
 
   const handleDeleteClick = (incident: any) => {
@@ -142,18 +131,22 @@ export function MyIncidents() {
   const handleDeleteConfirm = async () => {
     if (!deleteDialog.incidentId) return;
 
-    try {
-      const response = await deleteIncident(deleteDialog.incidentId);
-      if (response.success) {
-        notify({ description: "Risk incident deleted successfully", type: "success" });
-        router.refresh();
-        await fetchIncidents();
-        setDeleteDialog({ open: false, incidentId: null });
-      } else {
-        notify({ description: response.message || "Failed to delete incident", type: "error" });
-      }
-    } catch (error) {
-      notify({ description: "Failed to delete incident", type: "error" });
+    const response = await deleteIncident(deleteDialog.incidentId);
+
+    if (response.success) {
+      notify({
+        title: "Success",
+        description: "Risk incident deleted successfully",
+        type: "success"
+      });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+      setDeleteDialog({ open: false, incidentId: null });
+    } else {
+      notify({
+        title: "Error",
+        description: response.message || "Failed to delete incident",
+        type: "error"
+      });
     }
   };
 
@@ -164,7 +157,7 @@ export function MyIncidents() {
     return days;
   };
 
-  const filteredIncidents = incidents.filter((item) => {
+  const filteredIncidents = incidents.filter((item: any) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       item.incident.details.toLowerCase().includes(searchLower) ||
@@ -184,12 +177,12 @@ export function MyIncidents() {
   };
 
   const customPaginationData = {
-    page: pagination.page,
-    page_size: pagination.page_size,
-    total_pages: pagination.total_pages,
-    totalCount: pagination.total,
-    has_prev: pagination.has_prev,
-    has_next: pagination.has_next
+    page: paginationData.page,
+    page_size: paginationData.page_size,
+    total_pages: paginationData.total_pages,
+    totalCount: paginationData.total,
+    has_prev: paginationData.has_prev,
+    has_next: paginationData.has_next
   };
 
   const duration = calculateDuration();
@@ -301,10 +294,7 @@ export function MyIncidents() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-2">
-            <Button
-              className="flex-1"
-              onClick={fetchIncidents}
-              disabled={!dateRange?.from || !dateRange?.to}>
+            <Button className="flex-1" disabled={!dateRange?.from || !dateRange?.to}>
               <FileText className="mr-2 h-4 w-4" />
               Generate Report
             </Button>
@@ -395,10 +385,10 @@ export function MyIncidents() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredIncidents.map((item, index) => (
+                  filteredIncidents.map((item: any, index: number) => (
                     <TableRow key={item.incident.id}>
                       <TableCell className="font-medium">
-                        {(pagination.page - 1) * pagination.page_size + index + 1}
+                        {(paginationData.page - 1) * paginationData.page_size + index + 1}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {format(new Date(item.incident.incident_date), "MMM dd, yyyy")}
