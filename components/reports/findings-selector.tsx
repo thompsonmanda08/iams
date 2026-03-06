@@ -31,7 +31,7 @@ interface FindingsSelectorProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getColumnValue(finding: GeneralFindingSummary, colKey: string): string {
+export function getColumnValue(finding: GeneralFindingSummary, colKey: string): string {
   for (const col of finding.columns ?? []) {
     if (col.key === colKey) return col.value ?? "—";
     if ((col as any)[colKey] !== undefined) return String((col as any)[colKey]) || "—";
@@ -39,7 +39,7 @@ function getColumnValue(finding: GeneralFindingSummary, colKey: string): string 
   return "—";
 }
 
-function getKeyValue(finding: GeneralFindingSummary, keyKey: string): any {
+export function getKeyValue(finding: GeneralFindingSummary, keyKey: string): any {
   for (const k of finding.keys ?? []) {
     if (k.key === keyKey) return k.value ?? null;
     if ((k as any)[keyKey] !== undefined) return (k as any)[keyKey];
@@ -106,7 +106,7 @@ const GeneralFindingsSelectorView = ({
       <div className="border-foreground/20 flex items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-4">
           <h4 className="text-foreground text-sm font-semibold">Select Findings for Report</h4>
-          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
             {selectedIds.length} of {generalFindings.length} selected
           </span>
         </div>
@@ -347,7 +347,7 @@ export const FindingsSelector = ({
       <div className="border-foreground/20 flex items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-4">
           <h4 className="text-foreground text-sm font-semibold">Select Findings for Report</h4>
-          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
             {selectedIds.length} of {findings.length} selected
           </span>
         </div>

@@ -83,10 +83,15 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       const workpaper = result.data;
       const generalFindings = workpaper?.general_findings ?? [];
       const config = workpaper?.config?.[0] ?? null;
+      const metadata = workpaper?.metadata ?? null;
 
       return {
         findings: generalFindings,
-        config: config ? { columns: config.columns ?? [], keys: config.keys ?? [] } : null
+        config: config ? { columns: config.columns ?? [], keys: config.keys ?? [] } : null,
+        metadata: metadata ? {
+          work_done: metadata.work_done || "",
+          conclusion: metadata.conclusion || ""
+        } : null
       };
     },
     enabled: entityType === "audit_plan" && !!entityId
@@ -114,7 +119,8 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
     if (generalFindingsResult) {
       setGeneralFindings(
         generalFindingsResult.findings ?? [],
-        generalFindingsResult.config ?? null
+        generalFindingsResult.config ?? null,
+        generalFindingsResult.metadata ?? null
       );
     }
   }, [generalFindingsResult, setGeneralFindings]);

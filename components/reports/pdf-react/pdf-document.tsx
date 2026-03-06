@@ -173,6 +173,7 @@ interface PDFDocumentProps {
   findings: FindingSummary[];
   generalFindings?: GeneralFindingSummary[];
   generalFindingsConfig?: GeneralFindingsConfig | null;
+  workpaperMetadata?: { work_done: string; conclusion: string } | null;
 }
 
 // ─── General Findings PDF Helpers ────────────────────────────────────────────
@@ -197,7 +198,8 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
   report,
   findings,
   generalFindings = [],
-  generalFindingsConfig
+  generalFindingsConfig,
+  workpaperMetadata
 }) => {
   const primaryColor = report.branding?.primary_color || "#1e40af";
   const secondaryColor = report.branding?.secondary_color || "#64748b";
@@ -441,8 +443,40 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                       </View>
                     ))}
 
-              {/* Widgets */}
-              {section.widgets?.map((widget) => (
+              {/* Work Done & Conclusion for general framework findings sections */}
+              {(section.section_type === "compliance_findings" ||
+                section.section_type === "findings_selector") &&
+                report.management_standard?.toUpperCase() === "GENERAL" &&
+                workpaperMetadata && (
+                  <View>
+                    {workpaperMetadata.work_done ? (
+                      <View style={{ marginTop: 15 }}>
+                        <Text style={{ fontSize: 12, fontWeight: "bold", marginBottom: 6, color: primaryColor }}>
+                          Work Done
+                        </Text>
+                        <Text style={{ fontSize: 10, lineHeight: 1.5, color: "#374151" }}>
+                          {workpaperMetadata.work_done}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {workpaperMetadata.conclusion ? (
+                      <View style={{ marginTop: 15 }}>
+                        <Text style={{ fontSize: 12, fontWeight: "bold", marginBottom: 6, color: primaryColor }}>
+                          Conclusion
+                        </Text>
+                        <Text style={{ fontSize: 10, lineHeight: 1.5, color: "#374151" }}>
+                          {workpaperMetadata.conclusion}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                )}
+
+              {/* Widgets — skip for general framework findings sections */}
+              {!(
+                report.management_standard?.toUpperCase() === "GENERAL" &&
+                (section.section_type === "findings_selector" || section.section_type === "compliance_findings")
+              ) && section.widgets?.map((widget) => (
                 <View key={widget.instance_id}>
                   {widget.data.title && <Text style={styles.widgetTitle}>{widget.data.title}</Text>}
 

@@ -30,6 +30,7 @@ import {
 } from "@/lib/types/report-types";
 import { CoverPageEditor } from "./cover-page-editor";
 import { FindingsSelector } from "./findings-selector";
+import { GeneralFindingsTable } from "./general-findings-table";
 import { PieChartWidget } from "./pie-chart-widget";
 import { ConfigurableTable } from "./configurable-table";
 import { DynamicSection } from "./dynamic-section";
@@ -55,6 +56,7 @@ interface SectionEditorProps {
   generalFindings?: GeneralFindingSummary[];
   generalFindingsConfig?: GeneralFindingsConfig | null;
   isGeneralFramework?: boolean;
+  workpaperMetadata?: { work_done: string; conclusion: string } | null;
   onFieldValuesChange?: (fieldValues: DynamicSectionData) => void;
   onSchemaChange?: (fields: ReportField[]) => void;
   // Widget management props
@@ -93,6 +95,7 @@ export const SectionEditor = ({
   generalFindings,
   generalFindingsConfig,
   isGeneralFramework,
+  workpaperMetadata,
   onFieldValuesChange,
   onSchemaChange,
   onWidgetColumnsChange,
@@ -338,6 +341,19 @@ export const SectionEditor = ({
               />
             )}
 
+            {/* General Findings summary table (only for general framework) */}
+            {(section.section_type === "findings_selector" ||
+              section.section_type === "compliance_findings") &&
+              isGeneralFramework &&
+              generalFindings && (
+                <GeneralFindingsTable
+                  generalFindings={generalFindings}
+                  generalFindingsConfig={generalFindingsConfig ?? null}
+                  selectedIds={section.selected_finding_ids || []}
+                  workpaperMetadata={workpaperMetadata}
+                />
+              )}
+
             {/* Widget Manager for text_with_widgets sections - dynamic add/remove */}
             {section.section_type === "text_with_widgets" && onAddWidget && onRemoveWidget && (
               <WidgetManager
@@ -361,7 +377,9 @@ export const SectionEditor = ({
             )}
 
             {/* Legacy widget rendering for non-text_with_widgets sections or when widget manager props not provided */}
-            {section.section_type !== "text_with_widgets" && section.widgets && section.widgets.length > 0 && (
+            {section.section_type !== "text_with_widgets" &&
+              !(isGeneralFramework && (section.section_type === "findings_selector" || section.section_type === "compliance_findings")) &&
+              section.widgets && section.widgets.length > 0 && (
               <div className="space-y-4">
                 <div className="border-t border-border pt-4">
                   <h4 className="mb-3 text-xs font-bold tracking-wider text-muted-foreground uppercase">
@@ -412,7 +430,8 @@ export const SectionEditor = ({
                         const isFindingsTable =
                           (section.section_type === "findings_selector" ||
                             section.section_type === "compliance_findings") &&
-                          !widget.data.data_source_id;
+                          !widget.data.data_source_id &&
+                          !isGeneralFramework;
 
                         const displayData = isFindingsTable
                           ? {
@@ -483,6 +502,7 @@ export const SectionEditor = ({
             {/* Auto-generated tables for each finding type in compliance sections */}
             {(section.section_type === "findings_selector" ||
               section.section_type === "compliance_findings") &&
+              !isGeneralFramework &&
               Object.keys(groupedFindingsByType).length > 0 && (
                 <div className="space-y-6 border-t border-border pt-4">
                   <h4 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">

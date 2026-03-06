@@ -32,6 +32,7 @@ interface ReportState {
   findings: FindingSummary[];
   generalFindings: GeneralFindingSummary[];
   generalFindingsConfig: GeneralFindingsConfig | null;
+  workpaperMetadata: { work_done: string; conclusion: string } | null;
   dataSources: DataSource[];
   isLoading: boolean;
   entityId: string | null;
@@ -46,7 +47,7 @@ interface ReportState {
   setReport: (report: ReportContent) => void;
   updateReportMetadata: (updates: Partial<ReportContent>) => void;
   setFindings: (findings: FindingSummary[]) => void;
-  setGeneralFindings: (findings: GeneralFindingSummary[], config: GeneralFindingsConfig | null) => void;
+  setGeneralFindings: (findings: GeneralFindingSummary[], config: GeneralFindingsConfig | null, metadata?: { work_done: string; conclusion: string } | null) => void;
   setDataSources: (dataSources: DataSource[]) => void;
   setLoading: (isLoading: boolean) => void;
   setEntityId: (id: string | null) => void;
@@ -89,6 +90,7 @@ const initialState = {
   findings: [],
   generalFindings: [],
   generalFindingsConfig: null,
+  workpaperMetadata: null,
   dataSources: [],
   isLoading: false,
   entityId: null,
@@ -109,8 +111,8 @@ export const useReportStore = create<ReportState>((set, get) => ({
     })),
 
   setFindings: (findings) => set({ findings }),
-  setGeneralFindings: (generalFindings, generalFindingsConfig) =>
-    set({ generalFindings, generalFindingsConfig }),
+  setGeneralFindings: (generalFindings, generalFindingsConfig, workpaperMetadata) =>
+    set({ generalFindings, generalFindingsConfig, workpaperMetadata: workpaperMetadata ?? null }),
   setDataSources: (dataSources) => set({ dataSources }),
   setLoading: (isLoading) => set({ isLoading }),
   setEntityId: (entityId) => set({ entityId }),

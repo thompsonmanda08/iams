@@ -116,6 +116,7 @@ export function ReportBuilder({
     findings,
     generalFindings,
     generalFindingsConfig,
+    workpaperMetadata,
     isLoading,
     expandedSections,
     isAddSectionModalOpen,
@@ -520,7 +521,7 @@ export function ReportBuilder({
     setExportError(null);
 
     try {
-      const blob = await pdf(<PDFDocument report={report} findings={findings} generalFindings={generalFindings} generalFindingsConfig={generalFindingsConfig} />).toBlob();
+      const blob = await pdf(<PDFDocument report={report} findings={findings} generalFindings={generalFindings} generalFindingsConfig={generalFindingsConfig} workpaperMetadata={workpaperMetadata} />).toBlob();
 
       if (blob.size === 0) {
         throw new Error("Generated PDF is empty");
@@ -953,6 +954,7 @@ export function ReportBuilder({
                   generalFindings={generalFindings}
                   generalFindingsConfig={generalFindingsConfig}
                   isGeneralFramework={isGeneralFramework}
+                  workpaperMetadata={workpaperMetadata}
                   onFieldValuesChange={(field_values: DynamicSectionData) =>
                     updateSection(section.section_id, { field_values })
                   }
