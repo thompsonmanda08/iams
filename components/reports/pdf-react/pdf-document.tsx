@@ -340,7 +340,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                                 key={k.key}
                                 style={[
                                   styles.tableCellHeader,
-                                  { flex: 0.6, fontSize: fs, backgroundColor: "#fef3c7" }
+                                  { flex: 0.6, fontSize: fs, backgroundColor: "#fef3c7", color: "#92400e" }
                                 ]}>
                                 {k.name}
                               </Text>
@@ -369,12 +369,13 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                               ))}
                               {cfgKeys.map((k) => {
                                 const val = getKeyValuePdf(finding, k.key);
+                                const isBool = typeof val === "boolean" || val === "true" || val === "false";
                                 return (
                                   <Text
                                     key={k.key}
                                     style={[styles.tableCell, { flex: 0.6, fontSize: fs }]}>
-                                    {typeof val === "boolean"
-                                      ? val
+                                    {isBool
+                                      ? (val === true || val === "true")
                                         ? "Yes"
                                         : "No"
                                       : (val ?? "—")}

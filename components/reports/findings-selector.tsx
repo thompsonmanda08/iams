@@ -257,20 +257,7 @@ export const FindingsSelector = ({
   generalFindingsConfig,
   isGeneralFramework
 }: FindingsSelectorProps) => {
-  // Route to general findings selector if general framework
-  if (isGeneralFramework && generalFindings) {
-    return (
-      <GeneralFindingsSelectorView
-        generalFindings={generalFindings}
-        generalFindingsConfig={generalFindingsConfig ?? null}
-        selectedIds={selectedIds}
-        onSelectionChange={onSelectionChange}
-      />
-    );
-  }
-
-  // ── Compliance Findings Selector (existing) ──────────────────────────────
-
+  // ── Hooks must be called unconditionally (React rules of hooks) ────────
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
@@ -305,6 +292,20 @@ export const FindingsSelector = ({
       setExpandedCategories((prev) => ({ ...prev, ...initialExpanded }));
     }
   }, [groupedFindings.length]);
+
+  // Route to general findings selector if general framework
+  if (isGeneralFramework && generalFindings) {
+    return (
+      <GeneralFindingsSelectorView
+        generalFindings={generalFindings}
+        generalFindingsConfig={generalFindingsConfig ?? null}
+        selectedIds={selectedIds}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+  }
+
+  // ── Compliance Findings Selector (existing) ──────────────────────────────
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => ({
