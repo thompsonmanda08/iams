@@ -13,10 +13,8 @@ import {
   ShieldQuestion,
   ClipboardListIcon,
   BriefcaseBusiness,
-  MailCheck,
   ChartPieIcon,
   CompassIcon,
-  SquareAsterisk,
   Signature,
   Settings,
   UserCog2
@@ -217,23 +215,23 @@ export const navItems: NavGroup[] = [
     title: "System Configuration",
     items: [
       {
-        title: "Setup",
-        href: "/dashboard/system-configs/departments",
+        title: "System Setup",
+        href: "/dashboard/system-configs/setup",
         icon: UserCog2,
         items: [
           {
             title: "Branches",
-            href: "/dashboard/system-configs/branches",
+            href: "/dashboard/system-configs/setup?tab=branches",
             icon: MapPin
           },
           {
             title: "Departments",
-            href: "/dashboard/system-configs/departments",
+            href: "/dashboard/system-configs/setup?tab=departments",
             icon: BriefcaseBusiness
           },
           {
             title: "Users",
-            href: "/dashboard/system-configs/users",
+            href: "/dashboard/system-configs/setup?tab=users",
             icon: Users
           }
         ]
@@ -242,20 +240,7 @@ export const navItems: NavGroup[] = [
       {
         title: "General Settings",
         href: "/dashboard/system-configs",
-        icon: Settings,
-        isNew: true,
-        items: [
-          {
-            title: "Mail Settings",
-            href: "/dashboard/system-configs/mail-settings",
-            icon: MailCheck
-          },
-          {
-            title: "Password Policy",
-            href: "/dashboard/system-configs/password-policy",
-            icon: SquareAsterisk
-          }
-        ]
+        icon: Settings
       }
     ]
   }

@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { adminNavItems, navItems } from "@/lib/routes-config";
 import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Icon mapping based on the icon strings from API
@@ -191,7 +192,14 @@ export function transformModulesToNavCustom(
 
 export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated: boolean }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isMobile } = useSidebar();
+
+  // Build full URL (pathname + query string) for active-state matching
+  const fullPath = useMemo(() => {
+    const qs = searchParams.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }, [pathname, searchParams]);
 
   const routes = useMemo(() => {
     return user?.user_type === "BACKOFFICE_ADMIN" && pathname.startsWith("/admin/")
@@ -258,7 +266,7 @@ export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated:
                                 <SidebarMenuSubItem key={key}>
                                   <SidebarMenuSubButton
                                     className="hover:text-foreground active:text-foreground hover:bg-primary/10 active:bg-primary/10"
-                                    isActive={pathname === subItem.href}
+                                    isActive={fullPath === subItem.href}
                                     asChild>
                                     <Link
                                       href={subItem.href}
