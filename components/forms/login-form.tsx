@@ -12,7 +12,6 @@ import Link from "next/link";
 import CustomAlert from "../ui/custom-alert";
 import { capitalize, notify } from "@/lib/utils";
 
-
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -68,7 +67,7 @@ export default function LoginForm() {
             label="Email Address / Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full py-3 pr-4 pl-11 transition-all"
+            className="h-12 w-full py-3 pr-12 pl-11 text-base"
             placeholder="your@email.com"
             required
             disabled={isLoading}
@@ -85,7 +84,7 @@ export default function LoginForm() {
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full py-3 pr-12 pl-11"
+            className="h-12 w-full py-3 pr-12 pl-11 text-base"
             placeholder="Enter your password"
             required
             disabled={isLoading}
@@ -93,7 +92,7 @@ export default function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute top-2/3 right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600"
+            className="absolute top-[70%] right-3 -translate-y-1/3 text-slate-400 transition-colors hover:text-slate-600"
             disabled={isLoading}>
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
@@ -129,6 +128,7 @@ export default function LoginForm() {
 
       <Button
         type="submit"
+        size={"lg"}
         className="w-full py-3 font-semibold"
         isLoading={isLoading}
         loadingText="Signing in..."

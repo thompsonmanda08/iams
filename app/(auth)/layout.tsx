@@ -1,78 +1,54 @@
 import PoweredBy from "@/components/powered-by";
-import Image from "next/image";
 import { PropsWithChildren } from "react";
 import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
+import AuthRightPanel from "./_components/auth-right-panel";
+import ThemeSwitch from "@/components/layout/header/theme-switch";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
 export default async function AuthLayout({ children }: PropsWithChildren) {
   const { isAuthenticated, session } = await verifySession();
 
-
-  // If authenticated, handle routing based on MFA status
   if (isAuthenticated) {
-    // If MFA is required but not verified, allow access to OTP page only
     if (session?.mfa_required && !session?.mfa_verified) {
-      // OTP page is a child of this layout, allow it to render
-      return (
-        <div className="relative flex min-h-screen items-center justify-center p-4">
-          <div className="gradient absolute inset-0">
-            <Image
-              className="a a h-full w-full object-cover"
-              src={"/images/cover.webp"}
-              alt="auth-cover-img"
-              width={1920}
-              height={1080}
-            />
-          </div>
-          <div className="gradient absolute inset-0 grid opacity-80" />
-          <div className="z-30 w-full max-w-sm py-12">{children}</div>
-
-          <PoweredBy
-            className="absolute bottom-0 z-999"
-            classNames={{ text: "text-white" }}
-            isWhite={true}
-          />
-        </div>
-      );
+      // MFA pending — fall through to render OTP page in the split layout
+    } else {
+      if (session?.user_type === "BACKOFFICE_ADMIN") {
+        redirect("/admin/home");
+      }
+      redirect("/dashboard/home");
     }
-
-    // Fully authenticated (MFA complete or not required)
-    // Redirect to appropriate dashboard based on user_type from session
-    // console.log("[AUTH LAYOUT] Redirecting authenticated user:", {
-    //   user_type: session?.user_type,
-    //   mfa_required: session?.mfa_required,
-    //   mfa_verified: session?.mfa_verified
-    // });
-
-    if (session?.user_type === "BACKOFFICE_ADMIN") {
-      redirect("/admin/home");
-    }
-
-    redirect("/dashboard/home");
   }
 
-  // Not authenticated - allow login/register pages
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4">
-      <div className="gradient absolute inset-0">
-        <Image
-          className="a a h-full w-full object-cover"
-          src={"/images/cover.webp"}
-          alt="auth-cover-img"
-          width={1920}
-          height={1080}
-        />
-      </div>
-      <div className="gradient absolute inset-0 grid opacity-80" />
-      <div className="z-30 w-full max-w-sm py-12">{children}</div>
+    <div className="flex min-h-screen flex-col md:flex-row">
+      {/* Left — form area */}
+      <div className="bg-background flex min-h-screen w-full flex-col md:w-1/2">
+        <div className="text-muted-foreground flex items-center justify-between p-6">
+          <div className="rounded-2xl bg-white p-2">
+            <Image
+              src="/images/infratel-logo.png"
+              width={80}
+              height={56}
+              alt="Infratel logo"
+              unoptimized
+            />
+          </div>
+          <ThemeSwitch />
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center p-8 md:p-12 lg:p-16">
+          <div className="w-full max-w-sm">{children}</div>
+        </div>
 
-      <PoweredBy
-        className="absolute bottom-0 z-999"
-        classNames={{ text: "text-white" }}
-        isWhite={true}
-      />
+        <div className="flex justify-center pb-6">
+          <PoweredBy />
+        </div>
+      </div>
+
+      {/* Right — visual panel */}
+      <AuthRightPanel />
     </div>
   );
 }

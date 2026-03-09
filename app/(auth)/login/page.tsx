@@ -1,33 +1,38 @@
+"use client";
+
 import Image from "next/image";
-import { Lock } from "lucide-react";
+import { motion } from "motion/react";
 import LoginForm from "@/components/forms/login-form";
 
 export default function LoginPage() {
   return (
-    <div className="grid">
-      <div className="bg-card space-y-8 rounded-2xl border p-8">
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <div className="rounded-2xl bg-white p-2">
-            <Image src="/images/infratel-logo.png" width={100} height={70} alt="logo" unoptimized />
-          </div>
-          <h1 className="text-primary text-3xl font-bold">IAMS</h1>
-          <p className="text-foreground/70">Enter your credentials to continue</p>
+    <div className="space-y-8 rounded-2xl border p-8">
+      {/* Logo & heading */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="flex flex-col items-center space-y-3">
+        <div>
+          <h1 className="text-foreground font-mono text-3xl font-bold tracking-tight">Login</h1>
+          <p className="text-muted-foreground text-center text-sm leading-relaxed">
+            Enter your credentials to access your account
+          </p>
         </div>
+      </motion.div>
 
-        <LoginForm />
+      <LoginForm />
 
-        <div className="text-foreground/70 border-t border-slate-200 pt-6 text-center text-sm">
-          Need help?{" "}
-          <a href="#" className="text-primary hover:text-primary/70 font-medium transition-colors">
-            Contact Support
-          </a>
-        </div>
-      </div>
-
-      <div className="text-white/80 mt-6 flex items-center justify-center gap-2 text-center text-sm sm:text-base">
-        <Lock className="h-4 w-4 text-green-400" />
-        <p>Secured access for authorized personnel only</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="border-t pt-6 text-center">
+        <p className="mb-1 text-xs text-gray-400">Need assistance?</p>
+        <a href="#" className="text-primary text-sm font-medium transition-colors hover:underline">
+          Contact Support
+        </a>
+      </motion.div>
     </div>
   );
 }
