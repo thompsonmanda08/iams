@@ -330,7 +330,7 @@ export function GeneralFindingsList({
                               variant="outline"
                               className="text-violet-600 hover:text-violet-700"
                               onClick={() => {
-                                setAssignFinding(finding);
+                                setAssignFinding({ ...finding, framework: "GENERAL" });
                                 setAssignDialogOpen(true);
                               }}>
                               <UserPlus className="h-3 w-3" />

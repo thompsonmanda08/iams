@@ -736,7 +736,7 @@ export function GeneralEvidenceGrid({
         <AssignFindingActionDialog
           open={assignDialogOpen}
           onOpenChange={setAssignDialogOpen}
-          finding={assignFindingRow?.findingId ? ({ id: assignFindingRow.findingId } as any) : null}
+          finding={assignFindingRow?.findingId ? ({ id: assignFindingRow.findingId, framework: "GENERAL" } as any) : null}
           auditPlanStatus={auditPlanStatus || ""}
         />
       </div>
