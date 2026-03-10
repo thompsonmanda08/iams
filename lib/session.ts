@@ -112,7 +112,8 @@ export async function createAuthSession({
   user_id,
   change_password,
   mfa_required,
-  organization_id
+  organization_id,
+  session_timeout
 }: {
   accessToken: string;
   user_type: UserType;
@@ -120,9 +121,13 @@ export async function createAuthSession({
   change_password?: boolean;
   mfa_required?: boolean;
   organization_id?: string;
+  session_timeout?: number; // in minutes, from backend
 }): Promise<void> {
-  // Use centralized session config (60-minute session)
-  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+  // Use backend-provided session_timeout if available, otherwise fall back to default
+  const ttl = session_timeout
+    ? session_timeout * 60 * 1000
+    : SESSION_CONFIG.SESSION_TTL;
+  const expiresAt = new Date(Date.now() + ttl);
 
   const newSession: AuthSession = {
     accessToken: accessToken || "",
@@ -131,11 +136,12 @@ export async function createAuthSession({
     change_password,
     mfa_required,
     organization_id,
+    session_timeout, // store in JWT so refresh can read it later
     expiresAt
   };
 
   // Encrypt JWT with same TTL as cookie to prevent silent JWT expiry before cookie expires
-  const jwtExpirationSeconds = Math.ceil(SESSION_CONFIG.SESSION_TTL / 1000);
+  const jwtExpirationSeconds = Math.ceil(ttl / 1000);
   const token = await encrypt(newSession, `${jwtExpirationSeconds}s`);
 
   // Ensure `session` is successfully created before setting the cookie

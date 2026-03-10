@@ -322,7 +322,10 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   const { isLocked, setIsLocked, broadcastUnlock } = useUnlockSync(loggedIn);
 
   // Token refresh is paused when locked (uses isLocked, not a separate isIdle)
-  const { error: refreshError } = useRefreshToken(Boolean(loggedIn && !isLocked));
+  const { error: refreshError } = useRefreshToken(
+    Boolean(loggedIn && !isLocked),
+    session?.session_timeout ? session.session_timeout * 60 * 1000 : undefined
+  );
 
   useEffect(() => {
     if (refreshError) {

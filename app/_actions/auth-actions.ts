@@ -38,7 +38,7 @@ export async function loginUser({
     const response = await axios.post(url, { username, password });
 
     const session = response?.data;
-    console.log("[ LOGIN ]: ", session);
+    console.log("[ LOGIN ]---------------: ", session);
 
     // Set authentication cookie (will include mfa_required flag)
     await createAuthSession({
@@ -47,7 +47,8 @@ export async function loginUser({
       user_id: session?.user?.id,
       change_password: session?.change_password,
       mfa_required: session?.mfa_required,
-      organization_id: session?.organization_id
+      organization_id: session?.organization_id,
+      session_timeout: session?.session_timeout // Sync backend session timeout if provided (in minutes)
     });
 
     return successResponse(session, session?.message);
@@ -339,11 +340,11 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
       branch_id: userData?.branch_id,
       department_id: userData?.department_id,
       role_id: userData?.role_id,
-      // is_active: userData?.is_active,
-      // is_ldap_user: userData?.is_ldap_user,
-      // last_login: userData?.last_login,
-      // change_password: userData?.change_password,
-      // is_locked: userData?.is_locked,
+      is_active: userData?.is_active,
+      is_ldap_user: userData?.is_ldap_user,
+      last_login: userData?.last_login,
+      change_password: userData?.change_password,
+      is_locked: userData?.is_locked,
       mfa_enabled: userData?.mfa_enabled
     };
 
@@ -405,10 +406,12 @@ export async function getRefreshToken(): Promise<APIResponse> {
 
       const access_token = response.data?.access_token;
 
-      // ✅ CRITICAL FIX: Reset session expiration to 30 minutes from now
-      // When refreshing token, we must extend the session TTL
-      // Otherwise cookie expiration stays at old value and user gets logged out prematurely
-      const newExpiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+      // ✅ Extend session by backend-defined session_timeout (stored in JWT at login).
+      // Falls back to SESSION_CONFIG.SESSION_TTL when not provided by backend.
+      const refreshTtl = session?.session_timeout
+        ? session.session_timeout * 60 * 1000
+        : SESSION_CONFIG.SESSION_TTL;
+      const newExpiresAt = new Date(Date.now() + refreshTtl);
 
       await updateAuthSession({
         access_token,

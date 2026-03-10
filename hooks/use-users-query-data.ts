@@ -51,17 +51,19 @@ export const useHeadsOfDepartments = (
 /**
  * Hook to refresh authentication token
  * Configuration:
- * - When enabled=true: Automatically refreshes token every 30 minutes
+ * - When enabled=true: Automatically refreshes at half of session_timeout (capped at TOKEN_REFRESH_INTERVAL)
  * - When enabled=false: No automatic refresh
+ * - sessionTimeoutMs: backend session_timeout converted to ms (session_timeout * 60 * 1000)
  *
- * This prevents token expiry at 60 minutes by refreshing at 30 minutes
- * User must be active (not idle) for auto-refresh to happen
+ * This ensures the refresh fires well before expiry regardless of the configured timeout.
  */
-const REFRESH_INTERVAL = SESSION_CONFIG.TOKEN_REFRESH_INTERVAL; // Refresh every 30 minutes (before 60-min expiry)
+export const useRefreshToken = (enabled: boolean = false, sessionTimeoutMs?: number) => {
+  const interval = sessionTimeoutMs
+    ? Math.min(sessionTimeoutMs / 2, SESSION_CONFIG.TOKEN_REFRESH_INTERVAL)
+    : SESSION_CONFIG.TOKEN_REFRESH_INTERVAL;
 
-export const useRefreshToken = (enabled: boolean = false) =>
-  useQuery({
-    queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN, enabled],
+  return useQuery({
+    queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN, enabled, interval],
     queryFn: getRefreshToken,
     // ✅ CRITICAL FIX: Smart retry logic
     // Don't retry on 403 token expiration - these should fail fast
@@ -80,12 +82,11 @@ export const useRefreshToken = (enabled: boolean = false) =>
       return Math.min(1000 * Math.pow(2, attemptIndex), 8000);
     },
     refetchOnMount: false,
-    // ✅ Auto-refresh every 25 minutes when enabled
-    // This is BEFORE the 30-minute session expiry
-    refetchInterval: enabled ? REFRESH_INTERVAL : false,
+    refetchInterval: enabled ? interval : false,
     staleTime: 0, // Always consider stale to enable refetch
     enabled
   });
+};
 
 /**
  * Hook to fetch system setup (user data and permissions)
