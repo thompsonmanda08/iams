@@ -1036,6 +1036,8 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const isGeneralTemplate = formData.management_standard?.toUpperCase() === "GENERAL";
+
     const payload = {
       title: formData.title,
       description: formData.description,
@@ -1052,7 +1054,9 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       audit_team_members: formData.audit_team_members || [],
       client_representative: formData.client_representative,
       budget_item_ids: formData.budget_item_ids || [],
-      working_paper_template_id: formData.working_paper_template_id
+      ...(isGeneralTemplate
+        ? { general_work_paper_template_id: formData.working_paper_template_id }
+        : { working_paper_template_id: formData.working_paper_template_id })
     };
 
     generateMutation.mutate(
@@ -1116,7 +1120,7 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       </Button>
 
       <Dialog open={openModal} onOpenChange={setOpenModal} modal={false}>
-        <DialogContent className="max-h-[85vh] max-w-lg! overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-3xl! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generate Audit Plan from Annual Item</DialogTitle>
             <DialogDescription className="text-sm">
