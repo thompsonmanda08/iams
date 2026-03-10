@@ -251,7 +251,7 @@ export async function logUserOut(reason: string): Promise<APIResponse> {
         // method: "POST",
         // data: { reason }
       });
-      console.log("[ LOGOUT ]: ", reason);
+      logger.info("[ LOGOUT ]", { reason, function: "logUserOut" });
 
       // Check if backend logout succeeded (optional - proceed anyway)
       if (!response.status || response.status !== 200) {
@@ -612,3 +612,70 @@ export async function checkScreenLockState(): Promise<boolean> {
 
 // ✅ Server action wrapper for getting server session
 export const getServerSession = async () => await verifySession();
+
+/**
+ * HIGH-1: Explicitly clear the screen lock cookie after successful unlock.
+ * Called in fallback unlock paths (e.g., getRefreshToken success) where
+ * lockScreenOnUserIdle(false) was not used and therefore didn't clear the cookie.
+ * Primary unlock path (unlockScreen → lockScreenOnUserIdle(false)) already
+ * clears the cookie internally — no double-clear issue.
+ */
+export async function clearScreenLockState(): Promise<void> {
+  try {
+    await clearScreenLockCookie();
+    logger.debug("Screen lock state cleared", { function: "clearScreenLockState" });
+  } catch (error) {
+    logger.error("Failed to clear screen lock state", error, {
+      function: "clearScreenLockState"
+    });
+    // Don't rethrow — unlock already succeeded; a stale lock cookie is recoverable
+    // on next page load via getScreenLockState returning false once JWT expires.
+  }
+}
+
+/**
+ * HIGH-3: Dedicated server action for screen unlock with explicit audit trail.
+ * Wraps lockScreenOnUserIdle(false) and adds structured SCREEN_UNLOCK event
+ * logging for compliance and security monitoring.
+ *
+ * Note: When a full audit-log service (createAuditLog) is added, replace the
+ * logger.info calls below with structured audit log entries that include
+ * IP address, user agent, and session ID.
+ */
+export async function unlockScreen(): Promise<boolean> {
+  const { isAuthenticated, session } = await verifySession();
+
+  if (!isAuthenticated) {
+    logger.warn("[AUDIT] Screen unlock rejected — no active session", {
+      function: "unlockScreen",
+      event: "SCREEN_UNLOCK_REJECTED",
+      reason: "unauthenticated"
+    });
+    return false;
+  }
+
+  logger.info("[AUDIT] Screen unlock initiated", {
+    function: "unlockScreen",
+    event: "SCREEN_UNLOCK_INITIATED",
+    userId: session?.user_id,
+    sessionExpiry: session?.expiresAt
+  });
+
+  const result = await lockScreenOnUserIdle(false);
+
+  if (result) {
+    logger.info("[AUDIT] Screen unlock successful", {
+      function: "unlockScreen",
+      event: "SCREEN_UNLOCK_SUCCESS",
+      userId: session?.user_id
+    });
+  } else {
+    logger.warn("[AUDIT] Screen unlock failed", {
+      function: "unlockScreen",
+      event: "SCREEN_UNLOCK_FAILED",
+      userId: session?.user_id
+    });
+  }
+
+  return result;
+}
