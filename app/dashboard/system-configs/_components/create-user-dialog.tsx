@@ -280,12 +280,18 @@ export default function CreateUserForm({
       }
 
       if (response.success) {
-        notify({ description: `User ${isEdit ? "updated" : "created"} successfully`, type: "success" });
+        notify({
+          description: `User ${isEdit ? "updated" : "created"} successfully`,
+          type: "success"
+        });
         handleCloseModal();
         router.refresh();
       } else {
         console.error("Form submission failed:", response);
-        notify({ description: response.message || `Failed to ${isEdit ? "update" : "create"} user`, type: "error" });
+        notify({
+          description: response.message || `Failed to ${isEdit ? "update" : "create"} user`,
+          type: "error"
+        });
       }
     } catch (error) {
       console.error("Form submission error:", error);
@@ -429,7 +435,7 @@ export default function CreateUserForm({
                             placeholder="bmwale"
                             {...field}
                             className="focus-visible:ring-1"
-                            disabled={isSubmitting}
+                            disabled
                             required
                           />
                         </FormControl>
@@ -450,7 +456,7 @@ export default function CreateUserForm({
                             placeholder="mail@company.com"
                             {...field}
                             className="focus-visible:ring-1"
-                            disabled={isSubmitting}
+                            disabled
                             required
                           />
                         </FormControl>

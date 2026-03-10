@@ -13,7 +13,17 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, ArrowRight } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Building,
+  PencilLine,
+  ShieldAlert,
+  ArrowRight,
+  Cable,
+  Briefcase
+} from "lucide-react";
 import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { AuditConfigurableItem, Department, Pagination } from "@/lib/types";
@@ -46,6 +56,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { set } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/use-permissions";
+import { Badge } from "@/components/ui/badge";
 
 interface AreaFormData {
   name: string;
@@ -114,6 +125,14 @@ export default function AuditableAreaConfig() {
       }
     });
   };
+
+  const getDepartmentName = useCallback(
+    (departmentId: string) => {
+      const department = departments.find((d) => d.id === departmentId);
+      return department ? department.name : "No parent department ";
+    },
+    [departments]
+  );
 
   return (
     <>
@@ -204,19 +223,9 @@ export default function AuditableAreaConfig() {
                 </TableRow>
               ) : (
                 items &&
-                items?.map((item) => {
-                  const departmentName =
-                    item?.department ||
-                    departments.find((d) => d.id === item.department_id)?.name ||
-                    "No parent department";
+                items?.map((item: any) => {
                   return (
-                    <TableRow
-                      key={item.id}
-                      className="cursor-pointer"
-                      // onClick={() => {
-                      //   router.push(`/dashboard/system-configs/items/${item.id}`);
-                      // }}
-                    >
+                    <TableRow key={item.id} className="cursor-pointer">
                       <TableCell className="p-3 align-top">
                         <div className="flex min-w-0 items-start gap-2">
                           <Building className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
@@ -231,9 +240,10 @@ export default function AuditableAreaConfig() {
                         </div>
                       </TableCell>
                       <TableCell className="p-3 align-top">
-                        <div className="line-clamp-6 min-w-0 font-mono text-sm">
-                          {item?.department_name || "No parent department"}
-                        </div>
+                        <Badge variant="info" className="gap-1 text-xs">
+                          <Briefcase className="h-3 w-3" />
+                          {getDepartmentName(item.department_id)}
+                        </Badge>
                       </TableCell>
                       {/* <TableCell>
                       <span

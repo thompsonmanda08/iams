@@ -35,8 +35,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   isLoading?: boolean;
   loadingText?: string;
@@ -65,7 +64,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {isLoading ? (
           <span className="flex items-center gap-2">
             <Spinner
-              className={cn("dark:text-primary-foreground gradient-blue text-white", {
+              className={cn("dark:text-primary-foreground text-white", {
                 "text-primary dark:text-primary-foreground":
                   variant == "outline" || variant == "link" || variant == "ghost"
               })}

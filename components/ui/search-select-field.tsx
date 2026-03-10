@@ -172,7 +172,13 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
               <ChevronsUpDown className="ml-2 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="flex w-[var(--radix-popover-trigger-width)] p-0">
+          <PopoverContent
+            className="flex w-[var(--radix-popover-trigger-width)] p-0"
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              const input = (e.currentTarget as HTMLElement).querySelector("input");
+              if (input) input.focus();
+            }}>
             <Command>
               <CommandInput
                 placeholder="Type here to search..."

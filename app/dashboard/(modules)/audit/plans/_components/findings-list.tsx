@@ -61,6 +61,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
   const canAssignAction = ["COMPLETED", "APPROVED", "REJECTED", "CLOSED"].includes(finding.status);
 
   return (
+    <>
     <Card
       className="cursor-pointer gap-2 transition-shadow hover:shadow-md"
       onClick={() => setDetailsDialogOpen(true)}>
@@ -214,6 +215,8 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
         )}
       </CardContent>
 
+    </Card>
+
       {/* Assign Action Dialog */}
       <AssignFindingActionDialog
         open={assignActionDialogOpen}
@@ -228,7 +231,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
         onOpenChange={setDetailsDialogOpen}
         finding={finding}
       />
-    </Card>
+    </>
   );
 }
 

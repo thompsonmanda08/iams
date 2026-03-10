@@ -193,6 +193,7 @@ export function AssignActionDialog({
               disabled={createActionMutation.isPending || isLoadingUsers}
               isInvalid={!!errors.executor_id}
               errorText={errors.executor_id}
+              onModal={true}
               required
             />
           </div>
@@ -217,6 +218,7 @@ export function AssignActionDialog({
             isLoading={isLoadingUsers}
             isInvalid={!!errors.reviewer_id}
             errorText={errors.reviewer_id}
+            onModal={true}
             required
           />
           {/* Due Date */}

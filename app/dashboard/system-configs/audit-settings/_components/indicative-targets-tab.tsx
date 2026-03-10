@@ -12,7 +12,16 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Building, PencilLine, ShieldAlert, Target } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Building,
+  PencilLine,
+  ShieldAlert,
+  Target,
+  Briefcase
+} from "lucide-react";
 import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { Department, ErrorState, Pagination } from "@/lib/types";
@@ -41,6 +50,7 @@ import { useIndicativeTargets } from "@/hooks/use-audit-settings-query-data";
 import { Textarea } from "@/components/ui/textarea";
 import { QUERY_KEYS } from "@/lib/constants";
 import { usePermissions } from "@/hooks/use-permissions";
+import { Badge } from "@/components/ui/badge";
 
 interface TargetFormData {
   id: string;
@@ -214,9 +224,10 @@ export default function IndicativeTargetsTab() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm">
+                        <Badge variant="info" className="gap-1 text-xs">
+                          <Briefcase className="h-3 w-3" />
                           {getDepartmentName(item.department_id)}
-                        </span>
+                        </Badge>
                       </TableCell>
 
                       <TableCell align="center">

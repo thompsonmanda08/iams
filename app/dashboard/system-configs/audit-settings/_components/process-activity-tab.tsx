@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CustomPagination } from "@/components/ui/pagination";
@@ -12,7 +12,17 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Workflow, PencilLine, ShieldAlert, X } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Workflow,
+  PencilLine,
+  ShieldAlert,
+  X,
+  Briefcase,
+  Cable
+} from "lucide-react";
 import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { AuditConfigurableItem, Department, ErrorState, Pagination } from "@/lib/types";
@@ -48,6 +58,7 @@ import {
 import { de } from "zod/v4/locales";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/use-permissions";
+import { Badge } from "@/components/ui/badge";
 
 interface ProcessFormData {
   id?: string;
@@ -121,26 +132,26 @@ export default function ProcessActivityTab() {
 
   const { data: pillarsResponse } = useStrategicPillars(undefined, {
     page: 1,
-    page_size: 100
+    page_size: 300
   });
   const pillars = pillarsResponse?.data || [];
 
-  const { data: areasResponse } = useAuditableAreas({ page: 1, page_size: 100 });
+  const { data: areasResponse } = useAuditableAreas({ page: 1, page_size: 300 });
   const areas = areasResponse?.data || [];
 
   const getDepartmentName = (departmentId: string) => {
     const department = departments.find((d) => d.id === departmentId);
     return department ? department.name : "No parent department";
   };
-  const getPillarName = (pillarId: string) => {
-    const pillar = pillars.find((d) => d.id === pillarId);
+  const getPillarName = useCallback((pillarId: string) => {
+    const pillar = pillars.find((d: any) => d.id === pillarId);
     return pillar ? pillar.title : "No parent pillar";
-  };
+  }, []);
 
-  const getAuditableArea = (auditableAreaId: string) => {
-    const auditableArea = areas.find((d) => d.id === auditableAreaId);
+  const getAuditableArea = useCallback((auditableAreaId: string) => {
+    const auditableArea = areas.find((d: any) => d.id === auditableAreaId);
     return auditableArea ? auditableArea.name : "No auditable area assigned";
-  };
+  }, []);
 
   return (
     <>
@@ -180,7 +191,7 @@ export default function ProcessActivityTab() {
             <TableBody>
               {isFetching && items.length === 0 ? (
                 <>
-                  {[...Array(5)].map((_, idx) => (
+                  {[...Array(8)].map((_, idx) => (
                     <TableRow key={`skeleton-${idx}`}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -247,36 +258,29 @@ export default function ProcessActivityTab() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm">
+                        <Badge variant="info" className="gap-1 text-xs">
+                          <Briefcase className="h-3 w-3" />
                           {item?.department_name || "No parent department"}
-                        </span>
+                        </Badge>
+                        <span className="font-mono text-sm"></span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm">
+                        <Badge variant="info" className="gap-1 text-xs">
+                          <Cable className="h-3 w-3" />
                           {getPillarName(item.strategic_pillar_id)}
-                        </span>
+                        </Badge>
+                        <span className="font-mono text-sm"></span>
                       </TableCell>
                       <TableCell>
+                        <Badge variant="info" className="gap-1 text-xs">
+                          <Cable className="h-3 w-3" />
+                          {getPillarName(item.strategic_pillar_id)}
+                        </Badge>
                         <span className="font-mono text-sm">
                           {getAuditableArea(item.auditable_area_id)}
                         </span>
                       </TableCell>
-                      {/* <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {activities.slice(0, 3).map((activity: string, idx: number) => (
-                            <span
-                              key={idx}
-                              className="bg-primary/10 rounded-full px-2 py-0.5 text-xs">
-                              {activity}
-                            </span>
-                          ))}
-                          {activities.length > 3 && (
-                            <span className="text-muted-foreground text-xs">
-                              +{activities.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      </TableCell> */}
+
                       <TableCell align="center">
                         <div className="flex justify-end gap-2">
                           <Button

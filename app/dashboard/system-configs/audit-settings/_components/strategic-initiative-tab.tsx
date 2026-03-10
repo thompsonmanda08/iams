@@ -12,7 +12,16 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Lightbulb, PencilLine, ShieldAlert } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Lightbulb,
+  PencilLine,
+  ShieldAlert,
+  Briefcase,
+  Cable
+} from "lucide-react";
 import { notify } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { AuditConfigurableItem, Department, ErrorState, Pagination } from "@/lib/types";
@@ -48,6 +57,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Spinner } from "@/components/ui/spinner";
 import Loader from "@/components/ui/loader";
 import { usePermissions } from "@/hooks/use-permissions";
+import { Badge } from "@/components/ui/badge";
 
 interface InitiativeFormData extends Omit<AuditConfigurableItem, "id"> {
   pillar_id?: string;
@@ -253,14 +263,16 @@ export default function StrategicInitiativeTab() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono text-sm">
+                          <Badge variant="info" className="gap-1 text-xs">
+                            <Cable className="h-3 w-3" />
                             {item?.pillar || selectedPillar?.title || "No parent pillar"}
-                          </span>
+                          </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono text-sm">
+                          <Badge variant="info" className="gap-1 text-xs">
+                            <Briefcase className="h-3 w-3" />
                             {item?.department_name || departmentName}
-                          </span>
+                          </Badge>
                         </TableCell>
                         <TableCell align="center">
                           <div className="flex justify-end gap-2">

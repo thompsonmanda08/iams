@@ -49,6 +49,7 @@ export type User = {
   email: string;
   first_name: string;
   last_name: string;
+  profile_picture?: string;
   branch_id: string;
   department_id: string;
   role_id: string;

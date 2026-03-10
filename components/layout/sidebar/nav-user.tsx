@@ -16,12 +16,13 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import { BellIcon, CreditCardIcon, LogOutIcon, UserCircle2Icon } from "lucide-react";
+import { LogOutIcon, UserCircle2Icon } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { logUserOut } from "@/app/_actions/auth-actions";
 import { User } from "@/lib/types/account";
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 export function NavUser({ user, isLoadingUser }: { user: User; isLoadingUser: boolean }) {
   const { isMobile } = useSidebar();
@@ -90,11 +91,13 @@ export function NavUser({ user, isLoadingUser }: { user: User; isLoadingUser: bo
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/system-configs?tab=profile">
                 <UserCircle2Icon />
                 Account
-              </DropdownMenuItem>
+              </Link>
+            </DropdownMenuItem>
+            {/* <DropdownMenuGroup>
               <DropdownMenuItem>
                 <CreditCardIcon />
                 Billing
@@ -103,7 +106,7 @@ export function NavUser({ user, isLoadingUser }: { user: User; isLoadingUser: bo
                 <BellIcon />
                 Notifications
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            </DropdownMenuGroup> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleUserLogOut}>
               <LogOutIcon />

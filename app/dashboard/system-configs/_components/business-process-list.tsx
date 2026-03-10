@@ -21,6 +21,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 type BusinessProcess = {
   id: string;
   parent_id: string | null;
+  parent_name: string | null;
   name: string;
   description: string | null;
   created_at: string;
@@ -130,7 +131,10 @@ export function BusinessProcessList() {
         await fetchProcesses();
         setDeleteDialog({ open: false, processId: null, processName: null });
       } else {
-        notify({ description: response.message || "Failed to delete business process", type: "error" });
+        notify({
+          description: response.message || "Failed to delete business process",
+          type: "error"
+        });
       }
     } catch (error) {
       console.error("Error deleting process:", error);
@@ -144,13 +148,6 @@ export function BusinessProcessList() {
 
   const handleEditClick = (process: BusinessProcess) => {
     setDialog({ open: true, process });
-  };
-
-  // Get parent process name
-  const getParentProcessName = (parentId: string | null) => {
-    if (!parentId) return null;
-    const parent = processes.find((p) => p.id === parentId);
-    return parent ? parent.name : "Unknown Parent";
   };
 
   if (isLoading) {
@@ -212,20 +209,22 @@ export function BusinessProcessList() {
               </TableRow>
             ) : (
               processes.map((process) => {
-                const parentName = getParentProcessName(process.parent_id);
                 return (
                   <TableRow key={process.id}>
                     <TableCell>
                       <p className="text-foreground font-medium">{process.name}</p>
                     </TableCell>
                     <TableCell>
-                      {parentName ? (
+                      {process.parent_id ? (
                         <Badge variant="success" className="gap-1 text-xs">
                           <Cable className="h-3 w-3" />
-                          {parentName}
+                          {process.parent_name}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
+                        <Badge variant="success" className="gap-1 text-xs">
+                          <Cable className="h-3 w-3" />
+                          N/A
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell>
