@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Plus, Globe, Send, Pencil, Trash2, User, UserCheckIcon } from "lucide-react";
+import { Plus, Globe, Send, Pencil, Trash2, User } from "lucide-react";
 import { notify } from "@/lib/utils";
 import { submitUniverseForApproval, deleteUniverseItem } from "@/app/_actions/audit-module-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -85,13 +85,19 @@ const UniverseDetails = ({
     },
     onSuccess: (response) => {
       if (response.success) {
-        notify({ description: response.message || "Universe item deleted successfully", type: "success" });
+        notify({
+          description: response.message || "Universe item deleted successfully",
+          type: "success"
+        });
         queryClient.invalidateQueries();
         setDeleteConfirmOpen(false);
         setItemToDelete(null);
         router.refresh();
       } else {
-        notify({ description: response.message || "Failed to delete universe item", type: "error" });
+        notify({
+          description: response.message || "Failed to delete universe item",
+          type: "error"
+        });
       }
     },
     onError: (error) => {
@@ -166,7 +172,10 @@ const UniverseDetails = ({
         queryClient.invalidateQueries({ queryKey: ["universes"] });
         router.refresh();
       } else {
-        notify({ description: result.message || "Failed to submit universe for approval", type: "error" });
+        notify({
+          description: result.message || "Failed to submit universe for approval",
+          type: "error"
+        });
       }
     } catch (error) {
       notify({ description: "An error occurred while submitting the universe", type: "error" });
@@ -236,21 +245,16 @@ const UniverseDetails = ({
                   <User className="h-4 w-4 text-cyan-500" />
                 </div>
                 <p className="text-foreground line-clamp-1 truncate text-lg font-semibold">
-                  {universe.created_by_name || universe.created_by || "N/A"}
+                  {universe?.created_by_name || universe?.created_by || "System User"}
                 </p>
               </div>
             </div>
             <div className="space-y-2">
               <Label className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
-                Approved By
+                Status
               </Label>
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-cyan-500/20 p-2">
-                  <UserCheckIcon className="h-4 w-4 text-cyan-500" />
-                </div>
-                <p className="text-foreground line-clamp-1 truncate text-lg font-semibold">
-                  {universe.approved_by_name || universe.approved_by || "Pending Review"}
-                </p>
+                <StatusBadge status={universe.status || "DRAFT"} />
               </div>
             </div>
           </div>
