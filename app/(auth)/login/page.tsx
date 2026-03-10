@@ -12,13 +12,11 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="flex flex-col items-center space-y-3">
-        <div>
-          <h1 className="text-foreground font-mono text-3xl font-bold tracking-tight">Login</h1>
-          <p className="text-muted-foreground text-center text-sm leading-relaxed">
-            Enter your credentials to access your account
-          </p>
-        </div>
+        className="flex flex-col items-start">
+        <h1 className="text-foreground p-0 font-mono text-3xl font-bold tracking-tight">Login</h1>
+        <p className="text-muted-foreground p-0 text-sm leading-relaxed">
+          Enter your credentials to access your account
+        </p>
       </motion.div>
 
       <LoginForm />
@@ -28,10 +26,10 @@ export default function LoginPage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
         className="border-t pt-6 text-center">
-        <p className="mb-1 text-xs text-gray-400">Need assistance?</p>
+        {/* <p className="mb-1 text-xs text-gray-400">Need assistance?</p>
         <a href="#" className="text-primary text-sm font-medium transition-colors hover:underline">
           Contact Support
-        </a>
+        </a> */}
       </motion.div>
     </div>
   );
