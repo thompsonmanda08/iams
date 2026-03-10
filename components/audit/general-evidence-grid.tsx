@@ -380,10 +380,12 @@ export function GeneralEvidenceGrid({
       const row = rows.find((r) => r._localId === localId);
       if (!row || !row.isDirty || row.isSaving) return;
 
-      // Check that at least one column has a value
-      const hasContent = Object.values(row.columns).some(
-        (v) => v !== "" && v !== null && v !== false
-      );
+      // Check that at least one field has a value (columns, keys, observation, or comments)
+      const hasContent =
+        Object.values(row.columns).some((v) => v !== "" && v !== null && v !== false) ||
+        Object.values(row.keys).some((v) => v !== "" && v !== null && v !== false) ||
+        row.audit_observation.trim() !== "" ||
+        row.audit_comments.trim() !== "";
       if (!hasContent) return;
 
       setRows((prev) => prev.map((r) => (r._localId === localId ? { ...r, isSaving: true } : r)));
@@ -638,7 +640,18 @@ export function GeneralEvidenceGrid({
                     <TableCell>
                       <EvidenceUploadCell
                         value={row.evidence}
-                        onChange={(url) => updateRowField(row._localId, "static", "evidence", url)}
+                        onChange={(url) => {
+                          updateRowField(row._localId, "static", "evidence", url);
+                          // File picker blur fires before upload completes so auto-save never
+                          // triggers via onBlur. Directly persist the evidence URL instead.
+                          if (row.findingId) {
+                            updateMutation.mutate({
+                              findingId: row.findingId,
+                              data: { evidence: url },
+                              workingPaperId
+                            });
+                          }
+                        }}
                         disabled={disabled || row.status !== "DRAFT"}
                       />
                     </TableCell>
