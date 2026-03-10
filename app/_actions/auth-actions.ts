@@ -38,7 +38,7 @@ export async function loginUser({
     const response = await axios.post(url, { username, password });
 
     const session = response?.data;
-    console.log("[ LOGIN ]---------------: ", session);
+    // FIX #12: Removed console.log that leaked access_token to server logs in all environments.
 
     // Set authentication cookie (will include mfa_required flag)
     await createAuthSession({

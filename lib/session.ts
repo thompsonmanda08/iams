@@ -381,7 +381,9 @@ export async function verifySessions(
     if (!cookie) return null;
     const data = await decrypt(cookie);
     // Ensure we don't return decryption error objects
-    return data && !data.success === false ? data : null;
+    // FIX #11: `!data.success === false` was logically inverted (operator precedence bug).
+    // Correct: reject objects where success is explicitly false (decryption error objects).
+    return data && data.success !== false ? data : null;
   });
 
   const decryptedSessions = await Promise.all(sessionPromises);
@@ -398,18 +400,23 @@ export async function verifySessions(
 
 /**
  * Set screen lock state cookie
- * Persists across page reloads so user needs to confirm they're still active
- * Cookie expires in 90 seconds (matches SCREEN_LOCK_COUNTDOWN)
+ * Persists across page reloads so the lock dialog is restored after a reload.
+ * Cookie and JWT expire with the full session TTL so the lock survives until
+ * the user explicitly confirms they are present or the session itself expires.
  */
 export async function setScreenLockCookie(isLocked: boolean): Promise<void> {
-  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SCREEN_LOCK_COUNTDOWN);
+  // FIX #4: Cookie and JWT expire with the full session (not just the 90s countdown window).
+  // The lock dialog must persist across page reloads until the user explicitly confirms
+  // or the session itself expires — a 90s cookie caused the lock to vanish on late reloads.
+  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
 
   const lockState = {
     locked: isLocked,
     timestamp: new Date().toISOString()
   };
 
-  const token = await encrypt(lockState, "90s");
+  const jwtExpirationSeconds = Math.ceil(SESSION_CONFIG.SESSION_TTL / 1000);
+  const token = await encrypt(lockState, `${jwtExpirationSeconds}s`);
 
   if (token) {
     (await cookies()).set(SCREEN_LOCK_SESSION, token, {
@@ -446,26 +453,9 @@ export async function getScreenLockState(): Promise<boolean> {
     return false;
   }
 
-  // Additional validation: Check if the lock timestamp is recent (within 95 seconds)
-  // This prevents showing stale lock state from old cookies
-  // The SCREEN_LOCK_SESSION cookie expires in 90 seconds, but we use 95s as a buffer
-  // to account for network delays and server/client time differences
-  const timestamp = (lockState as any)?.timestamp;
-  if (timestamp) {
-    try {
-      const lockTime = new Date(timestamp).getTime();
-      const nowTime = Date.now();
-      const ageMs = nowTime - lockTime;
-
-      // If lock is older than 95 seconds, consider it stale and ignore it
-      if (ageMs > 95000) {
-        return false;
-      }
-    } catch (error) {
-      // If timestamp parsing fails, still return true if locked flag is set
-      // This is safer than silently ignoring an active lock
-    }
-  }
+  // FIX #4: Removed the 95-second timestamp staleness check.
+  // Cookie and JWT now expire with the full session TTL, so JWT expiry (verified by
+  // decrypt() above) is the authoritative staleness signal — no manual age check needed.
 
   return true;
 }

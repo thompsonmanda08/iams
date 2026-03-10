@@ -20,14 +20,6 @@ export default function AuditSettingsPage() {
               description="Manage your audit templates, pillars, auditable areas, strategies, and workpapers"
               icon="ClipboardCheck"
             />
-            {/* <div className="flex gap-2">
-              <Link href="/dashboard/audit/budgets/new">
-                <Button className="gap-2">
-                  <Plus className="h-6 w-6" />
-                  New Budget
-                </Button>
-              </Link>
-            </div> */}
           </div>
         </div>
       </div>

@@ -5,9 +5,15 @@
  * Multi-tab idle detection using react-idle-timer's built-in crossTab support.
  * - crossTab: true + syncTimers: true shares activity events across all tabs
  * - If ANY tab is active, ALL tabs' idle timers reset (prevents false idle on active tabs)
- * - BroadcastChannel is used only for UNLOCK sync (when user clicks "I'm still here")
- * - Lock events are NOT broadcast — only the tab that goes idle shows its own dialog
- * - Persisted lock state (cookie) restores dialog on page reload WITHOUT broadcasting
+ * - BroadcastChannel is used for LOCK, UNLOCK, and LOGOUT sync across tabs
+ * - FIX #2: LOCK is the ONLY message type sent via the localStorage fallback.
+ *   UNLOCK and LOGOUT are never sent via localStorage — any same-origin script can
+ *   write to localStorage, so using it for security-sensitive unlocking is unsafe.
+ * - FIX #1: SCREEN_LOGOUT broadcast causes all receiving tabs to redirect to /login,
+ *   preventing dangling authenticated UI after the session has been deleted.
+ * - FIX #3: Countdown uses a wall-clock deadline so hiding/minimizing the tab
+ *   cannot defer auto-logout indefinitely.
+ * - Persisted lock state (cookie) restores dialog on page reload WITHOUT broadcasting.
  */
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useIdleTimer } from "react-idle-timer";
@@ -40,6 +46,10 @@ import { logger } from "@/lib/logger";
 const DEFAULT_TIMEOUT = SESSION_CONFIG.SCREEN_LOCK_COUNTDOWN;
 const SCREEN_LOCK_CHANNEL = "screen-lock-state";
 
+// FIX #1 + #2: Strict allowlist of valid broadcast types — unknown/injected types are rejected.
+type BroadcastType = "SCREEN_LOCK" | "SCREEN_UNLOCK" | "SCREEN_LOGOUT";
+const VALID_BROADCAST_TYPES = new Set<BroadcastType>(["SCREEN_LOCK", "SCREEN_UNLOCK", "SCREEN_LOGOUT"]);
+
 interface ScreenLockProps {
   open: boolean;
   onStillHere?: () => Promise<void>;
@@ -50,9 +60,10 @@ interface ScreenLockProps {
 
 /**
  * Custom hook for countdown timer logic
- * Handles timer state, interval cleanup, and timeout callbacks
  *
- * Only executes timeout if dialog is still open (prevents logout from hidden dialogs)
+ * FIX #3: Uses a wall-clock deadline instead of tick counting.
+ * When a tab is hidden (minimized, background) and then restored, the elapsed
+ * real-world time is accounted for — so hiding the browser cannot delay auto-logout.
  */
 const useCountdownTimer = (
   open: boolean,
@@ -62,46 +73,66 @@ const useCountdownTimer = (
 ) => {
   const [seconds, setSeconds] = useState(timeoutSeconds);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const deadlineRef = useRef<number | null>(null); // FIX #3: wall-clock deadline
+
+  const stopInterval = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const startInterval = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      // FIX #3: Compute remaining time from wall-clock deadline, not tick count
+      if (deadlineRef.current === null) return;
+      const remaining = Math.ceil((deadlineRef.current - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(intervalRef.current!);
+        intervalRef.current = null;
+        setSeconds(0);
+      } else {
+        setSeconds(remaining);
+      }
+    }, 1000);
+  }, []);
 
   useEffect(() => {
-    if (open) {
-      setSeconds(timeoutSeconds);
-      hasLoggedOutRef.current = false;
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+    if (!open) {
+      stopInterval();
       return;
     }
 
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+    // FIX #3: Record wall-clock deadline so elapsed time while hidden is accounted for
+    deadlineRef.current = Date.now() + timeoutSeconds * 1000;
+    setSeconds(timeoutSeconds);
+    hasLoggedOutRef.current = false;
+
+    if (document.visibilityState === "visible") {
+      startInterval();
     }
 
-    intervalRef.current = setInterval(() => {
-      setSeconds((prevSeconds) => {
-        const newSeconds = prevSeconds - 1;
-
-        if (newSeconds <= 0) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-          return 0;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        stopInterval();
+      } else {
+        // FIX #3: On resume, check if deadline already passed while the tab was hidden
+        if (deadlineRef.current !== null && deadlineRef.current <= Date.now()) {
+          setSeconds(0); // triggers onTimeout via the effect below
+        } else {
+          startInterval();
         }
-
-        return newSeconds;
-      });
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
       }
     };
-  }, [open, timeoutSeconds]);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stopInterval();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [open, timeoutSeconds, startInterval, stopInterval]);
 
   useEffect(() => {
     if (seconds <= 0 && open && !hasLoggedOutRef.current) {
@@ -195,13 +226,16 @@ function ScreenLock({
 }
 
 /**
- * Custom hook for multi-tab UNLOCK synchronization.
+ * Custom hook for multi-tab screen-lock synchronization.
  *
- * KEY DESIGN: This hook ONLY handles unlock broadcasts.
- * Lock events are NOT broadcast — react-idle-timer's crossTab handles activity sharing.
- * When one tab unlocks (user clicks "I'm still here"), all tabs unlock.
+ * FIX #1: Handles SCREEN_LOGOUT broadcast — receiving tabs call window.location.replace("/login")
+ * so they don't stay on the dashboard after the session cookie has been deleted.
+ *
+ * FIX #2: Message type is validated against an allowlist before acting.
+ * localStorage fallback is restricted to LOCK-only — UNLOCK and LOGOUT are never sent
+ * via localStorage because any same-origin script can write to it.
  */
-const useUnlockSync = (loggedIn: boolean) => {
+const useScreenLockSync = (loggedIn: boolean) => {
   const [isLocked, setIsLocked] = useState(false);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
 
@@ -210,31 +244,46 @@ const useUnlockSync = (loggedIn: boolean) => {
 
     let storageListener: ((e: StorageEvent) => void) | null = null;
 
-    const handleUnlockMessage = (isUnlocked: boolean) => {
-      if (isUnlocked) {
-        logger.info("Received unlock broadcast from another tab", {
-          component: "useUnlockSync"
+    const handleMessage = (type: string) => {
+      // FIX #2: Reject any message type not in the allowlist
+      if (!VALID_BROADCAST_TYPES.has(type as BroadcastType)) {
+        logger.warn("Ignoring unknown broadcast type", { type, component: "useScreenLockSync" });
+        return;
+      }
+      if (type === "SCREEN_UNLOCK") {
+        logger.info("Received SCREEN_UNLOCK broadcast from another tab", {
+          component: "useScreenLockSync"
         });
         setIsLocked(false);
+      } else if (type === "SCREEN_LOCK") {
+        logger.info("Received SCREEN_LOCK broadcast from another tab", {
+          component: "useScreenLockSync"
+        });
+        setIsLocked(true);
+      } else if (type === "SCREEN_LOGOUT") {
+        // FIX #1: Redirect this tab to login when another tab's session is terminated
+        logger.info("Received SCREEN_LOGOUT broadcast — redirecting to login", {
+          component: "useScreenLockSync"
+        });
+        window.location.replace("/login");
       }
     };
 
     const handleBroadcastMessage = (event: MessageEvent) => {
-      if (event.data.type === "SCREEN_UNLOCK") {
-        handleUnlockMessage(true);
-      }
+      handleMessage(event.data.type);
     };
 
+    // FIX #2: Only process SCREEN_LOCK from localStorage.
+    // UNLOCK and LOGOUT are intentionally excluded — any same-origin script can write
+    // to localStorage, so processing those types here would be a bypass vector.
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === SCREEN_LOCK_CHANNEL) {
         try {
           const data = event.newValue ? JSON.parse(event.newValue) : null;
-          if (data?.type === "SCREEN_UNLOCK") {
-            handleUnlockMessage(true);
-          }
+          if (data?.type === "SCREEN_LOCK") handleMessage(data.type);
         } catch {
           logger.debug("Failed to parse storage event data", {
-            component: "useUnlockSync"
+            component: "useScreenLockSync"
           });
         }
       }
@@ -243,12 +292,12 @@ const useUnlockSync = (loggedIn: boolean) => {
     try {
       broadcastChannelRef.current = new BroadcastChannel(SCREEN_LOCK_CHANNEL);
       broadcastChannelRef.current.addEventListener("message", handleBroadcastMessage);
-      logger.debug("BroadcastChannel initialized for unlock sync", {
-        component: "useUnlockSync"
+      logger.debug("BroadcastChannel initialized for screen-lock sync", {
+        component: "useScreenLockSync"
       });
     } catch {
       logger.warn("BroadcastChannel not supported, using localStorage fallback", {
-        component: "useUnlockSync"
+        component: "useScreenLockSync"
       });
     }
 
@@ -268,45 +317,48 @@ const useUnlockSync = (loggedIn: boolean) => {
     };
   }, [loggedIn]);
 
-  const broadcastUnlock = useCallback(() => {
-    const message = {
-      type: "SCREEN_UNLOCK",
-      timestamp: Date.now()
-    };
+  const broadcast = useCallback((type: BroadcastType) => {
+    const message = { type, timestamp: Date.now() };
 
-    // Try BroadcastChannel first, fall back to localStorage
     if (broadcastChannelRef.current) {
       try {
         broadcastChannelRef.current.postMessage(message);
-        logger.debug("Broadcasted unlock via BroadcastChannel", {
-          component: "useUnlockSync"
+        logger.debug(`Broadcasted ${type} via BroadcastChannel`, {
+          component: "useScreenLockSync"
         });
       } catch {
-        // Fall through to localStorage
-        _broadcastViaLocalStorage(message);
+        // FIX #2: Only LOCK events fall back to localStorage — UNLOCK/LOGOUT are unsafe there
+        if (type === "SCREEN_LOCK") _broadcastViaLocalStorage(message);
       }
     } else {
-      _broadcastViaLocalStorage(message);
+      // FIX #2: Same restriction applies when BroadcastChannel is unavailable
+      if (type === "SCREEN_LOCK") _broadcastViaLocalStorage(message);
     }
   }, []);
 
-  return { isLocked, setIsLocked, broadcastUnlock };
+  const broadcastLock = useCallback(() => broadcast("SCREEN_LOCK"), [broadcast]);
+  const broadcastUnlock = useCallback(() => broadcast("SCREEN_UNLOCK"), [broadcast]);
+  // FIX #1: New broadcast type — tells all other tabs to redirect to /login
+  const broadcastLogout = useCallback(() => broadcast("SCREEN_LOGOUT"), [broadcast]);
+
+  return { isLocked, setIsLocked, broadcastLock, broadcastUnlock, broadcastLogout };
 };
 
 function _broadcastViaLocalStorage(message: Record<string, unknown>) {
   try {
     localStorage.setItem(SCREEN_LOCK_CHANNEL, JSON.stringify(message));
-    // Clean up localStorage after a short delay to avoid stale data
+    // FIX #5: Increased from 1000ms to 3000ms so slow or background tabs have enough
+    // time to pick up the storage event before it is cleaned up.
     setTimeout(() => {
       try {
         localStorage.removeItem(SCREEN_LOCK_CHANNEL);
       } catch {
         // Ignore cleanup errors
       }
-    }, 1000);
+    }, 3000);
   } catch {
     logger.debug("Failed to broadcast via localStorage", {
-      component: "useUnlockSync"
+      component: "useScreenLockSync"
     });
   }
 }
@@ -314,12 +366,15 @@ function _broadcastViaLocalStorage(message: Record<string, unknown>) {
 export function IdleTimerContainer({ session }: { session: AuthSession | null }) {
   const [isLoading, setIsLoading] = useState(false);
   const hasLoggedOutRef = useRef(false);
+  // FIX #8: Prevents concurrent invocations of handleStillHere (e.g. double-click)
+  const isStillHereInProgressRef = useRef(false);
   const idleTimerRef = useRef<ReturnType<typeof useIdleTimer> | null>(null);
 
   const loggedIn = !!session?.accessToken;
 
-  // Unlock sync hook — only broadcasts/receives UNLOCK events across tabs
-  const { isLocked, setIsLocked, broadcastUnlock } = useUnlockSync(loggedIn);
+  // FIX #1: Destructure broadcastLogout for use in logout flows
+  const { isLocked, setIsLocked, broadcastLock, broadcastUnlock, broadcastLogout } =
+    useScreenLockSync(loggedIn);
 
   // Token refresh is paused when locked (uses isLocked, not a separate isIdle)
   const { error: refreshError } = useRefreshToken(
@@ -370,14 +425,19 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     }
   }, [loggedIn, setIsLocked]);
 
-  // Idle timeout callback — only locks THIS tab, no cross-tab broadcast
-  const onIdle = useCallback(async () => {
-    logger.debug("Idle timeout detected, locking screen", {
+  // FIX #10: onIdle implementation — kept in a ref so useIdleTimer's stable wrapper
+  // always dispatches to the latest version without re-registering the timer.
+  const onIdleImpl = useCallback(async () => {
+    // Guard: already locked (e.g. fired again after tab becomes visible)
+    if (isLocked) return;
+
+    logger.debug("Idle timeout detected, locking screen and broadcasting to all tabs", {
       component: "IdleTimerContainer.onIdle"
     });
 
-    // Lock this tab immediately
+    // Lock this tab immediately and notify all other open tabs
     setIsLocked(true);
+    broadcastLock();
 
     // Persist to server cookie (async, dialog already shown)
     try {
@@ -396,7 +456,15 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         component: "IdleTimerContainer.onIdle"
       });
     }
-  }, [setIsLocked]);
+  }, [isLocked, setIsLocked, broadcastLock]);
+
+  // FIX #10: Keep ref current so the stable wrapper always calls the latest onIdleImpl
+  const onIdleRef = useRef(onIdleImpl);
+  onIdleRef.current = onIdleImpl;
+
+  // FIX #10: Stable callback with no deps — useIdleTimer receives a reference that never
+  // changes, avoiding the risk of the timer holding a stale onIdle closure.
+  const onIdle = useCallback(() => onIdleRef.current(), []);
 
   const onActive = useCallback(() => {
     // No-op: we don't need to manually reset because crossTab + syncTimers
@@ -411,12 +479,16 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     throttle: 500,
     crossTab: true,
     syncTimers: 200,
-    disabled: !loggedIn || isLocked
+    // Keep timer enabled even when locked so this tab stays in the crossTab network
+    // and continues syncing activity events from other tabs.
+    disabled: !loggedIn
   });
 
   // Keep ref in sync for use in callbacks
   idleTimerRef.current = idleTimer;
 
+  // FIX #1: broadcastLogout instead of broadcastUnlock — other tabs redirect to /login
+  // rather than simply dismissing the lock dialog with an invalid session.
   const handleUserLogOut = useCallback(async () => {
     if (hasLoggedOutRef.current) return;
     hasLoggedOutRef.current = true;
@@ -445,15 +517,22 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         component: "IdleTimerContainer.handleUserLogOut"
       });
     } finally {
-      // Clear state and broadcast unlock AFTER logout completes
       setIsLocked(false);
-      broadcastUnlock();
+      // FIX #1: SCREEN_LOGOUT causes other tabs to redirect — not just dismiss the dialog
+      broadcastLogout();
       setIsLoading(false);
       window.location.replace("/login");
     }
-  }, [broadcastUnlock, setIsLocked]);
+  }, [broadcastLogout, setIsLocked]);
 
+  // FIX #7: Restructured to avoid calling handleUserLogOut from inside this function.
+  // Previously the nested call caused a double setIsLoading(false) and ambiguous
+  // finally-ordering. Logout logic is now inlined in both the failure and error paths.
+  // FIX #8: isStillHereInProgressRef prevents concurrent calls from double-clicks.
   const handleStillHere = useCallback(async () => {
+    if (isStillHereInProgressRef.current) return; // FIX #8
+    isStillHereInProgressRef.current = true;
+
     setIsLoading(true);
     try {
       logger.debug("User clicked 'I'm still here' - attempting to unlock screen", {
@@ -490,22 +569,40 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
         return;
       }
 
-      logger.error("Both unlock and refresh failed", {
+      // FIX #7: Inline logout — no nested handleUserLogOut call avoids double-finally issues
+      logger.error("Both unlock and refresh failed — logging out", {
         component: "IdleTimerContainer.handleStillHere"
       });
-
       notify({ description: "Session expired. Please log in again.", type: "error" });
-      await handleUserLogOut();
+      hasLoggedOutRef.current = true;
+      setIsLocked(false);
+      broadcastLogout(); // FIX #1: other tabs redirect to /login
+      await logUserOut("Session expired after idle.").catch((e) =>
+        logger.error("Logout error during session expiry", e, {
+          component: "IdleTimerContainer.handleStillHere"
+        })
+      );
+      window.location.replace("/login");
     } catch (error) {
       logger.error("Critical error in handleStillHere", error, {
         component: "IdleTimerContainer.handleStillHere"
       });
       notify({ description: "An unexpected error occurred. Logging out...", type: "error" });
-      await handleUserLogOut();
+      // FIX #7: Inline logout in error path as well
+      hasLoggedOutRef.current = true;
+      setIsLocked(false);
+      broadcastLogout(); // FIX #1
+      await logUserOut("Critical error during session restore.").catch((e) =>
+        logger.error("Logout error during critical failure", e, {
+          component: "IdleTimerContainer.handleStillHere"
+        })
+      );
+      window.location.replace("/login");
     } finally {
       setIsLoading(false);
+      isStillHereInProgressRef.current = false; // FIX #8
     }
-  }, [handleUserLogOut, broadcastUnlock, setIsLocked]);
+  }, [broadcastUnlock, broadcastLogout, setIsLocked]);
 
   // Debug logging for state changes
   useEffect(() => {
