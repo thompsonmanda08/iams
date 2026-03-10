@@ -40,6 +40,8 @@ interface Universe {
   end_date: string;
   is_active: boolean;
   status?: string;
+  created_by?: string;
+  created_by_name?: string;
 }
 
 interface UniverseDetailsProps {
