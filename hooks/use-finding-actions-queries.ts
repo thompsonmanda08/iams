@@ -324,6 +324,7 @@ export function useUpdateGeneralFindingReassessment() {
         audit_observation?: string;
         audit_comments?: string;
         evidence?: string;
+        is_marked_complete?: boolean;
       };
     }) => {
       const result = await updateGeneralFinding(params.findingId, params.data);

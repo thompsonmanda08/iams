@@ -258,7 +258,7 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
         id: "auditee-sign-off",
         name: "Auditee Sign-Off",
         description: "Auditee has reviewed findings and submitted sign-off comments",
-        completed: !!auditPlan.sign_off_comments?.trim(),
+        completed: !!auditPlan.management_comments?.trim(),
         required: false, // optional until full implementation
         category: "actions"
       },
@@ -383,27 +383,26 @@ export async function requestAuditClosure(payload: ClosureRequestPayload): Promi
 // ============================================================================
 
 /**
- * Submit auditee sign-off comments
- * TODO: replace stub with real endpoint when available
- * Expected endpoint: PATCH /api/v1/audit-plans/:id  { sign_off_comments }
+ * Submit auditee sign-off (management comments)
+ * Endpoint: PATCH /api/v1/audit-plans/:id/management-comments
  */
 export async function submitAuditeeSignOff(
   auditPlanId: string,
-  signOffComments: string
+  managementComments: string
 ): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
   }
 
-  if (!signOffComments?.trim()) {
+  if (!managementComments?.trim()) {
     return handleBadRequest("Sign-off comments are required");
   }
 
   try {
     const response = await authenticatedApiClient({
       method: "PATCH",
-      url: `/api/v1/audit-plans/${auditPlanId}`,
-      data: { sign_off_comments: signOffComments }
+      url: `/api/v1/audit-plans/${auditPlanId}/management-comments`,
+      data: { management_comments: managementComments }
     });
 
     if (!response.data) {
@@ -417,7 +416,35 @@ export async function submitAuditeeSignOff(
     return handleError(
       error,
       "PATCH | AUDITEE SIGN-OFF",
-      `/api/v1/audit-plans/${auditPlanId}`
+      `/api/v1/audit-plans/${auditPlanId}/management-comments`
+    );
+  }
+}
+
+/**
+ * Stub: Sends an email notification to the Auditee Department Head to log in
+ * and provide sign-off comments on the audit plan.
+ * TODO: replace with real endpoint when available
+ */
+export async function requestAuditeeSignOffNotification(
+  auditPlanId: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  try {
+    // Stub — real endpoint TBD
+    // await authenticatedApiClient({
+    //   method: "POST",
+    //   url: `/api/v1/audit-plans/${auditPlanId}/request-sign-off`
+    // });
+    return successResponse(null, "Sign-off notification sent successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | REQUEST SIGN-OFF NOTIFICATION",
+      `/api/v1/audit-plans/${auditPlanId}/request-sign-off`
     );
   }
 }

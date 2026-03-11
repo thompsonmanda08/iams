@@ -287,7 +287,7 @@ export interface AuditPlan {
     email: string;
     role: string;
   }>;
-  sign_off_comments?: string | null;
+  management_comments?: string | null;
 }
 
 type User = {

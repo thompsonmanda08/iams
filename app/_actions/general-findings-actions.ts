@@ -102,6 +102,7 @@ export async function updateGeneralFinding(
     audit_comments?: string;
     evidence?: string;
     status?: string;
+    is_marked_complete?: boolean;
   }
 ): Promise<APIResponse> {
   if (!findingId) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -23,6 +23,9 @@ import {
   useFinding,
   useGeneralFinding
 } from "@/hooks/use-finding-actions-queries";
+import { useQuery } from "@tanstack/react-query";
+import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
+import { getWorkpapers } from "@/app/_actions/audit-module-actions";
 import { useFindingEvidence } from "@/hooks/use-evidence-queries";
 import { SubmitEvidenceDialog } from "./submit-evidence-dialog";
 import { ReviewEvidenceDialog } from "./review-evidence-dialog";
@@ -147,6 +150,30 @@ export function FindingActionDetailsDialog({
   const isAssignedReviewer =
     currentUserId === action.auditor_id || currentUserId === action.auditor_user?.id;
 
+  // Fetch workpaper config so we can show column/key descriptions in tooltips.
+  // Use action.audit_plan.id (same endpoint as page.tsx) which is confirmed to return `config`.
+  const auditPlanId = action.audit_plan?.id;
+  const { data: workpaperData } = useQuery({
+    queryKey: [AUDIT_QUERY_KEYS.WORKPAPERS, auditPlanId],
+    queryFn: async () => {
+      const res = await getWorkpapers(auditPlanId);
+      return res.success ? res.data : null;
+    },
+    enabled: !!auditPlanId && isGeneralFinding,
+    staleTime: 5 * 60 * 1000
+  });
+
+  // Build key → { name, description } lookup maps from the workpaper's template config
+  const colConfigMap = useMemo(() => {
+    const cols: any[] = workpaperData?.config?.[0]?.columns ?? [];
+    return Object.fromEntries(cols.map((c: any) => [c.key, { name: c.name, description: c.description }]));
+  }, [workpaperData]);
+
+  const keyConfigMap = useMemo(() => {
+    const keys: any[] = workpaperData?.config?.[0]?.keys ?? [];
+    return Object.fromEntries(keys.map((k: any) => [k.key, { name: k.name, description: k.description }]));
+  }, [workpaperData]);
+
   // Hide reassessment button if finding is already compliant
   const isCompliant = findingData?.compliance_status?.toLowerCase() === "compliant";
 
@@ -171,6 +198,15 @@ export function FindingActionDetailsDialog({
     action_status: action.status,
     isCompliant,
     isGeneralFinding
+  });
+
+  console.log("[FindingActionDetailsDialog] workpaper config debug", {
+    auditPlanId,
+    workpaperData_id: workpaperData?.id,
+    workpaperData_config_length: workpaperData?.config?.length,
+    workpaperData_config0_columns: workpaperData?.config?.[0]?.columns?.length,
+    colConfigMap_keys: Object.keys(colConfigMap),
+    keyConfigMap_keys: Object.keys(keyConfigMap),
   });
 
   return (
@@ -222,32 +258,36 @@ export function FindingActionDetailsDialog({
                         <div className="grid grid-cols-2 gap-4">
                           {generalFindingData.columns.flatMap((col: any) => {
                             if (!col || typeof col !== "object") return [];
-                            const description: string | undefined = col.description;
                             return Object.entries(col)
                               .filter(
                                 ([k, value]: [string, any]) =>
                                   k !== "description" && value != null && value !== ""
                               )
-                              .map(([key, value]: [string, any]) => (
-                                <div key={key}>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <p className="text-muted-foreground mb-1 inline-flex cursor-default items-center gap-1 text-xs font-medium capitalize">
-                                          {key.replace(/_/g, " ")}
-                                          {description && <Info className="h-3 w-3 shrink-0" />}
-                                        </p>
-                                      </TooltipTrigger>
-                                      {description && (
-                                        <TooltipContent side="top">
-                                          <p className="max-w-xs text-xs">{description}</p>
-                                        </TooltipContent>
-                                      )}
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <p className="text-sm font-medium">{String(value)}</p>
-                                </div>
-                              ));
+                              .map(([key, value]: [string, any]) => {
+                                const cfg = colConfigMap[key];
+                                const label = cfg?.name || key.replace(/_/g, " ");
+                                const description = cfg?.description;
+                                return (
+                                  <div key={key}>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <p className="text-muted-foreground mb-1 inline-flex cursor-default items-center gap-1 text-xs font-medium capitalize">
+                                            {label}
+                                            {description && <Info className="h-3 w-3 shrink-0" />}
+                                          </p>
+                                        </TooltipTrigger>
+                                        {description && (
+                                          <TooltipContent side="top">
+                                            <p className="max-w-xs text-xs">{description}</p>
+                                          </TooltipContent>
+                                        )}
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <p className="text-sm font-medium">{String(value)}</p>
+                                  </div>
+                                );
+                              });
                           })}
                         </div>
                       )}
@@ -262,10 +302,12 @@ export function FindingActionDetailsDialog({
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                               {generalFindingData.keys.flatMap((k: any) => {
                                 if (!k || typeof k !== "object") return [];
-                                const description: string | undefined = k.description;
                                 return Object.entries(k)
                                   .filter(([key]: [string, any]) => key !== "description")
                                   .map(([key, value]: [string, any]) => {
+                                    const cfg = keyConfigMap[key];
+                                    const label = cfg?.name || key.replace(/_/g, " ");
+                                    const description = cfg?.description;
                                     const isBool =
                                       typeof value === "boolean" ||
                                       value === "true" ||
@@ -285,7 +327,7 @@ export function FindingActionDetailsDialog({
                                             <TooltipTrigger asChild>
                                               <span className="inline-flex cursor-default items-center gap-1 text-sm">
                                                 <span className="text-muted-foreground capitalize">
-                                                  {key.replace(/_/g, " ")}
+                                                  {label}
                                                 </span>
                                                 {description && (
                                                   <Info className="text-muted-foreground h-3 w-3 shrink-0" />
@@ -894,6 +936,7 @@ export function FindingActionDetailsDialog({
           onOpenChange={setCreateReassessmentOpen}
           findingId={action.finding_id}
           generalFindingData={generalFindingData}
+          workpaperConfig={workpaperData?.config?.[0]}
         />
       ) : (
         <CreateReassessmentDialog
