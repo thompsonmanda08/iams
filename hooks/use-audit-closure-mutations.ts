@@ -4,7 +4,8 @@ import {
   requestAuditClosure,
   getAuditClosureStatus,
   validateAuditClosure,
-  submitAuditeeSignOff
+  submitAuditeeSignOff,
+  requestAuditeeSignOffNotification
 } from "@/app/_actions/audit-closure-actions";
 
 // Query Keys
@@ -46,11 +47,11 @@ export function useSubmitAuditeeSignOffMutation() {
   return useMutation({
     mutationFn: ({
       auditPlanId,
-      signOffComments
+      managementComments
     }: {
       auditPlanId: string;
-      signOffComments: string;
-    }) => submitAuditeeSignOff(auditPlanId, signOffComments),
+      managementComments: string;
+    }) => submitAuditeeSignOff(auditPlanId, managementComments),
     onSuccess: (response) => {
       if (response.success) {
         queryClient.invalidateQueries();
@@ -71,6 +72,19 @@ export function useSubmitAuditeeSignOffMutation() {
       notify({
         title: "Error",
         description: error.message || "Failed to submit sign-off",
+        type: "error"
+      });
+    }
+  });
+}
+
+export function useRequestSignOffNotificationMutation() {
+  return useMutation({
+    mutationFn: (auditPlanId: string) => requestAuditeeSignOffNotification(auditPlanId),
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to send sign-off notification",
         type: "error"
       });
     }
