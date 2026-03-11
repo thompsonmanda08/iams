@@ -439,6 +439,13 @@ export function AuditPlanWorkpaperView({
           </div>
           {isGeneralFramework ? (
             <>
+              <GeneralFindingsList
+                findings={workpaper?.general_findings ?? []}
+                config={workpaper?.config?.[0]}
+                auditPlanStatus={auditPlanStatus || auditPlan.status}
+                auditPlan={auditPlan}
+                workingPaperId={workpaper?.id}
+              />
               {/* Workpaper metadata — readonly summary */}
               {workpaper?.metadata && (
                 <div className="bg-muted/30 grid gap-4 rounded-lg border p-4 sm:grid-cols-3">
@@ -448,7 +455,7 @@ export function AuditPlanWorkpaperView({
                     { label: "Conclusion", value: workpaper.metadata.conclusion }
                   ].map(({ label, value }) => (
                     <div key={label}>
-                      <p className="text-primary mb-1 text-xs font-semibold uppercase tracking-wide">
+                      <p className="text-primary mb-1 text-xs font-semibold tracking-wide uppercase">
                         {label}
                       </p>
                       {value ? (
@@ -460,13 +467,6 @@ export function AuditPlanWorkpaperView({
                   ))}
                 </div>
               )}
-              <GeneralFindingsList
-                findings={workpaper?.general_findings ?? []}
-                config={workpaper?.config?.[0]}
-                auditPlanStatus={auditPlanStatus || auditPlan.status}
-                auditPlan={auditPlan}
-                workingPaperId={workpaper?.id}
-              />
             </>
           ) : (
             <FindingsList
