@@ -218,7 +218,7 @@ export function FindingActionsPageLayout({
               <div className="relative flex items-end gap-2">
                 <Search
                   className="min-w-60"
-                  value={searchTerm}
+                  value={auditSearchTerm}
                   onChange={(value) => setAuditSearchTerm(value)}
                 />
                 <SelectField
