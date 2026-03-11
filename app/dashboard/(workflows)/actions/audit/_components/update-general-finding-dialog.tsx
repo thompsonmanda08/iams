@@ -40,20 +40,26 @@ export function UpdateGeneralFindingDialog({
   const updateMutation = useUpdateGeneralFindingReassessment();
   const { checkPermission } = usePermissions();
 
-  // Pre-populate form when dialog opens or data changes
+  // Pre-populate form when dialog opens or data changes.
+  // Each column/key in the API response is a single-property object like {"po_no": "ZMB74903"},
+  // so we flatten with Object.entries to get {key, value} pairs for the form state.
   useEffect(() => {
     if (generalFindingData && open) {
       setColumns(
-        (generalFindingData.columns ?? []).map((col: any) => ({
-          key: col.key,
-          value: col.value ?? ""
-        }))
+        (generalFindingData.columns ?? []).flatMap((col: any) => {
+          if (!col || typeof col !== "object") return [];
+          return Object.entries(col)
+            .filter(([k]) => k !== "description")
+            .map(([key, value]) => ({ key, value: value ?? "" }));
+        })
       );
       setKeys(
-        (generalFindingData.keys ?? []).map((k: any) => ({
-          key: k.key,
-          value: k.value ?? ""
-        }))
+        (generalFindingData.keys ?? []).flatMap((k: any) => {
+          if (!k || typeof k !== "object") return [];
+          return Object.entries(k)
+            .filter(([key]) => key !== "description")
+            .map(([key, value]) => ({ key, value: value ?? "" }));
+        })
       );
       setAuditObservation(generalFindingData.audit_observation ?? "");
       setAuditComments(generalFindingData.audit_comments ?? "");
@@ -88,8 +94,8 @@ export function UpdateGeneralFindingDialog({
       {
         findingId,
         data: {
-          columns,
-          keys,
+          columns: columns.map((col) => ({ [col.key]: col.value })),
+          keys: keys.map((k) => ({ [k.key]: k.value })),
           audit_observation: auditObservation,
           audit_comments: auditComments,
           evidence: evidence || undefined
