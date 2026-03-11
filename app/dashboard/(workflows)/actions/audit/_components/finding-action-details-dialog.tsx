@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -141,7 +140,6 @@ export function FindingActionDetailsDialog({
 
   // Can only create reassessment if evidence exists
   const hasEvidence = evidence && evidence?.length > 0;
-  const hasReviews = reviews && reviews?.length > 0;
 
   // Role-based access checks
   const isAssignedUser = currentUserId === action.assigned_to;
@@ -183,31 +181,6 @@ export function FindingActionDetailsDialog({
     (evidence && evidence.length > 0) ||
     action.status === "UNDER_REVIEW" ||
     action.status === "APPROVED";
-
-  const allActionEvidenceApproved = evidence?.every(
-    (item) => item.status?.toUpperCase() === "APPROVED"
-  );
-
-  console.log("[FindingActionDetailsDialog] button guards", {
-    currentUserId,
-    auditor_id: action.auditor_id,
-    auditor_user_id: action.auditor_user?.id,
-    isAssignedReviewer,
-    hasEvidence: evidence?.length,
-    actionHasEvidence,
-    action_status: action.status,
-    isCompliant,
-    isGeneralFinding
-  });
-
-  console.log("[FindingActionDetailsDialog] workpaper config debug", {
-    auditPlanId,
-    workpaperData_id: workpaperData?.id,
-    workpaperData_config_length: workpaperData?.config?.length,
-    workpaperData_config0_columns: workpaperData?.config?.[0]?.columns?.length,
-    colConfigMap_keys: Object.keys(colConfigMap),
-    keyConfigMap_keys: Object.keys(keyConfigMap),
-  });
 
   return (
     <>
@@ -652,7 +625,7 @@ export function FindingActionDetailsDialog({
                       <div className="space-y-2">
                         {findingEvidenceData.evidence.map((item, index) => (
                           <Card key={item.id} className="bg-muted/30">
-                            <CardContent className="">
+                            <CardContent>
                               <div className="space-y-2">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1">
@@ -763,7 +736,7 @@ export function FindingActionDetailsDialog({
                       <div className="space-y-3">
                         {evidence.map((item, index) => (
                           <Card key={item.id} className="bg-muted/50">
-                            <CardContent className="">
+                            <CardContent>
                               <div className="space-y-2">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1">
@@ -858,7 +831,7 @@ export function FindingActionDetailsDialog({
                       <div className="space-y-3">
                         {reviews.map((review: any) => (
                           <Card key={review.id} className="bg-muted/50 border-border/50">
-                            <CardContent className="">
+                            <CardContent>
                               <div className="space-y-2">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="space-y-1">

@@ -154,8 +154,7 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
       if (isGeneralFramework) {
         // GENERAL: metadata (work_done + conclusion) must be filled AND all general findings resolved
         // `findings` was fetched above from the dedicated endpoint for this workpaper
-        const metaFilled =
-          !!wp.metadata?.work_done?.trim() && !!wp.metadata?.conclusion?.trim();
+        const metaFilled = !!wp.metadata?.work_done?.trim() && !!wp.metadata?.conclusion?.trim();
         const allResolved =
           findings.length === 0 ||
           findings.every(
@@ -259,7 +258,7 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
         name: "Auditee Sign-Off",
         description: "Auditee has reviewed findings and submitted sign-off comments",
         completed: !!auditPlan.management_comments?.trim(),
-        required: false, // optional until full implementation
+        required: true,
         category: "actions"
       },
       {
@@ -320,6 +319,7 @@ export interface ClosureRequestPayload {
   teamLeadSignOff: boolean;
   closureReportUrl?: string;
 }
+
 
 /**
  * Request audit closure
@@ -421,24 +421,16 @@ export async function submitAuditeeSignOff(
   }
 }
 
-/**
- * Stub: Sends an email notification to the Auditee Department Head to log in
- * and provide sign-off comments on the audit plan.
- * TODO: replace with real endpoint when available
- */
-export async function requestAuditeeSignOffNotification(
-  auditPlanId: string
-): Promise<APIResponse> {
+export async function requestAuditeeSignOffNotification(auditPlanId: string): Promise<APIResponse> {
   if (!auditPlanId) {
     return handleBadRequest("Audit plan ID is required");
   }
 
   try {
-    // Stub — real endpoint TBD
-    // await authenticatedApiClient({
-    //   method: "POST",
-    //   url: `/api/v1/audit-plans/${auditPlanId}/request-sign-off`
-    // });
+    await authenticatedApiClient({
+      method: "POST",
+      url: `/api/v1/audit-plans/${auditPlanId}/request-sign-off`
+    });
     return successResponse(null, "Sign-off notification sent successfully");
   } catch (error: any) {
     return handleError(

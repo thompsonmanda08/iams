@@ -129,26 +129,20 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
       <CardContent className="space-y-4 text-sm">
         {/* Main Finding Details */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-          {finding.conclusion && (
-            <div>
-              <p className="text-primary mb-1 text-sm font-semibold">Conclusion</p>
-              <p className="line-clamp-2">{finding.conclusion}</p>
-            </div>
-          )}
-
-          {finding.workings_and_test_results && (
-            <div>
-              <p className="text-primary mb-1 text-sm font-semibold">Workings & Test Results</p>
-              <p className="line-clamp-3 text-sm">{finding.workings_and_test_results}</p>
-            </div>
-          )}
-
-          {finding.recommendation && (
-            <div>
-              <p className="text-primary mb-1 text-sm font-semibold">Recommendation</p>
-              <p className="line-clamp-3">{finding.recommendation}</p>
-            </div>
-          )}
+          {(
+            [
+              { label: "Conclusion", value: finding.conclusion, clamp: "line-clamp-2" },
+              { label: "Workings & Test Results", value: finding.workings_and_test_results, clamp: "line-clamp-3 text-sm" },
+              { label: "Recommendation", value: finding.recommendation, clamp: "line-clamp-3" }
+            ] as const
+          )
+            .filter(({ value }) => !!value)
+            .map(({ label, value, clamp }) => (
+              <div key={label}>
+                <p className="text-primary mb-1 text-sm font-semibold">{label}</p>
+                <p className={clamp}>{value}</p>
+              </div>
+            ))}
 
           {(finding.responsible_person || finding.due_date) && (
             <div className="grid grid-cols-2 gap-4 text-xs">

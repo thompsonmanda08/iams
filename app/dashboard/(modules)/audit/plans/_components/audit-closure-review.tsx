@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -26,24 +25,82 @@ import {
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import {
-  useAuditClosureValidation,
   useRequestAuditClosureMutation,
   useSubmitAuditeeSignOffMutation,
-  useRequestSignOffNotificationMutation
+  useRequestSignOffNotificationMutation,
+  useFindingActionsQuery
 } from "@/hooks/use-audit-closure-mutations";
 import { useSession } from "@/store/session-store";
-import type { ClosureChecklistResult } from "@/app/_actions/audit-closure-actions";
-import { cn } from "@/lib/utils";
-import { notify } from "@/lib/utils";
+import { computeClosureChecklist } from "@/lib/utils/audit-closure-checklist";
+import type { ClosureChecklist } from "@/app/_actions/audit-closure-actions";
+import { cn, notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+
+const CLOSURE_ENABLED_STATUSES = ["APPROVED", "COMPLETED", "CLOSURE_REVIEW", "CLOSED"];
 
 interface AuditClosureReviewProps {
   auditPlan: AuditPlan;
   frameworkType?: string;
+  /** Workpaper for the audit plan (already fetched by the parent page) */
+  workpaper?: any;
+  /** Resolved findings array — generalFindings for GENERAL, findings for compliance */
+  findings?: any[];
+  /** Workflow tasks already fetched by the parent page */
+  userTasks?: any[];
   onClosureRequested?: () => void;
+  /** Called after auditee sign-off succeeds so the parent can update its local auditPlan state */
+  onAuditPlanUpdate?: (updates: Partial<AuditPlan>) => void;
 }
 
-export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequested }: AuditClosureReviewProps) {
+// ---------------------------------------------------------------------------
+// Shared checklist row — used by all four category cards
+// ---------------------------------------------------------------------------
+function ChecklistItem({
+  checklist,
+  actions,
+  description
+}: {
+  checklist: ClosureChecklist;
+  /** Optional button/link rendered to the right of the name */
+  actions?: React.ReactNode;
+  /** Override description with custom ReactNode (e.g. coloured sign-off preview) */
+  description?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div
+        className={cn(
+          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+          checklist.completed ? "bg-green-100" : "bg-slate-100"
+        )}>
+        {checklist.completed ? (
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+        ) : (
+          <AlertCircle className="h-4 w-4 text-slate-400" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className={cn("flex items-center gap-2", actions && "justify-between")}>
+          <p className="text-sm font-medium">{checklist.name}</p>
+          {actions}
+        </div>
+        <div className="text-muted-foreground mt-0.5 text-xs">
+          {description ?? checklist.description}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AuditClosureReview({
+  auditPlan,
+  frameworkType,
+  workpaper = null,
+  findings = [],
+  userTasks = [],
+  onClosureRequested,
+  onAuditPlanUpdate
+}: AuditClosureReviewProps) {
   const { session } = useSession();
   const [showClosureDialog, setShowClosureDialog] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
@@ -54,34 +111,47 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
   const [closureNotes, setClosureNotes] = useState("");
   const [requestError, setRequestError] = useState<string | null>(null);
 
-  // Single source of truth: frameworkType prop (from page.tsx) takes precedence.
-  // Falls back to auditPlan fields for backwards compatibility.
   const isGeneralFramework = [
     frameworkType,
     auditPlan.framework_type,
     auditPlan.management_standard
   ].some((f) => String(f ?? "").toUpperCase() === "GENERAL");
 
-  // Check if current user is the audit team lead
   const isTeamLead =
     session?.user?.id === auditPlan?.audit_team_leader ||
     session?.user?.email === auditPlan?.audit_team_leader;
 
-  // Load closure validation using query hook
-  const { data: closureData, isLoading } = useAuditClosureValidation(
-    ["APPROVED", "COMPLETED", "CLOSURE_REVIEW", "CLOSED"].includes(auditPlan.status ?? "")
-      ? auditPlan.id
-      : ""
-  );
+  const isClosureEnabled = CLOSURE_ENABLED_STATUSES.includes(auditPlan.status ?? "");
 
-  // Request closure mutation
+  // Only fetch finding actions when closure is enabled — only remaining network call
+  const findingIds = isClosureEnabled ? findings.map((f: any) => f.id).filter(Boolean) : [];
+  const { data: findingActions = [], isLoading: isLoadingActions } =
+    useFindingActionsQuery(findingIds);
+
+  // Compute checklist entirely client-side from already-available data
+  const closureData = useMemo(() => {
+    if (!isClosureEnabled) return null;
+    return computeClosureChecklist({
+      auditPlan,
+      workpaper,
+      findings,
+      actions: findingActions,
+      userTasks,
+      isGeneralFramework
+    });
+  }, [
+    auditPlan,
+    workpaper,
+    findings,
+    findingActions,
+    userTasks,
+    isGeneralFramework,
+    isClosureEnabled
+  ]);
+
   const { mutate: requestClosure, isPending: isSubmitting } = useRequestAuditClosureMutation();
-
-  // Auditee sign-off mutation
   const { mutate: submitSignOff, isPending: isSignOffSubmitting } =
     useSubmitAuditeeSignOffMutation();
-
-  // Request sign-off notification mutation (stub)
   const { mutate: requestSignOffNotification, isPending: isRequestingSignOff } =
     useRequestSignOffNotificationMutation();
 
@@ -94,7 +164,17 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
       });
       return;
     }
-
+    // Hard block: closure endpoint must never be called without management sign-off
+    if (!auditPlan.management_comments?.trim()) {
+      setShowClosureDialog(false);
+      notify({
+        title: "Sign-Off Required",
+        description:
+          "Audit closure requires management sign-off comments. Use 'Request Sign-Off' to notify the Auditee Department Head.",
+        type: "error"
+      });
+      return;
+    }
     if (!closureNotes.trim()) {
       notify({
         title: "Validation Error",
@@ -103,30 +183,22 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
       });
       return;
     }
-
     handleRequestClosure();
   };
 
   const handleRequestClosure = () => {
     setRequestError(null);
-    // Team Lead requesting closure implicitly signs off
     requestClosure(
-      {
-        auditPlanId: auditPlan.id,
-        closureNotes,
-        teamLeadSignOff: true
-      },
+      { auditPlanId: auditPlan.id, closureNotes, teamLeadSignOff: true },
       {
         onSuccess: (response) => {
           if (response.success) {
-            // Only close dialogs on success
             setShowClosureDialog(false);
             setShowConfirmationDialog(false);
             setClosureNotes("");
             setRequestError(null);
             onClosureRequested?.();
           } else {
-            // Keep dialog open and show error alert
             setRequestError(response.message || "Failed to request audit closure");
             setShowConfirmationDialog(false);
           }
@@ -135,7 +207,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
     );
   };
 
-  if (isLoading) {
+  if (isLoadingActions && isClosureEnabled && findingIds.length > 0) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
@@ -155,26 +227,22 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
               <Lock className="text-primary h-16 w-16" strokeWidth={1.5} />
             </div>
           </div>
-
           <h3 className="text-foreground mb-2 text-2xl font-semibold">Closure Not Available Yet</h3>
           <p className="text-muted-foreground mb-8 max-w-md text-center">
             Audit closure becomes available once the audit plan has been approved. Complete the
             workpapers and submit for approval to unlock this section.
           </p>
-
           <div className="mb-4 grid w-full max-w-2xl grid-cols-3 gap-4 text-xs">
-            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-              <div className="text-primary mb-1 font-mono">1. COMPLETE WORKPAPERS</div>
-              <div className="text-muted-foreground">Finish all audit work</div>
-            </div>
-            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-              <div className="text-primary mb-1 font-mono">2. SUBMIT FOR APPROVAL</div>
-              <div className="text-muted-foreground">Get plan approved</div>
-            </div>
-            <div className="bg-canvas border-border rounded-lg border p-4 text-center">
-              <div className="text-primary mb-1 font-mono">3. REQUEST CLOSURE</div>
-              <div className="text-muted-foreground">Close the audit</div>
-            </div>
+            {[
+              { step: "1. COMPLETE WORKPAPERS", sub: "Finish all audit work" },
+              { step: "2. SUBMIT FOR APPROVAL", sub: "Get plan approved" },
+              { step: "3. REQUEST CLOSURE", sub: "Close the audit" }
+            ].map(({ step, sub }) => (
+              <div key={step} className="bg-canvas border-border rounded-lg border p-4 text-center">
+                <div className="text-primary mb-1 font-mono">{step}</div>
+                <div className="text-muted-foreground">{sub}</div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -184,13 +252,19 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
   const canRequestClosure = closureData.readyForClosure;
   const completedCount = closureData.checklists.filter((c) => c.completed).length;
   const totalCount = closureData.checklists.length;
+  const signedOff = auditPlan.management_comments?.trim();
 
   return (
     <div className="space-y-6">
       {/* Closure Status Header */}
       <Card
-        className={cn("border-2", canRequestClosure ? "border-green-200" : "border-yellow-200")}>
-        <CardHeader className="pb-3">
+        className={cn(
+          "border-2",
+          canRequestClosure
+            ? "border-green-200 bg-green-400/5"
+            : "border-yellow-200 bg-yellow-400/5"
+        )}>
+        <CardHeader className="">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <CardTitle className="flex items-center gap-2">
@@ -241,7 +315,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
 
       {/* Closure Checklists */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Workpapers Section */}
+        {/* Workpapers */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -252,24 +326,8 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
           <CardContent className="space-y-3">
             {closureData.checklists
               .filter((c) => c.category === "workpaper")
-              .map((checklist) => (
-                <div key={checklist.id} className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                      checklist.completed ? "bg-green-100" : "bg-slate-100"
-                    )}>
-                    {checklist.completed ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-slate-400" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{checklist.name}</p>
-                    <p className="text-muted-foreground text-xs">{checklist.description}</p>
-                  </div>
-                </div>
+              .map((c) => (
+                <ChecklistItem key={c.id} checklist={c} />
               ))}
             {isGeneralFramework && (
               <p className="text-muted-foreground mt-2 text-xs">
@@ -280,7 +338,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
           </CardContent>
         </Card>
 
-        {/* Findings Section */}
+        {/* Findings */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -291,29 +349,13 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
           <CardContent className="space-y-3">
             {closureData.checklists
               .filter((c) => c.category === "findings")
-              .map((checklist) => (
-                <div key={checklist.id} className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                      checklist.completed ? "bg-green-100" : "bg-slate-100"
-                    )}>
-                    {checklist.completed ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-slate-400" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{checklist.name}</p>
-                    <p className="text-muted-foreground text-xs">{checklist.description}</p>
-                  </div>
-                </div>
+              .map((c) => (
+                <ChecklistItem key={c.id} checklist={c} />
               ))}
           </CardContent>
         </Card>
 
-        {/* Actions Section */}
+        {/* Actions */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -324,84 +366,52 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
           <CardContent className="space-y-3">
             {closureData.checklists
               .filter((c) => c.category === "actions")
-              .map((checklist) => {
-                if (checklist.id === "auditee-sign-off") {
-                  return (
-                    <div key={checklist.id} className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                          checklist.completed ? "bg-green-100" : "bg-slate-100"
-                        )}>
-                        {checklist.completed ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-slate-400" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium">{checklist.name}</p>
-                          {auditPlan.management_comments?.trim() ? (
-                            <button
-                              onClick={() => setShowViewSignOffDialog(true)}
-                              className="text-primary hover:text-primary/80 text-xs underline underline-offset-2">
-                              View Sign-Off
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-3">
-                              <button
-                                onClick={() => {
-                                  setSignOffComments("");
-                                  setShowSignOffDialog(true);
-                                }}
-                                className="text-primary hover:text-primary/80 text-xs underline underline-offset-2">
-                                Provide Sign-Off
-                              </button>
-                              <button
-                                onClick={() => setShowRequestSignOffConfirm(true)}
-                                className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-2">
-                                Request Sign-Off
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        {auditPlan.management_comments?.trim() ? (
-                          <p className="mt-1 rounded bg-green-50 px-2 py-1 text-xs text-green-800 dark:bg-green-950/30 dark:text-green-200">
-                            {auditPlan.management_comments}
-                          </p>
-                        ) : (
-                          <p className="text-muted-foreground text-xs">{checklist.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }
+              .map((c) => {
+                if (c.id !== "auditee-sign-off") return <ChecklistItem key={c.id} checklist={c} />;
 
                 return (
-                  <div key={checklist.id} className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                        checklist.completed ? "bg-green-100" : "bg-slate-100"
-                      )}>
-                      {checklist.completed ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <ChecklistItem
+                    key={c.id}
+                    checklist={c}
+                    actions={
+                      signedOff ? (
+                        <button
+                          onClick={() => setShowViewSignOffDialog(true)}
+                          className="text-primary hover:text-primary/80 text-xs underline underline-offset-2">
+                          View Sign-Off
+                        </button>
                       ) : (
-                        <AlertCircle className="h-4 w-4 text-slate-400" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{checklist.name}</p>
-                      <p className="text-muted-foreground text-xs">{checklist.description}</p>
-                    </div>
-                  </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              setSignOffComments("");
+                              setShowSignOffDialog(true);
+                            }}
+                            className="text-primary hover:text-primary/80 text-xs underline underline-offset-2">
+                            Provide Sign-Off
+                          </button>
+                          <button
+                            onClick={() => setShowRequestSignOffConfirm(true)}
+                            className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-2">
+                            Request Sign-Off
+                          </button>
+                        </div>
+                      )
+                    }
+                    description={
+                      signedOff ? (
+                        <p className="mt-1 rounded bg-green-50 px-2 py-1 text-green-800 dark:bg-green-950/30 dark:text-green-200">
+                          {auditPlan.management_comments}
+                        </p>
+                      ) : undefined
+                    }
+                  />
                 );
               })}
           </CardContent>
         </Card>
 
-        {/* Approvals Section */}
+        {/* Approvals */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -412,24 +422,8 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
           <CardContent className="space-y-3">
             {closureData.checklists
               .filter((c) => c.category === "approvals" || c.category === "documentation")
-              .map((checklist) => (
-                <div key={checklist.id} className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                      checklist.completed ? "bg-green-100" : "bg-slate-100"
-                    )}>
-                    {checklist.completed ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-slate-400" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{checklist.name}</p>
-                    <p className="text-muted-foreground text-xs">{checklist.description}</p>
-                  </div>
-                </div>
+              .map((c) => (
+                <ChecklistItem key={c.id} checklist={c} />
               ))}
           </CardContent>
         </Card>
@@ -442,34 +436,32 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div>
-              <p className="text-muted-foreground mb-1 text-xs font-medium">Workpapers</p>
-              <p className="text-2xl font-bold">
-                {closureData.summary.completedWorkpapers}/{closureData.summary.totalWorkpapers}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-1 text-xs font-medium">Findings</p>
-              <p className="text-2xl font-bold">
-                {closureData.summary.resolvedFindings}/{closureData.summary.totalFindings}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-1 text-xs font-medium">Actions</p>
-              <p className="text-2xl font-bold">
-                {closureData.summary.approvedActions}/{closureData.summary.totalActions}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-1 text-xs font-medium">Pending Approvals</p>
-              <p className="text-2xl font-bold">{closureData.summary.openApprovals}</p>
-            </div>
+            {[
+              {
+                label: "Workpapers",
+                value: `${closureData.summary.completedWorkpapers}/${closureData.summary.totalWorkpapers}`
+              },
+              {
+                label: "Findings",
+                value: `${closureData.summary.resolvedFindings}/${closureData.summary.totalFindings}`
+              },
+              {
+                label: "Actions",
+                value: `${closureData.summary.approvedActions}/${closureData.summary.totalActions}`
+              },
+              { label: "Pending Approvals", value: closureData.summary.openApprovals }
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-muted-foreground mb-1 text-xs font-medium">{label}</p>
+                <p className="text-2xl font-bold">{value}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
 
       {/* Request Closure Button */}
-      {auditPlan?.status != "CLOSURE_REVIEW" && (
+      {auditPlan?.status !== "CLOSURE_REVIEW" && (
         <div className="space-y-2">
           <Button
             onClick={() => {
@@ -481,8 +473,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
                 });
                 return;
               }
-              if (!auditPlan.management_comments?.trim()) {
-                // Auto-send sign-off notification and block closure
+              if (!signedOff) {
                 requestSignOffNotification(auditPlan.id, {
                   onSuccess: (res) => {
                     if (res.success) {
@@ -529,14 +520,14 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
         </div>
       )}
 
-      {/* Closure Dialog */}
+      {/* ── Dialogs ── */}
+
+      {/* Request Closure Dialog */}
       <Dialog
         open={showClosureDialog}
         onOpenChange={(open) => {
           setShowClosureDialog(open);
-          if (open) {
-            setRequestError(null);
-          }
+          if (open) setRequestError(null);
         }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -545,9 +536,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
               Submit this audit for closure review and authorization
             </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4">
-            {/* Closure Notes */}
             <div className="space-y-2">
               <Label htmlFor="closure_notes">
                 Closure Notes <span className="text-red-500">*</span>
@@ -565,7 +554,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
             </div>
 
             {/* Auditee Sign-Off Status */}
-            {auditPlan.management_comments?.trim() ? (
+            {signedOff ? (
               <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
                 <div className="min-w-0 flex-1">
@@ -592,7 +581,6 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
               </div>
             )}
 
-            {/* Error Alert */}
             {requestError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -600,7 +588,6 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
               </Alert>
             )}
 
-            {/* Submit Actions */}
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
@@ -663,6 +650,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
                       onSuccess: (res) => {
                         if (res.success) {
                           setShowSignOffDialog(false);
+                          onAuditPlanUpdate?.({ management_comments: signOffComments });
                           setSignOffComments("");
                         }
                       }
@@ -687,7 +675,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
               Sign-off comments provided by the auditee department head
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-md border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
+          <div className="bg-muted/30 rounded-md border p-4 text-sm whitespace-pre-wrap">
             {auditPlan.management_comments}
           </div>
           <div className="flex justify-end pt-2">
@@ -696,7 +684,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
         </DialogContent>
       </Dialog>
 
-      {/* Request Sign-Off Confirmation Modal */}
+      {/* Request Sign-Off Confirmation */}
       <ConfirmationModal
         open={showRequestSignOffConfirm}
         onOpenChange={setShowRequestSignOffConfirm}
@@ -721,7 +709,7 @@ export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequeste
         }}
       />
 
-      {/* Closure Confirmation Modal — shown first on button click */}
+      {/* Closure Confirmation */}
       <ConfirmationModal
         open={showConfirmationDialog}
         onOpenChange={setShowConfirmationDialog}

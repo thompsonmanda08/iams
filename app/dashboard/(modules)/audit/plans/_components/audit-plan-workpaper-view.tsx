@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   Send,
   CircleAlertIcon,
-  CircleCheckBig,
   FileArchive,
   Trash2,
   PencilLineIcon
@@ -45,7 +44,6 @@ interface AuditPlanWorkpaperViewProps {
   workpaperCategories: any[];
   findings: any[];
   userTasks?: any[];
-  isLoading?: boolean;
   auditPlanStatus?: string;
   workpaper?: any;
   frameworkType?: string;
@@ -230,12 +228,6 @@ export function AuditPlanWorkpaperView({
             </div>
             <div className="flex flex-col items-end gap-4">
               <div className="flex gap-2">
-                {/* {auditPlanData.status.toUpperCase() === "COMPLETED" && (
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Download className="h-6 w-6" />
-                    Export
-                  </Button>
-                )} */}
                 {auditPlanData.status.toUpperCase() === "DRAFT" && (
                   <>
                     <Button
@@ -368,10 +360,7 @@ export function AuditPlanWorkpaperView({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div
-          className="overflow-x-auto"
-          // className="-mx-4 overflow-x-auto px-4 lg:overflow-visible md:mx-0 md:px-0"
-        >
+        <div className="overflow-x-auto">
           <TabsList className="inline-flex h-14 w-max gap-1 md:grid md:w-full md:grid-cols-5">
             <TabsTrigger
               value="plan-details"
@@ -400,12 +389,6 @@ export function AuditPlanWorkpaperView({
               <span className="hidden sm:inline">Audit Execution</span>
               <span className="sm:hidden">Findings</span>
             </TabsTrigger>
-            {/* <TabsTrigger
-              value="approvals"
-              className="w-full min-w-max text-nowrap whitespace-nowrap">
-              <CircleCheckBig className="h-5 w-5 text-green-600" />
-              <span className="inline">Approvals</span>
-            </TabsTrigger> */}
             <TabsTrigger value="closure" className="w-full min-w-max text-nowrap whitespace-nowrap">
               <CheckCircle2 className="h-5 w-5 text-blue-600" />
               Closure
@@ -445,14 +428,38 @@ export function AuditPlanWorkpaperView({
 
         {/* Findings Tab */}
         <TabsContent value="findings" className="space-y-4">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Audit Findings Summary</h2>
+            <p className="text-muted-foreground text-sm">
+              {isGeneralFramework
+                ? workpaper?.general_findings?.length || 0
+                : findings?.length || 0}{" "}
+              findings recorded
+            </p>
+          </div>
           {isGeneralFramework ? (
             <>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Audit Findings Summary</h2>
-                <p className="text-muted-foreground text-sm">
-                  {workpaper?.general_findings?.length || 0} findings recorded
-                </p>
-              </div>
+              {/* Workpaper metadata — readonly summary */}
+              {workpaper?.metadata && (
+                <div className="bg-muted/30 grid gap-4 rounded-lg border p-4 sm:grid-cols-3">
+                  {[
+                    { label: "Objective", value: workpaper.metadata.objective },
+                    { label: "Work Done", value: workpaper.metadata.work_done },
+                    { label: "Conclusion", value: workpaper.metadata.conclusion }
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <p className="text-primary mb-1 text-xs font-semibold uppercase tracking-wide">
+                        {label}
+                      </p>
+                      {value ? (
+                        <p className="text-sm">{value}</p>
+                      ) : (
+                        <p className="text-muted-foreground text-sm italic">Not provided</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               <GeneralFindingsList
                 findings={workpaper?.general_findings ?? []}
                 config={workpaper?.config?.[0]}
@@ -462,23 +469,15 @@ export function AuditPlanWorkpaperView({
               />
             </>
           ) : (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Audit Findings Summary</h2>
-                <p className="text-muted-foreground text-sm">
-                  {findings?.length || 0} findings recorded
-                </p>
-              </div>
-              <FindingsList
-                key={findingsRefreshKey}
-                findings={findings || []}
-                onRefresh={() => setFindingsRefreshKey((prev) => prev + 1)}
-                onEditFinding={handleEditFinding}
-                auditPlanStatus={auditPlanStatus || auditPlan.status}
-                auditPlan={auditPlan}
-                onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
-              />
-            </>
+            <FindingsList
+              key={findingsRefreshKey}
+              findings={findings || []}
+              onRefresh={() => setFindingsRefreshKey((prev) => prev + 1)}
+              onEditFinding={handleEditFinding}
+              auditPlanStatus={auditPlanStatus || auditPlan.status}
+              auditPlan={auditPlan}
+              onSubmitForApproval={() => setSubmitConfirmationOpen(true)}
+            />
           )}
         </TabsContent>
 
@@ -492,10 +491,13 @@ export function AuditPlanWorkpaperView({
           <AuditClosureReview
             auditPlan={auditPlanData}
             frameworkType={frameworkType}
+            workpaper={workpaper}
+            findings={isGeneralFramework ? (generalFindings ?? []) : (findings ?? [])}
+            userTasks={userTasks}
             onClosureRequested={() => {
               queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
-              setAuditPlanData((prev) => ({ ...prev }));
             }}
+            onAuditPlanUpdate={(updates) => setAuditPlanData((prev) => ({ ...prev, ...updates }))}
           />
         </TabsContent>
 

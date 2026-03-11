@@ -50,8 +50,7 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
 
   return (
     <>
-      <>
-        <div className="bg-card rounded-lg border">
+      <div className="bg-card rounded-lg border">
           <Table>
             <TableHeader className="bg-muted/50 text-muted-foreground uppercase">
               <TableRow>
@@ -98,10 +97,10 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
                   <TableCell>
                     <div className="space-y-1">
                       <Link
-                        href={`/dashboard/audit/plans/engagement/${action.audit_plan?.id}`}
+                        href={action.audit_plan?.id ? `/dashboard/audit/plans/engagement/${action.audit_plan.id}` : "#"}
                         onClick={(e) => e.stopPropagation()}
                         className="text-primary font-medium hover:underline">
-                        {`${action.audit_plan?.title || "Unknown Audit Plan"} (${action.audit_plan?.year})`}
+                        {`${action.audit_plan?.title || "Unknown Audit Plan"}${action.audit_plan?.year ? ` (${action.audit_plan.year})` : ""}`}
                       </Link>
                       <p className="truncate text-sm font-medium italic">
                         Ref No. {action.audit_plan?.ref_no || "N/A"}
@@ -199,7 +198,6 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
             </TableBody>
           </Table>
         </div>
-      </>
 
       {/* Details Dialog */}
       {selectedAction && (

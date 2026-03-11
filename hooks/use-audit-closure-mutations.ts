@@ -1,39 +1,38 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notify } from "@/lib/utils";
+import { QUERY_KEYS } from "@/lib/constants";
 import {
   requestAuditClosure,
-  getAuditClosureStatus,
-  validateAuditClosure,
   submitAuditeeSignOff,
   requestAuditeeSignOffNotification
 } from "@/app/_actions/audit-closure-actions";
-
-// Query Keys
-const AUDIT_CLOSURE_QUERY_KEYS = {
-  all: ["audit-closure"],
-  status: (auditPlanId: string) => [...AUDIT_CLOSURE_QUERY_KEYS.all, "status", auditPlanId],
-  validation: (auditPlanId: string) => [...AUDIT_CLOSURE_QUERY_KEYS.all, "validation", auditPlanId]
-};
+import { getFindingActionsByFinding } from "@/app/_actions/finding-actions";
 
 // ============================================================================
 // QUERIES
 // ============================================================================
 
-export function useAuditClosureValidation(auditPlanId: string) {
-  return useQuery({
-    queryKey: AUDIT_CLOSURE_QUERY_KEYS.validation(auditPlanId),
-    queryFn: () => validateAuditClosure(auditPlanId),
-    enabled: !!auditPlanId,
-    select: (response) => (response.success ? response.data : null)
-  });
-}
+/**
+ * Fetches actions for all given finding IDs in parallel and returns a flat list.
+ * This is the only remaining network call needed by the closure checklist —
+ * all other data (audit plan, workpaper, findings, userTasks) is passed as props.
+ */
+export function useFindingActionsQuery(findingIds: string[]) {
+  const sortedIds = [...findingIds].sort();
 
-export function useAuditClosureStatus(auditPlanId: string) {
   return useQuery({
-    queryKey: AUDIT_CLOSURE_QUERY_KEYS.status(auditPlanId),
-    queryFn: () => getAuditClosureStatus(auditPlanId),
-    enabled: !!auditPlanId,
-    select: (response) => (response.success ? response.data : null)
+    queryKey: ["finding-actions-batch", ...sortedIds],
+    queryFn: async () => {
+      const results = await Promise.all(sortedIds.map((id) => getFindingActionsByFinding(id)));
+      return results.flatMap((r) => {
+        if (!r.success) return [];
+        const d = r.data?.data ?? r.data ?? [];
+        return Array.isArray(d) ? d : [];
+      });
+    },
+    enabled: sortedIds.length > 0,
+    staleTime: 30_000,
+    placeholderData: [] as any[]
   });
 }
 
@@ -54,7 +53,7 @@ export function useSubmitAuditeeSignOffMutation() {
     }) => submitAuditeeSignOff(auditPlanId, managementComments),
     onSuccess: (response) => {
       if (response.success) {
-        queryClient.invalidateQueries();
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
         notify({
           title: "Sign-Off Submitted",
           description: "Auditee sign-off comments have been recorded",
@@ -96,18 +95,15 @@ export function useRequestAuditClosureMutation() {
 
   return useMutation({
     mutationFn: requestAuditClosure,
-    onSuccess: (response, variables) => {
+    onSuccess: (response) => {
       if (response.success) {
-        // Invalidate relevant queries
-        queryClient.invalidateQueries();
-
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
         notify({
           title: "Closure Requested",
           description: "Audit closure has been requested for approval",
           type: "success"
         });
       } else {
-        // Handle failed response
         notify({
           title: "Request Failed",
           description: response.message || "Failed to request audit closure",
