@@ -57,8 +57,12 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
   // Check if finding is editable (only in specific statuses)
   const isEditable = ["OPEN", "IN_PROGRESS", "DRAFT"].includes(finding.status);
 
-  // Check if can assign actions (only when audit is COMPLETED, APPROVED, or REJECTED)
-  const canAssignAction = ["COMPLETED", "APPROVED", "REJECTED", "CLOSED"].includes(finding.status);
+  // Compliant findings need no remediation — block action assignment
+  const isCompliant = finding.compliance_status?.toLowerCase() === "compliant";
+
+  // Check if can assign actions (only when audit is COMPLETED, APPROVED, or REJECTED, and finding is not compliant)
+  const canAssignAction =
+    !isCompliant && ["COMPLETED", "APPROVED", "REJECTED", "CLOSED"].includes(finding.status);
 
   return (
     <>

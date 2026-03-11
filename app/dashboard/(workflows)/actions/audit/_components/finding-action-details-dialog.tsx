@@ -143,21 +143,35 @@ export function FindingActionDetailsDialog({
   // Role-based access checks
   const isAssignedUser = currentUserId === action.assigned_to;
   const isReviewer = currentUserId === action.reviewer_id;
-  const isAssignedReviewer = currentUserId === action.auditor_id;
+  // auditor_id may come back as a flat field or nested under auditor_user
+  const isAssignedReviewer =
+    currentUserId === action.auditor_id || currentUserId === action.auditor_user?.id;
 
   // Hide reassessment button if finding is already compliant
   const isCompliant = findingData?.compliance_status?.toLowerCase() === "compliant";
+
+  // Evidence may not be visible to the auditor role via API — treat UNDER_REVIEW status as a signal
+  // that evidence has been submitted even if the list comes back empty
+  const actionHasEvidence =
+    (evidence && evidence.length > 0) ||
+    action.status === "UNDER_REVIEW" ||
+    action.status === "APPROVED";
 
   const allActionEvidenceApproved = evidence?.every(
     (item) => item.status?.toUpperCase() === "APPROVED"
   );
 
-  // console.log("Finding Action Evidence:", {
-  //   action,
-  //   reviews,
-  //   auditor: action.auditor_id,
-  //   currentUserId
-  // });
+  console.log("[FindingActionDetailsDialog] button guards", {
+    currentUserId,
+    auditor_id: action.auditor_id,
+    auditor_user_id: action.auditor_user?.id,
+    isAssignedReviewer,
+    hasEvidence: evidence?.length,
+    actionHasEvidence,
+    action_status: action.status,
+    isCompliant,
+    isGeneralFinding
+  });
 
   return (
     <>
@@ -210,7 +224,10 @@ export function FindingActionDetailsDialog({
                             if (!col || typeof col !== "object") return [];
                             const description: string | undefined = col.description;
                             return Object.entries(col)
-                              .filter(([k, value]: [string, any]) => k !== "description" && value != null && value !== "")
+                              .filter(
+                                ([k, value]: [string, any]) =>
+                                  k !== "description" && value != null && value !== ""
+                              )
                               .map(([key, value]: [string, any]) => (
                                 <div key={key}>
                                   <TooltipProvider>
@@ -238,7 +255,7 @@ export function FindingActionDetailsDialog({
                       {/* Audit Tests (Keys) */}
                       {generalFindingData?.keys?.length > 0 && (
                         <div>
-                          <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+                          <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
                             Audit Tests
                           </p>
                           <div className="rounded-md border bg-amber-50/50 p-3 dark:bg-amber-950/20">
@@ -270,9 +287,13 @@ export function FindingActionDetailsDialog({
                                                 <span className="text-muted-foreground capitalize">
                                                   {key.replace(/_/g, " ")}
                                                 </span>
-                                                {description && <Info className="text-muted-foreground h-3 w-3 shrink-0" />}
+                                                {description && (
+                                                  <Info className="text-muted-foreground h-3 w-3 shrink-0" />
+                                                )}
                                                 {!isBool && (
-                                                  <span className="font-medium">: {String(value) ?? "—"}</span>
+                                                  <span className="font-medium">
+                                                    : {String(value) ?? "—"}
+                                                  </span>
                                                 )}
                                               </span>
                                             </TooltipTrigger>
@@ -837,7 +858,7 @@ export function FindingActionDetailsDialog({
             </Tabs>
 
             {/* Create Reassessment / Update Finding Button */}
-            {hasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
+            {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
               <Button
                 onClick={() => {
                   if (!checkPermission("AUDIT_PLANS", "can_create")) return;
