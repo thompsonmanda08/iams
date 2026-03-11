@@ -14,7 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Plus, SquareArrowOutUpRight, CheckCircle2, XCircle } from "lucide-react";
+import { FileText, Plus, SquareArrowOutUpRight, CheckCircle2, XCircle, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FindingAction } from "@/lib/types/audit-types";
 import {
   useFindingActionEvidence,
@@ -27,7 +28,6 @@ import { SubmitEvidenceDialog } from "./submit-evidence-dialog";
 import { ReviewEvidenceDialog } from "./review-evidence-dialog";
 import { CreateReassessmentDialog } from "./create-reassessment-dialog";
 import { UpdateGeneralFindingDialog } from "./update-general-finding-dialog";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSession } from "@/store/session-store";
 import { StatusBadge } from "@/components/status-badge";
@@ -206,16 +206,32 @@ export function FindingActionDetailsDialog({
                       {/* Dynamic Columns */}
                       {generalFindingData?.columns?.length > 0 && (
                         <div className="grid grid-cols-2 gap-4">
-                          {generalFindingData.columns
-                            .filter((col: any) => col.value != null && col.value !== "")
-                            .map((col: any) => (
-                              <div key={col.key}>
-                                <p className="text-muted-foreground mb-1 text-xs font-medium capitalize">
-                                  {col.key.replace(/_/g, " ")}
-                                </p>
-                                <p className="text-sm font-medium">{col.value}</p>
-                              </div>
-                            ))}
+                          {generalFindingData.columns.flatMap((col: any) => {
+                            if (!col || typeof col !== "object") return [];
+                            const description: string | undefined = col.description;
+                            return Object.entries(col)
+                              .filter(([k, value]: [string, any]) => k !== "description" && value != null && value !== "")
+                              .map(([key, value]: [string, any]) => (
+                                <div key={key}>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <p className="text-muted-foreground mb-1 inline-flex cursor-default items-center gap-1 text-xs font-medium capitalize">
+                                          {key.replace(/_/g, " ")}
+                                          {description && <Info className="h-3 w-3 shrink-0" />}
+                                        </p>
+                                      </TooltipTrigger>
+                                      {description && (
+                                        <TooltipContent side="top">
+                                          <p className="max-w-xs text-xs">{description}</p>
+                                        </TooltipContent>
+                                      )}
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <p className="text-sm font-medium">{String(value)}</p>
+                                </div>
+                              ));
+                          })}
                         </div>
                       )}
 
@@ -227,31 +243,49 @@ export function FindingActionDetailsDialog({
                           </p>
                           <div className="rounded-md border bg-amber-50/50 p-3 dark:bg-amber-950/20">
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                              {generalFindingData.keys.map((k: any) => {
-                                const isBool =
-                                  typeof k.value === "boolean" ||
-                                  k.value === "true" ||
-                                  k.value === "false";
-                                const boolVal = k.value === true || k.value === "true";
-                                return (
-                                  <div key={k.key} className="flex items-center gap-2">
-                                    {isBool ? (
-                                      boolVal ? (
-                                        <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
-                                      ) : (
-                                        <XCircle className="h-4 w-4 shrink-0 text-red-500" />
-                                      )
-                                    ) : null}
-                                    <span className="text-sm">
-                                      <span className="text-muted-foreground capitalize">
-                                        {k.key.replace(/_/g, " ")}
-                                      </span>
-                                      {!isBool && (
-                                        <span className="font-medium">: {k.value ?? "—"}</span>
-                                      )}
-                                    </span>
-                                  </div>
-                                );
+                              {generalFindingData.keys.flatMap((k: any) => {
+                                if (!k || typeof k !== "object") return [];
+                                const description: string | undefined = k.description;
+                                return Object.entries(k)
+                                  .filter(([key]: [string, any]) => key !== "description")
+                                  .map(([key, value]: [string, any]) => {
+                                    const isBool =
+                                      typeof value === "boolean" ||
+                                      value === "true" ||
+                                      value === "false";
+                                    const boolVal = value === true || value === "true";
+                                    return (
+                                      <div key={key} className="flex items-center gap-2">
+                                        {isBool ? (
+                                          boolVal ? (
+                                            <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                                          ) : (
+                                            <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+                                          )
+                                        ) : null}
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="inline-flex cursor-default items-center gap-1 text-sm">
+                                                <span className="text-muted-foreground capitalize">
+                                                  {key.replace(/_/g, " ")}
+                                                </span>
+                                                {description && <Info className="text-muted-foreground h-3 w-3 shrink-0" />}
+                                                {!isBool && (
+                                                  <span className="font-medium">: {String(value) ?? "—"}</span>
+                                                )}
+                                              </span>
+                                            </TooltipTrigger>
+                                            {description && (
+                                              <TooltipContent side="top">
+                                                <p className="max-w-xs text-xs">{description}</p>
+                                              </TooltipContent>
+                                            )}
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </div>
+                                    );
+                                  });
                               })}
                             </div>
                           </div>
@@ -680,10 +714,9 @@ export function FindingActionDetailsDialog({
                                     )}
                                   </div>
                                   <div className="flex flex-col items-end justify-end space-y-2">
-                                    {item.status && (
+                                    {item.status && STATUS_COLORS[item.status] && (
                                       <StatusBadge
                                         status={STATUS_COLORS[item.status].text.toUpperCase()}
-                                        // className={cn("text-xs", STATUS_COLORS[item.status].badge)}
                                       />
                                     )}
 

@@ -72,14 +72,26 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
                   {/* Finding */}
                   <TableCell>
                     <div className="space-y-1">
-                      <p className="truncate font-medium">
-                        {action.clause_description
-                          ? action.clause_description.substring(0, 60) + "..."
-                          : action.finding?.category_name || "Unknown"}
-                      </p>
-                      <p className="text-xs font-medium">
-                        Clause No. {action.clause_number || action.finding?.clause_number || "N/A"}
-                      </p>
+                      {action.framework_type === "GENERAL" ? (
+                        <>
+                          <p className="truncate font-medium">General Workpaper Finding</p>
+                          <p className="text-muted-foreground font-mono text-xs">
+                            {action.finding_id?.substring(0, 24)}...
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="truncate font-medium">
+                            {action.clause_description
+                              ? action.clause_description.substring(0, 60) + "..."
+                              : action.finding?.category_name || "Unknown"}
+                          </p>
+                          <p className="text-xs font-medium">
+                            Clause No.{" "}
+                            {action.clause_number || action.finding?.clause_number || "N/A"}
+                          </p>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                   {/* Audit Plan */}
