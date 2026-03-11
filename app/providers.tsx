@@ -8,14 +8,13 @@ import FirstLogin from "@/components/first-login";
 import { useNetwork } from "@/hooks/use-network";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const queryClient = new QueryClient();
-
 function Providers({
   session,
   children
 }: PropsWithChildren & {
   session?: any;
 }) {
+  const [queryClient] = useState(() => new QueryClient());
   const [mounted, setMounted] = useState(false);
 
   const { online } = useNetwork();

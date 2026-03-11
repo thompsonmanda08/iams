@@ -1,6 +1,7 @@
 import { AUTH_SESSION } from "@/lib/constants";
 import { SESSION_CONFIG } from "@/lib/session-config";
 import { updateAuthSession, verifySession } from "@/lib/session";
+import { tokenRefreshLock } from "@/lib/token-refresh-lock";
 import { APIResponse } from "@/lib/types";
 import axiosClient, { AxiosRequestConfig, AxiosRequestHeaders } from "axios";
 
@@ -70,41 +71,46 @@ export type RequestType = AxiosRequestConfig & {
   contentType?: AxiosRequestHeaders["Content-Type"];
 };
 
-// Deduplicator: concurrent 403s share one refresh call instead of triggering multiple refreshes
-let _refreshPromise: Promise<string> | null = null;
-
+// Uses the shared tokenRefreshLock so this reactive path and the periodic
+// getRefreshToken (auth-actions.ts) share the same lock — no concurrent refreshes.
+//
+// Importantly, the lock's return value is intentionally discarded. Each caller
+// (this fn vs getRefreshToken) returns a different type, so using the shared
+// Promise directly would give the wrong type when one path piggybacks on the
+// other's operation. Instead, we wait for the lock (whoever holds it), then
+// re-read the session cookie as the single source of truth for the updated token.
 const _refreshAccessToken = async (): Promise<string> => {
-  if (_refreshPromise) return _refreshPromise;
+  await tokenRefreshLock.acquire(async () => {
+    const { session } = await verifySession();
+    if (!session?.accessToken) throw new Error("No session available for token refresh");
 
-  _refreshPromise = (async () => {
-    try {
-      const { session } = await verifySession();
-      if (!session?.accessToken) throw new Error("No session available for token refresh");
+    const response = await axios({
+      method: "GET",
+      url: "/api/v1/auth/refresh-token",
+      headers: {
+        "Content-type": "application/json",
+        Authorization: `Bearer ${session.accessToken}`
+      },
+      withCredentials: true
+    });
 
-      const response = await axios({
-        method: "GET",
-        url: "/api/v1/auth/refresh-token",
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
-          Cookie: `${AUTH_SESSION}=${session.accessToken}`
-        },
-        withCredentials: true
-      });
+    const newToken = response.data?.access_token as string;
+    // Use backend session_timeout if present (same logic as getRefreshToken)
+    const refreshTtl = session?.session_timeout
+      ? session.session_timeout * 60 * 1000
+      : SESSION_CONFIG.SESSION_TTL;
 
-      const newToken = response.data?.access_token as string;
-      await updateAuthSession({
-        accessToken: newToken,
-        expiresAt: new Date(Date.now() + SESSION_CONFIG.SESSION_TTL)
-      });
+    await updateAuthSession({
+      accessToken: newToken,
+      expiresAt: new Date(Date.now() + refreshTtl)
+    });
+  });
 
-      return newToken;
-    } finally {
-      _refreshPromise = null;
-    }
-  })();
-
-  return _refreshPromise;
+  // Re-read the session after the lock is released — the cookie now holds the
+  // refreshed token regardless of which path (this or getRefreshToken) ran.
+  const { session: refreshedSession } = await verifySession();
+  if (!refreshedSession?.accessToken) throw new Error("Session expired after token refresh");
+  return refreshedSession.accessToken;
 };
 
 const authenticatedApiClient = async (request: RequestType) => {
