@@ -530,7 +530,8 @@ export function ReportBuilder({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${report?.title?.replace(/[^a-z0-9]/gi, "-")?.toLowerCase()}-${Date.now()}.pdf`;
+      const reportName = (entity.title || report?.title || "audit-report").replace(/[^a-z0-9]/gi, "-").toLowerCase();
+      a.download = `${reportName}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
