@@ -203,8 +203,11 @@ export function FindingActionDetailsDialog({
                 <TabsTrigger value="overview">Action Overview</TabsTrigger>
                 <TabsTrigger value="finding-evidence">
                   Finding Evidence{" "}
-                  {Number(findingEvidenceData?.evidence?.length) > 0 &&
-                    `(${findingEvidenceData?.evidence?.length || 0})`}
+                  {(() => {
+                    const n = (findingEvidenceData?.evidence?.length ?? 0) +
+                      (isGeneralFinding && generalFindingData?.evidence ? 1 : 0);
+                    return n > 0 ? `(${n})` : null;
+                  })()}
                 </TabsTrigger>
                 <TabsTrigger value="action-evidence">
                   Action Evidence {evidence?.length > 0 && `(${evidence?.length})`}
@@ -610,97 +613,129 @@ export function FindingActionDetailsDialog({
                   <FindingEvidenceTabSkeleton />
                 ) : (
                   <>
-                    <div>
-                      <div>
-                        <p className="text-sm font-semibold">Finding Evidence</p>
-                        <p className="text-muted-foreground text-xs">
-                          {findingEvidenceData?.evidence?.length || 0} evidence
-                          {findingEvidenceData?.evidence?.length !== 1 ? "s" : ""} attached to this
-                          finding
-                        </p>
-                      </div>
-                    </div>
+                    {(() => {
+                      const structuredEvidence = findingEvidenceData?.evidence ?? [];
+                      const generalEvidenceUrl = isGeneralFinding ? generalFindingData?.evidence : null;
+                      const totalCount = structuredEvidence.length + (generalEvidenceUrl ? 1 : 0);
+                      const hasAny = totalCount > 0;
 
-                    {findingEvidenceData.evidence?.length > 0 ? (
-                      <div className="space-y-2">
-                        {findingEvidenceData.evidence.map((item, index) => (
-                          <Card key={item.id} className="bg-muted/30">
-                            <CardContent>
-                              <div className="space-y-2">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium">
-                                      {item.title || `Evidence #${index + 1}`}
-                                    </p>
-                                    <p className="text-muted-foreground mt-1 text-xs">
-                                      Type:{" "}
-                                      <span className="font-medium">{item.evidence_type}</span>
-                                    </p>
-                                    {item.description && (
-                                      <p className="text-muted-foreground mt-2 text-xs">
-                                        {item.description}
+                      return (
+                        <>
+                          <div>
+                            <p className="text-sm font-semibold">Finding Evidence</p>
+                            <p className="text-muted-foreground text-xs">
+                              {totalCount} evidence{totalCount !== 1 ? "s" : ""} attached to this finding
+                            </p>
+                          </div>
+
+                          {hasAny ? (
+                            <div className="space-y-2">
+                              {/* General finding URL-based evidence */}
+                              {generalEvidenceUrl && (
+                                <Card className="bg-muted/30">
+                                  <CardContent>
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-sm font-medium">Attached Evidence File</p>
+                                      <Button
+                                        size="sm"
+                                        variant="link"
+                                        className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
+                                        asChild>
+                                        <Link
+                                          href={generalEvidenceUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer">
+                                          View File
+                                          <FileText className="ml-1 h-3.5 w-3.5" />
+                                        </Link>
+                                      </Button>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )}
+
+                              {/* Structured evidence items */}
+                              {structuredEvidence.map((item, index) => (
+                                <Card key={item.id} className="bg-muted/30">
+                                  <CardContent>
+                                    <div className="space-y-2">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1">
+                                          <p className="text-sm font-medium">
+                                            {item.title || `Evidence #${index + 1}`}
+                                          </p>
+                                          <p className="text-muted-foreground mt-1 text-xs">
+                                            Type:{" "}
+                                            <span className="font-medium">{item.evidence_type}</span>
+                                          </p>
+                                          {item.description && (
+                                            <p className="text-muted-foreground mt-2 text-xs">
+                                              {item.description}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div className="flex items-end justify-end gap-1">
+                                          {item.file_link && (
+                                            <Button
+                                              size="sm"
+                                              variant="link"
+                                              className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
+                                              asChild>
+                                              <Link
+                                                href={item.file_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer">
+                                                Attached File
+                                                <FileText className="ml-1 h-4 w-4" />
+                                              </Link>
+                                            </Button>
+                                          )}
+                                          {item.external_link && (
+                                            <Button
+                                              size="sm"
+                                              variant="link"
+                                              className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
+                                              asChild>
+                                              <Link
+                                                href={item.external_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer">
+                                                External Link
+                                                <SquareArrowOutUpRight className="ml-1 h-4 w-4" />
+                                              </Link>
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <p className="text-muted-foreground text-xs">
+                                        Collected{" "}
+                                        {item.collection_date
+                                          ? format(new Date(item.collection_date), "MMM d, yyyy")
+                                          : "Unknown"}
                                       </p>
-                                    )}
-                                  </div>
-                                  <div className="flex items-end justify-end gap-1">
-                                    {item.file_link && (
-                                      <Button
-                                        size="sm"
-                                        variant="link"
-                                        className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
-                                        asChild>
-                                        <Link
-                                          href={item.file_link || "#"}
-                                          target="_blank"
-                                          rel="noopener noreferrer">
-                                          Attached File
-                                          <FileText className="ml-1 h-4 w-4" />
-                                        </Link>
-                                      </Button>
-                                    )}
-                                    {item.external_link && (
-                                      <Button
-                                        size="sm"
-                                        variant="link"
-                                        className="m-0 -mr-2 h-auto rounded-none p-0 text-xs"
-                                        asChild>
-                                        <Link
-                                          href={item.external_link || "#"}
-                                          target="_blank"
-                                          rel="noopener noreferrer">
-                                          External Link
-                                          <SquareArrowOutUpRight className="ml-1 h-4 w-4" />
-                                        </Link>
-                                      </Button>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <p className="text-muted-foreground text-xs">
-                                  Collected{" "}
-                                  {item.collection_date
-                                    ? format(new Date(item.collection_date), "MMM d, yyyy")
-                                    : "Unknown"}
+                                      {item.notes && (
+                                        <p className="text-muted-foreground mt-2 text-xs">
+                                          Notes: {item.notes}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          ) : (
+                            <Card className="bg-muted/50 border-dashed">
+                              <CardContent className="flex flex-col items-center justify-center px-8 py-12">
+                                <p className="text-muted-foreground text-center text-sm">
+                                  No evidence attached to this finding yet.
                                 </p>
-                                {item.notes && (
-                                  <p className="text-muted-foreground mt-2 text-xs">
-                                    Notes: {item.notes}
-                                  </p>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <Card className="bg-muted/50 border-dashed">
-                        <CardContent className="flex flex-col items-center justify-center px-8 py-12">
-                          <p className="text-muted-foreground text-center text-sm">
-                            No evidence attached to this finding yet.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
+                              </CardContent>
+                            </Card>
+                          )}
+                        </>
+                      );
+                    })()}
                   </>
                 )}
               </TabsContent>
