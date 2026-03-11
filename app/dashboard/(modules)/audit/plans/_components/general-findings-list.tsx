@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useSubmitGeneralFinding } from "@/hooks/use-general-findings-mutations";
+import { useFindingActionsByFinding } from "@/hooks/use-finding-actions-queries";
 import { AssignFindingActionDialog } from "./assign-finding-action-dialog";
 import type { AuditPlan } from "@/lib/types/audit-types";
 
@@ -75,6 +76,148 @@ function getKeyValue(finding: any, keyKey: string): any {
     if (k[keyKey] !== undefined) return k[keyKey];
   }
   return null;
+}
+
+// ─── Row Sub-component ────────────────────────────────────────────────────────
+
+interface GeneralFindingRowProps {
+  finding: any;
+  index: number;
+  configColumns: ConfigColumn[];
+  configKeys: ConfigColumn[];
+  auditPlanStatus: string;
+  submitMutation: ReturnType<typeof useSubmitGeneralFinding>;
+  onAssign: (finding: any) => void;
+}
+
+function GeneralFindingRow({
+  finding,
+  index,
+  configColumns,
+  configKeys,
+  auditPlanStatus,
+  submitMutation,
+  onAssign
+}: GeneralFindingRowProps) {
+  const { data: actions } = useFindingActionsByFinding(finding.id);
+  const actionsCount = actions?.length ?? 0;
+
+  return (
+    <TableRow key={finding.id}>
+      {/* Row number */}
+      <TableCell className="font-medium">{index + 1}</TableCell>
+
+      {/* Dynamic columns */}
+      {configColumns.map((col) => (
+        <TableCell key={col.key} className="text-sm">
+          {getColumnValue(finding, col.key)}
+        </TableCell>
+      ))}
+
+      {/* Dynamic keys (audit tests) */}
+      {configKeys.map((key) => {
+        const val = getKeyValue(finding, key.key);
+        return (
+          <TableCell
+            key={key.key}
+            className="border-l bg-amber-50/20 text-center dark:bg-amber-950/10">
+            {key.type === "boolean" ? (
+              val === true || val === "true" ? (
+                <CheckCircle2 className="mx-auto h-4 w-4 text-green-600" />
+              ) : val === false || val === "false" ? (
+                <XCircle className="mx-auto h-4 w-4 text-red-500" />
+              ) : (
+                <span className="text-muted-foreground text-xs">—</span>
+              )
+            ) : (
+              <span className="text-sm">{val ?? "—"}</span>
+            )}
+          </TableCell>
+        );
+      })}
+
+      {/* Audit Observations */}
+      <TableCell className="max-w-62.5 text-sm">
+        {finding.audit_observation || "—"}
+      </TableCell>
+
+      {/* Audit Comments */}
+      <TableCell className="max-w-62.5 text-sm">
+        {finding.audit_comments || "—"}
+      </TableCell>
+
+      {/* Evidence */}
+      <TableCell>
+        {finding.evidence ? (
+          <a
+            href={finding.evidence}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
+            <FileText className="h-3 w-3" />
+            View
+          </a>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        )}
+      </TableCell>
+
+      {/* Status + action count badge */}
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <Badge variant="outline" className="text-xs">
+            {finding.status || "DRAFT"}
+          </Badge>
+          {actionsCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {actionsCount} Action{actionsCount !== 1 ? "s" : ""}
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+
+      {/* Actions */}
+      <TableCell>
+        <div className="flex items-center gap-1">
+          {finding.status === "DRAFT" && auditPlanStatus?.toUpperCase() === "APPROVED" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-blue-600 hover:text-blue-700"
+                  onClick={() => submitMutation.mutate({ findingId: finding.id, workingPaperId: finding.working_paper_id })}
+                  disabled={submitMutation.isPending}>
+                  {submitMutation.isPending ? (
+                    <Spinner className="size-3" />
+                  ) : (
+                    <SendHorizonal className="h-3 w-3" />
+                  )}{" "}
+                  Submit
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Submit for approval</TooltipContent>
+            </Tooltip>
+          )}
+          {finding.status === "APPROVED" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-violet-600 hover:text-violet-700"
+                  onClick={() => onAssign({ ...finding, framework: "GENERAL" })}>
+                  <UserPlus className="h-3 w-3" />
+                  Assign
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Assign action</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -155,13 +298,25 @@ export function GeneralFindingsList({
     );
   }
 
-  function handleSubmit(findingId: string) {
-    submitMutation.mutate({ findingId, workingPaperId });
-  }
+  const pendingApprovalCount = sortedFindings.filter(
+    (f) => f.status === "SUBMITTED" || f.status === "IN_REVIEW" || f.status === "PENDING"
+  ).length;
 
   return (
     <TooltipProvider>
       <div className="space-y-4">
+        {/* Summary bar */}
+        <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-2 text-sm">
+          <span>
+            <strong>{sortedFindings.length}</strong> Finding
+            {sortedFindings.length !== 1 ? "s" : ""}
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span>
+            <strong>{pendingApprovalCount}</strong> Pending Approval
+          </span>
+        </div>
+
         <Card className="overflow-x-auto">
           <Table className="min-w-300">
             <TableHeader>
@@ -233,116 +388,19 @@ export function GeneralFindingsList({
 
             <TableBody>
               {sortedFindings.map((finding: any, index: number) => (
-                <TableRow key={finding.id}>
-                  {/* Row number */}
-                  <TableCell className="font-medium">{index + 1}</TableCell>
-
-                  {/* Dynamic columns */}
-                  {configColumns.map((col) => (
-                    <TableCell key={col.key} className="text-sm">
-                      {getColumnValue(finding, col.key)}
-                    </TableCell>
-                  ))}
-
-                  {/* Dynamic keys (audit tests) */}
-                  {configKeys.map((key) => {
-                    const val = getKeyValue(finding, key.key);
-                    return (
-                      <TableCell
-                        key={key.key}
-                        className="border-l bg-amber-50/20 text-center dark:bg-amber-950/10">
-                        {key.type === "boolean" ? (
-                          val === true || val === "true" ? (
-                            <CheckCircle2 className="mx-auto h-4 w-4 text-green-600" />
-                          ) : val === false || val === "false" ? (
-                            <XCircle className="mx-auto h-4 w-4 text-red-500" />
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )
-                        ) : (
-                          <span className="text-sm">{val ?? "—"}</span>
-                        )}
-                      </TableCell>
-                    );
-                  })}
-
-                  {/* Audit Observations */}
-                  <TableCell className="max-w-62.5 text-sm">
-                    {finding.audit_observation || "—"}
-                  </TableCell>
-
-                  {/* Audit Comments */}
-                  <TableCell className="max-w-62.5 text-sm">
-                    {finding.audit_comments || "—"}
-                  </TableCell>
-
-                  {/* Evidence */}
-                  <TableCell>
-                    {finding.evidence ? (
-                      <a
-                        href={finding.evidence}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
-                        <FileText className="h-3 w-3" />
-                        View
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">—</span>
-                    )}
-                  </TableCell>
-
-                  {/* Status */}
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {finding.status || "DRAFT"}
-                    </Badge>
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {finding.status === "DRAFT" && auditPlanStatus?.toUpperCase() === "APPROVED" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-blue-600 hover:text-blue-700"
-                              onClick={() => handleSubmit(finding.id)}
-                              disabled={submitMutation.isPending}>
-                              {submitMutation.isPending ? (
-                                <Spinner className="size-3" />
-                              ) : (
-                                <SendHorizonal className="h-3 w-3" />
-                              )}{" "}
-                              Submit
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Submit for approval</TooltipContent>
-                        </Tooltip>
-                      )}
-                      {finding.status === "APPROVED" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-violet-600 hover:text-violet-700"
-                              onClick={() => {
-                                setAssignFinding({ ...finding, framework: "GENERAL" });
-                                setAssignDialogOpen(true);
-                              }}>
-                              <UserPlus className="h-3 w-3" />
-                              Assign
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Assign action</TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <GeneralFindingRow
+                  key={finding.id}
+                  finding={finding}
+                  index={index}
+                  configColumns={configColumns}
+                  configKeys={configKeys}
+                  auditPlanStatus={auditPlanStatus}
+                  submitMutation={submitMutation}
+                  onAssign={(f) => {
+                    setAssignFinding(f);
+                    setAssignDialogOpen(true);
+                  }}
+                />
               ))}
             </TableBody>
           </Table>

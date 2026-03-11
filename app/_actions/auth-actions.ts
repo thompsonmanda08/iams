@@ -414,7 +414,7 @@ export async function getRefreshToken(): Promise<APIResponse> {
       const newExpiresAt = new Date(Date.now() + refreshTtl);
 
       await updateAuthSession({
-        access_token,
+        accessToken: access_token,
         expiresAt: newExpiresAt
       });
 

@@ -3,7 +3,8 @@ import { notify } from "@/lib/utils";
 import {
   requestAuditClosure,
   getAuditClosureStatus,
-  validateAuditClosure
+  validateAuditClosure,
+  submitAuditeeSignOff
 } from "@/app/_actions/audit-closure-actions";
 
 // Query Keys
@@ -38,6 +39,43 @@ export function useAuditClosureStatus(auditPlanId: string) {
 // ============================================================================
 // MUTATIONS
 // ============================================================================
+
+export function useSubmitAuditeeSignOffMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      auditPlanId,
+      signOffComments
+    }: {
+      auditPlanId: string;
+      signOffComments: string;
+    }) => submitAuditeeSignOff(auditPlanId, signOffComments),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries();
+        notify({
+          title: "Sign-Off Submitted",
+          description: "Auditee sign-off comments have been recorded",
+          type: "success"
+        });
+      } else {
+        notify({
+          title: "Submission Failed",
+          description: response.message || "Failed to submit sign-off",
+          type: "error"
+        });
+      }
+    },
+    onError: (error: any) => {
+      notify({
+        title: "Error",
+        description: error.message || "Failed to submit sign-off",
+        type: "error"
+      });
+    }
+  });
+}
 
 export function useRequestAuditClosureMutation() {
   const queryClient = useQueryClient();

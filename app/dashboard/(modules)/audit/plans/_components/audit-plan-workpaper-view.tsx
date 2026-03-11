@@ -48,6 +48,7 @@ interface AuditPlanWorkpaperViewProps {
   isLoading?: boolean;
   auditPlanStatus?: string;
   workpaper?: any;
+  frameworkType?: string;
 }
 
 // Helper function to check if a finding is completed
@@ -62,13 +63,20 @@ export function AuditPlanWorkpaperView({
   findings,
   userTasks = [],
   auditPlanStatus,
-  workpaper
+  workpaper,
+  frameworkType
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
   const { checkPermission } = usePermissions();
 
-  const isGeneralFramework =
-    (auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() === "GENERAL";
+  // Single source of truth: frameworkType prop (from page.tsx) takes precedence.
+  // Falls back to auditPlan fields for backwards compatibility.
+  const isGeneralFramework = [
+    frameworkType,
+    auditPlan.framework_type,
+    auditPlan.management_standard,
+    workpaper?.framework_type
+  ].some((f) => String(f ?? "").toUpperCase() === "GENERAL");
 
   // For GENERAL workpapers — subscribe to the same query key used by GeneralFindingsList
   // so the completion badge stays live without extra API calls (cache is shared).
@@ -416,8 +424,7 @@ export function AuditPlanWorkpaperView({
 
         {/* Workpaper Tab */}
         <TabsContent value="workpaper" className="space-y-4">
-          {(auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() ===
-          "GENERAL" ? (
+          {isGeneralFramework ? (
             <GeneralAuditWorkpaperTab auditPlan={auditPlan} workpaper={workpaper} />
           ) : (
             <ComplianceAuditWorkpaperTab
@@ -438,8 +445,7 @@ export function AuditPlanWorkpaperView({
 
         {/* Findings Tab */}
         <TabsContent value="findings" className="space-y-4">
-          {(auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() ===
-          "GENERAL" ? (
+          {isGeneralFramework ? (
             <>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Audit Findings Summary</h2>
@@ -485,6 +491,7 @@ export function AuditPlanWorkpaperView({
         <TabsContent value="closure" className="space-y-4">
           <AuditClosureReview
             auditPlan={auditPlanData}
+            frameworkType={frameworkType}
             onClosureRequested={() => {
               queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUDIT_PLANS] });
               setAuditPlanData((prev) => ({ ...prev }));

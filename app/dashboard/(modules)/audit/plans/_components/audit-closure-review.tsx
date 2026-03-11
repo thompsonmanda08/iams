@@ -27,7 +27,8 @@ import {
 import type { AuditPlan } from "@/lib/types/audit-types";
 import {
   useAuditClosureValidation,
-  useRequestAuditClosureMutation
+  useRequestAuditClosureMutation,
+  useSubmitAuditeeSignOffMutation
 } from "@/hooks/use-audit-closure-mutations";
 import { useSession } from "@/store/session-store";
 import type { ClosureChecklistResult } from "@/app/_actions/audit-closure-actions";
@@ -37,19 +38,26 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 
 interface AuditClosureReviewProps {
   auditPlan: AuditPlan;
+  frameworkType?: string;
   onClosureRequested?: () => void;
 }
 
-export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosureReviewProps) {
+export function AuditClosureReview({ auditPlan, frameworkType, onClosureRequested }: AuditClosureReviewProps) {
   const { session } = useSession();
   const [showClosureDialog, setShowClosureDialog] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  const [showSignOffDialog, setShowSignOffDialog] = useState(false);
+  const [signOffComments, setSignOffComments] = useState("");
   const [closureNotes, setClosureNotes] = useState("");
-  const [teamLeadSignOff, setTeamLeadSignOff] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
 
-  const isGeneralFramework =
-    (auditPlan.framework_type || auditPlan.management_standard)?.toUpperCase() === "GENERAL";
+  // Single source of truth: frameworkType prop (from page.tsx) takes precedence.
+  // Falls back to auditPlan fields for backwards compatibility.
+  const isGeneralFramework = [
+    frameworkType,
+    auditPlan.framework_type,
+    auditPlan.management_standard
+  ].some((f) => String(f ?? "").toUpperCase() === "GENERAL");
 
   // Check if current user is the audit team lead
   const isTeamLead =
@@ -58,11 +66,17 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
 
   // Load closure validation using query hook
   const { data: closureData, isLoading } = useAuditClosureValidation(
-    auditPlan.status === "APPROVED" || auditPlan.status === "COMPLETED" ? auditPlan.id : ""
+    ["APPROVED", "COMPLETED", "CLOSURE_REVIEW", "CLOSED"].includes(auditPlan.status ?? "")
+      ? auditPlan.id
+      : ""
   );
 
   // Request closure mutation
   const { mutate: requestClosure, isPending: isSubmitting } = useRequestAuditClosureMutation();
+
+  // Auditee sign-off mutation
+  const { mutate: submitSignOff, isPending: isSignOffSubmitting } =
+    useSubmitAuditeeSignOffMutation();
 
   const handleValidateAndConfirm = () => {
     if (!isTeamLead) {
@@ -83,8 +97,7 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
       return;
     }
 
-    // Show confirmation dialog
-    setShowConfirmationDialog(true);
+    handleRequestClosure();
   };
 
   const handleRequestClosure = () => {
@@ -103,7 +116,6 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
             setShowClosureDialog(false);
             setShowConfirmationDialog(false);
             setClosureNotes("");
-            setTeamLeadSignOff(false);
             setRequestError(null);
             onClosureRequested?.();
           } else {
@@ -305,25 +317,67 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
           <CardContent className="space-y-3">
             {closureData.checklists
               .filter((c) => c.category === "actions")
-              .map((checklist) => (
-                <div key={checklist.id} className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                      checklist.completed ? "bg-green-100" : "bg-slate-100"
-                    )}>
-                    {checklist.completed ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-slate-400" />
-                    )}
+              .map((checklist) => {
+                if (checklist.id === "auditee-sign-off") {
+                  return (
+                    <div key={checklist.id} className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                          checklist.completed ? "bg-green-100" : "bg-slate-100"
+                        )}>
+                        {checklist.completed ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium">{checklist.name}</p>
+                          <button
+                            onClick={() => {
+                              setSignOffComments(auditPlan.sign_off_comments ?? "");
+                              setShowSignOffDialog(true);
+                            }}
+                            className="text-primary hover:text-primary/80 text-xs underline underline-offset-2">
+                            {auditPlan.sign_off_comments?.trim()
+                              ? "Update Sign-Off"
+                              : "Provide Sign-Off"}
+                          </button>
+                        </div>
+                        {auditPlan.sign_off_comments?.trim() ? (
+                          <p className="mt-1 rounded bg-green-50 px-2 py-1 text-xs text-green-800 dark:bg-green-950/30 dark:text-green-200">
+                            {auditPlan.sign_off_comments}
+                          </p>
+                        ) : (
+                          <p className="text-muted-foreground text-xs">{checklist.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={checklist.id} className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                        checklist.completed ? "bg-green-100" : "bg-slate-100"
+                      )}>
+                      {checklist.completed ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-slate-400" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{checklist.name}</p>
+                      <p className="text-muted-foreground text-xs">{checklist.description}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{checklist.name}</p>
-                    <p className="text-muted-foreground text-xs">{checklist.description}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
           </CardContent>
         </Card>
 
@@ -407,7 +461,7 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
                 });
                 return;
               }
-              setShowClosureDialog(true);
+              setShowConfirmationDialog(true);
             }}
             disabled={!canRequestClosure || !isTeamLead}
             className="w-full gap-2"
@@ -474,20 +528,33 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
               </p>
             </div>
 
-            {/* Team Lead Sign-Off Notice */}
-            <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                  Team Lead Sign-Off
-                </p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  By requesting closure, you certify that this audit has been completed in
-                  accordance with audit standards and all findings have been appropriately
-                  documented and addressed.
-                </p>
+            {/* Auditee Sign-Off Status */}
+            {auditPlan.sign_off_comments?.trim() ? (
+              <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                    Auditee has signed off
+                  </p>
+                  <p className="mt-1 text-xs text-green-800 dark:text-green-200">
+                    {auditPlan.sign_off_comments}
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                    Auditee Sign-Off Pending
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Auditee sign-off is optional for now. The auditee will complete this by
+                    reviewing findings on the Execution tab.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Error Alert */}
             {requestError && (
@@ -517,16 +584,76 @@ export function AuditClosureReview({ auditPlan, onClosureRequested }: AuditClosu
         </DialogContent>
       </Dialog>
 
-      {/* Closure Confirmation Modal */}
+      {/* Auditee Sign-Off Dialog */}
+      <Dialog
+        open={showSignOffDialog}
+        onOpenChange={(open) => {
+          setShowSignOffDialog(open);
+          if (!open) setSignOffComments("");
+        }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Auditee Sign-Off</DialogTitle>
+            <DialogDescription>
+              Provide sign-off comments confirming your review of the audit findings
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="sign_off_comments">
+                Sign-Off Comments <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="sign_off_comments"
+                placeholder="Confirm that you have reviewed all findings and provide any observations..."
+                value={signOffComments}
+                onChange={(e) => setSignOffComments(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowSignOffDialog(false)}
+                disabled={isSignOffSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  submitSignOff(
+                    { auditPlanId: auditPlan.id, signOffComments },
+                    {
+                      onSuccess: (res) => {
+                        if (res.success) {
+                          setShowSignOffDialog(false);
+                          setSignOffComments("");
+                        }
+                      }
+                    }
+                  );
+                }}
+                disabled={isSignOffSubmitting || !signOffComments.trim()}>
+                {isSignOffSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit Sign-Off
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Closure Confirmation Modal — shown first on button click */}
       <ConfirmationModal
         open={showConfirmationDialog}
         onOpenChange={setShowConfirmationDialog}
-        onConfirm={handleRequestClosure}
-        title="Confirm Audit Closure Request"
-        description="Are you sure you want to request closure for this audit? Once submitted, this request will be sent to management for approval."
-        confirmText="Confirm & Submit"
+        onConfirm={() => {
+          setShowConfirmationDialog(false);
+          setShowClosureDialog(true);
+        }}
+        title="Request Audit Closure"
+        description="You are about to submit this audit for closure. This will send a closure request to management for approval. Do you want to proceed?"
+        confirmText="Yes, Proceed"
         type="default"
-        isLoading={isSubmitting}
       />
     </div>
   );

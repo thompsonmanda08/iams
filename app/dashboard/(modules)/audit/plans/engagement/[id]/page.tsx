@@ -48,11 +48,16 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
     ? userTasksResponse.data?.data || userTasksResponse.data
     : [];
 
-  // console.log("Audit Plan:", auditPlan);
+  const FRAMEWORK_TYPE = String(
+    auditPlan?.management_standard ||
+      auditPlan?.framework_type ||
+      workpaper?.framework_type ||
+      workpaper?.management_standard
+  ).toUpperCase();
+
+  console.log("Audit Plan:", auditPlan);
   // console.log("Workpaper:", workpaper);
   // console.log("Findings:", allFindings);
-  // console.log("userTasks:", userTasks[2]);
-
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -87,6 +92,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
           userTasks={userTasks}
           auditPlanStatus={auditPlan.status}
           workpaper={workpaper}
+          frameworkType={FRAMEWORK_TYPE}
         />
       </div>
     </div>

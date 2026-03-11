@@ -94,7 +94,7 @@ const _refreshAccessToken = async (): Promise<string> => {
 
       const newToken = response.data?.access_token as string;
       await updateAuthSession({
-        access_token: newToken,
+        accessToken: newToken,
         expiresAt: new Date(Date.now() + SESSION_CONFIG.SESSION_TTL)
       });
 

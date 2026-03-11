@@ -248,7 +248,7 @@ export function FindingsList({
   onSubmitForApproval
 }: FindingsListProps) {
   // Check if plan is approved
-  const isPlanApproved = ["APPROVED", "COMPLETED"].includes(auditPlanStatus?.toUpperCase() || "");
+  const isPlanApproved = ["APPROVED", "COMPLETED", "CLOSURE_REVIEW", "CLOSED"].includes(auditPlanStatus?.toUpperCase() || "");
 
   // Show "Requires Approval" component if plan is not approved
   if (!isPlanApproved && auditPlan && onSubmitForApproval) {

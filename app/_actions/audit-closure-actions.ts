@@ -56,16 +56,13 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
       url: `/api/v1/audit-plans/${auditPlanId}`
     });
 
-    if (!auditResponse.data) {
+    // auditResponse.data is the raw axios response body: { status, message, data: {...} }
+    // We must unwrap .data.data to get the actual audit plan object.
+    if (!auditResponse.data?.data) {
       return handleBadRequest("Audit plan not found");
     }
 
-    const auditPlan = auditResponse.data as AuditPlan;
-
-    // Detect GENERAL framework type
-    const isGeneralFramework =
-      auditPlan.framework_type?.toUpperCase() === "GENERAL" ||
-      auditPlan.management_standard?.toUpperCase() === "GENERAL";
+    const auditPlan = auditResponse.data.data as AuditPlan;
 
     // Fetch workpaper and tasks in parallel
     const [workpaperRes, tasksRes] = await Promise.all([
@@ -83,14 +80,39 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
     const workpaper = workpaperRes?.data?.data || workpaperRes?.data;
     const workpapers = workpaper ? [workpaper] : [];
 
-    // Extract findings — GENERAL workpapers store findings under general_findings
+    // Single source of truth for framework type detection.
+    // Checks all possible fields across both the audit plan and workpaper objects
+    // because different API endpoints surface the value in different fields.
+    const isGeneralFramework = [
+      auditPlan.management_standard,
+      auditPlan.framework_type,
+      workpaper?.framework_type,
+      workpaper?.management_standard
+    ].some((f) => String(f ?? "").toUpperCase() === "GENERAL");
+
+    // Extract findings — GENERAL workpapers use a dedicated endpoint.
+    // Fall back to workpaper.general_findings if the endpoint returns nothing.
     let findings: any[] = [];
-    if (isGeneralFramework) {
-      findings = Array.isArray(workpaper?.general_findings) ? workpaper.general_findings : [];
+    if (isGeneralFramework && workpaper?.id) {
+      const generalFindingsRes = await authenticatedApiClient({
+        method: "GET",
+        url: `/api/v1/general-work-paper-findings?working_paper_id=${workpaper.id}`
+      }).catch(() => ({ data: [] }));
+      // API returns { data: { findings: [...], total: N } } or { data: [...] }
+      const rawData = generalFindingsRes?.data?.data ?? generalFindingsRes?.data ?? [];
+      findings = Array.isArray(rawData?.findings)
+        ? rawData.findings
+        : Array.isArray(rawData)
+          ? rawData
+          : [];
+      // Fallback: use embedded general_findings if dedicated endpoint returned nothing
+      if (findings.length === 0 && Array.isArray(workpaper?.general_findings)) {
+        findings = workpaper.general_findings;
+      }
     } else if (Array.isArray(workpaper?.findings)) {
       findings = workpaper.findings;
     } else if (Array.isArray(workpaper?.categories)) {
-      // If findings are nested in categories, flatten them
+      // Compliance workpapers: findings nested inside categories
       findings = workpaper.categories.flatMap((cat: any) =>
         Array.isArray(cat.findings) ? cat.findings : []
       );
@@ -131,12 +153,12 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
 
       if (isGeneralFramework) {
         // GENERAL: metadata (work_done + conclusion) must be filled AND all general findings resolved
+        // `findings` was fetched above from the dedicated endpoint for this workpaper
         const metaFilled =
           !!wp.metadata?.work_done?.trim() && !!wp.metadata?.conclusion?.trim();
-        const gFindings: any[] = Array.isArray(wp.general_findings) ? wp.general_findings : [];
         const allResolved =
-          gFindings.length > 0 &&
-          gFindings.every(
+          findings.length === 0 ||
+          findings.every(
             (f: any) =>
               f.status !== "OPEN" && f.status !== "" && f.status !== null && f.status !== undefined
           );
@@ -233,12 +255,12 @@ export async function validateAuditClosure(auditPlanId: string): Promise<APIResp
         category: "approvals"
       },
       {
-        id: "team-sign-off",
-        name: "Team Lead Sign-Off",
-        description: "Audit team lead has reviewed and approved closure",
-        completed: auditPlan.status === "COMPLETED" || auditPlan.status === "CLOSED", // Only complete after closure request is approved
-        required: false, // Not a blocker - will be completed after request submission
-        category: "approvals"
+        id: "auditee-sign-off",
+        name: "Auditee Sign-Off",
+        description: "Auditee has reviewed findings and submitted sign-off comments",
+        completed: !!auditPlan.sign_off_comments?.trim(),
+        required: false, // optional until full implementation
+        category: "actions"
       },
       {
         id: "closure-documentation",
@@ -353,6 +375,50 @@ export async function requestAuditClosure(payload: ClosureRequestPayload): Promi
     return successResponse(closureResponse.data, "Audit closure requested successfully");
   } catch (error: any) {
     return handleError(error, "POST | REQUEST AUDIT CLOSURE", url);
+  }
+}
+
+// ============================================================================
+// AUDITEE SIGN-OFF
+// ============================================================================
+
+/**
+ * Submit auditee sign-off comments
+ * TODO: replace stub with real endpoint when available
+ * Expected endpoint: PATCH /api/v1/audit-plans/:id  { sign_off_comments }
+ */
+export async function submitAuditeeSignOff(
+  auditPlanId: string,
+  signOffComments: string
+): Promise<APIResponse> {
+  if (!auditPlanId) {
+    return handleBadRequest("Audit plan ID is required");
+  }
+
+  if (!signOffComments?.trim()) {
+    return handleBadRequest("Sign-off comments are required");
+  }
+
+  try {
+    const response = await authenticatedApiClient({
+      method: "PATCH",
+      url: `/api/v1/audit-plans/${auditPlanId}`,
+      data: { sign_off_comments: signOffComments }
+    });
+
+    if (!response.data) {
+      return handleBadRequest("Failed to submit sign-off comments");
+    }
+
+    revalidatePath(`/dashboard/audit/plans/engagement/${auditPlanId}`);
+
+    return successResponse(response.data, "Auditee sign-off submitted successfully");
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PATCH | AUDITEE SIGN-OFF",
+      `/api/v1/audit-plans/${auditPlanId}`
+    );
   }
 }
 
