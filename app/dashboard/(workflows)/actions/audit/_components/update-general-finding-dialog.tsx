@@ -118,7 +118,7 @@ export function UpdateGeneralFindingDialog({
           audit_observation: auditObservation,
           audit_comments: auditComments,
           evidence: evidence || undefined,
-          ...(isMarkedComplete && { is_marked_complete: true })
+          is_marked_complete: isMarkedComplete
         }
       },
       {
