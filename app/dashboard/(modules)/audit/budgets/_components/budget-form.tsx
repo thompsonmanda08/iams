@@ -182,8 +182,10 @@ const BudgetForm = ({
   };
 
   const createBudgetLineHandler = () => {
+    if (!lineData.budget_id) return;
+    if (!lineData.start_date || !lineData.end_date) return;
+
     const linePayload = {
-      budget_id: lineData.budget_id,
       name: lineData.name,
       description: lineData.description,
       allocated_amount: lineData.allocated_amount,
@@ -194,7 +196,7 @@ const BudgetForm = ({
       category: lineData.category
     };
 
-    createBudgetLineMutation(linePayload);
+    createBudgetLineMutation({ budgetId: lineData.budget_id, data: linePayload });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

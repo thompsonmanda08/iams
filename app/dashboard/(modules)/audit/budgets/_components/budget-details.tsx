@@ -80,7 +80,6 @@ interface BudgetDetailsProps {
 }
 
 interface BudgetLineFormData {
-  budget_id: string;
   name: string;
   description: string;
   allocated_amount: number;
@@ -92,7 +91,6 @@ interface BudgetLineFormData {
 }
 
 const INIT_LINE_DATA: BudgetLineFormData = {
-  budget_id: "",
   name: "",
   description: "",
   allocated_amount: 0,
@@ -108,7 +106,6 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   const { checkPermission } = usePermissions();
   const [lineData, setLineData] = useState<BudgetLineFormData>({
     ...INIT_LINE_DATA,
-    budget_id: budget?.id || "",
     currency: budget?.currency || "ZMW"
   });
   const [showLineForm, setShowLineForm] = useState(false);
@@ -200,6 +197,10 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkPermission("AUDIT_PLANS", editingLine ? "can_edit" : "can_create")) return;
+    if (!lineData.start_date || !lineData.end_date) {
+      notify({ description: "Please select start and end dates.", type: "error" });
+      return;
+    }
     setIsCreating(true);
 
     try {
@@ -218,7 +219,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
       if (editingLine) {
         response = await updateBudgetLine(editingLine.id, linePayload, budget.id);
       } else {
-        response = await createBudgetLine(lineData.budget_id, linePayload);
+        response = await createBudgetLine(budget.id, linePayload);
       }
 
       if (response.success) {
@@ -246,7 +247,6 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
     if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
     setEditingLine(line);
     setLineData({
-      budget_id: budget.id,
       name: line.name,
       description: line.description,
       allocated_amount: line.allocated_amount,
@@ -290,7 +290,6 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   const resetForm = () => {
     setLineData({
       ...INIT_LINE_DATA,
-      budget_id: budget.id,
       currency: budget.currency
     });
     setEditingLine(null);
@@ -426,7 +425,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Budget Lines</p>
-              <p className="text-2xl font-bold">{budgetLines.length}</p>
+              <p className="text-2xl font-bold">{safeBudgetLines.length}</p>
             </div>
           </div>
         </Card>
