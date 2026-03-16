@@ -494,7 +494,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
                 <div>
                   <DialogTitle>{memo?.subject || "Memo"}</DialogTitle>
                   <div className="text-muted-foreground mt-1 text-sm">
-                    Status: <StatusBadge status={memo?.status || "DRAFT"} />
+                    Status: <StatusBadge status={auditPlanStatus} />
                   </div>
                 </div>
               </div>

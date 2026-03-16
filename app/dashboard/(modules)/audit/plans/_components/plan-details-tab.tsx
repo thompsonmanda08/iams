@@ -222,14 +222,14 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                       <div className="flex-1">
                         <p className="text-sm font-medium">{memo.subject || "Untitled Memo"}</p>
                         <p className="text-muted-foreground text-xs">
-                          {memo.status === "SENT"
-                            ? `Sent on ${memo.sent_at ? format(new Date(memo.sent_at), "MMM d, yyyy") : "Unknown"}`
+                          {auditPlan.status === "IN_REVIEW" || auditPlan.status === "APPROVED"
+                            ? `Sent on ${format(new Date(memo.sent_at || auditPlan.updated_at), "MMM d, yyyy")}`
                             : "Draft - Not sent yet"}
                         </p>
                       </div>
                       {/* Action Buttons */}
                       <div className="flex items-center gap-2">
-                        {memo.status === "DRAFT" && auditPlan.status === "DRAFT" && (
+                        {auditPlan.status === "DRAFT" && (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -250,7 +250,7 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                           </TooltipProvider>
                         )}
 
-                        {memo.status === "DRAFT" && auditPlan.status === "DRAFT" && (
+                        {auditPlan.status === "DRAFT" && (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -295,15 +295,14 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                               <FileText className="h-6 w-6" />
                               Download PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => memoRef.current?.handleDownloadDocx()}>
+                            <DropdownMenuItem onClick={() => memoRef.current?.handleDownloadDocx()}>
                               <FileEditIcon className="h-6 w-6" />
                               Download Word
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <StatusBadge size="md" status={memo.status} />
+                        <StatusBadge size="md" status={auditPlan.status} />
                       </div>
                     </div>
                   </div>
@@ -336,7 +335,12 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
           </Card>
 
           {/* Hidden CreateOrUpdateMemo component - accessed via ref */}
-          <CreateOrUpdateMemo ref={memoRef} auditPlanId={auditPlan.id} directEdit={true} />
+          <CreateOrUpdateMemo
+            ref={memoRef}
+            auditPlanId={auditPlan.id}
+            directEdit={true}
+            auditPlanStatus={auditPlan.status}
+          />
 
           {/* Audit Team */}
           <Card>
