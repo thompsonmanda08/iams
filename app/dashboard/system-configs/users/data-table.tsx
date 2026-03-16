@@ -6,10 +6,8 @@ import { useTransition } from "react";
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import {
   Columns3,
-  MoreHorizontal,
   Filter,
   X,
-  MoreVertical,
   SlidersVertical,
   TimerReset,
   ShieldX,
