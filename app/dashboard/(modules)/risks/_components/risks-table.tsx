@@ -18,7 +18,16 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Trash2, View, Pencil, UserPlus, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Trash2, View, Pencil, UserPlus, X, SlidersVertical, AlertCircle } from "lucide-react";
 import { cn, notify } from "@/lib/utils";
 import { closeRisk, deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
@@ -349,14 +358,19 @@ export default function RisksTable({
               <TableHead>Risk Appetite Status</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Owner</TableHead>
-              <TableHead className="text-right">Options</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {risks?.length === 0 ? (
+            {!risks?.length ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-12 text-center">
-                  <p className="text-muted-foreground">No risks found</p>
+                <TableCell
+                  colSpan={12}
+                  className="py-23 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <AlertCircle className="text-muted-foreground mb-4 h-12 w-12" />
+                    <p className="text-sm text-gray-500">No risks found</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -423,68 +437,71 @@ export default function RisksTable({
                     <span className="text-sm">{getRiskOwnerName(risk)}</span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          router.push(`/dashboard/actions/risk/${risk.id}`);
-                        }}
-                        className="h-8 gap-1.5">
-                        <View className="h-3.5 w-3.5" />
-                        View Risk
-                      </Button>
-                      {risk.status === "DRAFT" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            handleEdit(risk);
-                            e.stopPropagation();
-                          }}
-                          className="h-8 gap-1.5">
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                      ) : risk.status === "OPEN" ? (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={(e) => {
-                            if (!checkPermission("RISK_ACTIONS", "can_assign")) return;
-                            setRiskForAssignment(risk);
-                            setAssignActionDialogOpen(true);
-                            e.stopPropagation();
-                          }}
-                          className="h-8 gap-1.5">
-                          <UserPlus className="h-3.5 w-3.5" />
-                          Assign Action
-                        </Button>
-                      ) : null}
-                      {risk.residual_rating === "Low" && risk.status !== "CLOSED" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            handleCloseClick(risk);
-                            e.stopPropagation();
-                          }}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                          <X className="h-4 w-4" />
-                          Close
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          handleDeleteClick(risk);
-                          e.stopPropagation();
-                        }}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
+                    <div className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-primary">
+                            <span className="sr-only">Open menu</span>
+                            <SlidersVertical className="h-4 w-4" />
+                            Options
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              router.push(`/dashboard/actions/risk/${risk.id}`);
+                            }}>
+                            <View className="h-4 w-4" />
+                            View Risk
+                          </DropdownMenuItem>
+                          {risk.status === "DRAFT" ? (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                handleEdit(risk);
+                                e.stopPropagation();
+                              }}
+                              className="h-8 gap-1.5">
+                              <Pencil className="h-3.5 w-3.5" />
+                              Edit
+                            </DropdownMenuItem>
+                          ) : risk.status === "OPEN" ? (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                if (!checkPermission("RISK_ACTIONS", "can_assign")) return;
+                                setRiskForAssignment(risk);
+                                setAssignActionDialogOpen(true);
+                                e.stopPropagation();
+                              }}>
+                              <UserPlus className="h-3.5 w-3.5" />
+                              Assign Action
+                            </DropdownMenuItem>
+                          ) : null}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              handleCloseClick(risk);
+                              e.stopPropagation();
+                            }}
+                            disabled={!(risk.residual_rating === "Low" && risk.status !== "CLOSED")}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                            <X className="h-4 w-4" />
+                            Close
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              handleDeleteClick(risk);
+                              e.stopPropagation();
+                            }}
+                            className="text-destructive hover:bg-destructive/10 focus:text-destructive">
+                            {" "}
+                            <Trash2 className="text-destructive h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>

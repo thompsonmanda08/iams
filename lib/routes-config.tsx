@@ -181,7 +181,7 @@ export const navItems: NavGroup[] = [
             icon: Signature
           },
           {
-            title: "Risk Acceptance Signatories",
+            title: "Acceptance Signatories",
             href: "/dashboard/system-configs/risk-acceptance-signatories",
             icon: Signature
           }
@@ -198,7 +198,7 @@ export const navItems: NavGroup[] = [
             icon: Signature
           },
           {
-            title: "Audit Workpaper Templates",
+            title: "Workpaper Templates",
             href: "/dashboard/system-configs/audit-settings/templates",
             icon: Signature
           }
