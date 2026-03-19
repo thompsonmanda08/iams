@@ -44,9 +44,10 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
     page_size: "15"
   });
 
-  const userTasks = userTasksResponse.success
-    ? userTasksResponse.data?.data || userTasksResponse.data
+  const rawUserTasks = userTasksResponse.success
+    ? (userTasksResponse.data?.data ?? userTasksResponse.data)
     : [];
+  const userTasks = Array.isArray(rawUserTasks) ? rawUserTasks : [];
 
   const FRAMEWORK_TYPE = String(
     auditPlan?.management_standard ||

@@ -24,6 +24,16 @@ export function computeClosureChecklist({
   userTasks,
   isGeneralFramework
 }: ComputeClosureChecklistParams): ClosureChecklistResult {
+  // Defensive normalization — callers may pass null/undefined or a non-array value
+  const safeFindings = Array.isArray(findings) ? findings : [];
+  const safeActions = Array.isArray(actions) ? actions : [];
+  const safeUserTasks = Array.isArray(userTasks) ? userTasks : [];
+
+  // Reassign to keep the rest of the function unchanged
+  findings = safeFindings;
+  actions = safeActions;
+  userTasks = safeUserTasks;
+
   const workpapers = workpaper ? [workpaper] : [];
 
   const completedWorkpapers = workpapers.filter((wp: any) => {

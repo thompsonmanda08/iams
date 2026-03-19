@@ -124,7 +124,8 @@ export function AuditClosureReview({
   const isClosureEnabled = CLOSURE_ENABLED_STATUSES.includes(auditPlan.status ?? "");
 
   // Only fetch finding actions when closure is enabled — only remaining network call
-  const findingIds = isClosureEnabled ? findings.map((f: any) => f.id).filter(Boolean) : [];
+  const safeFindings = Array.isArray(findings) ? findings : [];
+  const findingIds = isClosureEnabled ? safeFindings.map((f: any) => f.id).filter(Boolean) : [];
   const { data: findingActions = [], isLoading: isLoadingActions } =
     useFindingActionsQuery(findingIds);
 
@@ -134,9 +135,9 @@ export function AuditClosureReview({
     return computeClosureChecklist({
       auditPlan,
       workpaper,
-      findings,
+      findings: safeFindings,
       actions: findingActions,
-      userTasks,
+      userTasks: Array.isArray(userTasks) ? userTasks : [],
       isGeneralFramework
     });
   }, [
