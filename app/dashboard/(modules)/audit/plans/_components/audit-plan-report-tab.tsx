@@ -12,6 +12,7 @@ import { mergeReportWithTemplate } from "@/lib/config/report-template-merger";
 import type { ReportRecord } from "@/lib/types/report-types";
 import Loader from "@/components/ui/loader";
 import { usePermissions } from "@/hooks/use-permissions";
+import { notify } from "@/lib/utils";
 
 interface AuditPlanReportTabProps {
   auditPlan: {
@@ -22,6 +23,7 @@ interface AuditPlanReportTabProps {
     ref_no?: string;
     management_standard?: string;
     framework_type?: string;
+    management_comments?: string | null;
   };
 }
 
@@ -77,6 +79,15 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
   // Handle create report
   const handleCreateReport = () => {
     if (!checkPermission("AUDIT_REPORTS", "can_create")) return;
+    if (!auditPlan.management_comments?.trim()) {
+      notify({
+        title: "Management Comments Required",
+        description:
+          "Management comments must be provided before creating a report for this audit plan.",
+        type: "error"
+      });
+      return;
+    }
     const managementStandard = normalizeManagementStandard(
       auditPlan.management_standard || auditPlan.framework_type
     );

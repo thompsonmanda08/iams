@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { FindingsList } from "./findings-list";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
@@ -30,6 +30,7 @@ import {
   useSubmitAuditPlanMutation,
   useDeleteAuditPlanMutation
 } from "@/hooks/use-audit-mutations";
+import { useAuditMemo } from "@/hooks/use-audit-queries";
 import { AuditClosureReview } from "./audit-closure-review";
 import { AuditPlanTasksPanel } from "./audit-plan-tasks-panel";
 import { ComplianceAuditWorkpaperTab } from "./compliance-workpaper-tab";
@@ -101,6 +102,8 @@ export function AuditPlanWorkpaperView({
   const [auditPlanData, setAuditPlanData] = useState(auditPlan);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
+
+  const { data: memoData } = useAuditMemo(auditPlan.id);
 
   const { mutate: submitPlan, isPending: isSubmitting } = useSubmitAuditPlanMutation({
     onSuccess: () => {
@@ -235,6 +238,15 @@ export function AuditPlanWorkpaperView({
                       className="gap-2"
                       onClick={() => {
                         if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                        if (!memoData) {
+                          notify({
+                            title: "Engagement Memo Required",
+                            description:
+                              "An engagement memo must be created before submitting this audit plan for approval.",
+                            type: "error"
+                          });
+                          return;
+                        }
                         setSubmitConfirmationOpen(true);
                       }}
                       disabled={isSubmitting}
