@@ -435,7 +435,7 @@ export default function CreateUserForm({
                             placeholder="bmwale"
                             {...field}
                             className="focus-visible:ring-1"
-                            disabled
+                            disabled={isEditMode}
                             required
                           />
                         </FormControl>
@@ -456,7 +456,7 @@ export default function CreateUserForm({
                             placeholder="mail@company.com"
                             {...field}
                             className="focus-visible:ring-1"
-                            disabled
+                            disabled={isEditMode}
                             required
                           />
                         </FormControl>
