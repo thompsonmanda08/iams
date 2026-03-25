@@ -31,6 +31,7 @@ import {
   deleteKRIRegister
 } from "@/app/_actions/risk-module-actions";
 import Search from "@/components/ui/search-field";
+import { useTableSearch } from "@/hooks/use-table-search";
 import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import PageHeader from "@/components/page-header";
@@ -119,9 +120,6 @@ export default function KRIRegistersClient({
     });
   };
 
-  const handleSearchChange = (value: string) => {
-    updateSearchParams("search", value);
-  };
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -249,6 +247,11 @@ export default function KRIRegistersClient({
     router.push(`/dashboard/risks/kri/${registerId}`);
   };
 
+  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
+    initialValue: currentSearch,
+    onDebouncedChange: (v) => updateSearchParams("search", v),
+  });
+
   const customPaginationData = {
     page: initialPagination.page,
     page_size: initialPagination.page_size,
@@ -321,8 +324,8 @@ export default function KRIRegistersClient({
         <Card className="p-4">
           <Search
             placeholder="Search registers..."
-            defaultValue={currentSearch}
-            onChange={handleSearchChange}
+            value={localSearch}
+            onChange={setLocalSearch}
             disabled={isPending}
           />
         </Card>

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { useTableSearch } from "@/hooks/use-table-search";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
@@ -51,7 +52,7 @@ interface ActionsTableProps {
 
 export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useTableSearch({ debounceMs: 200 });
   const searchParams = useSearchParams();
   const [_, startTransition] = useTransition();
   const [selectedActionForFindings, setSelectedActionForFindings] =

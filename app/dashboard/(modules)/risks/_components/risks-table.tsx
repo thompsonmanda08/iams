@@ -32,6 +32,7 @@ import { cn, notify } from "@/lib/utils";
 import { closeRisk, deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import Search from "@/components/ui/search-field";
+import { useTableSearch } from "@/hooks/use-table-search";
 import { CustomPagination } from "@/components/ui/pagination";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { AssignActionDialog } from "./assign-action-dialog";
@@ -185,9 +186,6 @@ export default function RisksTable({
     });
   };
 
-  const handleSearchChange = (value: string) => {
-    updateSearchParams("search", value);
-  };
 
   const handleCategoryChange = (value: string) => {
     updateSearchParams("category", value);
@@ -303,14 +301,19 @@ export default function RisksTable({
     return `${risk.risk_owner.first_name} ${risk.risk_owner.last_name}`.trim();
   };
 
+  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
+    initialValue: currentSearch,
+    onDebouncedChange: (v) => updateSearchParams("search", v),
+  });
+
   return (
     <div className="px-4">
       <Card className="container mx-auto mb-8 px-4 py-8">
         <div className="flex flex-col gap-4 md:flex-row">
           <Search
             placeholder="Search risks..."
-            defaultValue={currentSearch}
-            onChange={(e) => handleSearchChange(e)}
+            value={localSearch}
+            onChange={setLocalSearch}
             disabled={isPending}
           />
 

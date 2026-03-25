@@ -22,6 +22,7 @@ import { Card } from "@/components/ui/card";
 import { QUERY_KEYS } from "@/lib/constants";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useState } from "react";
+import { useTableSearch } from "@/hooks/use-table-search";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -36,70 +37,72 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
-  // Read state from URL params
+  // Read pagination state from URL params (search is handled client-side)
   const currentPage = Number(searchParams.get("page") || "1");
   const pageSize = Number(searchParams.get("page_size") || String(DEFAULT_PAGE_SIZE));
-  const searchTerm = searchParams.get("search") || "";
 
   const updateParams = useCallback(
-    (updates: { page?: number; page_size?: number; search?: string }) => {
+    (updates: { page?: number; page_size?: number }) => {
       const params = new URLSearchParams(searchParams.toString());
       if (updates.page !== undefined) params.set("page", String(updates.page));
       if (updates.page_size !== undefined) {
         params.set("page_size", String(updates.page_size));
-        params.set("page", "1"); // reset page on page size change
-      }
-      if (updates.search !== undefined) {
-        if (updates.search) params.set("search", updates.search);
-        else params.delete("search");
-        params.set("page", "1"); // reset page on new search
+        params.set("page", "1");
       }
       router.push(`${pathname}?${params.toString()}`);
     },
     [router, pathname, searchParams]
   );
 
-  // Fetch companies — pass page, page_size & search to API
+  // Fetch companies (pagination only — search is handled client-side)
   const { data: companiesResponse, isLoading } = useQuery({
-    queryKey: [QUERY_KEYS.COMPANIES, currentPage, pageSize, searchTerm],
+    queryKey: [QUERY_KEYS.COMPANIES, currentPage, pageSize],
     queryFn: () =>
       getOrganizations({
         page: currentPage,
-        page_size: pageSize,
-        search: searchTerm || undefined
+        page_size: pageSize
       }),
     staleTime: 5 * 60 * 1000
   });
 
   const rawData = companiesResponse?.success ? companiesResponse.data : {};
   const companies: Company[] = rawData?.data ?? (Array.isArray(rawData) ? rawData : []);
-  // Only trust server pagination if it carries a real total_pages value
   const serverPagination = rawData?.pagination?.total_pages ? rawData.pagination : null;
 
-  // If no server pagination, fall back to client-side
-  const filteredCompanies = serverPagination
-    ? companies
-    : companies.filter(
-        (company: Company) =>
-          company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          company.contact_email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: filteredCompanies } =
+    useTableSearch<Company>({
+      data: companies,
+      filterFn: (company, query) =>
+        company.name.toLowerCase().includes(query.toLowerCase()) ||
+        (company.contact_email?.toLowerCase().includes(query.toLowerCase()) ?? false),
+      debounceMs: 200,
+    });
 
+  // When searching, filter the current page client-side and show client counts.
+  // When not searching, use server pagination counts for correct total/pages.
+  const isSearching = localSearch.trim() !== "";
+  const displayedCompanies = isSearching ? filteredCompanies : companies;
   const clientTotalPages = Math.max(1, Math.ceil(filteredCompanies.length / pageSize));
-  const displayedCompanies = serverPagination
-    ? filteredCompanies
-    : filteredCompanies.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const paginationData = serverPagination ?? {
-    page: currentPage,
-    page_size: pageSize,
-    total: filteredCompanies.length,
-    total_pages: clientTotalPages,
-    has_prev: currentPage > 1,
-    has_next: currentPage < clientTotalPages
-  };
+  const paginationData = isSearching
+    ? {
+        page: currentPage,
+        page_size: pageSize,
+        total: filteredCompanies.length,
+        total_pages: clientTotalPages,
+        has_prev: currentPage > 1,
+        has_next: currentPage < clientTotalPages
+      }
+    : serverPagination ?? {
+        page: currentPage,
+        page_size: pageSize,
+        total: companies.length,
+        total_pages: Math.max(1, Math.ceil(companies.length / pageSize)),
+        has_prev: currentPage > 1,
+        has_next: currentPage < Math.ceil(companies.length / pageSize)
+      };
 
-  const totalCount = paginationData.total ?? filteredCompanies.length;
+  const totalCount = paginationData.total;
 
   if (isLoading) {
     return (
@@ -121,8 +124,8 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
             <Input
               type="text"
               placeholder="Search companies..."
-              defaultValue={searchTerm}
-              onChange={(e) => updateParams({ search: e.target.value })}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
               className="w-full pl-10"
             />
           </div>
@@ -147,7 +150,7 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
               {displayedCompanies.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-slate-500">
-                    {searchTerm
+                    {localSearch
                       ? "No companies found matching your search."
                       : "No companies yet. Click 'Add Company' to create one."}
                   </TableCell>

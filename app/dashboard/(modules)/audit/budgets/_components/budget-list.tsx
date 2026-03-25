@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
+import { useTableSearch } from "@/hooks/use-table-search";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -58,7 +59,7 @@ interface BudgetListProps {
 const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   const router = useRouter();
   const { checkPermission } = usePermissions();
-  const [searchTerm, setSearchTerm] = useState("");
+  const { searchValue: searchTerm, setSearchValue: setSearchTerm, debouncedSearch } = useTableSearch({ debounceMs: 200 });
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     page_size: 10,
@@ -84,10 +85,11 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
 
   // Filter budgets based on search
   const filteredBudgets = useMemo(() => {
+    if (!debouncedSearch.trim()) return budgetsWithLines;
     return budgetsWithLines.filter((budget) =>
-      budget.title.toLowerCase().includes(searchTerm.toLowerCase())
+      budget.title.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [budgetsWithLines, searchTerm]);
+  }, [budgetsWithLines, debouncedSearch]);
 
   // Calculate pagination
   const paginatedBudgets = useMemo(() => {

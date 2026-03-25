@@ -56,6 +56,7 @@ import {
 import { CustomPagination } from "@/components/ui/pagination";
 import SearchField from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { useTableSearch } from "@/hooks/use-table-search";
 import CreateUserForm from "@/app/dashboard/system-configs/_components/create-user-dialog";
 
 type Pagination = {
@@ -380,8 +381,22 @@ export default function UsersDataTable({
     handleViewProfile
   );
 
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: displayData } =
+    useTableSearch<User>({
+      data,
+      filterFn: (user, query) => {
+        const lower = query.toLowerCase();
+        return (
+          `${user.first_name} ${user.last_name}`.toLowerCase().includes(lower) ||
+          user.email?.toLowerCase().includes(lower) ||
+          user.username?.toLowerCase().includes(lower)
+        );
+      },
+      debounceMs: 200,
+    });
+
   const table = useReactTable({
-    data,
+    data: displayData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -411,9 +426,6 @@ export default function UsersDataTable({
     });
   };
 
-  const handleSearchChange = (value: string) => {
-    updateSearchParams("search", value);
-  };
 
   const handleStatusChange = (value: string) => {
     updateSearchParams("status", value);
@@ -441,9 +453,10 @@ export default function UsersDataTable({
     });
   };
 
-  const hasFilters = currentStatus !== "all" || currentRole !== "all" || currentSearch !== "";
+  const hasFilters = currentStatus !== "all" || currentRole !== "all" || localSearch !== "";
 
   const clearFilters = () => {
+    setLocalSearch("");
     const params = new URLSearchParams();
     startTransition(() => {
       router.push(`?${params.toString()}`);
@@ -456,6 +469,7 @@ export default function UsersDataTable({
       new Set(data.filter((user) => user.role?.name).map((user) => user.role.name))
     ).sort();
   }, [data]);
+
 
   // Transform pagination for CustomPagination
   const customPaginationData = {
@@ -474,8 +488,8 @@ export default function UsersDataTable({
           <div className="flex flex-col gap-4 sm:flex-row">
             <SearchField
               placeholder="Search users by name or email..."
-              defaultValue={currentSearch}
-              onChange={(event) => handleSearchChange(event)}
+              value={localSearch}
+              onChange={setLocalSearch}
               disabled={isPending}
             />
 

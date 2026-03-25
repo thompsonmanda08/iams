@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTableSearch } from "@/hooks/use-table-search";
 import {
   Pencil,
   Trash2,
@@ -63,7 +64,6 @@ export default function AuditUniverseList({
 }) {
   const router = useRouter();
   const { checkPermission } = usePermissions();
-  const [searchQuery, setSearchQuery] = useState("");
   const searchParams = useSearchParams();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -78,20 +78,26 @@ export default function AuditUniverseList({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Use only real data from backend, no mock data fallback
   const data = universes || [];
 
-  const filteredData = data.filter((item: any) => {
-    const universeName = item.universe_name || item.universeName || "";
-    const searchLower = searchQuery.toLowerCase();
-
-    return (
-      universeName.toLowerCase().includes(searchLower) ||
-      (item.functionalAreas &&
-        item.functionalAreas.some((area: string) => area.toLowerCase().includes(searchLower))) ||
-      (item.auditableAreas &&
-        item.auditableAreas.some((area: string) => area.toLowerCase().includes(searchLower)))
-    );
+  const {
+    searchValue: searchQuery,
+    setSearchValue: setSearchQuery,
+    filteredData,
+  } = useTableSearch<any>({
+    data,
+    filterFn: (item, query) => {
+      const universeName = item.universe_name || item.universeName || "";
+      const lower = query.toLowerCase();
+      return (
+        universeName.toLowerCase().includes(lower) ||
+        (item.functionalAreas &&
+          item.functionalAreas.some((area: string) => area.toLowerCase().includes(lower))) ||
+        (item.auditableAreas &&
+          item.auditableAreas.some((area: string) => area.toLowerCase().includes(lower)))
+      );
+    },
+    debounceMs: 200,
   });
 
   const currentData = filteredData;

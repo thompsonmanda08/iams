@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTableSearch } from "@/hooks/use-table-search";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ import { SendForReviewDialog } from "./send-for-review-dialog";
 export function MyIncidents() {
   const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { searchValue: searchQuery, setSearchValue: setSearchQuery, debouncedSearch } = useTableSearch({ debounceMs: 200 });
   const [selectedIncident, setSelectedIncident] = useState<IncidentData | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [sendForReviewDialogOpen, setSendForReviewDialogOpen] = useState(false);
@@ -158,7 +159,8 @@ export function MyIncidents() {
   };
 
   const filteredIncidents = incidents.filter((item: any) => {
-    const searchLower = searchQuery.toLowerCase();
+    if (!debouncedSearch.trim()) return true;
+    const searchLower = debouncedSearch.toLowerCase();
     return (
       item.incident.details.toLowerCase().includes(searchLower) ||
       item.incident.location.toLowerCase().includes(searchLower) ||

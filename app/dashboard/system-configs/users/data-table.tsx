@@ -57,6 +57,7 @@ import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import CreateUserForm from "../_components/create-user-dialog";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useTableSearch } from "@/hooks/use-table-search";
 
 type Pagination = {
   total: number;
@@ -417,9 +418,6 @@ export default function UsersDataTable({
     });
   };
 
-  const handleSearchChange = (value: string) => {
-    updateSearchParams("search", value);
-  };
 
   const handleStatusChange = (value: string) => {
     updateSearchParams("status", value);
@@ -463,6 +461,11 @@ export default function UsersDataTable({
     ).sort();
   }, [data]);
 
+  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
+    initialValue: currentSearch,
+    onDebouncedChange: (v) => updateSearchParams("search", v),
+  });
+
   // Transform pagination for CustomPagination
   const customPaginationData = {
     page: pagination.page,
@@ -480,8 +483,8 @@ export default function UsersDataTable({
           <div className="flex flex-col gap-4 sm:flex-row">
             <Search
               placeholder="Search users by name or email..."
-              defaultValue={currentSearch}
-              onChange={(event) => handleSearchChange(event)}
+              value={localSearch}
+              onChange={setLocalSearch}
               disabled={isPending}
             />
 

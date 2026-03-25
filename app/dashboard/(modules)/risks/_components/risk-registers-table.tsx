@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { RiskRegister } from "@/lib/types/risk-types";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
+import { useTableSearch } from "@/hooks/use-table-search";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { deleteRiskRegister } from "@/app/_actions/risk-module-actions";
 import EditRiskRegisterDialog from "@/components/forms/edit-risk-register-dialog";
@@ -88,9 +89,6 @@ export default function RiskRegistersTable({
     });
   };
 
-  const handleSearchChange = (value: string) => {
-    updateSearchParams("search", value);
-  };
 
   const handleStatusChange = (value: string) => {
     updateSearchParams("status", value);
@@ -161,6 +159,11 @@ export default function RiskRegistersTable({
     }
   };
 
+  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
+    initialValue: currentSearch,
+    onDebouncedChange: (v) => updateSearchParams("search", v),
+  });
+
   const customPaginationData = {
     page: pagination.page,
     page_size: pagination.page_size,
@@ -177,8 +180,8 @@ export default function RiskRegistersTable({
         <div className="flex flex-col gap-4 md:flex-row">
           <Search
             placeholder="Search risk registers..."
-            defaultValue={currentSearch}
-            onChange={(e) => handleSearchChange(e)}
+            value={localSearch}
+            onChange={setLocalSearch}
             disabled={isPending}
           />
           <Select

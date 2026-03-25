@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTableSearch } from "@/hooks/use-table-search";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -51,16 +52,25 @@ export function FindingActionsPageLayout({
   const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] = useState("my-actions");
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ActionStatus | "ALL">("ALL");
-  const [auditSearchTerm, setAuditSearchTerm] = useState("");
+
+  const {
+    searchValue: searchTerm,
+    setSearchValue: setSearchTerm,
+    debouncedSearch: debouncedSearchTerm,
+  } = useTableSearch({ debounceMs: 200 });
+
+  const {
+    searchValue: auditSearchTerm,
+    setSearchValue: setAuditSearchTerm,
+    debouncedSearch: debouncedAuditSearchTerm,
+  } = useTableSearch({ debounceMs: 200 });
 
   const filteredActions = useMemo(() => {
     let filtered = initialActions;
 
-    // Filter by search term (action description, finding name, assigned user)
-    if (searchTerm.trim()) {
-      const lowerSearch = searchTerm.toLowerCase();
+    if (debouncedSearchTerm.trim()) {
+      const lowerSearch = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter(
         (action) =>
           action.action_description?.toLowerCase().includes(lowerSearch) ||
@@ -69,20 +79,18 @@ export function FindingActionsPageLayout({
       );
     }
 
-    // Filter by status
     if (statusFilter !== "ALL") {
       filtered = filtered.filter((action) => action.status === statusFilter);
     }
 
     return filtered;
-  }, [initialActions, searchTerm, statusFilter]);
+  }, [initialActions, debouncedSearchTerm, statusFilter]);
 
   const filteredAuditLogActions = useMemo(() => {
     let filtered = auditLogActions;
 
-    // Filter by search term (action description, finding name, assigned user)
-    if (auditSearchTerm.trim()) {
-      const lowerSearch = auditSearchTerm.toLowerCase();
+    if (debouncedAuditSearchTerm.trim()) {
+      const lowerSearch = debouncedAuditSearchTerm.toLowerCase();
       filtered = filtered.filter(
         (action) =>
           action.action_description?.toLowerCase().includes(lowerSearch) ||
@@ -92,7 +100,7 @@ export function FindingActionsPageLayout({
     }
 
     return filtered;
-  }, [auditLogActions, auditSearchTerm]);
+  }, [auditLogActions, debouncedAuditSearchTerm]);
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
     const pageSize = pageConfig.page_size || pagination?.page_size || 10;
