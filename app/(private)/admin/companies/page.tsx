@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MultiStepCompanyForm } from "@/components/forms/multi-step-company-form";
-// import { getOrganizations } from "@/app/_actions/backoffice-actions";
 
 function CompaniesSkeleton() {
   return (
@@ -26,12 +25,6 @@ function CompaniesSkeleton() {
 }
 
 async function CompaniesPage() {
-  // TODO: Replace with real API call when backend endpoint is ready
-  // Endpoint: GET /api/v1/backoffice/organizations
-  // Uncomment below when backend is ready:
-  // const response = await getOrganizations();
-  // const companies = response.success && response.data?.items ? response.data.items : [];
-
   return (
     <div>
       {/* Header */}

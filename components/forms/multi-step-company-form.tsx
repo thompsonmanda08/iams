@@ -9,7 +9,10 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  RefreshCw
 } from "lucide-react";
 import {
   Dialog,
@@ -113,6 +116,7 @@ export function MultiStepCompanyForm({
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const isEditMode = !!company;
 
@@ -319,10 +323,10 @@ export function MultiStepCompanyForm({
       notify({ description: "Admin password must be at least 8 characters", type: "error" });
       return false;
     }
-    if (stepThreeData.max_users < 1) {
-      notify({ description: "Maximum users must be at least 1", type: "error" });
-      return false;
-    }
+    // if (stepThreeData.max_users < 1) {
+    //   notify({ description: "Maximum users must be at least 1", type: "error" });
+    //   return false;
+    // }
     return true;
   };
 
@@ -736,7 +740,7 @@ export function MultiStepCompanyForm({
         {/* Step 3: Admin User Setup */}
         {currentStep === 3 && (
           <div className="space-y-4">
-            <div className="border-border bg-muted/50 rounded-lg border p-4">
+            {/* <div className="border-border bg-muted/50 rounded-lg border p-4">
               <h4 className="mb-2 flex items-center gap-2 font-medium">
                 <Shield className="h-4 w-4" />
                 Subscription Settings
@@ -775,7 +779,31 @@ export function MultiStepCompanyForm({
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
+
+            {!isEditMode && (
+              <div className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40 rounded-lg border p-4">
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
+                  <Shield className="h-4 w-4" />
+                  What happens when you create this admin?
+                </h4>
+                <ul className="space-y-2">
+                  {[
+                    "This admin will have full access control with create, update, configure, and delete permissions across the account.",
+                    "A default Department will be automatically created and assigned to this admin user.",
+                    "A default HQ Branch will be created, and this admin user will be assigned to it.",
+                    "This user will have access to all modules of the system."
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300">
+                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-200 text-[10px] font-bold dark:bg-blue-800">
+                        {i + 1}
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {!isEditMode && (
               <div className="border-border bg-muted/50 rounded-lg border p-4">
@@ -856,16 +884,47 @@ export function MultiStepCompanyForm({
                     <Label htmlFor="admin_password">
                       Password <span className="text-destructive">*</span>
                     </Label>
-                    <Input
-                      id="admin_password"
-                      type="password"
-                      placeholder="Minimum 8 characters"
-                      value={stepThreeData.admin_password}
-                      onChange={(e) =>
-                        setStepThreeData((prev) => ({ ...prev, admin_password: e.target.value }))
-                      }
-                      required
-                    />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          id="admin_password"
+                          type={showAdminPassword ? "text" : "password"}
+                          placeholder="Minimum 8 characters"
+                          value={stepThreeData.admin_password}
+                          onChange={(e) =>
+                            setStepThreeData((prev) => ({
+                              ...prev,
+                              admin_password: e.target.value
+                            }))
+                          }
+                          required
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2"
+                          onClick={() => setShowAdminPassword((prev) => !prev)}>
+                          {showAdminPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          setStepThreeData((prev) => ({
+                            ...prev,
+                            admin_password: generateRandomString()
+                          }))
+                        }>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Generate
+                      </Button>
+                    </div>
                     <p className="text-muted-foreground text-xs">
                       Password must be at least 8 characters long
                     </p>

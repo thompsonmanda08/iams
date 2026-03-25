@@ -22,11 +22,11 @@ export default async function AdminDashboardHome() {
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="rounded-lg bg-white p-6 shadow-md">
+            <div key={stat.label} className="bg-card rounded-lg p-6 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="mb-1 text-sm text-slate-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-slate-800">{stat.value}</p>
+                  <p className="text-muted-foreground mb-1 text-sm">{stat.label}</p>
+                  <p className="text-foreground text-3xl font-bold">{stat.value}</p>
                 </div>
                 <div className={`${stat.color} rounded-lg p-3`}>
                   <Icon size={24} className="text-white" />

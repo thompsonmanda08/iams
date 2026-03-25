@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, Building2, Pencil, View } from "lucide-react";
 import { Company, Country } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
@@ -19,32 +19,87 @@ import { getOrganizations } from "@/app/_actions/backoffice-actions";
 import { Spinner } from "@/components/ui/spinner";
 import { MultiStepCompanyForm } from "@/components/forms/multi-step-company-form";
 import { Card } from "@/components/ui/card";
-import Link from "next/link";
 import { QUERY_KEYS } from "@/lib/constants";
+import { CustomPagination } from "@/components/ui/pagination";
+import { useState } from "react";
+
+const DEFAULT_PAGE_SIZE = 10;
+
 
 export default function Companies({ initialCountries }: { initialCountries?: Country[] }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
-  // Fetch companies
+  // Read state from URL params
+  const currentPage = Number(searchParams.get("page") || "1");
+  const pageSize = Number(searchParams.get("page_size") || String(DEFAULT_PAGE_SIZE));
+  const searchTerm = searchParams.get("search") || "";
+
+  const updateParams = useCallback(
+    (updates: { page?: number; page_size?: number; search?: string }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (updates.page !== undefined) params.set("page", String(updates.page));
+      if (updates.page_size !== undefined) {
+        params.set("page_size", String(updates.page_size));
+        params.set("page", "1"); // reset page on page size change
+      }
+      if (updates.search !== undefined) {
+        if (updates.search) params.set("search", updates.search);
+        else params.delete("search");
+        params.set("page", "1"); // reset page on new search
+      }
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams]
+  );
+
+  // Fetch companies — pass page, page_size & search to API
   const { data: companiesResponse, isLoading } = useQuery({
-    queryKey: [QUERY_KEYS.COMPANIES],
-    queryFn: () => getOrganizations(),
-    staleTime: 5 * 60 * 1000 // 5 minutes
+    queryKey: [QUERY_KEYS.COMPANIES, currentPage, pageSize, searchTerm],
+    queryFn: () =>
+      getOrganizations({
+        page: currentPage,
+        page_size: pageSize,
+        search: searchTerm || undefined
+      }),
+    staleTime: 5 * 60 * 1000
   });
 
-  const companies = companiesResponse?.success ? companiesResponse.data?.data : [];
+  const rawData = companiesResponse?.success ? companiesResponse.data : {};
+  const companies: Company[] = rawData?.data ?? (Array.isArray(rawData) ? rawData : []);
+  // Only trust server pagination if it carries a real total_pages value
+  const serverPagination = rawData?.pagination?.total_pages ? rawData.pagination : null;
 
-  // Filter companies
-  const filteredCompanies = companies.filter(
-    (company: Company) =>
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // If no server pagination, fall back to client-side
+  const filteredCompanies = serverPagination
+    ? companies
+    : companies.filter(
+        (company: Company) =>
+          company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          company.contact_email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+  const clientTotalPages = Math.max(1, Math.ceil(filteredCompanies.length / pageSize));
+  const displayedCompanies = serverPagination
+    ? filteredCompanies
+    : filteredCompanies.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const paginationData = serverPagination ?? {
+    page: currentPage,
+    page_size: pageSize,
+    total: filteredCompanies.length,
+    total_pages: clientTotalPages,
+    has_prev: currentPage > 1,
+    has_next: currentPage < clientTotalPages
+  };
+
+  const totalCount = paginationData.total ?? filteredCompanies.length;
 
   if (isLoading) {
     return (
@@ -66,8 +121,8 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
             <Input
               type="text"
               placeholder="Search companies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              defaultValue={searchTerm}
+              onChange={(e) => updateParams({ search: e.target.value })}
               className="w-full pl-10"
             />
           </div>
@@ -89,7 +144,7 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCompanies.length === 0 ? (
+              {displayedCompanies.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-slate-500">
                     {searchTerm
@@ -98,7 +153,7 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredCompanies.map((company: Company) => (
+                displayedCompanies.map((company: Company) => (
                   <TableRow key={company.id}>
                     <TableCell>
                       {company.logo_url ? (
@@ -156,6 +211,16 @@ export default function Companies({ initialCountries }: { initialCountries?: Cou
             </TableBody>
           </Table>
         </div>
+
+        {totalCount > 0 && (
+          <CustomPagination
+            pagination={paginationData}
+            updatePagination={({ page, page_size }) => updateParams({ page, page_size })}
+            allowSetPageSize
+            showDetails
+            className="mt-2 border-t"
+          />
+        )}
       </Card>
 
       {/* Multi-Step Company Creation Form */}
