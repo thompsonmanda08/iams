@@ -19,10 +19,8 @@ import {
   Shield,
   Activity,
   AlertTriangle,
-  CheckCircle2,
   Clock,
   FileText,
-  TrendingUp,
   User as UserIcon,
   Calendar,
   Edit
@@ -42,71 +40,6 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
 
   const fullName = `${user.first_name} ${user.last_name}`;
   const avatarFallback = generateAvatarFallback(fullName);
-
-  // Mock data - Replace with actual API calls
-  const riskMetrics = {
-    totalRisks: 12,
-    criticalRisks: 2,
-    highRisks: 5,
-    mediumRisks: 3,
-    lowRisks: 2,
-    riskScore: 68
-  };
-
-  const auditMetrics = {
-    totalAudits: 8,
-    completedAudits: 5,
-    inProgressAudits: 2,
-    upcomingAudits: 1,
-    findingsCreated: 24,
-    openFindings: 6
-  };
-
-  const recentActivities = [
-    {
-      id: "1",
-      type: "audit",
-      action: "Created audit plan",
-      details: "ISO 27001:2022 Annual Audit",
-      timestamp: new Date(2025, 10, 1, 10, 30)
-    },
-    {
-      id: "2",
-      type: "risk",
-      action: "Updated risk assessment",
-      details: "Cybersecurity Risk - Data Breach",
-      timestamp: new Date(2025, 9, 30, 14, 15)
-    },
-    {
-      id: "3",
-      type: "finding",
-      action: "Resolved finding",
-      details: "Missing encryption on database",
-      timestamp: new Date(2025, 9, 29, 9, 45)
-    },
-    {
-      id: "4",
-      type: "login",
-      action: "Logged in",
-      details: "From IP: 192.168.1.100",
-      timestamp: new Date(2025, 9, 28, 8, 0)
-    }
-  ];
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "audit":
-        return <FileText className="h-4 w-4" />;
-      case "risk":
-        return <AlertTriangle className="h-4 w-4" />;
-      case "finding":
-        return <CheckCircle2 className="h-4 w-4" />;
-      case "login":
-        return <Activity className="h-4 w-4" />;
-      default:
-        return <Activity className="h-4 w-4" />;
-    }
-  };
 
   const formatTimestamp = (date: Date) => {
     const now = new Date();
@@ -263,49 +196,10 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                   </CardTitle>
                   <CardDescription>Summary of risk assessments</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">Total Risks</span>
-                    <span className="text-2xl font-bold">{riskMetrics.totalRisks}</span>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-red-500" />
-                        <span>Critical</span>
-                      </div>
-                      <span className="font-medium">{riskMetrics.criticalRisks}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-orange-500" />
-                        <span>High</span>
-                      </div>
-                      <span className="font-medium">{riskMetrics.highRisks}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                        <span>Medium</span>
-                      </div>
-                      <span className="font-medium">{riskMetrics.mediumRisks}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-green-500" />
-                        <span>Low</span>
-                      </div>
-                      <span className="font-medium">{riskMetrics.lowRisks}</span>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">Risk Score</span>
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-orange-500" />
-                      <span className="text-xl font-bold">{riskMetrics.riskScore}</span>
-                    </div>
+                <CardContent>
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <AlertTriangle className="text-muted-foreground mb-2 h-8 w-8" />
+                    <p className="text-muted-foreground text-sm">No risk data available</p>
                   </div>
                 </CardContent>
               </Card>
@@ -319,45 +213,10 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                   </CardTitle>
                   <CardDescription>Summary of audit activities</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">Total Audits</span>
-                    <span className="text-2xl font-bold">{auditMetrics.totalAudits}</span>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        <span>Completed</span>
-                      </div>
-                      <span className="font-medium">{auditMetrics.completedAudits}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-blue-500" />
-                        <span>In Progress</span>
-                      </div>
-                      <span className="font-medium">{auditMetrics.inProgressAudits}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <span>Upcoming</span>
-                      </div>
-                      <span className="font-medium">{auditMetrics.upcomingAudits}</span>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Findings Created</span>
-                      <span className="font-medium">{auditMetrics.findingsCreated}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Open Findings</span>
-                      <span className="font-medium">{auditMetrics.openFindings}</span>
-                    </div>
+                <CardContent>
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <FileText className="text-muted-foreground mb-2 h-8 w-8" />
+                    <p className="text-muted-foreground text-sm">No audit data available</p>
                   </div>
                 </CardContent>
               </Card>
@@ -428,153 +287,13 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
 
           {/* Metrics Tab */}
           <TabsContent value="metrics" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Detailed Risk Metrics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Risk Assessment Metrics</CardTitle>
-                  <CardDescription>
-                    Detailed breakdown of risk assessments performed
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="mb-2 flex items-center justify-between text-sm">
-                        <span>Critical Risks</span>
-                        <span className="font-medium">{riskMetrics.criticalRisks}</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
-                        <div
-                          className="h-2 rounded-full bg-red-500"
-                          style={{
-                            width: `${(riskMetrics.criticalRisks / riskMetrics.totalRisks) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-2 flex items-center justify-between text-sm">
-                        <span>High Risks</span>
-                        <span className="font-medium">{riskMetrics.highRisks}</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
-                        <div
-                          className="h-2 rounded-full bg-orange-500"
-                          style={{
-                            width: `${(riskMetrics.highRisks / riskMetrics.totalRisks) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-2 flex items-center justify-between text-sm">
-                        <span>Medium Risks</span>
-                        <span className="font-medium">{riskMetrics.mediumRisks}</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
-                        <div
-                          className="h-2 rounded-full bg-yellow-500"
-                          style={{
-                            width: `${(riskMetrics.mediumRisks / riskMetrics.totalRisks) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-2 flex items-center justify-between text-sm">
-                        <span>Low Risks</span>
-                        <span className="font-medium">{riskMetrics.lowRisks}</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
-                        <div
-                          className="h-2 rounded-full bg-green-500"
-                          style={{
-                            width: `${(riskMetrics.lowRisks / riskMetrics.totalRisks) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Detailed Audit Metrics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Audit Performance Metrics</CardTitle>
-                  <CardDescription>
-                    Detailed breakdown of audit activities and findings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="mb-2 flex items-center justify-between text-sm">
-                        <span>Completion Rate</span>
-                        <span className="font-medium">
-                          {Math.round(
-                            (auditMetrics.completedAudits / auditMetrics.totalAudits) * 100
-                          )}
-                          %
-                        </span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
-                        <div
-                          className="h-2 rounded-full bg-green-500"
-                          style={{
-                            width: `${(auditMetrics.completedAudits / auditMetrics.totalAudits) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-2 flex items-center justify-between text-sm">
-                        <span>In Progress Rate</span>
-                        <span className="font-medium">
-                          {Math.round(
-                            (auditMetrics.inProgressAudits / auditMetrics.totalAudits) * 100
-                          )}
-                          %
-                        </span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
-                        <div
-                          className="h-2 rounded-full bg-blue-500"
-                          style={{
-                            width: `${(auditMetrics.inProgressAudits / auditMetrics.totalAudits) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <Separator />
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Total Findings Created</span>
-                        <span className="font-medium">{auditMetrics.findingsCreated}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Open Findings</span>
-                        <span className="font-medium text-orange-600">
-                          {auditMetrics.openFindings}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Resolution Rate</span>
-                        <span className="font-medium">
-                          {Math.round(
-                            ((auditMetrics.findingsCreated - auditMetrics.openFindings) /
-                              auditMetrics.findingsCreated) *
-                              100
-                          )}
-                          %
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardContent>
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <p className="text-muted-foreground text-sm">No metrics data available</p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Activity Tab */}
@@ -585,29 +304,9 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                 <CardDescription>Latest actions and events from this user</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentActivities.map((activity, index) => (
-                    <div key={activity.id}>
-                      <div className="flex items-start gap-4">
-                        <div
-                          className={`bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full`}>
-                          {getActivityIcon(activity.type)}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="text-sm font-medium">{activity.action}</p>
-                              <p className="text-muted-foreground text-sm">{activity.details}</p>
-                            </div>
-                            <span className="text-muted-foreground text-xs">
-                              {formatTimestamp(activity.timestamp)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {index < recentActivities.length - 1 && <Separator className="my-4" />}
-                    </div>
-                  ))}
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <Activity className="text-muted-foreground mb-2 h-8 w-8" />
+                  <p className="text-muted-foreground text-sm">No recent activities</p>
                 </div>
               </CardContent>
             </Card>
