@@ -176,6 +176,9 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
               "image/jpeg": ["jpg", "jpeg"],
               "image/png": ["png"],
               "image/webp": ["webp"],
+              "image/gif": ["gif"],
+              "image/svg+xml": ["svg"],
+              "image/avif": ["avif"],
               "application/vnd.ms-excel": ["xls"],
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ["xlsx"],
               "text/csv": ["csv"]
@@ -488,7 +491,10 @@ export const ACCEPTABLE_FILE_TYPES = {
   images: {
     "image/png": [".png"],
     "image/jpeg": [".jpg", ".jpeg"],
-    "image/webp": [".webp"]
+    "image/webp": [".webp"],
+    "image/gif": [".gif"],
+    "image/svg+xml": [".svg"],
+    "image/avif": [".avif"]
   },
   png: {
     "image/png": [".png"]

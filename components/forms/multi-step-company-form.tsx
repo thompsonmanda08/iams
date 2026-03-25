@@ -648,7 +648,7 @@ export function MultiStepCompanyForm({
                 value={stepOneData?.logo_url || undefined}
                 isLoading={uploading}
                 dropzoneOptions={{
-                  accept: ACCEPTABLE_FILE_TYPES.png
+                  accept: ACCEPTABLE_FILE_TYPES.images
                 }}
                 onChange={async (file) => {
                   if (file) {
