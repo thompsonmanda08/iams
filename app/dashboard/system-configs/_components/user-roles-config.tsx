@@ -675,6 +675,24 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
     );
   }
 
+  if (modules?.length === 0) {
+    return (
+      <div className="col-span-full rounded-lg border border-dashed">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <InfoIcon className="h-6 w-6" />
+            </EmptyMedia>
+            <EmptyTitle>No Modules Assigned</EmptyTitle>
+            <EmptyDescription>
+              No modules have been assigned to this department. Please assign modules first.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
+    );
+  }
+
   if (!roles?.length || roles?.length === 0) {
     return (
       <>
@@ -711,24 +729,6 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
           setInitialData={setEditingRole}
         />
       </>
-    );
-  }
-
-  if (modules?.length === 0) {
-    return (
-      <div className="col-span-full rounded-lg border border-dashed">
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <InfoIcon className="h-6 w-6" />
-            </EmptyMedia>
-            <EmptyTitle>No Modules Assigned</EmptyTitle>
-            <EmptyDescription>
-              No modules have been assigned to this department. Please assign modules first.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      </div>
     );
   }
 
