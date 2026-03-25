@@ -381,14 +381,14 @@ function EditUserRoleDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>User</Label>
-            <div className="text-muted-foreground rounded-md border bg-gray-50 p-3 text-sm">
+            <div className="text-muted-foreground rounded-md border bg-muted p-3 text-sm">
               {user?.first_name} {user?.last_name}
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Current Role</Label>
-            <div className="text-muted-foreground rounded-md border bg-gray-50 p-3 text-sm">
+            <div className="text-muted-foreground rounded-md border bg-muted p-3 text-sm">
               {user?.role?.name || "No role assigned"}
             </div>
           </div>
@@ -488,7 +488,7 @@ export function CreateOrUpdateDepartment({
 
   // Reset form when modal closes
   useEffect(() => {
-    if (!openModal) {
+    if (openModal === false) {
       // Small delay to allow animation to complete
       const timer = setTimeout(() => {
         setFormData(INIT_DEPARTMENT);
