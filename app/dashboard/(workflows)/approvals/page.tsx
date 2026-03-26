@@ -12,7 +12,7 @@ export default async function TasksPage() {
   // Fetch workflow instances (SSR)
   const instancesResponse = await getWorkflowInstances({ page: "1", page_size: "15" });
   const instances = instancesResponse.success
-    ? instancesResponse?.data?.data || instancesResponse.data
+    ? (Array.isArray(instancesResponse?.data?.data) ? instancesResponse.data.data : [])
     : [];
   const instancesPagination: any = instancesResponse?.data?.pagination || {};
 
@@ -20,7 +20,9 @@ export default async function TasksPage() {
 
   // Fetch user-assigned workflow tasks (SSR)
   const tasksResponse = await getUserAssignedWorkflowTasks({ page: "1", page_size: "15" });
-  const tasks = tasksResponse.success ? tasksResponse.data?.data || tasksResponse.data : [];
+  const tasks = tasksResponse.success
+    ? (Array.isArray(tasksResponse?.data?.data) ? tasksResponse.data.data : [])
+    : [];
   const tasksPagination: any = tasksResponse?.data?.pagination || {};
 
   return (

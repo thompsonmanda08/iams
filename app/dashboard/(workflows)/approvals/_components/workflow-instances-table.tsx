@@ -167,7 +167,7 @@ export function WorkflowInstancesTable({
     );
   }
 
-  if (instances.length === 0) {
+  if (!instances?.length) {
     return (
       <div className="border-border bg-muted/50 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
         <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
@@ -269,7 +269,7 @@ export function WorkflowInstancesTable({
           <TableBody>
             {instances.map((instance) => (
               <TableRow
-                key={instance.instance.id}
+                key={instance.instance?.id ?? instance.entity?.entity_id}
                 onClick={() => onInstanceSelect?.(instance)}
                 className="hover:bg-muted/50 cursor-pointer transition-colors">
                 {/* ENTITY NAME */}
@@ -291,17 +291,17 @@ export function WorkflowInstancesTable({
                   })()}
                 </TableCell>
                 {/* ENTITY TYPE */}
-                <TableCell>{getEntityTypeBadge(instance.instance.entity_type)}</TableCell>
+                <TableCell>{getEntityTypeBadge(instance.instance?.entity_type || "")}</TableCell>
                 {/* CONTEXT */}
                 <TableCell>{renderEntityContext(instance)}</TableCell>
                 {/* WORKFLOW STATE */}
                 <TableCell>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline">{instance.instance.status || "Unknown"}</Badge>
+                      <Badge variant="outline">{instance.instance?.status || "Unknown"}</Badge>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
-                      Current position in workflow: {instance.instance.status || "Unknown"}
+                      Current position in workflow: {instance.instance?.status || "Unknown"}
                     </TooltipContent>
                   </Tooltip>
                 </TableCell>
@@ -311,18 +311,22 @@ export function WorkflowInstancesTable({
                 </TableCell>
                 {/* CREATED DATE */}
                 <TableCell>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="text-muted-foreground cursor-help text-sm">
-                        {formatDistanceToNow(new Date(instance.instance.created_at), {
-                          addSuffix: true
-                        })}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs">
-                      Created on: {new Date(instance.instance.created_at).toLocaleString()}
-                    </TooltipContent>
-                  </Tooltip>
+                  {instance.instance?.created_at ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-muted-foreground cursor-help text-sm">
+                          {formatDistanceToNow(new Date(instance.instance.created_at), {
+                            addSuffix: true
+                          })}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        Created on: {new Date(instance.instance.created_at).toLocaleString()}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">-</span>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

@@ -63,9 +63,8 @@ export function WorkflowInstancesPanel({
   });
 
   // Prefer React Query data when available, fall back to SSR initial data
-  const allInstances = instancesResponse
-    ? instancesResponse?.data || instancesResponse
-    : initialInstances;
+  const rawInstances = instancesResponse?.data ?? instancesResponse;
+  const allInstances = Array.isArray(rawInstances) ? rawInstances : initialInstances;
 
   const totalCount = allInstances?.length || 0;
   const totalPages = Math.ceil(totalCount / pageSize);

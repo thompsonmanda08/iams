@@ -38,9 +38,8 @@ export function WorkflowTasksPanel({ initialTasks = [] }: WorkflowTasksPanelProp
   });
 
   // Prefer React Query data when available, fall back to SSR initial data
-  const allTasks = tasksResponse
-    ? tasksResponse?.data || tasksResponse
-    : initialTasks;
+  const rawTasks = tasksResponse?.data ?? tasksResponse;
+  const allTasks = Array.isArray(rawTasks) ? rawTasks : initialTasks;
 
   const totalCount = allTasks?.length || 0;
   const totalPages = Math.ceil(totalCount / pageSize);

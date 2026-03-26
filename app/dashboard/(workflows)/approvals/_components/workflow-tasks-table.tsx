@@ -218,7 +218,7 @@ export function WorkflowTasksTable({ tasks, onTaskSelect, isLoading }: WorkflowT
     );
   }
 
-  if (tasks.length === 0) {
+  if (!tasks?.length) {
     return (
       <div className="border-border bg-muted/50 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
         <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">

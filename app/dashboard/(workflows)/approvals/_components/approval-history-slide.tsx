@@ -80,9 +80,11 @@ export function ApprovalHistorySlide({
           {task && (
             <SheetDescription>
               {task.entity_name}
-              <span className="text-muted-foreground block text-xs mt-1">
-                ID: {task.instance.id.substring(0, 8)}...
-              </span>
+              {task.instance?.id && (
+                <span className="text-muted-foreground block text-xs mt-1">
+                  ID: {task.instance.id.substring(0, 8)}...
+                </span>
+              )}
             </SheetDescription>
           )}
         </SheetHeader>
@@ -96,7 +98,7 @@ export function ApprovalHistorySlide({
                 <p className="text-sm text-muted-foreground">Loading approvals...</p>
               </div>
             </div>
-          ) : approvals.length === 0 ? (
+          ) : !approvals?.length ? (
             <div className="border-border bg-muted/50 flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-dashed p-4 text-center">
               <div className="mx-auto flex max-w-[300px] flex-col items-center justify-center text-center">
                 <h3 className="mt-2 text-sm font-semibold">No approval history</h3>
@@ -106,7 +108,7 @@ export function ApprovalHistorySlide({
               </div>
             </div>
           ) : (
-            approvals.map((approval) => (
+            (approvals ?? []).map((approval) => (
               <Card key={approval.id} className="p-4">
                 <div className="space-y-3">
                   {/* Header Row */}
@@ -144,7 +146,7 @@ export function ApprovalHistorySlide({
         </div>
 
         {/* Pagination Footer */}
-        {!isLoading && approvals.length > 0 && pagination && pagination.total_pages > 1 && (
+        {!isLoading && !!approvals?.length && pagination && pagination.total_pages > 1 && (
           <div className="border-t pt-4 px-4">
             <CustomPagination
               pagination={pagination}
