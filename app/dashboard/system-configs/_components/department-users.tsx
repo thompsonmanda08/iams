@@ -33,11 +33,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  updateDepartment,
-  createDepartment,
-  getRoles
-} from "@/app/_actions/config-actions";
+import { updateDepartment, createDepartment, getRoles } from "@/app/_actions/config-actions";
 import { updateUser, getUsers } from "@/app/_actions/user-actions";
 import { useRouter, useParams } from "next/navigation";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -136,11 +132,21 @@ export default function DepartmentUsersConfig() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-5 w-36" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell><Skeleton className="ml-auto h-8 w-48" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-36" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-28" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="ml-auto h-8 w-48" />
+                  </TableCell>
                 </TableRow>
               ))
             ) : users.length === 0 ? (
@@ -219,7 +225,7 @@ export default function DepartmentUsersConfig() {
                         <Pencil className="h-3.5 w-3.5" />
                         Edit Role
                       </Button>
-                      <Button
+                      {/* <Button
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
@@ -230,7 +236,7 @@ export default function DepartmentUsersConfig() {
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-4 w-4" />
                         Remove
-                      </Button>
+                      </Button> */}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -341,7 +347,7 @@ function EditUserRoleDialog({
         branch_id: user.branch_id,
         department_id: user.department_id,
         role_id: roleId,
-        is_active: user.is_active ?? true,
+        is_active: user.is_active ?? true
       });
     },
     onSuccess: (response) => {
@@ -390,14 +396,14 @@ function EditUserRoleDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>User</Label>
-            <div className="text-muted-foreground rounded-md border bg-muted p-3 text-sm">
+            <div className="text-muted-foreground bg-muted rounded-md border p-3 text-sm">
               {user?.first_name} {user?.last_name}
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Current Role</Label>
-            <div className="text-muted-foreground rounded-md border bg-muted p-3 text-sm">
+            <div className="text-muted-foreground bg-muted rounded-md border p-3 text-sm">
               {user?.role?.name || "No role assigned"}
             </div>
           </div>
@@ -527,7 +533,10 @@ export function CreateOrUpdateDepartment({
     },
     onSuccess: (response) => {
       if (response.success) {
-        notify({ description: `Department ${initialData ? "updated" : "created"} successfully`, type: "success" });
+        notify({
+          description: `Department ${initialData ? "updated" : "created"} successfully`,
+          type: "success"
+        });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DEPARTMENTS] });
         setOpenModal?.(false);
         setInitialData?.(null);
