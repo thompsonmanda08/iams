@@ -333,7 +333,16 @@ function EditUserRoleDialog({
   const updateRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       if (!user) throw new Error("No user selected");
-      return await updateUser(user.id, { role_id: roleId });
+      return await updateUser(user.id, {
+        username: user.username,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        branch_id: user.branch_id,
+        department_id: user.department_id,
+        role_id: roleId,
+        is_active: user.is_active ?? true,
+      });
     },
     onSuccess: (response) => {
       if (response.success) {
