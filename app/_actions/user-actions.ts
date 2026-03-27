@@ -15,7 +15,8 @@ export async function createNewUser({
   branch_id,
   department_id,
   role_id,
-  mfa_enabled
+  mfa_enabled,
+  user_type
 }: {
   username: string;
   email: string;
@@ -23,9 +24,9 @@ export async function createNewUser({
   password: string;
   first_name: string;
   last_name: string;
-  branch_id: string;
-  department_id: string;
-  role_id: string;
+  branch_id?: string;
+  department_id?: string;
+  role_id?: string;
   mfa_enabled: boolean;
   user_type?: UserType;
 }): Promise<APIResponse> {
@@ -40,10 +41,11 @@ export async function createNewUser({
         password,
         first_name,
         last_name,
-        branch_id,
-        department_id,
-        role_id,
+        ...(branch_id && { branch_id }),
+        ...(department_id && { department_id }),
+        ...(role_id && { role_id }),
         mfa_enabled,
+        ...(user_type && { user_type }),
       },
       method: "POST"
     });

@@ -60,6 +60,8 @@ export function usePermissions() {
   const { data: sessionResponse } = useSystemSetup(true);
   const session = sessionResponse?.data;
 
+  const isBackofficeAdmin = session?.user?.user_type === "BACKOFFICE_ADMIN";
+
   const permissionMap = useMemo(() => {
     if (!session?.permissions || !Array.isArray(session.permissions)) {
       return new Map<string, ModulePermissions>();
@@ -81,20 +83,23 @@ export function usePermissions() {
   /**
    * Silently checks if the user has a specific permission on a module.
    * Returns true if the permission is granted, false otherwise.
+   * BACKOFFICE_ADMIN users are granted all permissions.
    */
   const hasPermission = useCallback(
     (moduleCode: string, action: PermissionAction): boolean => {
+      if (isBackofficeAdmin) return true;
       const perms = permissionMap.get(moduleCode);
       if (!perms) return false;
       return perms[action] === true;
     },
-    [permissionMap]
+    [permissionMap, isBackofficeAdmin]
   );
 
   /**
    * Checks if the user has a specific permission on a module.
    * If denied, shows a contextual toast error and returns false.
    * Use this in onClick/onSubmit handlers as a guard.
+   * BACKOFFICE_ADMIN users are granted all permissions.
    *
    * @param moduleCode - The module code to check (e.g., "RISK_REGISTERS")
    * @param action - The permission action to check (e.g., "can_create")
@@ -102,6 +107,7 @@ export function usePermissions() {
    */
   const checkPermission = useCallback(
     (moduleCode: string, action: PermissionAction, customMessage?: string): boolean => {
+      if (isBackofficeAdmin) return true;
       const perms = permissionMap.get(moduleCode);
       if (!perms || perms[action] !== true) {
         const actionLabel = ACTION_LABELS[action] || action;
@@ -113,7 +119,7 @@ export function usePermissions() {
       }
       return true;
     },
-    [permissionMap]
+    [permissionMap, isBackofficeAdmin]
   );
 
   return { getPermissions, hasPermission, checkPermission };
