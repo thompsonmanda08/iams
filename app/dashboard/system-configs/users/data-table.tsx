@@ -45,7 +45,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { generateAvatarFallback, generateRandomString, getAvatarSrc, notify } from "@/lib/utils";
 import { User } from "@/lib/types/account";
-import { activateUser, deactivateUser, resetUserPassword } from "@/app/_actions/user-actions";
+import { updateUser, deactivateUser, resetUserPassword } from "@/app/_actions/user-actions";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -229,7 +229,8 @@ export default function UsersDataTable({
     userId: string | null;
     userName: string | null;
     activate: boolean | null;
-  }>({ open: false, userId: null, userName: null, activate: null });
+    user: User | null;
+  }>({ open: false, userId: null, userName: null, activate: null, user: null });
 
   const [resetPasswordDialog, setResetPasswordDialog] = React.useState<{
     open: boolean;
@@ -249,7 +250,8 @@ export default function UsersDataTable({
         open: true,
         userId: id,
         userName: `${user.first_name} ${user.last_name}`,
-        activate
+        activate,
+        user
       });
     }
   };
@@ -260,8 +262,23 @@ export default function UsersDataTable({
     }
 
     try {
-      const action = toggleStatusDialog.activate ? activateUser : deactivateUser;
-      const response = await action(toggleStatusDialog.userId);
+      let response;
+      if (toggleStatusDialog.activate && toggleStatusDialog.user) {
+        const u = toggleStatusDialog.user;
+        response = await updateUser(toggleStatusDialog.userId, {
+          username: u.username,
+          email: u.email,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          branch_id: u.branch_id,
+          department_id: u.department_id,
+          role_id: u.role_id,
+          mfa_enabled: u.mfa_enabled,
+          is_active: true
+        });
+      } else {
+        response = await deactivateUser(toggleStatusDialog.userId);
+      }
 
       if (response.success) {
         const statusText = toggleStatusDialog.activate ? "activated" : "deactivated";
@@ -276,7 +293,8 @@ export default function UsersDataTable({
             open: false,
             userId: null,
             userName: null,
-            activate: null
+            activate: null,
+            user: null
           });
         }, 300);
       } else {
@@ -588,7 +606,7 @@ export default function UsersDataTable({
           toggleStatusDialog.activate ? "activate" : "deactivate"
         } the user "${toggleStatusDialog.userName?.toLocaleUpperCase()}"?`}
         onOpenChange={(open) =>
-          setToggleStatusDialog({ open, userId: null, userName: null, activate: null })
+          setToggleStatusDialog({ open, userId: null, userName: null, activate: null, user: null })
         }
         onConfirm={handleToggleStatusConfirm}
         type={toggleStatusDialog.activate ? "default" : "delete"}
