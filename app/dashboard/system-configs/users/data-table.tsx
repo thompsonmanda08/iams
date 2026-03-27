@@ -12,7 +12,6 @@ import {
   TimerReset,
   ShieldX,
   ShieldCheck,
-  Trash2,
   View,
   PencilLine
 } from "lucide-react";
@@ -46,18 +45,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { generateAvatarFallback, generateRandomString, getAvatarSrc, notify } from "@/lib/utils";
 import { User } from "@/lib/types/account";
-import {
-  activateUser,
-  deactivateUser,
-  deleteUser,
-  resetUserPassword
-} from "@/app/_actions/user-actions";
+import { activateUser, deactivateUser, resetUserPassword } from "@/app/_actions/user-actions";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreateUserForm from "../_components/create-user-dialog";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useTableSearch } from "@/hooks/use-table-search";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Pagination = {
   total: number;
@@ -77,7 +73,6 @@ type UsersDataTableProps = {
 };
 
 const getColumns = (
-  onDelete: (id: string) => void,
   onToggleStatus: (id: string, isActive: boolean) => void,
   onEdit: (user: User) => void,
   onResetPassword: (id: string) => void,
@@ -190,7 +185,6 @@ const getColumns = (
                 View Profile
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(user)}>
-                {" "}
                 <PencilLine className="h-4 w-4" />
                 Edit User Details
               </DropdownMenuItem>
@@ -199,22 +193,15 @@ const getColumns = (
                 <TimerReset className="h-4 w-4" />
                 Reset Password
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggleStatus(user.id, !user.is_active)}>
-                {" "}
+              <DropdownMenuItem
+                onClick={() => onToggleStatus(user.id, !user.is_active)}
+                className={user.is_active ? "text-destructive focus:text-destructive" : ""}>
                 {!user.is_active ? (
                   <ShieldCheck className="h-4 w-4" />
                 ) : (
-                  <ShieldX className="h-4 w-4" />
+                  <ShieldX className="text-destructive h-4 w-4" />
                 )}
                 {user.is_active ? "Deactivate" : "Activate"} Account
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onDelete(user.id)}
-                className="text-destructive hover:bg-destructive/10 focus:text-destructive">
-                {" "}
-                <Trash2 className="text-destructive h-4 w-4" />
-                Delete User
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -237,15 +224,6 @@ export default function UsersDataTable({
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
-  const [deleteDialog, setDeleteDialog] = React.useState<{
-    open: boolean;
-    userId: string | null;
-    userName: string | null;
-  }>({
-    open: false,
-    userId: null,
-    userName: null
-  });
   const [toggleStatusDialog, setToggleStatusDialog] = React.useState<{
     open: boolean;
     userId: string | null;
@@ -262,39 +240,6 @@ export default function UsersDataTable({
     userId: null,
     userName: null
   });
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteDialog.userId) return;
-
-    try {
-      const response = await deleteUser(deleteDialog.userId);
-      if (response.success) {
-        notify({ description: response.message || "User deleted successfully", type: "success" });
-        router.refresh();
-        // Close dialog first, then reset state after animation
-        setDeleteDialog((prev) => ({ ...prev, open: false }));
-        setTimeout(() => {
-          setDeleteDialog({ open: false, userId: null, userName: null });
-        }, 300);
-      } else {
-        notify({ description: response.message || "Failed to delete user", type: "error" });
-      }
-    } catch (error) {
-      notify({ description: "An unexpected error occurred", type: "error" });
-    }
-  };
-
-  const handleDeleteClick = (id: string) => {
-    if (!checkPermission("USER_MGMT", "can_delete")) return;
-    const user = data.find((u) => u.id === id);
-    if (user) {
-      setDeleteDialog({
-        open: true,
-        userId: id,
-        userName: `${user.first_name} ${user.last_name}`
-      });
-    }
-  };
 
   const handleToggleStatusClick = (id: string, activate: boolean) => {
     if (!checkPermission("USER_MGMT", "can_edit")) return;
@@ -380,7 +325,6 @@ export default function UsersDataTable({
   };
 
   const columns = getColumns(
-    handleDeleteClick,
     handleToggleStatusClick,
     handleEditClick,
     handleResetPasswordClick,
@@ -418,11 +362,6 @@ export default function UsersDataTable({
     });
   };
 
-
-  const handleStatusChange = (value: string) => {
-    updateSearchParams("status", value);
-  };
-
   const handleRoleChange = (value: string) => {
     updateSearchParams("role", value);
   };
@@ -445,7 +384,7 @@ export default function UsersDataTable({
     });
   };
 
-  const hasFilters = currentStatus !== "all" || currentRole !== "all" || currentSearch !== "";
+  const hasFilters = currentRole !== "all" || currentSearch !== "";
 
   const clearFilters = () => {
     const params = new URLSearchParams();
@@ -463,7 +402,7 @@ export default function UsersDataTable({
 
   const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
     initialValue: currentSearch,
-    onDebouncedChange: (v) => updateSearchParams("search", v),
+    onDebouncedChange: (v) => updateSearchParams("search", v)
   });
 
   // Transform pagination for CustomPagination
@@ -476,9 +415,19 @@ export default function UsersDataTable({
     has_next: pagination.has_next
   };
 
+  const activeTab = currentStatus === "inactive" ? "inactive" : "active";
+
   return (
     <Card className="shadow-none">
       <CardContent className="p-0">
+        <div className="border-b px-4">
+          <Tabs value={activeTab} onValueChange={(v) => updateSearchParams("status", v)}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="active">Active Users</TabsTrigger>
+              <TabsTrigger value="inactive">Inactive Users</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
         <div className="space-y-4 border-b p-4">
           <div className="flex flex-col gap-4 sm:flex-row">
             <Search
@@ -489,17 +438,6 @@ export default function UsersDataTable({
             />
 
             <div className="flex items-center gap-2">
-              <Select value={currentStatus} onValueChange={handleStatusChange} disabled={isPending}>
-                <SelectTrigger className="w-full sm:w-36">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-
               <Select value={currentRole} onValueChange={handleRoleChange} disabled={isPending}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Role" />
@@ -572,7 +510,39 @@ export default function UsersDataTable({
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+              {isPending ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-6" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-44" />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-36" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-14 rounded-full" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Skeleton className="ml-auto h-8 w-24" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
@@ -611,13 +581,6 @@ export default function UsersDataTable({
           />
         )}
       </CardContent>
-      <ConfirmationModal
-        open={deleteDialog.open}
-        description={`Are you sure you want to delete the user "${deleteDialog.userName?.toLocaleUpperCase()}"? This action cannot be undone.`}
-        onOpenChange={(open) => setDeleteDialog({ open, userId: null, userName: null })}
-        onConfirm={handleDeleteConfirm}
-        type="delete"
-      />
       <ConfirmationModal
         open={toggleStatusDialog.open}
         title={`${toggleStatusDialog.activate ? "Activate" : "Deactivate"} User`}

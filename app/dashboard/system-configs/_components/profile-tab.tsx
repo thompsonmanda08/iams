@@ -63,7 +63,10 @@ export function ProfileTab() {
         last_name: sessionUser.last_name,
         email: sessionUser.email,
         username: sessionUser.username,
-        is_active: sessionUser.is_active || true,
+        branch_id: sessionUser.branch_id,
+        department_id: sessionUser.department_id,
+        role_id: sessionUser.role_id,
+        is_active: sessionUser.is_active ?? true,
         profile_picture: fileUrl
       });
       if (!updateResponse.success)
@@ -124,8 +127,11 @@ export function ProfileTab() {
         first_name: profile.first_name,
         last_name: profile.last_name,
         email: profile.email,
-        username: sessionUser.username, // Username is required by API but not editable
-        is_active: sessionUser.is_active ?? true // Required by API, not editable here
+        username: sessionUser.username,
+        branch_id: sessionUser.branch_id,
+        department_id: sessionUser.department_id,
+        role_id: sessionUser.role_id,
+        is_active: sessionUser.is_active ?? true
       });
       if (!response.success) throw new Error(response.message || "Failed to update profile");
       queryClient.invalidateQueries();

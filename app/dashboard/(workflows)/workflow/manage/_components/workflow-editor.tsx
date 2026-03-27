@@ -688,6 +688,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
         }}
         onUpdate={handleTransitionUpdate}
         states={workflow.states}
+        transitions={workflow.transitions}
         workflowId={workflow.id}
       />
 

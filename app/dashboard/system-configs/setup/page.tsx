@@ -53,9 +53,10 @@ export default async function SystemSetupPage({ searchParams }: PageProps) {
     departmentsData = departmentsRes.success ? departmentsRes.data : null;
     pagination = departmentsData?.pagination ?? pagination;
   } else if (tab === "users") {
+    const status = params.status === "inactive" ? "inactive" : "active";
     const usersRes = await getUsers({
       search: params.search || undefined,
-      isActive: params.status && params.status !== "all" ? params.status === "active" : undefined,
+      isActive: status === "active",
       role: params.role && params.role !== "all" ? params.role : undefined,
       page,
       page_size
@@ -123,7 +124,7 @@ export default async function SystemSetupPage({ searchParams }: PageProps) {
                 data={usersData}
                 pagination={pagination}
                 currentSearch={params.search || ""}
-                currentStatus={params.status || "all"}
+                currentStatus={params.status === "inactive" ? "inactive" : "active"}
                 currentRole={params.role || "all"}
               />
             </Suspense>

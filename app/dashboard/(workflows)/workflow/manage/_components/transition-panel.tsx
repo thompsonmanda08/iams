@@ -23,6 +23,7 @@ interface TransitionPanelProps {
   onClose: () => void;
   onUpdate: (transition: Transition) => void;
   states?: State[];
+  transitions?: Transition[];
   workflowId?: string;
 }
 
@@ -41,12 +42,14 @@ export const TransitionPanel = ({
   isOpen,
   onClose,
   onUpdate,
-  states = []
+  states = [],
+  transitions = []
 }: TransitionPanelProps) => {
   const [localTransition, setLocalTransition] = useState<Transition | null>(transition);
   const [selectedFromStatus, setSelectedFromStatus] = useState("");
   const [selectedToStatus, setSelectedToStatus] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
   // Fetch available roles from API
   const { data: rolesResponse, isLoading: rolesLoading } = useRoles({ is_Active: true });
@@ -88,6 +91,7 @@ export const TransitionPanel = ({
   // Sync local state with prop changes and set defaults for new transitions
   // Note: Added isOpen to dependency array to ensure initialization runs when panel reopens
   useEffect(() => {
+    setDuplicateError(null);
     setLocalTransition(transition);
     if (transition && isOpen) {
       let fromStatusValue = "";
@@ -124,6 +128,8 @@ export const TransitionPanel = ({
   const handleSave = () => {
     if (!localTransition) return;
 
+    setDuplicateError(null);
+
     // Validation: Prevent saving if from_status and to_status are the same
     if (selectedFromStatus && selectedToStatus && selectedFromStatus === selectedToStatus) {
       notify({ description: "From State and To State cannot be the same", type: "error" });
@@ -142,12 +148,30 @@ export const TransitionPanel = ({
       return;
     }
 
+    // Check for duplicate transition (same from/to states + same role)
+    const isDuplicate = transitions.some(
+      (t) =>
+        t.id !== localTransition.id &&
+        t._changeType !== "deleted" &&
+        t.from_state_id === localTransition.from_state_id &&
+        t.to_state_id === localTransition.to_state_id &&
+        t.required_role_id === selectedRoleId
+    );
+
+    if (isDuplicate) {
+      setDuplicateError(
+        "A transition between these two states with this role already exists. Please choose a different state or role."
+      );
+      return;
+    }
+
     onUpdate(localTransition);
     onClose();
   };
 
   const handleRoleChange = (roleId: string) => {
     setSelectedRoleId(roleId);
+    setDuplicateError(null);
     updateLocalTransition({
       required_role_id: roleId
     });
@@ -211,6 +235,7 @@ export const TransitionPanel = ({
               value={selectedFromStatus}
               onValueChange={(value) => {
                 setSelectedFromStatus(value);
+                setDuplicateError(null);
                 if (!localTransition) return;
 
                 // value is the state name (e.g., "Staff Submit")
@@ -258,6 +283,7 @@ export const TransitionPanel = ({
               value={selectedToStatus}
               onValueChange={(value) => {
                 setSelectedToStatus(value);
+                setDuplicateError(null);
                 if (!localTransition) return;
 
                 // value is the state name (e.g., "Supervisor Review")
@@ -355,6 +381,12 @@ export const TransitionPanel = ({
           </div> */}
 
           {/* Action Buttons */}
+          {duplicateError && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {duplicateError}
+            </div>
+          )}
+
           <div className="flex gap-2 pt-6">
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
