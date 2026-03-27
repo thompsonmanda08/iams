@@ -134,22 +134,18 @@ type RisksTableProps = {
   risks: Risk[];
   pagination: Pagination;
   registerId: string;
-  currentSearch: string;
-  currentCategory: string;
-  currentStatus: string;
 };
 
 export default function RisksTable({
   risks,
   pagination,
-  registerId,
-  currentSearch,
-  currentCategory,
-  currentStatus
+  registerId
 }: RisksTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -188,11 +184,11 @@ export default function RisksTable({
 
 
   const handleCategoryChange = (value: string) => {
-    updateSearchParams("category", value);
+    setSelectedCategory(value);
   };
 
   const handleStatusChange = (value: string) => {
-    updateSearchParams("status", value);
+    setSelectedStatus(value);
   };
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
@@ -301,9 +297,24 @@ export default function RisksTable({
     return `${risk.risk_owner.first_name} ${risk.risk_owner.last_name}`.trim();
   };
 
-  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
-    initialValue: currentSearch,
-    onDebouncedChange: (v) => updateSearchParams("search", v),
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: filteredRisks } = useTableSearch({
+    data: risks,
+    filterFn: (risk, query) => {
+      const q = query.toLowerCase();
+      return (
+        risk.title.toLowerCase().includes(q) ||
+        (risk.description?.toLowerCase().includes(q) ?? false) ||
+        (risk.category?.name?.toLowerCase().includes(q) ?? false) ||
+        (risk.department?.name?.toLowerCase().includes(q) ?? false)
+      );
+    },
+    debounceMs: 200,
+  });
+
+  const displayedRisks = filteredRisks.filter(risk => {
+    const matchesCategory = selectedCategory === "all" || risk.category?.name === selectedCategory;
+    const matchesStatus = selectedStatus === "all" || risk.status?.toUpperCase() === selectedStatus.toUpperCase();
+    return matchesCategory && matchesStatus;
   });
 
   return (
@@ -317,7 +328,7 @@ export default function RisksTable({
             disabled={isPending}
           />
 
-          <Select value={currentCategory} onValueChange={handleCategoryChange} disabled={isPending}>
+          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -331,7 +342,7 @@ export default function RisksTable({
             </SelectContent>
           </Select>
 
-          <Select value={currentStatus} onValueChange={handleStatusChange} disabled={isPending}>
+          <Select value={selectedStatus} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -365,7 +376,7 @@ export default function RisksTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!risks?.length ? (
+            {!displayedRisks?.length ? (
               <TableRow>
                 <TableCell
                   colSpan={12}
@@ -377,7 +388,7 @@ export default function RisksTable({
                 </TableCell>
               </TableRow>
             ) : (
-              risks?.map((risk) => (
+              displayedRisks?.map((risk) => (
                 <TableRow key={risk.id}>
                   <TableCell>
                     <span className="font-mono text-sm font-medium uppercase">{`${risk.category.code}-${risk.id.slice(0, 4)}`}</span>
@@ -513,7 +524,7 @@ export default function RisksTable({
           </TableBody>
         </Table>
 
-        {risks?.length > 0 && (
+        {displayedRisks?.length > 0 && (
           <CustomPagination
             pagination={customPaginationData}
             updatePagination={updatePagination}

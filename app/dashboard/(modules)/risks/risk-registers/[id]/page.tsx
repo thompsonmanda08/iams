@@ -5,9 +5,6 @@ import RisksTable from "../../_components/risks-table";
 type PageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{
-    search?: string;
-    category?: string;
-    status?: string;
     page?: string;
     page_size?: string;
   }>;
@@ -15,18 +12,9 @@ type PageProps = {
 
 export default async function RisksPage({ params, searchParams }: PageProps) {
   const { id } = await params;
-  const {
-    search = "",
-    category = "all",
-    status = "all",
-    page = "1",
-    page_size = "10"
-  } = await searchParams;
+  const { page = "1", page_size = "10" } = await searchParams;
 
   const response = await getRisksInRegister(id, {
-    search: search || undefined,
-    category: category !== "all" ? category : undefined,
-    status: status !== "all" ? status : undefined,
     page: Number(page),
     page_size: Number(page_size)
   });
@@ -44,9 +32,6 @@ export default async function RisksPage({ params, searchParams }: PageProps) {
         risks={transformedRisks as unknown as any}
         pagination={pagination}
         registerId={id}
-        currentSearch={search}
-        currentCategory={category}
-        currentStatus={status}
       />
     </div>
   );

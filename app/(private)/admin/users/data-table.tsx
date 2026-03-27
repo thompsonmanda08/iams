@@ -71,9 +71,6 @@ type Pagination = {
 type UsersDataTableProps = {
   data: User[];
   pagination: Pagination;
-  currentSearch: string;
-  currentStatus: string;
-  currentRole: string;
 };
 
 const getColumns = (
@@ -223,15 +220,14 @@ const getColumns = (
 
 export default function UsersDataTable({
   data,
-  pagination,
-  currentSearch,
-  currentStatus,
-  currentRole
+  pagination
 }: UsersDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [selectedStatus, setSelectedStatus] = React.useState("all");
+  const [selectedRole, setSelectedRole] = React.useState("all");
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [deleteDialog, setDeleteDialog] = React.useState<{
     open: boolean;
@@ -381,7 +377,7 @@ export default function UsersDataTable({
     handleViewProfile
   );
 
-  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: displayData } =
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: searchFilteredData } =
     useTableSearch<User>({
       data,
       filterFn: (user, query) => {
@@ -395,6 +391,14 @@ export default function UsersDataTable({
       debounceMs: 200,
     });
 
+  const displayData = searchFilteredData.filter((user: User) => {
+    const matchesStatus =
+      selectedStatus === "all" ||
+      (selectedStatus === "active" ? user.is_active : !user.is_active);
+    const matchesRole = selectedRole === "all" || user.role?.name === selectedRole;
+    return matchesStatus && matchesRole;
+  });
+
   const table = useReactTable({
     data: displayData,
     columns,
@@ -403,48 +407,26 @@ export default function UsersDataTable({
     state: {
       columnVisibility
     },
-    manualPagination: true, // Important for server-side pagination
+    manualPagination: true,
     pageCount: pagination.total_pages
   });
 
-  // Update search params
-  const updateSearchParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (value && value !== "all") {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-
-    if (key !== "page") {
-      params.delete("page");
-    }
-
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
-  };
-
-
   const handleStatusChange = (value: string) => {
-    updateSearchParams("status", value);
+    setSelectedStatus(value);
   };
 
   const handleRoleChange = (value: string) => {
-    updateSearchParams("role", value);
+    setSelectedRole(value);
   };
 
   // Pagination handler
   const updatePagination = ({ page, page_size }: { page: number; page_size?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    // Always set the page
     params.set("page", String(page));
 
     if (page_size !== undefined) {
       params.set("page_size", String(page_size));
-      // Reset to page 1 when page size changes
       params.set("page", "1");
     }
 
@@ -453,14 +435,12 @@ export default function UsersDataTable({
     });
   };
 
-  const hasFilters = currentStatus !== "all" || currentRole !== "all" || localSearch !== "";
+  const hasFilters = selectedStatus !== "all" || selectedRole !== "all" || localSearch !== "";
 
   const clearFilters = () => {
     setLocalSearch("");
-    const params = new URLSearchParams();
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
+    setSelectedStatus("all");
+    setSelectedRole("all");
   };
 
   // Get unique roles from data
@@ -494,7 +474,7 @@ export default function UsersDataTable({
             />
 
             <div className="flex items-center gap-2">
-              <Select value={currentStatus} onValueChange={handleStatusChange} disabled={isPending}>
+              <Select value={selectedStatus} onValueChange={handleStatusChange}>
                 <SelectTrigger className="w-full sm:w-36">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -505,7 +485,7 @@ export default function UsersDataTable({
                 </SelectContent>
               </Select>
 
-              <Select value={currentRole} onValueChange={handleRoleChange} disabled={isPending}>
+              <Select value={selectedRole} onValueChange={handleRoleChange}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>

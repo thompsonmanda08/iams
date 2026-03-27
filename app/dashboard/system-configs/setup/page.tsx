@@ -53,14 +53,7 @@ export default async function SystemSetupPage({ searchParams }: PageProps) {
     departmentsData = departmentsRes.success ? departmentsRes.data : null;
     pagination = departmentsData?.pagination ?? pagination;
   } else if (tab === "users") {
-    const status = params.status === "inactive" ? "inactive" : "active";
-    const usersRes = await getUsers({
-      search: params.search || undefined,
-      isActive: status === "active",
-      role: params.role && params.role !== "all" ? params.role : undefined,
-      page,
-      page_size
-    });
+    const usersRes = await getUsers({ page, page_size });
     usersData = (usersRes?.data?.data || []) as User[];
     pagination = usersRes?.data?.pagination ?? pagination;
   }
@@ -123,9 +116,6 @@ export default async function SystemSetupPage({ searchParams }: PageProps) {
               <UsersDataTable
                 data={usersData}
                 pagination={pagination}
-                currentSearch={params.search || ""}
-                currentStatus={params.status === "inactive" ? "inactive" : "active"}
-                currentRole={params.role || "all"}
               />
             </Suspense>
           </TabsContent>

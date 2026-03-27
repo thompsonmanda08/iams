@@ -8,19 +8,15 @@ import PageHeader from "@/components/page-header";
 
 type PageProps = {
   searchParams: Promise<{
-    search?: string;
-    status?: string;
     page?: string;
     page_size?: string;
   }>;
 };
 
 export default async function RiskRegistersPage({ searchParams }: PageProps) {
-  const { status = "", search = "", page = "1", page_size = "10" } = await searchParams;
+  const { page = "1", page_size = "10" } = await searchParams;
 
   const response = await getRiskRegisters({
-    name: search || undefined,
-    status: status && status !== "all" ? status.toUpperCase() : undefined,
     page: Number(page),
     page_size: Number(page_size)
   });
@@ -112,8 +108,6 @@ export default async function RiskRegistersPage({ searchParams }: PageProps) {
           <RiskRegistersTable
             registers={registers}
             pagination={pagination}
-            currentStatus={status}
-            currentSearch={search}
           />
         </Suspense>
       </div>

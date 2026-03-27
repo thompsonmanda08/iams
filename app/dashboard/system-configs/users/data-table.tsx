@@ -67,9 +67,6 @@ type Pagination = {
 type UsersDataTableProps = {
   data: User[];
   pagination: Pagination;
-  currentSearch: string;
-  currentStatus: string;
-  currentRole: string;
 };
 
 const getColumns = (
@@ -213,16 +210,15 @@ const getColumns = (
 
 export default function UsersDataTable({
   data,
-  pagination,
-  currentSearch,
-  currentStatus,
-  currentRole
+  pagination
 }: UsersDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { checkPermission } = usePermissions();
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [activeTab, setActiveTab] = React.useState<"active" | "inactive">("active");
+  const [selectedRole, setSelectedRole] = React.useState("all");
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [toggleStatusDialog, setToggleStatusDialog] = React.useState<{
     open: boolean;
@@ -349,15 +345,34 @@ export default function UsersDataTable({
     handleViewProfile
   );
 
-  const table = useReactTable({
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: filteredUsers } = useTableSearch<User>({
     data,
+    filterFn: (user, query) => {
+      const lower = query.toLowerCase();
+      return (
+        `${user.first_name} ${user.last_name}`.toLowerCase().includes(lower) ||
+        user.email?.toLowerCase().includes(lower) ||
+        user.username?.toLowerCase().includes(lower)
+      );
+    },
+    debounceMs: 200,
+  });
+
+  const displayedUsers = filteredUsers.filter(user => {
+    const matchesTab = activeTab === "active" ? user.is_active : !user.is_active;
+    const matchesRole = selectedRole === "all" || user.role?.name === selectedRole;
+    return matchesTab && matchesRole;
+  });
+
+  const table = useReactTable({
+    data: displayedUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     state: {
       columnVisibility
     },
-    manualPagination: true, // Important for server-side pagination
+    manualPagination: true,
     pageCount: pagination.total_pages
   });
 
@@ -381,7 +396,7 @@ export default function UsersDataTable({
   };
 
   const handleRoleChange = (value: string) => {
-    updateSearchParams("role", value);
+    setSelectedRole(value);
   };
 
   // Pagination handler
@@ -402,13 +417,12 @@ export default function UsersDataTable({
     });
   };
 
-  const hasFilters = currentRole !== "all" || currentSearch !== "";
+  const hasFilters = selectedRole !== "all" || localSearch !== "";
 
   const clearFilters = () => {
-    const params = new URLSearchParams();
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
+    setLocalSearch("");
+    setSelectedRole("all");
+    setActiveTab("active");
   };
 
   // Get unique roles from data
@@ -417,11 +431,6 @@ export default function UsersDataTable({
       new Set(data.filter((user) => user.role?.name).map((user) => user.role.name))
     ).sort();
   }, [data]);
-
-  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
-    initialValue: currentSearch,
-    onDebouncedChange: (v) => updateSearchParams("search", v)
-  });
 
   // Transform pagination for CustomPagination
   const customPaginationData = {
@@ -433,13 +442,11 @@ export default function UsersDataTable({
     has_next: pagination.has_next
   };
 
-  const activeTab = currentStatus === "inactive" ? "inactive" : "active";
-
   return (
     <Card className="shadow-none">
       <CardContent className="p-0">
         <div className="border-b px-4">
-          <Tabs value={activeTab} onValueChange={(v) => updateSearchParams("status", v)}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "active" | "inactive")}>
             <TabsList className="mb-4">
               <TabsTrigger value="active">Active Users</TabsTrigger>
               <TabsTrigger value="inactive">Inactive Users</TabsTrigger>
@@ -456,7 +463,7 @@ export default function UsersDataTable({
             />
 
             <div className="flex items-center gap-2">
-              <Select value={currentRole} onValueChange={handleRoleChange} disabled={isPending}>
+              <Select value={selectedRole} onValueChange={handleRoleChange}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>

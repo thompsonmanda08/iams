@@ -68,14 +68,12 @@ type CreateRegisterForm = {
 type Props = {
   initialRegisters: KRIRegister[];
   initialPagination: Pagination;
-  currentSearch: string;
   stats: any;
 };
 
 export default function KRIRegistersClient({
   initialRegisters,
   initialPagination,
-  currentSearch,
   stats
 }: Props) {
   const router = useRouter();
@@ -247,9 +245,16 @@ export default function KRIRegistersClient({
     router.push(`/dashboard/risks/kri/${registerId}`);
   };
 
-  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
-    initialValue: currentSearch,
-    onDebouncedChange: (v) => updateSearchParams("search", v),
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: filteredRegisters } = useTableSearch({
+    data: initialRegisters,
+    filterFn: (register, query) => {
+      const q = query.toLowerCase();
+      return (
+        register.name.toLowerCase().includes(q) ||
+        (register.description?.toLowerCase().includes(q) ?? false)
+      );
+    },
+    debounceMs: 200,
   });
 
   const customPaginationData = {
@@ -344,18 +349,18 @@ export default function KRIRegistersClient({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {initialRegisters?.length === 0 ? (
+              {filteredRegisters?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-12 text-center">
                     <div className="flex flex-col items-center">
                       <FolderOpen className="text-muted-foreground mx-auto h-12 w-12" />
                       <h3 className="mt-4 text-lg font-semibold">No registers found</h3>
                       <p className="text-muted-foreground mt-2 text-sm">
-                        {currentSearch
+                        {localSearch
                           ? "Try adjusting your search criteria"
                           : "Get started by creating your first KRI register"}
                       </p>
-                      {!currentSearch && (
+                      {!localSearch && (
                         <Button className="mt-4" onClick={handleCreateClick}>
                           <Plus className="mr-2 h-4 w-4" />
                           Create Register
@@ -365,7 +370,7 @@ export default function KRIRegistersClient({
                   </TableCell>
                 </TableRow>
               ) : (
-                initialRegisters?.map((register) => (
+                filteredRegisters?.map((register) => (
                   <TableRow key={register.id}>
                     <TableCell>
                       <p className="text-foreground font-medium">{register.name}</p>
@@ -426,7 +431,7 @@ export default function KRIRegistersClient({
               )}
             </TableBody>
           </Table>
-          {initialRegisters?.length > 0 && (
+          {filteredRegisters?.length > 0 && (
             <CustomPagination
               pagination={customPaginationData}
               updatePagination={updatePagination}

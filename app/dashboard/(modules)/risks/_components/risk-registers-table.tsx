@@ -42,19 +42,16 @@ type RiskRegistersTableProps = {
     has_prev: boolean;
     has_next: boolean;
   };
-  currentStatus: string;
-  currentSearch: string;
 };
 
 export default function RiskRegistersTable({
   registers,
-  pagination,
-  currentStatus,
-  currentSearch
+  pagination
 }: RiskRegistersTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     registerId: string | null;
@@ -91,7 +88,7 @@ export default function RiskRegistersTable({
 
 
   const handleStatusChange = (value: string) => {
-    updateSearchParams("status", value);
+    setSelectedStatus(value);
   };
 
   const updatePagination = ({ page, page_size }: { page?: number; page_size?: number }) => {
@@ -159,10 +156,22 @@ export default function RiskRegistersTable({
     }
   };
 
-  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch({
-    initialValue: currentSearch,
-    onDebouncedChange: (v) => updateSearchParams("search", v),
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: displayedRegisters } = useTableSearch({
+    data: registers,
+    filterFn: (register, query) => {
+      const q = query.toLowerCase();
+      return (
+        register.name.toLowerCase().includes(q) ||
+        (register.description?.toLowerCase().includes(q) ?? false) ||
+        (register.department?.name?.toLowerCase().includes(q) ?? false)
+      );
+    },
+    debounceMs: 200,
   });
+
+  const displayedRegisters = selectedStatus === "all"
+    ? displayedRegisters
+    : displayedRegisters.filter(r => r.status?.toUpperCase() === selectedStatus.toUpperCase());
 
   const customPaginationData = {
     page: pagination.page,
@@ -185,9 +194,8 @@ export default function RiskRegistersTable({
             disabled={isPending}
           />
           <Select
-            value={currentStatus || "all"}
-            onValueChange={handleStatusChange}
-            disabled={isPending}>
+            value={selectedStatus}
+            onValueChange={handleStatusChange}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -216,14 +224,14 @@ export default function RiskRegistersTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {registers.length === 0 ? (
+            {displayedRegisters.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="py-12 text-center">
                   <p className="text-muted-foreground">No risk registers found</p>
                 </TableCell>
               </TableRow>
             ) : (
-              registers.map((register) => (
+              displayedRegisters.map((register) => (
                 <TableRow key={register.id} className="cursor-pointer">
                   <TableCell>
                     <p className="text-foreground font-medium">{register.name}</p>
@@ -305,7 +313,7 @@ export default function RiskRegistersTable({
             )}
           </TableBody>
         </Table>
-        {registers.length > 0 && (
+        {displayedRegisters.length > 0 && (
           <CustomPagination
             pagination={customPaginationData}
             updatePagination={updatePagination}

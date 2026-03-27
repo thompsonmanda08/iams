@@ -3,18 +3,16 @@ import KRIRegistersClient from "../_components/register-list";
 
 type PageProps = {
   searchParams: Promise<{
-    search?: string;
     page?: string;
     page_size?: string;
   }>;
 };
 
 export default async function KRIRegistersPage({ searchParams }: PageProps) {
-  const { search = "", page = "1", page_size = "10" } = await searchParams;
+  const { page = "1", page_size = "10" } = await searchParams;
   const kriStats = await getKRIStats();
 
   const response = await getKRIRegisters({
-    search: search || undefined,
     page: Number(page),
     page_size: Number(page_size)
   });
@@ -34,7 +32,6 @@ export default async function KRIRegistersPage({ searchParams }: PageProps) {
     <KRIRegistersClient
       initialRegisters={registers}
       initialPagination={pagination}
-      currentSearch={search}
       stats={kriStats.data}
     />
   );

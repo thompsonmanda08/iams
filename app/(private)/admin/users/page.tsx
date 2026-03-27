@@ -10,9 +10,6 @@ import { Spinner } from "@/components/ui/spinner";
 
 interface AdminUsersPageProps {
   searchParams: Promise<{
-    search?: string;
-    status?: string;
-    role?: string;
     page?: string;
     page_size?: string;
   }>;
@@ -20,31 +17,10 @@ interface AdminUsersPageProps {
 
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
   const params = await searchParams;
-  const search = params.search || "";
-  const status = params.status || "all";
-  const role = params.role || "all";
   const page = parseInt(params.page || "1", 10);
   const page_size = parseInt(params.page_size || "10", 10);
 
-  // Build API params
-  const apiParams: any = {
-    page,
-    page_size
-  };
-
-  if (search) {
-    apiParams.search = search;
-  }
-
-  if (status !== "all") {
-    apiParams.isActive = status === "active";
-  }
-
-  if (role !== "all") {
-    apiParams.role = role;
-  }
-
-  const response = await getUsers(apiParams);
+  const response = await getUsers({ page, page_size });
   const users = response.success && response.data.data ? response.data.data : [];
   const pagination =
     response.success && response.data.pagination
@@ -91,9 +67,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           <UsersDataTable
             data={users}
             pagination={pagination}
-            currentSearch={search}
-            currentStatus={status}
-            currentRole={role}
           />
         </Suspense>
       </div>
