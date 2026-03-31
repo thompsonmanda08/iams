@@ -142,7 +142,7 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
     editData.name !== scale.name || editData.description !== scale.description;
 
   const handleSaveEdit = async (scale: Scale) => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "update")) return;
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_edit")) return;
     if (!editData.name.trim()) {
       notify({ description: "Name is required", type: "error" });
       return;
@@ -173,7 +173,7 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
   };
 
   const handleSaveNew = async () => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "create")) return;
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_create")) return;
     if (!newData.name.trim()) {
       notify({ description: "Name is required", type: "error" });
       return;
@@ -194,7 +194,7 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
   // ── Delete ───────────────────────────────────────────────────────────────
 
   const handleDeleteConfirm = async () => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "delete")) return;
+    if (!checkPermission("RISK_MODULE_CONFIGS", "can_delete")) return;
     if (!deleteDialog.scaleId) return;
     const response = await deleteScaleMutation.mutateAsync(deleteDialog.scaleId);
     if (response.success) {
