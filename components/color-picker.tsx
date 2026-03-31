@@ -13,36 +13,20 @@ type ColorPickerProps = {
 export function ColorPicker({ value, onChange, disabled = false }: ColorPickerProps) {
   const colors = [
     // Reds
+    { hex: "#c23737", name: "Critical Red" },
     { hex: "#ef4444", name: "Red" },
-    { hex: "#f97316", name: "Orange" },
-    { hex: "#f59e0b", name: "Amber" },
+    { hex: "#ff5448", name: "Red-Orange" },
 
     // Yellows
+    { hex: "#f97316", name: "Orange" },
+    { hex: "#f59e0b", name: "Amber" },
+    { hex: "#f0a404", name: "Dark Yellow" },
     { hex: "#eab308", name: "Yellow" },
-    { hex: "#fde047", name: "Light Yellow" },
 
     // Greens
-    { hex: "#84cc16", name: "Lime" },
-    { hex: "#22c55e", name: "Green" },
-    { hex: "#10b981", name: "Emerald" },
-
-    // Cyans/Blues
-    { hex: "#06b6d4", name: "Cyan" },
-    { hex: "#0ea5e9", name: "Sky" },
-    { hex: "#3b82f6", name: "Blue" },
-    { hex: "#6366f1", name: "Indigo" },
-
-    // Purples/Pinks
-    { hex: "#8b5cf6", name: "Violet" },
-    { hex: "#a855f7", name: "Purple" },
-    { hex: "#d946ef", name: "Fuchsia" },
-    { hex: "#ec4899", name: "Pink" },
-
-    // Neutrals
-    { hex: "#64748b", name: "Slate" },
-    { hex: "#6b7280", name: "Gray" },
-    { hex: "#71717a", name: "Zinc" },
-    { hex: "#737373", name: "Neutral" }
+    { hex: "#25dd69", name: "Lime" },
+    { hex: "#13be53", name: "Emerald" },
+    { hex: "#19a64e", name: "Green" }
   ];
 
   return (
