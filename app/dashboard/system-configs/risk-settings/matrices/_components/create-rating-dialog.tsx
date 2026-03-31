@@ -130,6 +130,7 @@ export function CreateRatingDialog({
                   id="max_score"
                   type="number"
                   min="1"
+                  max="25"
                   value={formData.max_score}
                   onChange={(e) =>
                     setFormData({ ...formData, max_score: parseInt(e.target.value) || 1 })
