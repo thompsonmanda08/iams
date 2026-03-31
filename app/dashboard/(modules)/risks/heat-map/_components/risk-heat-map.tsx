@@ -4,12 +4,26 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Calendar, Coins, User, Building } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { AlertTriangle, Calendar, Coins, User, Building, Loader2, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import { RiskSummaryStats } from "./summary";
 import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useHeatMap, useMatrixRatings } from "@/hooks/use-matrix-query-data";
+import { useRiskMatrices } from "@/hooks/use-risk-query-data";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { RiskMatrix } from "@/lib/types/risk-type";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Risk {
   id: string;
@@ -28,357 +42,636 @@ interface Risk {
   target_closing_date: string;
 }
 
+interface RatingLevelSummary {
+  id: string;
+  name: string;
+  min_score: number;
+  max_score: number;
+  color_hex: string;
+  description: string;
+  count: number;
+}
+
 interface MatrixCell {
   likelihood: number;
   impact: number;
+  likelihood_label: string;
+  impact_label: string;
   score: number;
-  rating: string;
-  color: string;
+  rating_level_id: string;
+  rating_level_name: string;
+  color_hex: string;
   count: number;
   risks: Risk[];
-}
-
-interface HeatmapMetadata {
-  title: string;
-  description: string;
-  register_name: string;
-  date_range: {
-    start_date: string;
-    end_date: string;
-  };
-  total_risks: number;
-  generated_at: string;
-}
-
-interface HeatmapSummary {
-  low_count: number;
-  medium_count: number;
-  high_count: number;
-  very_high_count: number;
-  average_score: number;
-  highest_score: number;
-  lowest_score: number;
-  above_appetite_count: number;
-  within_appetite_count: number;
 }
 
 interface HeatmapData {
   type: string;
   register_id: string | null;
-  metadata: HeatmapMetadata;
+  metadata: {
+    title: string;
+    description: string;
+    register_name: string;
+    matrix_name: string;
+    likelihood_levels: number;
+    impact_levels: number;
+    date_range: { start_date: string; end_date: string };
+    total_risks: number;
+    generated_at: string;
+  };
+  rating_levels: RatingLevelSummary[];
   matrix: MatrixCell[];
-  summary: HeatmapSummary;
+  summary: {
+    by_rating_level: RatingLevelSummary[];
+    average_score: number;
+    highest_score: number;
+    lowest_score: number;
+    above_appetite_count: number;
+    within_appetite_count: number;
+  };
 }
 
-interface SelectedCell extends MatrixCell {}
+// ── Color helper ─────────────────────────────────────────────────────────────
 
-const getColorClass = (color: string): string => {
-  const colorMap: Record<string, string> = {
-    green: "bg-emerald-500 hover:bg-emerald-600",
-    yellow: "bg-amber-500 hover:bg-amber-600",
-    orange: "bg-orange-500 hover:bg-orange-600",
-    red: "bg-red-500 hover:bg-red-600"
+function getColorFromRatings(score: number, ratings: any[]): string {
+  if (!ratings.length) return "";
+  const sorted = [...ratings].sort((a, b) => a.min_score - b.min_score);
+  const match = sorted.find((r) => score >= r.min_score && score <= r.max_score);
+  if (match) return match.color_hex;
+  if (score < sorted[0].min_score) return sorted[0].color_hex;
+  return sorted[sorted.length - 1].color_hex;
+}
+
+// ── Derive summary stats from matrix cells when backend hasn't populated them ─
+
+function computeSummaryFromMatrix(matrix: MatrixCell[], configRatings: any[]) {
+  let within = 0;
+  let above = 0;
+  const scores: number[] = [];
+  const ratingCounts: Record<string, number> = {};
+
+  matrix.forEach((cell) => {
+    if (!cell.risks?.length) return;
+
+    cell.risks.forEach(() => scores.push(cell.score));
+
+    cell.risks.forEach((risk) => {
+      if (risk.risk_appetite_status === "WITHIN") within++;
+      else above++;
+    });
+
+    const matchedRating =
+      configRatings.find((r) => r.id === cell.rating_level_id) ??
+      configRatings.find((r) => cell.score >= r.min_score && cell.score <= r.max_score);
+    if (matchedRating) {
+      ratingCounts[matchedRating.id] = (ratingCounts[matchedRating.id] ?? 0) + cell.count;
+    }
+  });
+
+  return {
+    within,
+    above,
+    average_score: scores.length ? +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0,
+    highest_score: scores.length ? Math.max(...scores) : 0,
+    lowest_score: scores.length ? Math.min(...scores) : 0,
+    ratingCounts
   };
-  return colorMap[color] || "bg-gray-500";
-};
+}
 
-const getRatingBadgeClass = (rating: string): string => {
-  const ratingMap: Record<string, string> = {
-    LOW: "bg-emerald-500",
-    MEDIUM: "bg-amber-500",
-    HIGH: "bg-orange-500",
-    VERY_HIGH: "bg-red-500"
-  };
-  return ratingMap[rating] || "bg-gray-100 text-gray-800";
-};
+// ── Risk Matrix grid ──────────────────────────────────────────────────────────
 
-const getRecurrenceColor = (recurrence: string): string => {
-  const recurrenceMap: Record<string, string> = {
-    ONGOING: "bg-blue-100 text-blue-800 border-blue-200",
-    "ONE-TIME": "bg-amber-100 text-amber-800 border-amber-200"
-  };
-  return recurrenceMap[recurrence?.toLowerCase()] || "bg-gray-100 text-gray-800 border-gray-200";
-};
-
-const RiskMatrix = ({
+function RiskMatrix({
   matrixData,
+  likelihoodLevels,
+  impactLevels,
+  configRatings,
   onCellClick,
   selectedCell
 }: {
   matrixData: MatrixCell[];
+  likelihoodLevels: number;
+  impactLevels: number;
+  configRatings: any[];
   onCellClick: (cell: MatrixCell) => void;
-  selectedCell: SelectedCell | null;
-}) => {
-  const createGrid = () => {
-    const grid: (MatrixCell | null)[][] = Array(5)
-      .fill(null)
-      .map(() => Array(5).fill(null));
+  selectedCell: MatrixCell | null;
+}) {
+  // Build full N×M grid — cells without data remain null (empty / no-color)
+  const grid: (MatrixCell | null)[][] = Array(impactLevels)
+    .fill(null)
+    .map(() => Array(likelihoodLevels).fill(null));
 
-    matrixData.forEach((cell) => {
-      const impactIndex = 5 - cell.impact;
-      const likelihoodIndex = cell.likelihood - 1;
-      if (impactIndex >= 0 && impactIndex < 5 && likelihoodIndex >= 0 && likelihoodIndex < 5) {
-        grid[impactIndex][likelihoodIndex] = cell;
-      }
-    });
+  matrixData.forEach((cell) => {
+    const row = impactLevels - cell.impact;
+    const col = cell.likelihood - 1;
+    if (row >= 0 && row < impactLevels && col >= 0 && col < likelihoodLevels) {
+      grid[row][col] = cell;
+    }
+  });
 
-    return grid;
-  };
-
-  const grid = createGrid();
+  // Build axis label maps from cell data
+  const likelihoodLabels: Record<number, string> = {};
+  const impactLabels: Record<number, string> = {};
+  matrixData.forEach((cell) => {
+    likelihoodLabels[cell.likelihood] = cell.likelihood_label;
+    impactLabels[cell.impact] = cell.impact_label;
+  });
 
   return (
-    <div className="flex flex-col gap-1">
-      {grid.map((row, impactIdx) => (
-        <div key={impactIdx} className="flex gap-1">
-          {row.map((cell, likelihoodIdx) => {
-            if (!cell) return <div key={likelihoodIdx} className="h-16 w-16 rounded bg-gray-100" />;
+    <div className="flex gap-2 pr-6">
+      {/* Impact axis labels (left) */}
+      <div className="flex w-auto flex-col gap-1" style={{ paddingTop: 0 }}>
+        {Array.from({ length: impactLevels }, (_, i) => impactLevels - i).map((level) => (
+          <div
+            key={level}
+            className="text-muted-foreground grid h-16 w-6 place-items-center p-4 text-right text-xs">
+            <span className="truncate">{impactLabels[level] || level}</span>
+          </div>
+        ))}
+      </div>
 
-            const isSelected =
-              selectedCell &&
-              selectedCell.likelihood === cell.likelihood &&
-              selectedCell.impact === cell.impact;
+      <div className="flex flex-col gap-1">
+        {/* Grid rows */}
+        {grid.map((row, rowIdx) => (
+          <div key={rowIdx} className="flex gap-1">
+            {row.map((cell, colIdx) => {
+              if (!cell) {
+                // Derive score from grid position to color even empty cells
+                const likelihood = colIdx + 1;
+                const impact = impactLevels - rowIdx;
+                const fallbackColor = getColorFromRatings(likelihood * impact, configRatings);
+                return (
+                  <div
+                    key={colIdx}
+                    className="h-16 w-16 rounded border border-white/10"
+                    style={{ backgroundColor: fallbackColor ? `${fallbackColor}40` : undefined }}
+                  />
+                );
+              }
 
-            return (
-              <button
-                key={`${impactIdx}-${likelihoodIdx}`}
-                onClick={() => onCellClick(cell)}
-                className={cn(
-                  getColorClass(cell.color),
-                  "flex h-16 w-16 flex-col items-center justify-center rounded text-white transition-all hover:scale-105 hover:shadow-lg",
-                  isSelected && "ring-primary ring-1"
-                )}>
-                <span className="text-2xl font-bold">{cell.count}</span>
-                <span className="text-xs opacity-90">
-                  L{cell.likelihood}×I{cell.impact}
-                </span>
-              </button>
-            );
-          })}
+              const isSelected =
+                selectedCell?.likelihood === cell.likelihood &&
+                selectedCell?.impact === cell.impact;
+
+              const bgColor = cell.color_hex || getColorFromRatings(cell.score, configRatings);
+
+              return (
+                <button
+                  key={`${rowIdx}-${colIdx}`}
+                  onClick={() => onCellClick(cell)}
+                  title={`${cell.likelihood_label} × ${cell.impact_label} | Score: ${cell.score} | ${cell.rating_level_name}`}
+                  className={cn(
+                    "flex h-16 w-16 flex-col items-center justify-center rounded border border-white/10 text-white transition-all hover:scale-105 hover:shadow-lg",
+                    isSelected && "ring-2 ring-white ring-offset-1"
+                  )}
+                  style={{ backgroundColor: bgColor }}>
+                  {cell.count > 0 && (
+                    <span className="text-2xl leading-none font-bold">{cell.count}</span>
+                  )}
+                  <span className="text-xs opacity-80">
+                    {cell.likelihood}×{cell.impact}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+
+        {/* Likelihood axis labels (bottom) */}
+        <div className="mt-1 flex gap-1">
+          {Array.from({ length: likelihoodLevels }, (_, i) => i + 1).map((level) => (
+            <div
+              key={level}
+              className="text-muted-foreground flex h-8 w-16 items-start justify-center pt-1 text-center text-xs">
+              <span className="w-full truncate px-0.5">{likelihoodLabels[level] || level}</span>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
-};
+}
 
-export function RiskHeatMap({ heatmapData }: { heatmapData: HeatmapData }) {
+
+// ── Cell details content (shared between panel + dialog) ─────────────────────
+
+function CellDetailsContent({
+  selectedCell,
+  configRatings,
+  onNavigate
+}: {
+  selectedCell: MatrixCell;
+  configRatings: any[];
+  onNavigate: (id: string) => void;
+}) {
+  const derivedColor =
+    selectedCell.color_hex || getColorFromRatings(selectedCell.score, configRatings);
+  const derivedLevelName =
+    selectedCell.rating_level_name ||
+    configRatings.find(
+      (r) => selectedCell.score >= r.min_score && selectedCell.score <= r.max_score
+    )?.name;
+
+  return (
+    <div className="space-y-5">
+      {/* Stat pills */}
+      <div className="grid grid-cols-5 gap-2">
+        <div className="bg-muted/50 rounded-lg p-3">
+          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Likelihood</p>
+          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.likelihood}</p>
+          {selectedCell.likelihood_label && (
+            <p className="text-muted-foreground mt-1 truncate text-[10px]">
+              {selectedCell.likelihood_label}
+            </p>
+          )}
+        </div>
+        <div className="bg-muted/50 rounded-lg p-3">
+          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Impact</p>
+          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.impact}</p>
+          {selectedCell.impact_label && (
+            <p className="text-muted-foreground mt-1 truncate text-[10px]">
+              {selectedCell.impact_label}
+            </p>
+          )}
+        </div>
+        <div className="bg-muted/50 rounded-lg p-3">
+          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Score</p>
+          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.score}</p>
+        </div>
+        <div className="bg-muted/50 rounded-lg p-3">
+          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Level</p>
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: derivedColor || "#64748b" }}
+            />
+            <span className="truncate text-xs font-semibold">{derivedLevelName || "—"}</span>
+          </div>
+        </div>
+        <div className="bg-muted/50 rounded-lg p-3">
+          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Risks</p>
+          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.count}</p>
+        </div>
+      </div>
+
+      {/* Risk table */}
+      <div className="space-y-2">
+        <p className="text-sm font-semibold">
+          Risks in this cell{" "}
+          <span className="text-muted-foreground font-normal">({selectedCell.count})</span>
+        </p>
+        {selectedCell.count > 0 ? (
+          <div className="overflow-hidden rounded-lg border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/50 border-b">
+                  <th className="text-muted-foreground px-3 py-2 text-left text-xs font-medium">
+                    Risk
+                  </th>
+                  <th className="text-muted-foreground px-3 py-2 text-left text-xs font-medium">
+                    Owner
+                  </th>
+                  <th className="text-muted-foreground px-3 py-2 text-left text-xs font-medium">
+                    Due
+                  </th>
+                  <th className="text-muted-foreground px-3 py-2 text-left text-xs font-medium">
+                    Cost
+                  </th>
+                  <th className="text-muted-foreground px-3 py-2 text-left text-xs font-medium">
+                    Level
+                  </th>
+                  <th className="text-muted-foreground px-3 py-2 text-left text-xs font-medium">
+                    Status
+                  </th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {selectedCell.risks.map((risk) => {
+                  const isWithin = risk.risk_appetite_status === "WITHIN";
+                  return (
+                    <tr key={risk.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-3 py-3">
+                        <div className="flex items-start gap-2">
+                          <div
+                            className="mt-0.5 h-full w-0.5 shrink-0 self-stretch rounded-full"
+                            style={{ backgroundColor: isWithin ? "#22c55e" : "#ef4444" }}
+                          />
+                          <div className="min-w-0">
+                            <p className="max-w-[160px] truncate text-xs font-semibold">
+                              {risk.title}
+                            </p>
+                            <div className="text-muted-foreground mt-0.5 flex items-center gap-1">
+                              <Building className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate text-[10px]">{risk.department_name}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-1">
+                          <User className="text-muted-foreground h-3 w-3 shrink-0" />
+                          <span className="text-muted-foreground max-w-[100px] truncate text-xs">
+                            {risk.risk_owner_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="text-muted-foreground h-3 w-3 shrink-0" />
+                          <span className="text-muted-foreground text-xs">
+                            {risk.target_closing_date
+                              ? format(new Date(risk.target_closing_date), "MMM d, yyyy")
+                              : "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <Coins className="text-muted-foreground h-3 w-3 shrink-0" />
+                          <span className="text-muted-foreground text-xs">
+                            ZMW {risk.mitigation_cost?.toLocaleString() ?? 0}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <Badge
+                          className="w-fit text-xs text-white"
+                          style={{ backgroundColor: derivedColor || "#64748b" }}>
+                          {derivedLevelName || "—"}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-3">
+                        <Badge variant="outline" className="w-fit text-xs">
+                          {risk.status}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-3">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => onNavigate(risk.id)}>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="py-10 text-center">
+            <p className="text-muted-foreground text-sm">No risks in this cell</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+export function RiskHeatMap({
+  heatmapData: initialData,
+  matrices,
+  defaultMatrixId
+}: {
+  heatmapData: HeatmapData;
+  matrices: RiskMatrix[];
+  defaultMatrixId: string | null;
+}) {
   const router = useRouter();
-  const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
+  const isMobile = useIsMobile();
+  const [selectedMatrixId, setSelectedMatrixId] = useState<string | undefined>(
+    defaultMatrixId ?? undefined
+  );
+  const [selectedCell, setSelectedCell] = useState<MatrixCell | null>(null);
+  const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
 
   const handleCellClick = (cell: MatrixCell) => {
     setSelectedCell(cell);
+    if (isMobile) setMobileDialogOpen(true);
   };
+
+  // Use the same matrices source as risk creation — SSR data seeds the cache instantly
+  const { data: matrixOptions = matrices, isLoading: matricesLoading } = useRiskMatrices(
+    true,
+    matrices
+  );
+
+  // Fetch rating levels directly from config (same hook as the configuration page).
+  // Used as fallback until the backend returns rating_levels inside the heatmap response.
+  const { data: configRatings = [] } = useMatrixRatings(selectedMatrixId ?? "");
+
+  const { data: fetchedData, isFetching } = useHeatMap(
+    selectedMatrixId,
+    "inherent",
+    selectedMatrixId === defaultMatrixId ? initialData : undefined
+  );
+  // Normalize: backend may return an old/partial shape while implementation is pending.
+  // Merge with initialData so every field the UI touches is guaranteed to exist.
+  const raw = fetchedData ?? initialData;
+
+  // Derive fallback stats from matrix cell data when backend hasn't populated them
+  const computed = computeSummaryFromMatrix(raw?.matrix ?? [], configRatings);
+  const matrixRiskTotal = (raw?.matrix ?? []).reduce((sum: number, cell: MatrixCell) => sum + (cell.count ?? 0), 0);
+  const backendAppetiteTotal =
+    (raw?.summary?.within_appetite_count ?? 0) + (raw?.summary?.above_appetite_count ?? 0);
+  // Use computed when: backend returns no data OR backend totals don't match actual matrix risk count
+  const useComputed =
+    computed.within + computed.above > 0 &&
+    (backendAppetiteTotal === 0 || backendAppetiteTotal !== matrixRiskTotal);
+
+  const heatmapData: HeatmapData = {
+    ...initialData,
+    ...raw,
+    rating_levels: raw?.rating_levels?.length
+      ? raw.rating_levels
+      : configRatings.map((r: any) => ({ ...r, count: 0 })),
+    matrix: raw?.matrix ?? [],
+    metadata: {
+      ...initialData.metadata,
+      ...(raw?.metadata ?? {}),
+      likelihood_levels:
+        raw?.metadata?.likelihood_levels ?? initialData.metadata?.likelihood_levels ?? 5,
+      impact_levels: raw?.metadata?.impact_levels ?? initialData.metadata?.impact_levels ?? 5,
+      matrix_name: raw?.metadata?.matrix_name ?? initialData.metadata?.matrix_name ?? ""
+    },
+    summary: {
+      ...initialData.summary,
+      ...(raw?.summary ?? {}),
+      by_rating_level: raw?.summary?.by_rating_level?.length
+        ? raw.summary.by_rating_level
+        : configRatings.map((r: any) => ({ ...r, count: computed.ratingCounts[r.id] ?? 0 })),
+      within_appetite_count: useComputed
+        ? computed.within
+        : (raw?.summary?.within_appetite_count ?? 0),
+      above_appetite_count: useComputed
+        ? computed.above
+        : (raw?.summary?.above_appetite_count ?? 0),
+      average_score: raw?.summary?.average_score || computed.average_score,
+      highest_score: raw?.summary?.highest_score || computed.highest_score,
+      lowest_score: raw?.summary?.lowest_score || computed.lowest_score
+    }
+  };
+
+  const { likelihood_levels, impact_levels, matrix_name } = heatmapData.metadata;
+  const gridTitle = `${heatmapData.type?.charAt(0).toUpperCase() + heatmapData.type?.slice(1)} Risk Matrix (${likelihood_levels}×${impact_levels})`;
 
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
       <div className="bg-card border-b">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-6">
           <PageHeader
             title="Risk Heat Maps"
             description="Visual representation of risk distribution"
             icon="Map"
           />
+          <Select
+            value={selectedMatrixId}
+            onValueChange={(id) => {
+              setSelectedMatrixId(id);
+              setSelectedCell(null);
+            }}
+            disabled={matricesLoading && matrixOptions.length === 0}>
+            <SelectTrigger className="w-">
+              <SelectValue placeholder={matricesLoading ? "Loading matrices…" : "Select matrix"} />
+            </SelectTrigger>
+            <SelectContent>
+              {matrixOptions.map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  {m.name}
+                  {m.is_default && <Badge className="ml-1 text-xs">(Default)</Badge>}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="container mx-auto space-y-6 p-4 py-8">
+        {isFetching && (
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading heatmap…
+          </div>
+        )}
+
         <RiskSummaryStats summary={heatmapData.summary} />
-        {/* Legend */}
-        <Card className="bg-card border-border">
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap items-center gap-4">
-              <span className="text-foreground text-sm font-medium">Risk Levels:</span>
-              <div className="flex flex-wrap gap-3">
-                <Badge className="bg-emerald-500 text-white hover:bg-emerald-600">Low</Badge>
-                <Badge className="bg-amber-500 text-white hover:bg-amber-600">Medium</Badge>
-                <Badge className="bg-orange-500 text-white hover:bg-orange-600">High</Badge>
-                <Badge className="bg-red-500 text-white hover:bg-red-600">Very High</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Risk Matrix */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-              {heatmapData.type.charAt(0).toUpperCase() + heatmapData.type.slice(1)} Risk Matrix
-              (5×5)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-center gap-8">
-                <div className="text-muted-foreground origin-center -rotate-90 text-sm">
-                  Impact →
+        {/* Matrix + Cell Details — side by side on desktop */}
+        <div className="grid items-stretch gap-6 lg:grid-cols-[auto_1fr]">
+          {/* Risk Matrix card */}
+          <Card className="w-fit">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                {gridTitle}
+                {matrix_name && (
+                  <span className="text-muted-foreground text-sm font-normal">— {matrix_name}</span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {heatmapData.matrix.length === 0 ? (
+                <div className="py-16 text-center">
+                  <AlertTriangle className="text-muted-foreground/40 mx-auto mb-4 h-12 w-12" />
+                  <p className="text-muted-foreground">
+                    {heatmapData.rating_levels.length === 0
+                      ? "Configure rating levels for this matrix before viewing the heat map."
+                      : "No risks have been assessed against this matrix yet."}
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <RiskMatrix
-                    matrixData={heatmapData.matrix}
-                    onCellClick={handleCellClick}
-                    selectedCell={selectedCell}
-                  />
-                  <div className="text-muted-foreground flex justify-between px-2 text-xs">
-                    <span>1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                    <span>5</span>
-                  </div>
-                  <p className="text-muted-foreground text-center text-sm">← Likelihood →</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Cell Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Cell Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedCell ? (
-              <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-5">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Likelihood</p>
-                    <p className="text-2xl font-bold">{selectedCell.likelihood}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Impact</p>
-                    <p className="text-2xl font-bold">{selectedCell.impact}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Score</p>
-                    <p className="text-2xl font-bold">{selectedCell.score}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Risk Level</p>
-                    <Badge
-                      className={cn("border text-sm", getRatingBadgeClass(selectedCell.rating))}>
-                      {selectedCell.rating.replace("_", " ")}
-                    </Badge>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-xs">Risk Count</p>
-                    <p className="text-2xl font-bold">{selectedCell.count}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <p className="text-lg font-semibold">Risks in this cell ({selectedCell.count})</p>
-                  {selectedCell.count > 0 ? (
-                    <div className="grid gap-4">
-                      {selectedCell.risks.map((risk) => (
-                        <Card key={risk.id}>
-                          <CardContent className="pt-6">
-                            <div className="space-y-4">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <h4 className="text-lg font-semibold">{risk.title}</h4>
-                                  <p className="text-muted-foreground mt-1 text-sm">
-                                    {risk.description}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                  <Badge variant="outline">{risk.status}</Badge>
-                                  <Badge
-                                    className={cn("border", getRecurrenceColor(risk.recurrence))}>
-                                    {risk.recurrence}
-                                  </Badge>
-                                </div>
-                              </div>
-
-                              <div className="grid gap-3 border-t pt-3 md:grid-cols-2 lg:grid-cols-4">
-                                <div className="flex items-center gap-2">
-                                  <Building className="text-muted-foreground h-4 w-4" />
-                                  <div>
-                                    <p className="text-muted-foreground text-xs">Department</p>
-                                    <p className="text-sm font-medium">{risk.department_name}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <User className="text-muted-foreground h-4 w-4" />
-                                  <div>
-                                    <p className="text-muted-foreground text-xs">Owner</p>
-                                    <p className="text-sm font-medium">{risk.risk_owner_name}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="text-muted-foreground h-4 w-4" />
-                                  <div>
-                                    <p className="text-muted-foreground text-xs">Due Date</p>
-                                    <p className="text-sm font-medium">
-                                      {format(new Date(risk.target_closing_date), "MMM dd, yyyy")}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <Coins className="text-muted-foreground h-4 w-4" />
-                                  <div>
-                                    <p className="text-muted-foreground text-xs">Cost</p>
-                                    <p className="text-sm font-medium">
-                                      ZMW {risk.mitigation_cost.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between border-t pt-3">
-                                <div className="flex items-center gap-4 text-sm">
-                                  <span className="text-muted-foreground">
-                                    {risk.controls_count}{" "}
-                                    {risk.controls_count === 1 ? "Control" : "Controls"}
-                                  </span>
-                                  <Badge
-                                    variant="outline"
-                                    className={
-                                      risk.risk_appetite_status === "Below"
-                                        ? "border-green-200 text-green-700"
-                                        : "border-red-200 text-red-700"
-                                    }>
-                                    {risk.risk_appetite_status} Appetite
-                                  </Badge>
-                                </div>
-                                <Button
-                                  onClick={() => {
-                                    router.push(`/dashboard/actions/risk/${risk.id}`);
-                                  }}
-                                  size="sm"
-                                  variant="outline">
-                                  View Details
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="text-muted-foreground mt-8 origin-center -rotate-90 text-sm whitespace-nowrap">
+                      Impact →
                     </div>
-                  ) : (
-                    <div className="py-12 text-center">
-                      <p className="text-muted-foreground">No risks in this cell</p>
+                    <div className="space-y-1">
+                      <RiskMatrix
+                        matrixData={heatmapData.matrix}
+                        likelihoodLevels={likelihood_levels}
+                        impactLevels={impact_levels}
+                        configRatings={configRatings}
+                        onCellClick={handleCellClick}
+                        selectedCell={selectedCell}
+                      />
+                      <p className="text-muted-foreground mt-1 text-center text-sm">
+                        ← Likelihood →
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  {heatmapData.rating_levels.length > 0 && (
+                    <div className="border-t pt-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-muted-foreground text-xs font-medium">
+                          Risk Levels:
+                        </span>
+                        {heatmapData.rating_levels.map((level) => (
+                          <Badge
+                            key={level.id}
+                            className="text-xs text-white"
+                            style={{ backgroundColor: level.color_hex }}>
+                            {level.name}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="py-16 text-center">
-                <AlertTriangle className="text-muted-foreground/50 mx-auto mb-4 h-16 w-16" />
-                <p className="text-muted-foreground text-lg">
-                  Click on a cell to view risk details
-                </p>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Select any cell in the matrix above to see associated risks
-                </p>
-              </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cell Details — desktop panel (hidden on mobile) */}
+          <Card className="hidden lg:flex lg:flex-col lg:overflow-y-auto">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Cell Details</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto">
+              {selectedCell ? (
+                <CellDetailsContent
+                  selectedCell={selectedCell}
+                  configRatings={configRatings}
+                  onNavigate={(id) => router.push(`/dashboard/actions/risk/${id}`)}
+                />
+              ) : (
+                <div className="py-16 text-center">
+                  <AlertTriangle className="text-muted-foreground/50 mx-auto mb-4 h-16 w-16" />
+                  <p className="text-muted-foreground text-lg">
+                    Click on a cell to view risk details
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Select any cell in the matrix above to see associated risks
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cell Details — mobile dialog */}
+        <Dialog open={mobileDialogOpen} onOpenChange={setMobileDialogOpen}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto lg:hidden">
+            <DialogHeader>
+              <DialogTitle>Cell Details</DialogTitle>
+            </DialogHeader>
+            {selectedCell && (
+              <CellDetailsContent
+                selectedCell={selectedCell}
+                configRatings={configRatings}
+                onNavigate={(id) => {
+                  setMobileDialogOpen(false);
+                  router.push(`/dashboard/actions/risk/${id}`);
+                }}
+              />
             )}
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

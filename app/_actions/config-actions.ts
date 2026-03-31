@@ -1057,7 +1057,6 @@ export async function getRiskMatrices(params?:{
       method: "GET"
     });
 
-    revalidatePath("/dashboard/system-configs/risk-settings");
     return successResponse(response?.data.data);
   } catch (error: any) {
     return handleError(error, "GET | GET MATRICES", `/api/v1/risk-configs/matrices`);

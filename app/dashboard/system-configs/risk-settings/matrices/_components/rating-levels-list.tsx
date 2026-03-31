@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -14,13 +13,15 @@ import {
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { notify } from "@/lib/utils";
-import { deleteRating, getMatrixRatingsById } from "@/app/_actions/config-actions";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CreateRatingDialog } from "./create-rating-dialog";
 import { EditRatingDialog } from "./edit-rating-dialog";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMatrixRatings, useDeleteRating } from "@/hooks/use-matrix-query-data";
+import { QUERY_KEYS } from "@/lib/constants";
 
 type Rating = {
   id: string;
@@ -35,12 +36,18 @@ type Rating = {
 
 type RatingLevelsListProps = {
   matrixId: string;
+  initialData?: any[];
 };
 
-export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
+export function RatingLevelsList({ matrixId, initialData }: RatingLevelsListProps) {
   const { checkPermission } = usePermissions();
-  const [ratings, setRatings] = useState<Rating[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: ratings = [], isLoading } = useMatrixRatings(matrixId, initialData);
+  const deleteRatingMutation = useDeleteRating(matrixId);
+
+  const invalidateRatings = () =>
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MATRIX_RATINGS, matrixId] });
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -62,32 +69,6 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
     ratingName: string | null;
   }>({ open: false, ratingId: null, ratingName: null });
 
-  useEffect(() => {
-    fetchRatings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matrixId]);
-
-  const fetchRatings = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getMatrixRatingsById(matrixId);
-
-      if (response.success && response.data) {
-        const sortedRatings = response.data.sort(
-          (a: Rating, b: Rating) => a.min_score - b.min_score
-        );
-        setRatings(sortedRatings);
-      } else {
-        setRatings([]);
-      }
-    } catch (error) {
-      console.error("Error fetching ratings:", error);
-      notify({ description: "Failed to load rating levels", type: "error" });
-      setRatings([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Paginated data
   const paginatedRatings = useMemo(() => {
@@ -129,19 +110,12 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
   const handleDeleteConfirm = async () => {
     if (!checkPermission("RISK_MODULE_CONFIGS", "can_delete")) return;
     if (!deleteDialog.ratingId) return;
-
-    try {
-      const response = await deleteRating(deleteDialog.ratingId);
-      if (response.success) {
-        notify({ description: "Rating level deleted successfully", type: "success" });
-        setDeleteDialog({ open: false, ratingId: null, ratingName: null });
-        await fetchRatings();
-      } else {
-        notify({ description: response.message || "Failed to delete rating level", type: "error" });
-      }
-    } catch (error) {
-      console.error("Error deleting rating:", error);
-      notify({ description: "Failed to delete rating level. Please try again.", type: "error" });
+    const response = await deleteRatingMutation.mutateAsync(deleteDialog.ratingId);
+    if (response.success) {
+      notify({ description: "Rating level deleted successfully", type: "success" });
+      setDeleteDialog({ open: false, ratingId: null, ratingName: null });
+    } else {
+      notify({ description: response.message || "Failed to delete rating level", type: "error" });
     }
   };
 
@@ -280,7 +254,7 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         matrixId={matrixId}
-        onSuccess={fetchRatings}
+        onSuccess={invalidateRatings}
       />
 
       {editDialog.rating && (
@@ -288,7 +262,7 @@ export function RatingLevelsList({ matrixId }: RatingLevelsListProps) {
           open={editDialog.open}
           onOpenChange={(open) => setEditDialog({ open, rating: null })}
           rating={editDialog.rating}
-          onSuccess={fetchRatings}
+          onSuccess={invalidateRatings}
         />
       )}
 

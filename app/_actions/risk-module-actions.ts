@@ -1034,13 +1034,18 @@ export async function getRiskMatrix(): Promise<APIResponse> {
  * Get heat map data
  * Endpoint: GET /api/v1/heatmap
  */
-export async function getHeatMap(): Promise<APIResponse> {
+export async function getHeatMap(params?: {
+  matrix_id?: string;
+  type?: "inherent" | "residual";
+  register_id?: string;
+}): Promise<APIResponse> {
   try {
-    // TODO: Replace with real API call when backend is ready
-    const response = await authenticatedApiClient({
-      url: "/api/v1/risks/heatmap",
-      method: "GET"
-    });
+    const queryParams = new URLSearchParams();
+    if (params?.matrix_id) queryParams.append("matrix_id", params.matrix_id);
+    if (params?.type) queryParams.append("type", params.type);
+    if (params?.register_id) queryParams.append("register_id", params.register_id);
+    const url = `/api/v1/risks/heatmap${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedApiClient({ url, method: "GET" });
     return successResponse(response.data.data, "Heat map fetched successfully");
   } catch (error) {
     return handleError(error, "GET | GET HEAT MAP", "/api/v1/risks/heatmap");

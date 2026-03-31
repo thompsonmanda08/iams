@@ -17,7 +17,7 @@ import { RiskMatrix, RiskControls } from "@/lib/types/risk-type";
  * Fetch risk matrices from the API
  * Used for selecting risk assessment matrices in forms
  */
-export function useRiskMatrices(enabled: boolean = true) {
+export function useRiskMatrices(enabled: boolean = true, initialData?: RiskMatrix[]) {
   return useQuery({
     queryKey: ["risk-matrices"],
     queryFn: async (): Promise<RiskMatrix[]> => {
@@ -25,12 +25,13 @@ export function useRiskMatrices(enabled: boolean = true) {
       if (response.success && response.data?.data) {
         return response.data.data;
       }
-      throw new Error("Failed to load risk matrices");
+      return [];
     },
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
-    throwOnError: false
+    throwOnError: false,
+    initialData: initialData?.length ? initialData : undefined
   });
 }
 

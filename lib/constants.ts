@@ -119,7 +119,10 @@ export const QUERY_KEYS = {
   WORKFLOW_APPROVALS: "workflow-approvals",
   WORKFLOW_HISTORY: "workflow-history",
   GENERAL_WORK_PAPER_CONFIGS: "general-work-paper-configs",
-  GENERAL_FINDINGS: "general-findings"
+  GENERAL_FINDINGS: "general-findings",
+  MATRIX_SCALES: "matrix-scales",
+  MATRIX_RATINGS: "matrix-ratings",
+  HEATMAP: "heatmap"
 };
 
 // ANIMATION_VARIANTS
