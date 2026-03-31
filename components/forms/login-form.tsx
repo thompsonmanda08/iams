@@ -108,7 +108,7 @@ export default function LoginForm() {
             <span className="text-slate-600">Remember me</span>
           </Label> */}
           <Link
-            href="/#forgot-password"
+            href="/forgot-password"
             className="text-primary hover:text-primary/70 ml-auto text-xs font-medium transition-colors sm:text-sm">
             Forgot password?
           </Link>

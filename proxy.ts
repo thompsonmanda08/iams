@@ -45,11 +45,13 @@ export async function proxy(request: NextRequest) {
   // ✅ FAST: Check cookie existence only (no JWT decryption for most routes)
   const hasAuthCookie = request.cookies.has(AUTH_SESSION);
 
-  // Define authentication pages (login, register, OTP)
+  // Define authentication pages (login, register, OTP, password reset)
   const isAuthPage =
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
-    pathname.startsWith("/otp");
+    pathname.startsWith("/otp") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password");
 
   // Check if accessing admin routes
   const isAdminRoute = pathname.startsWith("/admin");

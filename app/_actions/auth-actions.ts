@@ -135,12 +135,25 @@ export async function resendOTP({ username }: { username: string }): Promise<API
 }
 
 /**
- * NOTE: This endpoint may need backend implementation.
- * API docs show POST /api/v1/auth/change-password which requires authentication
- * and expects { old_password, new_password }.
- *
- * For public password reset with token, backend needs to implement a separate endpoint.
- * Current implementation assumes token-based reset endpoint exists.
+ * Request a password reset email
+ * Endpoint: POST /api/v1/auth/forgot-password
+ * Public — no auth cookie required
+ */
+export async function requestPasswordReset(email: string): Promise<APIResponse> {
+  const url = `/api/v1/auth/forgot-password`;
+
+  try {
+    const response = await axios.post(url, { username: email });
+    return successResponse(response?.data, "Password reset email sent successfully");
+  } catch (error: Error | any) {
+    return handleError(error, "POST", url);
+  }
+}
+
+/**
+ * Reset password using token from email link
+ * Endpoint: POST /api/v1/auth/reset-password
+ * Public — no auth cookie required
  */
 export async function resetPassword({
   newPassword,
@@ -149,11 +162,10 @@ export async function resetPassword({
   newPassword: string;
   token: string;
 }): Promise<APIResponse> {
-  const url = `/api/v1/auth/password-reset`;
+  const url = `/api/v1/auth/reset-password`;
 
   try {
-    const response = await axios.post(url, { newPassword, token });
-
+    const response = await axios.post(url, { token, new_password: newPassword });
     return successResponse(response?.data, "Password reset successfully");
   } catch (error: Error | any) {
     return handleError(error, "POST", url);

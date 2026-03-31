@@ -167,8 +167,12 @@ export function EditRatingDialog({ open, onOpenChange, rating, onSuccess }: Edit
               disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Updating..." : "Update Rating"}
+            <Button
+              type="submit"
+              disabled={isLoading}
+              isLoading={isLoading}
+              loadingText="Saving...">
+              Update Rating
             </Button>
           </DialogFooter>
         </form>
