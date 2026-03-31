@@ -433,6 +433,7 @@ export function CreateOrUpdate({
               setFormData((c) => ({ ...c, department_id: value }));
             }}
             options={departmentOptions}
+            onModal
           />
           <Input
             label="Name"

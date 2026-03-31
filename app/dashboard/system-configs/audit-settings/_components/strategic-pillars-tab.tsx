@@ -339,7 +339,10 @@ function CreateOrUpdate({
     page: 1
   });
 
-  const departments = (data?.data?.data || []) as Department[];
+  const departments = [
+    { id: "", name: "None (no department)" },
+    ...((data?.data?.data || []) as Department[])
+  ];
 
   useEffect(() => {
     if (openModal) {
@@ -423,6 +426,7 @@ function CreateOrUpdate({
               setFormData((c) => ({ ...c, department_id: value }));
             }}
             options={departments as any}
+            onModal
           />
           <Input
             label="Strategic Pillar"

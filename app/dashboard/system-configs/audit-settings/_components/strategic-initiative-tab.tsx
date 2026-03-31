@@ -389,7 +389,7 @@ function CreateOrUpdate({
     department_id: formData?.department_id
   });
 
-  const pillars = pillarsResponse?.data || [];
+  const pillars = [{ id: "", name: "None (no pillar)" }, ...(pillarsResponse?.data || [])];
 
   useEffect(() => {
     if (openModal) {
@@ -438,10 +438,10 @@ function CreateOrUpdate({
   }
 
   const departmentOptions = useMemo(() => {
-    return departments.map((dept) => ({
-      id: dept?.id as string,
-      name: dept?.name
-    }));
+    return [
+      { id: "", name: "None (no department)" },
+      ...departments.map((dept) => ({ id: dept?.id as string, name: dept?.name }))
+    ];
   }, [departments]);
 
   return (
@@ -482,6 +482,7 @@ function CreateOrUpdate({
             }}
             isLoading={loadingPillars}
             options={departmentOptions}
+            onModal
           />
           <SearchSelectField
             label="Strategic Pillar"
@@ -493,6 +494,7 @@ function CreateOrUpdate({
               setFormData((c) => ({ ...c, pillar_id: value }));
             }}
             options={pillars}
+            onModal
           />
           <Input
             label="Strategic Initiative"

@@ -20,7 +20,7 @@ import {
   updateBusinessProcess,
   getBusinessProcesses
 } from "@/app/_actions/config-actions";
-import { SelectField } from "@/components/ui/select-field";
+import { SearchSelectField } from "@/components/ui/search-select-field";
 
 type BusinessProcess = {
   id: string;
@@ -133,12 +133,12 @@ export function BusinessProcessesDialog({
     }
   };
 
-  const parentProcessOptions = availableProcesses
-    .filter((p) => !p.parent_id)
-    .map((p) => ({
-      id: p.id,
-      name: p.name
-    }));
+  const parentProcessOptions = [
+    { id: "", name: "None (root process)" },
+    ...availableProcesses
+      .filter((p) => !p.parent_id)
+      .map((p) => ({ id: p.id, name: p.name }))
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -176,17 +176,16 @@ export function BusinessProcessesDialog({
 
             <div className="space-y-2">
               <Label htmlFor="parent_id">Parent Process (Optional)</Label>
-              <SelectField
+              <SearchSelectField
                 value={formData.parent_id}
-                onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
+                onValueChange={(value) => setFormData({ ...formData, parent_id: value || "" })}
                 placeholder={loadingProcesses ? "Loading processes..." : "Select parent process"}
                 options={parentProcessOptions}
-                disabled={isLoading || loadingProcesses}
-                className="w-full"
+                isDisabled={isLoading || loadingProcesses}
+                isLoading={loadingProcesses}
+                onModal
+                descriptionText="Select a parent if this is a sub-process"
               />
-              <p className="text-muted-foreground text-xs">
-                Select a parent if this is a sub-process
-              </p>
             </div>
 
             <div className="grid gap-2">

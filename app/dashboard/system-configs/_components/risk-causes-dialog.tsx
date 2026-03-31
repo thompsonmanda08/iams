@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { notify } from "@/lib/utils";
 import { createRiskCause, updateRiskCause, getRiskCauses } from "@/app/_actions/config-actions";
-import { SelectField } from "@/components/ui/select-field";
+import { SearchSelectField } from "@/components/ui/search-select-field";
 
 type RiskCause = {
   id: string;
@@ -111,12 +111,12 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
     }
   };
 
-  const parentRiskCauses = availableCauses
-    .filter((p) => !p.parent_id)
-    .map((p) => ({
-      id: p.id,
-      name: p.name
-    }));
+  const parentRiskCauses = [
+    { id: "", name: "None (root cause)" },
+    ...availableCauses
+      .filter((p) => !p.parent_id)
+      .map((p) => ({ id: p.id, name: p.name }))
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -149,17 +149,15 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
 
             <div className="space-y-2">
               <Label htmlFor="parent_id">Risk Cause Parent (Optional)</Label>
-              <SelectField
+              <SearchSelectField
                 value={formData.parent_id || ""}
                 onValueChange={(value) => setFormData({ ...formData, parent_id: value || null })}
                 placeholder="Select risk cause parent"
                 options={parentRiskCauses}
-                disabled={isLoading}
-                className="w-full"
+                isDisabled={isLoading}
+                onModal
+                descriptionText="Select a parent if this is a sub-cause"
               />
-              <p className="text-muted-foreground text-xs">
-                Select a parent if this is a sub-cause
-              </p>
             </div>
 
             <div className="grid gap-2">

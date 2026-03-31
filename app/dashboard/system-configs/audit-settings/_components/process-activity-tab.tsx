@@ -483,6 +483,7 @@ function CreateOrUpdate({
               setFormData((c) => ({ ...c, department_id: value }));
             }}
             options={departments as any}
+            onModal
           />
           {/* PILLAR */}
           <SearchSelectField
@@ -496,6 +497,7 @@ function CreateOrUpdate({
               setFormData((c) => ({ ...c, strategic_pillar_id: value }));
             }}
             options={pillars as any}
+            onModal
           />
           {/* AUDITABLE AREA */}
           <SearchSelectField
@@ -508,6 +510,7 @@ function CreateOrUpdate({
               setFormData((c) => ({ ...c, auditable_area_id: value }));
             }}
             options={auditableAreas as any}
+            onModal
           />
 
           <Input

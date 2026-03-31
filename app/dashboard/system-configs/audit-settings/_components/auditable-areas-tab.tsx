@@ -433,12 +433,12 @@ export function CreateOrUpdateArea({
   }
 
   const departmentOptions = useMemo(() => {
-    return items
-      .filter((dept) => dept.id !== formData.department_id) // Prevent self-parenting
-      .map((item) => ({
-        id: item?.id as string,
-        name: item?.name
-      }));
+    return [
+      { id: "", name: "None (no department)" },
+      ...items
+        .filter((dept) => dept.id !== formData.department_id)
+        .map((item) => ({ id: item?.id as string, name: item?.name }))
+    ];
   }, [items, areaId]);
 
   return (
@@ -476,6 +476,7 @@ export function CreateOrUpdateArea({
               setFormData((c) => ({ ...c, department_id: value }));
             }}
             options={departmentOptions}
+            onModal
           />
           <Input
             label="Name"
