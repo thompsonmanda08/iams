@@ -161,7 +161,7 @@ export function RiskMatrixConfigList() {
     <Card className="p-4">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-foreground text-2xl font-semibold">Risk Matrices</h2>
+          <h2 className="text-foreground text-2xl font-semibold">Risk</h2>
           <p className="text-muted-foreground text-sm">
             Configure risk assessment matrices for your organization
           </p>

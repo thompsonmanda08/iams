@@ -36,7 +36,7 @@ export const updateUserSchema = z.object({
   password: z.string().optional(),
   phone: z.string().optional(),
   user_type: z.string().optional(),
-  mfa_enabled: z.boolean().optional()
+  mfa_enabled: z.boolean().default(false)
 });
 
 // Base schema with common fields

@@ -256,7 +256,7 @@ export default function CreateUserForm({
           role_id: values.role_id,
           is_active: values.is_active ?? true,
           user_type,
-          mfa_enabled: values.mfa_enabled ?? true
+          mfa_enabled: values.mfa_enabled === true
         };
 
         response = await updateUserMutation.mutateAsync({

@@ -186,10 +186,10 @@ export function MultiStepCompanyForm({
   const [stepThreeData, setStepThreeData] = useState<StepThreeData>({
     subscription_tier: company?.subscription_tier || "basic",
     max_users: company?.max_users || 50,
-    admin_username: company?.admin_username || "",
-    admin_email: company?.admin_email || "",
-    admin_first_name: company?.admin_first_name || "",
-    admin_last_name: company?.admin_last_name || "",
+    admin_username: company?.admin_user?.username || "",
+    admin_email: company?.admin_user?.email || "",
+    admin_first_name: company?.admin_user?.first_name || "",
+    admin_last_name: company?.admin_user?.last_name || "",
     admin_password: generateRandomString()
   });
 
@@ -224,10 +224,10 @@ export function MultiStepCompanyForm({
       setStepThreeData({
         subscription_tier: company.subscription_tier || "basic",
         max_users: company.max_users || 50,
-        admin_username: company.admin_username || "",
-        admin_email: company.admin_email || "",
-        admin_first_name: company.admin_first_name || "",
-        admin_last_name: company.admin_last_name || "",
+        admin_username: company.admin_user?.username || "",
+        admin_email: company.admin_user?.email || "",
+        admin_first_name: company.admin_user?.first_name || "",
+        admin_last_name: company.admin_user?.last_name || "",
         admin_password: ""
       });
     }
@@ -781,156 +781,183 @@ export function MultiStepCompanyForm({
               </div>
             </div> */}
 
-            {!isEditMode && (
-              <div className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40 rounded-lg border p-4">
-                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
-                  <Shield className="h-4 w-4" />
-                  What happens when you create this admin?
-                </h4>
-                <ul className="space-y-2">
-                  {[
-                    "This admin will have full access control with create, update, configure, and delete permissions across the account.",
-                    "A default Department will be automatically created and assigned to this admin user.",
-                    "A default HQ Branch will be created, and this admin user will be assigned to it.",
-                    "This user will have access to all modules of the system."
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300">
-                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-200 text-[10px] font-bold dark:bg-blue-800">
-                        {i + 1}
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {!isEditMode && (
+            {isEditMode ? (
               <div className="border-border bg-muted/50 rounded-lg border p-4">
-                <h4 className="mb-2 flex items-center gap-2 font-medium">
+                <h4 className="mb-3 flex items-center gap-2 font-medium">
                   <User className="h-4 w-4" />
                   Administrator Account
                 </h4>
-                <div className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="admin_first_name">
-                        First Name <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="admin_first_name"
-                        placeholder="John"
-                        value={stepThreeData.admin_first_name}
-                        onChange={(e) =>
-                          setStepThreeData((prev) => ({
-                            ...prev,
-                            admin_first_name: e.target.value
-                          }))
-                        }
-                        required
-                      />
+                <div className="space-y-3">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-muted-foreground text-xs">First Name</Label>
+                      <p className="text-sm font-medium">{stepThreeData.admin_first_name || "—"}</p>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="admin_last_name">
-                        Last Name <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="admin_last_name"
-                        placeholder="Doe"
-                        value={stepThreeData.admin_last_name}
-                        onChange={(e) =>
-                          setStepThreeData((prev) => ({
-                            ...prev,
-                            admin_last_name: e.target.value
-                          }))
-                        }
-                        required
-                      />
+                    <div className="space-y-1">
+                      <Label className="text-muted-foreground text-xs">Last Name</Label>
+                      <p className="text-sm font-medium">{stepThreeData.admin_last_name || "—"}</p>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="admin_username">
-                      Username <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="admin_username"
-                      placeholder="admin.user"
-                      value={stepThreeData.admin_username}
-                      onChange={(e) =>
-                        setStepThreeData((prev) => ({ ...prev, admin_username: e.target.value }))
-                      }
-                      required
-                    />
+                  <div className="space-y-1">
+                    <Label className="text-muted-foreground text-xs">Username</Label>
+                    <p className="text-sm font-medium">{stepThreeData.admin_username || "—"}</p>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="admin_email">
-                      Email <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="admin_email"
-                      type="email"
-                      placeholder="admin@company.com"
-                      value={stepThreeData.admin_email}
-                      onChange={(e) =>
-                        setStepThreeData((prev) => ({ ...prev, admin_email: e.target.value }))
-                      }
-                      required
-                    />
+                  <div className="space-y-1">
+                    <Label className="text-muted-foreground text-xs">Email</Label>
+                    <p className="text-sm font-medium">{stepThreeData.admin_email || "—"}</p>
                   </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40 rounded-lg border p-4">
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
+                    <Shield className="h-4 w-4" />
+                    What happens when you create this admin?
+                  </h4>
+                  <ul className="space-y-2">
+                    {[
+                      "This admin will have full access control with create, update, configure, and delete permissions across the account.",
+                      "A default Department will be automatically created and assigned to this admin user.",
+                      "A default HQ Branch will be created, and this admin user will be assigned to it.",
+                      "This user will have access to all modules of the system."
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300">
+                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-200 text-[10px] font-bold dark:bg-blue-800">
+                          {i + 1}
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="admin_password">
-                      Password <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
+                <div className="border-border bg-muted/50 rounded-lg border p-4">
+                  <h4 className="mb-2 flex items-center gap-2 font-medium">
+                    <User className="h-4 w-4" />
+                    Administrator Account
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="admin_first_name">
+                          First Name <span className="text-destructive">*</span>
+                        </Label>
                         <Input
-                          id="admin_password"
-                          type={showAdminPassword ? "text" : "password"}
-                          placeholder="Minimum 8 characters"
-                          value={stepThreeData.admin_password}
+                          id="admin_first_name"
+                          placeholder="John"
+                          value={stepThreeData.admin_first_name}
                           onChange={(e) =>
                             setStepThreeData((prev) => ({
                               ...prev,
-                              admin_password: e.target.value
+                              admin_first_name: e.target.value
                             }))
                           }
                           required
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="admin_last_name">
+                          Last Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="admin_last_name"
+                          placeholder="Doe"
+                          value={stepThreeData.admin_last_name}
+                          onChange={(e) =>
+                            setStepThreeData((prev) => ({
+                              ...prev,
+                              admin_last_name: e.target.value
+                            }))
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="admin_username">
+                        Username <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="admin_username"
+                        placeholder="admin.user"
+                        value={stepThreeData.admin_username}
+                        onChange={(e) =>
+                          setStepThreeData((prev) => ({ ...prev, admin_username: e.target.value }))
+                        }
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="admin_email">
+                        Email <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="admin_email"
+                        type="email"
+                        placeholder="admin@company.com"
+                        value={stepThreeData.admin_email}
+                        onChange={(e) =>
+                          setStepThreeData((prev) => ({ ...prev, admin_email: e.target.value }))
+                        }
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="admin_password">
+                        Password <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            id="admin_password"
+                            type={showAdminPassword ? "text" : "password"}
+                            placeholder="Minimum 8 characters"
+                            value={stepThreeData.admin_password}
+                            onChange={(e) =>
+                              setStepThreeData((prev) => ({
+                                ...prev,
+                                admin_password: e.target.value
+                              }))
+                            }
+                            required
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2"
+                            onClick={() => setShowAdminPassword((prev) => !prev)}>
+                            {showAdminPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-1 top-1/2 -translate-y-1/2"
-                          onClick={() => setShowAdminPassword((prev) => !prev)}>
-                          {showAdminPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
+                          variant="outline"
+                          onClick={() =>
+                            setStepThreeData((prev) => ({
+                              ...prev,
+                              admin_password: generateRandomString()
+                            }))
+                          }>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Generate
                         </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          setStepThreeData((prev) => ({
-                            ...prev,
-                            admin_password: generateRandomString()
-                          }))
-                        }>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Generate
-                      </Button>
+                      <p className="text-muted-foreground text-xs">
+                        Password must be at least 8 characters long
+                      </p>
                     </div>
-                    <p className="text-muted-foreground text-xs">
-                      Password must be at least 8 characters long
-                    </p>
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}

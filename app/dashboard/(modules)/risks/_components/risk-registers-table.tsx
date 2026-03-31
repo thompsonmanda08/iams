@@ -156,7 +156,7 @@ export default function RiskRegistersTable({
     }
   };
 
-  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: displayedRegisters } = useTableSearch({
+  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: searchedRegisters } = useTableSearch({
     data: registers,
     filterFn: (register, query) => {
       const q = query.toLowerCase();
@@ -170,8 +170,8 @@ export default function RiskRegistersTable({
   });
 
   const displayedRegisters = selectedStatus === "all"
-    ? displayedRegisters
-    : displayedRegisters.filter(r => r.status?.toUpperCase() === selectedStatus.toUpperCase());
+    ? searchedRegisters
+    : searchedRegisters.filter(r => r.status?.toUpperCase() === selectedStatus.toUpperCase());
 
   const customPaginationData = {
     page: pagination.page,
