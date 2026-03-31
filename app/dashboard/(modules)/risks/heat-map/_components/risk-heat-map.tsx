@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useHeatMap, useMatrixRatings } from "@/hooks/use-matrix-query-data";
 import { useRiskMatrices } from "@/hooks/use-risk-query-data";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { RiskMatrix } from "@/lib/types/risk-type";
+import type { RiskMatrix as RiskMatrixType } from "@/lib/types/risk-type";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -73,6 +73,7 @@ interface HeatmapData {
     description: string;
     register_name: string;
     matrix_name: string;
+    matrix_size?: string; // backend returns "5x5" — parsed into likelihood/impact_levels
     likelihood_levels: number;
     impact_levels: number;
     date_range: { start_date: string; end_date: string };
@@ -83,6 +84,7 @@ interface HeatmapData {
   matrix: MatrixCell[];
   summary: {
     by_rating_level: RatingLevelSummary[];
+    rating_counts?: Record<string, number>; // backend returns object form, normalised to by_rating_level
     average_score: number;
     highest_score: number;
     lowest_score: number;
@@ -347,6 +349,7 @@ function CellDetailsContent({
               </thead>
               <tbody className="divide-y">
                 {selectedCell.risks.map((risk) => {
+                  // After normalisation: "Below" → "WITHIN", "Above" → "ABOVE"
                   const isWithin = risk.risk_appetite_status === "WITHIN";
                   return (
                     <tr key={risk.id} className="hover:bg-muted/30 transition-colors">
@@ -438,7 +441,7 @@ export function RiskHeatMap({
   defaultMatrixId
 }: {
   heatmapData: HeatmapData;
-  matrices: RiskMatrix[];
+  matrices: RiskMatrixType[];
   defaultMatrixId: string | null;
 }) {
   const router = useRouter();
@@ -473,15 +476,56 @@ export function RiskHeatMap({
   // Merge with initialData so every field the UI touches is guaranteed to exist.
   const raw = fetchedData ?? initialData;
 
-  // Derive fallback stats from matrix cell data when backend hasn't populated them
-  const computed = computeSummaryFromMatrix(raw?.matrix ?? [], configRatings);
-  const matrixRiskTotal = (raw?.matrix ?? []).reduce((sum: number, cell: MatrixCell) => sum + (cell.count ?? 0), 0);
+  // ── Normalize matrix cells: map backend field names to expected UI field names ──
+  // Backend returns: cell.color, cell.rating, risk.risk_appetite_status = "Above"/"Below"
+  // UI expects:      cell.color_hex, cell.rating_level_name, risk.risk_appetite_status = "ABOVE"/"WITHIN"
+  const normalizedMatrix: MatrixCell[] = (raw?.matrix ?? []).map((cell: any) => ({
+    ...cell,
+    color_hex: cell.color_hex ?? cell.color,
+    rating_level_name: cell.rating_level_name ?? cell.rating,
+    likelihood_label: cell.likelihood_label ?? String(cell.likelihood),
+    impact_label: cell.impact_label ?? String(cell.impact),
+    risks: (cell.risks ?? []).map((risk: any) => ({
+      ...risk,
+      risk_appetite_status:
+        risk.risk_appetite_status === "Below"
+          ? "WITHIN"
+          : risk.risk_appetite_status === "Above"
+            ? "ABOVE"
+            : risk.risk_appetite_status
+    }))
+  }));
+
+  // ── Parse matrix_size string ("5x5") → integer dimensions ─────────────────
+  const matrixSizeStr: string = raw?.metadata?.matrix_size ?? "";
+  const [parsedLikelihood, parsedImpact] = matrixSizeStr.includes("x")
+    ? matrixSizeStr.split("x").map(Number)
+    : [undefined, undefined];
+
+  // ── Derive fallback stats from normalised matrix cell data ─────────────────
+  const computed = computeSummaryFromMatrix(normalizedMatrix, configRatings);
+  const matrixRiskTotal = normalizedMatrix.reduce((sum, cell) => sum + (cell.count ?? 0), 0);
   const backendAppetiteTotal =
     (raw?.summary?.within_appetite_count ?? 0) + (raw?.summary?.above_appetite_count ?? 0);
-  // Use computed when: backend returns no data OR backend totals don't match actual matrix risk count
+  // Use computed when backend totals don't match actual matrix risk count
   const useComputed =
     computed.within + computed.above > 0 &&
     (backendAppetiteTotal === 0 || backendAppetiteTotal !== matrixRiskTotal);
+
+  // ── Convert backend's rating_counts object → by_rating_level array ─────────
+  // Backend: summary.rating_counts = { "HIGH": 1, "VERY_HIGH": 2 }  (UPPER_SNAKE)
+  // Config:  configRatings[].name = "High", "Very High"             (Title Case)
+  // Normalize both sides to UPPER_SNAKE before matching.
+  const normalizeRatingKey = (s: string) => s.toUpperCase().replace(/[\s-]+/g, "_");
+  const ratingCountsObj: Record<string, number> = raw?.summary?.rating_counts ?? {};
+  const ratingCountsNorm: Record<string, number> = {};
+  Object.entries(ratingCountsObj).forEach(([k, v]) => {
+    ratingCountsNorm[normalizeRatingKey(k)] = v;
+  });
+  const byRatingLevelFallback = configRatings.map((r: any) => ({
+    ...r,
+    count: ratingCountsNorm[normalizeRatingKey(r.name)] ?? computed.ratingCounts[r.id] ?? 0
+  }));
 
   const heatmapData: HeatmapData = {
     ...initialData,
@@ -489,13 +533,20 @@ export function RiskHeatMap({
     rating_levels: raw?.rating_levels?.length
       ? raw.rating_levels
       : configRatings.map((r: any) => ({ ...r, count: 0 })),
-    matrix: raw?.matrix ?? [],
+    matrix: normalizedMatrix,
     metadata: {
       ...initialData.metadata,
       ...(raw?.metadata ?? {}),
       likelihood_levels:
-        raw?.metadata?.likelihood_levels ?? initialData.metadata?.likelihood_levels ?? 5,
-      impact_levels: raw?.metadata?.impact_levels ?? initialData.metadata?.impact_levels ?? 5,
+        raw?.metadata?.likelihood_levels ??
+        parsedLikelihood ??
+        initialData.metadata?.likelihood_levels ??
+        5,
+      impact_levels:
+        raw?.metadata?.impact_levels ??
+        parsedImpact ??
+        initialData.metadata?.impact_levels ??
+        5,
       matrix_name: raw?.metadata?.matrix_name ?? initialData.metadata?.matrix_name ?? ""
     },
     summary: {
@@ -503,7 +554,7 @@ export function RiskHeatMap({
       ...(raw?.summary ?? {}),
       by_rating_level: raw?.summary?.by_rating_level?.length
         ? raw.summary.by_rating_level
-        : configRatings.map((r: any) => ({ ...r, count: computed.ratingCounts[r.id] ?? 0 })),
+        : byRatingLevelFallback,
       within_appetite_count: useComputed
         ? computed.within
         : (raw?.summary?.within_appetite_count ?? 0),
