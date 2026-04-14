@@ -31,6 +31,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { CreateOrUpdateDepartment } from "./department-users";
 import Link from "next/link";
 import { usePermissions } from "@/hooks/use-permissions";
+import { StatusBadge } from "@/components/status-badge";
 
 type Pagination = {
   total: number;
@@ -150,6 +151,7 @@ export default function DepartmentsConfig({
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Code</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="w-24" align="center">
                 Actions
               </TableHead>
@@ -158,7 +160,7 @@ export default function DepartmentsConfig({
           <TableBody>
             {departments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   <Empty>
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
@@ -206,6 +208,9 @@ export default function DepartmentsConfig({
                   </TableCell>
                   <TableCell>
                     <span className="font-mono text-sm">{department.code}</span>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={department.is_active ? "ACTIVE" : "INACTIVE"} />
                   </TableCell>
                   <TableCell align="center">
                     <div className="flex justify-end gap-2">

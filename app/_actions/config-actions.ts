@@ -124,8 +124,8 @@ export async function updateBranch({
   code,
   townId,
   provinceId,
-  address
-  // isActive
+  address,
+  isActive
 }: {
   id: string;
   name: string;
@@ -133,7 +133,7 @@ export async function updateBranch({
   townId: string;
   provinceId: string;
   address?: string;
-  // isActive?: boolean;
+  isActive?: boolean;
 }): Promise<APIResponse> {
   const url = `/api/v1/branches/${id}`;
 
@@ -151,7 +151,7 @@ export async function updateBranch({
         town_id: townId,
         province_id: provinceId,
         address,
-        // is_active: isActive,
+        is_active: isActive !== undefined ? isActive : true,
         manager_id: null // Optional field from API docs
       }
     });

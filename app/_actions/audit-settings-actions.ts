@@ -86,7 +86,12 @@ export async function updateAuditableArea(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        ...data
+        department_id: data.department_id,
+        name: data.name,
+        description: data.description || "",
+        process_type: data.process_type || "Process",
+        risk_level: data.risk_level || "MEDIUM",
+        is_active: data.is_active !== undefined ? data.is_active : true
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");

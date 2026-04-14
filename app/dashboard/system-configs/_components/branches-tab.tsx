@@ -39,6 +39,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import CustomAlert from "@/components/ui/custom-alert";
 import { usePermissions } from "@/hooks/use-permissions";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { StatusBadge } from "@/components/status-badge";
 
 interface Province {
   id: string;
@@ -232,13 +235,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                   <span className="text-muted-foreground text-sm">{branch.address || "N/A"}</span>
                 </TableCell>
                 <TableCell>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-1 text-xs font-medium",
-                      branch.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                    )}>
-                    {branch.is_active ? "Active" : "Inactive"}
-                  </span>
+                  <StatusBadge status={branch.is_active ? "ACTIVE" : "INACTIVE"} />
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
@@ -315,8 +312,8 @@ const BRANCH_INITIAL_STATE = {
   code: "",
   province_id: "",
   town_id: "",
-  address: ""
-  // is_active: true
+  address: "",
+  is_active: true
 };
 
 interface CreateOrUpdateBranchDialogProps {
@@ -358,8 +355,8 @@ function CreateOrUpdateBranchDialog({
         code: initialData.code || "",
         province_id: initialData.province_id || "",
         town_id: initialData.town_id || "",
-        address: initialData.address || ""
-        // is_active: initialData.is_active ?? true
+        address: initialData.address || "",
+        is_active: initialData.is_active !== undefined ? initialData.is_active : true
       });
     } else {
       setFormData(BRANCH_INITIAL_STATE);
@@ -401,8 +398,8 @@ function CreateOrUpdateBranchDialog({
             code: data.code,
             townId: data.town_id,
             provinceId: data.province_id,
-            address: data.address
-            // isActive: data.is_active
+            address: data.address,
+            isActive: data.is_active
           })
         : await createBranch({
             name: data.name,
@@ -522,6 +519,26 @@ function CreateOrUpdateBranchDialog({
               setFormData((c) => ({ ...c, address: e.target.value }));
             }}
           />
+          {initialData && (
+            <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
+              <Checkbox
+                id="is_active_branch"
+                checked={Boolean(formData.is_active)}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, is_active: Boolean(checked) }))
+                }
+                className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
+              />
+              <Label
+                htmlFor="is_active_branch"
+                className="flex w-full flex-1 cursor-pointer flex-col items-start gap-0 text-sm font-medium select-none">
+                Active
+                <span className="text-muted-foreground block text-xs font-normal">
+                  Set the active status of this branch.
+                </span>
+              </Label>
+            </div>
+          )}
           {error.status && (
             <CustomAlert type="error" message={error.message} Icon={TriangleAlert} />
           )}

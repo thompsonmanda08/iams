@@ -38,6 +38,8 @@ export const STATUS_VALUES = {
   BELOW: "BELOW",
   CRITICAL: "CRITICAL",
   COMPLETE: "COMPLETE",
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
 } as const;
 
 export type StandardStatus = (typeof STATUS_VALUES)[keyof typeof STATUS_VALUES];
@@ -259,6 +261,24 @@ export const STANDARD_STATUSES: Record<StandardStatus, StatusConfig> = {
     hexColor: "#20C997",
     sortOrder: 15
   },
+  ACTIVE: {
+    id: "ACTIVE",
+    label: "Active",
+    description: "Entity is currently active",
+    color: "success",
+    style: "outline",
+    hexColor: "#198754",
+    sortOrder: 16
+  },
+  INACTIVE: {
+    id: "INACTIVE",
+    label: "Inactive",
+    description: "Entity is currently inactive",
+    color: "danger",
+    style: "outline",
+    hexColor: "#DC3545",
+    sortOrder: 17
+  },
 };
 
 // ============================================================================
@@ -309,6 +329,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
 
@@ -348,6 +370,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
 
@@ -378,6 +402,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       IN_PROGRESS: [],
       UNDER_REVIEW: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
 
@@ -408,6 +434,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       UNDER_REVIEW: [],
       CRITICAL: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
 
@@ -446,6 +474,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       UNDER_REVIEW: [],
       CRITICAL: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
 
@@ -476,6 +506,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       BELOW: [],
       CRITICAL: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
 
@@ -506,6 +538,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       UNDER_REVIEW: [],
       CRITICAL: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
 
@@ -536,6 +570,8 @@ export const ENTITY_STATUS_RULES: Record<string, EntityStatusRules> = {
       UNDER_REVIEW: [],
       CRITICAL: [],
       COMPLETE: [],
+      ACTIVE: [],
+      INACTIVE: [],
     }
   },
   // ========== RISK MATRIX STATUSES ==========

@@ -267,18 +267,14 @@ export default function ProcessActivityTab() {
                       <TableCell>
                         <Badge variant="info" className="gap-1 text-xs">
                           <Cable className="h-3 w-3" />
-                          {getPillarName(item.strategic_pillar_id)}
+                          {item.strategic_pillar_name || "No strategic pillar"}
                         </Badge>
-                        <span className="font-mono text-sm"></span>
                       </TableCell>
                       <TableCell>
                         <Badge variant="info" className="gap-1 text-xs">
                           <Cable className="h-3 w-3" />
-                          {getPillarName(item.strategic_pillar_id)}
+                          {item.auditable_area_name || "No auditable area assigned"}
                         </Badge>
-                        <span className="font-mono text-sm">
-                          {getAuditableArea(item.auditable_area_id)}
-                        </span>
                       </TableCell>
 
                       <TableCell align="center">

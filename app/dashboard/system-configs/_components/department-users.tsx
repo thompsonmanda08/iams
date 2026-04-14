@@ -56,6 +56,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { usePermissions } from "@/hooks/use-permissions";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function DepartmentUsersConfig() {
   const router = useRouter();
@@ -493,7 +494,7 @@ export function CreateOrUpdateDepartment({
         code: initialData.code || "",
         description: initialData.description || "",
         parent_id: initialData.parent_id || null,
-        is_active: true || initialData?.is_active || true
+        is_active: initialData.is_active !== undefined ? initialData.is_active : true
       });
     } else {
       setFormData(INIT_DEPARTMENT);
@@ -518,14 +519,13 @@ export function CreateOrUpdateDepartment({
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: (data: Department) => {
-      // Remove is_active to prevent accidental changes
       const payload: Department = {
         id: data.id || undefined,
         name: data.name,
         code: data.code,
         description: data.description,
         parent_id: data.parent_id,
-        is_active: true || initialData?.is_active || true
+        is_active: data.is_active !== undefined ? data.is_active : true
       };
       return initialData && departmentId
         ? updateDepartment({ ...payload, id: String(departmentId) })
@@ -638,25 +638,26 @@ export function CreateOrUpdateDepartment({
             }}
           />
 
-          {/* <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
-            <Checkbox
-              id="is_active"
-              checked={formData?.is_active}
-              title="Define whether this department is currently active"
-              onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, is_active: checked }) as any)
-              }
-              className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
-            />
-            <Label
-              htmlFor="is_department_head"
-              className="flex w-full flex-1 cursor-pointer flex-col items-start gap-0 text-sm font-medium select-none">
-              Is Active Department
-              <span className="text-muted-foreground block text-xs font-normal">
-                Set the active status of this department.
-              </span>
-            </Label>
-          </div> */}
+          {departmentId && (
+            <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
+              <Checkbox
+                id="is_active_department"
+                checked={Boolean(formData?.is_active)}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, is_active: Boolean(checked) }))
+                }
+                className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
+              />
+              <Label
+                htmlFor="is_active_department"
+                className="flex w-full flex-1 cursor-pointer flex-col items-start gap-0 text-sm font-medium select-none">
+                Active
+                <span className="text-muted-foreground block text-xs font-normal">
+                  Set the active status of this department.
+                </span>
+              </Label>
+            </div>
+          )}
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
 
           <div className="flex justify-end gap-3 pt-2">

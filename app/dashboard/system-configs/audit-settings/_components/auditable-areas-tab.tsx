@@ -362,13 +362,11 @@ export function CreateOrUpdateArea({
   const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id">>(() => {
     if (initialData && areaId) {
       return {
-        // id: areaId,
         name: initialData.name || "",
         department_id: initialData.department_id || "",
-        description: initialData.description || ""
-        // parent_id: initialData.parent_id || undefined,
-        // is_active: initialData.is_active || true
-      } as AuditConfigurableItem;
+        description: initialData.description || "",
+        is_active: initialData.is_active !== undefined ? initialData.is_active : true
+      } as Omit<AuditConfigurableItem, "id">;
     }
     return INIT_AREA;
   });
@@ -386,12 +384,10 @@ export function CreateOrUpdateArea({
     if (openModal) {
       if (initialData && areaId) {
         setFormData({
-          // id: areaId,
           name: initialData.name || "",
           department_id: initialData.department_id || "",
-          description: initialData.description || ""
-          // parent_id: initialData.parent_id || null,
-          // is_active: initialData.is_active || true
+          description: initialData.description || "",
+          is_active: initialData.is_active !== undefined ? initialData.is_active : true
         });
       } else if (!initialData) {
         // Only reset if no initialData (create mode)
@@ -499,21 +495,26 @@ export function CreateOrUpdateArea({
               setFormData((c) => ({ ...c, description: e.target.value }));
             }}
           />
-          {/* <div className="flex items-center space-x-2 self-end pl-2">
-            <Checkbox
-              id="is_active"
-              checked={formData?.is_active}
-              title="Define whether this item is currently active"
-              onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, is_active: checked }) as any)
-              }
-            />
-            <Label
-              htmlFor="is_active"
-              className="text-foreground cursor-pointer text-sm font-medium text-nowrap">
-              Is Active AuditConfigurableItem
-            </Label>
-          </div> */}
+          {areaId && (
+            <div className="flex items-center space-x-2 rounded-lg border bg-slate-50/5 p-4 py-2 transition-colors hover:bg-slate-50">
+              <Checkbox
+                id="is_active"
+                checked={Boolean(formData?.is_active)}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, is_active: Boolean(checked) }))
+                }
+                className="text-primary focus:ring-primary h-4 w-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
+              />
+              <Label
+                htmlFor="is_active"
+                className="flex w-full flex-1 cursor-pointer flex-col items-start gap-0 text-sm font-medium select-none">
+                Active
+                <span className="text-muted-foreground block text-xs font-normal">
+                  Set the active status of this auditable area.
+                </span>
+              </Label>
+            </div>
+          )}
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}
 
           <div className="flex justify-end gap-3 pt-2">
