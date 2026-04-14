@@ -884,7 +884,8 @@ export function MultiStepCompanyForm({
                       </Label>
                       <Input
                         id="admin_username"
-                        placeholder="admin.user"
+                        placeholder="admin.user or admin@company.com"
+                        descriptionText="Can be a username or email address"
                         value={stepThreeData.admin_username}
                         onChange={(e) =>
                           setStepThreeData((prev) => ({ ...prev, admin_username: e.target.value }))

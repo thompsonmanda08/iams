@@ -42,6 +42,7 @@ import { useCreateUser, useUpdateUser } from "@/hooks/use-users-query-data";
 import { Branch, Department } from "@/lib/types";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useSession } from "@/store/session-store";
 
 type SignUpFormProps = {
   user: User | null;
@@ -76,6 +77,8 @@ export default function CreateUserForm({
   const [internalOpen, setInternalOpen] = useState<boolean>(false);
 
   const isEditMode = !!user;
+  const { user: currentUser } = useSession();
+  const isEditingSelf = isEditMode && user?.id === currentUser?.id;
 
   // Use internal state for trigger mode, external state for controlled mode
   const dialogOpen = showTrigger ? internalOpen : isOpenModal;
@@ -432,7 +435,8 @@ export default function CreateUserForm({
                         <FormControl>
                           <Input
                             label="Username"
-                            placeholder="bmwale"
+                            placeholder="bmwale or user@company.com"
+                            descriptionText="Can be a username or email address"
                             {...field}
                             className="focus-visible:ring-1"
                             disabled={isEditMode}
@@ -612,14 +616,18 @@ export default function CreateUserForm({
                             <div className="space-y-0.5">
                               <FormLabel className="text-base">Account Status</FormLabel>
                               <FormDescription>
-                                {field.value ? "Account is active" : "Account is deactivated"}
+                                {isEditingSelf
+                                  ? "You cannot deactivate your own account"
+                                  : field.value
+                                    ? "Account is active"
+                                    : "Account is deactivated"}
                               </FormDescription>
                             </div>
                             <FormControl>
                               <Switch
                                 checked={field.value}
                                 onCheckedChange={field.onChange}
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || isEditingSelf}
                               />
                             </FormControl>
                           </FormItem>
