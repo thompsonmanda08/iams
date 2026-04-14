@@ -422,6 +422,7 @@ export function CreateOrUpdateArea({
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
     saveAuditableAreaMutation.mutate({
+      ...(areaId ? { id: areaId } : {}),
       ...formData,
       onSuccess: () => {
         setOpenModal?.(false);
