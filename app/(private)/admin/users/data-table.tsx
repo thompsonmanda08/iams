@@ -58,6 +58,7 @@ import SearchField from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { useTableSearch } from "@/hooks/use-table-search";
 import CreateUserForm from "@/app/dashboard/system-configs/_components/create-user-dialog";
+import { useSession } from "@/store/session-store";
 
 type Pagination = {
   total: number;
@@ -78,7 +79,8 @@ const getColumns = (
   onToggleStatus: (id: string, isActive: boolean) => void,
   onEdit: (user: User) => void,
   onResetPassword: (id: string) => void,
-  onViewProfile: (id: string) => void
+  onViewProfile: (id: string) => void,
+  currentUserId?: string
 ): ColumnDef<User>[] => [
   {
     id: "#",
@@ -195,20 +197,31 @@ const getColumns = (
                 <TimerReset className="h-4 w-4" />
                 Reset Password
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggleStatus(user.id, !user.is_active)}>
+              <DropdownMenuItem
+                onClick={() => {
+                  if (user.id === currentUserId && user.is_active) return;
+                  onToggleStatus(user.id, !user.is_active);
+                }}
+                disabled={user.id === currentUserId && user.is_active}>
                 {!user.is_active ? (
                   <ShieldCheck className="h-4 w-4" />
                 ) : (
                   <ShieldX className="h-4 w-4" />
                 )}
-                {user.is_active ? "Deactivate" : "Activate"} Account
+                {user.id === currentUserId && user.is_active
+                  ? "Cannot deactivate own account"
+                  : `${user.is_active ? "Deactivate" : "Activate"} Account`}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => onDelete(user.id)}
+                onClick={() => {
+                  if (user.id === currentUserId) return;
+                  onDelete(user.id);
+                }}
+                disabled={user.id === currentUserId}
                 className="text-destructive hover:bg-destructive/10 focus:text-destructive">
                 <Trash2 className="text-destructive h-4 w-4" />
-                Delete User
+                {user.id === currentUserId ? "Cannot delete own account" : "Delete User"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -224,6 +237,7 @@ export default function UsersDataTable({
 }: UsersDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user: currentUser } = useSession();
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [selectedStatus, setSelectedStatus] = React.useState("all");
@@ -277,6 +291,10 @@ export default function UsersDataTable({
   };
 
   const handleDeleteClick = (id: string) => {
+    if (id === currentUser?.id) {
+      notify({ description: "You cannot delete your own account", type: "warning" });
+      return;
+    }
     const user = data.find((u) => u.id === id);
     if (user) {
       setDeleteDialog({
@@ -288,6 +306,10 @@ export default function UsersDataTable({
   };
 
   const handleToggleStatusClick = (id: string, activate: boolean) => {
+    if (id === currentUser?.id && !activate) {
+      notify({ description: "You cannot deactivate your own account", type: "warning" });
+      return;
+    }
     const user = data.find((u) => u.id === id);
     if (user) {
       setToggleStatusDialog({
@@ -374,7 +396,8 @@ export default function UsersDataTable({
     handleToggleStatusClick,
     handleEditClick,
     handleResetPasswordClick,
-    handleViewProfile
+    handleViewProfile,
+    currentUser?.id
   );
 
   const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: searchFilteredData } =

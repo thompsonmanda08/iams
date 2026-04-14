@@ -54,6 +54,7 @@ import CreateUserForm from "../_components/create-user-dialog";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useTableSearch } from "@/hooks/use-table-search";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSession } from "@/store/session-store";
 
 type Pagination = {
   total: number;
@@ -73,7 +74,8 @@ const getColumns = (
   onToggleStatus: (id: string, isActive: boolean) => void,
   onEdit: (user: User) => void,
   onResetPassword: (id: string) => void,
-  onViewProfile: (id: string) => void
+  onViewProfile: (id: string) => void,
+  currentUserId?: string
 ): ColumnDef<User>[] => [
   {
     id: "#",
@@ -191,14 +193,20 @@ const getColumns = (
                 Reset Password
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onToggleStatus(user.id, !user.is_active)}
+                onClick={() => {
+                  if (user.id === currentUserId && user.is_active) return;
+                  onToggleStatus(user.id, !user.is_active);
+                }}
+                disabled={user.id === currentUserId && user.is_active}
                 className={user.is_active ? "text-destructive focus:text-destructive" : ""}>
                 {!user.is_active ? (
                   <ShieldCheck className="h-4 w-4" />
                 ) : (
                   <ShieldX className="text-destructive h-4 w-4" />
                 )}
-                {user.is_active ? "Deactivate" : "Activate"} Account
+                {user.id === currentUserId && user.is_active
+                  ? "Cannot deactivate own account"
+                  : `${user.is_active ? "Deactivate" : "Activate"} Account`}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -215,6 +223,7 @@ export default function UsersDataTable({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { checkPermission } = usePermissions();
+  const { user: currentUser } = useSession();
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [activeTab, setActiveTab] = React.useState<"active" | "inactive">("active");
@@ -240,6 +249,10 @@ export default function UsersDataTable({
 
   const handleToggleStatusClick = (id: string, activate: boolean) => {
     if (!checkPermission("USER_MGMT", "can_edit")) return;
+    if (id === currentUser?.id && !activate) {
+      notify({ description: "You cannot deactivate your own account", type: "warning" });
+      return;
+    }
     const user = data.find((u) => u.id === id);
     if (user) {
       setToggleStatusDialog({
@@ -342,7 +355,8 @@ export default function UsersDataTable({
     handleToggleStatusClick,
     handleEditClick,
     handleResetPasswordClick,
-    handleViewProfile
+    handleViewProfile,
+    currentUser?.id
   );
 
   const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: filteredUsers } = useTableSearch<User>({
