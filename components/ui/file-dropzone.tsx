@@ -15,6 +15,7 @@ import { twMerge } from "tailwind-merge";
 import { MAX_FILE_SIZE, staggerContainerItemVariants } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import Loader from "./loader";
+import { Progress } from "./progress";
 
 const variants = {
   base: cn(
@@ -106,11 +107,39 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
       isLoading = false,
       showPreview = false,
       isUploaded = false,
-      preview = ""
+      preview = "",
+      uploadProgress: externalProgress
     },
     ref
   ) => {
     const [imagePreview, setImagePreview] = React.useState(preview);
+    const [validationError, setValidationError] = React.useState<string | undefined>();
+    const [validatedFile, setValidatedFile] = React.useState<File | null>(null);
+    const [simulatedProgress, setSimulatedProgress] = React.useState(0);
+
+    // Simulate upload progress when isLoading and no external progress is provided
+    React.useEffect(() => {
+      if (!isLoading) {
+        setSimulatedProgress(0);
+        return;
+      }
+
+      // Start at 0 and ramp up quickly at first, then slow down
+      setSimulatedProgress(5);
+      const intervals = [
+        setTimeout(() => setSimulatedProgress(15), 200),
+        setTimeout(() => setSimulatedProgress(30), 500),
+        setTimeout(() => setSimulatedProgress(50), 1000),
+        setTimeout(() => setSimulatedProgress(65), 1800),
+        setTimeout(() => setSimulatedProgress(78), 3000),
+        setTimeout(() => setSimulatedProgress(88), 5000),
+        setTimeout(() => setSimulatedProgress(93), 8000),
+      ];
+
+      return () => intervals.forEach(clearTimeout);
+    }, [isLoading]);
+
+    const uploadProgress = externalProgress ?? simulatedProgress;
 
     const imageUrl = React.useMemo(() => {
       if (typeof value === "string") {
@@ -143,6 +172,9 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
         if (file) {
           // Enhanced security validation
           try {
+            setValidationError(undefined);
+            setValidatedFile(null);
+
             // Check for executable file extensions
             const dangerousExtensions = [
               "exe",
@@ -166,7 +198,7 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
 
             const extension = file.name.split(".").pop()?.toLowerCase();
             if (extension && dangerousExtensions.includes(extension)) {
-              console.error("Executable files are not allowed");
+              setValidationError("Executable files are not allowed.");
               return;
             }
 
@@ -186,20 +218,20 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
 
             const validExtensions = allowedMimeTypes[file.type];
             if (!validExtensions || !extension || !validExtensions.includes(extension)) {
-              console.error("File type and extension do not match");
+              setValidationError("File type and extension do not match.");
               return;
             }
 
             // Check file size
             if (file.size > MAX_FILE_SIZE) {
-              console.error(`File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+              setValidationError(`The file is too large. Max size is ${formatFileSize(MAX_FILE_SIZE)}.`);
               return;
             }
 
             // Basic file content validation (check first few bytes)
-            const firstBytes = await readFileBytes(file, 8);
+            const firstBytes = await readFileBytes(file, 12);
             if (!isValidFileSignature(firstBytes, file.type)) {
-              console.error("Invalid file signature detected");
+              setValidationError("Invalid file type. The file content does not match its extension.");
               return;
             }
 
@@ -209,9 +241,10 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
 
             const imagePreview = fileObject?.preview;
 
+            setValidatedFile(file);
             void onChange?.(file, imagePreview);
           } catch (error) {
-            console.error("File validation failed:", error);
+            setValidationError("File validation failed. Please try another file.");
           }
         }
       },
@@ -223,6 +256,8 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
     React.useImperativeHandle(ref, () => ({
       clear() {
         setImagePreview("");
+        setValidationError(undefined);
+        setValidatedFile(null);
         onChange?.(undefined, undefined);
       }
     }));
@@ -262,12 +297,14 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
     }, [fileRejections, dropzoneOptions]);
 
     React.useEffect(() => {
-      if (acceptedFiles[0] || file) {
-        setImagePreview(URL.createObjectURL(acceptedFiles[0] || file));
+      if (validatedFile) {
+        setImagePreview(URL.createObjectURL(validatedFile));
+      } else if (file) {
+        setImagePreview(URL.createObjectURL(file));
       } else {
         setImagePreview(preview);
       }
-    }, [value, acceptedFiles, file]);
+    }, [value, validatedFile, file, preview]);
 
     return (
       <div>
@@ -283,19 +320,17 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
           <input ref={ref} {...getInputProps()} />
 
           {isLoading ? (
-            // Image Preview
-            <Loader
-              isLandscape
-              aria-label="Loading..."
-              className={"items-center"}
-              classNames={{
-                wrapper: "min-w-full min-h-full p-2.5 items-center",
-                text: "mt-0 font-medium text-sm",
-                spinner: "w-7 h-7"
-              }}
-              loadingText="Uploading..."
-            />
-          ) : showPreview && (imagePreview || acceptedFiles[0] || file) ? (
+            <div className="flex w-full flex-col items-center gap-3 px-6 py-4">
+              <CloudArrowUpIcon className="h-8 w-8 animate-pulse text-gray-400" />
+              <div className="w-full max-w-xs space-y-1.5">
+                <Progress value={uploadProgress} className="h-2" />
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>Uploading...</span>
+                  <span className="font-medium">{Math.round(uploadProgress)}%</span>
+                </div>
+              </div>
+            </div>
+          ) : showPreview && (imagePreview || validatedFile || file) ? (
             <div className="aspect-video max-h-40 w-80">
               <img
                 alt={acceptedFiles[0]?.name || file?.name}
@@ -303,7 +338,7 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
                 src={imagePreview || imageUrl || ""}
               />
             </div>
-          ) : (isUploaded && file) || acceptedFiles[0] ? (
+          ) : (isUploaded && file) || validatedFile ? (
             // ********************* FILE UPLOAD PREVIEW ******************* //
             <div
               className={cn("relative flex flex-col items-center py-2", {
@@ -327,7 +362,7 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
                 )}
                 <span className="text-primary flex w-full max-w-sm items-center gap-2 truncate text-xs font-semibold lg:text-sm">
                   {isLandscape && <CheckCircleIcon className="h-6 w-6 text-green-500" />}{" "}
-                  {acceptedFiles[0]?.name || file?.name}
+                  {validatedFile?.name || file?.name}
                 </span>
                 {/* // ONLY SHOWS ON THE UPRIGHT COMPONENT */}
                 {/* {!isLandscape && (
@@ -351,8 +386,11 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
                   "flex-row gap-2 font-medium": isLandscape
                 })}>
                 <CloudArrowUpIcon className={cn("mb-2 h-12 w-12", { "m-0 w-8": isLandscape })} />
-                <div className="text-gray-400">
-                  Drag & Drop to Upload - ({formatFileSize(MAX_FILE_SIZE)}) Max.
+                <div className="text-center text-gray-400">
+                  <span>Drag & Drop or <span className="text-primary font-medium underline">browse</span></span>
+                  <p className="mt-1 text-[11px] text-gray-400/80">
+                    {formatFileSize(MAX_FILE_SIZE)} max
+                  </p>
                 </div>
               </div>
               {/* {!isLandscape && (
@@ -371,6 +409,9 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
             <div
               className="group absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 transform"
               onClick={(e) => {
+                setValidatedFile(null);
+                setImagePreview("");
+                setValidationError(undefined);
                 void onChange?.(undefined);
                 e.stopPropagation();
               }}>
@@ -381,7 +422,7 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
           )}
         </div>
         {/* Error Text */}
-        {errorMessage && (
+        {(errorMessage || validationError) && (
           <motion.span
             className={cn("mt-1 ml-1 text-sm text-red-500")}
             whileInView={{
@@ -389,7 +430,7 @@ export const SingleFileDropzone = React.forwardRef<any, DropZoneProps>(
               opacity: [0, 1],
               transition: { duration: 0.3 }
             }}>
-            {errorMessage}
+            {errorMessage || validationError}
           </motion.span>
         )}
       </div>
@@ -425,6 +466,7 @@ type DropZoneProps = {
   showPreview?: boolean;
   isUploaded?: boolean;
   preview?: string;
+  uploadProgress?: number;
 };
 
 SingleFileDropzone.displayName = "SingleFileDropzone";
@@ -472,7 +514,13 @@ function isValidFileSignature(bytes: Uint8Array, mimeType: string): boolean {
     case "image/png":
       return hex.startsWith("89504e47"); // PNG
     case "image/webp":
-      return hex.startsWith("52494646") && hex.slice(16, 24) === "57454250"; // RIFF...WEBP
+      return hex.startsWith("52494646") && hex.length >= 24 && hex.slice(16, 24) === "57454250"; // RIFF....WEBP
+    case "image/gif":
+      return hex.startsWith("474946383961") || hex.startsWith("474946383761"); // GIF89a or GIF87a
+    case "image/svg+xml":
+      return true; // SVG is XML text, no specific magic number
+    case "image/avif":
+      return hex.slice(8, 16) === "66747970"; // ....ftyp (AVIF is ISOBMFF-based)
     case "application/vnd.ms-excel":
       return hex.startsWith("d0cf11e0") || hex.startsWith("09082100") || hex.startsWith("fdffffff"); // Excel .xls
     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
