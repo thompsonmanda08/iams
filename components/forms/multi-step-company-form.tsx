@@ -663,6 +663,9 @@ export function MultiStepCompanyForm({
                   }
                 }}
               />
+              <p className="text-muted-foreground mt-1 text-xs">
+                Supported formats: PNG, JPG, JPEG, WebP, GIF, SVG, AVIF
+              </p>
               {/* {formData.logo_url && (
                   <img
                     src={formData.logo_url}
