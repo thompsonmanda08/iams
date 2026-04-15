@@ -119,6 +119,12 @@ function FieldRowTable({
 
   const remove = (id: string) => onChange(rows.filter((r) => r._id !== id));
 
+  // Compute duplicate keys for inline warnings
+  const keyCounts = new Map<string, number>();
+  for (const r of rows) {
+    if (r.key) keyCounts.set(r.key, (keyCounts.get(r.key) ?? 0) + 1);
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -132,13 +138,28 @@ function FieldRowTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((row) => (
+        {rows.map((row) => {
+          const isDuplicate = row.key ? (keyCounts.get(row.key) ?? 0) > 1 : false;
+          const isEmptyKey = !!row.name.trim() && !row.key;
+          return (
           <TableRow key={row._id}>
             {/* Key — auto-derived badge */}
             <TableCell>
-              <Badge variant="secondary" className="font-mono text-xs">
-                {row.key || "—"}
-              </Badge>
+              <div className="flex flex-col gap-1">
+                <Badge
+                  variant={isDuplicate || isEmptyKey ? "destructive" : "secondary"}
+                  className="font-mono text-xs">
+                  {row.key || "—"}
+                </Badge>
+                {isDuplicate && (
+                  <span className="text-destructive text-[10px]">Duplicate key</span>
+                )}
+                {isEmptyKey && (
+                  <span className="text-destructive text-[10px]">
+                    Name must contain letters or numbers
+                  </span>
+                )}
+              </div>
             </TableCell>
 
             {/* Display Name */}
@@ -192,7 +213,8 @@ function FieldRowTable({
               </Button>
             </TableCell>
           </TableRow>
-        ))}
+          );
+        })}
       </TableBody>
     </Table>
   );
@@ -281,6 +303,10 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
   const router = useRouter();
   const { createConfigMutation, updateConfigMutation } = useGeneralWorkPaperConfigMutations();
 
+  // Refs for values read inside the useEffect without being deps
+  const isEditingRef = useRef(isEditing);
+  isEditingRef.current = isEditing;
+
   // Track the last-synced config id so we only reset on genuine server-side changes
   const lastSyncedConfigId = useRef<string | null>(initialConfigId);
 
@@ -290,18 +316,39 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
     const { existingConfigId: id, columns: cols, keys: ks } = parseConfigs(configs);
 
     // Skip reset if user is editing and the config identity hasn't changed
-    if (isEditing && id === lastSyncedConfigId.current) return;
+    if (isEditingRef.current && id === lastSyncedConfigId.current) return;
 
     lastSyncedConfigId.current = id;
     setExistingConfigId(id);
     setColumns(cols);
     setKeys(ks);
     setIsEditing(!id);
-  }, [configs]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [configs]);
 
   const isPending = createConfigMutation.isPending || updateConfigMutation.isPending;
 
-  const isValid = columns.some((c) => c.name.trim()) && keys.some((k) => k.name.trim());
+  // Validation: at least one named column & key, all named rows must produce a non-empty key,
+  // and no duplicate keys within each section
+  const filledColumns = columns.filter((c) => c.name.trim());
+  const filledKeys = keys.filter((k) => k.name.trim());
+  const hasDuplicateKeys = (rows: FieldRow[]) => {
+    const keySet = new Set<string>();
+    for (const r of rows) {
+      if (!r.key) continue;
+      if (keySet.has(r.key)) return true;
+      keySet.add(r.key);
+    }
+    return false;
+  };
+  const hasEmptyKey = (rows: FieldRow[]) => rows.some((r) => r.name.trim() && !r.key);
+
+  const isValid =
+    filledColumns.length > 0 &&
+    filledKeys.length > 0 &&
+    !hasEmptyKey(filledColumns) &&
+    !hasEmptyKey(filledKeys) &&
+    !hasDuplicateKeys(filledColumns) &&
+    !hasDuplicateKeys(filledKeys);
 
   const handleEdit = useCallback(() => {
     setSnapshot({ columns, keys });
