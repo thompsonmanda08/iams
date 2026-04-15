@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -281,14 +281,23 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
   const router = useRouter();
   const { createConfigMutation, updateConfigMutation } = useGeneralWorkPaperConfigMutations();
 
+  // Track the last-synced config id so we only reset on genuine server-side changes
+  const lastSyncedConfigId = useRef<string | null>(initialConfigId);
+
   // Sync state when the server component re-renders with fresh configs (after router.refresh())
+  // but NOT while the user is actively editing — that would discard their in-progress work.
   useEffect(() => {
     const { existingConfigId: id, columns: cols, keys: ks } = parseConfigs(configs);
+
+    // Skip reset if user is editing and the config identity hasn't changed
+    if (isEditing && id === lastSyncedConfigId.current) return;
+
+    lastSyncedConfigId.current = id;
     setExistingConfigId(id);
     setColumns(cols);
     setKeys(ks);
     setIsEditing(!id);
-  }, [configs]);
+  }, [configs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isPending = createConfigMutation.isPending || updateConfigMutation.isPending;
 
@@ -327,6 +336,7 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
         { id: existingConfigId, ...payload },
         {
           onSuccess: () => {
+            lastSyncedConfigId.current = existingConfigId;
             setIsEditing(false);
             router.refresh();
           }
@@ -338,6 +348,8 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
         { template_id: templateId, ...payload },
         {
           onSuccess: () => {
+            // Allow the useEffect to pick up the new config from the server
+            lastSyncedConfigId.current = null;
             router.refresh();
           }
         }
