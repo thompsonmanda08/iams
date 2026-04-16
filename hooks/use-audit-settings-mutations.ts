@@ -72,7 +72,7 @@ export const useIndicativeTargetsMutations = () => {
   const saveIndicativeTargetMutation = useMutation({
     mutationFn: (payload: any) => {
       const data = payload.data || payload;
-      return data.id
+      return data?.id
         ? updateIndicativeTarget(data)
         : createIndicativeTarget(data);
     },

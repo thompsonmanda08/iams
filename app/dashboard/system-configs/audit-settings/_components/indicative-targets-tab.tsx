@@ -380,6 +380,7 @@ export function CreateOrUpdate({
     e.preventDefault();
     saveIndicativeTargetMutation.mutate({
       ...formData,
+      id: selectedId,
       onSuccess: () => {
         setOpenModal(false);
       },

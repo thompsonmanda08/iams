@@ -612,7 +612,6 @@ export async function updateIndicativeTarget(data: any): Promise<APIResponse> {
   if (!data.id) {
     return handleBadRequest("ID is required");
   }
-
   const url = `/api/v1/audit/indicative-targets/${data.id}`;
 
   try {

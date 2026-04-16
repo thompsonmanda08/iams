@@ -416,7 +416,7 @@ function WorkflowCard({
           onInteractOutside={(e) => {
             e.preventDefault();
           }}
-          className="max-w-2xl">
+          className="max-w-2xl flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-xl">{workflow.name}</DialogTitle>
             <DialogDescription className="mt-2 text-sm text-slate-600 dark:text-slate-400">
