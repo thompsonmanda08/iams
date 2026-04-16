@@ -198,7 +198,8 @@ export async function updateStrategicPillar(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        ...data
+        ...data,
+        is_active: data.is_active ?? true
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -420,7 +421,8 @@ export async function updateFindingsCategory(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        ...data
+        ...data,
+        is_active: data.is_active ?? true
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -519,7 +521,8 @@ export async function updateProcessActivity(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        ...data
+        ...data,
+        is_active: data.is_active ?? true
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -617,7 +620,8 @@ export async function updateIndicativeTarget(data: any): Promise<APIResponse> {
       url,
       method: "PUT",
       data: {
-        ...data
+        ...data,
+        is_active: data.is_active ?? true
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings");
@@ -790,7 +794,8 @@ export async function updateGeneralWorkPaperConfig(
       method: "PUT",
       data: {
         columns: data.columns.map((col, i) => ({ ...col, order: i + 1 })),
-        keys: data.keys.map((k, i) => ({ ...k, order: i + 1 }))
+        keys: data.keys.map((k, i) => ({ ...k, order: i + 1 })),
+        is_active: true
       }
     });
     revalidatePath("/dashboard/system-configs/audit-settings", "layout");

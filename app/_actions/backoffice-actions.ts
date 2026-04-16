@@ -55,12 +55,16 @@ export async function updateCountry(data: {
   name?: string;
   code?: string;
   region?: string;
+  is_active?: boolean;
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: "/api/v1/countries/update",
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     return successResponse(response.data.data, "Country updated successfully");
@@ -211,7 +215,10 @@ export async function updateOrganization(data: Company): Promise<APIResponse> {
     const response = await authenticatedApiClient({
       url: `/api/v1/backoffice/organizations/${data.id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     return successResponse(response.data.data, "Organization updated successfully");

@@ -39,7 +39,10 @@ export async function updateSmtpConfig(id: string, data: any): Promise<APIRespon
     const response = await authenticatedApiClient({
       url: `/api/v1/smtp-configs`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/system-configs/mail-settings");

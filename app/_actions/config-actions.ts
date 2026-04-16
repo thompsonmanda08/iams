@@ -276,7 +276,14 @@ export async function updateDepartment(data: Department): Promise<APIResponse> {
   const url = `/api/v1/departments/${data?.id}`;
 
   try {
-    const response = await authenticatedApiClient({ url, method: "PUT", data });
+    const response = await authenticatedApiClient({ 
+      url, 
+      method: "PUT", 
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
+    });
     revalidatePath("/dashboard/system-configs/departments");
     return successResponse(response?.data, "Department updated successfully");
   } catch (error: Error | any) {
@@ -683,7 +690,8 @@ export async function updateRole(role: {
       data: {
         name: role.name,
         code: role.code,
-        description: role.description
+        description: role.description,
+        is_active: role.is_active ?? true
       }
     });
     revalidatePath("/dashboard/system-configs/departments");
@@ -1013,7 +1021,10 @@ export async function updateRiskCategory(
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-categories/${id}`,
-      data: input,
+      data: {
+        ...input,
+        is_active: input.is_active ?? true
+      },
       method: "PUT"
     });
     revalidatePath("/dashboard/system-configs/risk-settings");
@@ -1083,13 +1094,16 @@ export async function createRiskMatrix(data: {
 
 export async function updateRiskMatrix(
   id: string,
-  data: Partial<{ name: string; description: string; is_default: boolean }>
+  data: Partial<{ name: string; description: string; is_default: boolean; is_active: boolean }>
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/matrix-configs/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
     return successResponse(response.data);
@@ -1166,13 +1180,16 @@ export async function createRiskResponse(data: {
 
 export async function updateRiskResponse(
   id: string,
-  data: Partial<{ name: string; description: string }>
+  data: Partial<{ name: string; description: string; is_active: boolean }>
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-responses/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
     return successResponse(response.data);
@@ -1243,13 +1260,16 @@ export async function createScale(
 
 export async function updateScale(
   id: string,
-  data: Partial<{ name: string; description: string }>
+  data: Partial<{ name: string; description: string; is_active: boolean }>
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/matrix-scales/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
     return successResponse(response.data);
@@ -1331,13 +1351,17 @@ export async function updateRating(
     max_score: number;
     color_hex: string;
     description: string;
+    is_active: boolean;
   }>
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/rating-levels/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
     return successResponse(response.data);
@@ -1417,13 +1441,17 @@ export async function updateBusinessProcess(
     name: string;
     description: string | null;
     parent_id: string | null;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/business-processes/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
     revalidatePath("/dashboard/system-configs/risk-configs");
     return successResponse(response.data.data);
@@ -1503,13 +1531,17 @@ export async function updateRiskCause(
     name: string;
     description: string | null;
     parent_id: string | null;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-causes/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/system-configs/risk-configs");
@@ -1592,13 +1624,17 @@ export async function updateRiskAppetiteStatus(
     description: string;
     value: number;
     condition: string;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/risk-appetite-statuses/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/system-configs/risk-settings");
@@ -1687,13 +1723,17 @@ export async function updateEffectivenessLevel(
     name: string;
     description: string;
     value: number;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/effectiveness-levels/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/system-configs/risk-settings");
@@ -1784,13 +1824,17 @@ export async function updateResidualRiskRating(
     description: string;
     value: number;
     condition: string;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-configs/residual-risk-ratings/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/system-configs/risk-settings");
@@ -1894,7 +1938,10 @@ export async function updateReportGuide(
     const response = await authenticatedApiClient({
       url: `/api/v1/report-guides/${id}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/system-configs/report-guides-settings");
@@ -1983,7 +2030,10 @@ export async function updateRiskFindingGrading(
     const response = await authenticatedApiClient({
       url: `/api/v1/report-guides/${reportGuideId}/risk-findings-grading/${gradingId}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/report-guides");
@@ -2074,7 +2124,10 @@ export async function updateControlsAssessmentGuide(
     const response = await authenticatedApiClient({
       url: `/api/v1/report-guides/${reportGuideId}/controls-assessment-guide/${assessmentId}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/report-guides");
@@ -2165,7 +2218,10 @@ export async function updateAuditCriteriaRating(
     const response = await authenticatedApiClient({
       url: `/api/v1/report-guides/${reportGuideId}/audit-criteria-rating/${ratingId}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/report-guides");

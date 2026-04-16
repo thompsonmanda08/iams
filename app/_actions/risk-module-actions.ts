@@ -595,12 +595,15 @@ export async function createRiskCategory(input: RiskCategoryInput): Promise<APIR
  */
 export async function updateRiskCategory(
   id: string,
-  input: Partial<RiskCategoryInput>
+  data: Partial<RiskCategoryInput>
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
       url: `/api/v1/risk-categories/${id}`,
-      data: input,
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      },
       method: "PUT"
     });
     revalidatePath("/dashboard/(modules)/risks");
