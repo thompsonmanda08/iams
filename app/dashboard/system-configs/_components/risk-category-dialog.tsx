@@ -103,7 +103,8 @@ export function RiskCategoryFormDialog({
         name: formData.name.trim(),
         code: formData.code.trim().toUpperCase(),
         description: formData.description?.trim() || "",
-        sort_order: formData.sort_order
+        sort_order: formData.sort_order,
+        is_active: formData.is_active
       };
 
       let response;
@@ -114,7 +115,10 @@ export function RiskCategoryFormDialog({
       }
 
       if (response.success) {
-        notify({ description: `Risk category ${mode === "edit" ? "updated" : "created"} successfully`, type: "success" });
+        notify({
+          description: `Risk category ${mode === "edit" ? "updated" : "created"} successfully`,
+          type: "success"
+        });
         onSuccess();
         onOpenChange(false);
       } else {

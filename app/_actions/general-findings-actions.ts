@@ -103,6 +103,7 @@ export async function updateGeneralFinding(
     evidence?: string;
     status?: string;
     is_marked_complete?: boolean;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   if (!findingId) {
@@ -112,7 +113,14 @@ export async function updateGeneralFinding(
   const url = `/api/v1/general-work-paper-findings/${findingId}`;
 
   try {
-    const response = await authenticatedApiClient({ method: "PUT", url, data });
+    const response = await authenticatedApiClient({ 
+      method: "PUT", 
+      url, 
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
+    });
 
     revalidatePath("/dashboard/audit/plans", "layout");
 

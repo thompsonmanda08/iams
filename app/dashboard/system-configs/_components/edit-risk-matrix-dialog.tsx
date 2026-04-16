@@ -22,6 +22,7 @@ type RiskMatrix = {
   name: string;
   description: string;
   is_default: boolean;
+  is_active: boolean;
 };
 
 type EditRiskMatrixDialogProps = {
@@ -40,7 +41,8 @@ export function EditRiskMatrixDialog({
   const [formData, setFormData] = useState({
     name: matrix.name,
     description: matrix.description,
-    is_default: matrix.is_default
+    is_default: matrix.is_default,
+    is_active: matrix.is_active
   });
 
   const { mutate: updateMatrix, isPending } = useUpdateRiskMatrixMutation({
