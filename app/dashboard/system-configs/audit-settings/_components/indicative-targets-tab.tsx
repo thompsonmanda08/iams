@@ -214,7 +214,7 @@ export default function IndicativeTargetsTab() {
                     <TableRow key={item.id} className="cursor-pointer">
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Target className="text-muted-foreground h-4 w-4" />
+                          <Target className="text-muted-foreground h-4 w-4 flex-none" />
                           <span className="font-medium">{item.name}</span>
                         </div>
                       </TableCell>
