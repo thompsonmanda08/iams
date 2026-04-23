@@ -379,28 +379,31 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
     };
 
     if (existingConfigId) {
-      updateConfigMutation.mutate(
-        { id: existingConfigId, ...payload },
-        {
-          onSuccess: () => {
-            lastSyncedConfigId.current = existingConfigId;
-            setIsEditing(false);
-            router.refresh();
-          }
+      // `onSuccess` must live on the payload, not the mutate options. The hook
+      // only forwards payload.onSuccess when response.success === true; the
+      // options.onSuccess would fire on ANY resolved promise (including
+      // business-logic errors from the server action), causing router.refresh()
+      // to blow away the user's edits on error.
+      updateConfigMutation.mutate({
+        id: existingConfigId,
+        ...payload,
+        onSuccess: () => {
+          lastSyncedConfigId.current = existingConfigId;
+          setIsEditing(false);
+          router.refresh();
         }
-      );
+      });
     } else {
       if (!templateId) return;
-      createConfigMutation.mutate(
-        { template_id: templateId, ...payload },
-        {
-          onSuccess: () => {
-            // Allow the useEffect to pick up the new config from the server
-            lastSyncedConfigId.current = null;
-            router.refresh();
-          }
+      createConfigMutation.mutate({
+        template_id: templateId,
+        ...payload,
+        onSuccess: () => {
+          // Allow the useEffect to pick up the new config from the server
+          lastSyncedConfigId.current = null;
+          router.refresh();
         }
-      );
+      });
     }
   };
 
