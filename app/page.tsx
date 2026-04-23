@@ -13,6 +13,11 @@ export default async function HomePage() {
   const { isAuthenticated, session } = await verifySession();
 
   if (isAuthenticated) {
+    // MFA guard: a password-only session must not be routed to a dashboard.
+    if (session?.mfa_required && !session?.mfa_verified) {
+      redirect("/otp");
+    }
+
     // Redirect authenticated users to their dashboard
     if (session?.user_type === "BACKOFFICE_ADMIN") {
       redirect("/admin/home");

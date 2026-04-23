@@ -110,6 +110,7 @@ export async function createAuthSession({
   accessToken,
   user_type,
   user_id,
+  username,
   change_password,
   mfa_required,
   organization_id,
@@ -118,6 +119,7 @@ export async function createAuthSession({
   accessToken: string;
   user_type: UserType;
   user_id?: string;
+  username?: string;
   change_password?: boolean;
   mfa_required?: boolean;
   organization_id?: string;
@@ -133,6 +135,7 @@ export async function createAuthSession({
     accessToken: accessToken || "",
     user_type,
     user_id,
+    username,
     change_password,
     mfa_required,
     organization_id,

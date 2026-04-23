@@ -31,7 +31,12 @@ export default async function DashLayout({
 
   if (!isAuthenticated) return redirect("/login");
 
-  if (user_type !== "BACKOFFICE_ADMIN") { 
+  // MFA guard: a password-only session must not reach protected routes by URL typing.
+  if (session?.mfa_required && !session?.mfa_verified) {
+    return redirect("/otp");
+  }
+
+  if (user_type !== "BACKOFFICE_ADMIN") {
     return redirect("/dashboard/home");
   }
 

@@ -17,10 +17,16 @@ import { verifyOTP, resendOTP } from "@/app/_actions/auth-actions";
 
 import { Card } from "@/components/ui/card";
 
-export function OTPForm({ className, ...props }: React.ComponentProps<"div">) {
+type OTPFormProps = React.ComponentProps<"div"> & {
+  sessionUsername?: string;
+};
+
+export function OTPForm({ className, sessionUsername, ...props }: OTPFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const username = searchParams.get("username") || "";
+  // Session cookie is the source of truth; query param kept as a fallback for the
+  // existing login flow and any bookmarked links.
+  const username = sessionUsername || searchParams.get("username") || "";
 
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);

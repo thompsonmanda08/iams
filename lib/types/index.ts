@@ -54,6 +54,7 @@ export type AuthSession = JWTPayload & {
   organization_id?: string;
   user_type?: UserType;
   user_id?: string;
+  username?: string;
   expiresAt?: Date;
   session_timeout?: number; // in minutes, as received from backend
   [x: string]: any;

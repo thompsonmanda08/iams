@@ -45,6 +45,7 @@ export async function loginUser({
       accessToken: session?.access_token,
       user_type: session?.user_type,
       user_id: session?.user?.id,
+      username, // needed server-side to redirect MFA-pending users back to /otp
       change_password: session?.change_password,
       mfa_required: session?.mfa_required,
       organization_id: session?.organization_id,
