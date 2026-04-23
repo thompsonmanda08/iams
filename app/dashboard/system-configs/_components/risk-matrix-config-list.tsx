@@ -26,6 +26,7 @@ type RiskMatrix = {
   name: string;
   description: string;
   is_default: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };

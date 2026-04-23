@@ -81,7 +81,7 @@ export function StepOne({
 
       <div className="grid gap-2">
         <Label htmlFor="description">
-          Description <span className="text-destructive">*</span>
+         Impact Description <span className="text-destructive">*</span>
         </Label>
         <Textarea
           id="description"

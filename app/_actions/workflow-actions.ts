@@ -196,6 +196,7 @@ export async function updateWorkflowState(
     display_order?: number;
     is_initial?: boolean;
     is_final?: boolean;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   if (!stateId) {
@@ -206,7 +207,10 @@ export async function updateWorkflowState(
     const response = await authenticatedApiClient({
       method: "PUT",
       url: `/api/v1/simple-workflows/states/${stateId}`,
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/workflow/manage");
@@ -301,6 +305,7 @@ export async function updateWorkflowTransition(
     from_status?: string;
     to_status?: string;
     required_role_id?: string;
+    is_active?: boolean;
   }
 ): Promise<APIResponse> {
   if (!transitionId) {
@@ -310,7 +315,14 @@ export async function updateWorkflowTransition(
   const url = `/api/v1/simple-workflow-transitions/${transitionId}`;
 
   try {
-    const response = await authenticatedApiClient({ method: "PUT", url, data });
+    const response = await authenticatedApiClient({ 
+      method: "PUT", 
+      url, 
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
+    });
 
     revalidatePath("/dashboard/workflow/manage");
     return successResponse(response.data, "Workflow transition updated successfully");

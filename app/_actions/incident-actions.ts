@@ -134,6 +134,7 @@ export async function updateIncident(
     department_id?: string;
     status?: string;
     materiality?: string;
+    is_active?: boolean;
     [key: string]: any;
   }
 ): Promise<APIResponse> {
@@ -141,7 +142,10 @@ export async function updateIncident(
     const response = await authenticatedApiClient({
       url: `/api/v1/incidents/${incidentId}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     revalidatePath("/dashboard/risks/incidents");

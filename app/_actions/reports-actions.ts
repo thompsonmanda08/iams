@@ -260,7 +260,10 @@ export async function updateReport(
     const response = await authenticatedApiClient({
       url: `/api/v1/reports/${reportId}`,
       method: "PUT",
-      data
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }
     });
 
     // Revalidate all report-related pages

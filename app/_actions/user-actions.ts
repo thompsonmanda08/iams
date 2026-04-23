@@ -142,7 +142,14 @@ export async function updateUser(id: string, data: Partial<User>): Promise<APIRe
   const url = `/api/v1/users/${id}`;
 
   try {
-    const response = await authenticatedApiClient({ url: url, data: data, method: "PUT" });
+    const response = await authenticatedApiClient({ 
+      url: url, 
+      data: {
+        ...data,
+        is_active: data.is_active ?? true
+      }, 
+      method: "PUT" 
+    });
     revalidatePath("/dashboard/system-configs/users");
     return successResponse(response.data.data || response.data, "User updated successfully");
   } catch (error) {
