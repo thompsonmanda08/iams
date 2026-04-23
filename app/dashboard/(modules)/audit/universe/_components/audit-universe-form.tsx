@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Save, Globe } from "lucide-react";
+import { Save, Globe, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -326,6 +326,54 @@ export default function AuditUniverseForm({
 
   const processActivitiesData = mode === "item" ? processActivitiesResponse?.data || [] : [];
 
+  // Prerequisites for creating a universe item. A prerequisite is "missing" only
+  // after its query has resolved with an empty list — checking `response !== undefined`
+  // avoids flashing the banner during initial load.
+  const missingPrerequisites = useMemo(() => {
+    if (mode !== "item") return [];
+    const checks = [
+      {
+        key: "departments",
+        label: "Departments",
+        loaded: departmentsResponse !== undefined,
+        empty: departments.length === 0,
+        href: "/dashboard/system-configs/setup?tab=departments"
+      },
+      {
+        key: "initiatives",
+        label: "Strategic Initiatives",
+        loaded: strategicInitiativesResponse !== undefined,
+        empty: strategicInitiativesData.length === 0,
+        href: "/dashboard/system-configs/audit-settings?tab=initiative"
+      },
+      {
+        key: "targets",
+        label: "Indicative Targets",
+        loaded: indicativeTargetsResponse !== undefined,
+        empty: indicativeTargetsData.length === 0,
+        href: "/dashboard/system-configs/audit-settings?tab=targets"
+      },
+      {
+        key: "kris",
+        label: "Key Risk Indicators (KRIs)",
+        loaded: KRIResponse !== undefined,
+        empty: KRI_Data.length === 0,
+        href: "/dashboard/risks/kri"
+      }
+    ];
+    return checks.filter((c) => c.loaded && c.empty);
+  }, [
+    mode,
+    departmentsResponse,
+    departments.length,
+    strategicInitiativesResponse,
+    strategicInitiativesData.length,
+    indicativeTargetsResponse,
+    indicativeTargetsData.length,
+    KRIResponse,
+    KRI_Data.length
+  ]);
+
   // Fetch universes dynamically for the dropdown
   const { data: universesResponse } = useUniverses({ page: 1, page_size: 1000 });
   const universesData = mode === "item" ? universesResponse?.data || universes : [];
@@ -577,6 +625,37 @@ export default function AuditUniverseForm({
         {/* Form Section - 2 columns */}
         <Card className="animate-fade-in grid h-full lg:col-span-2">
           <form onSubmit={handleItemSubmit} className="h-full p-6 sm:p-8">
+            {/* Prerequisites banner — shown when dependent configs are empty. */}
+            {missingPrerequisites.length > 0 && (
+              <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-500" />
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                      Configuration required
+                    </p>
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                      Universe items depend on the following system configurations. Set these up
+                      first to be able to select values for every required field below.
+                    </p>
+                  </div>
+                  <ul className="space-y-1">
+                    {missingPrerequisites.map((p) => (
+                      <li key={p.key} className="flex items-center gap-2 text-xs">
+                        <span className="text-amber-900 dark:text-amber-200">• {p.label}</span>
+                        <Link
+                          href={p.href}
+                          className="inline-flex items-center gap-1 font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-400">
+                          Configure
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {/* Header Section */}
             <div className="mb-8">
               <h3 className="text-foreground flex items-center gap-2 text-xl font-semibold">
