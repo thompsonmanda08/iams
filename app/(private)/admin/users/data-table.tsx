@@ -80,7 +80,7 @@ const getColumns = (
   onEdit: (user: User) => void,
   onResetPassword: (id: string) => void,
   onViewProfile: (id: string) => void,
-  currentUserId?: string
+  isCurrentUser: (u: User) => boolean
 ): ColumnDef<User>[] => [
   {
     id: "#",
@@ -199,29 +199,29 @@ const getColumns = (
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  if (user.id === currentUserId && user.is_active) return;
+                  if (isCurrentUser(user) && user.is_active) return;
                   onToggleStatus(user.id, !user.is_active);
                 }}
-                disabled={user.id === currentUserId && user.is_active}>
+                disabled={isCurrentUser(user) && user.is_active}>
                 {!user.is_active ? (
                   <ShieldCheck className="h-4 w-4" />
                 ) : (
                   <ShieldX className="h-4 w-4" />
                 )}
-                {user.id === currentUserId && user.is_active
+                {isCurrentUser(user) && user.is_active
                   ? "Cannot deactivate own account"
                   : `${user.is_active ? "Deactivate" : "Activate"} Account`}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
-                  if (user.id === currentUserId) return;
+                  if (isCurrentUser(user)) return;
                   onDelete(user.id);
                 }}
-                disabled={user.id === currentUserId}
+                disabled={isCurrentUser(user)}
                 className="text-destructive hover:bg-destructive/10 focus:text-destructive">
                 <Trash2 className="text-destructive h-4 w-4" />
-                {user.id === currentUserId ? "Cannot delete own account" : "Delete User"}
+                {isCurrentUser(user) ? "Cannot delete own account" : "Delete User"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -237,7 +237,26 @@ export default function UsersDataTable({
 }: UsersDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user: currentUser } = useSession();
+  const { user: currentUser, session } = useSession();
+  // Prefer the JWT-backed user_id (always set at login) over the React-Query-backed
+  // currentUser.id (may be undefined during initial load). This closes the window
+  // where the guard briefly lets a user act on their own row before their profile
+  // finishes loading.
+  const currentUserId = session?.user_id ?? currentUser?.id;
+  // Fallback identity fields: guard against the case where the users-list endpoint
+  // returns IDs that don't match the login-response ID. Username/email uniquely identify.
+  const currentLoginIdentifier = (session?.username ?? currentUser?.email ?? "").toLowerCase();
+  const isCurrentUser = React.useCallback(
+    (u: User) => {
+      if (currentUserId && u.id === currentUserId) return true;
+      if (!currentLoginIdentifier) return false;
+      return (
+        u.email?.toLowerCase() === currentLoginIdentifier ||
+        u.username?.toLowerCase() === currentLoginIdentifier
+      );
+    },
+    [currentUserId, currentLoginIdentifier]
+  );
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [selectedStatus, setSelectedStatus] = React.useState("all");
@@ -291,11 +310,11 @@ export default function UsersDataTable({
   };
 
   const handleDeleteClick = (id: string) => {
-    if (id === currentUser?.id) {
+    const user = data.find((u) => u.id === id);
+    if (user && isCurrentUser(user)) {
       notify({ description: "You cannot delete your own account", type: "warning" });
       return;
     }
-    const user = data.find((u) => u.id === id);
     if (user) {
       setDeleteDialog({
         open: true,
@@ -306,11 +325,11 @@ export default function UsersDataTable({
   };
 
   const handleToggleStatusClick = (id: string, activate: boolean) => {
-    if (id === currentUser?.id && !activate) {
+    const user = data.find((u) => u.id === id);
+    if (user && isCurrentUser(user) && !activate) {
       notify({ description: "You cannot deactivate your own account", type: "warning" });
       return;
     }
-    const user = data.find((u) => u.id === id);
     if (user) {
       setToggleStatusDialog({
         open: true,
@@ -397,7 +416,7 @@ export default function UsersDataTable({
     handleEditClick,
     handleResetPasswordClick,
     handleViewProfile,
-    currentUser?.id
+    isCurrentUser
   );
 
   const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: searchFilteredData } =

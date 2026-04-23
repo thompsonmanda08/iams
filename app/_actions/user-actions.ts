@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { APIResponse } from "@/lib/types";
 import authenticatedApiClient, { handleError, successResponse } from "./api-config";
 import { User, UserType } from "@/lib/types/account";
+import { verifySession } from "@/lib/session";
 
 export async function createNewUser({
   username,
@@ -157,8 +158,43 @@ export async function updateUser(id: string, data: Partial<User>): Promise<APIRe
   }
 }
 
+/**
+ * Returns true when the given user id refers to the currently-authenticated user.
+ * Matches on session.user_id first; falls back to username/email from the target
+ * record because some backends return IDs that differ between /auth/setup and
+ * /users list responses.
+ */
+async function isSelfTarget(id: string): Promise<boolean> {
+  const { session } = await verifySession();
+  if (!session) return false;
+  if (session.user_id && session.user_id === id) return true;
+
+  const identifier = session.username?.toLowerCase();
+  if (!identifier) return false;
+
+  const targetRes = await getUserById(id);
+  const target = targetRes?.success ? (targetRes.data as User | undefined) : undefined;
+  if (!target) return false;
+  return (
+    target.email?.toLowerCase() === identifier ||
+    target.username?.toLowerCase() === identifier
+  );
+}
+
 export async function deleteUser(id: string): Promise<APIResponse> {
   const url = `/api/v1/users/${id}`;
+
+  // Server-side self-action guard: never let a caller delete their own account,
+  // even if the UI control that would block it is bypassed.
+  if (await isSelfTarget(id)) {
+    return {
+      success: false,
+      message: "You cannot delete your own account.",
+      data: null,
+      status: 403,
+      statusText: "FORBIDDEN"
+    };
+  }
 
   try {
     const response = await authenticatedApiClient({ url: url, method: "DELETE" });
@@ -209,6 +245,19 @@ export async function toggleUserStatus(id: string, isActive: boolean): Promise<A
 
 export async function deactivateUser(id: string): Promise<APIResponse> {
   const url = `/api/v1/users/${id}/deactivate`;
+
+  // Server-side self-action guard: a user must not be able to lock themselves
+  // out by deactivating their own account.
+  if (await isSelfTarget(id)) {
+    return {
+      success: false,
+      message: "You cannot deactivate your own account.",
+      data: null,
+      status: 403,
+      statusText: "FORBIDDEN"
+    };
+  }
+
   try {
     const response = await authenticatedApiClient({ url: url, method: "PATCH" });
     revalidatePath("/dashboard/system-configs/users");

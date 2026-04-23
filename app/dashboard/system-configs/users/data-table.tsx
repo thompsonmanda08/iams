@@ -75,7 +75,7 @@ const getColumns = (
   onEdit: (user: User) => void,
   onResetPassword: (id: string) => void,
   onViewProfile: (id: string) => void,
-  currentUserId?: string
+  isCurrentUser: (u: User) => boolean
 ): ColumnDef<User>[] => [
   {
     id: "#",
@@ -194,17 +194,17 @@ const getColumns = (
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  if (user.id === currentUserId && user.is_active) return;
+                  if (isCurrentUser(user) && user.is_active) return;
                   onToggleStatus(user.id, !user.is_active);
                 }}
-                disabled={user.id === currentUserId && user.is_active}
+                disabled={isCurrentUser(user) && user.is_active}
                 className={user.is_active ? "text-destructive focus:text-destructive" : ""}>
                 {!user.is_active ? (
                   <ShieldCheck className="h-4 w-4" />
                 ) : (
                   <ShieldX className="text-destructive h-4 w-4" />
                 )}
-                {user.id === currentUserId && user.is_active
+                {isCurrentUser(user) && user.is_active
                   ? "Cannot deactivate own account"
                   : `${user.is_active ? "Deactivate" : "Activate"} Account`}
               </DropdownMenuItem>
@@ -223,10 +223,31 @@ export default function UsersDataTable({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { checkPermission } = usePermissions();
-  const { user: currentUser } = useSession();
+  const { user: currentUser, session } = useSession();
+  // JWT-backed user_id is always populated after login, unlike the React-Query
+  // currentUser.id which may still be loading on first render.
+  const currentUserId = session?.user_id ?? currentUser?.id;
+  // Fallback identity fields: guard against the case where the users-list endpoint
+  // returns IDs that don't match the login-response ID (happens on some backends
+  // where setup.user.id !== users.list[].id). Username/email are uniquely identifying.
+  const currentLoginIdentifier = (session?.username ?? currentUser?.email ?? "").toLowerCase();
+  const isCurrentUser = React.useCallback(
+    (u: User) => {
+      if (currentUserId && u.id === currentUserId) return true;
+      if (!currentLoginIdentifier) return false;
+      return (
+        u.email?.toLowerCase() === currentLoginIdentifier ||
+        u.username?.toLowerCase() === currentLoginIdentifier
+      );
+    },
+    [currentUserId, currentLoginIdentifier]
+  );
   const [isPending, startTransition] = useTransition();
   const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [activeTab, setActiveTab] = React.useState<"active" | "inactive">("active");
+  // Tab state lives in the URL so server-side pagination filters by status.
+  const activeTab = (searchParams.get("status") === "inactive" ? "inactive" : "active") as
+    | "active"
+    | "inactive";
   const [selectedRole, setSelectedRole] = React.useState("all");
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [toggleStatusDialog, setToggleStatusDialog] = React.useState<{
@@ -249,11 +270,11 @@ export default function UsersDataTable({
 
   const handleToggleStatusClick = (id: string, activate: boolean) => {
     if (!checkPermission("USER_MGMT", "can_edit")) return;
-    if (id === currentUser?.id && !activate) {
+    const user = data.find((u) => u.id === id);
+    if (user && isCurrentUser(user) && !activate) {
       notify({ description: "You cannot deactivate your own account", type: "warning" });
       return;
     }
-    const user = data.find((u) => u.id === id);
     if (user) {
       setToggleStatusDialog({
         open: true,
@@ -356,7 +377,7 @@ export default function UsersDataTable({
     handleEditClick,
     handleResetPasswordClick,
     handleViewProfile,
-    currentUser?.id
+    isCurrentUser
   );
 
   const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: filteredUsers } = useTableSearch<User>({
@@ -372,10 +393,11 @@ export default function UsersDataTable({
     debounceMs: 200,
   });
 
+  // is_active is filtered server-side via ?status=; don't double-filter here
+  // (that previously made "10 per page" render as fewer rows).
   const displayedUsers = filteredUsers.filter(user => {
-    const matchesTab = activeTab === "active" ? user.is_active : !user.is_active;
     const matchesRole = selectedRole === "all" || user.role?.name === selectedRole;
-    return matchesTab && matchesRole;
+    return matchesRole;
   });
 
   const table = useReactTable({
@@ -436,7 +458,10 @@ export default function UsersDataTable({
   const clearFilters = () => {
     setLocalSearch("");
     setSelectedRole("all");
-    setActiveTab("active");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("status");
+    params.delete("page");
+    startTransition(() => router.push(`?${params.toString()}`));
   };
 
   // Get unique roles from data
@@ -460,7 +485,15 @@ export default function UsersDataTable({
     <Card className="shadow-none">
       <CardContent className="p-0">
         <div className="border-b px-4">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "active" | "inactive")}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => {
+              const params = new URLSearchParams(searchParams.toString());
+              if (v === "inactive") params.set("status", "inactive");
+              else params.delete("status");
+              params.delete("page");
+              startTransition(() => router.push(`?${params.toString()}`));
+            }}>
             <TabsList className="mb-4">
               <TabsTrigger value="active">Active Users</TabsTrigger>
               <TabsTrigger value="inactive">Inactive Users</TabsTrigger>
