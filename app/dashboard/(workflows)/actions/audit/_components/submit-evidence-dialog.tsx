@@ -19,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import { CreateFindingActionEvidenceInput } from "@/lib/types/audit-types";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface SubmitEvidenceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -119,7 +121,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
   };
 
   const handleSubmit = async () => {
-    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
     if (!validateForm()) {
       return;
     }

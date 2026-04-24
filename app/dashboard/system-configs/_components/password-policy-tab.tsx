@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { notify } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { getPasswordPolicy, updatePasswordPolicy } from "@/app/_actions/config-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface PasswordPolicyConfig {
   min_length: number;
@@ -32,6 +34,7 @@ interface PasswordPolicyTabProps {
 }
 
 export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
+  const { checkPermission } = usePermissions();
   const [policy, setPolicy] = useState<PasswordPolicyConfig | null>(initialData ?? null);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -408,7 +411,10 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
 
         <div className="sticky top-6 space-y-2">
           <Button
-            onClick={() => handleSavePolicy()}
+            onClick={() => {
+              if (!checkPermission(MODULE_CODES.USER_MGMT, "can_configure")) return;
+              handleSavePolicy();
+            }}
             disabled={!hasChanges || isSaving}
             className="w-full"
             size="lg">

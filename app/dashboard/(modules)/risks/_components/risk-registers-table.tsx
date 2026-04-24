@@ -32,6 +32,8 @@ import EditRiskRegisterDialog from "@/components/forms/edit-risk-register-dialog
 import { StatusBadge } from "@/components/status-badge";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type RiskRegistersTableProps = {
   registers: RiskRegister[];
   pagination: {
@@ -106,7 +108,7 @@ export default function RiskRegistersTable({
   };
 
   const handleDeleteClick = (register: RiskRegister) => {
-    if (!checkPermission("RISK_REGISTERS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       registerId: register.id,
@@ -132,7 +134,7 @@ export default function RiskRegistersTable({
   };
 
   const handleEditClick = (register: RiskRegister) => {
-    if (!checkPermission("RISK_REGISTERS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_edit")) return;
     setEditDialog({
       open: true,
       register

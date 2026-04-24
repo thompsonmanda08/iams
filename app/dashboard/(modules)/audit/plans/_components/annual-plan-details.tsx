@@ -22,6 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 export default function AuditDetailClient({
   auditPlan,
   planItems
@@ -87,7 +89,7 @@ export default function AuditDetailClient({
                     size="sm"
                     className="gap-2"
                     onClick={() => {
-                      if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                      if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
                       setSubmitDialogOpen(true);
                     }}
                     disabled={submitMutation.isPending || items.length === 0}

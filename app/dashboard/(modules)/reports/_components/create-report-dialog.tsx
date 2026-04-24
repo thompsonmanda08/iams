@@ -28,6 +28,8 @@ import type { ReportType, ReportEntityType } from "@/lib/types/report-types";
 import { useQuery } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 // Report type options
 const REPORT_TYPE_OPTIONS: { id: ReportType; name: string; description: string }[] = [
   {
@@ -199,7 +201,7 @@ export function CreateReportDialog({
 
   async function handleCreateReport(e: React.FormEvent) {
     e.preventDefault();
-    if (!checkPermission("AUDIT_REPORTS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_REPORTS, "can_create")) return;
 
     // Validation
     if (!formData.title.trim()) {

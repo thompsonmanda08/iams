@@ -24,6 +24,8 @@ import {
 import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface TransitionTrigger {
   id: string;
   trigger_name: string;
@@ -80,7 +82,7 @@ export const TransitionTriggersManager = ({
   };
 
   const handleOpenDialog = (trigger?: TransitionTrigger) => {
-    if (!checkPermission("WORKFLOW_CONFIG", trigger ? "can_edit" : "can_create")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, trigger ? "can_edit" : "can_create")) return;
     if (trigger) {
       setEditingTrigger(trigger);
       setTriggerName(trigger.trigger_name);
@@ -147,7 +149,7 @@ export const TransitionTriggersManager = ({
   };
 
   const handleDeleteTrigger = async (triggerId: string) => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_delete")) return;
     if (!confirm("Are you sure you want to delete this trigger?")) return;
 
     setIsLoading(true);

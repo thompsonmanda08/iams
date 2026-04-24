@@ -24,6 +24,8 @@ import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useQueryClient } from "@tanstack/react-query";
 import { notify } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface SendForReviewDialogProps {
   open: boolean;
@@ -42,6 +44,7 @@ interface FormData {
 
 export function SendForReviewDialog({ open, onOpenChange, incident }: SendForReviewDialogProps) {
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState<FormData>({
     responsible_person_id: "",
     reviewer_id: "",
@@ -140,6 +143,7 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
     e.preventDefault();
 
     if (!incident) return;
+    if (!checkPermission(MODULE_CODES.RISK_INCIDENTS, "can_assign")) return;
     if (!validateForm()) return;
 
     setIsSubmitting(true);

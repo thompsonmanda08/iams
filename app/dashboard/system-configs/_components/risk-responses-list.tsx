@@ -18,6 +18,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type RiskResponse = {
   id: string;
@@ -37,6 +39,7 @@ type PaginationState = {
 };
 
 export function RiskResponsesList() {
+  const { checkPermission } = usePermissions();
   const [responses, setResponses] = useState<RiskResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -111,6 +114,7 @@ export function RiskResponsesList() {
   };
 
   const handleDeleteClick = (response: RiskResponse) => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       responseId: response.id,

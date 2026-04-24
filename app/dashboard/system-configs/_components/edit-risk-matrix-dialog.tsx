@@ -15,6 +15,8 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { useUpdateRiskMatrixMutation } from "@/hooks/use-config-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 
 type RiskMatrix = {
@@ -38,6 +40,7 @@ export function EditRiskMatrixDialog({
   matrix,
   onSuccess
 }: EditRiskMatrixDialogProps) {
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState({
     name: matrix.name,
     description: matrix.description,
@@ -54,6 +57,8 @@ export function EditRiskMatrixDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_edit")) return;
 
     if (!formData.name.trim()) {
       return;

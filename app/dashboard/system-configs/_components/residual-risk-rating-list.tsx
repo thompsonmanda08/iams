@@ -17,6 +17,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type ResidualRiskRating = {
   id: string;
@@ -38,6 +40,7 @@ type PaginationState = {
 };
 
 export function ResidualRiskRatingList() {
+  const { checkPermission } = usePermissions();
   const [ratings, setRatings] = useState<ResidualRiskRating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{
@@ -114,6 +117,7 @@ export function ResidualRiskRatingList() {
   };
 
   const handleDeleteClick = (rating: ResidualRiskRating) => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       ratingId: rating.id,

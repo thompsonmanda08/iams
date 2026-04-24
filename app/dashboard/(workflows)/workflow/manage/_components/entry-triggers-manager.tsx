@@ -24,6 +24,8 @@ import {
 import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface EntryTrigger {
   id: string;
   trigger_name: string;
@@ -76,7 +78,7 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
   };
 
   const handleOpenDialog = (trigger?: EntryTrigger) => {
-    if (!checkPermission("WORKFLOW_CONFIG", trigger ? "can_edit" : "can_create")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, trigger ? "can_edit" : "can_create")) return;
     if (trigger) {
       setEditingTrigger(trigger);
       setTriggerName(trigger.trigger_name);
@@ -138,7 +140,7 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
   };
 
   const handleDeleteTrigger = async (triggerId: string) => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_delete")) return;
     if (!confirm("Are you sure you want to delete this entry trigger?")) return;
 
     setIsLoading(true);

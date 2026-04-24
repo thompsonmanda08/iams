@@ -333,42 +333,64 @@ export async function logUserOut(reason: string): Promise<APIResponse> {
  * you would need to implement a custom caching solution (e.g., Redis, in-memory cache)
  * as Next.js unstable_cache() doesn't support dynamic data sources like cookies.
  */
-async function _initializeSystemSetup(): Promise<APIResponse> {
+/**
+ * Read-only fetch of /api/v1/auth/setup. Safe to call from server components
+ * (layouts, pages) because it does NOT touch cookies.
+ *
+ * Cached per-request with React.cache() so multiple layouts in the same
+ * request share one HTTP call.
+ */
+async function _fetchSystemSetup(): Promise<APIResponse> {
   const url = `/api/v1/auth/setup`;
 
   try {
     const response = await authenticatedApiClient({ url });
-    const session = response?.data;
-    const userData = session?.user;
-
-    const user = {
-      id: userData?.id,
-      username: userData?.username,
-      email: userData?.email,
-      role: userData?.role || userData?.role?.name || "Viewer",
-      first_name: userData?.first_name,
-      last_name: userData?.last_name,
-      user_type: userData?.user_type,
-      organization_id: userData?.organization_id,
-      branch_id: userData?.branch_id,
-      department_id: userData?.department_id,
-      role_id: userData?.role_id,
-      is_active: userData?.is_active,
-      is_ldap_user: userData?.is_ldap_user,
-      last_login: userData?.last_login,
-      change_password: userData?.change_password,
-      is_locked: userData?.is_locked,
-      mfa_enabled: userData?.mfa_enabled
-    };
-
-    await updateAuthSession({ user, logo_url: session?.logo_url || "" });
-    // await createUserSession(user as any);
-
-    return successResponse(session, response?.data?.message);
+    return successResponse(response?.data, response?.data?.message);
   } catch (error: Error | any) {
     console.error("❌ [System Setup] Error:", error?.message);
     return handleError(error, "GET | SYSTEM SETUP", url);
   }
+}
+
+export const fetchSystemSetup = cache(_fetchSystemSetup);
+
+/**
+ * Initializes the system setup AND refreshes the auth-session cookie with
+ * the latest user snapshot and logo_url. Must be called from a Server Action
+ * or Route Handler — Server Components cannot write cookies.
+ *
+ * Used by the post-OTP login flow and the client-side React Query hook.
+ */
+async function _initializeSystemSetup(): Promise<APIResponse> {
+  const response = await fetchSystemSetup();
+  if (!response.success) return response;
+
+  const session = response.data;
+  const userData = session?.user;
+
+  const user = {
+    id: userData?.id,
+    username: userData?.username,
+    email: userData?.email,
+    role: userData?.role || userData?.role?.name || "Viewer",
+    first_name: userData?.first_name,
+    last_name: userData?.last_name,
+    user_type: userData?.user_type,
+    organization_id: userData?.organization_id,
+    branch_id: userData?.branch_id,
+    department_id: userData?.department_id,
+    role_id: userData?.role_id,
+    is_active: userData?.is_active,
+    is_ldap_user: userData?.is_ldap_user,
+    last_login: userData?.last_login,
+    change_password: userData?.change_password,
+    is_locked: userData?.is_locked,
+    mfa_enabled: userData?.mfa_enabled
+  };
+
+  await updateAuthSession({ user, logo_url: session?.logo_url || "" });
+
+  return response;
 }
 
 export const initializeSystemSetup = cache(_initializeSystemSetup);

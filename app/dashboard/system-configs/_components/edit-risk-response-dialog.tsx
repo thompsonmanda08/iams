@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { notify } from "@/lib/utils";
 import { updateRiskResponse } from "@/app/_actions/config-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 
 type RiskResponse = {
@@ -36,6 +38,7 @@ export function EditRiskResponseDialog({
   response,
   onSuccess
 }: EditRiskResponseDialogProps) {
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: response.name,
@@ -44,6 +47,8 @@ export function EditRiskResponseDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_edit")) return;
 
     if (!formData.name.trim()) {
       notify({ description: "Response name is required", type: "error" });

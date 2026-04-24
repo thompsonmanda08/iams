@@ -51,6 +51,8 @@ import { stat } from "fs/promises";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 // Mock data removed - using real backend data only
 
 export default function AuditUniverseList({
@@ -116,7 +118,7 @@ export default function AuditUniverseList({
   };
 
   const handleDeleteClick = (id: string, name: string) => {
-    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
     setSelectedUniverse({ id, name });
     setDeleteConfirmOpen(true);
   };
@@ -138,7 +140,7 @@ export default function AuditUniverseList({
   };
 
   const handleEdit = (universe: any) => {
-    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_edit")) return;
     setEditingUniverse(universe);
     setEditDialogOpen(true);
   };
@@ -148,7 +150,7 @@ export default function AuditUniverseList({
   };
 
   const handleSubmitClick = (id: string, name: string) => {
-    if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
     setUniverseToSubmit({ id, name });
     setSubmitConfirmOpen(true);
   };

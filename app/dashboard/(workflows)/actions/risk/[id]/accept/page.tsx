@@ -7,6 +7,8 @@ import { createRiskAcceptance, updateRiskAcceptance } from "@/app/_actions/risk-
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 export default function RiskAcceptancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { checkPermission } = usePermissions();
@@ -15,7 +17,7 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
   const { id } = use(params);
 
   const handleCreate = async (data: FormData) => {
-    if (!checkPermission("RISK_ACCEPTANCES", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.RISK_ACCEPTANCES, "can_create")) return;
     try {
       const response = await createRiskAcceptance(id, data);
       if (response.success) {
@@ -33,7 +35,7 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
   };
 
   const handleUpdate = async (data: FormData) => {
-    if (!checkPermission("RISK_ACCEPTANCES", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.RISK_ACCEPTANCES, "can_edit")) return;
     try {
       const response = await updateRiskAcceptance(id, data);
 

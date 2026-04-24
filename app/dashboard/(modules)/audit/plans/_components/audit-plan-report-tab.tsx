@@ -14,6 +14,8 @@ import Loader from "@/components/ui/loader";
 import { usePermissions } from "@/hooks/use-permissions";
 import { notify } from "@/lib/utils";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface AuditPlanReportTabProps {
   auditPlan: {
     id: string;
@@ -78,7 +80,7 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
 
   // Handle create report
   const handleCreateReport = () => {
-    if (!checkPermission("AUDIT_REPORTS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_REPORTS, "can_create")) return;
     if (!auditPlan.management_comments?.trim()) {
       notify({
         title: "Management Comments Required",

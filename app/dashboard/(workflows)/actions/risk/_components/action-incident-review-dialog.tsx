@@ -33,6 +33,8 @@ import { submitReviewIncidentFindings } from "@/app/_actions/incident-actions";
 import { Separator } from "@radix-ui/react-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SelectField } from "@/components/ui/select-field";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface ActionIncidentReviewDialogProps {
   open: boolean;
@@ -51,6 +53,7 @@ export function ActionIncidentReviewDialog({
   onOpenChange,
   actionDefinition
 }: ActionIncidentReviewDialogProps) {
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState<SubmissionFormData>({
     status: "",
     comment: "",
@@ -122,6 +125,8 @@ export function ActionIncidentReviewDialog({
   };
 
   const handleSubmit = async () => {
+    if (!checkPermission(MODULE_CODES.RISK_INCIDENTS, "can_approve")) return;
+
     if (!formData.comment.trim()) {
       notify({ description: "Please add a comment before submitting", type: "error" });
       return;

@@ -17,6 +17,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type RiskCause = {
   id: string;
@@ -37,6 +39,7 @@ type PaginationState = {
 };
 
 export function RiskCausesList() {
+  const { checkPermission } = usePermissions();
   const [causes, setCauses] = useState<RiskCause[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{
@@ -113,6 +116,7 @@ export function RiskCausesList() {
   };
 
   const handleDeleteClick = (cause: RiskCause) => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       causeId: cause.id,

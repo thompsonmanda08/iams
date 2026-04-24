@@ -33,6 +33,8 @@ import { useReportMutations } from "@/hooks/use-report-queries";
 import { capitalize, notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface ReportsTableProps {
   reports: ReportListItem[];
   pagination?: Pagination;
@@ -70,7 +72,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
   };
 
   const handleDeleteClick = (report: ReportListItem) => {
-    if (!checkPermission("AUDIT_REPORTS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_REPORTS, "can_delete")) return;
     if (report.status !== "DRAFT") {
       notify({ description: "Only draft reports can be deleted.", type: "error" });
       return;

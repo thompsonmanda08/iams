@@ -29,6 +29,8 @@ import {
 } from "@/app/_actions/risk-module-actions";
 import { getDepartmentHeads } from "@/app/_actions/user-actions";
 import { getStrategicPillars } from "@/app/_actions/audit-settings-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 import {
   Risk,
@@ -64,6 +66,7 @@ export function MultiStepRiskForm({
   riskData
 }: MultiStepRiskFormProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [createdRiskId, setCreatedRiskId] = useState<string | null>(
@@ -354,6 +357,7 @@ export function MultiStepRiskForm({
   };
 
   const handleStepOne = async () => {
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, mode === "edit" ? "can_edit" : "can_create")) return;
     setIsLoading(true);
     try {
       if (mode === "edit" && createdRiskId) {
@@ -386,6 +390,7 @@ export function MultiStepRiskForm({
 
   const handleStepTwo = async () => {
     if (!createdRiskId) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_edit")) return;
     setIsLoading(true);
     try {
       const response = await updateRiskStepTwo(createdRiskId, stepTwoData);
@@ -404,6 +409,7 @@ export function MultiStepRiskForm({
 
   const handleStepThree = async () => {
     if (!createdRiskId) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_edit")) return;
     setIsLoading(true);
     try {
       const response = await updateRiskStepThree(createdRiskId, stepThreeData);

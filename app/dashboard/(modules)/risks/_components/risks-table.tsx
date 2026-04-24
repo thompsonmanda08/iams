@@ -40,6 +40,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { Pagination } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type Risk = {
   id: string;
   risk_matrix_id: string;
@@ -209,18 +211,18 @@ export default function RisksTable({
   };
 
   const handleEdit = (risk: Risk) => {
-    if (!checkPermission("RISK_REGISTERS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_edit")) return;
     setSelectedRisk(risk);
     setEditDialogOpen(true);
   };
 
   const handleDeleteClick = (risk: Risk) => {
-    if (!checkPermission("RISK_REGISTERS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_delete")) return;
     setRiskToDelete({ id: risk.id, title: risk.title });
     setDeleteDialogOpen(true);
   };
   const handleCloseClick = (risk: Risk) => {
-    if (!checkPermission("RISK_REGISTERS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_edit")) return;
     setRiskToClose({ id: risk.id, title: risk.title });
     setCloseDialogOpen(true);
   };
@@ -483,7 +485,7 @@ export default function RisksTable({
                           ) : risk.status === "OPEN" ? (
                             <DropdownMenuItem
                               onClick={(e) => {
-                                if (!checkPermission("RISK_ACTIONS", "can_assign")) return;
+                                if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_assign")) return;
                                 setRiskForAssignment(risk);
                                 setAssignActionDialogOpen(true);
                                 e.stopPropagation();

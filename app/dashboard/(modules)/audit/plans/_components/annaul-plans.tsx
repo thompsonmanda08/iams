@@ -46,6 +46,8 @@ import { useRouter } from "next/navigation";
 import { notify } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectField } from "@/components/ui/select-field";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 const years = Array.from({ length: 20 }).map((_, index: number) => {
   return { id: String(2025 + index), name: String(2025 + index) };
@@ -73,6 +75,7 @@ export default function AuditAnnualPlan({
   const [createPlanForm, setCreatePlanForm] = useState({ year: new Date().getFullYear() });
 
   const router = useRouter();
+  const { checkPermission } = usePermissions();
 
   // Hook to fetch plans by year - only enabled when user selects a specific year
   const { data: yearFilteredPlan, isLoading: isFetchingByYear } = useAnnualAuditPlan(
@@ -97,6 +100,7 @@ export default function AuditAnnualPlan({
   const createMutation = useCreateAnnualAuditPlan();
 
   const createPlan = useCallback(async (year: number) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
     if (year > year + 2) {
       notify({
         title: "Error",
@@ -112,6 +116,7 @@ export default function AuditAnnualPlan({
   }, []);
 
   const confirmSubmitForApproval = () => {
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
     if (!submitId) {
       notify({
         title: "Missing Parameter: Plan ID"

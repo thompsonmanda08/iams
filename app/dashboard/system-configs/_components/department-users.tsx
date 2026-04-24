@@ -58,6 +58,8 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 export default function DepartmentUsersConfig() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -272,7 +274,7 @@ export default function DepartmentUsersConfig() {
         title="Remove User from Department"
         description={`Are you sure you want to remove ${userToRemove?.first_name} ${userToRemove?.last_name} from this department? This action cannot be undone.`}
         onConfirm={async () => {
-          if (!checkPermission("USER_MGMT", "can_delete")) return;
+          if (!checkPermission(MODULE_CODES.USER_MGMT, "can_delete")) return;
           if (!userToRemove) return;
 
           try {
@@ -369,7 +371,7 @@ function EditUserRoleDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkPermission("USER_MGMT", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_edit")) return;
     if (selectedRoleId && selectedRoleId !== user?.role?.id) {
       updateRoleMutation.mutate(selectedRoleId);
     } else {

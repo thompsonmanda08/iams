@@ -9,6 +9,8 @@ import { SelectField } from "@/components/ui/select-field";
 import { Loader2 } from "lucide-react";
 import { notify } from "@/lib/utils";
 import { createRiskCategory, updateRiskCategory } from "@/app/_actions/risk-module-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type Department = {
   id: string;
@@ -43,6 +45,7 @@ export function RiskCategoryFormDialog({
   onSuccess,
   mode
 }: RiskCategoryFormDialogProps) {
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState<Omit<RiskCategory, "id">>({
     department_id: "",
     name: "",
@@ -80,6 +83,8 @@ export function RiskCategoryFormDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, mode === "edit" ? "can_edit" : "can_create")) return;
 
     // Validation
     if (!formData.name.trim()) {

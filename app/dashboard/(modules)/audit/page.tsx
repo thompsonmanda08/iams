@@ -6,6 +6,8 @@ import Link from "next/link";
 import { AuditMetricsCards } from "@/components/audit/audit-metrics-cards";
 import { getAuditMetrics } from "@/app/_actions/audit-module-actions";
 import PageHeader from "@/components/page-header";
+import { requireModuleView } from "@/lib/permissions/server";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 import { AuditPlanAnalytics } from "./_components/audit-plan-analytics";
 import { AuditActivitiesDistribution } from "./_components/audit-activities-distribution";
@@ -14,6 +16,7 @@ import { BudgetAnalytics } from "./_components/budget-analytics";
 import { UniverseAnalytics } from "./_components/universe-analytics";
 
 export default async function AuditDashboardPage() {
+  await requireModuleView(MODULE_CODES.AUDIT_OVERVIEW);
   const summary = await getAuditMetrics();
 
   const overviewChartData = [

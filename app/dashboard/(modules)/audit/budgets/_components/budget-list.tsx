@@ -23,6 +23,8 @@ import { BudgetEditModal } from "./budget-edit-modal";
 import { StatusBadge } from "@/components/status-badge";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface BudgetLine {
   id: string;
   name: string;
@@ -137,7 +139,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   };
 
   const handleDeleteClick = (budget: Budget) => {
-    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
     setBudgetToDelete(budget);
     setShowDeleteModal(true);
   };
@@ -165,7 +167,7 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   };
 
   const handleEditClick = (budgetId: string) => {
-    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_edit")) return;
     setBudgetToEdit(budgetId);
     setShowEditModal(true);
   };

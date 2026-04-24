@@ -48,6 +48,8 @@ import BackButton from "@/components/back-button";
 import { StatusBadge } from "@/components/status-badge";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
 interface Budget {
@@ -196,7 +198,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkPermission("AUDIT_PLANS", editingLine ? "can_edit" : "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, editingLine ? "can_edit" : "can_create")) return;
     if (!lineData.start_date || !lineData.end_date) {
       notify({ description: "Please select start and end dates.", type: "error" });
       return;
@@ -244,7 +246,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   };
 
   const handleEditLine = (line: BudgetLine) => {
-    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_edit")) return;
     setEditingLine(line);
     setLineData({
       name: line.name,
@@ -260,7 +262,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   };
 
   const handleDeleteClick = (line: BudgetLine) => {
-    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
     setLineToDelete(line);
     setShowDeleteModal(true);
   };
@@ -301,7 +303,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   };
 
   const handleSubmitBudget = async () => {
-    if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
     setIsSubmitting(true);
     try {
       const response = await submitBudgetForApproval(budget.id);
@@ -337,7 +339,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
               </Button>
             )}
             <Button onClick={() => {
-              if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+              if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
               setShowLineForm(true);
             }} className="gap-2" size="sm">
               <Plus className="h-5 w-5" />
@@ -640,7 +642,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                       Add your first budget line to get started
                     </p>
                     <Button onClick={() => {
-                      if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                      if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
                       setShowLineForm(true);
                     }} className="gap-2">
                       <Plus className="h-4 w-4" />

@@ -22,6 +22,8 @@ import { createRiskAction } from "@/app/_actions/risk-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 // Type for Risk from risks-table
 type Risk = {
   id: string;
@@ -139,7 +141,7 @@ export function AssignActionDialog({
   });
 
   const handleSubmit = () => {
-    if (!checkPermission("RISK_ACTIONS", "can_assign")) return;
+    if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_assign")) return;
     if (!validateForm()) {
       return;
     }

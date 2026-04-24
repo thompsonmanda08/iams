@@ -10,6 +10,8 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface EvidenceListProps {
   evidence: FindingEvidence[];
   onEdit: (evidence: FindingEvidence) => void;
@@ -171,7 +173,7 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+                    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
                     onEdit(item);
                   }}
                   disabled={isLoading}
@@ -182,7 +184,7 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    if (!checkPermission("AUDIT_WPS", "can_delete")) return;
+                    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_delete")) return;
                     onDelete(item);
                   }}
                   disabled={isLoading}

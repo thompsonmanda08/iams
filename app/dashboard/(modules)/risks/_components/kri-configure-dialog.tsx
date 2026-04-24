@@ -9,6 +9,8 @@ import { notify } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type KRIFormData = {
   name: string;
   description: string;
@@ -63,7 +65,7 @@ export function KRIConfigureDialog({ registerId }: KRIConfigureDialogProps) {
   return (
     <>
       <Button size="sm" onClick={() => {
-        if (!checkPermission("KRI_DASHBOARD", "can_configure")) return;
+        if (!checkPermission(MODULE_CODES.KRI_DASHBOARD, "can_configure")) return;
         setConfigureOpen(true);
       }}>
         <AlertCircle className="mr-2 h-4 w-4" />

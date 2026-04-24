@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { notify } from "@/lib/utils";
 import { updateScale } from "@/app/_actions/config-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type Scale = {
   id: string;
@@ -33,6 +35,7 @@ type EditScaleDialogProps = {
 };
 
 export function EditScaleDialog({ open, onOpenChange, scale, onSuccess }: EditScaleDialogProps) {
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: scale.name,
@@ -42,6 +45,8 @@ export function EditScaleDialog({ open, onOpenChange, scale, onSuccess }: EditSc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_edit")) return;
 
     if (!formData.name.trim()) {
       notify({ description: "Scale name is required", type: "error" });

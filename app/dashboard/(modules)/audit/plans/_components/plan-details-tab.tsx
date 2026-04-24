@@ -37,6 +37,8 @@ import Loader from "@/components/ui/loader";
 import { StatusBadge } from "@/components/status-badge";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 const KRIColorBadge = ({ color }: { color: "Red" | "Amber" | "Green" | string }) => {
   const colorClasses: Record<string, string> = {
     Red: "bg-red-500",
@@ -238,7 +240,7 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                                   variant="outline"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
+                                    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_edit")) return;
                                     memoRef.current?.openEdit();
                                   }}
                                   className="gap-2">
@@ -259,7 +261,7 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                                   variant="destructive"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
+                                    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
                                     memoRef.current?.openDelete();
                                   }}
                                   className="gap-2">
@@ -322,7 +324,7 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                   <Button
                     size="sm"
                     onClick={() => {
-                      if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                      if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
                       memoRef.current?.setOpenModal(true);
                     }}
                     className="w-full gap-2">

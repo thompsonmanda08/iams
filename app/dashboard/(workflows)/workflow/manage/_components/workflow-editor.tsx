@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface WorkflowEditorProps {
   onBack: () => void;
   workflowId?: string | null;
@@ -542,7 +544,7 @@ export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEdi
 
   const handleSave = async () => {
     const isExistingWorkflow = !!workflowId;
-    if (!checkPermission("WORKFLOW_CONFIG", isExistingWorkflow ? "can_edit" : "can_create")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, isExistingWorkflow ? "can_edit" : "can_create")) return;
 
     if (!workflow.name.trim()) {
       notify({ description: "Workflow name is required", type: "error" });

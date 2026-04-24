@@ -19,6 +19,7 @@ import {
   Settings,
   UserCog2
 } from "lucide-react";
+import { MODULE_CODES, type ModuleCode } from "@/lib/constants/module-codes";
 
 export type NavGroup = {
   title: string;
@@ -33,6 +34,7 @@ export type NavItem = {
   isDataBadge?: string;
   isNew?: boolean;
   newTab?: boolean;
+  moduleCode?: ModuleCode;
   items?: NavItem;
 }[];
 
@@ -107,12 +109,32 @@ export const navItems: NavGroup[] = [
         href: "/dashboard/risks",
         icon: ShieldAlert,
         items: [
-          { title: "Overview", href: "/dashboard/risks" },
-          { title: "Risk Registers", href: "/dashboard/risks/risk-registers" },
-          { title: "Heat Map", href: "/dashboard/risks/heat-map" },
-          { title: "KRI Registers", href: "/dashboard/risks/kri" },
-          { title: "Incidents", href: "/dashboard/risks/incidents" },
-          { title: "Risk Acceptances", href: "/dashboard/risks/risk-acceptances" }
+          { title: "Overview", href: "/dashboard/risks", moduleCode: MODULE_CODES.RISK_OVERVIEW },
+          {
+            title: "Risk Registers",
+            href: "/dashboard/risks/risk-registers",
+            moduleCode: MODULE_CODES.RISK_REGISTERS
+          },
+          {
+            title: "Heat Map",
+            href: "/dashboard/risks/heat-map",
+            moduleCode: MODULE_CODES.RISK_HEATMAP
+          },
+          {
+            title: "KRI Registers",
+            href: "/dashboard/risks/kri",
+            moduleCode: MODULE_CODES.KRI_DASHBOARD
+          },
+          {
+            title: "Incidents",
+            href: "/dashboard/risks/incidents",
+            moduleCode: MODULE_CODES.RISK_INCIDENTS
+          },
+          {
+            title: "Risk Acceptances",
+            href: "/dashboard/risks/risk-acceptances",
+            moduleCode: MODULE_CODES.RISK_ACCEPTANCES
+          }
         ]
       },
       {
@@ -120,16 +142,29 @@ export const navItems: NavGroup[] = [
         href: "/dashboard/audit",
         icon: ClipboardCheck,
         items: [
-          { title: "Overview", href: "/dashboard/audit" },
-          { title: "Universes", href: "/dashboard/audit/universe" },
-          { title: "Budgets", href: "/dashboard/audit/budgets" },
-          { title: "Plans & Executions", href: "/dashboard/audit/plans" }
+          { title: "Overview", href: "/dashboard/audit", moduleCode: MODULE_CODES.AUDIT_OVERVIEW },
+          {
+            title: "Universes",
+            href: "/dashboard/audit/universe",
+            moduleCode: MODULE_CODES.AUDIT_PLANS
+          },
+          {
+            title: "Budgets",
+            href: "/dashboard/audit/budgets",
+            moduleCode: MODULE_CODES.AUDIT_PLANS
+          },
+          {
+            title: "Plans & Executions",
+            href: "/dashboard/audit/plans",
+            moduleCode: MODULE_CODES.AUDIT_PLANS
+          }
         ]
       },
       {
         title: "Reports",
         href: "/dashboard/reports",
-        icon: ChartPieIcon
+        icon: ChartPieIcon,
+        moduleCode: MODULE_CODES.AUDIT_REPORTS
       }
     ]
   },
@@ -142,8 +177,16 @@ export const navItems: NavGroup[] = [
         href: "/dashboard/actions",
         icon: FileUserIcon,
         items: [
-          { title: "Risk Actions", href: "/dashboard/actions/risk" },
-          { title: "Audit Actions & Logs", href: "/dashboard/actions/audit" }
+          {
+            title: "Risk Actions",
+            href: "/dashboard/actions/risk",
+            moduleCode: MODULE_CODES.RISK_ACTIONS
+          },
+          {
+            title: "Audit Actions & Logs",
+            href: "/dashboard/actions/audit",
+            moduleCode: MODULE_CODES.AUDIT_PLANS
+          }
         ]
       },
 
@@ -155,13 +198,15 @@ export const navItems: NavGroup[] = [
           {
             title: "Tasks & Approvals",
             href: "/dashboard/approvals",
-            icon: ShieldCheck
+            icon: ShieldCheck,
+            moduleCode: MODULE_CODES.WORKFLOW_CONFIG
           },
 
           {
             title: "Workflow Designer",
             href: "/dashboard/workflow/manage",
-            icon: ShieldCheck
+            icon: ShieldCheck,
+            moduleCode: MODULE_CODES.WORKFLOW_CONFIG
           }
         ]
       }
@@ -178,12 +223,14 @@ export const navItems: NavGroup[] = [
           {
             title: "Risk Settings",
             href: "/dashboard/system-configs/risk-settings",
-            icon: Signature
+            icon: Signature,
+            moduleCode: MODULE_CODES.RISK_MODULE_CONFIGS
           },
           {
             title: "Acceptance Signatories",
             href: "/dashboard/system-configs/risk-acceptance-signatories",
-            icon: Signature
+            icon: Signature,
+            moduleCode: MODULE_CODES.RISK_MODULE_CONFIGS
           }
         ]
       },
@@ -195,19 +242,22 @@ export const navItems: NavGroup[] = [
           {
             title: "Audit Settings",
             href: "/dashboard/system-configs/audit-settings",
-            icon: Signature
+            icon: Signature,
+            moduleCode: MODULE_CODES.AUDIT_MODULE_CONFIG
           },
           {
             title: "Workpaper Templates",
             href: "/dashboard/system-configs/audit-settings/templates",
-            icon: Signature
+            icon: Signature,
+            moduleCode: MODULE_CODES.AUDIT_MODULE_CONFIG
           }
         ]
       },
       {
         title: "Report Guides Settings",
         href: "/dashboard/system-configs/report-guides-settings",
-        icon: CompassIcon
+        icon: CompassIcon,
+        moduleCode: MODULE_CODES.AUDIT_MODULE_CONFIG
       }
     ]
   },
@@ -222,17 +272,20 @@ export const navItems: NavGroup[] = [
           {
             title: "Branches",
             href: "/dashboard/system-configs/setup?tab=branches",
-            icon: MapPin
+            icon: MapPin,
+            moduleCode: MODULE_CODES.BRANCH_MGMT
           },
           {
             title: "Departments",
             href: "/dashboard/system-configs/setup?tab=departments",
-            icon: BriefcaseBusiness
+            icon: BriefcaseBusiness,
+            moduleCode: MODULE_CODES.DEPT_MGMT
           },
           {
             title: "Users",
             href: "/dashboard/system-configs/setup?tab=users",
-            icon: Users
+            icon: Users,
+            moduleCode: MODULE_CODES.USER_MGMT
           }
         ]
       },

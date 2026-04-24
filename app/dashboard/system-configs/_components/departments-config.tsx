@@ -33,6 +33,8 @@ import Link from "next/link";
 import { usePermissions } from "@/hooks/use-permissions";
 import { StatusBadge } from "@/components/status-badge";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type Pagination = {
   total: number;
   page: number;
@@ -108,7 +110,7 @@ export default function DepartmentsConfig({
   });
 
   const handleDeleteClick = (id: string) => {
-    if (!checkPermission("DEPT_MGMT", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.DEPT_MGMT, "can_delete")) return;
     setDepartmentToDelete(id);
     setDeleteDialogOpen(true);
   };
@@ -136,7 +138,7 @@ export default function DepartmentsConfig({
           <Button
             size="sm"
             onClick={() => {
-              if (!checkPermission("DEPT_MGMT", "can_create")) return;
+              if (!checkPermission(MODULE_CODES.DEPT_MGMT, "can_create")) return;
               setEditingDepartment(null);
               setOpenModal(true);
             }}>
@@ -230,7 +232,7 @@ export default function DepartmentsConfig({
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
-                          if (!checkPermission("DEPT_MGMT", "can_edit")) return;
+                          if (!checkPermission(MODULE_CODES.DEPT_MGMT, "can_edit")) return;
                           setEditingDepartment(department);
                           setOpenModal(true);
                           e.stopPropagation();

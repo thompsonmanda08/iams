@@ -17,6 +17,8 @@ import { Budget } from "@/lib/types/audit-types";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 const formatCurrency = (num: number): string => {
   return num.toLocaleString("en-US", {
     minimumFractionDigits: 2,
@@ -201,7 +203,7 @@ const BudgetForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
 
     if (mode === "budget") {
       createBudgetHandler();

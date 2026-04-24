@@ -18,6 +18,8 @@ import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 export function KRIMeasureDialog({
   kri_id,
   isOpen,
@@ -37,7 +39,7 @@ export function KRIMeasureDialog({
   const { checkPermission } = usePermissions();
 
   const handleSave = async () => {
-    if (!checkPermission("KRI_DASHBOARD", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.KRI_DASHBOARD, "can_create")) return;
     setIsSaving(true);
     try {
       const response = await addKRIMeasurement(kri_id, {

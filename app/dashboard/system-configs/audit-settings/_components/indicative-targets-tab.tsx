@@ -52,6 +52,8 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Badge } from "@/components/ui/badge";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface TargetFormData {
   id: string;
   name: string;
@@ -106,7 +108,7 @@ export default function IndicativeTargetsTab() {
   };
 
   const handleDeleteClick = (id: string) => {
-    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_delete")) return;
     setSelectedId(id);
     setDeleteDialogOpen(true);
   };
@@ -146,7 +148,7 @@ export default function IndicativeTargetsTab() {
           <Button
             size="sm"
             onClick={() => {
-              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
               setFormData(null);
               setOpenModal(true);
             }}>
@@ -197,7 +199,7 @@ export default function IndicativeTargetsTab() {
                           <Button
                             size="sm"
                             onClick={() => {
-                              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+                              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
                               setFormData(null);
                               setOpenModal(true);
                             }}>
@@ -237,7 +239,7 @@ export default function IndicativeTargetsTab() {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
+                              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
                               setFormData(item);
                               setSelectedId(item.id);
                               setOpenModal(true);

@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type RiskCategory = {
   id: string;
   department_id: string;
@@ -167,7 +169,7 @@ export function RiskCategoriesConfig() {
   };
 
   const handleAddCategory = () => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_create")) return;
     setFormDialog({
       open: true,
       mode: "create",
@@ -176,7 +178,7 @@ export function RiskCategoriesConfig() {
   };
 
   const handleEditCategory = (category: RiskCategory) => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_edit")) return;
     setFormDialog({
       open: true,
       mode: "edit",
@@ -185,7 +187,7 @@ export function RiskCategoriesConfig() {
   };
 
   const handleDeleteClick = (category: RiskCategory) => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       categoryId: category.id,

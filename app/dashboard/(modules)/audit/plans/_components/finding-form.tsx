@@ -20,6 +20,8 @@ import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface FindingFormProps {
   category: any;
   auditPlan: AuditPlan;
@@ -181,7 +183,7 @@ export function FindingForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
 
     if (!lastFinding?.id) {
       notify({

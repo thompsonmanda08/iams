@@ -14,6 +14,8 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { useCreateRiskResponseMutation } from "@/hooks/use-risk-response-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type CreateRiskResponseDialogProps = {
   open: boolean;
@@ -26,6 +28,7 @@ export function CreateRiskResponseDialog({
   onOpenChange,
   onSuccess
 }: CreateRiskResponseDialogProps) {
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState({
     name: "",
     description: ""
@@ -41,6 +44,8 @@ export function CreateRiskResponseDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_create")) return;
 
     if (!formData.name.trim()) {
       return;

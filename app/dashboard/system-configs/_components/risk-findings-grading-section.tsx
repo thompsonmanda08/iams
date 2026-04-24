@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/table";
 import { RiskFindingGradingDialog } from "./risk-finding-grading-dialog";
 import type { RiskFindingGrading } from "./report-guide-detail";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface RiskFindingsGradingSectionProps {
   reportGuideId: string;
@@ -33,6 +35,7 @@ export function RiskFindingsGradingSection({
   initialData,
   onDataUpdated
 }: RiskFindingsGradingSectionProps) {
+  const { checkPermission } = usePermissions();
   const [items, setItems] = useState<RiskFindingGrading[]>(initialData);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{
@@ -47,6 +50,7 @@ export function RiskFindingsGradingSection({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCreate = async (data: any) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
     try {
       const response = await createRiskFindingGrading(reportGuideId, data);
       if (response.success) {
@@ -61,6 +65,7 @@ export function RiskFindingsGradingSection({
   };
 
   const handleUpdate = async (itemId: string, data: any) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
     try {
       const response = await updateRiskFindingGrading(reportGuideId, itemId, data);
       if (response.success) {
@@ -75,6 +80,7 @@ export function RiskFindingsGradingSection({
   };
 
   const handleDeleteClick = (item: RiskFindingGrading) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_delete")) return;
     setDeleteDialog({
       open: true,
       itemId: item.id,

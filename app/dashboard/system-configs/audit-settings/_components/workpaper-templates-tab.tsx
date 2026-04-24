@@ -12,6 +12,8 @@ import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 import { usePermissions } from "@/hooks/use-permissions";
 import { CreateWorkpaperTemplateDialog } from "./create-workpaper-dialog";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface WorkingPaperTemplate {
   id: string;
   name: string;
@@ -34,7 +36,7 @@ export default function WorkpaperTemplatesTab() {
   const paginationData = response?.data?.pagination as Pagination;
 
   const handleOpenCreateDialog = () => {
-    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
     setIsCreateDialogOpen(true);
   };
 

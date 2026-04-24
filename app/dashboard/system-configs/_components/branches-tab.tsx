@@ -43,6 +43,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/status-badge";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface Province {
   id: string;
   name: string;
@@ -161,7 +163,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
         <Button
           size="sm"
           onClick={() => {
-            if (!checkPermission("BRANCH_MGMT", "can_create")) return;
+            if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_create")) return;
             setEditingBranch(null);
             setOpenModal(true);
           }}>
@@ -243,7 +245,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        if (!checkPermission("BRANCH_MGMT", "can_edit")) return;
+                        if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_edit")) return;
                         setEditingBranch(branch);
                         setOpenModal(true);
                         e.stopPropagation();
@@ -256,7 +258,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
+                        if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_delete")) return;
                         setBranchToDelete(branch);
                         setDeleteDialogOpen(true);
                         e.stopPropagation();

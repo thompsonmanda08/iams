@@ -17,6 +17,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type RiskAppetiteStatus = {
   id: string;
@@ -38,6 +40,7 @@ type PaginationState = {
 };
 
 export function RiskAppetiteStatusList() {
+  const { checkPermission } = usePermissions();
   const [appetites, setAppetites] = useState<RiskAppetiteStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{
@@ -114,6 +117,7 @@ export function RiskAppetiteStatusList() {
   };
 
   const handleDeleteClick = (appetite: RiskAppetiteStatus) => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       appetiteId: appetite.id,
@@ -140,10 +144,12 @@ export function RiskAppetiteStatusList() {
   };
 
   const handleCreateClick = () => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_create")) return;
     setDialog({ open: true, appetite: null });
   };
 
   const handleEditClick = (appetite: RiskAppetiteStatus) => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_edit")) return;
     setDialog({ open: true, appetite });
   };
 

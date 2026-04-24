@@ -32,6 +32,8 @@ import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { submitIncidentFindings } from "@/app/_actions/incident-actions";
 import { Separator } from "@radix-ui/react-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface ActionIncidentSubmissionDialogProps {
   open: boolean;
@@ -49,6 +51,7 @@ export function ActionIncidentSubmissionDialog({
   onOpenChange,
   actionDefinition
 }: ActionIncidentSubmissionDialogProps) {
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState<SubmissionFormData>({
     comment: "",
     file_urls: []
@@ -119,6 +122,8 @@ export function ActionIncidentSubmissionDialog({
   };
 
   const handleSubmit = async () => {
+    if (!checkPermission(MODULE_CODES.RISK_INCIDENTS, "can_edit")) return;
+
     if (!formData.comment.trim()) {
       notify({ description: "Please add a comment before submitting", type: "error" });
       return;

@@ -19,6 +19,8 @@ import Loader from "@/components/ui/loader";
 import { cn, notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 // Framework field configurations
 type FrameworkFields = {
   [key: string]: {
@@ -153,9 +155,9 @@ export default function NewCategoryPage({ params, initialData, categoryId }: New
     }
 
     if (isUpdating && categoryId) {
-      if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
+      if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
     } else {
-      if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+      if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
     }
 
     setIsSubmitting(true);

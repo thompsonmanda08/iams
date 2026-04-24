@@ -19,6 +19,8 @@ import { useAssessActionFindingsMutation } from "@/hooks/use-action-mutations";
 import type { ActionFindings } from "@/app/_actions/risk-module-actions";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface ActionAssessmentFormProps {
   findings: ActionFindings;
   reviewerId: string;
@@ -51,7 +53,7 @@ export function ActionAssessmentForm({
   });
 
   const handleSubmit = () => {
-    if (!checkPermission("RISK_ACTIONS", "can_approve")) return;
+    if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_approve")) return;
     // Validation
     if (!formData.reviewer_feedback.trim()) {
       return;

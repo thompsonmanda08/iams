@@ -20,6 +20,8 @@ import { Loader2 } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 import { notify } from "@/lib/utils";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface AssignFindingActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -88,7 +90,7 @@ export function AssignFindingActionDialog({
   };
 
   const handleSubmit = () => {
-    if (!checkPermission("AUDIT_PLANS", "can_assign")) {
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_assign")) {
       notify({ type: "error", description: "You do not have permission to assign actions" });
       return;
     }

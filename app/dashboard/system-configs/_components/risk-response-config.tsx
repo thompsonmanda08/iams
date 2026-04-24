@@ -10,6 +10,8 @@ import { Edit2, Save, X } from "lucide-react";
 import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type ResponseStrategy = {
   id: string;
   name: string;
@@ -101,7 +103,7 @@ export function RiskResponseConfig() {
             </div>
             {!editingStrategies ? (
               <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
                 setEditingStrategies(true);
               }}>
                 <Edit2 className="mr-2 h-4 w-4" />
@@ -165,7 +167,7 @@ export function RiskResponseConfig() {
             </div>
             {!editingStatuses ? (
               <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
                 setEditingStatuses(true);
               }}>
                 <Edit2 className="mr-2 h-4 w-4" />

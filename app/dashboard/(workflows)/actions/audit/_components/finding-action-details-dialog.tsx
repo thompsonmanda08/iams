@@ -41,6 +41,7 @@ import {
   ActionEvidenceTabSkeleton,
   ReviewsTabSkeleton
 } from "@/components/skeleton-loader";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface FindingActionDetailsDialogProps {
   open: boolean;
@@ -757,7 +758,7 @@ export function FindingActionDetailsDialog({
                         <Button
                           size="sm"
                           onClick={() => {
-                            if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                            if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
                             setSubmitEvidenceOpen(true);
                           }}
                           className="gap-2">
@@ -851,7 +852,7 @@ export function FindingActionDetailsDialog({
                         <Button
                           size="sm"
                           onClick={() => {
-                            if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                            if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
                             setReviewEvidenceOpen(true);
                           }}
                           className="gap-2"
@@ -911,7 +912,7 @@ export function FindingActionDetailsDialog({
             {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
               <Button
                 onClick={() => {
-                  if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+                  if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
                   setCreateReassessmentOpen(true);
                 }}
                 className="w-full">

@@ -25,6 +25,8 @@ import {
 import { notify } from "@/lib/utils";
 import { getDepartments } from "@/app/_actions/config-actions";
 import { createRisk, updateRisk } from "@/app/_actions/risk-module-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type Department = {
   id: string;
@@ -43,6 +45,7 @@ interface RiskFormDialogProps {
 
 export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFormDialogProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
@@ -109,6 +112,9 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, risk ? "can_edit" : "can_create")) return;
+
     setIsLoading(true);
 
     try {

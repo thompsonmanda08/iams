@@ -27,8 +27,7 @@ export function AppSidebar({
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
 
-  const { data: sessionResponse, isLoading } = useSystemSetup(isAuthenticated);
-  const session = sessionResponse?.data;
+  const { data: session, isLoading } = useSystemSetup(isAuthenticated);
   const isLoadingUser = isLoading || !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
 
   const user = React.useMemo(() => {
@@ -53,7 +52,11 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full">
-          <NavMain user={user} isAuthenticated={isAuthenticated} />
+          <NavMain
+            user={user}
+            isAuthenticated={isAuthenticated}
+            permissions={session?.permissions}
+          />
         </ScrollArea>
       </SidebarContent>
       <SidebarFooter>

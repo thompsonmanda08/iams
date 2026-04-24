@@ -1,6 +1,8 @@
 import { useMemo, useCallback } from "react";
 import { notify } from "@/lib/utils";
 import { useSystemSetup } from "@/hooks/use-users-query-data";
+import { buildPermissionMap } from "@/lib/permissions/build-permission-map";
+import type { ModuleCode } from "@/lib/constants/module-codes";
 import type { ModulePermissions, PermissionAction } from "@/lib/types";
 
 /** Maps permission actions to human-readable verbs for contextual toast messages */
@@ -16,30 +18,6 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
 };
 
 /**
- * Builds a flat map of module_code -> permissions from the nested API response.
- * Handles both parent modules and their sub_modules.
- */
-function buildPermissionMap(permissions: any[]): Map<string, ModulePermissions> {
-  const map = new Map<string, ModulePermissions>();
-
-  for (const mod of permissions) {
-    if (mod.module_code && mod.permissions) {
-      map.set(mod.module_code, mod.permissions);
-    }
-
-    if (Array.isArray(mod.sub_modules)) {
-      for (const sub of mod.sub_modules) {
-        if (sub.module_code && sub.permissions) {
-          map.set(sub.module_code, sub.permissions);
-        }
-      }
-    }
-  }
-
-  return map;
-}
-
-/**
  * Hook that provides permission checking utilities based on the current user's session.
  *
  * Usage:
@@ -47,34 +25,31 @@ function buildPermissionMap(permissions: any[]): Map<string, ModulePermissions> 
  * const { hasPermission, checkPermission } = usePermissions();
  *
  * // Silent check (no toast)
- * if (hasPermission("RISK_REGISTERS", "can_create")) { ... }
+ * if (hasPermission(MODULE_CODES.RISK_REGISTERS, "can_create")) { ... }
  *
  * // Check + toast on denial (use in onClick/onSubmit handlers)
  * const handleCreate = () => {
- *   if (!checkPermission("RISK_REGISTERS", "can_create")) return;
+ *   if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_create")) return;
  *   // proceed with action...
  * };
  * ```
  */
 export function usePermissions() {
-  const { data: sessionResponse } = useSystemSetup(true);
-  const session = sessionResponse?.data;
+  const { data: session } = useSystemSetup(true);
 
   const isBackofficeAdmin = session?.user?.user_type === "BACKOFFICE_ADMIN";
 
-  const permissionMap = useMemo(() => {
-    if (!session?.permissions || !Array.isArray(session.permissions)) {
-      return new Map<string, ModulePermissions>();
-    }
-    return buildPermissionMap(session.permissions);
-  }, [session?.permissions]);
+  const permissionMap = useMemo(
+    () => buildPermissionMap(session?.permissions ?? []),
+    [session?.permissions]
+  );
 
   /**
    * Returns the full permission object for a given module code.
    * Returns null if the module is not found.
    */
   const getPermissions = useCallback(
-    (moduleCode: string): ModulePermissions | null => {
+    (moduleCode: ModuleCode): ModulePermissions | null => {
       return permissionMap.get(moduleCode) ?? null;
     },
     [permissionMap]
@@ -86,7 +61,7 @@ export function usePermissions() {
    * BACKOFFICE_ADMIN users are granted all permissions.
    */
   const hasPermission = useCallback(
-    (moduleCode: string, action: PermissionAction): boolean => {
+    (moduleCode: ModuleCode, action: PermissionAction): boolean => {
       if (isBackofficeAdmin) return true;
       const perms = permissionMap.get(moduleCode);
       if (!perms) return false;
@@ -101,12 +76,12 @@ export function usePermissions() {
    * Use this in onClick/onSubmit handlers as a guard.
    * BACKOFFICE_ADMIN users are granted all permissions.
    *
-   * @param moduleCode - The module code to check (e.g., "RISK_REGISTERS")
+   * @param moduleCode - The module code to check (e.g., MODULE_CODES.RISK_REGISTERS)
    * @param action - The permission action to check (e.g., "can_create")
    * @param customMessage - Optional custom message to override the default contextual message
    */
   const checkPermission = useCallback(
-    (moduleCode: string, action: PermissionAction, customMessage?: string): boolean => {
+    (moduleCode: ModuleCode, action: PermissionAction, customMessage?: string): boolean => {
       if (isBackofficeAdmin) return true;
       const perms = permissionMap.get(moduleCode);
       if (!perms || perms[action] !== true) {

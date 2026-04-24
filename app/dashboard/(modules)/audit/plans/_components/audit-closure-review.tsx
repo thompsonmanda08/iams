@@ -35,6 +35,8 @@ import { computeClosureChecklist } from "@/lib/utils/audit-closure-checklist";
 import type { ClosureChecklist } from "@/app/_actions/audit-closure-actions";
 import { cn, notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 const CLOSURE_ENABLED_STATUSES = ["APPROVED", "COMPLETED", "CLOSURE_REVIEW", "CLOSED"];
 
@@ -102,6 +104,7 @@ export function AuditClosureReview({
   onAuditPlanUpdate
 }: AuditClosureReviewProps) {
   const { session } = useSession();
+  const { checkPermission } = usePermissions();
   const [showClosureDialog, setShowClosureDialog] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const [showSignOffDialog, setShowSignOffDialog] = useState(false);
@@ -188,6 +191,7 @@ export function AuditClosureReview({
   };
 
   const handleRequestClosure = () => {
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
     setRequestError(null);
     requestClosure(
       { auditPlanId: auditPlan.id, closureNotes, teamLeadSignOff: true },
@@ -645,6 +649,7 @@ export function AuditClosureReview({
               </Button>
               <Button
                 onClick={() => {
+                  if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
                   submitSignOff(
                     { auditPlanId: auditPlan.id, managementComments: signOffComments },
                     {

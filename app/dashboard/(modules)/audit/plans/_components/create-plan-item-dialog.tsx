@@ -24,6 +24,8 @@ import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 import { Department, ErrorState } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type AnnualPlanItem = {
   id?: string;
   department_id: string;
@@ -152,7 +154,7 @@ export function CreatePlanItemDialog({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    if (!checkPermission("AUDIT_PLANS", initialData && selectedItemId ? "can_edit" : "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, initialData && selectedItemId ? "can_edit" : "can_create")) return;
     saveMutation.mutate(formData);
   }
 

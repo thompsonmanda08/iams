@@ -14,6 +14,8 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { useCreateEffectivenessLevelMutation, useUpdateEffectivenessLevelMutation } from "@/hooks/use-config-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type ControlEffectiveness = {
   id: string;
@@ -37,6 +39,7 @@ export function ControlEffectivenessDialog({
   onSuccess,
   control
 }: ControlEffectivenessDialogProps) {
+  const { checkPermission } = usePermissions();
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -81,6 +84,8 @@ export function ControlEffectivenessDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, isEditMode ? "can_edit" : "can_create")) return;
 
     if (!formData.name.trim()) {
       return;

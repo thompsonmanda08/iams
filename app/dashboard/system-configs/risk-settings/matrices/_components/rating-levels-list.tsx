@@ -23,6 +23,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMatrixRatings, useDeleteRating } from "@/hooks/use-matrix-query-data";
 import { QUERY_KEYS } from "@/lib/constants";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type Rating = {
   id: string;
   name: string;
@@ -108,7 +110,7 @@ export function RatingLevelsList({ matrixId, initialData }: RatingLevelsListProp
   };
 
   const handleDeleteConfirm = async () => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     if (!deleteDialog.ratingId) return;
     const response = await deleteRatingMutation.mutateAsync(deleteDialog.ratingId);
     if (response.success) {

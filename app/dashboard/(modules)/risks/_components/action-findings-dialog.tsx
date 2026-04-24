@@ -23,6 +23,8 @@ import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface ActionFindingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -126,7 +128,7 @@ export function ActionFindingsDialog({
   });
 
   const handleSubmit = async () => {
-    if (!checkPermission("RISK_ACTIONS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_create")) return;
 
     // Validation
     if (!formData.evidence_description.trim()) {

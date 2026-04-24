@@ -26,6 +26,8 @@ import { useCompleteWorkflowTaskMutation } from "@/hooks/use-task-mutations";
 import { usePermissions } from "@/hooks/use-permissions";
 import type { WorkflowTask } from "@/lib/types/task";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface TaskActionDialogProps {
   task: WorkflowTask | null;
   action: "APPROVED" | "REJECTED" | null;
@@ -53,7 +55,7 @@ export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActio
   const actionLabel = isApproving ? "Approve" : "Reject";
 
   const handleSubmit = () => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_approve")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_approve")) return;
     if (action === "REJECTED" && !comment.trim()) {
       notify({ description: "Comment is required when rejecting a task", type: "error" });
       return;

@@ -31,6 +31,8 @@ import { MetadataDisplay } from "@/components/audit/metadata-display";
 import { usePermissions } from "@/hooks/use-permissions";
 import { notify } from "@/lib/utils";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface TemplateCategoriesTableProps {
   categories: TemplateCategory[];
   templateId: string;
@@ -56,7 +58,7 @@ export function TemplateCategoriesTable({
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
     e.stopPropagation();
-    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_delete")) return;
     setCategoryToDelete(category);
     setDeleteDialogOpen(true);
   };
@@ -194,7 +196,7 @@ export function TemplateCategoriesTable({
                     <Link
                       href={`/dashboard/system-configs/audit-settings/templates/${templateId}/categories/${category.id}/edit`}
                       onClick={(e) => {
-                        if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) {
+                        if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) {
                           e.preventDefault();
                         }
                       }}

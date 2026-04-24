@@ -26,6 +26,8 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type ModuleIcon = ReactElement | React.ReactNode | string;
 
 interface Module {
@@ -180,7 +182,7 @@ export default function ModuleListConfig({ initialModules = [] }: { initialModul
                         size="icon"
                         className="text-chart-1 hover:text-chart-1 hover:bg-chart-1/10 h-7 w-7"
                         onClick={() => {
-                          if (!checkPermission("USER_MGMT", "can_edit")) return;
+                          if (!checkPermission(MODULE_CODES.USER_MGMT, "can_edit")) return;
                           setEditingSubModule(subModule.id);
                         }}>
                         <Pencil className="h-3.5 w-3.5" />
@@ -189,7 +191,7 @@ export default function ModuleListConfig({ initialModules = [] }: { initialModul
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          if (!checkPermission("USER_MGMT", "can_delete")) return;
+                          if (!checkPermission(MODULE_CODES.USER_MGMT, "can_delete")) return;
                         }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7">
                         <Trash2 className="h-3.5 w-3.5" />
@@ -326,7 +328,7 @@ export function CreateOrUpdateModuleDialog({
   const { checkPermission } = usePermissions();
 
   const handleSubmit = () => {
-    if (!checkPermission("USER_MGMT", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_create")) return;
     console.log("Saving module:", formData);
     saveMutation.mutate(formData);
   };

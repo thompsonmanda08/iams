@@ -32,6 +32,8 @@ import { Pagination } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { StatusBadge } from "@/components/status-badge";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface Universe {
   id: string;
@@ -58,6 +60,7 @@ const UniverseDetails = ({
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
+  const { checkPermission } = usePermissions();
   const [showItemForm, setShowItemForm] = useState(false);
   const [submitConfirmationOpen, setSubmitConfirmationOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,6 +112,7 @@ const UniverseDetails = ({
   });
 
   const handleDeleteClick = (itemId: string) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
     setItemToDelete(itemId);
     setDeleteConfirmOpen(true);
   };
@@ -166,6 +170,7 @@ const UniverseDetails = ({
   };
 
   const handleSubmitUniverse = async () => {
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
     setIsSubmitting(true);
     try {
       const result = await submitUniverseForApproval(universe.id);

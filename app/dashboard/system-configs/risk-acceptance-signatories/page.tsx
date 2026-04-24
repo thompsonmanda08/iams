@@ -17,8 +17,11 @@ import {
   type RiskAcceptanceConfig,
   type RiskAcceptanceConfigInput
 } from "@/app/_actions/risk-module-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 export default function RiskAcceptanceSignatoriesPage() {
+  const { checkPermission } = usePermissions();
   const [config, setConfig] = useState<Partial<RiskAcceptanceConfig>>({
     signoff_role_ids: [],
     is_enabled: false
@@ -244,7 +247,10 @@ export default function RiskAcceptanceSignatoriesPage() {
             {/* Save Button */}
             <div className="sticky top-6 space-y-2">
               <Button
-                onClick={() => handleSaveConfig()}
+                onClick={() => {
+                  if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
+                  handleSaveConfig();
+                }}
                 disabled={!hasChanges || isSaving}
                 className="w-full"
                 size="lg">

@@ -24,6 +24,8 @@ import { Loader2 } from "lucide-react";
 import { useCreateFindingReassessmentMutation } from "@/hooks/use-finding-actions-queries";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface CreateReassessmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -102,7 +104,7 @@ export function CreateReassessmentDialog({
   };
 
   const handleSubmit = () => {
-    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
     if (!validateForm()) {
       return;
     }

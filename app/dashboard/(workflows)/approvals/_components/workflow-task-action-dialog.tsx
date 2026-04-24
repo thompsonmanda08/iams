@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation";
 import { useCompleteWorkflowTaskMutation } from "@/hooks/use-workflow-tasks";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface WorkflowTask {
   id: string;
   instance_id: string;
@@ -51,7 +53,7 @@ export function WorkflowTaskActionDialog({
   const { checkPermission } = usePermissions();
 
   const handleCompleteTask = async () => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_approve")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_approve")) return;
     if (!task || !action) return;
 
     completeTaskMutation.mutate(

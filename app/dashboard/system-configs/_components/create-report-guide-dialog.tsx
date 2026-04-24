@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { notify } from "@/lib/utils";
 import { createReportGuide } from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface CreateReportGuideDialogProps {
   open: boolean;
@@ -28,6 +30,7 @@ export function CreateReportGuideDialog({
   onOpenChange,
   onSuccess
 }: CreateReportGuideDialogProps) {
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +40,8 @@ export function CreateReportGuideDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
 
     if (!formData.name.trim()) {
       notify({ description: "Please enter a guide name", type: "error" });

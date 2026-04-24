@@ -14,6 +14,8 @@ import { RequiresApprovalState } from "./requires-approval-state";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface FindingsListProps {
   findings: any[];
   onRefresh: () => void;
@@ -106,7 +108,7 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  if (!checkPermission("AUDIT_WPS", "can_assign")) return;
+                  if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_assign")) return;
                   setAssignActionDialogOpen(true);
                 }}
                 className="gap-2">

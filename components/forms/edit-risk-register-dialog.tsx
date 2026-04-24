@@ -29,6 +29,8 @@ import { getDepartments } from "@/app/_actions/config-actions";
 import { updateRiskRegister } from "@/app/_actions/risk-module-actions";
 import { RiskRegister } from "@/lib/types/risk-types";
 import { SearchSelectField } from "../ui/search-select-field";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type Department = {
   id: string;
@@ -48,6 +50,7 @@ export default function EditRiskRegisterDialog({
   register
 }: EditRiskRegisterDialogProps) {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -86,6 +89,8 @@ export default function EditRiskRegisterDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_edit")) return;
 
     // Validate dates are selected
     if (!startDate || !dueDate) {

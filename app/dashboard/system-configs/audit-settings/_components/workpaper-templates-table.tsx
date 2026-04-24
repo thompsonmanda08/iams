@@ -25,6 +25,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/use-permissions";
 import { notify } from "@/lib/utils";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface WorkingPaperTemplate {
   id: string;
   name: string;
@@ -58,13 +60,13 @@ export function WorkpaperTemplatesTable({
   const [templateToEdit, setTemplateToEdit] = useState<WorkingPaperTemplate | null>(null);
 
   const handleDeleteClick = (template: WorkingPaperTemplate) => {
-    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_delete")) return;
     setTemplateToDelete(template);
     setDeleteDialogOpen(true);
   };
 
   const handleEditClick = (template: WorkingPaperTemplate) => {
-    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
 
     // setTemplateToEdit(template);
     setTemplateToEdit({
@@ -160,7 +162,7 @@ export function WorkpaperTemplatesTable({
           <Button
             size="lg"
             onClick={() => {
-              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
               onCreateClick?.();
             }}
             className="gap-2">

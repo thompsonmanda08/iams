@@ -15,6 +15,8 @@ import { ClipboardList, LogsIcon } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { notify } from "@/lib/utils";
 import { sendFollowupReminder } from "@/app/_actions/finding-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface FindingActionsPageLayoutProps {
   initialActions: FindingAction[];
@@ -50,6 +52,7 @@ export function FindingActionsPageLayout({
 }: FindingActionsPageLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { checkPermission } = usePermissions();
 
   const [activeTab, setActiveTab] = useState("my-actions");
   const [statusFilter, setStatusFilter] = useState<ActionStatus | "ALL">("ALL");
@@ -145,7 +148,7 @@ export function FindingActionsPageLayout({
   });
 
   const handleSendReminder = async (actionId: string) => {
-    // Ensure evidence_summary is set
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_assign")) return;
 
     await sendReminder.mutateAsync(actionId, {
       onSuccess: () => {

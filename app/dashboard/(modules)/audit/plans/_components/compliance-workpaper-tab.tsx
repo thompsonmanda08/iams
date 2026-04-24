@@ -22,6 +22,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { getFrameworkSidebarFields } from "@/lib/utils/finding-form-utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 const isCompletedFinding = (finding: any): boolean => finding.status !== "OPEN";
 
 interface ComplianceAuditWorkpaperTabProps {
@@ -279,7 +281,7 @@ export function ComplianceAuditWorkpaperTab({
                                 <Button
                                   size="sm"
                                   onClick={() => {
-                                    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+                                    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
                                     setEditingFinding(finding);
                                   }}
                                   className="shrink-0">

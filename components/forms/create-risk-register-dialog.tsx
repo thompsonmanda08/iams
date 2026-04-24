@@ -29,6 +29,8 @@ import { cn, notify } from "@/lib/utils";
 import { getBranches, getDepartments } from "@/app/_actions/config-actions";
 import { createRiskRegister } from "@/app/_actions/risk-module-actions";
 import { SearchSelectField } from "../ui/search-select-field";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type Department = {
   id: string;
@@ -38,6 +40,7 @@ type Department = {
 
 export default function CreateRiskRegisterDialog() {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
@@ -73,6 +76,8 @@ export default function CreateRiskRegisterDialog() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_create")) return;
 
     // Validate dates are selected
     if (!startDate || !dueDate) {

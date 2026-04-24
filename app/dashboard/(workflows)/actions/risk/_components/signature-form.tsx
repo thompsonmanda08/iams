@@ -11,6 +11,8 @@ import { cn, notify } from "@/lib/utils";
 import { format } from "date-fns";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { submitRiskAcceptanceSignature } from "@/app/_actions/risk-module-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 export interface ApproverSignature {
   action_id: string;
@@ -36,6 +38,7 @@ export default function SignatureForm({
   onSubmit,
   onClose
 }: SignatureFormProps) {
+  const { checkPermission } = usePermissions();
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);
@@ -150,6 +153,8 @@ export default function SignatureForm({
   };
 
   const handleSubmit = async () => {
+    if (!checkPermission(MODULE_CODES.RISK_ACCEPTANCES, "can_approve")) return;
+
     if (!formData.name.trim()) {
       notify({ description: "Please enter your name", type: "error" });
       return;

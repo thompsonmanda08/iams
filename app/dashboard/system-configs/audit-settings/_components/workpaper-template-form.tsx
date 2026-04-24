@@ -19,6 +19,8 @@ import { ErrorState } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
 import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 export const FRAMEWORK_TYPES = [
   { id: "ISO27001", name: "ISO 27001 Audit" },
   { id: "COSO", name: "COSO Audit" },
@@ -110,7 +112,7 @@ export function WorkpaperTemplateForm({
 
   async function handleCreateOrUpdate(e: React.FormEvent) {
     e.preventDefault();
-    if (!checkPermission("AUDIT_MODULE_CONFIG", initialData ? "can_edit" : "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, initialData ? "can_edit" : "can_create")) return;
     saveMutation.mutate(formData);
   }
 

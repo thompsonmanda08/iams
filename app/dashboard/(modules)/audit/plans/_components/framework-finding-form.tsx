@@ -45,6 +45,8 @@ import { EvidenceList } from "./evidence-list";
 import { Spinner } from "@/components/ui/spinner";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface FrameworkFindingFormProps {
   category: any;
   auditPlan: AuditPlan;
@@ -258,7 +260,7 @@ export function FrameworkFindingForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
 
     // Check if there's unsaved evidence form
     if (showEvidenceForm) {

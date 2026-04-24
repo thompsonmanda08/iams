@@ -33,6 +33,8 @@ import { SearchSelectField } from "@/components/ui/search-select-field";
 import { usePermissions } from "@/hooks/use-permissions";
 import type { WorkflowTask } from "@/lib/types/task";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface WorkflowTaskReassignDialogProps {
   task: WorkflowTask | null;
   open: boolean;
@@ -72,7 +74,7 @@ export function WorkflowTaskReassignDialog({
   const availableUsers = usersResponse?.data || [];
 
   const handleReassignTask = async () => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_assign")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_assign")) return;
     if (!task || !selectedUserId) return;
 
     reassignTaskMutation.mutate(

@@ -17,6 +17,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type ControlEffectiveness = {
   id: string;
@@ -37,6 +39,7 @@ type PaginationState = {
 };
 
 export function ControlEffectivenessList() {
+  const { checkPermission } = usePermissions();
   const [controls, setControls] = useState<ControlEffectiveness[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{
@@ -113,6 +116,7 @@ export function ControlEffectivenessList() {
   };
 
   const handleDeleteClick = (control: ControlEffectiveness) => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       controlId: control.id,

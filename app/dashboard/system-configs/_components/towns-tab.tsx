@@ -40,6 +40,8 @@ import {
 import { CustomPagination } from "@/components/ui/pagination";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface Province {
   id: string;
   name: string;
@@ -92,7 +94,7 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
   });
 
   const handleDeleteTown = async (id: string) => {
-    if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_delete")) return;
     if (true) {
       return notify({ description: "This action currently is disabled", type: "warning" });
     }
@@ -339,9 +341,9 @@ function CreateOrUpdateTownDialog({
     e.preventDefault();
 
     if (initialData) {
-      if (!checkPermission("BRANCH_MGMT", "can_edit")) return;
+      if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_edit")) return;
     } else {
-      if (!checkPermission("BRANCH_MGMT", "can_create")) return;
+      if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_create")) return;
     }
 
     if (!formData.province_id) {

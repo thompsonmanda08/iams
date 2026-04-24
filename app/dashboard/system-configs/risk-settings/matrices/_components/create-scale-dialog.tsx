@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { notify } from "@/lib/utils";
 import { createScale } from "@/app/_actions/config-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type CreateScaleDialogProps = {
   open: boolean;
@@ -32,6 +34,7 @@ export function CreateScaleDialog({
   scaleType,
   onSuccess
 }: CreateScaleDialogProps) {
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     level: 1,
@@ -42,6 +45,8 @@ export function CreateScaleDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_create")) return;
 
     if (!formData.name.trim()) {
       notify({ description: "Scale name is required", type: "error" });

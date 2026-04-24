@@ -95,15 +95,22 @@ export const useRefreshToken = (enabled: boolean = false, sessionTimeoutMs?: num
  */
 export const useSystemSetup = (enabled: boolean = false) =>
   useQuery({
-    queryKey: [USERS_QUERY_KEYS.SYS_SETUP, enabled], // Add enabled to key to prevent cache collision
-    queryFn: initializeSystemSetup,
-    retry: 2, // ✅ No retries - fail fast
-    refetchInterval: false, // ✅ DISABLED: Prevents automatic refetch every 5 minutes
-    refetchOnMount: false, // ✅ Don't refetch when component mounts
-    refetchOnWindowFocus: false, // ✅ Don't refetch when window gains focus
-    refetchOnReconnect: true, // ✅ Refetch when network reconnects
-    staleTime: Infinity, // ✅ Never go stale
-    enabled // ✅ Disabled by default
+    queryKey: [USERS_QUERY_KEYS.SYS_SETUP, enabled],
+    queryFn: async () => {
+      const response = await initializeSystemSetup();
+      if (!response.success) {
+        throw new Error("System setup failed");
+      }
+
+      return response.data;
+    },
+    retry: 2,
+    refetchInterval: false,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    staleTime: 5 * 60 * 1000,
+    enabled
   });
 
 /**

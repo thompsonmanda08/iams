@@ -44,6 +44,8 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface CategoryFormData {
   name: string;
   code: string;
@@ -101,7 +103,7 @@ export default function FindingsCategoryTab({
   });
 
   const handleDeleteClick = (id: string) => {
-    if (!checkPermission("AUDIT_MODULE_CONFIG", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_delete")) return;
     setSelectedId(id);
     setDeleteDialogOpen(true);
   };
@@ -124,7 +126,7 @@ export default function FindingsCategoryTab({
           <Button
             size="sm"
             onClick={() => {
-              if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
               setFormData(null);
               setOpenModal(true);
             }}>
@@ -163,7 +165,7 @@ export default function FindingsCategoryTab({
                         <Button
                           size="sm"
                           onClick={() => {
-                            if (!checkPermission("AUDIT_MODULE_CONFIG", "can_create")) return;
+                            if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
                             setFormData(null);
                             setOpenModal(true);
                           }}>
@@ -195,7 +197,7 @@ export default function FindingsCategoryTab({
                         variant="outline"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!checkPermission("AUDIT_MODULE_CONFIG", "can_edit")) return;
+                          if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
                           setFormData({ ...item });
                           setSelectedId(item.id);
                           setOpenModal(true);

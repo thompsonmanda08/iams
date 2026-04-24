@@ -15,6 +15,8 @@ import { notify } from "@/lib/utils";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface EvidenceFormProps {
   finding_id: string;
   evidence?: FindingEvidence | null;
@@ -90,7 +92,7 @@ export function EvidenceForm({
   };
 
   const handleSubmit = async (e: any) => {
-    if (!checkPermission("AUDIT_WPS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_create")) return;
     // e.preventDefault();
 
     // Validate required fields

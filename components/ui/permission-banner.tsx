@@ -5,6 +5,8 @@ import { ShieldAlert, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface PermissionBannerProps {
   /** The message to display in the banner */
   message?: string;
@@ -50,7 +52,7 @@ const iconStyles = {
  *
  *   return (
  *     <div>
- *       {!hasPermission("RISK_REGISTERS", "can_edit") && (
+ *       {!hasPermission(MODULE_CODES.RISK_REGISTERS, "can_edit") && (
  *         <PermissionBanner
  *           title="Read-Only Access"
  *           message="You have view-only access to risk registers. Contact your administrator to request edit permissions."

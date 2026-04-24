@@ -43,6 +43,8 @@ import { Department } from "@/lib/types";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 const AUDIT_FREQUENCIES = ["ANNUALLY", "SEMI_ANNUALLY", "QUARTERLY", "AS_NEEDED"];
 
@@ -118,6 +120,7 @@ export default function AuditUniverseForm({
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const isEditing = !!universeId;
 
   // Safely initialize universe data with proper date handling
@@ -459,6 +462,7 @@ export default function AuditUniverseForm({
   };
 
   const handleDeleteClick = (itemId: string) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
     setItemToDelete(itemId);
     setDeleteConfirmOpen(true);
   };
@@ -479,6 +483,8 @@ export default function AuditUniverseForm({
 
   const handleUniverseSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, isEditing ? "can_edit" : "can_create")) return;
 
     if (!universeData.universe_name.trim()) {
       notify({ description: "Please enter a universe name", type: "error" });
@@ -502,6 +508,8 @@ export default function AuditUniverseForm({
 
   const handleItemSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, editingItemId ? "can_edit" : "can_create")) return;
 
     if (!itemData.audit_universe_id) {
       notify({ description: "Please select a universe", type: "error" });

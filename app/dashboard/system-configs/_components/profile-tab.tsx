@@ -30,8 +30,7 @@ import CustomAlert from "@/components/ui/custom-alert";
 
 export function ProfileTab() {
   const queryClient = useQueryClient();
-  const { data: setupResponse, isLoading } = useSystemSetup(true);
-  const session = setupResponse?.data;
+  const { data: session, isLoading } = useSystemSetup(true);
 
   const sessionUser = session?.user;
   const branch = session?.branch;

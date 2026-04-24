@@ -46,6 +46,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 /**
  * Audit Plan Form Data Type
  * Represents the structure of the form data used in the audit plan creation flow
@@ -361,7 +363,7 @@ export default function NewAuditPlanPage() {
   }, []);
 
   async function handleSubmit() {
-    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
     setValidationError(null);
 
     // Validate that all required categories are selected (compliance only)

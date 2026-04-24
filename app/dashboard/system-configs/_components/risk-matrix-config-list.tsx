@@ -20,6 +20,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type RiskMatrix = {
   id: string;
@@ -42,6 +44,7 @@ type PaginationState = {
 
 export function RiskMatrixConfigList() {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [matrices, setMatrices] = useState<RiskMatrix[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -118,6 +121,7 @@ export function RiskMatrixConfigList() {
   };
 
   const handleDeleteClick = (matrix: RiskMatrix) => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       matrixId: matrix.id,

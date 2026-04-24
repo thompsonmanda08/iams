@@ -41,10 +41,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { adminNavItems, navItems } from "@/lib/routes-config";
+import { adminNavItems, navItems, type NavGroup as NavGroupConfig, type NavItem as NavItemConfig } from "@/lib/routes-config";
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { buildPermissionMap } from "@/lib/permissions/build-permission-map";
 
 // Icon mapping based on the icon strings from API
 const iconMap: Record<string, LucideIcon> = {
@@ -190,7 +191,42 @@ export function transformModulesToNavCustom(
   return transformModulesToNav(apiModules);
 }
 
-export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated: boolean }) {
+type NavMainProps = {
+  user: any;
+  isAuthenticated: boolean;
+  permissions?: any[];
+};
+
+function filterNavByPermissions(
+  groups: NavGroupConfig[],
+  permissionMap: Map<string, { can_view?: boolean } & Record<string, any>>
+): NavGroupConfig[] {
+  const filterItems = (items: NavItemConfig): NavItemConfig => {
+    return items.reduce<NavItemConfig>((acc, item) => {
+      const filteredChildren = Array.isArray(item.items) ? filterItems(item.items) : undefined;
+
+      // Parent with children: keep if any child survived
+      if (item.items && item.items.length > 0) {
+        if (filteredChildren && filteredChildren.length > 0) {
+          acc.push({ ...item, items: filteredChildren });
+        }
+        return acc;
+      }
+
+      // Leaf: keep if no moduleCode gate or user can_view
+      if (!item.moduleCode || permissionMap.get(item.moduleCode)?.can_view === true) {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
+  };
+
+  return groups
+    .map((group) => ({ ...group, items: filterItems(group.items) }))
+    .filter((group) => group.items.length > 0);
+}
+
+export function NavMain({ user, isAuthenticated, permissions }: NavMainProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { isMobile } = useSidebar();
@@ -201,11 +237,17 @@ export function NavMain({ user, isAuthenticated }: { user: any; isAuthenticated:
     return qs ? `${pathname}?${qs}` : pathname;
   }, [pathname, searchParams]);
 
+  const permissionMap = useMemo(
+    () => buildPermissionMap(permissions ?? []),
+    [permissions]
+  );
+
   const routes = useMemo(() => {
-    return user?.user_type === "BACKOFFICE_ADMIN" && pathname.startsWith("/admin/")
-      ? adminNavItems // ADMIN ROUTES
-      : navItems; // DEFAULT ROUTES
-  }, [navItems, user?.user_type]);
+    const isAdmin = user?.user_type === "BACKOFFICE_ADMIN";
+    const source = isAdmin && pathname.startsWith("/admin/") ? adminNavItems : navItems;
+    if (isAdmin) return source;
+    return filterNavByPermissions(source, permissionMap);
+  }, [user?.user_type, pathname, permissionMap]);
 
   return !user ? (
     <div className="space-y-2 px-1 pt-2 pb-4">

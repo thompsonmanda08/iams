@@ -11,6 +11,8 @@ import { notify } from "@/lib/utils";
 import { QUERY_KEYS } from "@/lib/constants";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface FindingActionsMenuProps {
   findingId: string;
   currentStatus: string;
@@ -90,7 +92,7 @@ export function FindingActionsMenu({
   };
 
   const handleStatusChange = (newStatus: string) => {
-    if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
     statusMutation.mutate(newStatus);
   };
 
@@ -102,7 +104,7 @@ export function FindingActionsMenu({
             variant="outline"
             size="sm"
             onClick={() => {
-              if (!checkPermission("AUDIT_WPS", "can_edit")) return;
+              if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
               onEdit();
             }}
             className="gap-2"

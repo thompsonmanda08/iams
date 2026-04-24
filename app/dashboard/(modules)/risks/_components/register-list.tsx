@@ -41,6 +41,8 @@ import { is } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type KRIRegister = {
   id: string;
   name: string;
@@ -172,12 +174,12 @@ export default function KRIRegistersClient({
   };
 
   const handleCreateClick = () => {
-    if (!checkPermission("KRI_DASHBOARD", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.KRI_DASHBOARD, "can_create")) return;
     setDialogOpen(true);
   };
 
   const handleEditClick = (register: KRIRegister) => {
-    if (!checkPermission("KRI_DASHBOARD", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.KRI_DASHBOARD, "can_edit")) return;
     setEditingRegister(register);
     setFormData({
       name: register.name,
@@ -214,7 +216,7 @@ export default function KRIRegistersClient({
   };
 
   const handleDeleteClick = (register: KRIRegister) => {
-    if (!checkPermission("KRI_DASHBOARD", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.KRI_DASHBOARD, "can_delete")) return;
     setRegisterToDelete(register);
     setDeleteDialogOpen(true);
   };

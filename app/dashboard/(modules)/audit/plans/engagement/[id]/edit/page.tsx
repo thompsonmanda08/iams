@@ -48,6 +48,8 @@ import { SearchSelectField } from "@/components/ui/search-select-field";
 import { FRAMEWORK_TYPES } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-template-form";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 /**
  * Audit Plan Form Data Type
  */
@@ -405,7 +407,7 @@ export default function EditAuditPlanPage() {
   }, []);
 
   async function handleSubmit() {
-    if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_edit")) return;
     setValidationError(null);
 
     // Validate that all required categories are selected (compliance only)

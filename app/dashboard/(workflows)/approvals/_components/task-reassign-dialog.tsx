@@ -25,6 +25,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUsersWithRole, useReassignTaskMutation } from "@/hooks/use-task-mutations";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface TaskReassignDialogProps {
   task: Task;
   open: boolean;
@@ -51,7 +53,7 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
   });
 
   const handleSubmit = () => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_assign")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_assign")) return;
     if (!selectedUserId) {
       return;
     }

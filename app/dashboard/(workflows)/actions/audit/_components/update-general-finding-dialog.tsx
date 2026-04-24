@@ -19,6 +19,8 @@ import { useUpdateGeneralFindingReassessment } from "@/hooks/use-finding-actions
 import { usePermissions } from "@/hooks/use-permissions";
 import { EvidenceUploadCell } from "@/components/audit/evidence-upload-cell";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface UpdateGeneralFindingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -107,7 +109,7 @@ export function UpdateGeneralFindingDialog({
   };
 
   const handleSubmit = () => {
-    if (!checkPermission("AUDIT_PLANS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
 
     updateMutation.mutate(
       {

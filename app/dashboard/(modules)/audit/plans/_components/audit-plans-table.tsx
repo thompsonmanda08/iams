@@ -35,6 +35,8 @@ import { Pagination } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
 import { notify } from "@/lib/utils";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface AuditPlansTableProps {
   plans: AuditPlan[];
   pagination?: Pagination;
@@ -54,7 +56,7 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
   };
 
   const handleDeleteClick = (plan: AuditPlan) => {
-    if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
     // Only allow deletion for DRAFT plans
     if (plan.status !== "DRAFT") {
       notify({
@@ -287,7 +289,7 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (!checkPermission("AUDIT_PLANS", "can_edit")) return;
+                              if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_edit")) return;
                               router.push(`/dashboard/audit/plans/engagement/${plan.id}/edit`);
                             }}
                             className="h-8 gap-1.5">

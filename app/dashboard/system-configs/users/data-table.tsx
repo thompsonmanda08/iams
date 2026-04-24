@@ -56,6 +56,8 @@ import { useTableSearch } from "@/hooks/use-table-search";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/store/session-store";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type Pagination = {
   total: number;
   page: number;
@@ -269,7 +271,7 @@ export default function UsersDataTable({
   });
 
   const handleToggleStatusClick = (id: string, activate: boolean) => {
-    if (!checkPermission("USER_MGMT", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_edit")) return;
     const user = data.find((u) => u.id === id);
     if (user && isCurrentUser(user) && !activate) {
       notify({ description: "You cannot deactivate your own account", type: "warning" });
@@ -364,7 +366,7 @@ export default function UsersDataTable({
   };
 
   const handleEditClick = (user: User) => {
-    if (!checkPermission("USER_MGMT", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_edit")) return;
     setEditingUser(user);
   };
 

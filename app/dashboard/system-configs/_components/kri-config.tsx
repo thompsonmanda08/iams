@@ -11,6 +11,8 @@ import { Plus, Trash2, Edit2, Save, X, TrendingUp, TrendingDown } from "lucide-r
 import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type KRI = {
   id: string;
   name: string;
@@ -239,7 +241,7 @@ export function KRIConfig() {
   ]);
 
   const handleEditCategory = (categoryId: string) => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
     setEditingCategory(categoryId);
   };
 
@@ -271,7 +273,7 @@ export function KRIConfig() {
   };
 
   const handleAddKRI = (categoryId: string) => {
-    if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
     const newKRI: KRI = {
       id: Date.now().toString(),
       name: "New KRI",

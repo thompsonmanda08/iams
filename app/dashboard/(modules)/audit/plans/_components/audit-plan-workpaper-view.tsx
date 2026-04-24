@@ -40,6 +40,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { AuditPlanDetailsTab } from "./plan-details-tab";
 import { GeneralFindingsList } from "./general-findings-list";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
   workpaperCategories: any[];
@@ -237,7 +239,7 @@ export function AuditPlanWorkpaperView({
                       size="sm"
                       className="gap-2"
                       onClick={() => {
-                        if (!checkPermission("AUDIT_PLANS", "can_approve")) return;
+                        if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
                         if (!memoData) {
                           notify({
                             title: "Engagement Memo Required",
@@ -259,7 +261,7 @@ export function AuditPlanWorkpaperView({
                       <Link
                         href={`/dashboard/audit/plans/engagement/${auditPlan.id}/edit`}
                         onClick={(e) => {
-                          if (!checkPermission("AUDIT_PLANS", "can_edit")) {
+                          if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_edit")) {
                             e.preventDefault();
                           }
                         }}>
@@ -272,7 +274,7 @@ export function AuditPlanWorkpaperView({
                       size="sm"
                       className="gap-2"
                       onClick={() => {
-                        if (!checkPermission("AUDIT_PLANS", "can_delete")) return;
+                        if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
                         setDeleteDialogOpen(true);
                       }}
                       disabled={isDeleting}>

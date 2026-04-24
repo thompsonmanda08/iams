@@ -9,6 +9,8 @@ import { Edit2, Save, X } from "lucide-react";
 import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type ScaleItem = {
   value: number;
   label: string;
@@ -89,7 +91,7 @@ export function RiskMatrixConfig() {
             </div>
             {!editingLikelihood ? (
               <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
                 setEditingLikelihood(true);
               }}>
                 <Edit2 className="mr-2 h-4 w-4" />
@@ -163,7 +165,7 @@ export function RiskMatrixConfig() {
             </div>
             {!editingImpact ? (
               <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission("RISK_MODULE_CONFIGS", "can_configure")) return;
+                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
                 setEditingImpact(true);
               }}>
                 <Edit2 className="mr-2 h-4 w-4" />

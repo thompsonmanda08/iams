@@ -48,6 +48,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { deleteIncident, getIncidents } from "@/app/_actions/incident-actions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { notify } from "@/lib/utils";
 import { CustomPagination } from "@/components/ui/pagination";
 import { IncidentData } from "@/lib/types/incidents-types";
@@ -58,6 +60,7 @@ import { SendForReviewDialog } from "./send-for-review-dialog";
 
 export function MyIncidents() {
   const queryClient = useQueryClient();
+  const { checkPermission } = usePermissions();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { searchValue: searchQuery, setSearchValue: setSearchQuery, debouncedSearch } = useTableSearch({ debounceMs: 200 });
   const [selectedIncident, setSelectedIncident] = useState<IncidentData | null>(null);
@@ -118,6 +121,7 @@ export function MyIncidents() {
   };
 
   const handleDeleteClick = (incident: any) => {
+    if (!checkPermission(MODULE_CODES.RISK_INCIDENTS, "can_delete")) return;
     setDeleteDialog({
       open: true,
       incidentId: incident.incident.id

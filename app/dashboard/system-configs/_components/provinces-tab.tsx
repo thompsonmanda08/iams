@@ -39,6 +39,8 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface Pagination {
   total: number;
   page: number;
@@ -87,7 +89,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
   });
 
   const handleDeleteProvince = async (id: string) => {
-    if (!checkPermission("BRANCH_MGMT", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_delete")) return;
     if (true) {
       return notify({ description: "This action currently is disabled", type: "warning" });
     }
@@ -309,9 +311,9 @@ function CreateOrUpdateProvinceDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (initialData) {
-      if (!checkPermission("BRANCH_MGMT", "can_edit")) return;
+      if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_edit")) return;
     } else {
-      if (!checkPermission("BRANCH_MGMT", "can_create")) return;
+      if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_create")) return;
     }
     saveMutation.mutate(formData);
   };

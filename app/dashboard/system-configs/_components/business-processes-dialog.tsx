@@ -21,6 +21,8 @@ import {
   getBusinessProcesses
 } from "@/app/_actions/config-actions";
 import { SearchSelectField } from "@/components/ui/search-select-field";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type BusinessProcess = {
   id: string;
@@ -44,6 +46,7 @@ export function BusinessProcessesDialog({
   onSuccess,
   process
 }: BusinessProcessesDialogProps) {
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
   const [availableProcesses, setAvailableProcesses] = useState<BusinessProcess[]>([]);
@@ -93,6 +96,8 @@ export function BusinessProcessesDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, isEditMode ? "can_edit" : "can_create")) return;
 
     if (!formData.name.trim()) {
       notify({ description: "Process name is required", type: "error" });

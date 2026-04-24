@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { notify } from "@/lib/utils";
 import { updateReportGuide } from "@/app/_actions/config-actions";
 import { SelectField } from "@/components/ui/select-field";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface ReportGuide {
   id: string;
@@ -39,6 +41,7 @@ export function EditReportGuideDialog({
   guide,
   onSuccess
 }: EditReportGuideDialogProps) {
+  const { checkPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: guide.name,
@@ -56,6 +59,8 @@ export function EditReportGuideDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
 
     if (!formData.name.trim()) {
       notify({ description: "Please enter a guide name", type: "error" });

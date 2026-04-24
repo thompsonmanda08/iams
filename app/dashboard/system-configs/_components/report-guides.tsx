@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/table";
 import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter } from "next/navigation";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 type ReportGuide = {
   id: string;
@@ -41,6 +43,7 @@ type PaginationState = {
 
 export function ReportGuides() {
   const router = useRouter();
+  const { checkPermission } = usePermissions();
   const [guides, setGuides] = useState<ReportGuide[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -125,6 +128,7 @@ export function ReportGuides() {
   };
 
   const handleDeleteClick = (guide: ReportGuide) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_delete")) return;
     setDeleteDialog({
       open: true,
       guideId: guide.id,

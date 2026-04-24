@@ -44,6 +44,8 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useSession } from "@/store/session-store";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 type SignUpFormProps = {
   user: User | null;
   isOpenModal: boolean;
@@ -340,7 +342,7 @@ export default function CreateUserForm({
           // In trigger mode, manage internal state
           if (open) {
             const action = isEditMode ? "can_edit" : "can_create";
-            if (!checkPermission("USER_MGMT", action)) return;
+            if (!checkPermission(MODULE_CODES.USER_MGMT, action)) return;
             setInternalOpen(true);
           } else {
             handleCloseModal();

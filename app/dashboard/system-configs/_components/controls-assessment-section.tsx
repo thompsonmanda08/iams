@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/table";
 import { ControlsAssessmentDialog } from "./controls-assessment-dialog";
 import type { ControlsAssessmentGuide } from "./report-guide-detail";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface ControlsAssessmentSectionProps {
   reportGuideId: string;
@@ -33,6 +35,7 @@ export function ControlsAssessmentSection({
   initialData,
   onDataUpdated
 }: ControlsAssessmentSectionProps) {
+  const { checkPermission } = usePermissions();
   const [items, setItems] = useState<ControlsAssessmentGuide[]>(initialData);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{
@@ -47,6 +50,7 @@ export function ControlsAssessmentSection({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCreate = async (data: any) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
     try {
       const response = await createControlsAssessmentGuide(reportGuideId, data);
       if (response.success) {
@@ -61,6 +65,7 @@ export function ControlsAssessmentSection({
   };
 
   const handleUpdate = async (itemId: string, data: any) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
     try {
       const response = await updateControlsAssessmentGuide(reportGuideId, itemId, data);
       if (response.success) {
@@ -75,6 +80,7 @@ export function ControlsAssessmentSection({
   };
 
   const handleDeleteClick = (item: ControlsAssessmentGuide) => {
+    if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_delete")) return;
     setDeleteDialog({
       open: true,
       itemId: item.id,

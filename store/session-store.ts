@@ -13,14 +13,14 @@ export const useSession = () => {
 
   const isAuthenticated = !!sessionRes?.session?.accessToken;
 
-  const { data: sessionResponse, isLoading: loadingSetup } = useSystemSetup(isAuthenticated);
+  const { data: sessionData, isLoading: loadingSetup } = useSystemSetup(isAuthenticated);
 
   const isLoading = loadingSession || loadingSetup;
 
   return {
     isLoading,
     isAuthenticated,
-    user: sessionResponse?.data || null,
+    user: sessionData || null,
     session: sessionRes?.session || null
   };
 };

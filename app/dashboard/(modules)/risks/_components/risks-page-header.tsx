@@ -8,6 +8,8 @@ import BackButton from "@/components/back-button";
 import PageHeader from "@/components/page-header";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface RisksPageHeaderProps {
   registerId: string;
   registerName?: string;
@@ -18,7 +20,7 @@ export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderPro
   const { checkPermission } = usePermissions();
 
   const handleCreateClick = () => {
-    if (!checkPermission("RISK_REGISTERS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_create")) return;
     setCreateDialogOpen(true);
   };
 

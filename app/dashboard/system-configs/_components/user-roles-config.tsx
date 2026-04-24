@@ -17,6 +17,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
+import { USERS_QUERY_KEYS } from "@/hooks/use-users-query-data";
 import { getDepartmentModules, createRole, updateRole } from "@/app/_actions/config-actions";
 import { getRolePermissions, bulkUpdateRolePermissions } from "@/app/_actions/permissions-actions";
 import {
@@ -46,6 +47,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { useModuleHierarchy } from "@/hooks/use-module-hierarchy";
 import { ModuleGroupCard } from "./module-group-card";
 import type { ModuleGroup } from "@/lib/stores/modules-store";
+
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface RolesPermissionsProps {
   departmentId: string;
@@ -545,6 +548,9 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       // Refetch permissions from server to confirm the changes persisted
       // This ensures the UI reflects what's actually in the database
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLE_PERMISSIONS, selectedRole] });
+      // If the admin just modified their own role's permissions, their client-side
+      // snapshot (used by usePermissions / sidebar filter) is now stale. Invalidate it.
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEYS.SYS_SETUP] });
     },
     onError: (error: Error) => {
       console.error("❌ Failed to save permissions:", error);
@@ -553,7 +559,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
   });
 
   const handleSave = () => {
-    if (!checkPermission("USER_MGMT", "can_configure")) return;
+    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_configure")) return;
     savePermissionsMutation.mutate();
   };
 
@@ -710,7 +716,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
                 <Button
                   size="sm"
                   onClick={() => {
-                    if (!checkPermission("USER_MGMT", "can_create")) return;
+                    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_create")) return;
                     setEditingRole(null);
                     setOpenRoleModal(true);
                   }}>
@@ -745,7 +751,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
           <Button
             size="sm"
             onClick={() => {
-              if (!checkPermission("USER_MGMT", "can_create")) return;
+              if (!checkPermission(MODULE_CODES.USER_MGMT, "can_create")) return;
               setEditingRole(null);
               setOpenRoleModal(true);
             }}>
@@ -794,7 +800,7 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
                       className="absolute top-2 right-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!checkPermission("USER_MGMT", "can_edit")) return;
+                        if (!checkPermission(MODULE_CODES.USER_MGMT, "can_edit")) return;
                         setEditingRole(role);
                         setOpenRoleModal(true);
                       }}>

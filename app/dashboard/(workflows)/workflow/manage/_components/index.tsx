@@ -44,12 +44,15 @@ import {
 } from "@/app/_actions/workflow-actions";
 import { QUERY_KEYS } from "@/lib/constants";
 import { useWorkflowMutations } from "@/hooks/use-workflow-mutations";
+import { usePermissions } from "@/hooks/use-permissions";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface WorkflowClientProps {
   initialWorkflows: WorkflowItem[];
 }
 
 const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
+  const { checkPermission } = usePermissions();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
@@ -88,6 +91,7 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
 
   const handleConfirmDelete = async () => {
     if (!workflowToDelete) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_delete")) return;
 
     setIsDeletingLoading(true);
     try {

@@ -24,6 +24,8 @@ import {
 } from "@/hooks/use-incident-mutations";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 export function NewIncident() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -96,7 +98,7 @@ export function NewIncident() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkPermission("RISK_INCIDENTS", "can_create")) return;
+    if (!checkPermission(MODULE_CODES.RISK_INCIDENTS, "can_create")) return;
     createNewIncident(formData);
   };
 

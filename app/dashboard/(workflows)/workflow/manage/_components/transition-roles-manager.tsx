@@ -15,6 +15,8 @@ import {
 import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface TransitionRolesManagerProps {
   transitionId: string;
   transitionName: string;
@@ -54,7 +56,7 @@ export const TransitionRolesManager = ({
   };
 
   const handleAssignRole = async () => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_edit")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_edit")) return;
     if (!selectedRoleId) {
       notify({ description: "Please select a role", type: "error" });
       return;
@@ -78,7 +80,7 @@ export const TransitionRolesManager = ({
   };
 
   const handleRemoveRole = async (roleId: string) => {
-    if (!checkPermission("WORKFLOW_CONFIG", "can_delete")) return;
+    if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_delete")) return;
     if (!confirm("Are you sure you want to remove this role?")) return;
 
     setIsLoading(true);

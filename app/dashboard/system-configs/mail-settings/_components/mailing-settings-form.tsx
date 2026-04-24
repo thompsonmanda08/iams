@@ -15,6 +15,8 @@ import BackButton from "@/components/back-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePermissions } from "@/hooks/use-permissions";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface SmtpFormData {
   host: string;
   port: number | string;
@@ -106,7 +108,7 @@ export function MailingSettingsForm({
   };
 
   const handleSave = async () => {
-    if (!checkPermission("USER_MGMT", "can_configure")) return;
+    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_configure")) return;
     if (!validateForm()) {
       notify({ description: "Please fix the validation errors", type: "error" });
       return;

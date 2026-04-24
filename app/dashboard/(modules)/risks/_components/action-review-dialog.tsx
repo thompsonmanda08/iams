@@ -29,6 +29,8 @@ import { RiskScoreDisplay } from "./risk-score-display";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+import { MODULE_CODES } from "@/lib/constants/module-codes";
+
 interface ActionReviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -148,7 +150,7 @@ export function ActionReviewDialog({
   };
 
   const handleNextStep = () => {
-    if (!checkPermission("RISK_ACTIONS", "can_approve")) return;
+    if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_approve")) return;
     if (validateStep(step)) {
       // Submit Step 1 review to API - Step 2 will only be shown after success
       submitReviewMutation.mutate();
@@ -226,6 +228,7 @@ export function ActionReviewDialog({
   });
 
   const handleSubmit = () => {
+    if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_edit")) return;
     if (validateStep(2)) {
       updateRiskMutation.mutate();
     }

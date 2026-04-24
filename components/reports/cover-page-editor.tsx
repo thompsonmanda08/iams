@@ -46,7 +46,7 @@ export const CoverPageEditor = ({
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
       // Ensure specific fields exist to prevent runtime errors
       // Use session data as fallback for organization fields
-      const sessionOrg = session?.data;
+      const sessionOrg = session;
       return {
         report_title: parsed.report_title || parsed.title || "",
         report_subtitle: parsed.report_subtitle || parsed.subtitle || "",
@@ -70,7 +70,7 @@ export const CoverPageEditor = ({
       };
     } catch (e) {
       // Use session data as fallback even on parse error
-      const sessionOrg = session?.data;
+      const sessionOrg = session;
       return {
         report_title: "",
         report_date: report?.created_at || "",
@@ -86,13 +86,13 @@ export const CoverPageEditor = ({
         cover_page_table: { columns: [], rows: [] }
       };
     }
-  }, [data, session?.data, report?.created_at]);
+  }, [data, session, report?.created_at]);
 
   // Persist session data to stored data once when session loads
   // This ensures the data is saved even if user doesn't edit anything
   useEffect(() => {
     if (hasPrefilled.current) return;
-    if (!session?.data) return;
+    if (!session) return;
 
     try {
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
@@ -101,20 +101,20 @@ export const CoverPageEditor = ({
       const updated = { ...parsed, organization: { ...org } };
 
       // Persist organization name from session if not already set
-      if (!org.name?.trim() && session.data.organisation_name) {
-        updated.organization.name = session.data.organisation_name;
+      if (!org.name?.trim() && session.organisation_name) {
+        updated.organization.name = session.organisation_name;
         needsUpdate = true;
       }
 
       // Persist logo_url from session if not already set
-      if (!org.logo_url?.trim() && session.data.logo_url) {
-        updated.organization.logo_url = session.data.logo_url;
+      if (!org.logo_url?.trim() && session.logo_url) {
+        updated.organization.logo_url = session.logo_url;
         needsUpdate = true;
       }
 
       // Persist tagline from session if not already set
-      if (!org.tagline?.trim() && session.data.tagline) {
-        updated.organization.tagline = session.data.tagline;
+      if (!org.tagline?.trim() && session.tagline) {
+        updated.organization.tagline = session.tagline;
         needsUpdate = true;
       }
 
@@ -135,7 +135,7 @@ export const CoverPageEditor = ({
     } catch {
       // Ignore parse errors
     }
-  }, [session?.data, report?.created_at, data, onChange]);
+  }, [session, report?.created_at, data, onChange]);
 
   const updateField = (path: string, value: any) => {
     const newData = { ...parsedData };
