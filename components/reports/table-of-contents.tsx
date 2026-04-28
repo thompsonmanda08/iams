@@ -1,4 +1,4 @@
-import React from "react";
+import React, { JSX } from "react";
 import { List } from "lucide-react";
 import { ReportSection, SectionTreeNode } from "@/lib/types/report-types";
 import { buildSectionTree } from "@/lib/utils/report-hierarchy-utils";

@@ -1157,7 +1157,7 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
             })}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             {/* Step 1: Audit Details */}
             {currentStep === 1 && (
               <div className="space-y-4">
@@ -1383,12 +1383,13 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
                   type="submit"
                   disabled={generateMutation.isPending}
                   isLoading={generateMutation.isPending}
-                  loadingText="Generating...">
+                  loadingText="Generating..."
+                  onClick={handleSubmit}>
                   Generate Plan
                 </Button>
               )}
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </>
