@@ -63,7 +63,11 @@ export const useRefreshToken = (enabled: boolean = false, sessionTimeoutMs?: num
     : SESSION_CONFIG.TOKEN_REFRESH_INTERVAL;
 
   return useQuery({
-    queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN, enabled, interval],
+    // Stable queryKey: do NOT include `enabled` or `interval` — toggling these
+    // (e.g. on every lock/unlock) would create a new query and restart the
+    // refetchInterval from zero, so refresh would never fire if the user
+    // locks/unlocks frequently within the interval window.
+    queryKey: [USERS_QUERY_KEYS.REFRESH_TOKEN],
     queryFn: getRefreshToken,
     // ✅ CRITICAL FIX: Smart retry logic
     // Don't retry on 403 token expiration - these should fail fast
@@ -81,8 +85,15 @@ export const useRefreshToken = (enabled: boolean = false, sessionTimeoutMs?: num
       // Exponential backoff: 1s, 2s, 4s
       return Math.min(1000 * Math.pow(2, attemptIndex), 8000);
     },
-    refetchOnMount: false,
+    // Fire one refresh on mount so the cookie is extended immediately when
+    // the IdleTimerContainer first mounts — otherwise the first refresh waits
+    // a full `interval` (up to 30 min), which can exceed a short backend
+    // session_timeout and let the cookie expire before any refresh fires.
+    refetchOnMount: true,
     refetchInterval: enabled ? interval : false,
+    // Keep refreshing even while the tab is backgrounded — otherwise a user
+    // working in another window for >session_timeout silently loses session.
+    refetchIntervalInBackground: true,
     staleTime: 0, // Always consider stale to enable refetch
     enabled
   });
