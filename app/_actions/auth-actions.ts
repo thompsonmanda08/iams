@@ -15,7 +15,9 @@ import {
   verifySession,
   setScreenLockCookie,
   clearScreenLockCookie,
-  getScreenLockState
+  getScreenLockState,
+  cacheSystemSetup,
+  getCachedSystemSetup
 } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { ChangePassword } from "@/lib/types/stores";
@@ -337,12 +339,20 @@ export async function logUserOut(reason: string): Promise<APIResponse> {
  * Read-only fetch of /api/v1/auth/setup. Safe to call from server components
  * (layouts, pages) because it does NOT touch cookies.
  *
- * Cached per-request with React.cache() so multiple layouts in the same
- * request share one HTTP call.
+ * Tries the encrypted PERMISSIONS_SESSION cookie cache first (5-min TTL) so
+ * page reloads avoid hitting the backend and rendering a flashed sidebar.
+ * Falls through to the backend on cache miss / expiry.
+ *
+ * Wrapped in React.cache() so multiple layouts in the same request share
+ * one resolution.
  */
 async function _fetchSystemSetup(): Promise<APIResponse> {
-  const url = `/api/v1/auth/setup`;
+  const cached = await getCachedSystemSetup();
+  if (cached) {
+    return successResponse(cached, "system setup (cached)");
+  }
 
+  const url = `/api/v1/auth/setup`;
   try {
     const response = await authenticatedApiClient({ url });
     return successResponse(response?.data, response?.data?.message);
@@ -359,13 +369,24 @@ export const fetchSystemSetup = cache(_fetchSystemSetup);
  * the latest user snapshot and logo_url. Must be called from a Server Action
  * or Route Handler — Server Components cannot write cookies.
  *
+ * Always hits the backend (bypasses the read-side cookie cache) so the
+ * snapshot is fresh, then re-populates the cookie cache for subsequent
+ * Server-Component reads.
+ *
  * Used by the post-OTP login flow and the client-side React Query hook.
  */
 async function _initializeSystemSetup(): Promise<APIResponse> {
-  const response = await fetchSystemSetup();
-  if (!response.success) return response;
+  const url = `/api/v1/auth/setup`;
+  let session: any;
 
-  const session = response.data;
+  try {
+    const response = await authenticatedApiClient({ url });
+    session = response?.data;
+  } catch (error: Error | any) {
+    console.error("❌ [System Setup] Error:", error?.message);
+    return handleError(error, "GET | SYSTEM SETUP", url);
+  }
+
   const userData = session?.user;
 
   const user = {
@@ -389,11 +410,22 @@ async function _initializeSystemSetup(): Promise<APIResponse> {
   };
 
   await updateAuthSession({ user, logo_url: session?.logo_url || "" });
+  await cacheSystemSetup(session);
 
-  return response;
+  return successResponse(session, "system setup");
 }
 
 export const initializeSystemSetup = cache(_initializeSystemSetup);
+
+/**
+ * Force-refreshes the system-setup cache cookie. Call after server-side
+ * mutations that affect the current user's permissions (role edits, profile
+ * changes) so the next page reload sees the new state without the old
+ * cached payload.
+ */
+export async function refreshSystemSetupCache(): Promise<APIResponse> {
+  return _initializeSystemSetup();
+}
 
 /**
  * Check if token refresh is currently in progress

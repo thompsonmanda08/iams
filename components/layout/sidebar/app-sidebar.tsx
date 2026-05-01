@@ -21,13 +21,20 @@ import { useSystemSetup } from "@/hooks/use-users-query-data";
 export function AppSidebar({
   user: userData,
   isAuthenticated,
+  initialSetup,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { user: any; isAuthenticated: boolean }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  user: any;
+  isAuthenticated: boolean;
+  initialSetup?: any;
+}) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
 
-  const { data: session, isLoading } = useSystemSetup(isAuthenticated);
+  const { data: session, isLoading } = useSystemSetup(isAuthenticated, {
+    initialData: initialSetup ?? undefined
+  });
   const isLoadingUser = isLoading || !userData || Object.keys(userData).length <= 0; // USER OBJECT HAS NO KEYS
 
   const user = React.useMemo(() => {

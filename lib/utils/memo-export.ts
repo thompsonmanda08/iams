@@ -53,105 +53,32 @@ export function downloadHtmlAsFile(html: string, filename: string = "memo.html")
 }
 
 /**
- * Generate PDF from HTML content
- * Uses @react-pdf/renderer library (installed)
- *
- * For actual PDF generation, use this in a server action or API route:
- * - Import @react-pdf/renderer in a .tsx/.jsx file
- * - Render your PDF document as React components
- * - Use renderToBuffer() or renderToStream() to generate the PDF
- *
- * Example usage in a server action:
- * ```tsx
- * "use server"
- * import { renderToBuffer } from "@react-pdf/renderer";
- * import { Document, Page, Text } from "@react-pdf/renderer";
- *
- * export async function generatePdfAction(html: string) {
- *   const PDFDoc = () => <Document>...</Document>;
- *   const buffer = await renderToBuffer(<PDFDoc />);
- *   return buffer;
- * }
- * ```
+ * Generate a real PDF (not a printable HTML stub) from memo HTML using
+ * @react-pdf/renderer. The renderer module is loaded dynamically so the
+ * heavy PDF dependency stays out of the main bundle until export is invoked.
  */
 export async function generateMemoPdf(
   html: string,
   memoTitle: string = "Audit_Memo"
 ): Promise<void> {
   try {
-    // For now, download as printable HTML
-    // @react-pdf/renderer is installed and ready to use in .tsx/.jsx files
-    const plainText = stripHtmlTags(html);
-    const printableHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${memoTitle}</title>
-          <style>
-            @media print {
-              body { margin: 0; padding: 20mm; }
-              button { display: none; }
-            }
-            body {
-              font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-              padding: 40px;
-              line-height: 1.6;
-              color: #333;
-            }
-            h1 {
-              font-size: 24px;
-              font-weight: bold;
-              margin-bottom: 20px;
-              border-bottom: 2px solid #ddd;
-              padding-bottom: 10px;
-            }
-            .content {
-              font-size: 14px;
-              margin: 20px 0;
-              white-space: pre-wrap;
-              word-wrap: break-word;
-            }
-            .footer {
-              font-size: 12px;
-              color: #666;
-              margin-top: 40px;
-              padding-top: 20px;
-              border-top: 1px solid #ccc;
-              text-align: center;
-            }
-            button {
-              background: #007bff;
-              color: white;
-              padding: 10px 20px;
-              border: none;
-              border-radius: 4px;
-              cursor: pointer;
-              margin-top: 20px;
-            }
-            button:hover {
-              background: #0056b3;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>${memoTitle}</h1>
-          <div class="content">${plainText}</div>
-          <div class="footer">
-            <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-            <p>Use Print (Ctrl+P / Cmd+P) and "Save as PDF" to save as PDF</p>
-          </div>
-          <button onclick="window.print()">Print / Save as PDF</button>
-        </body>
-      </html>
-    `;
-
-    downloadHtmlAsFile(printableHtml, `${memoTitle}_${new Date().toISOString().split("T")[0]}.html`);
+    const { renderMemoPdf } = await import("./memo-pdf");
+    await renderMemoPdf(html, memoTitle);
   } catch (error) {
     console.error("Failed to generate PDF:", error);
     throw new Error("Failed to generate PDF.");
   }
+}
+
+/**
+ * Build a preview blob URL for the memo PDF. Caller must revoke the URL when done.
+ */
+export async function buildMemoPdfPreviewUrl(
+  html: string,
+  memoTitle: string = "Audit_Memo"
+): Promise<string> {
+  const { buildMemoPreviewUrl } = await import("./memo-pdf");
+  return buildMemoPreviewUrl(html, memoTitle);
 }
 
 /**

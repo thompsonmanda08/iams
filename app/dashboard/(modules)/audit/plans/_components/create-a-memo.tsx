@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { format } from "date-fns";
 import { Clock } from "lucide-react";
-import { Plus, PencilLine, Loader2, AlertCircle } from "lucide-react";
+import { Plus, PencilLine, Loader2, AlertCircle, FileText } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,8 @@ import {
   copyHtmlToClipboard,
   downloadHtmlAsFile,
   generateMemoPdf,
-  generateMemoDocx
+  generateMemoDocx,
+  buildMemoPdfPreviewUrl
 } from "@/lib/utils/memo-export";
 import { notify } from "@/lib/utils";
 import { getTemplateById, getTemplateOptionsGrouped } from "@/lib/templates/memo-templates";
@@ -84,6 +86,12 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
     const [showValidation, setShowValidation] = useState(false);
     const [memoError, setMemoError] = useState<string>("");
     const [deleteError, setDeleteError] = useState<string>("");
+
+    // PDF preview state for the View modal "Preview" tab
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isBuildingPreview, setIsBuildingPreview] = useState(false);
+    const [previewError, setPreviewError] = useState<string>("");
+    const previewRequestIdRef = useRef(0);
 
     // Use external modal if provided, otherwise use internal
     const openModal = externalOpenModal !== undefined ? externalOpenModal : internalOpenModal;
@@ -145,6 +153,61 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
         setMemoError("");
       }
     }, [openModal]);
+
+    // Build PDF preview blob URL when the View modal opens; revoke on close.
+    // A monotonically increasing request id guards against an older render
+    // resolving after a newer one (e.g. user re-opens the modal quickly).
+    useEffect(() => {
+      if (!internalViewModal) {
+        setPreviewUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
+        setPreviewError("");
+        setIsBuildingPreview(false);
+        return;
+      }
+
+      const content = memo?.content || "";
+      const title = memo?.subject || "Audit Memo";
+      if (!content.trim()) {
+        setPreviewError("Memo has no content to preview.");
+        return;
+      }
+
+      const requestId = ++previewRequestIdRef.current;
+      setIsBuildingPreview(true);
+      setPreviewError("");
+
+      buildMemoPdfPreviewUrl(content, title)
+        .then((url) => {
+          if (requestId !== previewRequestIdRef.current) {
+            URL.revokeObjectURL(url);
+            return;
+          }
+          setPreviewUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+        })
+        .catch((err) => {
+          if (requestId !== previewRequestIdRef.current) return;
+          setPreviewError(err instanceof Error ? err.message : "Failed to build preview");
+        })
+        .finally(() => {
+          if (requestId === previewRequestIdRef.current) setIsBuildingPreview(false);
+        });
+    }, [internalViewModal, memo?.content, memo?.subject]);
+
+    // Final cleanup on unmount
+    useEffect(() => {
+      return () => {
+        setPreviewUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
+      };
+    }, []);
 
     const handleLoadClientTemplate = (templateId: string) => {
       const template = getTemplateById(templateId);
@@ -540,11 +603,59 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
               </div>
             </DialogHeader>
 
-            <Tabs defaultValue="content" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue="preview" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="preview">Preview</TabsTrigger>
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="history">History</TabsTrigger>
               </TabsList>
+
+              {/* Preview Tab — renders the PDF in an iframe so the user sees
+                  exactly what will be downloaded. Blob URL is built on open
+                  and revoked on close (see useEffect above). */}
+              <TabsContent value="preview" className="space-y-4 py-4">
+                <div className="border-border bg-muted/30 relative overflow-hidden rounded-lg border">
+                  {isBuildingPreview ? (
+                    <div className="space-y-3 p-6">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Building PDF preview…
+                      </div>
+                      <Skeleton className="h-6 w-1/2" />
+                      <Skeleton className="h-3 w-2/3" />
+                      <Skeleton className="h-3 w-3/4" />
+                      <Skeleton className="h-3 w-3/5" />
+                      <Skeleton className="h-[55vh] w-full" />
+                    </div>
+                  ) : previewError ? (
+                    <div className="flex items-start gap-2 p-6 text-sm text-red-700">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>{previewError}</span>
+                    </div>
+                  ) : previewUrl ? (
+                    <iframe
+                      src={previewUrl}
+                      title="Memo PDF Preview"
+                      className="block h-[70vh] w-full border-0 bg-white"
+                    />
+                  ) : (
+                    <div className="text-muted-foreground p-6 text-sm">
+                      No preview available.
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={handleDownloadPdf}
+                    disabled={isExporting || isBuildingPreview || !!previewError}
+                    isLoading={isExporting}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
+              </TabsContent>
 
               {/* Content Tab */}
               <TabsContent value="content" className="space-y-4 py-4">

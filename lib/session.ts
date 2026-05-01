@@ -183,15 +183,22 @@ export async function createUserSession(user: User): Promise<void> {
   }
 }
 
-export async function createPermissionsSession(pem: Permission[]): Promise<void> {
-  const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // AFTER 1 HOURS
+/**
+ * Cache the full /api/v1/auth/setup payload (user + permissions + branch + dept + role + logo)
+ * in an encrypted httpOnly cookie. Read back on page reloads via getCachedSystemSetup()
+ * so the dashboard layout can render without hitting the backend or flashing the sidebar.
+ *
+ * Must be called from a Server Action or Route Handler (cookies are read-only in Server Components).
+ */
+export async function cacheSystemSetup(
+  setup: Record<string, any>,
+  ttlSeconds: number = 5 * 60
+): Promise<void> {
+  if (!setup || typeof setup !== "object") return;
 
-  const newSession = { ...pem, expiresAt };
+  const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+  const token = await encrypt({ setup, expiresAt }, `${ttlSeconds}s`);
 
-  // Call `encrypt` to generate the session token
-  const token = await encrypt(newSession, "1h");
-
-  // Ensure `session` is successfully created before setting the cookie
   if (token) {
     (await cookies()).set(PERMISSIONS_SESSION, token, {
       httpOnly: true,
@@ -200,8 +207,6 @@ export async function createPermissionsSession(pem: Permission[]): Promise<void>
       sameSite: "strict",
       path: "/"
     });
-  } else {
-    throw new Error("Failed to create session token.");
   }
 }
 
@@ -361,13 +366,26 @@ export async function getAuthSession(): Promise<Omit<AuthSession, "user" | "perm
 
 
 /**
- * Retrieves and decrypts the PERMISSIONS_SESSION cookie.
- * Contains user permissions.
+ * Retrieves and decrypts the cached system-setup payload from the PERMISSIONS_SESSION cookie.
+ * Returns null if missing, expired, or tampered with.
+ *
+ * Safe to call from Server Components — only reads, never writes.
  */
-export async function getPermissionsSession(): Promise<AuthSession["permissions"] | null> {
+export async function getCachedSystemSetup(): Promise<Record<string, any> | null> {
   const cookie = (await cookies()).get(PERMISSIONS_SESSION)?.value;
   if (!cookie) return null;
-  return decrypt(cookie) as unknown as AuthSession["permissions"];
+
+  const decoded: any = await decrypt(cookie);
+  if (!decoded || decoded.success === false) return null;
+  if (!decoded.setup) return null;
+
+  // Defense in depth: verify our own expiresAt even though JWT has its own
+  if (decoded.expiresAt) {
+    const exp = new Date(decoded.expiresAt);
+    if (exp < new Date()) return null;
+  }
+
+  return decoded.setup as Record<string, any>;
 }
 
 /**

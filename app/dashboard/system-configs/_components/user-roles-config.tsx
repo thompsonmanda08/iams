@@ -20,6 +20,7 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { USERS_QUERY_KEYS } from "@/hooks/use-users-query-data";
 import { getDepartmentModules, createRole, updateRole } from "@/app/_actions/config-actions";
 import { getRolePermissions, bulkUpdateRolePermissions } from "@/app/_actions/permissions-actions";
+import { refreshSystemSetupCache } from "@/app/_actions/auth-actions";
 import {
   Dialog,
   DialogClose,
@@ -549,8 +550,9 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
       // This ensures the UI reflects what's actually in the database
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ROLE_PERMISSIONS, selectedRole] });
       // If the admin just modified their own role's permissions, their client-side
-      // snapshot (used by usePermissions / sidebar filter) is now stale. Invalidate it.
+      // snapshot AND the server-side cookie cache are now stale.
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEYS.SYS_SETUP] });
+      void refreshSystemSetupCache();
     },
     onError: (error: Error) => {
       console.error("❌ Failed to save permissions:", error);

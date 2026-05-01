@@ -11,6 +11,7 @@ import { normalizeManagementStandard } from "@/components/reports/report-templat
 import { mergeReportWithTemplate } from "@/lib/config/report-template-merger";
 import type { ReportRecord } from "@/lib/types/report-types";
 import Loader from "@/components/ui/loader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/use-permissions";
 import { notify } from "@/lib/utils";
 
@@ -114,8 +115,30 @@ export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader loadingText="Loading report..." classNames={{ spinner: "w-16 h-16" }} />
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="space-y-4 p-6">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-9 w-32" />
+            </div>
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-2/3" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="space-y-3 p-6">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="space-y-3 p-6">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-32 w-full" />
+          </CardContent>
+        </Card>
       </div>
     );
   }

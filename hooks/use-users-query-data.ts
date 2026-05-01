@@ -100,11 +100,16 @@ export const useRefreshToken = (enabled: boolean = false, sessionTimeoutMs?: num
 };
 
 /**
- * Hook to fetch system setup (user data and permissions)
- * IMPORTANT: This hook is disabled by default as it's handled server-side
- * Only enable if you need to manually trigger a refresh
+ * Hook to fetch system setup (user data and permissions).
+ *
+ * Pass `initialData` when the parent layout already pre-fetched the setup
+ * payload server-side — React Query treats it as fresh until staleTime elapses,
+ * which prevents the sidebar from flashing on page reload.
  */
-export const useSystemSetup = (enabled: boolean = false) =>
+export const useSystemSetup = (
+  enabled: boolean = false,
+  options?: { initialData?: any }
+) =>
   useQuery({
     queryKey: [USERS_QUERY_KEYS.SYS_SETUP, enabled],
     queryFn: async () => {
@@ -121,7 +126,9 @@ export const useSystemSetup = (enabled: boolean = false) =>
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     staleTime: 5 * 60 * 1000,
-    enabled
+    enabled,
+    initialData: options?.initialData,
+    initialDataUpdatedAt: options?.initialData ? Date.now() : undefined
   });
 
 /**

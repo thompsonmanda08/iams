@@ -339,13 +339,13 @@ export function TipTapEditor({
       />
 
       {/* Editor Content */}
-      <div className="bg-background max-h-[500px] min-h-[300px] max-w-none overflow-y-auto rounded-lg border p-4">
+      <div className="bg-background text-foreground max-h-[500px] min-h-[300px] max-w-none overflow-y-auto rounded-lg border p-4">
         <style>{`
           .tiptap {
             word-break: break-word;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: inherit;
           }
 
           .tiptap p {

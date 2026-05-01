@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/layout/header";
 import { User } from "@/lib/types/account";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/session";
+import { fetchSystemSetup } from "@/app/_actions/auth-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -36,9 +37,16 @@ export default async function DashLayout({
     return redirect("/admin/home");
   }
 
-  // Enrich user object with user_type from session
+  // Pre-fetch the system setup server-side so the sidebar renders with
+  // permissions and user data already populated — no skeleton flash on reload.
+  // Reads from the encrypted PERMISSIONS_SESSION cookie cache when fresh,
+  // hits the backend only on cache miss / expiry.
+  const setupResponse = await fetchSystemSetup();
+  const initialSetup = setupResponse.success ? setupResponse.data : null;
+
   const enrichedUser = {
     ...user,
+    ...(initialSetup?.user ?? {}),
     user_type: user_type || session?.user_type
   } as User;
 
@@ -51,7 +59,12 @@ export default async function DashLayout({
           "--header-height": "calc(var(--spacing) * 14)"
         } as React.CSSProperties
       }>
-      <AppSidebar variant="inset" user={enrichedUser} isAuthenticated={!!user_type} />
+      <AppSidebar
+        variant="inset"
+        user={enrichedUser}
+        isAuthenticated={!!user_type}
+        initialSetup={initialSetup}
+      />
       <SidebarInset>
         <SiteHeader user={enrichedUser} />
         <div className="flex flex-1 flex-col">

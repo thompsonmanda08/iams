@@ -34,6 +34,8 @@ import type { AuditPlan } from "@/lib/types/audit-types";
 import { CreateOrUpdateMemo, type CreateOrUpdateMemoRef } from "./create-a-memo";
 import { useAuditMemo } from "@/hooks/use-audit-queries";
 import Loader from "@/components/ui/loader";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Eye } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -310,12 +312,26 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                   </div>
                 </div>
               ) : isLoadingMemo ? (
-                <Loader
-                  classNames={{
-                    spinner: "size-8",
-                    wrapper: " min-h-full"
-                  }}
-                />
+                <div
+                  className="border-border/50 space-y-3 rounded-lg border p-4"
+                  role="status"
+                  aria-label="Loading memo"
+                  aria-busy="true"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/5" />
+                      <Skeleton className="h-3 w-2/5" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-9 w-9 rounded-md" />
+                      <Skeleton className="h-9 w-9 rounded-md" />
+                      <Skeleton className="h-9 w-9 rounded-md" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                  </div>
+                  <span className="sr-only">Loading audit notification memo…</span>
+                </div>
               ) : (
                 <div className="space-y-3 p-4">
                   <p className="text-muted-foreground bg-muted/50 border-border/50 rounded-lg border p-4 text-sm">
