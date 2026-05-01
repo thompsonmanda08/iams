@@ -40,7 +40,7 @@ import {
 interface Country {
   id: string;
   name: string;
-  code: string;
+  iso2_code: string;
   region?: string;
   is_active: boolean;
 }
@@ -169,7 +169,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                   <span className="font-medium">{country.name}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-muted-foreground text-sm font-mono">{country.code}</span>
+                  <span className="text-muted-foreground text-sm font-mono">{country.iso2_code}</span>
                 </TableCell>
                 <TableCell>
                   <span className="text-muted-foreground text-sm">{country.region || "N/A"}</span>
@@ -239,7 +239,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
 
 const COUNTRY_INITIAL_STATE = {
   name: "",
-  code: "",
+  iso2_code: "",
   region: ""
 };
 
@@ -264,7 +264,11 @@ function CreateOrUpdateCountryDialog({
   });
   const [formData, setFormData] = useState(
     initialData
-      ? { name: initialData.name, code: initialData.code, region: initialData.region || "" }
+      ? {
+          name: initialData.name,
+          iso2_code: initialData.iso2_code || "",
+          region: initialData.region || ""
+        }
       : COUNTRY_INITIAL_STATE
   );
 
@@ -274,12 +278,12 @@ function CreateOrUpdateCountryDialog({
         ? await updateCountry({
             id: initialData.id,
             name: data.name,
-            code: data.code,
+            iso2_code: data.iso2_code,
             region: data.region || undefined
           })
         : await createCountry({
             name: data.name,
-            code: data.code,
+            iso2_code: data.iso2_code,
             region: data.region || undefined
           });
 
@@ -305,13 +309,13 @@ function CreateOrUpdateCountryDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.code) {
-      setError({ status: true, message: "Name and code are required" });
+    if (!formData.name || !formData.iso2_code) {
+      setError({ status: true, message: "Name and ISO2 code are required" });
       return;
     }
 
-    if (formData.code.length < 2 || formData.code.length > 3) {
-      setError({ status: true, message: "Country code must be 2-3 characters" });
+    if (formData.iso2_code.length !== 2) {
+      setError({ status: true, message: "ISO2 code must be exactly 2 characters" });
       return;
     }
 
@@ -345,14 +349,14 @@ function CreateOrUpdateCountryDialog({
             required
           />
           <Input
-            label="Country Code"
+            label="ISO2 Code"
             placeholder="e.g. US, CA, ZM"
-            value={formData.code}
+            value={formData.iso2_code}
             onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, code: e.target.value.toUpperCase() }));
+              setFormData((c) => ({ ...c, iso2_code: e.target.value.toUpperCase() }));
             }}
-            maxLength={3}
+            maxLength={2}
             required
           />
           <Input
@@ -378,7 +382,7 @@ function CreateOrUpdateCountryDialog({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name || !formData.code}
+              disabled={saveMutation.isPending || !formData.name || !formData.iso2_code}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
               Save

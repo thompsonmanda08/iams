@@ -156,7 +156,10 @@ export function TownsTab({ countries }: TownsTabProps) {
             size="sm"
             onClick={() => {
               if (!selectedProvince) {
-                notify({ description: "Please select a country and province first", type: "warning" });
+                notify({
+                  description: "Please select a country and province first",
+                  type: "warning"
+                });
                 return;
               }
               setOpenModal(true);
@@ -226,7 +229,6 @@ export function TownsTab({ countries }: TownsTabProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Province</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -263,11 +265,7 @@ export function TownsTab({ countries }: TownsTabProps) {
                     <TableCell>
                       <span className="font-medium">{town.name}</span>
                     </TableCell>
-                    <TableCell>
-                      <span className="text-muted-foreground text-sm">
-                        {getProvinceName(town.province_id)}
-                      </span>
-                    </TableCell>
+
                     <TableCell>
                       <span
                         className={cn(
@@ -284,7 +282,10 @@ export function TownsTab({ countries }: TownsTabProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          notify({ description: "Update functionality coming soon", type: "warning" });
+                          notify({
+                            description: "Update functionality coming soon",
+                            type: "warning"
+                          });
                         }}
                         className="h-8 gap-1.5">
                         <Edit className="h-3.5 w-3.5" />

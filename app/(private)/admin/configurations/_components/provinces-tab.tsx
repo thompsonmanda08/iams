@@ -178,7 +178,6 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Country</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -221,11 +220,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                     <TableCell>
                       <span className="font-medium">{province.name}</span>
                     </TableCell>
-                    <TableCell>
-                      <span className="text-muted-foreground text-sm">
-                        {getCountryName(province.country_id)}
-                      </span>
-                    </TableCell>
+
                     <TableCell>
                       <span
                         className={cn(
@@ -242,7 +237,10 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          notify({ description: "Update functionality coming soon", type: "warning" });
+                          notify({
+                            description: "Update functionality coming soon",
+                            type: "warning"
+                          });
                         }}
                         className="h-8 gap-1.5">
                         <Edit className="h-3.5 w-3.5" />

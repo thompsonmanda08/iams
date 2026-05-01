@@ -441,7 +441,7 @@ export default function CreateUserForm({
                             descriptionText="Can be a username or email address"
                             {...field}
                             className="focus-visible:ring-1"
-                            disabled={isEditMode}
+                            disabled={isSubmitting}
                             required
                           />
                         </FormControl>
@@ -462,7 +462,7 @@ export default function CreateUserForm({
                             placeholder="mail@company.com"
                             {...field}
                             className="focus-visible:ring-1"
-                            disabled={isEditMode}
+                            disabled={isSubmitting}
                             required
                           />
                         </FormControl>

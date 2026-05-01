@@ -230,10 +230,22 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
       deleteMutation.mutate();
     };
 
+    const getExportContent = () => memoContent || memo?.content || "";
+    const getExportTitle = () => memoTitle || memo?.subject || "memo";
+
     const handleCopyHtml = async () => {
       try {
         setIsExporting(true);
-        await copyHtmlToClipboard(memoContent);
+        const content = getExportContent();
+        if (!content) {
+          notify({
+            title: "Error",
+            description: "Memo has no content to copy",
+            type: "error"
+          });
+          return;
+        }
+        await copyHtmlToClipboard(content);
         notify({
           title: "Success",
           description: "Memo HTML copied to clipboard",
@@ -253,8 +265,18 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
     const handleDownloadHtml = () => {
       try {
         setIsExporting(true);
-        const filename = `${memoTitle || "memo"}_${new Date().toISOString().split("T")[0]}.html`;
-        downloadHtmlAsFile(memoContent, filename);
+        const content = getExportContent();
+        const title = getExportTitle();
+        if (!content) {
+          notify({
+            title: "Error",
+            description: "Memo has no content to download",
+            type: "error"
+          });
+          return;
+        }
+        const filename = `${title}_${new Date().toISOString().split("T")[0]}.html`;
+        downloadHtmlAsFile(content, filename);
         notify({
           title: "Success",
           description: "Memo downloaded as HTML",
@@ -274,7 +296,16 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
     const handleDownloadPdf = async () => {
       try {
         setIsExporting(true);
-        await generateMemoPdf(memoContent, memoTitle || "memo");
+        const content = getExportContent();
+        if (!content) {
+          notify({
+            title: "Error",
+            description: "Memo has no content to export",
+            type: "error"
+          });
+          return;
+        }
+        await generateMemoPdf(content, getExportTitle());
         notify({
           title: "Success",
           description: "Memo downloaded as PDF",
@@ -294,7 +325,16 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
     const handleDownloadDocx = async () => {
       try {
         setIsExporting(true);
-        await generateMemoDocx(memoContent, memoTitle || "memo");
+        const content = getExportContent();
+        if (!content) {
+          notify({
+            title: "Error",
+            description: "Memo has no content to export",
+            type: "error"
+          });
+          return;
+        }
+        await generateMemoDocx(content, getExportTitle());
         notify({
           title: "Success",
           description: "Memo downloaded as Word document",
