@@ -190,7 +190,7 @@ const SearchSelectField = React.forwardRef<HTMLSelectElement, SelectInputProps>(
                 <CommandEmpty>No items found.</CommandEmpty>
                 <CommandGroup>
                   {filteredOptions.map((item, index) => {
-                    const itemValue = String(item.id || item.value || index.toString());
+                    const itemValue = item.id != null ? String(item.id) : item.value != null ? String(item.value) : index.toString();
                     const itemLabel =
                       item?.[String(listItemName)] ||
                       item.name ||

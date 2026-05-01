@@ -23,6 +23,7 @@ import {
   useUpdateScale,
   useDeleteScale
 } from "@/hooks/use-matrix-query-data";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Scale = {
   id: string;
@@ -227,11 +228,28 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
             assessment
           </p>
         </div>
-        <Button onClick={startAddNew} size="default" className="gap-2" disabled={addingNew}>
+        <Button
+          onClick={startAddNew}
+          size="default"
+          className="gap-2"
+          disabled={addingNew || scales.length >= 5}>
           <Plus className="h-4 w-4" />
           Add Level
         </Button>
       </div>
+      {scales.length >= 5 && (
+        <Alert
+          variant="destructive"
+          className="mt-3 border-amber-500/50 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200 [&>svg]:text-amber-500">
+          <AlertTitle>
+            Maximum {scaleType === "LIKELIHOOD" ? "Likelihood" : "Impact"} scales reached
+          </AlertTitle>
+          <AlertDescription>
+            You cannot add more than 5 {scaleType === "LIKELIHOOD" ? "likelihood" : "impact"}{" "}
+            scales. Delete an existing scale to add a new one.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {scales.length === 0 && !addingNew ? (
         <Card className="mt-4 border-dashed">
