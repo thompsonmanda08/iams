@@ -1260,7 +1260,7 @@ export async function createScale(
 
 export async function updateScale(
   id: string,
-  data: Partial<{ name: string; description: string; is_active: boolean }>
+  data: Partial<{ name: string; description: string; level: number; is_active: boolean }>
 ): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({

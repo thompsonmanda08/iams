@@ -21,7 +21,8 @@ import {
   useMatrixScales,
   useCreateScale,
   useUpdateScale,
-  useDeleteScale
+  useDeleteScale,
+  useReindexScalesAfterDelete
 } from "@/hooks/use-matrix-query-data";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
@@ -70,6 +71,9 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
   const createScaleMutation = useCreateScale(matrixId, scaleType);
   const updateScaleMutation = useUpdateScale(matrixId, scaleType);
   const deleteScaleMutation = useDeleteScale(matrixId, scaleType);
+  const reindexMutation = useReindexScalesAfterDelete(matrixId, scaleType);
+
+  const isBusy = deleteScaleMutation.isPending || reindexMutation.isPending;
 
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -94,7 +98,8 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
     open: boolean;
     scaleId: string | null;
     scaleName: string | null;
-  }>({ open: false, scaleId: null, scaleName: null });
+    scaleLevel: number | null;
+  }>({ open: false, scaleId: null, scaleName: null, scaleLevel: null });
 
   useEffect(() => {
     if (addingNew) {
@@ -124,6 +129,11 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
   const updatePagination = ({ page, page_size }: { page: number; page_size?: number }) => {
     setPagination((prev) => ({ ...prev, page, page_size: page_size ?? prev.page_size }));
   };
+
+  const nextLevel = useMemo(
+    () => (scales.length === 0 ? 1 : Math.max(...scales.map((s: Scale) => s.level)) + 1),
+    [scales]
+  );
 
   // ── Inline edit ──────────────────────────────────────────────────────────
 
@@ -180,7 +190,7 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
       return;
     }
     const response = await createScaleMutation.mutateAsync({
-      level: scales.length + 1,
+      level: nextLevel,
       name: newData.name,
       description: newData.description
     });
@@ -196,14 +206,40 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
 
   const handleDeleteConfirm = async () => {
     if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_delete")) return;
-    if (!deleteDialog.scaleId) return;
+    if (!deleteDialog.scaleId || deleteDialog.scaleLevel === null) return;
+    const deletedLevel = deleteDialog.scaleLevel;
+    const snapshot = scales as Scale[];
+
     const response = await deleteScaleMutation.mutateAsync(deleteDialog.scaleId);
-    if (response.success) {
-      notify({ description: "Scale deleted successfully", type: "success" });
-      setDeleteDialog({ open: false, scaleId: null, scaleName: null });
-    } else {
+    if (!response.success) {
       notify({ description: response.message || "Failed to delete scale", type: "error" });
+      return;
     }
+
+    const toShift = snapshot.filter((s) => s.level > deletedLevel);
+    if (toShift.length > 0) {
+      const reindexResult = await reindexMutation.mutateAsync({
+        deletedLevel,
+        scales: toShift.map((s) => ({
+          id: s.id,
+          level: s.level,
+          name: s.name,
+          description: s.description,
+          matrix_id: s.matrix_id
+        }))
+      });
+      if (!reindexResult.success) {
+        notify({
+          description: `Deleted, but failed to reindex ${reindexResult.failed.length} item(s). Refresh to verify.`,
+          type: "error"
+        });
+      } else {
+        notify({ description: "Scale deleted and levels reindexed", type: "success" });
+      }
+    } else {
+      notify({ description: "Scale deleted successfully", type: "success" });
+    }
+    setDeleteDialog({ open: false, scaleId: null, scaleName: null, scaleLevel: null });
   };
 
   if (isLoading) {
@@ -213,8 +249,6 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
       </div>
     );
   }
-
-  const nextLevel = scales.length + 1;
 
   return (
     <Card className="p-4">
@@ -228,7 +262,7 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
             assessment
           </p>
         </div>
-        <Button onClick={startAddNew} size="default" className="gap-2" disabled={addingNew}>
+        <Button onClick={startAddNew} size="default" className="gap-2" disabled={addingNew || isBusy}>
           <Plus className="h-4 w-4" />
           Add Level
         </Button>
@@ -253,7 +287,12 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
           </div>
         </Card>
       ) : (
-        <div className="bg-card mt-4 rounded-lg border">
+        <div className="bg-card relative mt-4 rounded-lg border">
+          {isBusy && (
+            <div className="bg-background/60 absolute inset-0 z-10 flex items-center justify-center rounded-lg backdrop-blur-sm">
+              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+            </div>
+          )}
           <Table>
             <TableHeader className="uppercase">
               <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -341,7 +380,7 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
                               variant="outline"
                               onClick={() => startEdit(scale)}
                               className="h-8 gap-1.5"
-                              disabled={addingNew}>
+                              disabled={addingNew || isBusy}>
                               Edit
                             </Button>
                             <Button
@@ -351,11 +390,12 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
                                 setDeleteDialog({
                                   open: true,
                                   scaleId: scale.id,
-                                  scaleName: `${scale.name} (Level ${scale.level})`
+                                  scaleName: `${scale.name} (Level ${scale.level})`,
+                                  scaleLevel: scale.level
                                 })
                               }
                               className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5"
-                              disabled={addingNew}>
+                              disabled={addingNew || isBusy}>
                               <Trash2 className="h-3.5 w-3.5" />
                               Delete
                             </Button>
@@ -437,7 +477,9 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
 
       <ConfirmationModal
         open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog({ open, scaleId: null, scaleName: null })}
+        onOpenChange={(open) =>
+          setDeleteDialog({ open, scaleId: null, scaleName: null, scaleLevel: null })
+        }
         onConfirm={handleDeleteConfirm}
         title="Delete Scale"
         description={`Are you sure you want to delete "${deleteDialog.scaleName}"? This action cannot be undone.`}

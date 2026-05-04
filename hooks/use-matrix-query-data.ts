@@ -77,8 +77,13 @@ export const useCreateScale = (matrixId: string, scaleType: "LIKELIHOOD" | "IMPA
 export const useUpdateScale = (matrixId: string, scaleType: "LIKELIHOOD" | "IMPACT") => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<{ name: string; description: string; matrix_id: string }> }) =>
-      updateScale(id, data),
+    mutationFn: ({
+      id,
+      data
+    }: {
+      id: string;
+      data: Partial<{ name: string; description: string; level: number; matrix_id: string }>;
+    }) => updateScale(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.MATRIX_SCALES, matrixId, scaleType]
@@ -92,6 +97,58 @@ export const useDeleteScale = (matrixId: string, scaleType: "LIKELIHOOD" | "IMPA
   return useMutation({
     mutationFn: (id: string) => deleteScale(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.MATRIX_SCALES, matrixId, scaleType]
+      });
+    }
+  });
+};
+
+type ReindexScale = {
+  id: string;
+  level: number;
+  name: string;
+  description: string;
+  matrix_id?: string;
+};
+
+export const useReindexScalesAfterDelete = (
+  matrixId: string,
+  scaleType: "LIKELIHOOD" | "IMPACT"
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      deletedLevel,
+      scales
+    }: {
+      deletedLevel: number;
+      scales: ReindexScale[];
+    }) => {
+      const toShift = scales.filter((s) => s.level > deletedLevel);
+      if (toShift.length === 0) return { success: true, failed: [] as string[] };
+
+      const results = await Promise.allSettled(
+        toShift.map((s) =>
+          updateScale(s.id, {
+            name: s.name,
+            description: s.description,
+            level: s.level - 1
+          })
+        )
+      );
+
+      const failed = results
+        .map((r, i) =>
+          r.status === "rejected" || (r.status === "fulfilled" && !r.value.success)
+            ? toShift[i].id
+            : null
+        )
+        .filter((x): x is string => x !== null);
+
+      return { success: failed.length === 0, failed };
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.MATRIX_SCALES, matrixId, scaleType]
       });
