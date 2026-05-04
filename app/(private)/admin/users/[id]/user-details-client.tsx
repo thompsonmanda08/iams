@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { User } from "@/lib/types/account";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -76,10 +78,13 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                 </p>
               </div>
             </div>
-            <Button onClick={() => setIsEditingUser(true)}>
+            <PermissionButton
+              moduleCode={MODULE_CODES.USER_MGMT}
+              action="can_edit"
+              onClick={() => setIsEditingUser(true)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit User
-            </Button>
+            </PermissionButton>
           </div>
         </div>
       </div>

@@ -59,6 +59,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 export default function DepartmentUsersConfig() {
   const router = useRouter();
@@ -113,12 +114,16 @@ export default function DepartmentUsersConfig() {
               List of all the users in this department
             </p>
           </div>
-          <Button size="sm" asChild>
+          <PermissionButton
+            moduleCode={MODULE_CODES.USER_MGMT}
+            action="can_create"
+            size="sm"
+            asChild>
             <Link href="/dashboard/system-configs/users">
               <Plus className="mr-2 h-4 w-4" />
               Add Department Users
             </Link>
-          </Button>
+          </PermissionButton>
         </div>
 
         <Table>
@@ -169,9 +174,14 @@ export default function DepartmentUsersConfig() {
                       </EmptyHeader>
                       <EmptyContent>
                         <div className="flex gap-2">
-                          <Link href="/dashboard/system-configs/users">
-                            <Button>Add Department Users</Button>
-                          </Link>
+                          <PermissionButton
+                            moduleCode={MODULE_CODES.USER_MGMT}
+                            action="can_create"
+                            asChild>
+                            <Link href="/dashboard/system-configs/users">
+                              Add Department Users
+                            </Link>
+                          </PermissionButton>
                         </div>
                       </EmptyContent>
                       <Button variant="link" asChild className="text-muted-foreground" size="sm">
@@ -574,7 +584,10 @@ export function CreateOrUpdateDepartment({
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       {showTrigger && (
         <DialogTrigger asChild>
-          <Button size="sm">
+          <PermissionButton
+            moduleCode={MODULE_CODES.DEPT_MGMT}
+            action={initialData ? "can_edit" : "can_create"}
+            size="sm">
             {initialData ? (
               <>
                 <PencilLine className="mr-2 h-4 w-4" /> Update Department
@@ -584,7 +597,7 @@ export function CreateOrUpdateDepartment({
                 <Plus className="mr-2 h-4 w-4" /> Create New Department
               </>
             )}
-          </Button>
+          </PermissionButton>
         </DialogTrigger>
       )}
       <DialogContent

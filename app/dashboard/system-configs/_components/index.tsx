@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { AppModule, Department, ErrorState } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -34,8 +36,6 @@ import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/use-permissions";
-
-import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 export const AddNewRoleForm = () => {
   const { checkPermission, hasPermission } = usePermissions();
@@ -743,9 +743,12 @@ export function ModuleSelection({
                 </EmptyHeader>
                 <EmptyContent>
                   <div className="flex gap-2">
-                    <Link href="/dashboard/system-configs/modules">
-                      <Button>Create module</Button>
-                    </Link>
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.USER_MGMT}
+                      action="can_create"
+                      asChild>
+                      <Link href="/dashboard/system-configs/modules">Create module</Link>
+                    </PermissionButton>
                   </div>
                 </EmptyContent>
                 <Button variant="link" asChild className="text-muted-foreground" size="sm">

@@ -11,6 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { AuditPlanStatusBadge } from "../../../../../../components/audit/audit-plan-status-badge";
 import { Eye, Edit, Trash2, Loader2, Plus, ClipboardListIcon, View } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
@@ -145,12 +146,17 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
             </div>
           </div>
 
-          <Button size="lg" className="gap-2" asChild>
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_PLANS}
+            action="can_create"
+            size="lg"
+            className="gap-2"
+            asChild>
             <Link href="/dashboard/audit/plans/engagement/new">
               <Plus className="h-4 w-4" />
               Create Audit Plan
             </Link>
-          </Button>
+          </PermissionButton>
         </CardContent>
       </Card>
     );
@@ -210,12 +216,17 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                         </div>
                       </div>
 
-                      <Button size="lg" className="gap-2" asChild>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_PLANS}
+                        action="can_create"
+                        size="lg"
+                        className="gap-2"
+                        asChild>
                         <Link href="/dashboard/audit/items/engagement/new">
                           <Plus className="h-4 w-4" />
                           Create Audit item
                         </Link>
-                      </Button>
+                      </PermissionButton>
                     </CardContent>
                   </Card>
                 </TableCell>
@@ -296,7 +307,9 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                             <Edit className="h-3.5 w-3.5" />
                             Edit
                           </Button>
-                          <Button
+                          <PermissionButton
+                            moduleCode={MODULE_CODES.AUDIT_PLANS}
+                            action="can_delete"
                             size="sm"
                             variant="outline"
                             onClick={(e) => {
@@ -306,7 +319,7 @@ export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTabl
                             className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                             <Trash2 className="h-3.5 w-3.5" />
                             Delete
-                          </Button>
+                          </PermissionButton>
                         </>
                       )}
                     </div>

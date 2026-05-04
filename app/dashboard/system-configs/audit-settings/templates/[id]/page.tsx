@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { Layers, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -145,13 +147,17 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
               </TabsList>
 
               {isISO27001 && (
-                <Link
-                  href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
-                  <Button size="sm">
+                <PermissionButton
+                  moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                  action="can_create"
+                  size="sm"
+                  asChild>
+                  <Link
+                    href={`/dashboard/system-configs/audit-settings/templates/${id}/categories/new`}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Category
-                  </Button>
-                </Link>
+                  </Link>
+                </PermissionButton>
               )}
             </div>
 

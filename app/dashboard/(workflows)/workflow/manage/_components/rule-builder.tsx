@@ -2,6 +2,8 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -81,13 +83,15 @@ export const RuleBuilder = ({ conditions, onAdd, onUpdate, onDelete }: RuleBuild
                   className="flex-1"
                 />
 
-                <Button
+                <PermissionButton
+                  moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+                  action="can_configure"
                   size="icon"
                   variant="outline"
                   type="button"
                   onClick={() => onDelete(condition.id)}>
                   <Trash2 className="text-destructive h-4 w-4" />
-                </Button>
+                </PermissionButton>
               </div>
             </div>
           ))}

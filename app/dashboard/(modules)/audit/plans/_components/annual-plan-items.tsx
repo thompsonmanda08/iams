@@ -11,6 +11,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import {
   Trash2,
   Plus,
@@ -385,7 +387,9 @@ export function AnnualPlanItems({
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
                         </Button>
-                        <Button
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.AUDIT_PLANS}
+                          action="can_delete"
                           size="sm"
                           variant="outline"
                           onClick={(e) => {
@@ -395,7 +399,7 @@ export function AnnualPlanItems({
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                           <Trash2 className="h-3.5 w-3.5" />
                           Delete
-                        </Button>
+                        </PermissionButton>
                       </>
                     )}
                     {annualPlan.status === "APPROVED" && !item.is_generated ? (

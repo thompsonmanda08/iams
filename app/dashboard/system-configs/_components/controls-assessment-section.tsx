@@ -23,6 +23,7 @@ import { ControlsAssessmentDialog } from "./controls-assessment-dialog";
 import type { ControlsAssessmentGuide } from "./report-guide-detail";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 interface ControlsAssessmentSectionProps {
   reportGuideId: string;
@@ -121,10 +122,13 @@ export function ControlsAssessmentSection({
             Define control assessment criteria and evaluation guidelines
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <PermissionButton
+          moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+          action="can_create"
+          onClick={() => setCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Control
-        </Button>
+        </PermissionButton>
       </div>
 
       <div className="overflow-hidden rounded-lg border">
@@ -154,22 +158,26 @@ export function ControlsAssessmentSection({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={() => setEditDialog({ open: true, item })}
                         className="h-8 gap-1.5">
                         <Edit2 className="h-3.5 w-3.5" />
                         Edit
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                        action="can_delete"
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteClick(item)}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-4 w-4" />
                         Delete
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </TableCell>
                 </TableRow>

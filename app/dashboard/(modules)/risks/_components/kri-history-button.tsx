@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { KRIHistory } from "../kri/kri-history";
 import type { KRI } from "@/app/_actions/risk-module-actions";
 import { KRIMeasureDialog } from "./kri-measure-dialog";
@@ -16,9 +18,14 @@ export function KRIHistoryButton({ kri }: KRIHistoryButtonProps) {
 
   return (
     <div className="space-x-2">
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+      <PermissionButton
+        moduleCode={MODULE_CODES.KRI_DASHBOARD}
+        action="can_edit"
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen(true)}>
         Update Measure
-      </Button>
+      </PermissionButton>
       <Button variant="ghost" size="sm" onClick={() => setIsOpen(true)}>
         View History
       </Button>

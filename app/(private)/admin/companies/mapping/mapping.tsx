@@ -4,6 +4,8 @@ import { Plus, X, MapPin, Trash2, Building2 } from "lucide-react";
 import { Company, Country, Province, Town } from "@/lib/types";
 import { notify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import {
   Dialog,
   DialogContent,
@@ -275,10 +277,14 @@ export default function CompanyMapping() {
                 Manage country, province, and town associations
               </p>
             </div>
-            <Button size={"sm"} onClick={openModal}>
+            <PermissionButton
+              moduleCode={MODULE_CODES.USER_MGMT}
+              action="can_create"
+              size={"sm"}
+              onClick={openModal}>
               <Plus size={20} />
               Add Location
-            </Button>
+            </PermissionButton>
           </div>
 
           <div className="relative mb-4">
@@ -309,10 +315,14 @@ export default function CompanyMapping() {
                 </EmptyHeader>
                 <EmptyContent>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={openModal}>
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.USER_MGMT}
+                      action="can_create"
+                      size="sm"
+                      onClick={openModal}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add a location
-                    </Button>
+                    </PermissionButton>
                   </div>
                 </EmptyContent>
               </Empty>

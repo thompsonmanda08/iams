@@ -24,6 +24,7 @@ import { useMatrixRatings, useDeleteRating } from "@/hooks/use-matrix-query-data
 import { QUERY_KEYS } from "@/lib/constants";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 type Rating = {
   id: string;
@@ -142,10 +143,15 @@ export function RatingLevelsList({ matrixId, initialData }: RatingLevelsListProp
             Define risk rating levels based on calculated scores
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)} size="default" className="gap-2">
+        <PermissionButton
+          moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+          action="can_create"
+          onClick={() => setCreateDialogOpen(true)}
+          size="default"
+          className="gap-2">
           <Plus className="h-4 w-4" />
           Add Rating
-        </Button>
+        </PermissionButton>
       </div>
 
       {ratings.length === 0 ? (
@@ -160,10 +166,14 @@ export function RatingLevelsList({ matrixId, initialData }: RatingLevelsListProp
             <p className="text-muted-foreground mb-6 text-center text-sm">
               Get started by adding your first rating level to begin risk assessment.
             </p>
-            <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+            <PermissionButton
+              moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+              action="can_create"
+              onClick={() => setCreateDialogOpen(true)}
+              className="gap-2">
               <Plus className="h-4 w-4" />
               Add Your First Rating
-            </Button>
+            </PermissionButton>
           </div>
         </Card>
       ) : (
@@ -217,22 +227,26 @@ export function RatingLevelsList({ matrixId, initialData }: RatingLevelsListProp
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-2">
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditClick(rating)}
                         className="h-8 gap-1.5">
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                        action="can_delete"
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteClick(rating)}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Plus, ClipboardListIcon, FileText } from "lucide-react";
 import Link from "next/link";
 import { AuditPlansTable } from "@/app/dashboard/(modules)/audit/plans/_components/audit-plans-table";
@@ -99,10 +101,13 @@ export default async function AuditPlansPage({
                   </div>
                   <div className="flex items-end gap-2">
                     <Link href="/dashboard/audit/plans/engagement/new">
-                      <Button className="gap-2">
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_PLANS}
+                        action="can_create"
+                        className="gap-2">
                         <Plus className="h-4 w-4" />
                         Create Audit Plan
-                      </Button>
+                      </PermissionButton>
                     </Link>
                   </div>
                 </div>

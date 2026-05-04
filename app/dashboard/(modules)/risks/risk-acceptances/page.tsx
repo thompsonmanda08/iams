@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import {
   Dialog,
   DialogContent,
@@ -298,12 +300,17 @@ export default function RiskAcceptanceList() {
                   <div className="text-muted-foreground">Management Decision</div>
                 </div>
               </div>
-              <Button size="lg" className="gap-2" asChild>
+              <PermissionButton
+                moduleCode={MODULE_CODES.RISK_ACCEPTANCES}
+                action="can_create"
+                size="lg"
+                className="gap-2"
+                asChild>
                 <Link href="/dashboard/risks/risk-registers">
                   <Plus className="h-4 w-4" />
                   Go to Risk Register
                 </Link>
-              </Button>
+              </PermissionButton>
             </CardContent>
           </Card>
         </div>

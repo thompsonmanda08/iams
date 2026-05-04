@@ -22,6 +22,7 @@ import { CustomPagination } from "@/components/ui/pagination";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 type ReportGuide = {
   id: string;
@@ -179,10 +180,13 @@ export function ReportGuides() {
           </p>
         </div>
         {pagination.total < 2 && (
-          <Button onClick={() => setCreateDialogOpen(true)}>
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+            action="can_create"
+            onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Create Report Guide
-          </Button>
+          </PermissionButton>
         )}
       </div>
 
@@ -214,10 +218,14 @@ export function ReportGuides() {
                       generation.
                     </p>
                     {pagination.total < 2 && (
-                      <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                        action="can_create"
+                        onClick={() => setCreateDialogOpen(true)}
+                        className="gap-2">
                         <Plus className="h-4 w-4" />
                         Create Your First Guide
-                      </Button>
+                      </PermissionButton>
                     )}
                   </div>
                 </TableCell>
@@ -248,30 +256,36 @@ export function ReportGuides() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={() => handleNavigate(guide.id)}
                         className="h-8 gap-1.5">
                         <Settings className="h-3.5 w-3.5" />
                         Configure
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditClick(guide)}
                         className="h-8 gap-1.5">
                         <Edit2 className="h-3.5 w-3.5" />
                         Edit
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                        action="can_delete"
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteClick(guide)}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-4 w-4" />
                         Delete
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </TableCell>
                 </TableRow>

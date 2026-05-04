@@ -27,6 +27,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import {
   Table,
   TableBody,
@@ -188,16 +190,24 @@ const getColumns = (
                 <View className="h-4 w-4" />
                 View Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(user)}>
+              <PermissionDropdownMenuItem
+                moduleCode={MODULE_CODES.USER_MGMT}
+                action="can_edit"
+                onClick={() => onEdit(user)}>
                 <PencilLine className="h-4 w-4" />
                 Edit User Details
-              </DropdownMenuItem>
+              </PermissionDropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onResetPassword(user.id)}>
+              <PermissionDropdownMenuItem
+                moduleCode={MODULE_CODES.USER_MGMT}
+                action="can_edit"
+                onClick={() => onResetPassword(user.id)}>
                 <TimerReset className="h-4 w-4" />
                 Reset Password
-              </DropdownMenuItem>
-              <DropdownMenuItem
+              </PermissionDropdownMenuItem>
+              <PermissionDropdownMenuItem
+                moduleCode={MODULE_CODES.USER_MGMT}
+                action="can_edit"
                 onClick={() => {
                   if (isCurrentUser(user) && user.is_active) return;
                   onToggleStatus(user.id, !user.is_active);
@@ -211,9 +221,11 @@ const getColumns = (
                 {isCurrentUser(user) && user.is_active
                   ? "Cannot deactivate own account"
                   : `${user.is_active ? "Deactivate" : "Activate"} Account`}
-              </DropdownMenuItem>
+              </PermissionDropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
+              <PermissionDropdownMenuItem
+                moduleCode={MODULE_CODES.USER_MGMT}
+                action="can_delete"
                 onClick={() => {
                   if (isCurrentUser(user)) return;
                   onDelete(user.id);
@@ -222,7 +234,7 @@ const getColumns = (
                 className="text-destructive hover:bg-destructive/10 focus:text-destructive">
                 <Trash2 className="text-destructive h-4 w-4" />
                 {isCurrentUser(user) ? "Cannot delete own account" : "Delete User"}
-              </DropdownMenuItem>
+              </PermissionDropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

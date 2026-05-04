@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Download, AlertCircle, Clock, CheckCircle2, Search } from "lucide-react";
@@ -81,10 +83,14 @@ export function AuditFindingsTab({ stats, findings, auditPlanId }: AuditFindings
                 <Download className="h-4 w-4" />
                 Export
               </Button>
-              <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                action="can_create"
+                className="gap-2"
+                onClick={() => setIsCreateModalOpen(true)}>
                 <Plus className="h-4 w-4" />
                 New Finding
-              </Button>
+              </PermissionButton>
             </div>
           </div>
         </div>

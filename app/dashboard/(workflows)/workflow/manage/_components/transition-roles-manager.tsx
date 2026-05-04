@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Shield, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -138,7 +139,9 @@ export const TransitionRolesManager = ({
                 )}
               </SelectContent>
             </Select>
-            <Button
+            <PermissionButton
+              moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+              action="can_configure"
               onClick={handleAssignRole}
               disabled={!selectedRoleId || isLoading}
               className="gap-2">
@@ -148,7 +151,7 @@ export const TransitionRolesManager = ({
                 <Plus className="h-4 w-4" />
               )}
               Assign
-            </Button>
+            </PermissionButton>
           </div>
         </div>
 

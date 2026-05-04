@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { State, Transition } from "@/lib/types/workflow";
 import { TransitionArrow } from "./transition-arrow";
 import { StateNode } from "./state-node";
@@ -138,10 +140,14 @@ export const WorkflowCanvas = ({
               <p className="text-muted-foreground mb-4">
                 No states yet. Add your first state to begin.
               </p>
-              <Button onClick={onStateAdd} size="lg">
+              <PermissionButton
+                moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+                action="can_configure"
+                onClick={onStateAdd}
+                size="lg">
                 <Plus className="mr-2 h-4 w-4" />
                 Add First State
-              </Button>
+              </PermissionButton>
             </div>
           </div>
         )}
@@ -149,11 +155,13 @@ export const WorkflowCanvas = ({
 
       {/* Floating Add Button */}
       {states.length > 0 && (
-        <Button
+        <PermissionButton
+          moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+          action="can_configure"
           onClick={onStateAdd}
           className="absolute right-8 bottom-8 z-10 aspect-square h-16! max-h-none! w-16 rounded-full p-0! shadow-xl">
           <Plus className="h-12 w-12" />
-        </Button>
+        </PermissionButton>
       )}
     </div>
   );

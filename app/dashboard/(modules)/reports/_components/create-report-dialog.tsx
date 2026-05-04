@@ -13,6 +13,8 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, FileText, ShieldAlert, AlertCircle } from "lucide-react";
@@ -27,8 +29,6 @@ import { ErrorState } from "@/lib/types";
 import type { ReportType, ReportEntityType } from "@/lib/types/report-types";
 import { useQuery } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/use-permissions";
-
-import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 // Report type options
 const REPORT_TYPE_OPTIONS: { id: ReportType; name: string; description: string }[] = [
@@ -251,10 +251,15 @@ export function CreateReportDialog({
     <Dialog open={openModal} onOpenChange={setOpenModal} modal={false}>
       {showTrigger && (
         <DialogTrigger asChild>
-          <Button size="sm" variant={triggerVariant} className="gap-2">
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_REPORTS}
+            action="can_create"
+            size="sm"
+            variant={triggerVariant}
+            className="gap-2">
             <Plus className="h-3.5 w-3.5" />
             {triggerLabel}
-          </Button>
+          </PermissionButton>
         </DialogTrigger>
       )}
       <DialogContent

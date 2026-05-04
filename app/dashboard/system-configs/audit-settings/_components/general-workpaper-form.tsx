@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -418,10 +420,16 @@ export function GeneralTemplateConfigsForm({ templateId, configs }: GeneralWorkp
             <CardTitle className="text-base">
               Columns ({columns.filter((c) => c.name).length})
             </CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={handleEdit}>
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+              action="can_edit"
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleEdit}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit Config
-            </Button>
+            </PermissionButton>
           </CardHeader>
           <CardContent>
             <FieldViewTable rows={columns.filter((c) => c.name)} label="columns" />

@@ -43,6 +43,8 @@ import {
 } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
 import { CustomPagination } from "@/components/ui/pagination";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface Country {
   id: string;
@@ -154,7 +156,9 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
               Manage provinces and states within each country
             </p>
           </div>
-          <Button
+          <PermissionButton
+            moduleCode={MODULE_CODES.BRANCH_MGMT}
+            action="can_create"
             size="sm"
             onClick={() => {
               setEditingProvince(null);
@@ -163,7 +167,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
             disabled={!selectedCountry}>
             <Plus className="mr-2 h-4 w-4" />
             Add Province
-          </Button>
+          </PermissionButton>
         </div>
 
         <div className="w-full max-w-sm">
@@ -225,7 +229,9 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                       </EmptyHeader>
                       <EmptyContent>
                         <div className="flex gap-2">
-                          <Button
+                          <PermissionButton
+                            moduleCode={MODULE_CODES.BRANCH_MGMT}
+                            action="can_create"
                             size="sm"
                             onClick={() => {
                               setEditingProvince(null);
@@ -233,7 +239,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                             }}>
                             <Plus className="mr-2 h-4 w-4" />
                             Add Province
-                          </Button>
+                          </PermissionButton>
                         </div>
                       </EmptyContent>
                     </Empty>
@@ -264,7 +270,9 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.BRANCH_MGMT}
+                          action="can_edit"
                           size="sm"
                           variant="outline"
                           onClick={() => {
@@ -274,8 +282,10 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                           className="h-8 gap-1.5">
                           <Edit className="h-3.5 w-3.5" />
                           Edit
-                        </Button>
-                        <Button
+                        </PermissionButton>
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.BRANCH_MGMT}
+                          action="can_delete"
                           size="sm"
                           variant="outline"
                           onClick={() => handleDelete(province.id)}
@@ -283,7 +293,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                           <Trash2 className="h-3.5 w-3.5" />
                           Delete
-                        </Button>
+                        </PermissionButton>
                       </div>
                     </TableCell>
                   </TableRow>

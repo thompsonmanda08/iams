@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
 import {
   FileText,
   CheckCircle2,
@@ -288,23 +289,35 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => memoRef.current?.handleCopyHtml()}>
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.AUDIT_PLANS}
+                              action="can_export"
+                              onClick={() => memoRef.current?.handleCopyHtml()}>
                               <Copy className="h-6 w-6" />
                               Copy HTML
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => memoRef.current?.handleDownloadHtml()}>
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.AUDIT_PLANS}
+                              action="can_export"
+                              onClick={() => memoRef.current?.handleDownloadHtml()}>
                               <FileCode className="h-6 w-6" />
                               Download HTML
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => memoRef.current?.handleDownloadPdf()}>
+                            </PermissionDropdownMenuItem>
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.AUDIT_PLANS}
+                              action="can_export"
+                              onClick={() => memoRef.current?.handleDownloadPdf()}>
                               <FileText className="h-6 w-6" />
                               Download PDF
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => memoRef.current?.handleDownloadDocx()}>
+                            </PermissionDropdownMenuItem>
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.AUDIT_PLANS}
+                              action="can_export"
+                              onClick={() => memoRef.current?.handleDownloadDocx()}>
                               <FileEditIcon className="h-6 w-6" />
                               Download Word
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
 

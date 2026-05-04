@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Zap, Edit2, Loader2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -173,10 +174,14 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => handleOpenDialog()} className="gap-2">
+            <PermissionButton
+              moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+              action="can_configure"
+              onClick={() => handleOpenDialog()}
+              className="gap-2">
               <Plus className="h-4 w-4" />
               Add Entry Trigger
-            </Button>
+            </PermissionButton>
           </div>
 
           {/* Triggers List */}
@@ -208,20 +213,24 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+                      action="can_configure"
                       size="icon"
                       variant="ghost"
                       onClick={() => handleOpenDialog(trigger)}
                       disabled={isLoading}>
                       <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
+                    </PermissionButton>
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+                      action="can_configure"
                       size="icon"
                       variant="ghost"
                       onClick={() => handleDeleteTrigger(trigger.id)}
                       disabled={isLoading}>
                       <Trash2 className="text-destructive h-4 w-4" />
-                    </Button>
+                    </PermissionButton>
                   </div>
                 </div>
               ))}

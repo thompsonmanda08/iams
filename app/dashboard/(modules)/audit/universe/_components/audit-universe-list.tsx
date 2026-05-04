@@ -17,6 +17,7 @@ import {
   Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -274,10 +275,13 @@ export default function AuditUniverseList({
             </EmptyHeader>
             <EmptyContent>
               <Link href="/dashboard/audit/universe/new">
-                <Button className="gap-2">
+                <PermissionButton
+                  moduleCode={MODULE_CODES.AUDIT}
+                  action="can_create"
+                  className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create New Universe
-                </Button>
+                </PermissionButton>
               </Link>
             </EmptyContent>
           </Empty>
@@ -382,10 +386,13 @@ export default function AuditUniverseList({
 
                               <div className="flex items-center gap-2">
                                 <Link href="/dashboard/audit/universe/new">
-                                  <Button className="gap-2">
+                                  <PermissionButton
+                                    moduleCode={MODULE_CODES.AUDIT}
+                                    action="can_create"
+                                    className="gap-2">
                                     <Plus className="h-4 w-4" />
                                     Create New Universe
-                                  </Button>
+                                  </PermissionButton>
                                 </Link>
                               </div>
                             </CardContent>
@@ -525,7 +532,9 @@ export default function AuditUniverseList({
                                   {item.status === "DRAFT" && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <Button
+                                        <PermissionButton
+                                          moduleCode={MODULE_CODES.AUDIT}
+                                          action="can_delete"
                                           size="sm"
                                           variant="outline"
                                           onClick={(e) => {
@@ -535,7 +544,7 @@ export default function AuditUniverseList({
                                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                                           <Trash2 className="h-4 w-4" />
                                           Delete
-                                        </Button>
+                                        </PermissionButton>
                                       </TooltipTrigger>
                                       <TooltipContent>Delete Universe</TooltipContent>
                                     </Tooltip>

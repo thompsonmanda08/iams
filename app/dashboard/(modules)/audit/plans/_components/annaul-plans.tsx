@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { CustomPagination } from "@/components/ui/pagination";
 import {
   Table,
@@ -401,7 +402,9 @@ export default function AuditAnnualPlan({
               }}>
               Cancel
             </Button>
-            <Button
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT_PLANS}
+              action="can_create"
               onClick={() => {
                 createPlan(createPlanForm.year);
               }}
@@ -409,7 +412,7 @@ export default function AuditAnnualPlan({
               isLoading={createMutation.isPending}
               loadingText="Generating...">
               Create Annual Plan
-            </Button>
+            </PermissionButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

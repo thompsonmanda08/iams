@@ -684,14 +684,16 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
                         </Button>
-                        <Button
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.AUDIT}
+                          action="can_delete"
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteClick(line)}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                           <Trash2 className="h-4 w-4" />
                           Delete
-                        </Button>
+                        </PermissionButton>
                       </div>
                     </TableCell>
                   </TableRow>

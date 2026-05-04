@@ -7,6 +7,8 @@ import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import {
   Table,
   TableBody,
@@ -202,14 +204,16 @@ function GeneralFindingRow({
           {finding.status === "APPROVED" && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <PermissionButton
+                  moduleCode={MODULE_CODES.AUDIT_PLANS}
+                  action="can_assign"
                   size="sm"
                   variant="outline"
                   className="text-violet-600 hover:text-violet-700"
                   onClick={() => onAssign({ ...finding, framework: "GENERAL" })}>
                   <UserPlus className="h-3 w-3" />
                   Assign
-                </Button>
+                </PermissionButton>
               </TooltipTrigger>
               <TooltipContent>Assign action</TooltipContent>
             </Tooltip>

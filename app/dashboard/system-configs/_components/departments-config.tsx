@@ -177,14 +177,16 @@ export default function DepartmentsConfig({
                     </EmptyHeader>
                     <EmptyContent>
                       <div className="flex gap-2">
-                        <Button
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.DEPT_MGMT}
+                          action="can_create"
                           size="sm"
                           onClick={() => {
                             setEditingDepartment(null);
                             setOpenModal(true);
                           }}>
                           <Plus className="h-4 w-4" /> Create New Department
-                        </Button>
+                        </PermissionButton>
                       </div>
                     </EmptyContent>
                   </Empty>
@@ -241,7 +243,9 @@ export default function DepartmentsConfig({
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
                       </PermissionButton>
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.DEPT_MGMT}
+                        action="can_delete"
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
@@ -250,7 +254,7 @@ export default function DepartmentsConfig({
                         }}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-4 w-4" /> Delete
-                      </Button>
+                      </PermissionButton>
                     </div>
                     <div className="flex gap-4"></div>
                   </TableCell>

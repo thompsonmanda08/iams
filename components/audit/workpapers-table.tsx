@@ -11,6 +11,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, AlertCircle, Loader2, FileText, Plus } from "lucide-react";
 import type { Workpaper } from "@/lib/types/audit-types";
@@ -155,10 +157,14 @@ export function WorkpapersTable({
             </p>
           </div>
           {onCreateClick && (
-            <Button onClick={onCreateClick} className="gap-2">
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT_WPS}
+              action="can_create"
+              onClick={onCreateClick}
+              className="gap-2">
               <Plus className="h-4 w-4" />
               Create Your First Workpaper
-            </Button>
+            </PermissionButton>
           )}
         </div>
       </div>

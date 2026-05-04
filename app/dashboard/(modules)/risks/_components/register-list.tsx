@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -282,10 +283,14 @@ export default function KRIRegistersClient({
               description="Manage your Key Risk Indicator registers and reports"
               Icon={FileText}
             />
-            <Button size="sm" onClick={handleCreateClick}>
+            <PermissionButton
+              moduleCode={MODULE_CODES.RISK_REGISTERS}
+              action="can_create"
+              size="sm"
+              onClick={handleCreateClick}>
               <Plus className="mr-2 h-4 w-4" />
               New KRI Register
-            </Button>
+            </PermissionButton>
           </div>
         </div>
       </div>
@@ -363,10 +368,14 @@ export default function KRIRegistersClient({
                           : "Get started by creating your first KRI register"}
                       </p>
                       {!localSearch && (
-                        <Button className="mt-4" onClick={handleCreateClick}>
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.RISK_REGISTERS}
+                          action="can_create"
+                          className="mt-4"
+                          onClick={handleCreateClick}>
                           <Plus className="mr-2 h-4 w-4" />
                           Create Register
-                        </Button>
+                        </PermissionButton>
                       )}
                     </div>
                   </TableCell>
@@ -410,22 +419,26 @@ export default function KRIRegistersClient({
                           <View className="h-3.5 w-3.5" />
                           View KRI Register
                         </Button>
-                        <Button
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.RISK_REGISTERS}
+                          action="can_edit"
                           size="sm"
                           variant="outline"
                           className="h-8 gap-1.5"
                           onClick={() => handleEditClick(register)}>
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
-                        </Button>
-                        <Button
+                        </PermissionButton>
+                        <PermissionButton
+                          moduleCode={MODULE_CODES.RISK_REGISTERS}
+                          action="can_delete"
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteClick(register)}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                           <Trash2 className="h-3.5 w-3.5" />
                           Delete
-                        </Button>
+                        </PermissionButton>
                       </div>
                     </TableCell>
                   </TableRow>

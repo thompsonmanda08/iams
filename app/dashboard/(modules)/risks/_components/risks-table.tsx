@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
 import { Trash2, View, Pencil, UserPlus, X, SlidersVertical, AlertCircle } from "lucide-react";
 import { cn, notify } from "@/lib/utils";
 import { closeRisk, deleteRisk, RiskResponse } from "@/app/_actions/risk-module-actions";
@@ -473,7 +474,9 @@ export default function RisksTable({
                             View Risk
                           </DropdownMenuItem>
                           {risk.status === "DRAFT" ? (
-                            <DropdownMenuItem
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.RISK_REGISTERS}
+                              action="can_edit"
                               onClick={(e) => {
                                 handleEdit(risk);
                                 e.stopPropagation();
@@ -481,9 +484,11 @@ export default function RisksTable({
                               className="h-8 gap-1.5">
                               <Pencil className="h-3.5 w-3.5" />
                               Edit
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                           ) : risk.status === "OPEN" ? (
-                            <DropdownMenuItem
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.RISK_ACTIONS}
+                              action="can_assign"
                               onClick={(e) => {
                                 if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_assign")) return;
                                 setRiskForAssignment(risk);
@@ -492,10 +497,12 @@ export default function RisksTable({
                               }}>
                               <UserPlus className="h-3.5 w-3.5" />
                               Assign Action
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                           ) : null}
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
+                          <PermissionDropdownMenuItem
+                            moduleCode={MODULE_CODES.RISK_REGISTERS}
+                            action="can_edit"
                             onClick={(e) => {
                               handleCloseClick(risk);
                               e.stopPropagation();
@@ -504,9 +511,11 @@ export default function RisksTable({
                             className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                             <X className="h-4 w-4" />
                             Close
-                          </DropdownMenuItem>
+                          </PermissionDropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
+                          <PermissionDropdownMenuItem
+                            moduleCode={MODULE_CODES.RISK_REGISTERS}
+                            action="can_delete"
                             onClick={(e) => {
                               handleDeleteClick(risk);
                               e.stopPropagation();
@@ -515,7 +524,7 @@ export default function RisksTable({
                             {" "}
                             <Trash2 className="text-destructive h-4 w-4" />
                             Delete
-                          </DropdownMenuItem>
+                          </PermissionDropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

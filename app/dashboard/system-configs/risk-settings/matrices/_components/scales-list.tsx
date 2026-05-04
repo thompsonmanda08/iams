@@ -26,6 +26,7 @@ import {
   useSwapScaleLevels
 } from "@/hooks/use-matrix-query-data";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Scale = {
@@ -303,14 +304,16 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
             assessment
           </p>
         </div>
-        <Button
+        <PermissionButton
+          moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+          action="can_create"
           onClick={startAddNew}
           size="default"
           className="gap-2"
           disabled={addingNew || isBusy || scales.length >= 5}>
           <Plus className="h-4 w-4" />
           Add Level
-        </Button>
+        </PermissionButton>
       </div>
       {scales.length >= 5 && (
         <Alert
@@ -338,10 +341,14 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
             <p className="text-muted-foreground mb-6 text-center text-sm">
               Get started by adding your first {scaleType.toLowerCase()} level.
             </p>
-            <Button onClick={startAddNew} className="gap-2">
+            <PermissionButton
+              moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+              action="can_create"
+              onClick={startAddNew}
+              className="gap-2">
               <Plus className="h-4 w-4" />
               Add Your First Level
-            </Button>
+            </PermissionButton>
           </div>
         </Card>
       ) : (
@@ -433,7 +440,9 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
                           </>
                         ) : (
                           <>
-                            <Button
+                            <PermissionButton
+                              moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                              action="can_edit"
                               size="sm"
                               variant="outline"
                               onClick={() => handleMove(scale, "up")}
@@ -441,8 +450,10 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
                               title="Move up"
                               disabled={addingNew || isBusy || scale.level <= 1}>
                               <ArrowUp className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
+                            </PermissionButton>
+                            <PermissionButton
+                              moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                              action="can_edit"
                               size="sm"
                               variant="outline"
                               onClick={() => handleMove(scale, "down")}
@@ -450,16 +461,20 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
                               title="Move down"
                               disabled={addingNew || isBusy || scale.level >= scales.length}>
                               <ArrowDown className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
+                            </PermissionButton>
+                            <PermissionButton
+                              moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                              action="can_edit"
                               size="sm"
                               variant="outline"
                               onClick={() => startEdit(scale)}
                               className="h-8 gap-1.5"
                               disabled={addingNew || isBusy}>
                               Edit
-                            </Button>
-                            <Button
+                            </PermissionButton>
+                            <PermissionButton
+                              moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                              action="can_delete"
                               size="sm"
                               variant="outline"
                               onClick={() =>
@@ -474,7 +489,7 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
                               disabled={addingNew || isBusy}>
                               <Trash2 className="h-3.5 w-3.5" />
                               Delete
-                            </Button>
+                            </PermissionButton>
                           </>
                         )}
                       </div>

@@ -347,10 +347,13 @@ export function CreateOrUpdateModuleDialog({
     // }}
     >
       <DialogTrigger asChild>
-        <Button size="sm">
+        <PermissionButton
+          moduleCode={MODULE_CODES.USER_MGMT}
+          action="can_create"
+          size="sm">
           <Plus className="mr-2 h-4 w-4" />
           Add New Module
-        </Button>
+        </PermissionButton>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

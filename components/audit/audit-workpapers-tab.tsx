@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Plus, Download } from "lucide-react";
 import { CreateOrUpdateFindingModal } from "@/components/audit/create-finding-modal";
 import type { Workpaper } from "@/lib/types/audit-types";
@@ -31,10 +33,14 @@ export function AuditWorkpapersTab({ workpapers }: WorkpapersTabProps) {
                 <Download className="h-4 w-4" />
                 Export
               </Button>
-              <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT_WPS}
+                action="can_create"
+                className="gap-2"
+                onClick={() => setIsCreateModalOpen(true)}>
                 <Plus className="h-4 w-4" />
                 Attach Workpaper
-              </Button>
+              </PermissionButton>
             </div>
           </div>
         </div>

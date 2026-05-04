@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
 import { MoreHorizontal } from "lucide-react";
 import { CreateReportDialog } from "./create-report-dialog";
 import { useReportMutations } from "@/hooks/use-report-queries";
@@ -243,30 +244,38 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
 
                         {report.status === "DRAFT" && (
                           <>
-                            <DropdownMenuItem asChild>
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                              action="can_edit"
+                              asChild>
                               <Link
                                 href={handleEditReport(report)}
                                 className="flex items-center gap-2">
                                 <Edit className="h-4 w-4" />
                                 Edit/Update Report
                               </Link>
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                              action="can_delete"
                               onClick={() => handleDeleteClick(report)}
                               className="text-destructive focus:text-destructive font-medium">
                               <Trash2 className="h-4 w-4 text-red-500" />
                               Delete Report
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                           </>
                         )}
 
                         {report.status === "PUBLISHED" && (
                           <>
-                            <DropdownMenuItem className="flex items-center gap-2 font-medium">
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                              action="can_export"
+                              className="flex items-center gap-2 font-medium">
                               <Download className="h-4 w-4" />
                               Download PDF
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                           </>
                         )}
                       </DropdownMenuContent>

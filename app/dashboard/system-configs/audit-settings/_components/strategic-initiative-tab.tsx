@@ -277,12 +277,13 @@ export default function StrategicInitiativeTab() {
                         </TableCell>
                         <TableCell align="center">
                           <div className="flex justify-end gap-2">
-                            <Button
+                            <PermissionButton
+                              moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                              action="can_edit"
                               size="sm"
                               variant="outline"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
                                 setFormData(item);
                                 setSelectedId(item.id);
                                 setOpenModal(true);
@@ -290,8 +291,10 @@ export default function StrategicInitiativeTab() {
                               className="h-8 gap-1.5">
                               <Edit className="h-3.5 w-3.5" />
                               Edit
-                            </Button>
-                            <Button
+                            </PermissionButton>
+                            <PermissionButton
+                              moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                              action="can_delete"
                               size="sm"
                               variant="outline"
                               onClick={(e) => {
@@ -301,7 +304,7 @@ export default function StrategicInitiativeTab() {
                               className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                               <Trash2 className="h-4 w-4" />
                               Delete
-                            </Button>
+                            </PermissionButton>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -450,7 +453,10 @@ function CreateOrUpdate({
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       {showTrigger && (
         <DialogTrigger asChild>
-          <Button size="sm">
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+            action={initialData ? "can_edit" : "can_create"}
+            size="sm">
             {initialData ? (
               <>
                 <PencilLine className="mr-2 h-4 w-4" /> Update Strategic Initiative
@@ -460,7 +466,7 @@ function CreateOrUpdate({
                 <Plus className="mr-2 h-4 w-4" /> Create New Strategic Initiative
               </>
             )}
-          </Button>
+          </PermissionButton>
         </DialogTrigger>
       )}
       <DialogContent

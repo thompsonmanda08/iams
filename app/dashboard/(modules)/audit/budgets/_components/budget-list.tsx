@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react";
 import { useTableSearch } from "@/hooks/use-table-search";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import {
   Table,
   TableBody,
@@ -328,14 +329,16 @@ const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
                             </Button>
                           )}
                           {budget.status !== "APPROVED" && (
-                            <Button
+                            <PermissionButton
+                              moduleCode={MODULE_CODES.AUDIT}
+                              action="can_delete"
                               size="sm"
                               variant="outline"
                               onClick={() => handleDeleteClick(budget)}
                               className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                               <Trash2 className="h-3.5 w-3.5" />
                               Delete
-                            </Button>
+                            </PermissionButton>
                           )}
                         </div>
                       </TableCell>

@@ -19,6 +19,7 @@ import {
 import { CustomPagination } from "@/components/ui/pagination";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 type ControlEffectiveness = {
   id: string;
@@ -167,10 +168,14 @@ export function ControlEffectivenessList() {
             Define and manage control effectiveness levels for comprehensive risk management
           </p>
         </div>
-        <Button onClick={handleCreateClick} className="gap-2">
+        <PermissionButton
+          moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+          action="can_create"
+          onClick={handleCreateClick}
+          className="gap-2">
           <Plus className="h-4 w-4" />
           Create Control Effectiveness
-        </Button>
+        </PermissionButton>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -200,10 +205,14 @@ export function ControlEffectivenessList() {
                       Get started by creating your first control effectiveness level to evaluate and
                       manage control measures.
                     </p>
-                    <Button onClick={handleCreateClick} className="gap-2">
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                      action="can_create"
+                      onClick={handleCreateClick}
+                      className="gap-2">
                       <Plus className="h-4 w-4" />
                       Create Your First Control Effectiveness
-                    </Button>
+                    </PermissionButton>
                   </div>
                 </TableCell>
               </TableRow>
@@ -235,22 +244,26 @@ export function ControlEffectivenessList() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditClick(control)}
                         className="h-8 gap-1.5">
                         <Edit2 className="h-3.5 w-3.5" />
                         Edit
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                        action="can_delete"
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteClick(control)}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-4 w-4" />
                         Delete
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </TableCell>
                 </TableRow>

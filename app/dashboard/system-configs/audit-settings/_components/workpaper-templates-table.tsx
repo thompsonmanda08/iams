@@ -241,7 +241,9 @@ export function WorkpaperTemplatesTable({
                       View
                     </Link>
                   </Button>
-                  <Button
+                  <PermissionButton
+                    moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                    action="can_edit"
                     size="sm"
                     variant="outline"
                     onClick={(e) => {
@@ -251,8 +253,10 @@ export function WorkpaperTemplatesTable({
                     className="h-8 gap-1.5">
                     <Pencil className="h-3.5 w-3.5" />
                     Edit
-                  </Button>
-                  <Button
+                  </PermissionButton>
+                  <PermissionButton
+                    moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                    action="can_delete"
                     size="sm"
                     variant="outline"
                     onClick={(e) => {
@@ -261,7 +265,7 @@ export function WorkpaperTemplatesTable({
                     }}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                     <Trash2 className="h-4 w-4" /> Delete
-                  </Button>
+                  </PermissionButton>
                 </div>
               </TableCell>
             </TableRow>

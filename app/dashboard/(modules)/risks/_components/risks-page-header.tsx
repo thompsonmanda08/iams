@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { MultiStepRiskForm } from "@/components/forms/multi-step-risk-form";
 import BackButton from "@/components/back-button";
 import PageHeader from "@/components/page-header";
@@ -36,10 +37,14 @@ export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderPro
 
           <div className="flex gap-2">
             <BackButton title="Back to registers" />
-            <Button size={"sm"} onClick={handleCreateClick}>
+            <PermissionButton
+              moduleCode={MODULE_CODES.RISK_REGISTERS}
+              action="can_create"
+              size={"sm"}
+              onClick={handleCreateClick}>
               <Plus className="h-4 w-4" />
               Create Risk
-            </Button>
+            </PermissionButton>
           </div>
         </div>
       </div>

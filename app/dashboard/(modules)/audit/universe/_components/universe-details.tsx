@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Plus, Globe, Send, Pencil, Trash2, User } from "lucide-react";
@@ -319,10 +320,14 @@ const UniverseDetails = ({
                   </p>
                 </div>
                 {universe.status?.toUpperCase() === "DRAFT" && (
-                  <Button onClick={() => setShowItemForm(true)} className="gap-2">
+                  <PermissionButton
+                    moduleCode={MODULE_CODES.AUDIT}
+                    action="can_create"
+                    onClick={() => setShowItemForm(true)}
+                    className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add Item
-                  </Button>
+                  </PermissionButton>
                 )}
               </div>
             </div>
@@ -534,7 +539,9 @@ const UniverseDetails = ({
                                 {universe.status?.toUpperCase() === "DRAFT" && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button
+                                      <PermissionButton
+                                        moduleCode={MODULE_CODES.AUDIT}
+                                        action="can_delete"
                                         size="sm"
                                         variant="outline"
                                         onClick={(e) => {
@@ -543,7 +550,7 @@ const UniverseDetails = ({
                                         }}
                                         className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1 p-0">
                                         <Trash2 className="h-4 w-4" /> Delete
-                                      </Button>
+                                      </PermissionButton>
                                     </TooltipTrigger>
                                     <TooltipContent>Delete</TooltipContent>
                                   </Tooltip>

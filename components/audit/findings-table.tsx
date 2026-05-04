@@ -11,6 +11,8 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Eye, Edit, Trash2, FileText, AlertCircle, Loader2 } from "lucide-react";
 import type { Finding } from "@/lib/types/audit-types";
@@ -23,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -153,10 +156,14 @@ export function FindingsTable({ findings, isLoading, onCreateClick }: FindingsTa
             </p>
           </div>
           {onCreateClick && (
-            <Button onClick={onCreateClick} className="gap-2">
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT_REPORTS}
+              action="can_create"
+              onClick={onCreateClick}
+              className="gap-2">
               <AlertCircle className="h-4 w-4" />
               Create Finding
-            </Button>
+            </PermissionButton>
           )}
         </div>
       </div>
@@ -263,19 +270,23 @@ export function FindingsTable({ findings, isLoading, onCreateClick }: FindingsTa
                           View Details
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
+                      <PermissionDropdownMenuItem
+                        moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                        action="can_edit"
                         className="cursor-pointer gap-2"
                         onClick={() => router.push(`/dashboard/audit/findings/${finding.id}/edit`)}>
                         <Edit className="h-4 w-4" />
                         Edit
-                      </DropdownMenuItem>
+                      </PermissionDropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
+                      <PermissionDropdownMenuItem
+                        moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                        action="can_delete"
                         className="text-destructive cursor-pointer gap-2"
                         onClick={() => handleDeleteClick(finding)}>
                         <Trash2 className="h-4 w-4" />
                         Delete
-                      </DropdownMenuItem>
+                      </PermissionDropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

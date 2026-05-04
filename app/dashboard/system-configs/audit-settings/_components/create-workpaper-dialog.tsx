@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { WorkpaperTemplate } from "@/lib/types/audit-types";
 import { WorkpaperTemplateForm } from "./workpaper-template-form";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 export function CreateWorkpaperTemplateDialog({
   showTrigger,
@@ -37,7 +39,10 @@ export function CreateWorkpaperTemplateDialog({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {showTrigger && (
         <DialogTrigger asChild>
-          <Button size="sm">
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+            action={initialData ? "can_edit" : "can_create"}
+            size="sm">
             {initialData ? (
               <>
                 <PencilLine className="mr-2 h-4 w-4" /> Update Template
@@ -47,7 +52,7 @@ export function CreateWorkpaperTemplateDialog({
                 <Plus className="mr-2 h-4 w-4" /> Create New Template
               </>
             )}
-          </Button>
+          </PermissionButton>
         </DialogTrigger>
       )}
       <DialogContent

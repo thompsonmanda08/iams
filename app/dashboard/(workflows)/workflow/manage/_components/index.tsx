@@ -27,6 +27,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkflowEditor from "./workflow-editor";
 import { CreateWorkflowDialog } from "./create-workflow-dialog";
@@ -139,10 +140,14 @@ const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
               Icon={WorkflowIcon}
             />
             <div className="flex gap-2">
-              <Button onClick={handleNew} className="gap-2">
+              <PermissionButton
+                moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+                action="can_create"
+                onClick={handleNew}
+                className="gap-2">
                 <Plus className="h-4 w-4" />
                 New Workflow
-              </Button>
+              </PermissionButton>
             </div>
           </div>
         </div>
@@ -400,16 +405,22 @@ function WorkflowCard({
               <View className="h-4 w-4" />
               <span className="hidden sm:inline">View</span>
             </Button>
-            <Button onClick={() => onEdit(workflow.id)} size="sm">
+            <PermissionButton
+              moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+              action="can_edit"
+              onClick={() => onEdit(workflow.id)}
+              size="sm">
               <Pencil className="h-4 w-4" /> Edit
-            </Button>
-            <Button
+            </PermissionButton>
+            <PermissionButton
+              moduleCode={MODULE_CODES.WORKFLOW_CONFIG}
+              action="can_delete"
               onClick={() => onDelete(workflow.id)}
               size="sm"
               variant="outline"
               className="h-8 w-8 border-red-100 p-0 text-red-600 hover:border-red-200 hover:bg-red-50 sm:h-9 sm:w-auto sm:px-3 dark:border-red-900/30 dark:text-red-400 dark:hover:border-red-700 dark:hover:bg-red-900/20">
               <Trash2 className="h-4 w-4" /> Delete
-            </Button>
+            </PermissionButton>
           </div>
         </div>
       </div>

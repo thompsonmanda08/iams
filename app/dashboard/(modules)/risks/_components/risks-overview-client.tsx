@@ -2,6 +2,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Badge } from "@/components/ui/badge";
 import { FileText, TrendingUp, AlertTriangle, Activity, Filter } from "lucide-react";
 import {
@@ -272,10 +274,13 @@ export default function RisksOverviewClient() {
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap gap-3">
                   <Link href="/dashboard/risks/risk-registers">
-                    <Button className="gap-2">
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.RISK_REGISTERS}
+                      action="can_create"
+                      className="gap-2">
                       <FileText className="h-4 w-4" />
                       Add New Risk
-                    </Button>
+                    </PermissionButton>
                   </Link>
                   <Link href="/dashboard/risks/heat-map">
                     <Button variant="outline" className="gap-2">

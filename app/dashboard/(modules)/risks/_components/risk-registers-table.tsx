@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -286,7 +287,9 @@ export default function RiskRegistersTable({
                         <View className="h-3.5 w-3.5" />
                         View Risk Register
                       </Button>
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_REGISTERS}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
@@ -296,8 +299,10 @@ export default function RiskRegistersTable({
                         className="h-8 gap-1.5">
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_REGISTERS}
+                        action="can_delete"
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
@@ -307,7 +312,7 @@ export default function RiskRegistersTable({
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-4 w-4" />
                         Delete
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </TableCell>
                 </TableRow>

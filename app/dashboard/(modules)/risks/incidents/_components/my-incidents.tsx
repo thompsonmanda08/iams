@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
 import {
   Table,
   TableBody,
@@ -430,19 +431,23 @@ export function MyIncidents() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.RISK_INCIDENTS}
+                              action="can_edit"
                               onClick={() => handleSendForReviewClick(item)}
                               className="gap-2">
                               <Send className="h-4 w-4" />
                               <span>Submit for Review</span>
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleViewDetails(item)}
                               className="gap-2">
                               <Eye className="h-4 w-4" />
                               <span>View Incident</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem
+                            <PermissionDropdownMenuItem
+                              moduleCode={MODULE_CODES.RISK_INCIDENTS}
+                              action="can_delete"
                               onClick={(e) => {
                                 handleDeleteClick(item);
                                 e.stopPropagation();
@@ -450,7 +455,7 @@ export function MyIncidents() {
                               className="text-destructive gap-2">
                               <Trash2 className="h-4 w-4" />
                               <span>Delete</span>
-                            </DropdownMenuItem>
+                            </PermissionDropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

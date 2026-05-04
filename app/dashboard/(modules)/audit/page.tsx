@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Plus, FileText, ClipboardCheckIcon } from "lucide-react";
 import Link from "next/link";
 import { AuditMetricsCards } from "@/components/audit/audit-metrics-cards";
@@ -77,10 +78,13 @@ export default async function AuditDashboardPage() {
                 </Button>
               </Link>
               <Link href="/dashboard/audit/plans/engagement/new">
-                <Button className="gap-2">
+                <PermissionButton
+                  moduleCode={MODULE_CODES.AUDIT_PLANS}
+                  action="can_create"
+                  className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create New Audit
-                </Button>
+                </PermissionButton>
               </Link>
             </div>
           </div>

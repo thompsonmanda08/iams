@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import BudgetList from "./_components/budget-list";
@@ -35,10 +37,14 @@ const BudgetsPage = async () => {
             />
             <div className="flex gap-2">
               <Link href="/dashboard/audit/budgets/new">
-                <Button size="sm" className="gap-2">
+                <PermissionButton
+                  moduleCode={MODULE_CODES.AUDIT}
+                  action="can_create"
+                  size="sm"
+                  className="gap-2">
                   <Plus className="h-4 w-4" />
                   New Budget
-                </Button>
+                </PermissionButton>
               </Link>
             </div>
           </div>

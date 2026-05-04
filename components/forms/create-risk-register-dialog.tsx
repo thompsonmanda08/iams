@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -124,10 +125,13 @@ export default function CreateRiskRegisterDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <PermissionButton
+          moduleCode={MODULE_CODES.RISK_REGISTERS}
+          action="can_create"
+          size="sm">
           <Plus className="mr-2 h-4 w-4" />
           New Risk Register
-        </Button>
+        </PermissionButton>
       </DialogTrigger>
       <DialogContent
         onInteractOutside={(e) => {

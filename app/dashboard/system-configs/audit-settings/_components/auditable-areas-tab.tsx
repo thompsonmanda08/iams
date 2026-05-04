@@ -4,6 +4,8 @@ import { useState, useEffect, PropsWithChildren, useCallback, useMemo } from "re
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { CustomPagination } from "@/components/ui/pagination";
 import {
   Table,
@@ -57,10 +59,6 @@ import { set } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Badge } from "@/components/ui/badge";
-
-import { MODULE_CODES } from "@/lib/constants/module-codes";
-
-import { PermissionButton } from "@/components/ui/permission-button";
 
 interface AreaFormData {
   name: string;
@@ -260,12 +258,13 @@ export default function AuditableAreaConfig() {
                     </TableCell> */}
                       <TableCell align="center">
                         <div className="flex justify-end gap-2">
-                          <Button
+                          <PermissionButton
+                            moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                            action="can_edit"
                             size="sm"
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_edit")) return;
                               setFormData(item);
                               setAreaId(item.id);
                               setOpenModal(true);
@@ -273,8 +272,10 @@ export default function AuditableAreaConfig() {
                             className="h-8 gap-1.5">
                             <Edit className="h-3.5 w-3.5" />
                             Edit
-                          </Button>
-                          <Button
+                          </PermissionButton>
+                          <PermissionButton
+                            moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                            action="can_delete"
                             size="sm"
                             variant="outline"
                             onClick={(e) => {
@@ -284,7 +285,7 @@ export default function AuditableAreaConfig() {
                             className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                             <Trash2 className="h-4 w-4" />
                             Delete
-                          </Button>
+                          </PermissionButton>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -444,7 +445,10 @@ export function CreateOrUpdateArea({
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       {showTrigger && (
         <DialogTrigger asChild>
-          <Button size="sm">
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+            action={initialData ? "can_edit" : "can_create"}
+            size="sm">
             {initialData ? (
               <>
                 <PencilLine className="mr-2 h-4 w-4" /> Update Area
@@ -454,7 +458,7 @@ export function CreateOrUpdateArea({
                 <Plus className="mr-2 h-4 w-4" /> Create New Area
               </>
             )}
-          </Button>
+          </PermissionButton>
         </DialogTrigger>
       )}
       <DialogContent

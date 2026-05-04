@@ -9,6 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import {
   TrendingUp,
   Target,
@@ -216,24 +218,35 @@ export function ActionDetails({ action, actionLogs, pagination }: ActionDetailsP
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => handleMitigationSelect("Reduce")}>
+                  <PermissionDropdownMenuItem
+                    moduleCode={MODULE_CODES.RISK_ACTIONS}
+                    action="can_edit"
+                    onClick={() => handleMitigationSelect("Reduce")}>
                     <Shield className="mr-2 h-4 w-4" />
                     Reduce
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
+                  </PermissionDropdownMenuItem>
+                  <PermissionDropdownMenuItem
+                    moduleCode={MODULE_CODES.RISK_ACTIONS}
+                    action="can_edit"
                     onClick={() => router.push(`/dashboard/actions/risk/${action.id}/accept`)}
                     disabled={isDisabled}>
                     <Target className="mr-2 h-4 w-4" />
                     Accept
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleMitigationSelect("Avoid")}>
+                  </PermissionDropdownMenuItem>
+                  <PermissionDropdownMenuItem
+                    moduleCode={MODULE_CODES.RISK_ACTIONS}
+                    action="can_edit"
+                    onClick={() => handleMitigationSelect("Avoid")}>
                     <AlertTriangle className="mr-2 h-4 w-4" />
                     Avoid
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleMitigationSelect("Transfer")}>
+                  </PermissionDropdownMenuItem>
+                  <PermissionDropdownMenuItem
+                    moduleCode={MODULE_CODES.RISK_ACTIONS}
+                    action="can_edit"
+                    onClick={() => handleMitigationSelect("Transfer")}>
                     <TrendingUp className="mr-2 h-4 w-4" />
                     Transfer
-                  </DropdownMenuItem>
+                  </PermissionDropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

@@ -34,6 +34,8 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import { Button } from "../../../../../../components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -183,11 +185,15 @@ export function TemplateSelectorSimple({
           </EmptyHeader>
           <EmptyContent>
             <div className="flex gap-2">
-              <Button size="sm" asChild>
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+                action="can_create"
+                size="sm"
+                asChild>
                 <Link href="/dashboard/system-configs/audit-settings/templates">
                   <Plus className="h-4 w-4" /> Create New Template
                 </Link>
-              </Button>
+              </PermissionButton>
             </div>
           </EmptyContent>
         </Empty>

@@ -40,6 +40,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 interface Pagination {
   total: number;
@@ -123,7 +124,9 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
     <Card className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Provinces</h3>
-        <Button
+        <PermissionButton
+          moduleCode={MODULE_CODES.BRANCH_MGMT}
+          action="can_create"
           size="sm"
           onClick={() => {
             setEditingProvince(null);
@@ -131,7 +134,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
           }}>
           <Plus className="mr-2 h-4 w-4" />
           Add Province
-        </Button>
+        </PermissionButton>
       </div>
 
       <Table>
@@ -160,7 +163,9 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
                   </EmptyHeader>
                   <EmptyContent>
                     <div className="flex gap-2">
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.BRANCH_MGMT}
+                        action="can_create"
                         size="sm"
                         onClick={() => {
                           setEditingProvince(null);
@@ -168,7 +173,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
                         }}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add Province
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </EmptyContent>
                 </Empty>
@@ -199,7 +204,9 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
-                    <Button
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.BRANCH_MGMT}
+                      action="can_edit"
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
@@ -213,8 +220,10 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
                       className="h-8 gap-1.5">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
-                    </Button>
-                    <Button
+                    </PermissionButton>
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.BRANCH_MGMT}
+                      action="can_delete"
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
@@ -225,7 +234,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
                       disabled={deleteProvinceMutation.isPending}>
                       <Trash2 className="h-4 w-4" />
                       Delete
-                    </Button>
+                    </PermissionButton>
                   </div>
                 </TableCell>
               </TableRow>

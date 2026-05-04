@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Plus } from "lucide-react";
 import { Pagination } from "@/lib/types";
 import { WorkpaperTemplatesTable } from "@/app/dashboard/system-configs/audit-settings/_components/workpaper-templates-table";
@@ -57,10 +58,14 @@ export default function WorkpaperTemplatesTab() {
               Showing {templates.length} workpaper{templates.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Button className="ml-auto gap-2" onClick={handleOpenCreateDialog}>
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG}
+            action="can_create"
+            className="ml-auto gap-2"
+            onClick={handleOpenCreateDialog}>
             <Plus className="h-4 w-4" />
             Create Workpaper Template
-          </Button>
+          </PermissionButton>
         </div>
 
         {/* Main Content */}

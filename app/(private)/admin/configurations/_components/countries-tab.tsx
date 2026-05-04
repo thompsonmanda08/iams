@@ -36,6 +36,8 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 interface Country {
   id: string;
@@ -117,7 +119,9 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
             Manage countries where your organization operates globally
           </p>
         </div>
-        <Button
+        <PermissionButton
+          moduleCode={MODULE_CODES.BRANCH_MGMT}
+          action="can_create"
           size="sm"
           onClick={() => {
             setEditingCountry(null);
@@ -125,7 +129,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
           }}>
           <Plus className="mr-2 h-4 w-4" />
           Add Country
-        </Button>
+        </PermissionButton>
       </div>
 
       <Table>
@@ -154,7 +158,9 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                   </EmptyHeader>
                   <EmptyContent>
                     <div className="flex gap-2">
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.BRANCH_MGMT}
+                        action="can_create"
                         size="sm"
                         onClick={() => {
                           setEditingCountry(null);
@@ -162,7 +168,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                         }}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add Country
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </EmptyContent>
                 </Empty>
@@ -191,7 +197,9 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
+                  <PermissionButton
+                    moduleCode={MODULE_CODES.BRANCH_MGMT}
+                    action="can_edit"
                     size="sm"
                     variant="outline"
                     onClick={() => {
@@ -201,7 +209,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                     className="h-8 gap-1.5">
                     <Edit className="h-3.5 w-3.5" />
                     Edit
-                  </Button>
+                  </PermissionButton>
                 </TableCell>
               </TableRow>
             ))

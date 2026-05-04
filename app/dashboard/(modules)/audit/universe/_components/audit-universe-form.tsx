@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { Save, Globe, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
@@ -954,7 +955,9 @@ export default function AuditUniverseForm({
                                 }}>
                                 <Pencil className="h-3 w-3" />
                               </Button>
-                              <Button
+                              <PermissionButton
+                                moduleCode={MODULE_CODES.AUDIT}
+                                action="can_delete"
                                 size="icon"
                                 variant="outline"
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7"
@@ -963,7 +966,7 @@ export default function AuditUniverseForm({
                                   handleDeleteClick(item.id);
                                 }}>
                                 <Trash2 className="h-3 w-3" />
-                              </Button>
+                              </PermissionButton>
                             </div>
                           </div>
                           {/* Quick Info Row */}

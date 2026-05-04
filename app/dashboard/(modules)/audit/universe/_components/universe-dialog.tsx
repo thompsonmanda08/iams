@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Plus, Pencil, Globe, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import {
   Dialog,
   DialogContent,
@@ -76,15 +78,23 @@ export default function UniverseDialog({
       {showTrigger && (
         <DialogTrigger asChild>
           {isEditing ? (
-            <Button size="sm" variant="outline" className="h-8 gap-1.5">
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT}
+              action="can_edit"
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5">
               <Pencil className="h-3.5 w-3.5" />
               Edit
-            </Button>
+            </PermissionButton>
           ) : (
-            <Button className="gap-2">
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT}
+              action="can_create"
+              className="gap-2">
               <Plus className="h-4 w-4" />
               Create Universe
-            </Button>
+            </PermissionButton>
           )}
         </DialogTrigger>
       )}

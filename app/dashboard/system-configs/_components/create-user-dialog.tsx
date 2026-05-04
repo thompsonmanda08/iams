@@ -32,6 +32,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
 import { Switch } from "@/components/ui/switch";
 
 import { useRouter } from "next/navigation";
@@ -356,7 +357,10 @@ export default function CreateUserForm({
       }}>
       {showTrigger && (
         <DialogTrigger asChild>
-          <Button size="sm">
+          <PermissionButton
+            moduleCode={MODULE_CODES.USER_MGMT}
+            action={user ? "can_edit" : "can_create"}
+            size="sm">
             {user ? (
               <>
                 <PencilLine className="mr-2 h-4 w-4" /> Update User
@@ -367,7 +371,7 @@ export default function CreateUserForm({
                 Create New User
               </>
             )}
-          </Button>
+          </PermissionButton>
         </DialogTrigger>
       )}
 

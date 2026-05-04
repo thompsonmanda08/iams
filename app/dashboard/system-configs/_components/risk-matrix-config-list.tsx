@@ -22,6 +22,7 @@ import {
 import { CustomPagination } from "@/components/ui/pagination";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 type RiskMatrix = {
   id: string;
@@ -171,10 +172,13 @@ export function RiskMatrixConfigList() {
             Configure risk assessment matrices for your organization
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <PermissionButton
+          moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+          action="can_create"
+          onClick={() => setCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Risk Matrix
-        </Button>
+        </PermissionButton>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -203,10 +207,14 @@ export function RiskMatrixConfigList() {
                     <p className="text-muted-foreground mb-6 text-center text-sm">
                       Get started by creating your first risk matrix to organize and classify risks.
                     </p>
-                    <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                      action="can_create"
+                      onClick={() => setCreateDialogOpen(true)}
+                      className="gap-2">
                       <Plus className="h-4 w-4" />
                       Create Your First Matrix
-                    </Button>
+                    </PermissionButton>
                   </div>
                 </TableCell>
               </TableRow>
@@ -238,23 +246,29 @@ export function RiskMatrixConfigList() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={() => handleConfigureScales(matrix.id)}
                         className="h-8 gap-1.5">
                         <Settings className="h-3.5 w-3.5" />
                         Configure
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                        action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditClick(matrix)}
                         className="h-8 gap-1.5">
                         <Edit2 className="h-3.5 w-3.5" />
                         Edit
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton
+                        moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS}
+                        action="can_delete"
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteClick(matrix)}
@@ -262,7 +276,7 @@ export function RiskMatrixConfigList() {
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
                         <Trash2 className="h-4 w-4" />
                         Delete
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </TableCell>
                 </TableRow>
