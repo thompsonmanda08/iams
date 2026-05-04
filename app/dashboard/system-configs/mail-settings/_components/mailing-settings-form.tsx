@@ -10,7 +10,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SelectField } from "@/components/ui/select-field";
 import { notify } from "@/lib/utils";
 import { createSmtpConfig, updateSmtpConfig } from "@/app/_actions/smtp-actions";
-import { Spinner } from "@/components/ui/spinner";
 import BackButton from "@/components/back-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePermissions } from "@/hooks/use-permissions";

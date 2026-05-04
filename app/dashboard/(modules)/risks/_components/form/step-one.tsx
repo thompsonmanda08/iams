@@ -131,8 +131,7 @@ export function StepOne({
           classNames={{ wrapper: "max-w-full" }}
         />
         <SearchSelectField
-          label="Sub Process"
-          required
+          label="Sub Process (Optional)"
           placeholder={!data.macro_process_id ? "Select macro process first" : "Select sub process"}
           options={availableSubProcesses}
           value={data.sub_process_id}

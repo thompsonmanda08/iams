@@ -546,12 +546,8 @@ export async function getDataSourceData(
     // Fetch actual data from the backend endpoint
     // Format: GET /data-sources/{dataSourceId}?widget_type={widgetType}&{entity_param}={id}
 
-    // Special handling: risk_objective_mapping always fetches as 'table' format from API
-    // The transformation happens in transformWidgetData()
-    const apiWidgetType = widgetType === "risk_objective_mapping" ? "table" : widgetType;
-
     const params = new URLSearchParams({
-      widget_type: apiWidgetType
+      widget_type: widgetType
     });
 
     if (entityId && entityType) {
@@ -571,11 +567,6 @@ export async function getDataSourceData(
 
     const url = `/api/v1/data-sources/${dataSourceId}?${params.toString()}`;
     console.log("🔍 [getDataSourceData] API URL:", url);
-    if (widgetType === "risk_objective_mapping") {
-      console.log(
-        `ℹ️ [getDataSourceData] Note: Fetching risk_objective_mapping as 'table' format from API`
-      );
-    }
 
     const response = await authenticatedApiClient({
       url,

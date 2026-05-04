@@ -328,7 +328,34 @@ export function MultiStepRiskForm({
     if (!open && mode === "create") {
       setCurrentStep(1);
       setCreatedRiskId(null);
-      // Reset forms
+      setCloseDate(undefined);
+      setSelectedMatrix(null);
+      setStepOneData({
+        title: "",
+        description: "",
+        category_id: "",
+        department_id: "",
+        macro_process_id: "",
+        sub_process_id: "",
+        strategic_objective_id: "",
+        root_cause: "",
+        recurrence: "ongoing",
+        status: ""
+      });
+      setStepTwoData({
+        risk_matrix_id: "",
+        inherent_likelihood: 0,
+        inherent_impact: 0,
+        existing_controls: "",
+        control_effectiveness: 0
+      });
+      setStepThreeData({
+        treatment_plan: "",
+        risk_response_id: "",
+        risk_owner_id: "",
+        target_closing_date: "",
+        mitigation_cost: 0
+      });
     }
   }, [open, mode]);
 
@@ -359,9 +386,13 @@ export function MultiStepRiskForm({
   const handleStepOne = async () => {
     if (!checkPermission(MODULE_CODES.RISK_REGISTERS, mode === "edit" ? "can_edit" : "can_create")) return;
     setIsLoading(true);
+    const payload = {
+      ...stepOneData,
+      sub_process_id: stepOneData.sub_process_id || null
+    };
     try {
       if (mode === "edit" && createdRiskId) {
-        const response = await updateRisk(createdRiskId, stepOneData);
+        const response = await updateRisk(createdRiskId, payload);
         if (response.success) {
           notify({ description: "Step 1 updated", type: "success" });
           setCurrentStep(2);
@@ -371,7 +402,7 @@ export function MultiStepRiskForm({
       } else {
         const response = await createRiskStepOne({
           risk_register_id: registerId,
-          ...stepOneData
+          ...payload
         });
         if (response.success && response.data) {
           setCreatedRiskId(response.data.id);
@@ -457,7 +488,7 @@ export function MultiStepRiskForm({
         onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+        className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === "edit" ? "Edit Risk" : "Create New Risk"} - Step {currentStep} of 3

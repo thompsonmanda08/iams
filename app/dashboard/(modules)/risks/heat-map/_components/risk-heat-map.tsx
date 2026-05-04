@@ -22,6 +22,7 @@ import { useHeatMap, useMatrixRatings } from "@/hooks/use-matrix-query-data";
 import { useRiskMatrices } from "@/hooks/use-risk-query-data";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { RiskMatrix as RiskMatrixType } from "@/lib/types/risk-type";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -133,7 +134,9 @@ function computeSummaryFromMatrix(matrix: MatrixCell[], configRatings: any[]) {
   return {
     within,
     above,
-    average_score: scores.length ? +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0,
+    average_score: scores.length
+      ? +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+      : 0,
     highest_score: scores.length ? Math.max(...scores) : 0,
     lowest_score: scores.length ? Math.min(...scores) : 0,
     ratingCounts
@@ -253,7 +256,6 @@ function RiskMatrix({
   );
 }
 
-
 // ── Cell details content (shared between panel + dialog) ─────────────────────
 
 function CellDetailsContent({
@@ -278,8 +280,8 @@ function CellDetailsContent({
       {/* Stat pills */}
       <div className="grid grid-cols-5 gap-2">
         <div className="bg-muted/50 rounded-lg p-3">
-          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Likelihood</p>
-          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.likelihood}</p>
+          <p className="text-muted-foreground text-[11px] tracking-wide uppercase">Likelihood</p>
+          <p className="mt-1 text-2xl leading-none font-bold">{selectedCell.likelihood}</p>
           {selectedCell.likelihood_label && (
             <p className="text-muted-foreground mt-1 truncate text-[10px]">
               {selectedCell.likelihood_label}
@@ -287,8 +289,8 @@ function CellDetailsContent({
           )}
         </div>
         <div className="bg-muted/50 rounded-lg p-3">
-          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Impact</p>
-          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.impact}</p>
+          <p className="text-muted-foreground text-[11px] tracking-wide uppercase">Impact</p>
+          <p className="mt-1 text-2xl leading-none font-bold">{selectedCell.impact}</p>
           {selectedCell.impact_label && (
             <p className="text-muted-foreground mt-1 truncate text-[10px]">
               {selectedCell.impact_label}
@@ -296,11 +298,11 @@ function CellDetailsContent({
           )}
         </div>
         <div className="bg-muted/50 rounded-lg p-3">
-          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Score</p>
-          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.score}</p>
+          <p className="text-muted-foreground text-[11px] tracking-wide uppercase">Score</p>
+          <p className="mt-1 text-2xl leading-none font-bold">{selectedCell.score}</p>
         </div>
         <div className="bg-muted/50 rounded-lg p-3">
-          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Level</p>
+          <p className="text-muted-foreground text-[11px] tracking-wide uppercase">Level</p>
           <div className="mt-1.5 flex items-center gap-1.5">
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -310,8 +312,8 @@ function CellDetailsContent({
           </div>
         </div>
         <div className="bg-muted/50 rounded-lg p-3">
-          <p className="text-muted-foreground text-[11px] uppercase tracking-wide">Risks</p>
-          <p className="mt-1 text-2xl font-bold leading-none">{selectedCell.count}</p>
+          <p className="text-muted-foreground text-[11px] tracking-wide uppercase">Risks</p>
+          <p className="mt-1 text-2xl leading-none font-bold">{selectedCell.count}</p>
         </div>
       </div>
 
@@ -360,9 +362,12 @@ function CellDetailsContent({
                             style={{ backgroundColor: isWithin ? "#22c55e" : "#ef4444" }}
                           />
                           <div className="min-w-0">
-                            <p className="max-w-[160px] truncate text-xs font-semibold">
-                              {risk.title}
-                            </p>
+                            <Tooltip>
+                              <TooltipTrigger className="max-w-[160px] truncate text-xs font-semibold">
+                                {risk.title}
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">{risk.title}</TooltipContent>
+                            </Tooltip>
                             <div className="text-muted-foreground mt-0.5 flex items-center gap-1">
                               <Building className="h-2.5 w-2.5 shrink-0" />
                               <span className="truncate text-[10px]">{risk.department_name}</span>
@@ -543,10 +548,7 @@ export function RiskHeatMap({
         initialData.metadata?.likelihood_levels ??
         5,
       impact_levels:
-        raw?.metadata?.impact_levels ??
-        parsedImpact ??
-        initialData.metadata?.impact_levels ??
-        5,
+        raw?.metadata?.impact_levels ?? parsedImpact ?? initialData.metadata?.impact_levels ?? 5,
       matrix_name: raw?.metadata?.matrix_name ?? initialData.metadata?.matrix_name ?? ""
     },
     summary: {

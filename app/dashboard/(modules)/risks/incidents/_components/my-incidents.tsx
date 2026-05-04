@@ -321,7 +321,7 @@ export function MyIncidents() {
               <CardTitle className="text-lg font-semibold">Report Incidents</CardTitle>
               <p className="text-muted-foreground mt-1 text-sm">View and export incident reports</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 hidden">
               <Button variant="outline" size="sm">
                 <Copy className="mr-2 h-4 w-4" />
                 Copy

@@ -24,10 +24,14 @@ export function RiskScalesManager({
   return (
     <Tabs defaultValue="likelihood" className="space-y-6">
       <TabsList className="inline-flex h-12 w-auto min-w-full gap-1 lg:gap-2">
+        <TabsTrigger value="ratings">Rating Levels</TabsTrigger>
         <TabsTrigger value="likelihood">Likelihood Scale</TabsTrigger>
         <TabsTrigger value="impact">Impact Scale</TabsTrigger>
-        <TabsTrigger value="ratings">Rating Levels</TabsTrigger>
       </TabsList>
+
+      <TabsContent value="ratings" className="space-y-6">
+        <RatingLevelsList matrixId={matrixId} initialData={initialRatings} />
+      </TabsContent>
 
       <TabsContent value="likelihood" className="space-y-6">
         <ScalesList
@@ -45,10 +49,6 @@ export function RiskScalesManager({
           ratings={ratings}
           initialData={initialImpactScales}
         />
-      </TabsContent>
-
-      <TabsContent value="ratings" className="space-y-6">
-        <RatingLevelsList matrixId={matrixId} initialData={initialRatings} />
       </TabsContent>
     </Tabs>
   );
