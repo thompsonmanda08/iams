@@ -9,6 +9,9 @@ import {
   getUserById
 } from "@/app/_actions/user-actions";
 import { SESSION_CONFIG } from "@/lib/session-config";
+import { clamp } from "@/lib/utils/session-clamp";
+
+const REFRESH_INTERVAL_FLOOR_MS = 60_000; // 1 min — guard against refresh storms
 
 // Query Keys
 export const USERS_QUERY_KEYS = {
@@ -58,9 +61,13 @@ export const useHeadsOfDepartments = (
  * This ensures the refresh fires well before expiry regardless of the configured timeout.
  */
 export const useRefreshToken = (enabled: boolean = false, sessionTimeoutMs?: number) => {
-  const interval = sessionTimeoutMs
+  // Refresh fires at half the backend session_timeout, capped at 30 min, with
+  // a 60 s floor so a backend that returns session_timeout: 1 cannot create
+  // a sub-second refresh storm.
+  const rawInterval = sessionTimeoutMs
     ? Math.min(sessionTimeoutMs / 2, SESSION_CONFIG.TOKEN_REFRESH_INTERVAL)
     : SESSION_CONFIG.TOKEN_REFRESH_INTERVAL;
+  const interval = clamp(rawInterval, REFRESH_INTERVAL_FLOOR_MS, SESSION_CONFIG.TOKEN_REFRESH_INTERVAL);
 
   return useQuery({
     // Stable queryKey: do NOT include `enabled` or `interval` — toggling these

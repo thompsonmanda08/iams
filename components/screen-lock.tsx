@@ -34,7 +34,8 @@ import {
   getRefreshToken,
   checkScreenLockState,
   unlockScreen,
-  clearScreenLockState
+  clearScreenLockState,
+  getServerSession
 } from "@/app/_actions/auth-actions";
 import { AuthSession } from "@/lib/types";
 import { notify } from "@/lib/utils";
@@ -43,7 +44,15 @@ import {
   SCREEN_LOCK_COUNTDOWN_SECONDS,
   PROGRESS_CIRCLE_TOTAL
 } from "@/lib/session-config";
+import { clamp } from "@/lib/utils/session-clamp";
 import { logger } from "@/lib/logger";
+
+// G11: redirect after this many consecutive background-refresh failures.
+const REFRESH_FAILURE_REDIRECT_THRESHOLD = 3;
+// G9: minimum idle-timeout floor regardless of how short the backend session is.
+const IDLE_TIMEOUT_FLOOR_MS = 60_000;
+// G12: how often to verify (server-side) that the auth cookie is still valid.
+const SERVER_SESSION_POLL_MS = 60_000;
 
 const DEFAULT_TIMEOUT = SESSION_CONFIG.SCREEN_LOCK_COUNTDOWN;
 const SCREEN_LOCK_CHANNEL = "screen-lock-state";
@@ -529,23 +538,79 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
   const { isLocked, setIsLocked, broadcastLock, broadcastUnlock, broadcastLogout } =
     useScreenLockSync(loggedIn, idleTimerRef);
 
-  // Token refresh is paused when locked (uses isLocked, not a separate isIdle)
-  const { error: refreshError } = useRefreshToken(
-    Boolean(loggedIn && !isLocked),
-    session?.session_timeout ? session.session_timeout * 60 * 1000 : undefined
+  // G5: keep refreshing while locked — the underlying session must stay live
+  // so unlock has a valid token. The isLocked flag only governs UI now.
+  const sessionTimeoutMs = session?.session_timeout ? session.session_timeout * 60 * 1000 : undefined;
+  const { error: refreshError, isSuccess: refreshSuccess } = useRefreshToken(
+    loggedIn,
+    sessionTimeoutMs
   );
 
+  // G11: redirect after N consecutive refresh failures rather than toasting
+  // every failure forever. Counter resets on any successful refresh.
+  const refreshFailureCountRef = useRef(0);
+  const hasShownRefreshWarningRef = useRef(false);
   useEffect(() => {
-    if (refreshError) {
-      logger.error("Background token refresh failed - session may be expiring", refreshError, {
-        component: "IdleTimerContainer"
-      });
+    if (refreshSuccess) {
+      refreshFailureCountRef.current = 0;
+      hasShownRefreshWarningRef.current = false;
+    }
+  }, [refreshSuccess]);
+
+  useEffect(() => {
+    if (!refreshError) return;
+    refreshFailureCountRef.current += 1;
+    logger.error("Background token refresh failed - session may be expiring", refreshError, {
+      component: "IdleTimerContainer",
+      attempt: refreshFailureCountRef.current
+    });
+    if (!hasShownRefreshWarningRef.current) {
       notify({
         description: "Your session may be expiring. Please save your work and log back in if needed.",
         type: "warning"
       });
+      hasShownRefreshWarningRef.current = true;
+    }
+    if (refreshFailureCountRef.current >= REFRESH_FAILURE_REDIRECT_THRESHOLD) {
+      logger.warn("Refresh failure threshold hit — forcing logout", {
+        component: "IdleTimerContainer",
+        threshold: REFRESH_FAILURE_REDIRECT_THRESHOLD
+      });
+      // Fire-and-forget logout — even if it fails, force the redirect.
+      logUserOut("Background token refresh repeatedly failed.").catch(() => undefined);
+      window.location.replace("/login");
     }
   }, [refreshError]);
+
+  // G12: lightweight client poll to detect cookie expiry while the user is
+  // actively interacting. Without this the IdleTimerContainer would stay
+  // mounted (session prop captured at render time) and show no UI even
+  // after the cookie expired — the next server action would 401, but UX
+  // would lag. Polling getServerSession (a thin verifySession wrapper) on
+  // a coarse interval catches this without much network cost.
+  useEffect(() => {
+    if (!loggedIn) return;
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const result = await getServerSession();
+        if (cancelled) return;
+        if (!result?.isAuthenticated) {
+          logger.info("Server session invalid — redirecting to login", {
+            component: "IdleTimerContainer.poll"
+          });
+          window.location.replace("/login");
+        }
+      } catch (e) {
+        // Network errors are expected occasionally; ignore.
+      }
+    };
+    const id = window.setInterval(tick, SERVER_SESSION_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [loggedIn]);
 
   // Check for persisted lock state on mount (survives page reload)
   // Does NOT broadcast — only restores this tab's own dialog
@@ -631,10 +696,18 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
     // once all tabs are idle.
   }, []);
 
+  // G9: idle timeout adapts to backend session_timeout. Use 80% of the session
+  // window so the lock dialog appears with enough runway for the user to
+  // confirm presence before the cookie itself expires. Floored at 60 s and
+  // capped at the configured IDLE_TIMEOUT.
+  const effectiveIdleTimeout = sessionTimeoutMs
+    ? clamp(sessionTimeoutMs * 0.8, IDLE_TIMEOUT_FLOOR_MS, SESSION_CONFIG.IDLE_TIMEOUT)
+    : SESSION_CONFIG.IDLE_TIMEOUT;
+
   const idleTimer = useIdleTimer({
     onIdle,
     onActive,
-    timeout: SESSION_CONFIG.IDLE_TIMEOUT,
+    timeout: effectiveIdleTimeout,
     throttle: 500,
     crossTab: true,
     syncTimers: 200,

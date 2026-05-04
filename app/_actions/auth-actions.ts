@@ -26,6 +26,7 @@ import { cache } from "react";
 import { logger } from "@/lib/logger";
 import { SESSION_CONFIG } from "@/lib/session-config";
 import { tokenRefreshLock } from "@/lib/token-refresh-lock";
+import { sessionTimeoutMs } from "@/lib/utils/session-clamp";
 
 export async function loginUser({
   username,
@@ -474,10 +475,8 @@ export async function getRefreshToken(): Promise<APIResponse> {
       const access_token = response.data?.access_token;
 
       // ✅ Extend session by backend-defined session_timeout (stored in JWT at login).
-      // Falls back to SESSION_CONFIG.SESSION_TTL when not provided by backend.
-      const refreshTtl = session?.session_timeout
-        ? session.session_timeout * 60 * 1000
-        : SESSION_CONFIG.SESSION_TTL;
+      // Clamped via sessionTimeoutMs to reject pathological values from the backend.
+      const refreshTtl = sessionTimeoutMs(session?.session_timeout) ?? SESSION_CONFIG.SESSION_TTL;
       const newExpiresAt = new Date(Date.now() + refreshTtl);
 
       await updateAuthSession({
@@ -524,76 +523,59 @@ export async function lockScreenOnUserIdle(state: boolean): Promise<boolean> {
   }
 
   try {
-    // When unlocking (state = false), refresh the token to extend the session
+    // When unlocking (state = false), refresh the token AND mark
+    // screen_locked: false in a single session write so we don't race two
+    // sequential cookie writes (each of which triggers a fresh
+    // verifySession → encrypt → cookies().set round-trip).
     if (!state) {
+      logger.debug("🔓 Unlocking screen - attempting token refresh", {
+        function: "lockScreenOnUserIdle",
+        state
+      });
+
+      const refreshResponse = await getRefreshToken();
+
+      if (refreshResponse.success) {
+        logger.info("✅ Token refreshed successfully during unlock", {
+          function: "lockScreenOnUserIdle",
+          state
+        });
+      } else {
+        logger.warn("Token refresh failed during unlock; clearing lock cookie anyway", {
+          function: "lockScreenOnUserIdle",
+          state,
+          refreshSuccess: refreshResponse.success
+        });
+      }
+
+      // getRefreshToken has already written the refreshed accessToken/expiresAt
+      // to the cookie via updateAuthSession. We only need to flip the
+      // screen_locked flag and clear the lock cookie.
       try {
-        logger.debug("🔓 Unlocking screen - attempting token refresh", {
+        await updateAuthSession({ screen_locked: false });
+      } catch (sessionUpdateError) {
+        logger.error("Exception while updating session during unlock", sessionUpdateError, {
           function: "lockScreenOnUserIdle",
           state
         });
+        // Continue — try to clear lock cookie anyway.
+      }
 
-        const refreshResponse = await getRefreshToken();
-        if (!refreshResponse.success) {
-          logger.warn("Token refresh failed during unlock", {
-            function: "lockScreenOnUserIdle",
-            state,
-            refreshSuccess: refreshResponse.success
-          });
-          // Continue with updating screen lock state even if refresh fails
-        } else {
-          logger.info("✅ Token refreshed successfully during unlock", {
-            function: "lockScreenOnUserIdle",
-            state
-          });
-        }
-
-        // Update session even if refresh failed
-        try {
-          const updateResult = await updateAuthSession({ screen_locked: state });
-
-          if (!updateResult) {
-            logger.error("Failed to update session lock state during unlock", undefined, {
-              function: "lockScreenOnUserIdle",
-              state
-            });
-            // Continue anyway - try to clear lock cookie
-          } else {
-            logger.debug("✅ Session updated successfully during unlock", {
-              function: "lockScreenOnUserIdle",
-              state
-            });
-          }
-        } catch (sessionUpdateError) {
-          logger.error("Exception while updating session during unlock", sessionUpdateError, {
-            function: "lockScreenOnUserIdle",
-            state
-          });
-          // Continue anyway - try to clear lock cookie
-        }
-
-        // Clear screen lock cookie on unlock (success or partial success)
-        try {
-          await clearScreenLockCookie();
-          logger.info("✅ Screen unlocked successfully", {
-            function: "lockScreenOnUserIdle",
-            state,
-            refreshedToken: refreshResponse.success
-          });
-          return true;
-        } catch (cookieError) {
-          logger.error("Failed to clear screen lock cookie during unlock", cookieError, {
-            function: "lockScreenOnUserIdle",
-            state
-          });
-          // Still return true because unlock was processed
-          return true;
-        }
-      } catch (error) {
-        logger.error("Exception while unlocking screen", error, {
+      try {
+        await clearScreenLockCookie();
+        logger.info("✅ Screen unlocked successfully", {
+          function: "lockScreenOnUserIdle",
+          state,
+          refreshedToken: refreshResponse.success
+        });
+        return true;
+      } catch (cookieError) {
+        logger.error("Failed to clear screen lock cookie during unlock", cookieError, {
           function: "lockScreenOnUserIdle",
           state
         });
-        return false;
+        // Lock state in session is already false — treat as success.
+        return true;
       }
     }
 

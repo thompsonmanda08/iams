@@ -3,6 +3,7 @@ import { SESSION_CONFIG } from "@/lib/session-config";
 import { updateAuthSession, verifySession } from "@/lib/session";
 import { tokenRefreshLock } from "@/lib/token-refresh-lock";
 import { APIResponse } from "@/lib/types";
+import { sessionTimeoutMs } from "@/lib/utils/session-clamp";
 import axiosClient, { AxiosRequestConfig, AxiosRequestHeaders } from "axios";
 
 export const axios = axiosClient.create({
@@ -95,10 +96,9 @@ const _refreshAccessToken = async (): Promise<string> => {
     });
 
     const newToken = response.data?.access_token as string;
-    // Use backend session_timeout if present (same logic as getRefreshToken)
-    const refreshTtl = session?.session_timeout
-      ? session.session_timeout * 60 * 1000
-      : SESSION_CONFIG.SESSION_TTL;
+    // Use backend session_timeout if present (same logic as getRefreshToken).
+    // Clamp so a misconfigured backend value cannot create a multi-year cookie.
+    const refreshTtl = sessionTimeoutMs(session?.session_timeout) ?? SESSION_CONFIG.SESSION_TTL;
 
     await updateAuthSession({
       accessToken: newToken,
@@ -134,14 +134,39 @@ const authenticatedApiClient = async (request: RequestType) => {
   try {
     return await axios(buildConfig(session.accessToken));
   } catch (error: any) {
-    // On 403 with any token-expired message, refresh the token and retry once.
-    // Covers all variants: "token has expired", "token is expired", "token expired", etc.
+    // Refresh the token and retry once on any signal that the access token has
+    // expired or been rejected. Broader than the previous "403 + message
+    // contains 'token expired'" check, which broke whenever the backend
+    // changed wording or returned 401 instead of 403.
+    const status = error.status ?? error.response?.status;
     const msg: string = (error.message ?? error.response?.data?.error ?? "").toLowerCase();
-    const isTokenExpired = error.status === 403 && msg.includes("token") && msg.includes("expired");
+    const codeOrStatus: string = (
+      error.response?.data?.statusText ??
+      error.response?.data?.code ??
+      ""
+    ).toString().toUpperCase();
 
-    if (isTokenExpired) {
-      const newToken = await _refreshAccessToken();
-      return await axios(buildConfig(newToken));
+    const tokenExpired =
+      status === 401 ||
+      (status === 403 && (
+        msg.includes("token") ||
+        msg.includes("expired") ||
+        msg.includes("unauthorized") ||
+        codeOrStatus.includes("TOKEN_EXPIRED") ||
+        codeOrStatus.includes("UNAUTHORIZED")
+      ));
+
+    // Avoid infinite loops by tagging the request after a refresh attempt.
+    const alreadyRetried = (request as any).__refreshed === true;
+
+    if (tokenExpired && !alreadyRetried) {
+      try {
+        const newToken = await _refreshAccessToken();
+        (request as any).__refreshed = true;
+        return await axios(buildConfig(newToken));
+      } catch {
+        throw error;
+      }
     }
 
     throw error;

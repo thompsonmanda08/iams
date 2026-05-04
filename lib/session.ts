@@ -9,6 +9,27 @@ import { AUTH_SESSION, USER_SESSION, PERMISSIONS_SESSION, SCREEN_LOCK_SESSION } 
 import { User, UserType } from "./types/account";
 import { cache } from "react";
 import { SESSION_CONFIG } from "./session-config";
+import { sessionTimeoutMs } from "./utils/session-clamp";
+
+// JWT issuer/audience claims bind every token to this app. Defaults are used
+// in dev so AUTH_SECRET alone is not enough to forge a token usable by another
+// service that happens to share the secret.
+const JWT_ISSUER = process.env.JWT_ISSUER || "iams-web";
+const JWT_AUDIENCE = process.env.JWT_AUDIENCE || "iams-client";
+
+/**
+ * Decrypt-error statusText values that indicate a tampered or malformed token —
+ * the only conditions where verifySession() should actively destroy session
+ * cookies. Other failures (expiry, transient verification problems) just
+ * return unauthenticated and leave the cookies alone.
+ */
+const TAMPER_STATUS = new Set(["INVALID_TOKEN_SIGNATURE", "INVALID_TOKEN_FORMAT"]);
+
+/** Compute a JWT expiry string ("Ns") from a target Date. */
+function _computeJwtTtl(expiresAt: Date): string {
+  const seconds = Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
+  return `${seconds}s`;
+}
 
 // 1. Get secret from environment variables (MUST be set) - SERVER SIDE ONLY
 // Note: Validation is deferred to runtime to avoid build-time issues
@@ -36,6 +57,8 @@ export async function encrypt(payload: any, expirationTime: string = "1h") {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
+    .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
     .setExpirationTime(expirationTime)
     .sign(key);
 }
@@ -67,7 +90,9 @@ export async function decrypt(token: any) {
     const key = getKey();
     const { payload } = await jwtVerify(token, key, {
       algorithms: ["HS256"],
-      clockTolerance: 15
+      clockTolerance: 15,
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE
     });
 
     return payload;
@@ -92,6 +117,20 @@ export async function decrypt(token: any) {
         data: null,
         status: 500,
         statusText: "TOKEN_EXPIRED"
+      };
+    }
+
+    if (error.code === "ERR_JWT_CLAIM_VALIDATION_FAILED") {
+      // Issuer / audience mismatch — token was minted for a different consumer
+      // or this is an old token from before iss/aud were enforced. Treat as
+      // unauthenticated, NOT as tampering, so existing user cookies survive
+      // the rollout (a fresh login mints a properly-claimed token).
+      return {
+        success: false,
+        message: "Token claim validation failed",
+        data: null,
+        status: 500,
+        statusText: "TOKEN_CLAIM_INVALID"
       };
     }
 
@@ -125,10 +164,9 @@ export async function createAuthSession({
   organization_id?: string;
   session_timeout?: number; // in minutes, from backend
 }): Promise<void> {
-  // Use backend-provided session_timeout if available, otherwise fall back to default
-  const ttl = session_timeout
-    ? session_timeout * 60 * 1000
-    : SESSION_CONFIG.SESSION_TTL;
+  // Clamp the backend value so an out-of-range session_timeout cannot create
+  // a multi-year cookie or a sub-minute timeout that triggers refresh storms.
+  const ttl = sessionTimeoutMs(session_timeout) ?? SESSION_CONFIG.SESSION_TTL;
   const expiresAt = new Date(Date.now() + ttl);
 
   const newSession: AuthSession = {
@@ -144,8 +182,7 @@ export async function createAuthSession({
   };
 
   // Encrypt JWT with same TTL as cookie to prevent silent JWT expiry before cookie expires
-  const jwtExpirationSeconds = Math.ceil(ttl / 1000);
-  const token = await encrypt(newSession, `${jwtExpirationSeconds}s`);
+  const token = await encrypt(newSession, _computeJwtTtl(expiresAt));
 
   // Ensure `session` is successfully created before setting the cookie
   if (token) {
@@ -167,20 +204,20 @@ export async function createAuthSession({
   }
 }
 
-export async function createUserSession(user: User): Promise<void> {
-  const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // AFTER 1 HOURS
+export async function createUserSession(user: User, expiresAt?: Date): Promise<void> {
+  // Default to the auth-session derived expiry passed by the caller. Falls back
+  // to SESSION_TTL only if the caller has no auth-session reference yet.
+  const expiry = expiresAt ?? new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
 
-  const newSession = { ...user, expiresAt };
+  const newSession = { ...user, expiresAt: expiry };
 
-  // Call `encrypt` to generate the session token
-  const token = await encrypt(newSession, "1h");
+  const token = await encrypt(newSession, _computeJwtTtl(expiry));
 
-  // Ensure `session` is successfully created before setting the cookie
   if (token) {
     (await cookies()).set(USER_SESSION, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      expires: expiresAt,
+      expires: expiry,
       sameSite: "strict",
       path: "/"
     });
@@ -230,24 +267,18 @@ export async function updateAuthSession(fields: any): Promise<AuthSession | unde
       ...fields
     };
 
-    // Determine expiration: use provided expiresAt from fields, keep existing, or create new (1 hour)
+    // Determine expiration: provided expiresAt → existing → fallback to SESSION_TTL
     const expiresAt = fields?.expiresAt
       ? new Date(fields.expiresAt)
       : oldSession?.expiresAt
         ? new Date(oldSession.expiresAt)
-        : new Date(Date.now() + 1 * 60 * 60 * 1000);
+        : new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
 
     // Ensure expiresAt is included in the session payload
     newSession.expiresAt = expiresAt;
 
-    // ✅ CRITICAL FIX: Calculate JWT expiration time to match cookie expiration
-    // This ensures the encrypted token doesn't expire before the cookie
-    const timeUntilExpiry = expiresAt.getTime() - Date.now();
-    const expirationTimeSeconds = Math.ceil(timeUntilExpiry / 1000);
-    const jwtExpirationTime = `${expirationTimeSeconds}s`;
-
-    // Call `encrypt` to generate the session token with proper expiration
-    const session = await encrypt(newSession, jwtExpirationTime);
+    // Encrypt with JWT TTL aligned to the cookie TTL.
+    const session = await encrypt(newSession, _computeJwtTtl(expiresAt));
 
     if (session) {
       (await cookies()).set(AUTH_SESSION, session, {
@@ -283,10 +314,23 @@ export async function verifySession(): Promise<{
 
     const decrypted = await decrypt(cookie);
 
-    // Check if decryption returned an error object
+    // Check if decryption returned an error object.
+    // Only DESTROY cookies on signature/format failures (true tampering).
+    // Expiry, claim mismatch, and transient verification errors return
+    // unauthenticated without writing cookies — important because this
+    // function is also called from Server Components, which cannot write
+    // cookies and would throw if deleteSession() ran during render.
     if (!decrypted || decrypted.success === false) {
-      // Invalid token - clean up
-      await deleteSession();
+      const statusText = (decrypted as any)?.statusText as string | undefined;
+      if (statusText && TAMPER_STATUS.has(statusText)) {
+        try {
+          await deleteSession();
+        } catch (cookieWriteError) {
+          // Server Component caller — cookie write not allowed.
+          // Log and proceed; layout-level redirect to /login still fires.
+          console.warn("[verifySession] Could not clear tampered cookies:", cookieWriteError);
+        }
+      }
       return { isAuthenticated: false, session: null };
     }
 
@@ -297,14 +341,14 @@ export async function verifySession(): Promise<{
       return { isAuthenticated: false, session: null };
     }
 
-    // Check token expiration
+    // Check token expiration. Don't write cookies here either — JWT exp will
+    // catch expired tokens on the next decrypt, and the framework will not
+    // allow writes from Server Component callers.
     if (session?.expiresAt) {
       const expiresAt = new Date(session.expiresAt);
       const now = new Date();
 
       if (expiresAt < now) {
-        // Token is expired, delete it
-        await deleteSession();
         return { isAuthenticated: false, session: null };
       }
     }
@@ -432,21 +476,29 @@ export async function verifySessions(
  * the user explicitly confirms they are present or the session itself expires.
  */
 export async function setScreenLockCookie(isLocked: boolean): Promise<void> {
-  // FIX #4: Cookie and JWT expire with the full session (not just the 90s countdown window).
-  // The lock dialog must persist across page reloads until the user explicitly confirms
-  // or the session itself expires — a 90s cookie caused the lock to vanish on late reloads.
-  const expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+  // Tie the lock-cookie expiry to the ACTIVE auth-session expiry so the lock
+  // can never outlive the session. Falls back to SESSION_TTL only when no
+  // active session is present (defensive — this path should not be reached
+  // since lock requires an authenticated user).
+  const cookieStore = await cookies();
+  const authCookie = cookieStore.get(AUTH_SESSION)?.value;
+  let expiresAt = new Date(Date.now() + SESSION_CONFIG.SESSION_TTL);
+  if (authCookie) {
+    const auth = await decrypt(authCookie);
+    if (auth && (auth as any).success !== false && (auth as any).expiresAt) {
+      expiresAt = new Date((auth as any).expiresAt);
+    }
+  }
 
   const lockState = {
     locked: isLocked,
     timestamp: new Date().toISOString()
   };
 
-  const jwtExpirationSeconds = Math.ceil(SESSION_CONFIG.SESSION_TTL / 1000);
-  const token = await encrypt(lockState, `${jwtExpirationSeconds}s`);
+  const token = await encrypt(lockState, _computeJwtTtl(expiresAt));
 
   if (token) {
-    (await cookies()).set(SCREEN_LOCK_SESSION, token, {
+    cookieStore.set(SCREEN_LOCK_SESSION, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       expires: expiresAt,
@@ -491,9 +543,7 @@ export async function getScreenLockState(): Promise<boolean> {
       const auth = await decrypt(authCookie);
       const authValid = auth && (auth as any).success !== false && (auth as any).expiresAt;
       if (authValid) {
-        const ttlMs = (auth as any).session_timeout
-          ? (auth as any).session_timeout * 60 * 1000
-          : SESSION_CONFIG.SESSION_TTL;
+        const ttlMs = sessionTimeoutMs((auth as any).session_timeout) ?? SESSION_CONFIG.SESSION_TTL;
         const authCreatedAt = new Date((auth as any).expiresAt).getTime() - ttlMs;
         const lockTimestamp = (lockState as any).timestamp
           ? new Date((lockState as any).timestamp).getTime()

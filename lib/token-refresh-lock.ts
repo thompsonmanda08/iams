@@ -1,50 +1,47 @@
 /**
  * Token Refresh Lock
  *
- * Ensures only one token refresh happens at a time across the entire application.
- * Multiple requests waiting for a refresh share the same Promise to avoid redundant calls.
+ * Serializes token-refresh work across concurrent callers within this Node
+ * process. A second caller does NOT receive the first caller's return value —
+ * each caller runs its own `fn()` after the previous one settles, so callers
+ * with different return types stay correct.
  *
- * This solves the race condition where concurrent requests all trigger token refresh simultaneously.
+ * The first caller's work still wins from the backend's perspective: by the
+ * time the second caller's `fn()` runs, the cookie has been refreshed and
+ * `verifySession()` returns the up-to-date access token. Subsequent fn()s
+ * therefore see the latest state and either no-op (if they re-check expiry)
+ * or perform their own cookie-coherent refresh.
+ *
+ * Single-instance deployment only. A multi-instance prod would need a Redis
+ * or database-backed mutex (out of scope for this plan).
  */
 
 class TokenRefreshLock {
-  private isRefreshing = false;
-  private refreshPromise: Promise<any> | null = null;
+  private chain: Promise<unknown> = Promise.resolve();
+  private inFlight = 0;
 
-  /**
-   * Check if a token refresh is currently in progress
-   */
   isRefreshInProgress(): boolean {
-    return this.isRefreshing;
+    return this.inFlight > 0;
   }
 
   /**
-   * Acquire the lock and execute a function atomically.
-   *
-   * If a refresh is already in progress, wait for and return the same Promise.
-   * This ensures multiple concurrent requests share the same refresh operation.
-   *
-   * @param fn - The async function to execute while holding the lock
-   * @returns Promise with the result of the function
+   * Run `fn` after any in-flight acquire(s) have settled. Returns the result
+   * of THIS caller's `fn`, never another caller's.
    */
   async acquire<T>(fn: () => Promise<T>): Promise<T> {
-    // If already refreshing, wait for the existing refresh to complete
-    if (this.isRefreshing && this.refreshPromise) {
-      return this.refreshPromise as Promise<T>;
-    }
-
-    // Set flag and create promise
-    this.isRefreshing = true;
+    this.inFlight++;
+    // Chain off the previous tail. We swallow the previous result/error so a
+    // failure from caller A does not propagate into caller B's promise.
+    const next = this.chain.then(
+      () => fn(),
+      () => fn()
+    );
+    this.chain = next.catch(() => undefined);
 
     try {
-      // Create promise that will be shared with waiting requests
-      this.refreshPromise = fn();
-      const result = await this.refreshPromise;
-      return result;
+      return await next;
     } finally {
-      // Release the lock
-      this.isRefreshing = false;
-      this.refreshPromise = null;
+      this.inFlight--;
     }
   }
 }
