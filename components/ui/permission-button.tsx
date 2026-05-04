@@ -2,12 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePermissions } from "@/hooks/use-permissions";
 import type { ModuleCode } from "@/lib/constants/module-codes";
 import type { PermissionAction } from "@/lib/types";
@@ -36,12 +31,13 @@ type PermissionButtonProps = React.ComponentProps<typeof Button> & {
 /**
  * Drop-in replacement for <Button> that visually disables itself when the
  * current user lacks the required module permission. Renders a tooltip
- * explaining why the button is disabled. BACKOFFICE_ADMIN bypasses the check.
+ * explaining why the button is disabled. BACKOFFICE_ADMIN bypasses the check. -- need to be careful when using this component in the backoffice, as it may show options that the user cannot actually access.
  *
  * Usage:
  *   <PermissionButton moduleCode={MODULE_CODES.RISK_REGISTERS} action="can_create" onClick={...}>
  *     Add Risk
  *   </PermissionButton>
+ *
  */
 export function PermissionButton({
   moduleCode,
@@ -59,8 +55,7 @@ export function PermissionButton({
   if (allowed) return button;
 
   const message =
-    noPermissionTooltip ??
-    `You do not have permission to ${ACTION_VERB[action]} this resource`;
+    noPermissionTooltip ?? `You do not have permission to ${ACTION_VERB[action]} this resource`;
 
   return (
     <TooltipProvider>

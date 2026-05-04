@@ -2,12 +2,7 @@
 
 import * as React from "react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePermissions } from "@/hooks/use-permissions";
 import type { ModuleCode } from "@/lib/constants/module-codes";
 import type { PermissionAction } from "@/lib/types";
@@ -32,7 +27,7 @@ type PermissionDropdownMenuItemProps = React.ComponentProps<typeof DropdownMenuI
 /**
  * Drop-in replacement for <DropdownMenuItem> that disables itself + shows a
  * tooltip when the current user lacks the required permission.
- * BACKOFFICE_ADMIN bypasses the check.
+ * BACKOFFICE_ADMIN bypasses the check. -- need to be careful when using this component in the backoffice, as it may show options that the user cannot actually access.
  */
 export function PermissionDropdownMenuItem({
   moduleCode,
@@ -55,8 +50,7 @@ export function PermissionDropdownMenuItem({
   if (allowed) return item;
 
   const message =
-    noPermissionTooltip ??
-    `You do not have permission to ${ACTION_VERB[action]} this resource`;
+    noPermissionTooltip ?? `You do not have permission to ${ACTION_VERB[action]} this resource`;
 
   return (
     <TooltipProvider>
