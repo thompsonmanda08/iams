@@ -34,7 +34,7 @@ export async function getCountries(params?: {
 
 export async function createCountry(data: {
   name: string;
-  iso2_code: string;
+  code: string;
   region?: string;
 }): Promise<APIResponse> {
   try {
@@ -53,7 +53,7 @@ export async function createCountry(data: {
 export async function updateCountry(data: {
   id: string;
   name?: string;
-  iso2_code?: string;
+  code?: string;
   region?: string;
   is_active?: boolean;
 }): Promise<APIResponse> {

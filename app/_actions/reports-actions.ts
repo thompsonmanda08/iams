@@ -724,7 +724,30 @@ export async function fetchFindingsForReport(auditPlanId?: string): Promise<APIR
 
       // Extract findings from workpaper response
       const workpaper = response?.data?.data || response?.data;
-      const rawFindings = workpaper?.findings || [];
+      let rawFindings = workpaper?.findings || [];
+
+      // The /working-paper endpoint may not embed findings. Fall back to the
+      // dedicated /working-paper-findings endpoint when the array is empty so
+      // the report's Compliance Findings widget mirrors the Workpaper tab.
+      if (rawFindings.length === 0) {
+        try {
+          const fallback = await authenticatedApiClient({
+            url: `/api/v1/working-paper-findings?audit_plan_id=${auditPlanId}&page=1&page_size=200`,
+            method: "GET"
+          });
+          const payload = fallback?.data?.data ?? fallback?.data;
+          rawFindings = Array.isArray(payload?.findings)
+            ? payload.findings
+            : Array.isArray(payload)
+              ? payload
+              : [];
+        } catch (fallbackError: any) {
+          console.warn(
+            "⚠️ [fetchFindingsForReport] Fallback /working-paper-findings failed:",
+            fallbackError?.message
+          );
+        }
+      }
 
       console.log(
         `📋 [fetchFindingsForReport] Found ${rawFindings.length} findings for audit plan ${auditPlanId}`

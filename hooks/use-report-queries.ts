@@ -18,6 +18,7 @@ import {
   getReportByEntityId
 } from "@/app/_actions/reports-actions";
 import { getWorkpaperByAuditPlanId } from "@/app/_actions/audit-module-actions";
+import { listGeneralFindings } from "@/app/_actions/general-findings-actions";
 import type { ReportContent, ReportEntityType, ReportRecord } from "@/lib/types/report-types";
 import { QUERY_KEYS } from "@/lib/constants";
 import { notify } from "@/lib/utils";
@@ -81,9 +82,24 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       if (!result.success) return null;
 
       const workpaper = result.data;
-      const generalFindings = workpaper?.general_findings ?? [];
+      let generalFindings = workpaper?.general_findings ?? [];
       const config = workpaper?.config?.[0] ?? null;
       const metadata = workpaper?.metadata ?? null;
+
+      // The /working-paper endpoint may not embed findings. Fall back to the
+      // dedicated /general-work-paper-findings endpoint when the array is empty,
+      // matching the source of truth used by the Workpaper tab.
+      if (generalFindings.length === 0 && workpaper?.id) {
+        const findingsResult = await listGeneralFindings(workpaper.id);
+        if (findingsResult.success) {
+          const data = findingsResult.data;
+          generalFindings = Array.isArray(data?.findings)
+            ? data.findings
+            : Array.isArray(data)
+              ? data
+              : [];
+        }
+      }
 
       return {
         findings: generalFindings,

@@ -149,13 +149,19 @@ export async function createAuthSession({
 
   // Ensure `session` is successfully created before setting the cookie
   if (token) {
-    (await cookies()).set(AUTH_SESSION, token, {
+    const cookieStore = await cookies();
+    cookieStore.set(AUTH_SESSION, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       expires: expiresAt,
       sameSite: "strict",
       path: "/"
     });
+    // Drop any stale screen-lock cookie left over from a previous session.
+    // The lock cookie has its own 60-min TTL and can outlive the auth session
+    // (e.g. user locked → walked away → JWT expired). Without this, a fresh
+    // login would re-trigger the lock dialog on mount via getScreenLockState().
+    cookieStore.delete(SCREEN_LOCK_SESSION);
   } else {
     throw new Error("Failed to create session token.");
   }
@@ -192,7 +198,7 @@ export async function createUserSession(user: User): Promise<void> {
  */
 export async function cacheSystemSetup(
   setup: Record<string, any>,
-  ttlSeconds: number = 5 * 60
+  ttlSeconds: number = 30 * 60
 ): Promise<void> {
   if (!setup || typeof setup !== "object") return;
 
@@ -459,7 +465,8 @@ export async function setScreenLockCookie(isLocked: boolean): Promise<void> {
  * to prevent showing stale lock state from old cookies
  */
 export async function getScreenLockState(): Promise<boolean> {
-  const cookie = (await cookies()).get(SCREEN_LOCK_SESSION)?.value;
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get(SCREEN_LOCK_SESSION)?.value;
   if (!cookie) return false;
 
   const lockState = await decrypt(cookie);
@@ -472,6 +479,35 @@ export async function getScreenLockState(): Promise<boolean> {
   // Verify lock state is actually locked
   if ((lockState as any)?.locked !== true) {
     return false;
+  }
+
+  // Defensive staleness check: if the lock cookie predates the current auth
+  // session, it belongs to a previous (expired) session and must be ignored.
+  // createAuthSession() also clears this cookie on every login, so this is a
+  // belt-and-suspenders guard against any login path that bypasses it.
+  try {
+    const authCookie = cookieStore.get(AUTH_SESSION)?.value;
+    if (authCookie) {
+      const auth = await decrypt(authCookie);
+      const authValid = auth && (auth as any).success !== false && (auth as any).expiresAt;
+      if (authValid) {
+        const ttlMs = (auth as any).session_timeout
+          ? (auth as any).session_timeout * 60 * 1000
+          : SESSION_CONFIG.SESSION_TTL;
+        const authCreatedAt = new Date((auth as any).expiresAt).getTime() - ttlMs;
+        const lockTimestamp = (lockState as any).timestamp
+          ? new Date((lockState as any).timestamp).getTime()
+          : 0;
+        if (lockTimestamp && lockTimestamp < authCreatedAt) {
+          // Lock predates the active auth session — discard it.
+          cookieStore.delete(SCREEN_LOCK_SESSION);
+          return false;
+        }
+      }
+    }
+  } catch {
+    // If the staleness check itself fails, fall through to the existing
+    // checks rather than locking the user out of a fresh session.
   }
 
   // FIX #4: Removed the 95-second timestamp staleness check.

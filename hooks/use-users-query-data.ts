@@ -125,7 +125,7 @@ export const useSystemSetup = (
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
     enabled,
     initialData: options?.initialData,
     initialDataUpdatedAt: options?.initialData ? Date.now() : undefined
