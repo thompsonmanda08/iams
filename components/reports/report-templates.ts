@@ -180,7 +180,7 @@ createSection("exec_summary", "text_with_widgets",
   },
 ]
 ),
-createSection("strategic_objective", "text_only", 3, "INFRATEL Strategic Objective", "Risk Strategic Objective"),
+createSection("strategic_objective", "text_only", 3, "Strategic Objective", "Risk Strategic Objective"),
  createSection("mapping_strategic_objective", "text_with_widgets",
    4, "Mapping Of Key Risks Against Strategic Objectives",
     "Strategic risks and Objectives", "",
