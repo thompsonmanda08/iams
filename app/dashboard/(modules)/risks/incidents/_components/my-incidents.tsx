@@ -60,7 +60,7 @@ import { SendForReviewDialog } from "./send-for-review-dialog";
 
 export function MyIncidents() {
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { searchValue: searchQuery, setSearchValue: setSearchQuery, debouncedSearch } = useTableSearch({ debounceMs: 200 });
   const [selectedIncident, setSelectedIncident] = useState<IncidentData | null>(null);

@@ -47,7 +47,7 @@ export function TemplateCategoriesTable({
   frameworkType = "ISO27001"
 }: TemplateCategoriesTableProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   // const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<TemplateCategory | null>(null);

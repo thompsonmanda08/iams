@@ -50,7 +50,7 @@ export default function EditRiskRegisterDialog({
   register
 }: EditRiskRegisterDialogProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [departments, setDepartments] = useState<Department[]>([]);

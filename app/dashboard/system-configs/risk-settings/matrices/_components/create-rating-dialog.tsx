@@ -33,7 +33,7 @@ export function CreateRatingDialog({
   matrixId,
   onSuccess
 }: CreateRatingDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",

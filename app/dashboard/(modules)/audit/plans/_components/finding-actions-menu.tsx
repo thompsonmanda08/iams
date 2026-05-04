@@ -13,6 +13,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface FindingActionsMenuProps {
   findingId: string;
   currentStatus: string;
@@ -34,7 +36,7 @@ export function FindingActionsMenu({
   onRefresh
 }: FindingActionsMenuProps) {
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
   // Check if finding is editable
@@ -100,19 +102,18 @@ export function FindingActionsMenu({
     <>
       {isEditable && (
         <div className="flex items-center gap-2">
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.AUDIT_WPS} action="can_edit"
             variant="outline"
             size="sm"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
-              onEdit();
-            }}
+  onEdit();
+}}
             className="gap-2"
             disabled={clearMutation.isPending || statusMutation.isPending}
             title="">
             <Edit2 className="h-4 w-4" />
             Edit
-          </Button>
+          </PermissionButton>
 
           <SelectField
             id="finding-status"

@@ -65,7 +65,7 @@ export default function DepartmentUsersConfig() {
   const queryClient = useQueryClient();
   const params = useParams();
   const departmentId = params?.id as string;
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const [editingUser, setEditingUser] = useState<DepartmentUser | null>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);

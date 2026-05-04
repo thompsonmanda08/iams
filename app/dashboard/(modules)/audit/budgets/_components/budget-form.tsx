@@ -91,7 +91,7 @@ const BudgetForm = ({
   onBudgetCreated?: (budgetId: string) => void;
 }) => {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const [budgetData, setBudgetData] = useState<BudgetFormData>({
     ...INIT_BUDGET_DATA,

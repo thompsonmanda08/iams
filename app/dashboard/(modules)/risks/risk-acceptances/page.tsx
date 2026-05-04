@@ -211,7 +211,7 @@ const AcceptanceCard = ({ acceptance, onAcceptanceClick, onViewRisk }: Acceptanc
 
 export default function RiskAcceptanceList() {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [activeTab, setActiveTab] = useState<Status>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAcceptance, setSelectedAcceptance] = useState<Acceptance | null>(null);

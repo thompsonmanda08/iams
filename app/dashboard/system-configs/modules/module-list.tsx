@@ -28,6 +28,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 type ModuleIcon = ReactElement | React.ReactNode | string;
 
 interface Module {
@@ -80,7 +82,7 @@ const initialModules: Module[] = [
 ];
 
 export default function ModuleListConfig({ initialModules = [] }: { initialModules?: Module[] }) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [editingSubModule, setEditingSubModule] = useState<string | null>(null);
 
@@ -177,25 +179,24 @@ export default function ModuleListConfig({ initialModules = [] }: { initialModul
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
+                      <PermissionButton moduleCode={MODULE_CODES.USER_MGMT} action="can_edit"
                         variant="ghost"
                         size="icon"
                         className="text-chart-1 hover:text-chart-1 hover:bg-chart-1/10 h-7 w-7"
                         onClick={() => {
-                          if (!checkPermission(MODULE_CODES.USER_MGMT, "can_edit")) return;
-                          setEditingSubModule(subModule.id);
-                        }}>
+  setEditingSubModule(subModule.id);
+}}>
                         <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
+                      </PermissionButton>
+                      <PermissionButton moduleCode={MODULE_CODES.USER_MGMT} action="can_delete"
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          if (!checkPermission(MODULE_CODES.USER_MGMT, "can_delete")) return;
-                        }}
+  
+}}
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7">
                         <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      </PermissionButton>
                     </div>
                   </div>
                 ))}

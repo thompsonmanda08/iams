@@ -44,7 +44,7 @@ type PaginationState = {
 
 export function RiskMatrixConfigList() {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [matrices, setMatrices] = useState<RiskMatrix[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

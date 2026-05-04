@@ -13,6 +13,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 type RegisterType = {
   id: string;
   name: string;
@@ -35,7 +37,7 @@ type AutoArchivalRule = {
 };
 
 export function RiskRegisterConfig() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [editingTypes, setEditingTypes] = useState(false);
   const [editingLifecycle, setEditingLifecycle] = useState(false);
   const [editingRules, setEditingRules] = useState(false);
@@ -202,13 +204,12 @@ export function RiskRegisterConfig() {
               <CardDescription>Configure available risk register categories</CardDescription>
             </div>
             {!editingTypes ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditingTypes(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditingTypes(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleAddRegisterType()}>
@@ -295,13 +296,12 @@ export function RiskRegisterConfig() {
               <CardDescription>Define status progression for risk records</CardDescription>
             </div>
             {!editingLifecycle ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditingLifecycle(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditingLifecycle(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditingLifecycle(false)}>
@@ -353,13 +353,12 @@ export function RiskRegisterConfig() {
               <CardDescription>Automated risk record management policies</CardDescription>
             </div>
             {!editingRules ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditingRules(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditingRules(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditingRules(false)}>

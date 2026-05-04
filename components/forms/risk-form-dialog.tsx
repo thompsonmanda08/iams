@@ -45,7 +45,7 @@ interface RiskFormDialogProps {
 
 export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFormDialogProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);

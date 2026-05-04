@@ -31,7 +31,7 @@ interface AuditPlanReportTabProps {
 }
 
 export function AuditPlanReportTab({ auditPlan }: AuditPlanReportTabProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { setEntityId, setEntityType, setReport, report } = useReportStore();
 
   // Fetch report by entity_id using the reusable hook

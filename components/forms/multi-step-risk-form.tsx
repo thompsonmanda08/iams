@@ -66,7 +66,7 @@ export function MultiStepRiskForm({
   riskData
 }: MultiStepRiskFormProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [createdRiskId, setCreatedRiskId] = useState<string | null>(

@@ -37,7 +37,7 @@ type RiskCauseDialogProps = {
 };
 
 export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCauseDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [availableCauses, setAvailableCauses] = useState<RiskCause[]>([]);
   const [formData, setFormData] = useState<{

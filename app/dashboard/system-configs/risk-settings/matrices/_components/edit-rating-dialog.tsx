@@ -37,7 +37,7 @@ type EditRatingDialogProps = {
 };
 
 export function EditRatingDialog({ open, onOpenChange, rating, onSuccess }: EditRatingDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: rating.name,

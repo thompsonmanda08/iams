@@ -44,7 +44,7 @@ export function ActionFindingsDialog({
 }: ActionFindingsDialogProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const uploadFieldRef = useRef<any>(null);
   const [formData, setFormData] = useState({
     evidence_description: "",

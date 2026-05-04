@@ -11,6 +11,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 type KRIFormData = {
   name: string;
   description: string;
@@ -42,7 +44,7 @@ interface KRIConfigureDialogProps {
 
 export function KRIConfigureDialog({ registerId }: KRIConfigureDialogProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [configureOpen, setConfigureOpen] = useState(false);
 
   const handleKRISubmit = async (data: KRIFormData) => {
@@ -64,13 +66,12 @@ export function KRIConfigureDialog({ registerId }: KRIConfigureDialogProps) {
 
   return (
     <>
-      <Button size="sm" onClick={() => {
-        if (!checkPermission(MODULE_CODES.KRI_DASHBOARD, "can_configure")) return;
-        setConfigureOpen(true);
-      }}>
+      <PermissionButton moduleCode={MODULE_CODES.KRI_DASHBOARD} action="can_configure" size="sm" onClick={() => {
+  setConfigureOpen(true);
+}}>
         <AlertCircle className="mr-2 h-4 w-4" />
         Configure KRIs
-      </Button>
+      </PermissionButton>
       <KRIConfigureForm
         open={configureOpen}
         onOpenChange={setConfigureOpen}

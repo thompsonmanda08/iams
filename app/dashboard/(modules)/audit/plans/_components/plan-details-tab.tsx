@@ -41,6 +41,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 const KRIColorBadge = ({ color }: { color: "Red" | "Amber" | "Green" | string }) => {
   const colorClasses: Record<string, string> = {
     Red: "bg-red-500",
@@ -130,7 +132,7 @@ interface AuditPlanDetailsTabProps {
 }
 
 export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const memoRef = useRef<CreateOrUpdateMemoRef>(null);
 
   const { data: memo, isLoading, isFetching, isRefetching } = useAuditMemo(auditPlan.id);
@@ -337,16 +339,15 @@ export function AuditPlanDetailsTab({ auditPlan }: AuditPlanDetailsTabProps) {
                   <p className="text-muted-foreground bg-muted/50 border-border/50 rounded-lg border p-4 text-sm">
                     No memo created yet. Create a new memo to get started.
                   </p>
-                  <Button
+                  <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_create"
                     size="sm"
                     onClick={() => {
-                      if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
-                      memoRef.current?.setOpenModal(true);
-                    }}
+  memoRef.current?.setOpenModal(true);
+}}
                     className="w-full gap-2">
                     <Plus className="h-6 w-6" />
                     Create Memo
-                  </Button>
+                  </PermissionButton>
                 </div>
               )}
             </CardContent>

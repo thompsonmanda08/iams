@@ -74,7 +74,7 @@ export default function CreateUserForm({
   setIsOpenModal?: Dispatch<SetStateAction<boolean>>;
 }) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [copied, setCopied] = useState(false);
   const [internalOpen, setInternalOpen] = useState<boolean>(false);
 

@@ -39,7 +39,7 @@ type PaginationState = {
 };
 
 export function RiskResponsesList() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [responses, setResponses] = useState<RiskResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

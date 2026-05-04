@@ -42,6 +42,8 @@ import { GeneralFindingsList } from "./general-findings-list";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface AuditPlanWorkpaperViewProps {
   auditPlan: AuditPlan;
   workpaperCategories: any[];
@@ -68,7 +70,7 @@ export function AuditPlanWorkpaperView({
   frameworkType
 }: AuditPlanWorkpaperViewProps) {
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   // Single source of truth: frameworkType prop (from page.tsx) takes precedence.
   // Falls back to auditPlan fields for backwards compatibility.
@@ -235,12 +237,11 @@ export function AuditPlanWorkpaperView({
               <div className="flex gap-2">
                 {auditPlanData.status.toUpperCase() === "DRAFT" && (
                   <>
-                    <Button
+                    <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_approve"
                       size="sm"
                       className="gap-2"
                       onClick={() => {
-                        if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
-                        if (!memoData) {
+  if (!memoData) {
                           notify({
                             title: "Engagement Memo Required",
                             description:
@@ -250,13 +251,13 @@ export function AuditPlanWorkpaperView({
                           return;
                         }
                         setSubmitConfirmationOpen(true);
-                      }}
+}}
                       disabled={isSubmitting}
                       isLoading={isSubmitting}
                       loadingText="Submitting...">
                       <Send className="h-6 w-6" />
                       Submit for Approval
-                    </Button>
+                    </PermissionButton>
                     <Button asChild variant="secondary" size="sm" className="gap-2">
                       <Link
                         href={`/dashboard/audit/plans/engagement/${auditPlan.id}/edit`}
@@ -269,18 +270,17 @@ export function AuditPlanWorkpaperView({
                         Edit Plan
                       </Link>
                     </Button>
-                    <Button
+                    <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_delete"
                       variant="destructive"
                       size="sm"
                       className="gap-2"
                       onClick={() => {
-                        if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_delete")) return;
-                        setDeleteDialogOpen(true);
-                      }}
+  setDeleteDialogOpen(true);
+}}
                       disabled={isDeleting}>
                       <Trash2 className="h-6 w-6" />
                       Delete Plan
-                    </Button>
+                    </PermissionButton>
                   </>
                 )}
               </div>

@@ -51,7 +51,7 @@ export function ActionIncidentSubmissionDialog({
   onOpenChange,
   actionDefinition
 }: ActionIncidentSubmissionDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState<SubmissionFormData>({
     comment: "",
     file_urls: []

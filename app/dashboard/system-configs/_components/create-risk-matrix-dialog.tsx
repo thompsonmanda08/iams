@@ -30,7 +30,7 @@ export function CreateRiskMatrixDialog({
   onOpenChange,
   onSuccess
 }: CreateRiskMatrixDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState({
     name: "",
     description: "",

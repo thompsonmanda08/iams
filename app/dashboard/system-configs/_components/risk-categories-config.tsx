@@ -92,7 +92,7 @@ export function RiskCategoriesConfig() {
   });
 
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   // Fetch categories when pagination changes
   useEffect(() => {

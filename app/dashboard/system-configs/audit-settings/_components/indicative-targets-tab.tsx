@@ -54,6 +54,8 @@ import { Badge } from "@/components/ui/badge";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface TargetFormData {
   id: string;
   name: string;
@@ -99,7 +101,7 @@ export default function IndicativeTargetsTab() {
     }
   };
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { deleteIndicativeTargetMutation } = useIndicativeTargetsMutations();
 
   const handleDeleteSettled = () => {
@@ -145,16 +147,15 @@ export default function IndicativeTargetsTab() {
               List of all the indicative targets across all departments
             </p>
           </div>
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
             size="sm"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-              setFormData(null);
+  setFormData(null);
               setOpenModal(true);
-            }}>
+}}>
             <Plus className="h-4 w-4" />
             New Indicative Target
-          </Button>
+          </PermissionButton>
         </div>
 
         <div className="bg-card rounded-lg border">
@@ -196,15 +197,14 @@ export default function IndicativeTargetsTab() {
                       </EmptyHeader>
                       <EmptyContent>
                         <div className="flex gap-2">
-                          <Button
+                          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
                             size="sm"
                             onClick={() => {
-                              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-                              setFormData(null);
+  setFormData(null);
                               setOpenModal(true);
-                            }}>
+}}>
                             <Plus className="h-4 w-4" /> Create New Indicative Target
-                          </Button>
+                          </PermissionButton>
                         </div>
                       </EmptyContent>
                     </Empty>

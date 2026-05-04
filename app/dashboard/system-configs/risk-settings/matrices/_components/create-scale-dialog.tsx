@@ -34,7 +34,7 @@ export function CreateScaleDialog({
   scaleType,
   onSuccess
 }: CreateScaleDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     level: 1,

@@ -41,7 +41,7 @@ export function EditReportGuideDialog({
   guide,
   onSuccess
 }: EditReportGuideDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: guide.name,

@@ -44,7 +44,7 @@ interface FormData {
 
 export function SendForReviewDialog({ open, onOpenChange, incident }: SendForReviewDialogProps) {
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState<FormData>({
     responsible_person_id: "",
     reviewer_id: "",

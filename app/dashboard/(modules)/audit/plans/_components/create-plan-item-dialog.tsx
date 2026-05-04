@@ -61,7 +61,7 @@ export function CreatePlanItemDialog({
 }: CreatePlanItemDialogProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [openModal, setOpenModal] = useState(false);
   const [error, setError] = useState<ErrorState>({
     status: false,

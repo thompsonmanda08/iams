@@ -37,7 +37,7 @@ interface TaskActionDialogProps {
 
 export function TaskActionDialog({ task, action, open, onOpenChange }: TaskActionDialogProps) {
   const [comment, setComment] = useState("");
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const { mutate: completeTask, isPending: isSubmitting } = useCompleteWorkflowTaskMutation({
     onSuccess: () => {

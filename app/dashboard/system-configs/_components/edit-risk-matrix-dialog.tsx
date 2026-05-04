@@ -40,7 +40,7 @@ export function EditRiskMatrixDialog({
   matrix,
   onSuccess
 }: EditRiskMatrixDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState({
     name: matrix.name,
     description: matrix.description,

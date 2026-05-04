@@ -39,7 +39,7 @@ export function ControlEffectivenessDialog({
   onSuccess,
   control
 }: ControlEffectivenessDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState<{
     name: string;
     description: string;

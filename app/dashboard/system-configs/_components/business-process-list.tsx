@@ -40,7 +40,7 @@ type PaginationState = {
 };
 
 export function BusinessProcessList() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [processes, setProcesses] = useState<BusinessProcess[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{

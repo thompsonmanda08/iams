@@ -12,6 +12,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface EvidenceListProps {
   evidence: FindingEvidence[];
   onEdit: (evidence: FindingEvidence) => void;
@@ -32,7 +34,7 @@ const EVIDENCE_TYPE_COLORS: Record<EvidenceType, string> = {
 };
 
 export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: EvidenceListProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (evidence.length === 0) {
@@ -169,28 +171,26 @@ export function EvidenceList({ evidence, onEdit, onDelete, isLoading, stats }: E
 
               {/* Action Buttons */}
               <div className="flex shrink-0 gap-2">
-                <Button
+                <PermissionButton moduleCode={MODULE_CODES.AUDIT_WPS} action="can_edit"
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
-                    onEdit(item);
-                  }}
+  onEdit(item);
+}}
                   disabled={isLoading}
                   className="h-8 w-8 p-0">
                   <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
+                </PermissionButton>
+                <PermissionButton moduleCode={MODULE_CODES.AUDIT_WPS} action="can_delete"
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_delete")) return;
-                    onDelete(item);
-                  }}
+  onDelete(item);
+}}
                   disabled={isLoading}
                   className="text-destructive hover:text-destructive h-8 w-8 p-0">
                   <Trash2 className="h-4 w-4" />
-                </Button>
+                </PermissionButton>
               </div>
             </div>
           </CardContent>

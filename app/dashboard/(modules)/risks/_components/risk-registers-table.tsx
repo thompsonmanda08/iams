@@ -71,7 +71,7 @@ export default function RiskRegistersTable({
     register: null
   });
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());

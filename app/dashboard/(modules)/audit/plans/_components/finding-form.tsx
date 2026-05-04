@@ -50,7 +50,7 @@ export function FindingForm({
   onEditComplete
 }: FindingFormProps) {
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { data: teamMemberResponse, isLoading: loadingTeamMembers } = useUsers({
     page_size: 100
   });

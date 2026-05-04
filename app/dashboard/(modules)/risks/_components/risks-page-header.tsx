@@ -17,7 +17,7 @@ interface RisksPageHeaderProps {
 
 export function RisksPageHeader({ registerId, registerName }: RisksPageHeaderProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const handleCreateClick = () => {
     if (!checkPermission(MODULE_CODES.RISK_REGISTERS, "can_create")) return;

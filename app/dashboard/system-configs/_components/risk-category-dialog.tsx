@@ -45,7 +45,7 @@ export function RiskCategoryFormDialog({
   onSuccess,
   mode
 }: RiskCategoryFormDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState<Omit<RiskCategory, "id">>({
     department_id: "",
     name: "",

@@ -35,7 +35,7 @@ type EditScaleDialogProps = {
 };
 
 export function EditScaleDialog({ open, onOpenChange, scale, onSuccess }: EditScaleDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: scale.name,

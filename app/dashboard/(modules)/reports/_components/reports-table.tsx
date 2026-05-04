@@ -59,7 +59,7 @@ export function ReportsTable({ reports = [], pagination, isLoading }: ReportsTab
 
   // Ensure reports is always an array even when fetching fails
   const safeReports = Array.isArray(reports) ? reports : [];
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<ReportListItem | null>(null);
 

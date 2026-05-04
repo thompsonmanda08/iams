@@ -48,7 +48,7 @@ export function EvidenceForm({
   onCancel,
   isLoading
 }: EvidenceFormProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const [formData, setFormData] = useState({
     evidence_type: "" as FindingEvidenceType,

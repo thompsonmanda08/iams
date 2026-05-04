@@ -49,7 +49,7 @@ export const TransitionTriggersManager = ({
   transitionId,
   transitionName
 }: TransitionTriggersManagerProps) => {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [triggers, setTriggers] = useState<TransitionTrigger[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState<TransitionTrigger | null>(null);

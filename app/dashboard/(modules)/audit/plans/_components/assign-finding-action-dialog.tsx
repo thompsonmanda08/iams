@@ -35,7 +35,7 @@ export function AssignFindingActionDialog({
   finding,
   auditPlanStatus
 }: AssignFindingActionDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   // Only allow if audit plan is COMPLETED, APPROVED, or REJECTED
   const canAssignAction =
     auditPlanStatus === "COMPLETED" ||

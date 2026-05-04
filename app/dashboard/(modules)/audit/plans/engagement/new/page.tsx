@@ -85,7 +85,7 @@ type FieldErrors = Partial<Record<keyof AuditPlanFormData, string>>;
 export default function NewAuditPlanPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [validationError, setValidationError] = useState<string | null>(null);

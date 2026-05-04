@@ -14,6 +14,8 @@ import { getPasswordPolicy, updatePasswordPolicy } from "@/app/_actions/config-a
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface PasswordPolicyConfig {
   min_length: number;
   require_uppercase: boolean;
@@ -34,7 +36,7 @@ interface PasswordPolicyTabProps {
 }
 
 export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [policy, setPolicy] = useState<PasswordPolicyConfig | null>(initialData ?? null);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -410,17 +412,16 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
         </Card>
 
         <div className="sticky top-6 space-y-2">
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.USER_MGMT} action="can_configure"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.USER_MGMT, "can_configure")) return;
-              handleSavePolicy();
-            }}
+  handleSavePolicy();
+}}
             disabled={!hasChanges || isSaving}
             className="w-full"
             size="lg">
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSaving ? "Saving..." : "Save Policy"}
-          </Button>
+          </PermissionButton>
           {hasChanges && (
             <p className="text-center text-xs text-amber-600 dark:text-amber-400">
               You have unsaved changes

@@ -60,7 +60,7 @@ interface BudgetListProps {
 
 const BudgetList = ({ budgets, budgetLinesMap = {} }: BudgetListProps) => {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { searchValue: searchTerm, setSearchValue: setSearchTerm, debouncedSearch } = useTableSearch({ debounceMs: 200 });
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,

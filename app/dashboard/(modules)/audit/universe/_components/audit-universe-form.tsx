@@ -120,7 +120,7 @@ export default function AuditUniverseForm({
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const isEditing = !!universeId;
 
   // Safely initialize universe data with proper date handling

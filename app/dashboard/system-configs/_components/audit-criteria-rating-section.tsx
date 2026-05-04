@@ -36,7 +36,7 @@ export function AuditCriteriaRatingSection({
   initialData,
   onDataUpdated
 }: AuditCriteriaRatingSectionProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [items, setItems] = useState<AuditCriteriaRating[]>(initialData);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{

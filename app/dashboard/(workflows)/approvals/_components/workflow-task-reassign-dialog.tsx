@@ -59,7 +59,7 @@ export function WorkflowTaskReassignDialog({
   const [remarks, setRemarks] = useState("");
 
   const reassignTaskMutation = useReassignWorkflowTaskMutation();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   // Fetch available users for reassignment
   const { data: usersResponse, isLoading: usersLoading } = useQuery({

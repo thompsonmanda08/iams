@@ -38,6 +38,8 @@ import { ConfirmationModal } from "@/components/confirmation-modal";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 const CLOSURE_ENABLED_STATUSES = ["APPROVED", "COMPLETED", "CLOSURE_REVIEW", "CLOSED"];
 
 interface AuditClosureReviewProps {
@@ -104,7 +106,7 @@ export function AuditClosureReview({
   onAuditPlanUpdate
 }: AuditClosureReviewProps) {
   const { session } = useSession();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [showClosureDialog, setShowClosureDialog] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const [showSignOffDialog, setShowSignOffDialog] = useState(false);
@@ -647,10 +649,9 @@ export function AuditClosureReview({
                 disabled={isSignOffSubmitting}>
                 Cancel
               </Button>
-              <Button
+              <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_approve"
                 onClick={() => {
-                  if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
-                  submitSignOff(
+  submitSignOff(
                     { auditPlanId: auditPlan.id, managementComments: signOffComments },
                     {
                       onSuccess: (res) => {
@@ -662,11 +663,11 @@ export function AuditClosureReview({
                       }
                     }
                   );
-                }}
+}}
                 disabled={isSignOffSubmitting || !signOffComments.trim()}>
                 {isSignOffSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit Sign-Off
-              </Button>
+              </PermissionButton>
             </div>
           </div>
         </DialogContent>

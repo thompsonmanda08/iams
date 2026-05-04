@@ -33,7 +33,7 @@ export function MailingSettingsForm({
 }: {
   initialData?: SmtpFormData & { id?: string };
 }) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showTestSection, setShowTestSection] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

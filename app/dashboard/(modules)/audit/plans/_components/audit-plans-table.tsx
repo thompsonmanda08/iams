@@ -45,7 +45,7 @@ interface AuditPlansTableProps {
 
 export function AuditPlansTable({ plans, pagination, isLoading }: AuditPlansTableProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<AuditPlan | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);

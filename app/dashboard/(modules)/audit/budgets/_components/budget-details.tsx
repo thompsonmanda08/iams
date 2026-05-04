@@ -50,6 +50,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 const BUDGET_CATEGORIES = ["PERSONNEL", "TECHNOLOGY", "TRAINING", "CONSULTING", "OTHER"];
 
 interface Budget {
@@ -105,7 +107,7 @@ const INIT_LINE_DATA: BudgetLineFormData = {
 
 const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [lineData, setLineData] = useState<BudgetLineFormData>({
     ...INIT_LINE_DATA,
     currency: budget?.currency || "ZMW"
@@ -338,13 +340,12 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                 Submit for Approval
               </Button>
             )}
-            <Button onClick={() => {
-              if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
-              setShowLineForm(true);
-            }} className="gap-2" size="sm">
+            <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_create" onClick={() => {
+  setShowLineForm(true);
+}} className="gap-2" size="sm">
               <Plus className="h-5 w-5" />
               Budget Line
-            </Button>
+            </PermissionButton>
           </div>
         )}
       </div>
@@ -641,13 +642,12 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                     <p className="text-muted-foreground mb-6">
                       Add your first budget line to get started
                     </p>
-                    <Button onClick={() => {
-                      if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
-                      setShowLineForm(true);
-                    }} className="gap-2">
+                    <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_create" onClick={() => {
+  setShowLineForm(true);
+}} className="gap-2">
                       <Plus className="h-4 w-4" />
                       Add First Line
-                    </Button>
+                    </PermissionButton>
                   </TableCell>
                 </TableRow>
               ) : (

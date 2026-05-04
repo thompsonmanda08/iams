@@ -35,7 +35,7 @@ export function ControlsAssessmentSection({
   initialData,
   onDataUpdated
 }: ControlsAssessmentSectionProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [items, setItems] = useState<ControlsAssessmentGuide[]>(initialData);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{

@@ -67,7 +67,7 @@ function getScaleColor(level: number, ratings: Rating[]): string {
 }
 
 export function ScalesList({ matrixId, scaleType, ratings, initialData }: ScalesListProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const { data: scales = [], isLoading } = useMatrixScales(matrixId, scaleType, initialData);
   const createScaleMutation = useCreateScale(matrixId, scaleType);

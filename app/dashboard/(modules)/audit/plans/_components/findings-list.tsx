@@ -16,6 +16,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface FindingsListProps {
   findings: any[];
   onRefresh: () => void;
@@ -41,7 +43,7 @@ const STATUS_ICONS: Record<string, any> = {
 
 // Individual finding card component with evidence
 function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const { data: evidenceData } = useFindingEvidence(finding.id);
@@ -104,17 +106,16 @@ function FindingCard({ finding, onEditFinding, onRefresh, auditPlanStatus }: any
           </div>
           <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
             {canAssignAction && (
-              <Button
+              <PermissionButton moduleCode={MODULE_CODES.AUDIT_WPS} action="can_assign"
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_assign")) return;
-                  setAssignActionDialogOpen(true);
-                }}
+  setAssignActionDialogOpen(true);
+}}
                 className="gap-2">
                 <Plus className="mr-2 h-4 w-4" />
                 Assign Action
-              </Button>
+              </PermissionButton>
             )}
             {isEditable && (
               <FindingActionsMenu

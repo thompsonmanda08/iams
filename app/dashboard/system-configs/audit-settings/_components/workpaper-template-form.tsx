@@ -50,7 +50,7 @@ export function WorkpaperTemplateForm({
   onCancel?: () => void;
 }) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const [error, setError] = useState<ErrorState>({

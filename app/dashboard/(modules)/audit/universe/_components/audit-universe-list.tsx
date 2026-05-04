@@ -65,7 +65,7 @@ export default function AuditUniverseList({
   pagination?: Pagination;
 }) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const searchParams = useSearchParams();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);

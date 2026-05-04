@@ -44,7 +44,7 @@ export function UpdateGeneralFindingDialog({
   const [isMarkedComplete, setIsMarkedComplete] = useState(false);
 
   const updateMutation = useUpdateGeneralFindingReassessment();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const colConfigMap = useMemo(() => {
     const cols = workpaperConfig?.columns ?? [];

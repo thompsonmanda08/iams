@@ -38,7 +38,7 @@ export default function SignatureForm({
   onSubmit,
   onClose
 }: SignatureFormProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);

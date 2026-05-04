@@ -38,7 +38,7 @@ export function EditRiskResponseDialog({
   response,
   onSuccess
 }: EditRiskResponseDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: response.name,

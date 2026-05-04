@@ -63,7 +63,7 @@ export function AssignActionDialog({
 }: AssignActionDialogProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   // Fetch users
   const { data: usersResponse, isLoading: isLoadingUsers } = useUsers({

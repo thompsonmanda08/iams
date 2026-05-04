@@ -35,6 +35,8 @@ import { StatusBadge } from "@/components/status-badge";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 type Pagination = {
   total: number;
   page: number;
@@ -58,7 +60,7 @@ export default function DepartmentsConfig({
   const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [openModal, setOpenModal] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -135,16 +137,15 @@ export default function DepartmentsConfig({
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold">Departments</h3>
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.DEPT_MGMT} action="can_create"
             size="sm"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.DEPT_MGMT, "can_create")) return;
-              setEditingDepartment(null);
+  setEditingDepartment(null);
               setOpenModal(true);
-            }}>
+}}>
             <Plus className="h-4 w-4" />
             New Department
-          </Button>
+          </PermissionButton>
         </div>
 
         <Table>
@@ -228,19 +229,18 @@ export default function DepartmentsConfig({
                           View
                         </Link>
                       </Button>
-                      <Button
+                      <PermissionButton moduleCode={MODULE_CODES.DEPT_MGMT} action="can_edit"
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
-                          if (!checkPermission(MODULE_CODES.DEPT_MGMT, "can_edit")) return;
-                          setEditingDepartment(department);
+  setEditingDepartment(department);
                           setOpenModal(true);
                           e.stopPropagation();
-                        }}
+}}
                         className="h-8 gap-1.5">
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
-                      </Button>
+                      </PermissionButton>
                       <Button
                         size="sm"
                         variant="outline"

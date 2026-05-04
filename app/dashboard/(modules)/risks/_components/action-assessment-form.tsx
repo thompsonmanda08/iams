@@ -33,7 +33,7 @@ export function ActionAssessmentForm({
   onAssessmentComplete
 }: ActionAssessmentFormProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState({
     assessment_score: [5],
     reviewer_feedback: "",

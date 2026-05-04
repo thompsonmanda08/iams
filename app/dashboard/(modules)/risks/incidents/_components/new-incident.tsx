@@ -94,7 +94,7 @@ export function NewIncident() {
     return selectedCause?.sub_causes || [];
   }, [formData.primary_cause_id, causes]);
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

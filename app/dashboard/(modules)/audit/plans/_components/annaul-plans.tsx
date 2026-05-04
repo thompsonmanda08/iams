@@ -75,7 +75,7 @@ export default function AuditAnnualPlan({
   const [createPlanForm, setCreatePlanForm] = useState({ year: new Date().getFullYear() });
 
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   // Hook to fetch plans by year - only enabled when user selects a specific year
   const { data: yearFilteredPlan, isLoading: isFetchingByYear } = useAnnualAuditPlan(

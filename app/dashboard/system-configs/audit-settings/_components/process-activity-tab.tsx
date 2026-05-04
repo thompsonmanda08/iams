@@ -62,6 +62,8 @@ import { Badge } from "@/components/ui/badge";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface ProcessFormData {
   id?: string;
   title: string;
@@ -112,7 +114,7 @@ export default function ProcessActivityTab() {
     }
   };
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { deleteProcessActivityMutation } = useProcessActivitiesMutations();
 
   const handleDeleteClick = (id: string) => {
@@ -165,16 +167,15 @@ export default function ProcessActivityTab() {
               Manage business processes and their associated activities
             </p>
           </div>
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
             size="sm"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-              setFormData(null);
+  setFormData(null);
               setOpenModal(true);
-            }}>
+}}>
             <Plus className="h-4 w-4" />
             New Process/Activity
-          </Button>
+          </PermissionButton>
         </div>
 
         <div className="bg-card rounded-lg border">
@@ -235,15 +236,14 @@ export default function ProcessActivityTab() {
                       </EmptyHeader>
                       <EmptyContent>
                         <div className="flex gap-2">
-                          <Button
+                          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
                             size="sm"
                             onClick={() => {
-                              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-                              setFormData(null);
+  setFormData(null);
                               setOpenModal(true);
-                            }}>
+}}>
                             <Plus className="h-4 w-4" /> Create New Process/Activity
-                          </Button>
+                          </PermissionButton>
                         </div>
                       </EmptyContent>
                     </Empty>

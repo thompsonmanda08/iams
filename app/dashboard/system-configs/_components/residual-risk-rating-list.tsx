@@ -40,7 +40,7 @@ type PaginationState = {
 };
 
 export function ResidualRiskRatingList() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [ratings, setRatings] = useState<ResidualRiskRating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{

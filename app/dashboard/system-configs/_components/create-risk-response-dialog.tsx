@@ -28,7 +28,7 @@ export function CreateRiskResponseDialog({
   onOpenChange,
   onSuccess
 }: CreateRiskResponseDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState({
     name: "",
     description: ""

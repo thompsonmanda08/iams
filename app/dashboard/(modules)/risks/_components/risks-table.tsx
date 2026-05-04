@@ -164,7 +164,7 @@ export default function RisksTable({
   const [assignActionDialogOpen, setAssignActionDialogOpen] = useState(false);
   const [riskForAssignment, setRiskForAssignment] = useState<Risk | undefined>();
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());

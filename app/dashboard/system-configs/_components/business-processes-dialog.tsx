@@ -46,7 +46,7 @@ export function BusinessProcessesDialog({
   onSuccess,
   process
 }: BusinessProcessesDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
   const [availableProcesses, setAvailableProcesses] = useState<BusinessProcess[]>([]);

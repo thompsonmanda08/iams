@@ -39,7 +39,7 @@ type PaginationState = {
 };
 
 export function ControlEffectivenessList() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [controls, setControls] = useState<ControlEffectiveness[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{

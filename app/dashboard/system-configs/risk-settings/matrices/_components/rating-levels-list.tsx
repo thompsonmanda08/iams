@@ -42,7 +42,7 @@ type RatingLevelsListProps = {
 };
 
 export function RatingLevelsList({ matrixId, initialData }: RatingLevelsListProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const queryClient = useQueryClient();
   const { data: ratings = [], isLoading } = useMatrixRatings(matrixId, initialData);
   const deleteRatingMutation = useDeleteRating(matrixId);

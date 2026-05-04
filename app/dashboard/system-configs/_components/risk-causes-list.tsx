@@ -39,7 +39,7 @@ type PaginationState = {
 };
 
 export function RiskCausesList() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [causes, setCauses] = useState<RiskCause[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{

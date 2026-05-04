@@ -46,6 +46,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface CategoryFormData {
   name: string;
   code: string;
@@ -71,7 +73,7 @@ export default function FindingsCategoryTab({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [items, setItems] = useState<CategoryFormData[]>(categories);
 
   useEffect(() => {
@@ -123,16 +125,15 @@ export default function FindingsCategoryTab({
               Define categories for classifying audit findings
             </p>
           </div>
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
             size="sm"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-              setFormData(null);
+  setFormData(null);
               setOpenModal(true);
-            }}>
+}}>
             <Plus className="h-4 w-4" />
             New Findings Category
-          </Button>
+          </PermissionButton>
         </div>
 
         <Table>
@@ -162,15 +163,14 @@ export default function FindingsCategoryTab({
                     </EmptyHeader>
                     <EmptyContent>
                       <div className="flex gap-2">
-                        <Button
+                        <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
                           size="sm"
                           onClick={() => {
-                            if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-                            setFormData(null);
+  setFormData(null);
                             setOpenModal(true);
-                          }}>
+}}>
                           <Plus className="h-4 w-4" /> Create New Findings Category
-                        </Button>
+                        </PermissionButton>
                       </div>
                     </EmptyContent>
                   </Empty>

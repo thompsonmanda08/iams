@@ -81,7 +81,7 @@ export function FrameworkFindingForm({
   onEditComplete
 }: FrameworkFindingFormProps) {
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { data: teamMemberResponse } = useUsers({ page_size: 100 });
   const teamMembers = ((teamMemberResponse?.data?.data || []) as User[]) ?? [];
 

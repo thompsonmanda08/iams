@@ -20,8 +20,10 @@ import {
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 export default function RiskAcceptanceSignatoriesPage() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [config, setConfig] = useState<Partial<RiskAcceptanceConfig>>({
     signoff_role_ids: [],
     is_enabled: false
@@ -246,17 +248,16 @@ export default function RiskAcceptanceSignatoriesPage() {
 
             {/* Save Button */}
             <div className="sticky top-6 space-y-2">
-              <Button
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure"
                 onClick={() => {
-                  if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                  handleSaveConfig();
-                }}
+  handleSaveConfig();
+}}
                 disabled={!hasChanges || isSaving}
                 className="w-full"
                 size="lg">
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving ? "Saving..." : "Save Configuration"}
-              </Button>
+              </PermissionButton>
               {hasChanges && (
                 <p className="text-center text-xs text-amber-600 dark:text-amber-400">
                   You have unsaved changes

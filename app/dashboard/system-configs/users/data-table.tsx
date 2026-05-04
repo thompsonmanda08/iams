@@ -224,7 +224,7 @@ export default function UsersDataTable({
 }: UsersDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { user: currentUser, session } = useSession();
   // JWT-backed user_id is always populated after login, unlike the React-Query
   // currentUser.id which may still be loading on first render.

@@ -27,6 +27,8 @@ import { notify } from "@/lib/utils";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface WorkingPaperTemplate {
   id: string;
   name: string;
@@ -52,7 +54,7 @@ export function WorkpaperTemplatesTable({
 }: WorkpaperTemplatesTableProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<WorkingPaperTemplate | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -159,16 +161,15 @@ export function WorkpaperTemplatesTable({
             </div>
           </div>
 
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
             size="lg"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-              onCreateClick?.();
-            }}
+  onCreateClick?.();
+}}
             className="gap-2">
             <Plus className="h-5 w-5" />
             Create Workpaper Template
-          </Button>
+          </PermissionButton>
         </CardContent>
       </Card>
     );

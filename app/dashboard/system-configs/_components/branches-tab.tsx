@@ -42,6 +42,7 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/status-badge";
+import { PermissionButton } from "@/components/ui/permission-button";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
@@ -92,7 +93,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [branches, setBranches] = useState<Branch[]>(initialBranches);
   const [openModal, setOpenModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
@@ -160,16 +161,17 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
     <Card className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Branches</h3>
-        <Button
+        <PermissionButton
+          moduleCode={MODULE_CODES.BRANCH_MGMT}
+          action="can_create"
           size="sm"
           onClick={() => {
-            if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_create")) return;
             setEditingBranch(null);
             setOpenModal(true);
           }}>
           <Plus className="mr-2 h-4 w-4" />
           Add Branch
-        </Button>
+        </PermissionButton>
       </div>
 
       <Table>
@@ -241,11 +243,12 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
-                    <Button
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.BRANCH_MGMT}
+                      action="can_edit"
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_edit")) return;
                         setEditingBranch(branch);
                         setOpenModal(true);
                         e.stopPropagation();
@@ -253,12 +256,13 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       className="h-8 gap-1.5">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
-                    </Button>
-                    <Button
+                    </PermissionButton>
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.BRANCH_MGMT}
+                      action="can_delete"
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
-                        if (!checkPermission(MODULE_CODES.BRANCH_MGMT, "can_delete")) return;
                         setBranchToDelete(branch);
                         setDeleteDialogOpen(true);
                         e.stopPropagation();
@@ -267,7 +271,7 @@ export function BranchesTab({ initialBranches, provinces, towns, pagination }: B
                       disabled={deleteBranchMutation.isPending}>
                       <Trash2 className="h-4 w-4" />
                       Delete
-                    </Button>
+                    </PermissionButton>
                   </div>
                 </TableCell>
               </TableRow>

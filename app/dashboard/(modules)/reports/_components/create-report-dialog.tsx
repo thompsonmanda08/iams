@@ -93,7 +93,7 @@ export function CreateReportDialog({
 }: CreateReportDialogProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   // Internal state for uncontrolled mode
   const [internalOpen, setInternalOpen] = useState(false);

@@ -40,7 +40,7 @@ type Department = {
 
 export default function CreateRiskRegisterDialog() {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDepartments, setLoadingDepartments] = useState(true);

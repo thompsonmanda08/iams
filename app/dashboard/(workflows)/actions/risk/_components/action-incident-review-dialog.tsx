@@ -53,7 +53,7 @@ export function ActionIncidentReviewDialog({
   onOpenChange,
   actionDefinition
 }: ActionIncidentReviewDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState<SubmissionFormData>({
     status: "",
     comment: "",

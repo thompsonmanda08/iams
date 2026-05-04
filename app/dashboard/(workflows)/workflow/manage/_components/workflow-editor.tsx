@@ -179,7 +179,7 @@ const transformWorkflowData = (apiWorkflow: any): WorkflowItem => {
 };
 
 export const WorkflowEditor = ({ onBack, workflowId, allWorkflows }: WorkflowEditorProps) => {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { saveOrUpdateWorkflow, isLoading: isSaving } = useWorkflowMutations();
   const queryClient = useQueryClient();
 

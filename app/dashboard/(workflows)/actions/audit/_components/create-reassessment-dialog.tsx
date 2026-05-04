@@ -57,7 +57,7 @@ export function CreateReassessmentDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createReassessmentMutation = useCreateFindingReassessmentMutation();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

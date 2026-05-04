@@ -60,6 +60,8 @@ import { Badge } from "@/components/ui/badge";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface InitiativeFormData extends Omit<AuditConfigurableItem, "id"> {
   pillar_id?: string;
 }
@@ -98,7 +100,7 @@ export default function StrategicInitiativeTab() {
     }
   };
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const { deleteStrategicInitiativeMutation } = useStrategicInitiativesMutations();
 
   const handleDeleteClick = (id: string) => {
@@ -172,17 +174,16 @@ export default function StrategicInitiativeTab() {
                 wrapper: "min-w-60"
               }}
             />
-            <Button
+            <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
               size="sm"
               className="h-9"
               onClick={() => {
-                if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-                setFormData(null);
+  setFormData(null);
                 setOpenModal(true);
-              }}>
+}}>
               <Plus className="h-4 w-4" />
               New Strategic Initiative
-            </Button>
+            </PermissionButton>
           </div>
         </div>
 
@@ -232,17 +233,16 @@ export default function StrategicInitiativeTab() {
                                 wrapper: "min-w-40"
                               }}
                             />
-                            <Button
+                            <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
                               size="sm"
                               className="h-9"
                               onClick={() => {
-                                if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-                                setFormData(null);
+  setFormData(null);
                                 setOpenModal(true);
-                              }}>
+}}>
                               <Plus className="h-4 w-4" />
                               New Strategic Initiative
-                            </Button>
+                            </PermissionButton>
                           </div>
                         </EmptyContent>
                       </Empty>

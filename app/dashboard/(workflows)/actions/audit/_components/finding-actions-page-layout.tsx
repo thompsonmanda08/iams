@@ -52,7 +52,7 @@ export function FindingActionsPageLayout({
 }: FindingActionsPageLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const [activeTab, setActiveTab] = useState("my-actions");
   const [statusFilter, setStatusFilter] = useState<ActionStatus | "ALL">("ALL");

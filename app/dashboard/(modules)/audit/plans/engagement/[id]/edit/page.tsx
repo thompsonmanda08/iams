@@ -85,7 +85,7 @@ type FieldErrors = Partial<Record<keyof AuditPlanFormData, string>>;
 
 export default function EditAuditPlanPage() {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const params = useParams();
   const auditPlanId = String(params.id);
 

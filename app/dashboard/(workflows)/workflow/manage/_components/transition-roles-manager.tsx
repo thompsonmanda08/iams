@@ -28,7 +28,7 @@ export const TransitionRolesManager = ({
   transitionName,
   availableRoles
 }: TransitionRolesManagerProps) => {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [assignedRoles, setAssignedRoles] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);

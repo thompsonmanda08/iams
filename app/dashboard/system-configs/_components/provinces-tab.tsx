@@ -65,7 +65,7 @@ export function ProvincesTab({ initialProvinces, pagination }: ProvincesTabProps
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [provinces, setProvinces] = useState<Province[]>(initialProvinces);
   const [openModal, setOpenModal] = useState(false);
   const [editingProvince, setEditingProvince] = useState<Province | null>(null);

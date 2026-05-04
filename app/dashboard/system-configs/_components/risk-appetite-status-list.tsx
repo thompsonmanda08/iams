@@ -40,7 +40,7 @@ type PaginationState = {
 };
 
 export function RiskAppetiteStatusList() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [appetites, setAppetites] = useState<RiskAppetiteStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialog, setDialog] = useState<{

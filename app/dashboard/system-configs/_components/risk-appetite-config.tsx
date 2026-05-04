@@ -18,6 +18,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 type AppetiteLevel = {
   category: string;
   appetite: string;
@@ -26,7 +28,7 @@ type AppetiteLevel = {
 };
 
 export function RiskAppetiteConfig() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [editing, setEditing] = useState(false);
 
   const [appetiteLevels, setAppetiteLevels] = useState<AppetiteLevel[]>([
@@ -99,13 +101,12 @@ export function RiskAppetiteConfig() {
               <CardDescription>Define acceptable risk levels for each category</CardDescription>
             </div>
             {!editing ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditing(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditing(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditing(false)}>

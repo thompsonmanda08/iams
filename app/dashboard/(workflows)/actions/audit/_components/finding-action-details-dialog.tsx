@@ -43,6 +43,8 @@ import {
 } from "@/components/skeleton-loader";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface FindingActionDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -102,7 +104,7 @@ export function FindingActionDetailsDialog({
   onOpenChange,
   action
 }: FindingActionDetailsDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [submitEvidenceOpen, setSubmitEvidenceOpen] = useState(false);
   const [reviewEvidenceOpen, setReviewEvidenceOpen] = useState(false);
   const [createReassessmentOpen, setCreateReassessmentOpen] = useState(false);
@@ -755,16 +757,15 @@ export function FindingActionDetailsDialog({
                         </p>
                       </div>
                       {isAssignedUser && (
-                        <Button
+                        <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_create"
                           size="sm"
                           onClick={() => {
-                            if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
-                            setSubmitEvidenceOpen(true);
-                          }}
+  setSubmitEvidenceOpen(true);
+}}
                           className="gap-2">
                           <Plus className="h-4 w-4" />
                           Submit Action Evidence
-                        </Button>
+                        </PermissionButton>
                       )}
                     </div>
 
@@ -849,17 +850,16 @@ export function FindingActionDetailsDialog({
                         </p>
                       </div>
                       {isReviewer && (
-                        <Button
+                        <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_approve"
                           size="sm"
                           onClick={() => {
-                            if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
-                            setReviewEvidenceOpen(true);
-                          }}
+  setReviewEvidenceOpen(true);
+}}
                           className="gap-2"
                           disabled={!hasEvidence}>
                           <Plus className="h-4 w-4" />
                           Add Review
-                        </Button>
+                        </PermissionButton>
                       )}
                     </div>
 
@@ -910,14 +910,13 @@ export function FindingActionDetailsDialog({
 
             {/* Create Reassessment / Update Finding Button */}
             {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
-              <Button
+              <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_create"
                 onClick={() => {
-                  if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_create")) return;
-                  setCreateReassessmentOpen(true);
-                }}
+  setCreateReassessmentOpen(true);
+}}
                 className="w-full">
                 {isGeneralFinding ? "Update Finding" : "Create Reassessment"}
-              </Button>
+              </PermissionButton>
             )}
           </div>
         </DialogContent>

@@ -30,7 +30,7 @@ type KRICategory = {
 };
 
 export function KRIConfig() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
   const [categories, setCategories] = useState<KRICategory[]>([

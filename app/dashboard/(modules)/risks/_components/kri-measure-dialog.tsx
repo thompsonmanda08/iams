@@ -36,7 +36,7 @@ export function KRIMeasureDialog({
   const [isSaving, setIsSaving] = useState(false);
 
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const handleSave = async () => {
     if (!checkPermission(MODULE_CODES.KRI_DASHBOARD, "can_create")) return;

@@ -35,7 +35,7 @@ export function RiskFindingsGradingSection({
   initialData,
   onDataUpdated
 }: RiskFindingsGradingSectionProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [items, setItems] = useState<RiskFindingGrading[]>(initialData);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{

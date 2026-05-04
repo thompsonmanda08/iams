@@ -51,6 +51,8 @@ import type { ModuleGroup } from "@/lib/stores/modules-store";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface RolesPermissionsProps {
   departmentId: string;
 }
@@ -108,7 +110,7 @@ const formatModuleName = (name: string, moduleCode?: string): string => {
 };
 
 export default function UserRolesConfig({ departmentId }: RolesPermissionsProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
@@ -715,16 +717,15 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
             </EmptyHeader>
             <EmptyContent>
               <div className="flex gap-2">
-                <Button
+                <PermissionButton moduleCode={MODULE_CODES.USER_MGMT} action="can_create"
                   size="sm"
                   onClick={() => {
-                    if (!checkPermission(MODULE_CODES.USER_MGMT, "can_create")) return;
-                    setEditingRole(null);
+  setEditingRole(null);
                     setOpenRoleModal(true);
-                  }}>
+}}>
                   <Plus className="mr-2 h-4 w-4" />
                   Create First Role
-                </Button>
+                </PermissionButton>
               </div>
             </EmptyContent>
           </Empty>
@@ -750,16 +751,15 @@ export default function UserRolesConfig({ departmentId }: RolesPermissionsProps)
               List of all the roles and permissions in this department
             </p>
           </div>
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.USER_MGMT} action="can_create"
             size="sm"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.USER_MGMT, "can_create")) return;
-              setEditingRole(null);
+  setEditingRole(null);
               setOpenRoleModal(true);
-            }}>
+}}>
             <Plus className="mr-2 h-4 w-4" />
             Add New Role
-          </Button>
+          </PermissionButton>
         </div>
 
         <div className="space-y-6">

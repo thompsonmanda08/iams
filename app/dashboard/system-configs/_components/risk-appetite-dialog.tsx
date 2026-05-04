@@ -42,7 +42,7 @@ export function RiskAppetiteStatusDialog({
   onSuccess,
   appetite
 }: RiskAppetiteStatusDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<{
     name: string;

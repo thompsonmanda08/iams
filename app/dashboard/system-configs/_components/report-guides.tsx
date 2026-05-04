@@ -43,7 +43,7 @@ type PaginationState = {
 
 export function ReportGuides() {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [guides, setGuides] = useState<ReportGuide[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

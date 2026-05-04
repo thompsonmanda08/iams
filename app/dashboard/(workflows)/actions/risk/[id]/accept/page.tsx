@@ -11,7 +11,7 @@ import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 export default function RiskAcceptancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [existingFormData, setExistingFormData] = useState<Partial<FormData> | null>(null);
   const { id } = use(params);

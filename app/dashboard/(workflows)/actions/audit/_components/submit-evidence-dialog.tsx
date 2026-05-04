@@ -42,7 +42,7 @@ export function SubmitEvidenceDialog({ open, onOpenChange, actionId }: SubmitEvi
 
   const createEvidenceMutation = useCreateFindingActionEvidenceMutation();
   const uploading = createEvidenceMutation.isPending;
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const updatePayload = (field: keyof CreateFindingActionEvidenceInput, value: string) => {
     setPayload((prev) => {

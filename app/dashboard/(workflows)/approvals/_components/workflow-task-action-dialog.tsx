@@ -50,7 +50,7 @@ export function WorkflowTaskActionDialog({
   const router = useRouter();
   const [remarks, setRemarks] = useState("");
   const completeTaskMutation = useCompleteWorkflowTaskMutation();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const handleCompleteTask = async () => {
     if (!checkPermission(MODULE_CODES.WORKFLOW_CONFIG, "can_approve")) return;

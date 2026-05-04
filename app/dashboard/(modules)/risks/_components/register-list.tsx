@@ -98,7 +98,7 @@ export default function KRIRegistersClient({
   const [registerToDelete, setRegisterToDelete] = useState<KRIRegister | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

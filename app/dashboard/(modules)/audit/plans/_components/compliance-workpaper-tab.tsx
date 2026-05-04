@@ -24,6 +24,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 const isCompletedFinding = (finding: any): boolean => finding.status !== "OPEN";
 
 interface ComplianceAuditWorkpaperTabProps {
@@ -53,7 +55,7 @@ export function ComplianceAuditWorkpaperTab({
   onSubmitForApproval,
   isSubmitting
 }: ComplianceAuditWorkpaperTabProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const selectedCategory = useMemo(
     () => categoriesFromFindings?.find((cat) => cat.id === selectedCategoryId),
@@ -278,16 +280,15 @@ export function ComplianceAuditWorkpaperTab({
                                   ✓ Completed
                                 </Badge>
                               ) : (
-                                <Button
+                                <PermissionButton moduleCode={MODULE_CODES.AUDIT_WPS} action="can_edit"
                                   size="sm"
                                   onClick={() => {
-                                    if (!checkPermission(MODULE_CODES.AUDIT_WPS, "can_edit")) return;
-                                    setEditingFinding(finding);
-                                  }}
+  setEditingFinding(finding);
+}}
                                   className="shrink-0">
                                   <PencilLineIcon className="h-6 w-6" />
                                   Edit
-                                </Button>
+                                </PermissionButton>
                               )}
                             </div>
                           );

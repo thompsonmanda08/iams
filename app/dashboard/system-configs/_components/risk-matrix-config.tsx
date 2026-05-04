@@ -11,6 +11,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 type ScaleItem = {
   value: number;
   label: string;
@@ -18,7 +20,7 @@ type ScaleItem = {
 };
 
 export function RiskMatrixConfig() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [editingLikelihood, setEditingLikelihood] = useState(false);
   const [editingImpact, setEditingImpact] = useState(false);
 
@@ -90,13 +92,12 @@ export function RiskMatrixConfig() {
               <CardDescription>Define the probability levels for risk occurrence</CardDescription>
             </div>
             {!editingLikelihood ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditingLikelihood(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditingLikelihood(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditingLikelihood(false)}>
@@ -164,13 +165,12 @@ export function RiskMatrixConfig() {
               <CardDescription>Define the severity levels for risk consequences</CardDescription>
             </div>
             {!editingImpact ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditingImpact(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditingImpact(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditingImpact(false)}>

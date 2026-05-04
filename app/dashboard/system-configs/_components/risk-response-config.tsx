@@ -12,6 +12,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 type ResponseStrategy = {
   id: string;
   name: string;
@@ -26,7 +28,7 @@ type TreatmentStatus = {
 };
 
 export function RiskResponseConfig() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [editingStrategies, setEditingStrategies] = useState(false);
   const [editingStatuses, setEditingStatuses] = useState(false);
 
@@ -102,13 +104,12 @@ export function RiskResponseConfig() {
               </CardDescription>
             </div>
             {!editingStrategies ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditingStrategies(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditingStrategies(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditingStrategies(false)}>
@@ -166,13 +167,12 @@ export function RiskResponseConfig() {
               <CardDescription>Track the progress of risk treatment activities</CardDescription>
             </div>
             {!editingStatuses ? (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_configure")) return;
-                setEditingStatuses(true);
-              }}>
+              <PermissionButton moduleCode={MODULE_CODES.RISK_MODULE_CONFIGS} action="can_configure" variant="outline" size="sm" onClick={() => {
+  setEditingStatuses(true);
+}}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </PermissionButton>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditingStatuses(false)}>

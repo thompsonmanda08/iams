@@ -69,7 +69,7 @@ export function ActionReviewDialog({
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [selectedMatrix, setSelectedMatrix] = useState<RiskMatrix | null>(null);
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [errors, setErrors] = useState<{
     remarks?: string;
     assessment_decision?: string;

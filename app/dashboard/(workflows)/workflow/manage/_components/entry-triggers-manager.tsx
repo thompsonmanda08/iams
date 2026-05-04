@@ -46,7 +46,7 @@ const ENTRY_TRIGGER_TYPES = [
 ];
 
 export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggersManagerProps) => {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [triggers, setTriggers] = useState<EntryTrigger[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState<EntryTrigger | null>(null);

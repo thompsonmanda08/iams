@@ -37,7 +37,7 @@ export function CreateWorkflowDialog({
   existingWorkflows = []
 }: CreateWorkflowDialogProps) {
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [formData, setFormData] = useState({
     name: "",
     trigger_type: "" as WorkflowTriggerType,

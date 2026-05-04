@@ -36,7 +36,7 @@ interface TaskReassignDialogProps {
 export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDialogProps) {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [comment, setComment] = useState("");
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   // Query hook for fetching users
   const { data: users = [], isLoading: isLoadingUsers } = useUsersWithRole(

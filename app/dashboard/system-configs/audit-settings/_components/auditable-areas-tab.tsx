@@ -60,6 +60,8 @@ import { Badge } from "@/components/ui/badge";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 interface AreaFormData {
   name: string;
   department_id: string;
@@ -73,7 +75,7 @@ const INIT_FORM_DATA: AreaFormData = {
 };
 
 export default function AuditableAreaConfig() {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState<Omit<AuditConfigurableItem, "id"> | null>(
     INIT_FORM_DATA
@@ -146,16 +148,15 @@ export default function AuditableAreaConfig() {
               List of all the auditable areas across all departments
             </p>
           </div>
-          <Button
+          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
             size="sm"
             onClick={() => {
-              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-              setFormData(null);
+  setFormData(null);
               setOpenModal(true);
-            }}>
+}}>
             <Plus className="h-4 w-4" />
             New Auditable Area
-          </Button>
+          </PermissionButton>
         </div>
 
         <div className="bg-card rounded-lg border">
@@ -209,15 +210,14 @@ export default function AuditableAreaConfig() {
                       </EmptyHeader>
                       <EmptyContent>
                         <div className="flex gap-2">
-                          <Button
+                          <PermissionButton moduleCode={MODULE_CODES.AUDIT_MODULE_CONFIG} action="can_create"
                             size="sm"
                             onClick={() => {
-                              if (!checkPermission(MODULE_CODES.AUDIT_MODULE_CONFIG, "can_create")) return;
-                              setFormData(null);
+  setFormData(null);
                               setOpenModal(true);
-                            }}>
+}}>
                             <Plus className="h-4 w-4" /> Create New Auditable Area
-                          </Button>
+                          </PermissionButton>
                         </div>
                       </EmptyContent>
                     </Empty>

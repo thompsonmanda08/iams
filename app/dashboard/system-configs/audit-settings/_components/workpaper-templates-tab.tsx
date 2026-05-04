@@ -26,7 +26,7 @@ export default function WorkpaperTemplatesTab() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
 
   const { data: response, isFetching } = useWorkpaperTemplates({ page, page_size: pageSize });
   const rawTemplates = (response?.data?.data as (WorkingPaperTemplate & { created_at?: string })[]) || [];

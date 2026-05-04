@@ -42,7 +42,7 @@ export function ResidualRiskRatingDialog({
   onSuccess,
   rating
 }: ResidualRiskRatingDialogProps) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<{
     name: string;

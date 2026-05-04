@@ -66,7 +66,7 @@ export function TownsTab({ initialTowns, provinces, pagination }: TownsTabProps)
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [towns, setTowns] = useState<Town[]>(initialTowns);
   const [openModal, setOpenModal] = useState(false);
   const [editingTown, setEditingTown] = useState<Town | null>(null);

@@ -24,6 +24,8 @@ import { usePermissions } from "@/hooks/use-permissions";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
+import { PermissionButton } from "@/components/ui/permission-button";
+
 export default function AuditDetailClient({
   auditPlan,
   planItems
@@ -31,7 +33,7 @@ export default function AuditDetailClient({
   auditPlan: any;
   planItems: any;
 }) {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [comments, setComments] = useState("");
   const [openAddPlanItemModal, setOpenAddPlanItemModal] = useState(false);
@@ -85,13 +87,12 @@ export default function AuditDetailClient({
                   </Button>
                 )}
                 {auditPlan.status.toUpperCase() === "DRAFT" && (
-                  <Button
+                  <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_approve"
                     size="sm"
                     className="gap-2"
                     onClick={() => {
-                      if (!checkPermission(MODULE_CODES.AUDIT_PLANS, "can_approve")) return;
-                      setSubmitDialogOpen(true);
-                    }}
+  setSubmitDialogOpen(true);
+}}
                     disabled={submitMutation.isPending || items.length === 0}
                     isLoading={submitMutation.isPending}
                     loadingText="Submitting..."
@@ -102,7 +103,7 @@ export default function AuditDetailClient({
                     }>
                     <Send className="h-4 w-4" />
                     Submit for Approval
-                  </Button>
+                  </PermissionButton>
                 )}
               </div>
             </div>

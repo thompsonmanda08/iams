@@ -52,7 +52,7 @@ interface WorkflowClientProps {
 }
 
 const WorkflowClient = ({ initialWorkflows }: WorkflowClientProps) => {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);

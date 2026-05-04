@@ -117,7 +117,7 @@ interface NewCategoryPageProps {
 export default function NewCategoryPage({ params, initialData, categoryId }: NewCategoryPageProps) {
   const { id: templateId } = use(params);
   const router = useRouter();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, hasPermission } = usePermissions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setUpdating] = useState(initialData && categoryId);
 
