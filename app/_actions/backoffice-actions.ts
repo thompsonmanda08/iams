@@ -59,7 +59,7 @@ export async function updateCountry(data: {
 }): Promise<APIResponse> {
   try {
     const response = await authenticatedApiClient({
-      url: "/api/v1/countries/update",
+      url: "/api/v1/backoffice/countries/update",
       method: "PUT",
       data: {
         ...data,

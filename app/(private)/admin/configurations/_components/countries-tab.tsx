@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -133,7 +133,6 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Code</TableHead>
-            <TableHead>Region</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -141,7 +140,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
         <TableBody>
           {countries.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} align="center">
+              <TableCell colSpan={4} align="center">
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia variant="icon">
@@ -179,9 +178,6 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                   <span className="text-muted-foreground font-mono text-sm">
                     {country.iso2_code}
                   </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-muted-foreground text-sm">{country.region || "N/A"}</span>
                 </TableCell>
                 <TableCell>
                   <span
@@ -248,8 +244,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
 
 const COUNTRY_INITIAL_STATE = {
   name: "",
-  iso2_code: "",
-  region: ""
+  iso2_code: ""
 };
 
 interface CreateOrUpdateCountryDialogProps {
@@ -275,11 +270,24 @@ function CreateOrUpdateCountryDialog({
     initialData
       ? {
           name: initialData.name,
-          iso2_code: initialData.iso2_code || "",
-          region: initialData.region || ""
+          iso2_code: initialData.iso2_code || ""
         }
       : COUNTRY_INITIAL_STATE
   );
+
+  useEffect(() => {
+    if (openModal) {
+      setFormData(
+        initialData
+          ? {
+              name: initialData.name,
+              iso2_code: initialData.iso2_code || ""
+            }
+          : COUNTRY_INITIAL_STATE
+      );
+      setError({ status: false, message: "" });
+    }
+  }, [openModal, initialData]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -287,13 +295,11 @@ function CreateOrUpdateCountryDialog({
         ? await updateCountry({
             id: initialData.id,
             name: data.name,
-            code: data.iso2_code,
-            region: data.region || undefined
+            code: data.iso2_code
           })
         : await createCountry({
             name: data.name,
-            code: data.iso2_code,
-            region: data.region || undefined
+            code: data.iso2_code
           });
 
       if (!response.success) {
@@ -371,15 +377,6 @@ function CreateOrUpdateCountryDialog({
             maxLength={2}
             descriptionText="Country code has to be valid"
             required
-          />
-          <Input
-            label="Region (Optional)"
-            placeholder="e.g. North America, Southern Africa"
-            value={formData.region}
-            onChange={(e) => {
-              setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, region: e.target.value }));
-            }}
           />
           {error.status && (
             <Alert variant="destructive">

@@ -187,6 +187,7 @@ export function TownsTab({ countries }: TownsTabProps) {
             value={selectedProvince}
             onValueChange={setSelectedProvince}
             disabled={!selectedCountry || loadingProvinces}
+            isLoading={loadingProvinces}
           />
         </div>
       </div>
@@ -324,6 +325,7 @@ export function TownsTab({ countries }: TownsTabProps) {
         setOpenModal={setOpenModal}
         selectedProvince={selectedProvince}
         provinces={activeProvinces}
+        loadingProvinces={loadingProvinces}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TOWNS] });
           router.refresh();
@@ -344,6 +346,7 @@ interface CreateTownDialogProps {
   setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
   selectedProvince: string;
   provinces: Province[];
+  loadingProvinces?: boolean;
   onSuccess: () => void;
 }
 
@@ -352,6 +355,7 @@ function CreateTownDialog({
   setOpenModal,
   selectedProvince,
   provinces,
+  loadingProvinces,
   onSuccess
 }: CreateTownDialogProps) {
   const [error, setError] = useState<ErrorState>({
@@ -430,6 +434,7 @@ function CreateTownDialog({
               setError({ status: false, message: "" });
               setFormData((c) => ({ ...c, province_id }));
             }}
+            isLoading={loadingProvinces}
           />
           <Input
             label="Town / City Name"
