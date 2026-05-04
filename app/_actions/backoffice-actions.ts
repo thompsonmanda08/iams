@@ -58,18 +58,23 @@ export async function updateCountry(data: {
   is_active?: boolean;
 }): Promise<APIResponse> {
   try {
+    const { id, ...payload } = data;
     const response = await authenticatedApiClient({
-      url: "/api/v1/backoffice/countries/update",
+      url: `/api/v1/backoffice/countries/update?id=${id}`,
       method: "PUT",
       data: {
-        ...data,
-        is_active: data.is_active ?? true
+        ...payload,
+        is_active: payload.is_active ?? true
       }
     });
 
     return successResponse(response.data.data, "Country updated successfully");
   } catch (error) {
-    return handleError(error, "PUT | UPDATE COUNTRY", "/api/v1/countries/update");
+    return handleError(
+      error,
+      "PUT | UPDATE COUNTRY",
+      `/api/v1/backoffice/countries/update?id=${data.id}`
+    );
   }
 }
 
