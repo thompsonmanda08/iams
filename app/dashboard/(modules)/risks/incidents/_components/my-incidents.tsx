@@ -63,7 +63,11 @@ export function MyIncidents() {
   const queryClient = useQueryClient();
   const { checkPermission, hasPermission } = usePermissions();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const { searchValue: searchQuery, setSearchValue: setSearchQuery, debouncedSearch } = useTableSearch({ debounceMs: 200 });
+  const {
+    searchValue: searchQuery,
+    setSearchValue: setSearchQuery,
+    debouncedSearch
+  } = useTableSearch({ debounceMs: 200 });
   const [selectedIncident, setSelectedIncident] = useState<IncidentData | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [sendForReviewDialogOpen, setSendForReviewDialogOpen] = useState(false);
@@ -322,7 +326,7 @@ export function MyIncidents() {
               <CardTitle className="text-lg font-semibold">Report Incidents</CardTitle>
               <p className="text-muted-foreground mt-1 text-sm">View and export incident reports</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 hidden">
+            <div className="flex hidden flex-wrap items-center gap-2">
               <Button variant="outline" size="sm">
                 <Copy className="mr-2 h-4 w-4" />
                 Copy
@@ -398,30 +402,30 @@ export function MyIncidents() {
                         {(paginationData.page - 1) * paginationData.page_size + index + 1}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        {format(new Date(item.incident.incident_date), "MMM dd, yyyy")}
+                        {format(new Date(item?.incident?.incident_date), "MMM dd, yyyy")}
                       </TableCell>
                       <TableCell className="flex flex-col gap-y-2">
-                        <span>{item.department.name}</span>
+                        <span>{item?.department?.name}</span>
                         <span className="font-bold">
                           KRI:{" "}
                           <span className="text-xs font-normal text-gray-600">
-                            {item.incident.kri_id || "N/A"}
+                            {item?.kri?.name || "N/A"}
                           </span>
                         </span>
                       </TableCell>
-                      <TableCell>{item.primary_cause.name}</TableCell>
+                      <TableCell>{item?.primary_cause?.name}</TableCell>
                       <TableCell>
-                        <StatusBadge status={item.incident.materiality} />
+                        <StatusBadge status={item?.incident?.materiality} />
                       </TableCell>
-                      <TableCell>{item.incident.location}</TableCell>
+                      <TableCell>{item?.incident?.location}</TableCell>
                       <TableCell>
-                        {`${item.responsible_person.first_name} ${item.responsible_person.last_name}`}
+                        {`${item?.responsible_person?.first_name} ${item?.responsible_person?.last_name}`}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        {format(new Date(item.incident.due_date), "MMM dd, yyyy")}
+                        {format(new Date(item?.incident?.due_date), "MMM dd, yyyy")}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={item.incident.status} />
+                        <StatusBadge status={item?.incident?.status} />
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
