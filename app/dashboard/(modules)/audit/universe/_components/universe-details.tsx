@@ -209,10 +209,14 @@ const UniverseDetails = ({
             </div>
             <div className="flex gap-2">
               {universe.status?.toUpperCase() == "DRAFT" && (
-                <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2">
+                <PermissionButton
+                  moduleCode={MODULE_CODES.AUDIT}
+                  action="can_edit"
+                  onClick={() => setSubmitConfirmationOpen(true)}
+                  className="gap-2">
                   <Send className="h-4 w-4" />
                   Submit for Approval
-                </Button>
+                </PermissionButton>
               )}
             </div>
           </div>

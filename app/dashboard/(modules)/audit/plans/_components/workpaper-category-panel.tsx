@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { getFrameworkFieldConfig } from "@/lib/config/finding-framework-fields";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { useSubmitCategoryFindingsForApproval } from "@/hooks/use-workpaper-queries";
 import { useState } from "react";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -162,9 +164,13 @@ export function WorkpaperCategoryPanel({ category, auditPlan }: WorkpaperCategor
           )}
 
           {category.status === "PENDING" && (
-            <Button onClick={() => setOpenModal(true)} className="w-">
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT_WPS}
+              action="can_edit"
+              onClick={() => setOpenModal(true)}
+              className="w-">
               Submit for Approval
-            </Button>
+            </PermissionButton>
           )}
         </CardContent>
       </Card>

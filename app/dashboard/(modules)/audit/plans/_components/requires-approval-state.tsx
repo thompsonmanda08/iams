@@ -2,6 +2,8 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { ClipboardListIcon, Send } from "lucide-react";
 import type { AuditPlan } from "@/lib/types/audit-types";
 
@@ -47,7 +49,9 @@ export function RequiresApprovalState({
         </div>
 
         {auditPlan.status.toUpperCase() === "DRAFT" && (
-          <Button
+          <PermissionButton
+            moduleCode={MODULE_CODES.AUDIT_PLANS}
+            action="can_edit"
             size="lg"
             onClick={onSubmitForApproval}
             disabled={isSubmitting}
@@ -56,7 +60,7 @@ export function RequiresApprovalState({
             className="gap-2">
             <Send className="h-6 w-6" />
             Submit for Approval
-          </Button>
+          </PermissionButton>
         )}
       </CardContent>
     </Card>

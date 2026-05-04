@@ -335,10 +335,15 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
         {!showLineForm && (
           <div className="ml-auto flex gap-2">
             {budget.status == "DRAFT" && (
-              <Button onClick={() => setSubmitConfirmationOpen(true)} className="gap-2" size="sm">
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT}
+                action="can_edit"
+                onClick={() => setSubmitConfirmationOpen(true)}
+                className="gap-2"
+                size="sm">
                 <Send className="h-4 w-4" />
                 Submit for Approval
-              </Button>
+              </PermissionButton>
             )}
             <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_create" onClick={() => {
   setShowLineForm(true);

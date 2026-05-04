@@ -12,6 +12,8 @@ import {
   TimerReset,
   ShieldX,
   ShieldCheck,
+  Lock,
+  LockOpen,
   View,
   PencilLine
 } from "lucide-react";
@@ -46,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { generateAvatarFallback, generateRandomString, getAvatarSrc, notify } from "@/lib/utils";
 import { User } from "@/lib/types/account";
-import { updateUser, deactivateUser, resetUserPassword } from "@/app/_actions/user-actions";
+import { updateUser, deactivateUser, resetUserPassword, lockUser, unlockUser } from "@/app/_actions/user-actions";
 import { CustomPagination } from "@/components/ui/pagination";
 import Search from "@/components/ui/search-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -75,6 +77,7 @@ type UsersDataTableProps = {
 
 const getColumns = (
   onToggleStatus: (id: string, isActive: boolean) => void,
+  onToggleLock: (user: User) => void,
   onEdit: (user: User) => void,
   onResetPassword: (id: string) => void,
   onViewProfile: (id: string) => void,
@@ -179,7 +182,7 @@ const getColumns = (
                 Options
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="min-w-48 w-full">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onViewProfile(user.id)}>
@@ -218,6 +221,24 @@ const getColumns = (
                 {isCurrentUser(user) && user.is_active
                   ? "Cannot deactivate own account"
                   : `${user.is_active ? "Deactivate" : "Activate"} Account`}
+              </PermissionDropdownMenuItem>
+              <PermissionDropdownMenuItem
+                moduleCode={MODULE_CODES.USER_MGMT}
+                action="can_edit"
+                onClick={() => {
+                  if (isCurrentUser(user) && !user.is_locked) return;
+                  onToggleLock(user);
+                }}
+                disabled={isCurrentUser(user) && !user.is_locked}
+                className={!user.is_locked ? "text-destructive focus:text-destructive" : ""}>
+                {user.is_locked ? (
+                  <LockOpen className="h-4 w-4" />
+                ) : (
+                  <Lock className="text-destructive h-4 w-4" />
+                )}
+                {isCurrentUser(user) && !user.is_locked
+                  ? "Cannot lock own account"
+                  : `${user.is_locked ? "Unlock" : "Lock"} Account`}
               </PermissionDropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -268,6 +289,11 @@ export default function UsersDataTable({
     activate: boolean | null;
     user: User | null;
   }>({ open: false, userId: null, userName: null, activate: null, user: null });
+
+  const [lockDialog, setLockDialog] = React.useState<{
+    open: boolean;
+    user: User | null;
+  }>({ open: false, user: null });
 
   const [resetPasswordDialog, setResetPasswordDialog] = React.useState<{
     open: boolean;
@@ -345,6 +371,29 @@ export default function UsersDataTable({
       console.error("Error toggling user status:", error);
     }
   };
+  const handleToggleLockClick = (user: User) => {
+    if (!checkPermission("USER_MGMT", "can_edit")) return;
+    if (isCurrentUser(user) && !user.is_locked) {
+      notify({ description: "You cannot lock your own account", type: "warning" });
+      return;
+    }
+    setLockDialog({ open: true, user });
+  };
+
+  const handleToggleLockConfirm = async () => {
+    if (!lockDialog.user) return;
+    const { user } = lockDialog;
+    const response = user.is_locked ? await unlockUser(user.id) : await lockUser(user.id);
+    if (response.success) {
+      notify({ description: `User ${user.is_locked ? "unlocked" : "locked"} successfully`, type: "success" });
+      router.refresh();
+      setLockDialog((prev) => ({ ...prev, open: false }));
+      setTimeout(() => setLockDialog({ open: false, user: null }), 300);
+    } else {
+      notify({ description: response.message || "Failed to update lock status", type: "error" });
+    }
+  };
+
   const handleResetPasswordClick = (id: string) => {
     const user = data.find((u) => u.id === id);
     if (user) {
@@ -385,6 +434,7 @@ export default function UsersDataTable({
 
   const columns = getColumns(
     handleToggleStatusClick,
+    handleToggleLockClick,
     handleEditClick,
     handleResetPasswordClick,
     handleViewProfile,
@@ -675,6 +725,14 @@ export default function UsersDataTable({
         }
         onConfirm={handleToggleStatusConfirm}
         type={toggleStatusDialog.activate ? "default" : "delete"}
+      />
+      <ConfirmationModal
+        open={lockDialog.open}
+        title={`${lockDialog.user?.is_locked ? "Unlock" : "Lock"} User`}
+        description={`Are you sure you want to ${lockDialog.user?.is_locked ? "unlock" : "lock"} the account of "${`${lockDialog.user?.first_name} ${lockDialog.user?.last_name}`.toLocaleUpperCase()}"?`}
+        onOpenChange={(open) => setLockDialog({ open, user: null })}
+        onConfirm={handleToggleLockConfirm}
+        type={lockDialog.user?.is_locked ? "default" : "delete"}
       />
       <ConfirmationModal
         open={resetPasswordDialog.open}

@@ -316,6 +316,37 @@ export async function toggleUserMFA(id: string, enabled: boolean): Promise<APIRe
   }
 }
 
+export async function lockUser(id: string): Promise<APIResponse> {
+  const url = `/api/v1/users/${id}/lock`;
+  if (await isSelfTarget(id)) {
+    return {
+      success: false,
+      message: "You cannot lock your own account.",
+      data: null,
+      status: 403,
+      statusText: "FORBIDDEN"
+    };
+  }
+  try {
+    const response = await authenticatedApiClient({ url, method: "PATCH" });
+    revalidatePath("/dashboard/system-configs/users");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "PATCH", url);
+  }
+}
+
+export async function unlockUser(id: string): Promise<APIResponse> {
+  const url = `/api/v1/users/${id}/unlock`;
+  try {
+    const response = await authenticatedApiClient({ url, method: "PATCH" });
+    revalidatePath("/dashboard/system-configs/users");
+    return successResponse(response.data.data);
+  } catch (error) {
+    return handleError(error, "PATCH", url);
+  }
+}
+
 /**
  * Reset user password
  */

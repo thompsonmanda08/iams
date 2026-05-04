@@ -30,6 +30,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../u
 import { Badge } from "../ui/badge";
 import { CreateReportDialog } from "@/app/dashboard/(modules)/reports/_components/create-report-dialog";
 import { Button } from "../ui/button";
+import { PermissionButton } from "@/components/ui/permission-button";
+import { MODULE_CODES } from "@/lib/constants/module-codes";
 import CustomAlert from "../ui/custom-alert";
 import Loader from "../ui/loader";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
@@ -760,7 +762,9 @@ export function ReportBuilder({
           </div>
           <div className="flex gap-1 sm:gap-2">
             {report.status !== "PUBLISHED" && (
-              <Button
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                action="can_edit"
                 variant={"outline"}
                 size="icon"
                 onClick={handleSave}
@@ -771,7 +775,7 @@ export function ReportBuilder({
                 <Save className="h-4 w-4" />
                 <span className="hidden sm:inline md:hidden">Save</span>
                 <span className="hidden md:inline">Save Draft</span>
-              </Button>
+              </PermissionButton>
             )}
             <Button
               variant={"outline"}
@@ -782,7 +786,9 @@ export function ReportBuilder({
               <Eye className="h-4 w-4" />
               <span className="hidden sm:inline">Preview</span>
             </Button>
-            <Button
+            <PermissionButton
+              moduleCode={MODULE_CODES.AUDIT_REPORTS}
+              action="can_export"
               onClick={exportToPDF}
               disabled={isExporting}
               isLoading={isExporting}
@@ -792,9 +798,11 @@ export function ReportBuilder({
               <Download className="h-4 w-4" />
               <span className="hidden sm:inline md:hidden">Export</span>
               <span className="hidden md:inline">Export PDF</span>
-            </Button>
+            </PermissionButton>
             {report.status !== "PUBLISHED" && (
-              <Button
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                action="can_edit"
                 onClick={handlePublish}
                 disabled={isPublishing}
                 isLoading={isPublishing}
@@ -804,7 +812,7 @@ export function ReportBuilder({
                 <Send className="h-4 w-4" />
                 <span className="hidden sm:inline md:hidden">Submit</span>
                 <span className="hidden md:inline">Submit for Approval</span>
-              </Button>
+              </PermissionButton>
             )}
           </div>
         </div>

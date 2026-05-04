@@ -327,24 +327,20 @@ export default function AuditAnnualPlan({
                             </TooltipProvider>
 
                             {item.status === "DRAFT" && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary h-8 gap-1.5"
-                                      onClick={(e) => {
-                                        handleSubmitClick(String(item.id));
-                                        e.stopPropagation();
-                                      }}>
-                                      <Send className="h-3.5 w-3.5" />
-                                      Submit
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Submit for Approval</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <PermissionButton
+                                moduleCode={MODULE_CODES.AUDIT_PLANS}
+                                action="can_edit"
+                                size="sm"
+                                variant="outline"
+                                title="Submit for Approval"
+                                className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary h-8 gap-1.5"
+                                onClick={(e) => {
+                                  handleSubmitClick(String(item.id));
+                                  e.stopPropagation();
+                                }}>
+                                <Send className="h-3.5 w-3.5" />
+                                Submit
+                              </PermissionButton>
                             )}
                           </div>
                         </TableCell>

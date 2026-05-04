@@ -474,22 +474,20 @@ export default function AuditUniverseList({
                             <TableCell className="text-center">
                               <div className="flex justify-end gap-1">
                                 {status === "DRAFT" && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary h-8 gap-1.5"
-                                        onClick={(e) => {
-                                          handleSubmitClick(item.id, universeName);
-                                          e.stopPropagation();
-                                        }}>
-                                        <Send className="h-3.5 w-3.5" />
-                                        Submit
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Submit for Approval</TooltipContent>
-                                  </Tooltip>
+                                  <PermissionButton
+                                    moduleCode={MODULE_CODES.AUDIT}
+                                    action="can_edit"
+                                    size="sm"
+                                    variant="outline"
+                                    title="Submit for Approval"
+                                    className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary h-8 gap-1.5"
+                                    onClick={(e) => {
+                                      handleSubmitClick(item.id, universeName);
+                                      e.stopPropagation();
+                                    }}>
+                                    <Send className="h-3.5 w-3.5" />
+                                    Submit
+                                  </PermissionButton>
                                 )}
 
                                 <TooltipProvider>
