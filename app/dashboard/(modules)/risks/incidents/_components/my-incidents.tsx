@@ -21,7 +21,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { PermissionDropdownMenuItem } from "@/components/ui/permission-dropdown-menu-item";
 import {
   Table,
   TableBody,
@@ -431,23 +430,19 @@ export function MyIncidents() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
-                            <PermissionDropdownMenuItem
-                              moduleCode={MODULE_CODES.RISK_INCIDENTS}
-                              action="can_edit"
+                            <DropdownMenuItem
                               onClick={() => handleSendForReviewClick(item)}
                               className="gap-2">
                               <Send className="h-4 w-4" />
                               <span>Submit for Review</span>
-                            </PermissionDropdownMenuItem>
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleViewDetails(item)}
                               className="gap-2">
                               <Eye className="h-4 w-4" />
                               <span>View Incident</span>
                             </DropdownMenuItem>
-                            <PermissionDropdownMenuItem
-                              moduleCode={MODULE_CODES.RISK_INCIDENTS}
-                              action="can_delete"
+                            <DropdownMenuItem
                               onClick={(e) => {
                                 handleDeleteClick(item);
                                 e.stopPropagation();
@@ -455,7 +450,7 @@ export function MyIncidents() {
                               className="text-destructive gap-2">
                               <Trash2 className="h-4 w-4" />
                               <span>Delete</span>
-                            </PermissionDropdownMenuItem>
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
