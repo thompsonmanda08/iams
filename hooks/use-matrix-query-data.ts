@@ -125,26 +125,89 @@ export const useReindexScalesAfterDelete = (
       deletedLevel: number;
       scales: ReindexScale[];
     }) => {
-      const toShift = scales.filter((s) => s.level > deletedLevel);
+      const toShift = scales
+        .filter((s) => s.level > deletedLevel)
+        .sort((x, y) => x.level - y.level);
       if (toShift.length === 0) return { success: true, failed: [] as string[] };
 
-      const results = await Promise.allSettled(
-        toShift.map((s) =>
-          updateScale(s.id, {
+      // Sequential ascending: each PUT lands on a vacated slot, avoiding
+      // collisions on the unique (matrix_id, scale_type, level) constraint.
+      const failed: string[] = [];
+      for (const s of toShift) {
+        try {
+          const res = await updateScale(s.id, {
             name: s.name,
             description: s.description,
             level: s.level - 1
-          })
-        )
-      );
+          });
+          if (!res.success) failed.push(s.id);
+        } catch {
+          failed.push(s.id);
+        }
+      }
+      return { success: failed.length === 0, failed };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.MATRIX_SCALES, matrixId, scaleType]
+      });
+    }
+  });
+};
 
-      const failed = results
-        .map((r, i) =>
-          r.status === "rejected" || (r.status === "fulfilled" && !r.value.success)
-            ? toShift[i].id
-            : null
-        )
-        .filter((x): x is string => x !== null);
+export const useSwapScaleLevels = (
+  matrixId: string,
+  scaleType: "LIKELIHOOD" | "IMPACT"
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      a,
+      b,
+      tempLevel
+    }: {
+      a: ReindexScale;
+      b: ReindexScale;
+      tempLevel: number;
+    }) => {
+      // Backend enforces unique (matrix_id, scale_type, level). Use 3-step
+      // sequential dance via a temp level outside the active range.
+      const failed: string[] = [];
+      const targetA = b.level;
+      const targetB = a.level;
+
+      const step1 = await updateScale(a.id, {
+        name: a.name,
+        description: a.description,
+        level: tempLevel
+      });
+      if (!step1.success) {
+        failed.push(a.id);
+        return { success: false, failed };
+      }
+
+      const step2 = await updateScale(b.id, {
+        name: b.name,
+        description: b.description,
+        level: targetB
+      });
+      if (!step2.success) {
+        failed.push(b.id);
+        // Restore A to its original level so we don't leave it stranded at tempLevel.
+        await updateScale(a.id, {
+          name: a.name,
+          description: a.description,
+          level: a.level
+        });
+        return { success: false, failed };
+      }
+
+      const step3 = await updateScale(a.id, {
+        name: a.name,
+        description: a.description,
+        level: targetA
+      });
+      if (!step3.success) failed.push(a.id);
 
       return { success: failed.length === 0, failed };
     },

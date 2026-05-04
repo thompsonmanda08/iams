@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Trash2, Loader2, Check, X } from "lucide-react";
+import { Plus, Trash2, Loader2, Check, X, ArrowUp, ArrowDown } from "lucide-react";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { CustomPagination } from "@/components/ui/pagination";
 import { notify } from "@/lib/utils";
@@ -22,7 +22,8 @@ import {
   useCreateScale,
   useUpdateScale,
   useDeleteScale,
-  useReindexScalesAfterDelete
+  useReindexScalesAfterDelete,
+  useSwapScaleLevels
 } from "@/hooks/use-matrix-query-data";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -73,8 +74,47 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
   const updateScaleMutation = useUpdateScale(matrixId, scaleType);
   const deleteScaleMutation = useDeleteScale(matrixId, scaleType);
   const reindexMutation = useReindexScalesAfterDelete(matrixId, scaleType);
+  const swapMutation = useSwapScaleLevels(matrixId, scaleType);
 
-  const isBusy = deleteScaleMutation.isPending || reindexMutation.isPending;
+  const isBusy =
+    deleteScaleMutation.isPending || reindexMutation.isPending || swapMutation.isPending;
+
+  const handleMove = async (scale: Scale, direction: "up" | "down") => {
+    if (!checkPermission(MODULE_CODES.RISK_MODULE_CONFIGS, "can_edit")) return;
+    const sorted = [...(scales as Scale[])].sort((x, y) => x.level - y.level);
+    const idx = sorted.findIndex((s) => s.id === scale.id);
+    if (idx === -1) return;
+    const neighborIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (neighborIdx < 0 || neighborIdx >= sorted.length) return;
+    const neighbor = sorted[neighborIdx];
+
+    const tempLevel = sorted.length + 1;
+    const result = await swapMutation.mutateAsync({
+      a: {
+        id: scale.id,
+        level: scale.level,
+        name: scale.name,
+        description: scale.description,
+        matrix_id: scale.matrix_id
+      },
+      b: {
+        id: neighbor.id,
+        level: neighbor.level,
+        name: neighbor.name,
+        description: neighbor.description,
+        matrix_id: neighbor.matrix_id
+      },
+      tempLevel
+    });
+    if (result.success) {
+      notify({ description: "Levels reordered", type: "success" });
+    } else {
+      notify({
+        description: `Reorder failed for ${result.failed.length} item(s). Refresh to verify.`,
+        type: "error"
+      });
+    }
+  };
 
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -393,6 +433,24 @@ export function ScalesList({ matrixId, scaleType, ratings, initialData }: Scales
                           </>
                         ) : (
                           <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleMove(scale, "up")}
+                              className="h-8 w-8 p-0"
+                              title="Move up"
+                              disabled={addingNew || isBusy || scale.level <= 1}>
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleMove(scale, "down")}
+                              className="h-8 w-8 p-0"
+                              title="Move down"
+                              disabled={addingNew || isBusy || scale.level >= scales.length}>
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
