@@ -40,7 +40,7 @@ import {
 interface Country {
   id: string;
   name: string;
-  iso3_code: string;
+  code: string;
   region?: string;
   is_active: boolean;
 }
@@ -176,7 +176,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                 </TableCell>
                 <TableCell>
                   <span className="text-muted-foreground font-mono text-sm">
-                    {country.iso3_code}
+                    {country.code}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -244,7 +244,7 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
 
 const COUNTRY_INITIAL_STATE = {
   name: "",
-  iso3_code: ""
+  code: ""
 };
 
 interface CreateOrUpdateCountryDialogProps {
@@ -270,7 +270,7 @@ function CreateOrUpdateCountryDialog({
     initialData
       ? {
           name: initialData.name,
-          iso3_code: initialData.iso3_code || ""
+          code: initialData.code || ""
         }
       : COUNTRY_INITIAL_STATE
   );
@@ -281,7 +281,7 @@ function CreateOrUpdateCountryDialog({
         initialData
           ? {
               name: initialData.name,
-              iso3_code: initialData.iso3_code || ""
+              code: initialData.code || ""
             }
           : COUNTRY_INITIAL_STATE
       );
@@ -295,11 +295,11 @@ function CreateOrUpdateCountryDialog({
         ? await updateCountry({
             id: initialData.id,
             name: data.name,
-            code: data.iso3_code
+            code: data.code
           })
         : await createCountry({
             name: data.name,
-            code: data.iso3_code
+            code: data.code
           });
 
       if (!response.success) {
@@ -327,12 +327,12 @@ function CreateOrUpdateCountryDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.iso3_code) {
+    if (!formData.name || !formData.code) {
       setError({ status: true, message: "Name and ISO3 code are required" });
       return;
     }
 
-    if (formData.iso3_code.length !== 3) {
+    if (formData.code.length !== 3) {
       setError({ status: true, message: "ISO3 code must be exactly 3 characters" });
       return;
     }
@@ -369,10 +369,10 @@ function CreateOrUpdateCountryDialog({
           <Input
             label="Country Code"
             placeholder="e.g. USA, CAN, ZMB"
-            value={formData.iso3_code}
+            value={formData.code}
             onChange={(e) => {
               setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, iso3_code: e.target.value.toUpperCase() }));
+              setFormData((c) => ({ ...c, code: e.target.value.toUpperCase() }));
             }}
             maxLength={3}
             descriptionText="Country code has to be valid"
@@ -392,7 +392,7 @@ function CreateOrUpdateCountryDialog({
             <Button
               type="submit"
               size="sm"
-              disabled={saveMutation.isPending || !formData.name || !formData.iso3_code}
+              disabled={saveMutation.isPending || !formData.name || !formData.code}
               isLoading={saveMutation.isPending}
               loadingText="Saving...">
               Save

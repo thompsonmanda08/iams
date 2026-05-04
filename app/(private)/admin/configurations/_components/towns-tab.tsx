@@ -170,18 +170,16 @@ export function TownsTab({ countries }: TownsTabProps) {
           </Button>
         </div>
 
-        <div className="flex">
+        <div className="flex max-w-lg gap-4">
           <SelectField
-            className="w-full max-w-sm"
-            label="Select Country"
+            label="Country"
             placeholder="Choose a country"
             options={activeCountries?.map((c) => ({ id: c.id, name: c.name }))}
             value={selectedCountry}
             onValueChange={setSelectedCountry}
           />
           <SelectField
-            className="w-full max-w-sm"
-            label="Select Province / State"
+            label="Province / State"
             placeholder={selectedCountry ? "Choose a province" : "Select country first"}
             options={activeProvinces?.map((p) => ({ id: p.id, name: p.name }))}
             value={selectedProvince}
