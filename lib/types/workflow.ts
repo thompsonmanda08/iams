@@ -4,12 +4,7 @@
 
 import { StandardStatus } from "../statuses";
 
-export type EntityType =
-  | "RISK_ACCEPTANCE"
-  | "AUDIT_PLAN"
-  | "BUDGET"
-  | "AUDIT_UNIVERSE"
-  | "FINDINGS";
+export type EntityType = "AUDIT_PLAN" | "BUDGET" | "AUDIT_UNIVERSE" | "FINDINGS";
 
 export type OperatorType = "=" | "!=" | ">" | "<" | ">=" | "<=" | "is" | "contains";
 
@@ -19,8 +14,7 @@ export type WorkflowTriggerType =
   | "BUDGET_CREATION"
   | "UNIVERSE_CREATION"
   | "AUDIT_PLAN"
-  | "FINDINGS"
-  | "RISK_ACCEPTANCE";
+  | "FINDINGS";
 
 // ============================================================================
 // CONDITION INTERFACES
