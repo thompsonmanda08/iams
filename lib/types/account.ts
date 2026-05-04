@@ -55,6 +55,7 @@ export type User = {
   role_id: string;
   is_active: boolean;
   is_ldap_user: boolean;
+  is_locked: boolean;
   last_login: string | null;
   mfa_enabled: boolean;
   created_at: string;
