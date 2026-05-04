@@ -83,16 +83,23 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
   });
 
   const countries = countriesResponse?.success ? countriesResponse.data : [];
-  const pagination = countriesResponse?.pagination || initialPagination || {
-    total: 0,
-    page: 1,
-    page_size: 10,
-    total_pages: 0,
-    has_next: false,
-    has_prev: false
-  };
+  const pagination = countriesResponse?.pagination ||
+    initialPagination || {
+      total: 0,
+      page: 1,
+      page_size: 10,
+      total_pages: 0,
+      has_next: false,
+      has_prev: false
+    };
 
-  const handlePageChange = ({ page: newPage, page_size: newPageSize }: { page: number; page_size?: number }) => {
+  const handlePageChange = ({
+    page: newPage,
+    page_size: newPageSize
+  }: {
+    page: number;
+    page_size?: number;
+  }) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(newPage));
     if (newPageSize) {
@@ -142,8 +149,8 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                     </EmptyMedia>
                     <EmptyTitle>No Countries Yet</EmptyTitle>
                     <EmptyDescription>
-                      You haven&apos;t created any countries yet. Get started by creating your
-                      first country.
+                      You haven&apos;t created any countries yet. Get started by creating your first
+                      country.
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
@@ -169,7 +176,9 @@ export function CountriesTab({ initialCountries, initialPagination }: CountriesT
                   <span className="font-medium">{country.name}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-muted-foreground text-sm font-mono">{country.iso2_code}</span>
+                  <span className="text-muted-foreground font-mono text-sm">
+                    {country.iso2_code}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <span className="text-muted-foreground text-sm">{country.region || "N/A"}</span>
@@ -278,12 +287,12 @@ function CreateOrUpdateCountryDialog({
         ? await updateCountry({
             id: initialData.id,
             name: data.name,
-            iso2_code: data.iso2_code,
+            code: data.iso2_code,
             region: data.region || undefined
           })
         : await createCountry({
             name: data.name,
-            iso2_code: data.iso2_code,
+            code: data.iso2_code,
             region: data.region || undefined
           });
 
@@ -293,7 +302,10 @@ function CreateOrUpdateCountryDialog({
       return response;
     },
     onSuccess: () => {
-      notify({ description: `Country ${initialData ? "updated" : "created"} successfully`, type: "success" });
+      notify({
+        description: `Country ${initialData ? "updated" : "created"} successfully`,
+        type: "success"
+      });
       setOpenModal(false);
       setInitialData(null);
       setFormData(COUNTRY_INITIAL_STATE);
@@ -349,7 +361,7 @@ function CreateOrUpdateCountryDialog({
             required
           />
           <Input
-            label="ISO2 Code"
+            label="Country Code"
             placeholder="e.g. US, CA, ZM"
             value={formData.iso2_code}
             onChange={(e) => {
@@ -357,6 +369,7 @@ function CreateOrUpdateCountryDialog({
               setFormData((c) => ({ ...c, iso2_code: e.target.value.toUpperCase() }));
             }}
             maxLength={2}
+            descriptionText="Country code has to be valid"
             required
           />
           <Input
