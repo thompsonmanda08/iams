@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, MapPin } from "lucide-react";
+import { Plus, Edit, MapPin, Trash2 } from "lucide-react";
 import { cn, notify } from "@/lib/utils";
 import {
   Dialog,
@@ -25,7 +25,12 @@ import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ErrorState } from "@/lib/types";
-import { createProvince, getProvincesByCountry } from "@/app/_actions/backoffice-actions";
+import {
+  createProvince,
+  deleteProvince,
+  getProvincesByCountry,
+  updateProvince
+} from "@/app/_actions/backoffice-actions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
 import {
@@ -50,6 +55,7 @@ interface Country {
 interface Province {
   id: string;
   name: string;
+  code?: string;
   country_id: string;
   country_name?: string;
   is_active: boolean;
@@ -101,6 +107,28 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
 
   const activeCountries = useMemo(() => countries.filter((c) => c.is_active), [countries]);
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await deleteProvince(id);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    },
+    onSuccess: () => {
+      notify({ description: "Province deleted successfully", type: "success" });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROVINCES] });
+    },
+    onError: (error: Error) => {
+      notify({ description: error.message || "Failed to delete province", type: "error" });
+    }
+  });
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Delete this province?")) return;
+    deleteMutation.mutate(id);
+  };
+
   const handlePageChange = ({
     page: newPage,
     page_size: newPageSize
@@ -129,10 +157,6 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
           <Button
             size="sm"
             onClick={() => {
-              if (!selectedCountry) {
-                notify({ description: "Please select a country first", type: "warning" });
-                return;
-              }
               setEditingProvince(null);
               setOpenModal(true);
             }}
@@ -178,6 +202,7 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Code</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -220,6 +245,11 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                     <TableCell>
                       <span className="font-medium">{province.name}</span>
                     </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground font-mono text-sm">
+                        {province.code || "-"}
+                      </span>
+                    </TableCell>
 
                     <TableCell>
                       <span
@@ -233,19 +263,28 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          notify({
-                            description: "Update functionality coming soon",
-                            type: "warning"
-                          });
-                        }}
-                        className="h-8 gap-1.5">
-                        <Edit className="h-3.5 w-3.5" />
-                        Edit
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingProvince(province);
+                            setOpenModal(true);
+                          }}
+                          className="h-8 gap-1.5">
+                          <Edit className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(province.id)}
+                          disabled={deleteMutation.isPending}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -279,6 +318,8 @@ export function ProvincesTab({ countries }: ProvincesTabProps) {
         setOpenModal={setOpenModal}
         selectedCountry={selectedCountry}
         countries={activeCountries}
+        initialData={editingProvince}
+        setInitialData={setEditingProvince}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROVINCES] });
           router.refresh();
@@ -299,6 +340,8 @@ interface CreateProvinceDialogProps {
   setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
   selectedCountry: string;
   countries: Country[];
+  initialData: Province | null;
+  setInitialData: React.Dispatch<React.SetStateAction<Province | null>>;
   onSuccess: () => void;
 }
 
@@ -307,6 +350,8 @@ function CreateProvinceDialog({
   setOpenModal,
   selectedCountry,
   countries,
+  initialData,
+  setInitialData,
   onSuccess
 }: CreateProvinceDialogProps) {
   const [error, setError] = useState<ErrorState>({
@@ -318,18 +363,35 @@ function CreateProvinceDialog({
     country_id: selectedCountry
   });
 
-  // Update country_id when selectedCountry changes
   useEffect(() => {
-    setFormData((prev) => ({ ...prev, country_id: selectedCountry }));
-  }, [selectedCountry]);
+    if (openModal) {
+      setFormData(
+        initialData
+          ? {
+              name: initialData.name,
+              country_id: initialData.country_id,
+              code: (initialData as Province & { code?: string }).code || ""
+            }
+          : { ...PROVINCE_INITIAL_STATE, country_id: selectedCountry }
+      );
+      setError({ status: false, message: "" });
+    }
+  }, [openModal, initialData, selectedCountry]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await createProvince({
-        name: data.name,
-        country_id: data.country_id,
-        code: data.code
-      });
+      const response = initialData
+        ? await updateProvince({
+            id: initialData.id,
+            name: data.name,
+            country_id: data.country_id,
+            code: data.code
+          })
+        : await createProvince({
+            name: data.name,
+            country_id: data.country_id,
+            code: data.code
+          });
 
       if (!response.success) {
         throw new Error(response.message);
@@ -337,8 +399,12 @@ function CreateProvinceDialog({
       return response;
     },
     onSuccess: () => {
-      notify({ description: "Province created successfully", type: "success" });
+      notify({
+        description: `Province ${initialData ? "updated" : "created"} successfully`,
+        type: "success"
+      });
       setOpenModal(false);
+      setInitialData(null);
       setFormData({ ...PROVINCE_INITIAL_STATE, country_id: selectedCountry });
       onSuccess();
     },
@@ -368,29 +434,14 @@ function CreateProvinceDialog({
         if (!open) {
           setFormData({ ...PROVINCE_INITIAL_STATE, country_id: selectedCountry });
           setError({ status: false, message: "" });
+          setInitialData(null);
         }
       }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Province</DialogTitle>
+          <DialogTitle>{initialData ? "Update Province" : "Create New Province"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <SelectField
-            label="Country"
-            className="w-full"
-            placeholder="Select a country"
-            options={countries.map((c) => ({ id: c.id, name: c.name }))}
-            value={formData.country_id}
-            onValueChange={(country_id) => {
-              const country = countries.find((c) => c.id === country_id);
-              setError({ status: false, message: "" });
-              setFormData((c) => ({
-                ...c,
-                country_id,
-                code: country?.code || ""
-              }));
-            }}
-          />
           <Input
             label="Province / State Name"
             placeholder="e.g. California, Copperbelt, Ontario"

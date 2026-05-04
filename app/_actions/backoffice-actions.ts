@@ -1,7 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import authenticatedApiClient, { handleError, successResponse } from "./api-config";
 import { APIResponse, Company } from "@/lib/types";
+
+const CONFIG_PATH = "/admin/configurations";
 
 // ==================== COUNTRIES ====================
 
@@ -44,6 +47,7 @@ export async function createCountry(data: {
       data
     });
 
+    revalidatePath(CONFIG_PATH);
     return successResponse(response.data.data, "Country created successfully");
   } catch (error) {
     return handleError(error, "POST | CREATE COUNTRY", "/api/v1/backoffice/countries");
@@ -68,6 +72,7 @@ export async function updateCountry(data: {
       }
     });
 
+    revalidatePath(CONFIG_PATH);
     return successResponse(response.data.data, "Country updated successfully");
   } catch (error) {
     return handleError(
@@ -119,9 +124,46 @@ export async function createProvince(data: {
       data
     });
 
+    revalidatePath(CONFIG_PATH);
     return successResponse(response.data.data, "Province created successfully");
   } catch (error) {
     return handleError(error, "POST | CREATE PROVINCE", "/api/v1/provinces");
+  }
+}
+
+export async function updateProvince(data: {
+  id: string;
+  name?: string;
+  country_id?: string;
+  code?: string;
+  is_active?: boolean;
+}): Promise<APIResponse> {
+  try {
+    const { id, ...payload } = data;
+    const response = await authenticatedApiClient({
+      url: `/api/v1/provinces/${id}`,
+      method: "PUT",
+      data: payload
+    });
+
+    revalidatePath(CONFIG_PATH);
+    return successResponse(response.data.data, "Province updated successfully");
+  } catch (error) {
+    return handleError(error, "PUT | UPDATE PROVINCE", `/api/v1/provinces/${data.id}`);
+  }
+}
+
+export async function deleteProvince(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/provinces/${id}`,
+      method: "DELETE"
+    });
+
+    revalidatePath(CONFIG_PATH);
+    return successResponse(response.data.data, "Province deleted successfully");
+  } catch (error) {
+    return handleError(error, "DELETE | DELETE PROVINCE", `/api/v1/provinces/${id}`);
   }
 }
 
@@ -166,9 +208,46 @@ export async function createTown(data: {
       data
     });
 
+    revalidatePath(CONFIG_PATH);
     return successResponse(response.data.data, "Town created successfully");
   } catch (error) {
     return handleError(error, "POST | CREATE TOWN", "/api/v1/towns");
+  }
+}
+
+export async function updateTown(data: {
+  id: string;
+  name?: string;
+  province_id?: string;
+  code?: string;
+  is_active?: boolean;
+}): Promise<APIResponse> {
+  try {
+    const { id, ...payload } = data;
+    const response = await authenticatedApiClient({
+      url: `/api/v1/towns/${id}`,
+      method: "PUT",
+      data: payload
+    });
+
+    revalidatePath(CONFIG_PATH);
+    return successResponse(response.data.data, "Town updated successfully");
+  } catch (error) {
+    return handleError(error, "PUT | UPDATE TOWN", `/api/v1/towns/${data.id}`);
+  }
+}
+
+export async function deleteTown(id: string): Promise<APIResponse> {
+  try {
+    const response = await authenticatedApiClient({
+      url: `/api/v1/towns/${id}`,
+      method: "DELETE"
+    });
+
+    revalidatePath(CONFIG_PATH);
+    return successResponse(response.data.data, "Town deleted successfully");
+  } catch (error) {
+    return handleError(error, "DELETE | DELETE TOWN", `/api/v1/towns/${id}`);
   }
 }
 

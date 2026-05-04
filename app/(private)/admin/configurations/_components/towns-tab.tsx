@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Plus, Edit, MapPin } from "lucide-react";
+import { Plus, Edit, MapPin, Trash2 } from "lucide-react";
 import { cn, notify } from "@/lib/utils";
 import {
   Dialog,
@@ -27,8 +27,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ErrorState } from "@/lib/types";
 import {
   createTown,
+  deleteTown,
   getProvincesByCountry,
-  getTownsByProvince
+  getTownsByProvince,
+  updateTown
 } from "@/app/_actions/backoffice-actions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -60,6 +62,7 @@ interface Province {
 interface Town {
   id: string;
   name: string;
+  code?: string;
   province_id: string;
   province_name?: string;
   is_active: boolean;
@@ -76,6 +79,7 @@ export function TownsTab({ countries }: TownsTabProps) {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedProvince, setSelectedProvince] = useState<string>("");
   const [openModal, setOpenModal] = useState(false);
+  const [editingTown, setEditingTown] = useState<Town | null>(null);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const page_size = parseInt(searchParams.get("page_size") || "10", 10);
@@ -127,6 +131,28 @@ export function TownsTab({ countries }: TownsTabProps) {
 
   const activeProvinces = useMemo(() => provinces?.filter((p) => p.is_active), [provinces]);
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await deleteTown(id);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    },
+    onSuccess: () => {
+      notify({ description: "Town deleted successfully", type: "success" });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TOWNS] });
+    },
+    onError: (error: Error) => {
+      notify({ description: error.message || "Failed to delete town", type: "error" });
+    }
+  });
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Delete this town?")) return;
+    deleteMutation.mutate(id);
+  };
+
   const handlePageChange = ({
     page: newPage,
     page_size: newPageSize
@@ -154,17 +180,8 @@ export function TownsTab({ countries }: TownsTabProps) {
           </div>
           <Button
             size="sm"
-            onClick={() => {
-              if (!selectedProvince) {
-                notify({
-                  description: "Please select a country and province first",
-                  type: "warning"
-                });
-                return;
-              }
-              setOpenModal(true);
-            }}
-            disabled={!selectedProvince}>
+            onClick={() => setOpenModal(true)}
+            disabled={!selectedCountry || !selectedProvince}>
             <Plus className="mr-2 h-4 w-4" />
             Add Town
           </Button>
@@ -228,6 +245,7 @@ export function TownsTab({ countries }: TownsTabProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Code</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -264,6 +282,11 @@ export function TownsTab({ countries }: TownsTabProps) {
                     <TableCell>
                       <span className="font-medium">{town.name}</span>
                     </TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground font-mono text-sm">
+                        {town.code || "-"}
+                      </span>
+                    </TableCell>
 
                     <TableCell>
                       <span
@@ -277,19 +300,28 @@ export function TownsTab({ countries }: TownsTabProps) {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          notify({
-                            description: "Update functionality coming soon",
-                            type: "warning"
-                          });
-                        }}
-                        className="h-8 gap-1.5">
-                        <Edit className="h-3.5 w-3.5" />
-                        Edit
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingTown(town);
+                            setOpenModal(true);
+                          }}
+                          className="h-8 gap-1.5">
+                          <Edit className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(town.id)}
+                          disabled={deleteMutation.isPending}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 gap-1.5">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -322,8 +354,8 @@ export function TownsTab({ countries }: TownsTabProps) {
         openModal={openModal}
         setOpenModal={setOpenModal}
         selectedProvince={selectedProvince}
-        provinces={activeProvinces}
-        loadingProvinces={loadingProvinces}
+        initialData={editingTown}
+        setInitialData={setEditingTown}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TOWNS] });
           router.refresh();
@@ -343,8 +375,8 @@ interface CreateTownDialogProps {
   openModal: boolean;
   setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
   selectedProvince: string;
-  provinces: Province[];
-  loadingProvinces?: boolean;
+  initialData: Town | null;
+  setInitialData: React.Dispatch<React.SetStateAction<Town | null>>;
   onSuccess: () => void;
 }
 
@@ -352,8 +384,8 @@ function CreateTownDialog({
   openModal,
   setOpenModal,
   selectedProvince,
-  provinces,
-  loadingProvinces,
+  initialData,
+  setInitialData,
   onSuccess
 }: CreateTownDialogProps) {
   const [error, setError] = useState<ErrorState>({
@@ -365,18 +397,35 @@ function CreateTownDialog({
     province_id: selectedProvince
   });
 
-  // Update province_id when selectedProvince changes
   useEffect(() => {
-    setFormData((prev) => ({ ...prev, province_id: selectedProvince }));
-  }, [selectedProvince]);
+    if (openModal) {
+      setFormData(
+        initialData
+          ? {
+              name: initialData.name,
+              province_id: initialData.province_id,
+              code: (initialData as Town & { code?: string }).code || ""
+            }
+          : { ...TOWN_INITIAL_STATE, province_id: selectedProvince }
+      );
+      setError({ status: false, message: "" });
+    }
+  }, [openModal, initialData, selectedProvince]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await createTown({
-        name: data.name,
-        province_id: data.province_id,
-        code: data.code
-      });
+      const response = initialData
+        ? await updateTown({
+            id: initialData.id,
+            name: data.name,
+            province_id: data.province_id,
+            code: data.code
+          })
+        : await createTown({
+            name: data.name,
+            province_id: data.province_id,
+            code: data.code
+          });
 
       if (!response.success) {
         throw new Error(response.message);
@@ -384,8 +433,12 @@ function CreateTownDialog({
       return response;
     },
     onSuccess: () => {
-      notify({ description: "Town created successfully", type: "success" });
+      notify({
+        description: `Town ${initialData ? "updated" : "created"} successfully`,
+        type: "success"
+      });
       setOpenModal(false);
+      setInitialData(null);
       setFormData({ ...TOWN_INITIAL_STATE, province_id: selectedProvince });
       onSuccess();
     },
@@ -415,25 +468,14 @@ function CreateTownDialog({
         if (!open) {
           setFormData({ ...TOWN_INITIAL_STATE, province_id: selectedProvince });
           setError({ status: false, message: "" });
+          setInitialData(null);
         }
       }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Town</DialogTitle>
+          <DialogTitle>{initialData ? "Update Town" : "Create New Town"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <SelectField
-            className="w-full"
-            label="Province / State"
-            placeholder="Select a province"
-            options={provinces?.map((p) => ({ id: p.id, name: p.name }))}
-            value={formData.province_id}
-            onValueChange={(province_id) => {
-              setError({ status: false, message: "" });
-              setFormData((c) => ({ ...c, province_id }));
-            }}
-            isLoading={loadingProvinces}
-          />
           <Input
             label="Town / City Name"
             placeholder="e.g. Lusaka, Kitwe, Ndola"
