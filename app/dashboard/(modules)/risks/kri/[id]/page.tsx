@@ -171,8 +171,9 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
   // Calculate status for each KRI
   const enrichedKRIs = kris.map((kri) => {
     const currentValue = kri.last_measured_value || 0;
+    const backendStatus = kri.color_status ?? kri.last_status;
     const calculatedStatus =
-      kri.last_status ||
+      backendStatus ||
       calculateStatus(
         currentValue,
         kri.from_trigger_value,
@@ -278,12 +279,17 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
         ) : (
           enrichedKRIs?.map((kri) => {
             const accent = statusAccent(kri.status);
-            const performance = getProgressPercentage(
-              kri.currentValue,
-              kri.target_value,
-              kri.limit_value,
-              kri.invert_direction
-            );
+            const backendProgress =
+              kri.progress_percentage != null ? Number(kri.progress_percentage) : null;
+            const performance =
+              backendProgress != null && !Number.isNaN(backendProgress)
+                ? Math.min(Math.max(backendProgress, 0), 100)
+                : getProgressPercentage(
+                    kri.currentValue,
+                    kri.target_value,
+                    kri.limit_value,
+                    kri.invert_direction
+                  );
             return (
               <Card
                 key={kri.id}
@@ -335,7 +341,13 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                   </div>
 
                   {/* Metrics */}
-                  <div className="border-border bg-muted/30 grid grid-cols-1 divide-y rounded-xl border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                  <div
+                    className={cn(
+                      "border-border bg-muted/30 grid grid-cols-2 divide-x divide-y rounded-xl border",
+                      kri.total_measured_value != null
+                        ? "sm:grid-cols-2"
+                        : "sm:grid-cols-3 sm:divide-y-0"
+                    )}>
                     <div className="p-4">
                       <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
                         Current
@@ -344,6 +356,20 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                         {formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)}
                       </p>
                     </div>
+                    {kri.total_measured_value != null && (
+                      <div className="p-4">
+                        <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
+                          Total Measured
+                        </p>
+                        <p className="text-foreground mt-1 font-mono text-lg font-semibold tabular-nums">
+                          {formatValue(
+                            kri.total_measured_value,
+                            kri.measurement_type,
+                            kri.currency_code
+                          )}
+                        </p>
+                      </div>
+                    )}
                     <div className="p-4">
                       <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
                         Target
