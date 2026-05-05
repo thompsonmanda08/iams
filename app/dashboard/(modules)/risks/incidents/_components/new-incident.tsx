@@ -186,7 +186,6 @@ export function NewIncident() {
             />
             <SearchSelectField
               label="Sub Process"
-              required
               placeholder={
                 !formData.primary_cause_id ? "Select macro process first" : "Select sub process"
               }

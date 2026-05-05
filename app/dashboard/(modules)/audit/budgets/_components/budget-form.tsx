@@ -14,8 +14,9 @@ import { useDepartments } from "@/hooks/use-query-data";
 import { useBudgets } from "@/hooks/use-audit-settings-query-data";
 import { useCreateBudgetMutation, useCreateBudgetLineMutation } from "@/hooks/use-budget-mutations";
 import { Budget } from "@/lib/types/audit-types";
-import { cn } from "@/lib/utils";
+import { cn, notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
+import { format } from "date-fns";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
@@ -83,12 +84,14 @@ const BudgetForm = ({
   budgetId,
   departmentId,
   mode = "budget",
-  onBudgetCreated
+  onBudgetCreated,
+  initialData
 }: {
   budgetId?: string;
   departmentId?: string;
   mode?: "budget" | "line";
   onBudgetCreated?: (budgetId: string) => void;
+  initialData?: Budget;
 }) => {
   const router = useRouter();
   const { checkPermission, hasPermission } = usePermissions();
@@ -122,6 +125,26 @@ const BudgetForm = ({
   });
 
   const isCreating = isCreatingBudget || isCreatingLine;
+
+  // Hydrate form when initialData arrives (edit mode)
+  useEffect(() => {
+    if (!initialData) return;
+    setBudgetData({
+      department_id: initialData.department_id ?? "",
+      year: initialData.year ?? new Date().getFullYear(),
+      title: initialData.title ?? "",
+      total_amount: initialData.total_amount ?? 0,
+      currency: initialData.currency ?? "ZMW",
+      start_date: initialData.start_date
+        ? format(new Date(initialData.start_date), "yyyy-MM-dd")
+        : "",
+      end_date: initialData.end_date
+        ? format(new Date(initialData.end_date), "yyyy-MM-dd")
+        : "",
+      description: initialData.description ?? ""
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData?.id]);
 
   const totalAmountRef = useRef<HTMLInputElement>(null);
   const allocatedAmountRef = useRef<HTMLInputElement>(null);
@@ -175,8 +198,8 @@ const BudgetForm = ({
       title: budgetData.title,
       total_amount: budgetData.total_amount,
       currency: budgetData.currency,
-      start_date: new Date(budgetData.start_date).toISOString(),
-      end_date: new Date(budgetData.end_date).toISOString(),
+      start_date: budgetData.start_date,
+      end_date: budgetData.end_date,
       description: budgetData.description
     };
 
@@ -187,14 +210,28 @@ const BudgetForm = ({
     if (!lineData.budget_id) return;
     if (!lineData.start_date || !lineData.end_date) return;
 
+    if (selectedBudget?.start_date && selectedBudget?.end_date) {
+      const budgetStart = new Date(selectedBudget.start_date);
+      const budgetEnd = new Date(selectedBudget.end_date);
+      const lineStart = new Date(lineData.start_date);
+      const lineEnd = new Date(lineData.end_date);
+      if (lineStart < budgetStart || lineEnd > budgetEnd) {
+        notify({
+          description: `Budget line dates must fall within the parent budget range (${format(budgetStart, "yyyy-MM-dd")} to ${format(budgetEnd, "yyyy-MM-dd")})`,
+          type: "error"
+        });
+        return;
+      }
+    }
+
     const linePayload = {
       name: lineData.name,
       description: lineData.description,
       allocated_amount: lineData.allocated_amount,
       spent_amount: lineData.spent_amount,
       currency: lineData.currency,
-      start_date: new Date(lineData.start_date).toISOString(),
-      end_date: new Date(lineData.end_date).toISOString(),
+      start_date: lineData.start_date,
+      end_date: lineData.end_date,
       category: lineData.category
     };
 
@@ -334,7 +371,7 @@ const BudgetForm = ({
                         : undefined
                     }
                     onValueChange={(date) =>
-                      updateBudgetData({ start_date: date?.toISOString().split("T")[0] || "" })
+                      updateBudgetData({ start_date: date ? format(date, "yyyy-MM-dd") : "" })
                     }
                   />
                 </div>
@@ -350,7 +387,7 @@ const BudgetForm = ({
                         : undefined
                     }
                     onValueChange={(date) =>
-                      updateBudgetData({ end_date: date?.toISOString().split("T")[0] || "" })
+                      updateBudgetData({ end_date: date ? format(date, "yyyy-MM-dd") : "" })
                     }
                   />
                 </div>
@@ -383,7 +420,16 @@ const BudgetForm = ({
               <Button
                 type="submit"
                 form="budget-form"
-                disabled={isCreating || loadingDepartments}
+                disabled={
+                  isCreating ||
+                  loadingDepartments ||
+                  !budgetData.department_id ||
+                  !budgetData.title ||
+                  !budgetData.total_amount ||
+                  Number(budgetData.total_amount) <= 0 ||
+                  !budgetData.start_date ||
+                  !budgetData.end_date
+                }
                 className="gap-2 shadow-lg">
                 <Save className="h-4 w-4" />
                 {isCreating ? "Creating..." : isEditMode ? "Save Changes" : "Create Budget"}
@@ -542,7 +588,12 @@ const BudgetForm = ({
                 <DatePicker
                   label="Start Date"
                   name="lineStartDate"
-                  minDate={new Date()}
+                  minDate={
+                    selectedBudget?.start_date ? new Date(selectedBudget.start_date) : undefined
+                  }
+                  maxDate={
+                    selectedBudget?.end_date ? new Date(selectedBudget.end_date) : undefined
+                  }
                   required
                   value={
                     lineData.start_date
@@ -550,19 +601,25 @@ const BudgetForm = ({
                       : undefined
                   }
                   onValueChange={(date) =>
-                    updateLineData({ start_date: date?.toISOString().split("T")[0] || "" })
+                    updateLineData({ start_date: date ? format(date, "yyyy-MM-dd") : "" })
                   }
                 />
 
                 <DatePicker
                   label="End Date"
                   name="lineEndDate"
+                  minDate={
+                    selectedBudget?.start_date ? new Date(selectedBudget.start_date) : undefined
+                  }
+                  maxDate={
+                    selectedBudget?.end_date ? new Date(selectedBudget.end_date) : undefined
+                  }
                   required
                   value={
                     lineData.end_date ? (new Date(lineData.end_date) as unknown as any) : undefined
                   }
                   onValueChange={(date) =>
-                    updateLineData({ end_date: date?.toISOString().split("T")[0] || "" })
+                    updateLineData({ end_date: date ? format(date, "yyyy-MM-dd") : "" })
                   }
                 />
               </div>
@@ -592,7 +649,18 @@ const BudgetForm = ({
               <Button
                 type="submit"
                 form="budget-form"
-                disabled={isCreating || loadingBudgets}
+                disabled={
+                  isCreating ||
+                  loadingBudgets ||
+                  !lineData.budget_id ||
+                  !lineData.name ||
+                  !lineData.allocated_amount ||
+                  Number(lineData.allocated_amount) <= 0 ||
+                  !lineData.currency ||
+                  !lineData.category ||
+                  !lineData.start_date ||
+                  !lineData.end_date
+                }
                 className="gap-2 shadow-lg">
                 <Save className="h-4 w-4" />
                 {isCreating ? "Creating..." : "Create Budget Line"}

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Save, Globe, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PermissionButton } from "@/components/ui/permission-button";
@@ -171,6 +171,44 @@ export default function AuditUniverseForm({
     // If we have initialData with an id, we're editing
     return initialData?.id || null;
   });
+
+  // Sync form state when initialData arrives async (parent fetches then re-renders)
+  useEffect(() => {
+    if (!initialData) return;
+    setUniverseData({
+      universe_name: initialData.universe_name || "",
+      start_date:
+        initialData.start_date instanceof Date && !isNaN(initialData.start_date.getTime())
+          ? initialData.start_date
+          : undefined,
+      end_date:
+        initialData.end_date instanceof Date && !isNaN(initialData.end_date.getTime())
+          ? initialData.end_date
+          : undefined,
+      is_active: initialData.is_active ?? true
+    });
+    if (initialData.audit_universe_id) {
+      setItemData({
+        ...INIT_ITEM_DATA,
+        audit_universe_id: initialData.audit_universe_id,
+        process_activity_id: initialData.process_activity_id || "",
+        name: initialData.name || "",
+        department_id: initialData.department_id || "",
+        strategic_pillar_id: initialData.strategic_pillar_id || "",
+        strategic_pillar_name: initialData.strategic_pillar_name || "",
+        auditable_area_id: initialData.auditable_area_id || "",
+        auditable_area_name: initialData.auditable_area_name || "",
+        indicative_target_id: initialData.indicative_target_id || "",
+        strategic_initiative_id: initialData.strategic_initiative_id || "",
+        strategic_initiative_name: initialData.strategic_initiative_name || "",
+        risk_id: initialData.risk_id || "",
+        kri_id: initialData.kri_id || "",
+        audit_frequency: initialData.audit_frequency || "ANNUALLY",
+        is_active: initialData.is_active ?? true
+      });
+      setEditingItemId(initialData.id || null);
+    }
+  }, [initialData?.id]);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 

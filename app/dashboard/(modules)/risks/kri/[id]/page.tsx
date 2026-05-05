@@ -79,7 +79,8 @@ function calculateStatus(
   fromCondition: string,
   toTrigger: number | string,
   toCondition: string,
-  limit: number | string
+  limit: number | string,
+  invertDirection: boolean = false
 ): string {
   const currentNum = typeof current === "string" ? parseFloat(current) : current;
   const fromTriggerNum = typeof fromTrigger === "string" ? parseFloat(fromTrigger) : fromTrigger;
@@ -87,7 +88,9 @@ function calculateStatus(
   const limitNum = typeof limit === "string" ? parseFloat(limit) : limit;
 
   // Check if in critical zone (beyond limit)
-  if (currentNum <= limitNum) return "critical";
+  // For inverted KRIs (lower-is-better), breach occurs when current >= limit.
+  // For non-inverted KRIs (higher-is-better), breach occurs when current <= limit.
+  if (invertDirection ? currentNum >= limitNum : currentNum <= limitNum) return "critical";
 
   // Check if in warning zone (trigger range)
   const inFromRange = evaluateCondition(currentNum, fromTriggerNum, fromCondition);
@@ -142,7 +145,8 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
         kri.from_trigger_condition,
         kri.to_trigger_value,
         kri.to_trigger_condition,
-        kri.limit_value
+        kri.limit_value,
+        kri.invert_direction
       );
 
     const status = normalizeStatus(calculatedStatus);

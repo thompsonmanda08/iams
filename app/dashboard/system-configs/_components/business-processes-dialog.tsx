@@ -87,7 +87,7 @@ export function BusinessProcessesDialog({
       setFormData({
         name: process.name,
         description: process.description || "",
-        parent_id: process.parent_id || ""
+        parent_id: process.parent_id || "__none__"
       });
     } else if (!open) {
       setFormData({ name: "", description: "", parent_id: "" });
@@ -109,7 +109,10 @@ export function BusinessProcessesDialog({
       const payload = {
         name: formData.name.trim(),
         description: formData.description.trim() || "",
-        parent_id: formData.parent_id || null
+        parent_id:
+          !formData.parent_id || formData.parent_id === "__none__"
+            ? null
+            : formData.parent_id
       };
 
       const result = isEditMode
@@ -139,7 +142,7 @@ export function BusinessProcessesDialog({
   };
 
   const parentProcessOptions = [
-    { id: "", name: "None (root process)" },
+    { id: "__none__", name: "None (root process)" },
     ...availableProcesses
       .filter((p) => !p.parent_id)
       .map((p) => ({ id: p.id, name: p.name }))
