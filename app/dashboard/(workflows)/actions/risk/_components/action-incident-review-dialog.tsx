@@ -318,11 +318,12 @@ export function ActionIncidentReviewDialog({
                               <div className="space-y-2">
                                 {submission.file_urls.map((fileUrl: any, fileIdx: number) => {
                                   return (
-                                    <div className="rounded-lg border border-gray-200 p-4">
+                                    <div className="border-border rounded-lg border p-4">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
+                                          <FileText className="text-muted-foreground h-4 w-4" />
                                           <div>
-                                            <p className="text-xs text-gray-600">File</p>
+                                            <p className="text-muted-foreground text-xs">File</p>
                                           </div>
                                         </div>
                                         <Button
@@ -400,11 +401,12 @@ export function ActionIncidentReviewDialog({
                                   return (
                                     <div
                                       key={fileIdx}
-                                      className="rounded-lg border border-gray-200 p-4">
+                                      className="border-border rounded-lg border p-4">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
+                                          <FileText className="text-muted-foreground h-4 w-4" />
                                           <div>
-                                            <p className="text-xs text-gray-600">File</p>
+                                            <p className="text-muted-foreground text-xs">File</p>
                                           </div>
                                         </div>
                                         <Button
@@ -474,11 +476,11 @@ export function ActionIncidentReviewDialog({
                 <Label className="text-foreground/80 mb-2 text-xs font-medium capitalize">
                   Attach Evidence Files
                 </Label>
-                <div className="flex items-center justify-center rounded-lg border border-dashed border-black/40 px-2">
+                <div className="border-border hover:border-primary/50 hover:bg-muted/30 flex items-center justify-center rounded-lg border border-dashed px-2 py-6 transition">
                   <label className="w-full cursor-pointer text-center">
-                    <div className="flex items-center gap-2 space-y-2 text-xs text-gray-400">
-                      <CloudUpload className="mb-2 h-12 w-8" />
-                      <div className="text-sm font-medium text-gray-400">
+                    <div className="text-muted-foreground flex items-center justify-center gap-3">
+                      <CloudUpload className="h-8 w-8" />
+                      <div className="text-sm font-medium">
                         Click to upload or drag and drop
                       </div>
                     </div>

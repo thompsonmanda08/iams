@@ -164,20 +164,23 @@ export function ActionFindingsDialog({
         <div className="space-y-2 pb-4">
           {/* Action Information - Read Only */}
           {(actionTitle || riskTitle) && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="border-border bg-muted/50 rounded-lg border-l-4 border-l-blue-500 p-4 dark:border-l-blue-400">
               <div className="space-y-2">
                 {riskTitle && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700">
-                      Risk: <span className="text-xs font-normal text-gray-900">{riskTitle}</span>
+                    <p className="text-foreground text-sm font-semibold">
+                      Risk:{" "}
+                      <span className="text-muted-foreground text-xs font-normal">{riskTitle}</span>
                     </p>
                   </div>
                 )}
                 {actionTitle && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700">
+                    <p className="text-foreground text-sm font-semibold">
                       Action:{" "}
-                      <span className="text-xs font-normal text-gray-900">{actionTitle}</span>
+                      <span className="text-muted-foreground text-xs font-normal">
+                        {actionTitle}
+                      </span>
                     </p>
                   </div>
                 )}

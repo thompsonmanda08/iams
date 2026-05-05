@@ -76,16 +76,16 @@ export function ActionEvidenceViewerDialog({
 
         <div className="space-y-6 py-4">
           {/* Submission Status */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="border-border bg-muted/50 rounded-lg border-l-4 border-l-blue-500 p-4 dark:border-l-blue-400">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-700">Submission Status</p>
+                <p className="text-foreground text-sm font-semibold">Submission Status</p>
                 <StatusBadge status={execution.status} />
               </div>
               {execution.submitted_at && (
                 <div>
-                  <p className="text-xs text-gray-600">Submitted on</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-muted-foreground text-xs">Submitted on</p>
+                  <p className="text-foreground text-sm font-medium">
                     {format(new Date(execution.submitted_at), "MMM dd, yyyy h:mm a")}
                   </p>
                 </div>
@@ -95,9 +95,9 @@ export function ActionEvidenceViewerDialog({
 
           {/* Evidence Description */}
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-700">Action Taken / Description</p>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p className="text-sm whitespace-pre-wrap text-gray-900">
+            <p className="text-foreground text-sm font-semibold">Action Taken / Description</p>
+            <div className="border-border bg-muted/40 rounded-lg border p-4">
+              <p className="text-foreground text-sm whitespace-pre-wrap">
                 {execution.evidence_description}
               </p>
             </div>
@@ -106,16 +106,16 @@ export function ActionEvidenceViewerDialog({
           {/* Evidence File */}
           {hasFile && (
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700">Evidence File</p>
-              <div className="rounded-lg border border-gray-200 p-4">
+              <p className="text-foreground text-sm font-semibold">Evidence File</p>
+              <div className="border-border rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {getFileIcon(execution.evidence_file_type)}
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-foreground text-sm font-medium">
                         {execution.evidence_file_name}
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-muted-foreground text-xs">
                         {execution.evidence_file_type || "File"}
                       </p>
                     </div>
@@ -130,8 +130,8 @@ export function ActionEvidenceViewerDialog({
           )}
 
           {!hasFile && (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p className="text-center text-sm text-gray-600">
+            <div className="border-border bg-muted/40 rounded-lg border p-4">
+              <p className="text-muted-foreground text-center text-sm">
                 No file attached to this submission
               </p>
             </div>
