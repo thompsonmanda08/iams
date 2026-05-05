@@ -548,9 +548,9 @@ export function MyIncidents() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground text-xs">Specific Cause</Label>
-                    <p className="font-medium">{selectedIncident.specific_cause.name}</p>
+                    <p className="font-medium">{selectedIncident?.specific_cause?.name || "Not specified"}</p>
                     <p className="text-muted-foreground text-sm">
-                      {selectedIncident.specific_cause.description}
+                      {selectedIncident?.specific_cause?.description}
                     </p>
                   </div>
                 </div>
