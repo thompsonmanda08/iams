@@ -76,7 +76,7 @@ export function useCreateBudgetMutation(options?: {
  * });
  */
 export function useCreateBudgetLineMutation(options?: {
-  onSuccess?: () => void;
+  onSuccess?: (line: any) => void;
   onError?: (error: Error) => void;
 }) {
   const queryClient = useQueryClient();
@@ -96,7 +96,7 @@ export function useCreateBudgetLineMutation(options?: {
         description: response.message || "Budget line created successfully",
         type: "success"
       });
-      options?.onSuccess?.();
+      options?.onSuccess?.(response.data);
     },
     onError: (error: Error) => {
       notify({

@@ -85,12 +85,14 @@ const BudgetForm = ({
   departmentId,
   mode = "budget",
   onBudgetCreated,
+  onLineCreated,
   initialData
 }: {
   budgetId?: string;
   departmentId?: string;
   mode?: "budget" | "line";
   onBudgetCreated?: (budgetId: string) => void;
+  onLineCreated?: (line: any) => void;
   initialData?: Budget;
 }) => {
   const router = useRouter();
@@ -106,8 +108,7 @@ const BudgetForm = ({
   });
 
   const { mutate: createBudgetMutation, isPending: isCreatingBudget } = useCreateBudgetMutation({
-    onSuccess: (response) => {
-      const createdBudgetId = response?.data?.id;
+    onSuccess: (createdBudgetId) => {
       setBudgetData(INIT_BUDGET_DATA);
       if (onBudgetCreated && createdBudgetId) {
         onBudgetCreated(createdBudgetId);
@@ -116,11 +117,12 @@ const BudgetForm = ({
   });
 
   const { mutate: createBudgetLineMutation, isPending: isCreatingLine } = useCreateBudgetLineMutation({
-    onSuccess: () => {
+    onSuccess: (line) => {
       setLineData({
         ...INIT_LINE_DATA,
         budget_id: budgetId as string
       });
+      onLineCreated?.(line);
     }
   });
 
