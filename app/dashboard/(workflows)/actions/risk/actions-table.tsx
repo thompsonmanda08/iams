@@ -52,7 +52,9 @@ interface ActionsTableProps {
 
 export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const router = useRouter();
-  const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useTableSearch({ debounceMs: 200 });
+  const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useTableSearch({
+    debounceMs: 200
+  });
   const searchParams = useSearchParams();
   const [_, startTransition] = useTransition();
   const [selectedActionForFindings, setSelectedActionForFindings] =
@@ -123,6 +125,8 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
       notify({ description: error.message || "Failed to submit signature", type: "error" });
     }
   };
+
+  console.log("ACTIONS:", actions);
 
   return (
     <Card>
