@@ -262,21 +262,21 @@ export default function SignatureForm({
   return (
     <>
       {showSignatureModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center rounded-lg bg-black p-4">
-          <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b p-4">
-              <h3 className="text-lg font-semibold text-slate-800">Sign Here</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-card text-foreground w-full max-w-2xl rounded-lg shadow-xl">
+            <div className="border-border flex items-center justify-between border-b p-4">
+              <h3 className="text-foreground text-lg font-semibold">Sign Here</h3>
               <button
                 onClick={() => setShowSignatureModal(false)}
-                className="rounded p-1 hover:bg-slate-100">
+                className="hover:bg-muted rounded p-1 transition">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="p-4">
-              <p className="mb-4 text-sm text-slate-600">
+              <p className="text-muted-foreground mb-4 text-sm">
                 Draw your signature below using your mouse or touch screen
               </p>
-              <div className="overflow-hidden rounded-lg border-2 border-slate-300 bg-white">
+              <div className="border-border overflow-hidden rounded-lg border-2 bg-white">
                 <canvas
                   ref={canvasRef}
                   width={600}
@@ -292,7 +292,7 @@ export default function SignatureForm({
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between border-t bg-slate-50 p-4">
+            <div className="bg-muted/40 border-border flex items-center justify-between border-t p-4">
               <Button onClick={clearCanvas} variant="outline" disabled={isUploadingSignature}>
                 Clear
               </Button>
@@ -318,29 +318,29 @@ export default function SignatureForm({
             <button
               type="button"
               onClick={() => setDecision("APPROVE")}
-              className="group hover:border-emerald-400 hover:bg-emerald-50/60 focus-visible:ring-emerald-500/40 flex items-center gap-4 rounded-lg border border-l-4 border-l-emerald-500 border-slate-200 bg-white p-4 text-left transition focus-visible:ring-2 focus-visible:outline-none">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+              className="group bg-card border-border hover:border-emerald-400 hover:bg-emerald-50/60 focus-visible:ring-emerald-500/40 dark:hover:border-emerald-500/60 dark:hover:bg-emerald-950/30 flex items-center gap-4 rounded-lg border border-l-4 border-l-emerald-500 p-4 text-left transition focus-visible:ring-2 focus-visible:outline-none">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-slate-900">Approve</p>
+                <p className="text-foreground font-medium">Approve</p>
                 <p className="text-muted-foreground text-sm">Sign off and accept this risk.</p>
               </div>
-              <ChevronRight className="text-muted-foreground h-4 w-4 transition group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+              <ChevronRight className="text-muted-foreground h-4 w-4 transition group-hover:translate-x-0.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-300" />
             </button>
 
             <button
               type="button"
               onClick={() => setDecision("REJECT")}
-              className="group hover:border-red-400 hover:bg-red-50/60 focus-visible:ring-red-500/40 flex items-center gap-4 rounded-lg border border-l-4 border-l-red-500 border-slate-200 bg-white p-4 text-left transition focus-visible:ring-2 focus-visible:outline-none">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+              className="group bg-card border-border hover:border-red-400 hover:bg-red-50/60 focus-visible:ring-red-500/40 dark:hover:border-red-500/60 dark:hover:bg-red-950/30 flex items-center gap-4 rounded-lg border border-l-4 border-l-red-500 p-4 text-left transition focus-visible:ring-2 focus-visible:outline-none">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300">
                 <XCircle className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-slate-900">Reject</p>
+                <p className="text-foreground font-medium">Reject</p>
                 <p className="text-muted-foreground text-sm">Decline with written remarks.</p>
               </div>
-              <ChevronRight className="text-muted-foreground h-4 w-4 transition group-hover:translate-x-0.5 group-hover:text-red-600" />
+              <ChevronRight className="text-muted-foreground h-4 w-4 transition group-hover:translate-x-0.5 group-hover:text-red-600 dark:group-hover:text-red-300" />
             </button>
           </div>
         )}
@@ -401,7 +401,7 @@ export default function SignatureForm({
                   Signature <span className="!text-red-500">*</span>
                 </Label>
                 {formData.signature ? (
-                  <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50 p-4">
+                  <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-500/40 dark:bg-emerald-950/20">
                     <img
                       src={formData.signature}
                       alt="Signature"
