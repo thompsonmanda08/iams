@@ -26,7 +26,7 @@ const NewBudgetsPage = () => {
               description="Set up a new budget with budget lines"
               icon="Wallet"
             />
-            <BackButton title="Back to Budgets" />
+            <BackButton title="Back to Budgets" href="/dashboard/audit/budgets" />
           </div>
         </div>
       </div>

@@ -155,7 +155,7 @@ const UniverseDetails = ({
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <BackButton title="Back to Universes" />
+            <BackButton title="Back to Universes" href="/dashboard/audit/universe" />
           </EmptyContent>
         </Empty>
       </div>

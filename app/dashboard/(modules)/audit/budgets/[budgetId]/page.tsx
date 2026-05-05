@@ -23,7 +23,7 @@ const BudgetsPage = async ({ params }: { params: Promise<{ budgetId: string }> }
               icon="ListCheck"
             />
 
-            <BackButton title="Go Back" />
+            <BackButton title="Back to Budgets" href="/dashboard/audit/budgets" />
           </div>
         </div>
       </div>
