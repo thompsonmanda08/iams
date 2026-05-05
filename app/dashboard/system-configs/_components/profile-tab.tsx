@@ -298,39 +298,35 @@ export function ProfileTab() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="first_name">First Name</Label>
-                <Input
-                  id="first_name"
-                  value={profile.first_name}
-                  onChange={(e) => handleProfileChange("first_name", e.target.value)}
-                  disabled
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name</Label>
-                <Input
-                  id="last_name"
-                  value={profile.last_name}
-                  onChange={(e) => handleProfileChange("last_name", e.target.value)}
-                  disabled
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
               <Input
-                id="email"
-                type="email"
-                value={profile.email}
-                onChange={(e) => handleProfileChange("email", e.target.value)}
+                label="First Name"
+                id="first_name"
+                value={profile.first_name}
+                onChange={(e) => handleProfileChange("first_name", e.target.value)}
+                disabled
+              />
+              <Input
+                label="Last Name"
+                id="last_name"
+                value={profile.last_name}
+                onChange={(e) => handleProfileChange("last_name", e.target.value)}
                 disabled
               />
             </div>
-            <div className="space-y-2">
-              <Label>Username</Label>
-              <Input value={sessionUser?.username ?? ""} disabled className="bg-muted/50" />
-            </div>
+            <Input
+              label="Email Address"
+              id="email"
+              type="email"
+              value={profile.email}
+              onChange={(e) => handleProfileChange("email", e.target.value)}
+              disabled
+            />
+            <Input
+              label="Username"
+              value={sessionUser?.username ?? ""}
+              disabled
+              className="bg-muted/50"
+            />
             <div className="flex items-center justify-between pt-2">
               {/* {profileChanged && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">

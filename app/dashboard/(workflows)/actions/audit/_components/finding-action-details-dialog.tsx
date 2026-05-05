@@ -107,8 +107,14 @@ export function FindingActionDetailsDialog({
   const [createReassessmentOpen, setCreateReassessmentOpen] = useState(false);
 
   // Get current user session
-  const { session } = useSession();
-  const currentUserId = session?.user?.id;
+  const { session, user: currentUser } = useSession();
+  // useSession.user is the full /auth/setup payload (with `.user` nested);
+  // session is the JWT cookie payload (may have user_id and a flat user object).
+  const currentUserId =
+    session?.user?.id ??
+    session?.user_id ??
+    (currentUser as any)?.user?.id ??
+    (currentUser as any)?.id;
 
   // Fetch evidence and reviews for this action
   const { data: evidence = [], isLoading: isLoadingEvidence } = useFindingActionEvidence(action.id);
@@ -142,11 +148,18 @@ export function FindingActionDetailsDialog({
   const hasEvidence = evidence && evidence?.length > 0;
 
   // Role-based access checks
-  const isAssignedUser = currentUserId === action.assigned_to;
-  const isReviewer = currentUserId === action.reviewer_id;
-  // auditor_id may come back as a flat field or nested under auditor_user
+  const isAssignedUser =
+    !!currentUserId &&
+    (currentUserId === action.assigned_to ||
+      currentUserId === action.assigned_to_user?.id);
+  const isReviewer =
+    !!currentUserId &&
+    (currentUserId === action.reviewer_id ||
+      currentUserId === action.reviewer_user?.id);
   const isAssignedReviewer =
-    currentUserId === action.auditor_id || currentUserId === action.auditor_user?.id;
+    !!currentUserId &&
+    (currentUserId === action.auditor_id || currentUserId === action.auditor_user?.id);
+
 
   // Fetch workpaper config so we can show column/key descriptions in tooltips.
   // Use action.audit_plan.id (same endpoint as page.tsx) which is confirmed to return `config`.

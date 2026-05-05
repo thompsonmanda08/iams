@@ -512,7 +512,7 @@ export function useFindingActionReviews(actionId: string | null | undefined) {
       if (!actionId) return [];
       const response = await getFindingActionReviews(actionId);
       if (response.success) {
-        return response.data;
+        return response.data ?? [];
       }
       return [];
     },

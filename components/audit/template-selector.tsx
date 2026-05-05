@@ -221,17 +221,14 @@ export function TemplateSelector({ onTemplateSelect, selectedTemplate }: Templat
         <TabsContent value="create" className="mt-4 space-y-4">
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="clause-code">
-                  Clause Code <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="clause-code"
-                  placeholder="e.g., 5.1"
-                  value={newTemplate.clause}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, clause: e.target.value })}
-                />
-              </div>
+              <Input
+                id="clause-code"
+                label="Clause Code"
+                required
+                placeholder="e.g., 5.1"
+                value={newTemplate.clause}
+                onChange={(e) => setNewTemplate({ ...newTemplate, clause: e.target.value })}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="category">
@@ -258,17 +255,14 @@ export function TemplateSelector({ onTemplateSelect, selectedTemplate }: Templat
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="clause-title">
-                Clause Title <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="clause-title"
-                placeholder="e.g., Leadership and Commitment"
-                value={newTemplate.clauseTitle}
-                onChange={(e) => setNewTemplate({ ...newTemplate, clauseTitle: e.target.value })}
-              />
-            </div>
+            <Input
+              id="clause-title"
+              label="Clause Title"
+              required
+              placeholder="e.g., Leadership and Commitment"
+              value={newTemplate.clauseTitle}
+              onChange={(e) => setNewTemplate({ ...newTemplate, clauseTitle: e.target.value })}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="objective">

@@ -204,28 +204,9 @@ export default function ModuleListConfig({ initialModules = [] }: { initialModul
                 {/* Edit Form (shown when editing) */}
                 {editingSubModule && (
                   <div className="border-border bg-card space-y-4 border-t p-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="route-name" className="text-foreground text-sm font-medium">
-                        Route Name
-                      </Label>
-                      <Input id="route-name" placeholder="Enter route name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="path-name-edit"
-                        className="text-foreground text-sm font-medium">
-                        Path Name
-                      </Label>
-                      <Input id="path-name-edit" placeholder="Enter path name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="icon-name-edit"
-                        className="text-foreground text-sm font-medium">
-                        Icon Name
-                      </Label>
-                      <Input id="icon-name-edit" placeholder="Enter icon name" />
-                    </div>
+                    <Input label="Route Name" id="route-name" placeholder="Enter route name" />
+                    <Input label="Path Name" id="path-name-edit" placeholder="Enter path name" />
+                    <Input label="Icon Name" id="icon-name-edit" placeholder="Enter icon name" />
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -367,45 +348,33 @@ export function CreateOrUpdateModuleDialog({
 
         <form onSubmit={handleSubmit} className=" ">
           <div className="grid w-full gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="module-name" className="text-foreground text-sm font-medium">
-                Module Name
-              </Label>
-              <Input
-                id="module-name"
-                name="name"
-                value={formData?.name}
-                onChange={updateFormData}
-                placeholder="Enter Module Name"
-              />
-            </div>
+            <Input
+              label="Module Name"
+              id="module-name"
+              name="name"
+              value={formData?.name}
+              onChange={updateFormData}
+              placeholder="Enter Module Name"
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="path-name" className="text-foreground text-sm font-medium">
-                Path Name
-              </Label>
-              <Input
-                id="path-name"
-                value={formData?.href}
-                name="href"
-                onChange={updateFormData}
-                placeholder="e.g. /dashboard/user-accounts"
-              />
-            </div>
+            <Input
+              label="Path Name"
+              id="path-name"
+              value={formData?.href}
+              name="href"
+              onChange={updateFormData}
+              placeholder="e.g. /dashboard/user-accounts"
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="sidebar-order" className="text-foreground text-sm font-medium">
-                Sidebar Order
-              </Label>
-              <Input
-                id="sidebar-order"
-                type="number"
-                name="order"
-                value={formData?.order}
-                onChange={updateFormData}
-                placeholder="0"
-              />
-            </div>
+            <Input
+              label="Sidebar Order"
+              id="sidebar-order"
+              type="number"
+              name="order"
+              value={formData?.order}
+              onChange={updateFormData}
+              placeholder="0"
+            />
 
             <div className="flex items-center space-x-2 self-end">
               <Checkbox

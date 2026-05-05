@@ -517,25 +517,21 @@ export function CreateWorkpaperForm({
 
           {/* Sample Size and Control Frequency */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="sampleSize">Sample Size</Label>
-              <Input
-                id="sampleSize"
-                placeholder="e.g., 20 items, All records"
-                value={formData.sampleSize}
-                onChange={(e) => updateField("sampleSize", e.target.value)}
-              />
-            </div>
+            <Input
+              id="sampleSize"
+              label="Sample Size"
+              placeholder="e.g., 20 items, All records"
+              value={formData.sampleSize}
+              onChange={(e) => updateField("sampleSize", e.target.value)}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="controlFrequency">Frequency of Control</Label>
-              <Input
-                id="controlFrequency"
-                placeholder="e.g., Daily, Weekly, Monthly"
-                value={formData.controlFrequency}
-                onChange={(e) => updateField("controlFrequency", e.target.value)}
-              />
-            </div>
+            <Input
+              id="controlFrequency"
+              label="Frequency of Control"
+              placeholder="e.g., Daily, Weekly, Monthly"
+              value={formData.controlFrequency}
+              onChange={(e) => updateField("controlFrequency", e.target.value)}
+            />
           </div>
 
           {/* Sampling Methodology */}

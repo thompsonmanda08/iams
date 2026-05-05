@@ -151,16 +151,14 @@ export function TaskReassignDialog({ task, open, onOpenChange }: TaskReassignDia
           </div>
 
           {/* Comment Field */}
-          <div className="space-y-2">
-            <Label htmlFor="comment">Comment (Optional)</Label>
-            <Textarea
-              id="comment"
-              placeholder="Add a reason for reassignment..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={3}
-            />
-          </div>
+          <Textarea
+            label="Comment (Optional)"
+            id="comment"
+            placeholder="Add a reason for reassignment..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={3}
+          />
         </div>
 
         <DialogFooter>

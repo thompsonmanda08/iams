@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -118,44 +117,36 @@ export function ControlEffectivenessDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Control Effectiveness Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g., Highly Effective, Effective, Partially Effective"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isPending}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="value">
-                Control Effectiveness Value <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="value"
-                type="number"
-                min="1"
-                placeholder="e.g., 1, 2, 3..."
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
-                disabled={isPending}
-              />
-            </div>
+            <Input
+              label="Control Effectiveness Name"
+              required
+              id="name"
+              placeholder="e.g., Highly Effective, Effective, Partially Effective"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isPending}
+            />
+            <Input
+              label="Control Effectiveness Value"
+              required
+              id="value"
+              type="number"
+              min="1"
+              placeholder="e.g., 1, 2, 3..."
+              value={formData.value}
+              onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
+              disabled={isPending}
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe this control effectiveness level"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isPending}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              id="description"
+              placeholder="Describe this control effectiveness level"
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              disabled={isPending}
+            />
           </div>
 
           <DialogFooter>

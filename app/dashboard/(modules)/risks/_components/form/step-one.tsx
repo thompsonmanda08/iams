@@ -48,18 +48,15 @@ export function StepOne({
 }: StepOneProps) {
   return (
     <>
-      <div className="grid gap-2">
-        <Label htmlFor="title">
-          Risk Title<span className="text-destructive">*</span>
-        </Label>
-        <Input
-          id="title"
-          placeholder="Enter risk title"
-          value={data.title}
-          onChange={(e) => onChange({ title: e.target.value })}
-          disabled={isLoading}
-        />
-      </div>
+      <Input
+        label="Risk Title"
+        required
+        id="title"
+        placeholder="Enter risk title"
+        value={data.title}
+        onChange={(e) => onChange({ title: e.target.value })}
+        disabled={isLoading}
+      />
 
       <div className="grid gap-2">
         <Label htmlFor="recurrence">
@@ -79,19 +76,16 @@ export function StepOne({
         </Select>
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="description">
-         Impact Description <span className="text-destructive">*</span>
-        </Label>
-        <Textarea
-          id="description"
-          placeholder="Describe the risk in detail"
-          rows={3}
-          value={data.description}
-          onChange={(e) => onChange({ description: e.target.value })}
-          disabled={isLoading}
-        />
-      </div>
+      <Textarea
+        label="Impact Description"
+        required
+        id="description"
+        placeholder="Describe the risk in detail"
+        rows={3}
+        value={data.description}
+        onChange={(e) => onChange({ description: e.target.value })}
+        disabled={isLoading}
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <SearchSelectField
@@ -155,19 +149,16 @@ export function StepOne({
         listItemName="title"
       />
 
-      <div className="grid gap-2">
-        <Label htmlFor="root_cause">
-          Root Cause<span className="text-destructive">*</span>
-        </Label>
-        <Textarea
-          id="root_cause"
-          placeholder="Describe the underlying cause of this risk"
-          rows={2}
-          value={data.root_cause}
-          onChange={(e) => onChange({ root_cause: e.target.value })}
-          disabled={isLoading}
-        />
-      </div>
+      <Textarea
+        label="Root Cause"
+        required
+        id="root_cause"
+        placeholder="Describe the underlying cause of this risk"
+        rows={2}
+        value={data.root_cause}
+        onChange={(e) => onChange({ root_cause: e.target.value })}
+        disabled={isLoading}
+      />
     </>
   );
 }

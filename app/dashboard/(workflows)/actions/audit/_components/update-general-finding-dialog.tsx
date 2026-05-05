@@ -262,28 +262,24 @@ export function UpdateGeneralFindingDialog({
           )}
 
           {/* Audit Observation */}
-          <div className="space-y-2">
-            <Label htmlFor="audit_observation">Audit Observation</Label>
-            <Textarea
-              id="audit_observation"
-              placeholder="Update audit observation..."
-              value={auditObservation}
-              onChange={(e) => setAuditObservation(e.target.value)}
-              rows={3}
-            />
-          </div>
+          <Textarea
+            label="Audit Observation"
+            id="audit_observation"
+            placeholder="Update audit observation..."
+            value={auditObservation}
+            onChange={(e) => setAuditObservation(e.target.value)}
+            rows={3}
+          />
 
           {/* Audit Comments */}
-          <div className="space-y-2">
-            <Label htmlFor="audit_comments">Audit Comments</Label>
-            <Textarea
-              id="audit_comments"
-              placeholder="Update audit comments..."
-              value={auditComments}
-              onChange={(e) => setAuditComments(e.target.value)}
-              rows={3}
-            />
-          </div>
+          <Textarea
+            label="Audit Comments"
+            id="audit_comments"
+            placeholder="Update audit comments..."
+            value={auditComments}
+            onChange={(e) => setAuditComments(e.target.value)}
+            rows={3}
+          />
 
           {/* Evidence */}
           <div className="space-y-2">

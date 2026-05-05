@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { cn, notify } from "@/lib/utils";
 import { format } from "date-fns";
 
 // Type definitions
@@ -132,8 +133,33 @@ export default function RiskAcceptanceForm({
       icon: Shield,
       fields: ["compensatingControls", "additionalRemarks", "expirationDate"],
       mode: ["create", "edit"]
+    },
+    {
+      title: "Approvals",
+      icon: CheckCircle2,
+      fields: ["risk_coordinator", "risk_owner", "reviewed_by", "emc_approval", "board_approval"],
+      mode: ["edit"]
     }
   ];
+
+  const approverConfigs: ApproverConfig[] = [
+    { key: "risk_coordinator", title: "Risk Coordinator" },
+    { key: "risk_owner", title: "Risk Owner" },
+    { key: "reviewed_by", title: "Reviewed By" },
+    { key: "emc_approval", title: "EMC Approval" },
+    { key: "board_approval", title: "Board Approval" }
+  ];
+
+  const updateApproverField = (
+    approverKey: ApproverKey,
+    field: ApproverField,
+    value: string
+  ): void => {
+    setFormData((prev) => ({
+      ...prev,
+      [approverKey]: { ...prev[approverKey], [field]: value }
+    }));
+  };
 
   // Filter steps based on current mode
   const steps = allSteps.filter((step) => !step.mode || step.mode.includes(mode));
@@ -151,6 +177,26 @@ export default function RiskAcceptanceForm({
   };
 
   const handleSubmit = async (): Promise<void> => {
+    if (mode === "edit") {
+      const approverKeys: ApproverKey[] = [
+        "risk_coordinator",
+        "risk_owner",
+        "reviewed_by",
+        "emc_approval",
+        "board_approval"
+      ];
+      const missing = approverKeys.filter(
+        (k) => formData[k]?.name?.trim() && !formData[k]?.signature?.trim()
+      );
+      if (missing.length > 0) {
+        notify({
+          description: `Signature required for all approvers: ${missing.join(", ")}`,
+          type: "error"
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       if (onSubmit) {
@@ -254,7 +300,9 @@ export default function RiskAcceptanceForm({
                 />
 
                 <div>
-                  <Label className="mb-2 block">Risk Rate <span className="text-red-500">*</span></Label>
+                  <Label className="mb-2 block">
+                    Risk Rate <span className="text-destructive">*</span>
+                  </Label>
                   <RadioGroup
                     value={formData.risk_rate}
                     onValueChange={(value) => updateField("risk_rate", value as RiskRate)}
@@ -332,7 +380,7 @@ export default function RiskAcceptanceForm({
 
                 <div>
                   <Label className="mb-2 block">
-                    Risk Acceptance Expiration Date <span className="text-red-500">*</span>
+                    Risk Acceptance Expiration Date <span className="text-destructive">*</span>
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -368,6 +416,46 @@ export default function RiskAcceptanceForm({
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Step 3: Approvals (edit mode only) */}
+            {mode === "edit" && currentStep === 3 && (
+              <div className="animate-fade-in space-y-6">
+                <p className="text-sm text-slate-500">
+                  Provide name, designation and signature for each approver. A typed name in the
+                  signature field is sufficient. Signature is required for any approver whose name
+                  is filled in.
+                </p>
+                {approverConfigs.map((cfg) => (
+                  <div
+                    key={cfg.key}
+                    className="space-y-3 rounded-lg border border-slate-200 p-4">
+                    <h3 className="text-base font-semibold text-slate-700">{cfg.title}</h3>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <Input
+                        label="Name"
+                        value={formData[cfg.key].name}
+                        onChange={(e) => updateApproverField(cfg.key, "name", e.target.value)}
+                        placeholder="Full name"
+                      />
+                      <Input
+                        label="Designation"
+                        value={formData[cfg.key].designation}
+                        onChange={(e) =>
+                          updateApproverField(cfg.key, "designation", e.target.value)
+                        }
+                        placeholder="Role / title"
+                      />
+                    </div>
+                    <Input
+                      label={`Signature${formData[cfg.key].name?.trim() ? " *" : ""}`}
+                      value={formData[cfg.key].signature}
+                      onChange={(e) => updateApproverField(cfg.key, "signature", e.target.value)}
+                      placeholder="Type full name to sign"
+                    />
+                  </div>
+                ))}
               </div>
             )}
 

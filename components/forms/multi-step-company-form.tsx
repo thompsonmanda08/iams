@@ -842,73 +842,57 @@ export function MultiStepCompanyForm({
                   </h4>
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="admin_first_name">
-                          First Name <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="admin_first_name"
-                          placeholder="John"
-                          value={stepThreeData.admin_first_name}
-                          onChange={(e) =>
-                            setStepThreeData((prev) => ({
-                              ...prev,
-                              admin_first_name: e.target.value
-                            }))
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="admin_last_name">
-                          Last Name <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="admin_last_name"
-                          placeholder="Doe"
-                          value={stepThreeData.admin_last_name}
-                          onChange={(e) =>
-                            setStepThreeData((prev) => ({
-                              ...prev,
-                              admin_last_name: e.target.value
-                            }))
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="admin_username">
-                        Username <span className="text-destructive">*</span>
-                      </Label>
                       <Input
-                        id="admin_username"
-                        placeholder="admin.user or admin@company.com"
-                        descriptionText="Can be a username or email address"
-                        value={stepThreeData.admin_username}
+                        id="admin_first_name"
+                        label="First Name"
+                        placeholder="John"
+                        value={stepThreeData.admin_first_name}
                         onChange={(e) =>
-                          setStepThreeData((prev) => ({ ...prev, admin_username: e.target.value }))
+                          setStepThreeData((prev) => ({
+                            ...prev,
+                            admin_first_name: e.target.value
+                          }))
+                        }
+                        required
+                      />
+                      <Input
+                        id="admin_last_name"
+                        label="Last Name"
+                        placeholder="Doe"
+                        value={stepThreeData.admin_last_name}
+                        onChange={(e) =>
+                          setStepThreeData((prev) => ({
+                            ...prev,
+                            admin_last_name: e.target.value
+                          }))
                         }
                         required
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="admin_email">
-                        Email <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="admin_email"
-                        type="email"
-                        placeholder="admin@company.com"
-                        value={stepThreeData.admin_email}
-                        onChange={(e) =>
-                          setStepThreeData((prev) => ({ ...prev, admin_email: e.target.value }))
-                        }
-                        required
-                      />
-                    </div>
+                    <Input
+                      id="admin_username"
+                      label="Username"
+                      placeholder="admin.user or admin@company.com"
+                      descriptionText="Can be a username or email address"
+                      value={stepThreeData.admin_username}
+                      onChange={(e) =>
+                        setStepThreeData((prev) => ({ ...prev, admin_username: e.target.value }))
+                      }
+                      required
+                    />
+
+                    <Input
+                      id="admin_email"
+                      label="Email"
+                      type="email"
+                      placeholder="admin@company.com"
+                      value={stepThreeData.admin_email}
+                      onChange={(e) =>
+                        setStepThreeData((prev) => ({ ...prev, admin_email: e.target.value }))
+                      }
+                      required
+                    />
 
                     <div className="space-y-2">
                       <Label htmlFor="admin_password">

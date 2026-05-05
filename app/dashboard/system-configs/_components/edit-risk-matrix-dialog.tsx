@@ -81,30 +81,25 @@ export function EditRiskMatrixDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Matrix Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g., Financial Risk Matrix"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isPending}
-              />
-            </div>
+            <Input
+              label="Matrix Name"
+              required
+              id="name"
+              placeholder="e.g., Financial Risk Matrix"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isPending}
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe the purpose of this matrix"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isPending}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              id="description"
+              placeholder="Describe the purpose of this matrix"
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              disabled={isPending}
+            />
 
             <div className="flex items-center space-x-2">
               <Checkbox

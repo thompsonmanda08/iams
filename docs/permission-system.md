@@ -42,6 +42,7 @@ The IAMS web application implements a client-side permission enforcement system 
 ### Returned Functions
 
 #### `hasPermission(moduleCode, action): boolean`
+
 Silent check - returns `true`/`false` without showing any UI feedback.
 
 ```tsx
@@ -54,6 +55,7 @@ if (hasPermission("RISK_REGISTERS", "can_export")) {
 ```
 
 #### `checkPermission(moduleCode, action, customMessage?): boolean`
+
 Check with toast feedback - returns `true` if allowed, shows an error toast and returns `false` if denied.
 
 ```tsx
@@ -66,14 +68,19 @@ const handleDelete = () => {
 ```
 
 With a custom message:
+
 ```tsx
 const handleDelete = () => {
-  if (!checkPermission("RISK_REGISTERS", "can_delete", "You cannot delete risks from this register.")) return;
+  if (
+    !checkPermission("RISK_REGISTERS", "can_delete", "You cannot delete risks from this register.")
+  )
+    return;
   // proceed...
 };
 ```
 
 #### `getPermissions(moduleCode): ModulePermissions | null`
+
 Returns the full permission object for a module, or `null` if not found.
 
 ```tsx
@@ -120,22 +127,21 @@ export type ModulePermissions = {
 
 These are the `module_code` values used throughout the application:
 
-| Module Code | Description |
-|-------------|-------------|
-| `RISK_REGISTERS` | Risk register CRUD operations |
-| `RISK_ACTIONS` | Risk action operations (assign, review, submit findings) |
-| `RISK_INCIDENTS` | Risk incident management |
-| `RISK_ACCEPTANCES` | Risk acceptance management |
-| `KRI_DASHBOARD` | Key Risk Indicator operations |
-| `RISK_MODULE_CONFIGS` | Risk module settings/configuration |
-| `AUDIT_PLANS` | Audit plan operations, memos, closures, evidence |
-| `AUDIT_WPS` | Workpaper/finding operations, evidence editing |
-| `AUDIT_REPORTS` | Audit report operations |
-| `AUDIT_MODULE_CONFIG` | Audit settings configuration |
-| `WORKFLOW_CONFIG` | Workflow management (create, edit, triggers, roles) |
-| `USER_MGMT` | User management, module management, mail settings |
-| `BRANCH_MGMT` | Branch, province, and town management |
-| `DEPT_MGMT` | Department management and module assignment |
+| Module Code           | Description                                              |
+| --------------------- | -------------------------------------------------------- |
+| `RISK_REGISTERS`      | Risk register CRUD operations                            |
+| `RISK_ACTIONS`        | Risk action operations (assign, review, submit findings) |
+| `RISK_INCIDENTS`      | Risk incident management                                 |
+| `KRI_DASHBOARD`       | Key Risk Indicator operations                            |
+| `RISK_MODULE_CONFIGS` | Risk module settings/configuration                       |
+| `AUDIT_PLANS`         | Audit plan operations, memos, closures, evidence         |
+| `AUDIT_WPS`           | Workpaper/finding operations, evidence editing           |
+| `AUDIT_REPORTS`       | Audit report operations                                  |
+| `AUDIT_MODULE_CONFIG` | Audit settings configuration                             |
+| `WORKFLOW_CONFIG`     | Workflow management (create, edit, triggers, roles)      |
+| `USER_MGMT`           | User management, module management, mail settings        |
+| `BRANCH_MGMT`         | Branch, province, and town management                    |
+| `DEPT_MGMT`           | Department management and module assignment              |
 
 ---
 
@@ -245,22 +251,22 @@ A dismissible banner for showing persistent (but closable) permission warnings a
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `message` | `string` | Generic restriction message | The message body |
-| `title` | `string` | `"Limited Access"` | Bold title text |
-| `variant` | `"warning" \| "error" \| "info"` | `"warning"` | Color scheme |
-| `dismissible` | `boolean` | `true` | Whether the user can close the banner |
-| `onDismiss` | `() => void` | - | Callback when dismissed |
-| `className` | `string` | - | Additional CSS classes |
+| Prop          | Type                             | Default                     | Description                           |
+| ------------- | -------------------------------- | --------------------------- | ------------------------------------- |
+| `message`     | `string`                         | Generic restriction message | The message body                      |
+| `title`       | `string`                         | `"Limited Access"`          | Bold title text                       |
+| `variant`     | `"warning" \| "error" \| "info"` | `"warning"`                 | Color scheme                          |
+| `dismissible` | `boolean`                        | `true`                      | Whether the user can close the banner |
+| `onDismiss`   | `() => void`                     | -                           | Callback when dismissed               |
+| `className`   | `string`                         | -                           | Additional CSS classes                |
 
 ### When to use which
 
-| Scenario | Use |
-|----------|-----|
-| User clicks a button they can't use | `checkPermission()` - shows a toast |
+| Scenario                                 | Use                                               |
+| ---------------------------------------- | ------------------------------------------------- |
+| User clicks a button they can't use      | `checkPermission()` - shows a toast               |
 | User lands on a page with limited access | `<PermissionBanner>` - shows a dismissible banner |
-| Conditionally hide a button entirely | `hasPermission()` - silent boolean check |
+| Conditionally hide a button entirely     | `hasPermission()` - silent boolean check          |
 
 ---
 
@@ -269,6 +275,7 @@ A dismissible banner for showing persistent (but closable) permission warnings a
 1. **`useSystemSetup`** fetches the user's session (including permissions) on app load and caches it with `staleTime: Infinity` via React Query.
 
 2. **`buildPermissionMap`** flattens the nested API response into a `Map<module_code, ModulePermissions>`. The API returns:
+
    ```json
    {
      "permissions": [
@@ -285,6 +292,7 @@ A dismissible banner for showing persistent (but closable) permission warnings a
      ]
    }
    ```
+
    Both parent modules and sub-modules are flattened into the map using their `module_code` as key.
 
 3. **`checkPermission`** looks up the module's permissions in the map, checks the specific action, and either returns `true` or shows a contextual toast and returns `false`.
@@ -296,6 +304,7 @@ A dismissible banner for showing persistent (but closable) permission warnings a
 Below is the complete list of files where permission guards have been applied:
 
 ### Risk Module
+
 - `risks/_components/risks-page-header.tsx` - Create risk button
 - `risks/_components/risks-table.tsx` - Edit, Delete, Close, Assign buttons
 - `risks/_components/risk-registers-table.tsx` - Register CRUD
@@ -310,6 +319,7 @@ Below is the complete list of files where permission guards have been applied:
 - `risks/incidents/_components/new-incident.tsx` - New incidents
 
 ### Audit Module
+
 - `audit/plans/_components/audit-plans-table.tsx` - Plan CRUD
 - `audit/plans/_components/audit-plan-workpaper-view.tsx` - Plan actions, memos, findings
 - `audit/plans/_components/finding-actions-menu.tsx` - Finding actions
@@ -329,6 +339,7 @@ Below is the complete list of files where permission guards have been applied:
 - `audit/universe/_components/audit-universe-list.tsx` - Universe CRUD
 
 ### Workflow Module
+
 - `(workflows)/workflow/manage/_components/create-workflow-dialog.tsx` - Create workflow
 - `(workflows)/workflow/manage/_components/workflow-editor.tsx` - Edit/save workflow
 - `(workflows)/workflow/manage/_components/entry-triggers-manager.tsx` - Entry triggers
@@ -343,10 +354,12 @@ Below is the complete list of files where permission guards have been applied:
 - `(workflows)/actions/audit/_components/submit-evidence-dialog.tsx` - Submit evidence
 
 ### Reports
+
 - `reports/_components/reports-table.tsx` - Report CRUD
 - `reports/_components/create-report-dialog.tsx` - Create reports
 
 ### System Configuration
+
 - `system-configs/_components/user-roles-config.tsx` - Role permissions
 - `system-configs/_components/branches-tab.tsx` - Branch management
 - `system-configs/_components/departments-config.tsx` - Department management
@@ -359,6 +372,7 @@ Below is the complete list of files where permission guards have been applied:
 - `system-configs/modules/module-list.tsx` - Module CRUD
 
 ### Risk Settings
+
 - `system-configs/_components/risk-categories-config.tsx`
 - `system-configs/_components/risk-appetite-config.tsx`
 - `system-configs/_components/risk-matrix-config.tsx`
@@ -367,6 +381,7 @@ Below is the complete list of files where permission guards have been applied:
 - `system-configs/_components/kri-config.tsx`
 
 ### Audit Settings
+
 - `system-configs/audit-settings/_components/auditable-areas-tab.tsx`
 - `system-configs/audit-settings/_components/findings-category-tab.tsx`
 - `system-configs/audit-settings/_components/process-activity-tab.tsx`
@@ -381,6 +396,7 @@ Below is the complete list of files where permission guards have been applied:
 - `system-configs/audit-settings/templates/[id]/categories/new/page.tsx`
 
 ### Mail Settings
+
 - `system-configs/mail-settings/_components/mailing-settings-form.tsx`
 
 ---
@@ -390,16 +406,19 @@ Below is the complete list of files where permission guards have been applied:
 When building new features, follow this checklist:
 
 1. Import the hook:
+
    ```tsx
    import { usePermissions } from "@/hooks/use-permissions";
    ```
 
 2. Destructure inside your component:
+
    ```tsx
    const { checkPermission } = usePermissions();
    ```
 
 3. Guard every action handler:
+
    ```tsx
    const handleAction = () => {
      if (!checkPermission("MODULE_CODE", "can_action")) return;
@@ -409,12 +428,14 @@ When building new features, follow this checklist:
 
 4. For pages with restricted access, add a `<PermissionBanner>`:
    ```tsx
-   {!hasPermission("MODULE_CODE", "can_edit") && (
-     <PermissionBanner
-       title="Read-Only Access"
-       message="You have view-only access to this section."
-     />
-   )}
+   {
+     !hasPermission("MODULE_CODE", "can_edit") && (
+       <PermissionBanner
+         title="Read-Only Access"
+         message="You have view-only access to this section."
+       />
+     );
+   }
    ```
 
 ---

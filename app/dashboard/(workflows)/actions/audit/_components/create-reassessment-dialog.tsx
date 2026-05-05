@@ -190,10 +190,9 @@ export function CreateReassessmentDialog({
 
           {/* Auditor Comments */}
           <div className="space-y-2">
-            <Label htmlFor="auditor_comments">
-              Auditor Comments <span className="text-red-500">*</span>
-            </Label>
             <Textarea
+              label="Auditor Comments"
+              required
               id="auditor_comments"
               placeholder="Provide detailed comments on the reassessment..."
               value={formData.auditor_comments}
@@ -234,10 +233,9 @@ export function CreateReassessmentDialog({
           {/* New Recommendation (if non-compliant or partial) */}
           {(formData.compliance_status === "Non-Compliant" || formData.compliance_status === "Partial") && (
             <div className="space-y-2">
-              <Label htmlFor="new_recommendation" className={errors.new_recommendation ? "text-red-500" : ""}>
-                New Recommendation <span className="text-red-500">*</span>
-              </Label>
               <Textarea
+                label="New Recommendation"
+                required
                 id="new_recommendation"
                 placeholder="Provide new recommendations for remediation..."
                 value={formData.new_recommendation}
@@ -254,10 +252,9 @@ export function CreateReassessmentDialog({
           {/* Compliance Percentage (if partial) */}
           {formData.compliance_status === "Partial" && (
             <div className="space-y-2">
-              <Label htmlFor="compliance_percentage">
-                Compliance Percentage <span className="text-red-500">*</span>
-              </Label>
               <Input
+                label="Compliance Percentage"
+                required
                 id="compliance_percentage"
                 type="number"
                 placeholder="Enter percentage (0-100)..."

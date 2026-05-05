@@ -261,47 +261,39 @@ export function NewIncident() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="Where the incident happened"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            />
-          </div>
+          <Input
+            id="location"
+            label="Location"
+            placeholder="Where the incident happened"
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="details">Incident Details</Label>
-            <Textarea
-              id="details"
-              placeholder="What happened? When did it happen? Where did it happen? How did it happen?"
-              rows={6}
-              value={formData.details}
-              onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-            />
-          </div>
+          <Textarea
+            id="details"
+            label="Incident Details"
+            placeholder="What happened? When did it happen? Where did it happen? How did it happen?"
+            rows={6}
+            value={formData.details}
+            onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+          />
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="root-cause">Root Cause</Label>
-              <Input
-                id="root-cause"
-                placeholder="What caused the incident?"
-                value={formData.root_cause}
-                onChange={(e) => setFormData({ ...formData, root_cause: e.target.value })}
-              />
-            </div>
+            <Input
+              id="root-cause"
+              label="Root Cause"
+              placeholder="What caused the incident?"
+              value={formData.root_cause}
+              onChange={(e) => setFormData({ ...formData, root_cause: e.target.value })}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="action-plan">Action Plan</Label>
-              <Input
-                id="action-plan"
-                placeholder="The resolution"
-                value={formData.action_plan}
-                onChange={(e) => setFormData({ ...formData, action_plan: e.target.value })}
-              />
-            </div>
+            <Input
+              id="action-plan"
+              label="Action Plan"
+              placeholder="The resolution"
+              value={formData.action_plan}
+              onChange={(e) => setFormData({ ...formData, action_plan: e.target.value })}
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

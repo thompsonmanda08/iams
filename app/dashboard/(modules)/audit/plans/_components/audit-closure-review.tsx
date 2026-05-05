@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -37,8 +36,6 @@ import { cn, notify } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
-
-import { PermissionButton } from "@/components/ui/permission-button";
 
 const CLOSURE_ENABLED_STATUSES = ["APPROVED", "COMPLETED", "CLOSURE_REVIEW", "CLOSED"];
 
@@ -105,7 +102,20 @@ export function AuditClosureReview({
   onClosureRequested,
   onAuditPlanUpdate
 }: AuditClosureReviewProps) {
-  const { session } = useSession();
+  const { session, user: currentUser } = useSession();
+  // useSession.user is the full /auth/setup payload (with `.user` nested);
+  // session is the JWT cookie payload (may have user_id and a flat user object).
+  const currentUserId =
+    session?.user?.id ??
+    session?.user_id ??
+    (currentUser as any)?.user?.id ??
+    (currentUser as any)?.id;
+  const currentUserEmail = (
+    session?.user?.email ??
+    (currentUser as any)?.user?.email ??
+    (currentUser as any)?.email ??
+    ""
+  ).toLowerCase();
   const { checkPermission, hasPermission } = usePermissions();
   const [showClosureDialog, setShowClosureDialog] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
@@ -122,9 +132,17 @@ export function AuditClosureReview({
     auditPlan.management_standard
   ].some((f) => String(f ?? "").toUpperCase() === "GENERAL");
 
+  const teamLeaderId = auditPlan?.audit_team_leader;
+  const teamLeaderEmail = (
+    auditPlan?.audit_team_leader_user?.email ??
+    auditPlan?.team_leader?.email ??
+    ""
+  ).toLowerCase();
   const isTeamLead =
-    session?.user?.id === auditPlan?.audit_team_leader ||
-    session?.user?.email === auditPlan?.audit_team_leader;
+    (!!currentUserId && !!teamLeaderId && currentUserId === teamLeaderId) ||
+    (!!currentUserEmail && !!teamLeaderEmail && currentUserEmail === teamLeaderEmail) ||
+    // Backend may stuff email into the audit_team_leader field directly
+    (!!currentUserEmail && currentUserEmail === String(teamLeaderId ?? "").toLowerCase());
 
   const isClosureEnabled = CLOSURE_ENABLED_STATUSES.includes(auditPlan.status ?? "");
 
@@ -545,10 +563,9 @@ export function AuditClosureReview({
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="closure_notes">
-                Closure Notes <span className="text-red-500">*</span>
-              </Label>
               <Textarea
+                label="Closure Notes"
+                required
                 id="closure_notes"
                 placeholder="Summarize the audit execution, key findings, and remediation actions..."
                 value={closureNotes}
@@ -629,18 +646,15 @@ export function AuditClosureReview({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="management_comments">
-                Sign-Off Comments <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="management_comments"
-                placeholder="Confirm that you have reviewed all findings and provide any observations..."
-                value={signOffComments}
-                onChange={(e) => setSignOffComments(e.target.value)}
-                rows={4}
-              />
-            </div>
+            <Textarea
+              label="Sign-Off Comments"
+              required
+              id="management_comments"
+              placeholder="Confirm that you have reviewed all findings and provide any observations..."
+              value={signOffComments}
+              onChange={(e) => setSignOffComments(e.target.value)}
+              rows={4}
+            />
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
@@ -649,9 +663,9 @@ export function AuditClosureReview({
                 disabled={isSignOffSubmitting}>
                 Cancel
               </Button>
-              <PermissionButton moduleCode={MODULE_CODES.AUDIT_PLANS} action="can_approve"
+              <Button
                 onClick={() => {
-  submitSignOff(
+                  submitSignOff(
                     { auditPlanId: auditPlan.id, managementComments: signOffComments },
                     {
                       onSuccess: (res) => {
@@ -663,11 +677,11 @@ export function AuditClosureReview({
                       }
                     }
                   );
-}}
+                }}
                 disabled={isSignOffSubmitting || !signOffComments.trim()}>
                 {isSignOffSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit Sign-Off
-              </PermissionButton>
+              </Button>
             </div>
           </div>
         </DialogContent>

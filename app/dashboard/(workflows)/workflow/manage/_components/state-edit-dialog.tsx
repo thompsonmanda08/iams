@@ -81,37 +81,34 @@ export const StateEditDialog = ({ state, isOpen, onClose, onSave }: StateEditDia
 
         <div className="space-y-4">
           {/* State Name */}
-          <div className="space-y-2">
-            <Label htmlFor="state-name">State Name *</Label>
-            <Input
-              id="state-name"
-              placeholder="e.g., Approved"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  name: e.target.value
-                })
-              }
-            />
-          </div>
+          <Input
+            id="state-name"
+            label="State Name"
+            required
+            placeholder="e.g., Approved"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                name: e.target.value
+              })
+            }
+          />
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="state-description">Description</Label>
-            <Textarea
-              id="state-description"
-              placeholder="Describe this state..."
-              value={formData.description || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  description: e.target.value
-                })
-              }
-              className="min-h-20"
-            />
-          </div>
+          <Textarea
+            id="state-description"
+            label="Description"
+            placeholder="Describe this state..."
+            value={formData.description || ""}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                description: e.target.value
+              })
+            }
+            className="min-h-20"
+          />
 
           {/* Display Order */}
           <div className="space-y-2">

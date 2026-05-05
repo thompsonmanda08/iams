@@ -171,30 +171,26 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Risk Title</Label>
-              <Input
-                id="title"
-                placeholder="Enter risk title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Risk Title"
+              id="title"
+              placeholder="Enter risk title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+              disabled={isLoading}
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe the risk in detail"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                required
-                disabled={isLoading}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              id="description"
+              placeholder="Describe the risk in detail"
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              required
+              disabled={isLoading}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -319,17 +315,15 @@ export function RiskFormDialog({ open, onOpenChange, risk, registerId }: RiskFor
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="owner">Risk Owner</Label>
-                <Input
-                  id="owner"
-                  placeholder="Enter owner name"
-                  value={formData.owner}
-                  onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+              <Input
+                label="Risk Owner"
+                id="owner"
+                placeholder="Enter owner name"
+                value={formData.owner}
+                onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                required
+                disabled={isLoading}
+              />
               <div className="grid gap-2">
                 <Label htmlFor="status">Status</Label>
                 <Select

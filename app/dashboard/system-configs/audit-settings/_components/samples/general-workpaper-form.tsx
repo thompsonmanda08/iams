@@ -240,17 +240,14 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
           <h3 className="text-lg font-semibold">Basic Information</h3>
 
           {/* Process Under Review */}
-          <div className="space-y-2">
-            <Label htmlFor="process">
-              Process Under Review <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="process"
-              placeholder="e.g., Revenue Recognition Process"
-              value={formData.processUnderReview}
-              onChange={(e) => updateField("processUnderReview", e.target.value)}
-            />
-          </div>
+          <Input
+            id="process"
+            label="Process Under Review"
+            required
+            placeholder="e.g., Revenue Recognition Process"
+            value={formData.processUnderReview}
+            onChange={(e) => updateField("processUnderReview", e.target.value)}
+          />
 
           <Separator />
 
@@ -275,17 +272,14 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
             </div>
 
             {/* Preparation Date */}
-            <div className="space-y-2">
-              <Label htmlFor="preparedDate">
-                Preparation Date <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="preparedDate"
-                type="date"
-                value={formData.preparedDate.toISOString().split("T")[0]}
-                onChange={(e) => updateField("preparedDate", new Date(e.target.value))}
-              />
-            </div>
+            <Input
+              id="preparedDate"
+              label="Preparation Date"
+              required
+              type="date"
+              value={formData.preparedDate.toISOString().split("T")[0]}
+              onChange={(e) => updateField("preparedDate", new Date(e.target.value))}
+            />
 
             {/* Reviewed By */}
             <div className="space-y-2">
@@ -303,19 +297,17 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
             </div>
 
             {/* Review Date */}
-            <div className="space-y-2">
-              <Label htmlFor="reviewedDate">Review Date (Optional)</Label>
-              <Input
-                id="reviewedDate"
-                type="date"
-                value={
-                  formData.reviewedDate ? formData.reviewedDate.toISOString().split("T")[0] : ""
-                }
-                onChange={(e) =>
-                  updateField("reviewedDate", e.target.value ? new Date(e.target.value) : undefined)
-                }
-              />
-            </div>
+            <Input
+              id="reviewedDate"
+              label="Review Date (Optional)"
+              type="date"
+              value={
+                formData.reviewedDate ? formData.reviewedDate.toISOString().split("T")[0] : ""
+              }
+              onChange={(e) =>
+                updateField("reviewedDate", e.target.value ? new Date(e.target.value) : undefined)
+              }
+            />
           </div>
         </div>
       </Card>

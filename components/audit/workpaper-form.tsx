@@ -143,43 +143,39 @@ export function WorkpaperForm({
         </div>
 
         {/* Objectives */}
-        <div className="space-y-2">
-          <Label htmlFor="objectives">Audit Objectives *</Label>
-          <Textarea
-            id="objectives"
-            value={objectives}
-            onChange={(e) => setObjectives(e.target.value)}
-            placeholder="Enter the objectives of this audit test..."
-            rows={3}
-            className="resize-none"
-          />
-        </div>
+        <Textarea
+          id="objectives"
+          label="Audit Objectives"
+          required
+          value={objectives}
+          onChange={(e) => setObjectives(e.target.value)}
+          placeholder="Enter the objectives of this audit test..."
+          rows={3}
+          className="resize-none"
+        />
 
         {/* Test Procedures */}
-        <div className="space-y-2">
-          <Label htmlFor="testProcedures">Test Procedures *</Label>
-          <Textarea
-            id="testProcedures"
-            value={testProcedures}
-            onChange={(e) => setTestProcedures(e.target.value)}
-            placeholder="Describe the testing procedures performed..."
-            rows={6}
-            className="resize-none"
-          />
-        </div>
+        <Textarea
+          id="testProcedures"
+          label="Test Procedures"
+          required
+          value={testProcedures}
+          onChange={(e) => setTestProcedures(e.target.value)}
+          placeholder="Describe the testing procedures performed..."
+          rows={6}
+          className="resize-none"
+        />
 
         {/* Test Results */}
-        <div className="space-y-2">
-          <Label htmlFor="testResults">Test Results</Label>
-          <Textarea
-            id="testResults"
-            value={testResults}
-            onChange={(e) => setTestResults(e.target.value)}
-            placeholder="Document the results of testing..."
-            rows={4}
-            className="resize-none"
-          />
-        </div>
+        <Textarea
+          id="testResults"
+          label="Test Results"
+          value={testResults}
+          onChange={(e) => setTestResults(e.target.value)}
+          placeholder="Document the results of testing..."
+          rows={4}
+          className="resize-none"
+        />
 
         {/* Test Result Selection */}
         <div className="space-y-3">

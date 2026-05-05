@@ -1,12 +1,23 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Pen, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import {
+  X,
+  Pen,
+  Calendar as CalendarIcon,
+  Loader2,
+  ShieldCheck,
+  XCircle,
+  ArrowLeft,
+  ChevronRight
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn, notify } from "@/lib/utils";
 import { format } from "date-fns";
 import { uploadFile } from "@/app/_actions/pocketbase-actions";
@@ -21,12 +32,16 @@ export interface ApproverSignature {
   designation: string;
   date: Date | string;
   signature: string;
+  remarks?: string;
 }
+
+type Decision = "APPROVE" | "REJECT" | null;
 
 interface SignatureFormProps {
   actionId: string;
   userId: string;
   acceptanceId: string;
+  riskName: string;
   onSubmit: (data: ApproverSignature) => Promise<void>;
   onClose: () => void;
 }
@@ -35,10 +50,12 @@ export default function SignatureForm({
   actionId,
   userId,
   acceptanceId,
+  riskName,
   onSubmit,
   onClose
 }: SignatureFormProps) {
-  const { checkPermission, hasPermission } = usePermissions();
+  const { checkPermission } = usePermissions();
+  const [decision, setDecision] = useState<Decision>(null);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);
@@ -51,10 +68,10 @@ export default function SignatureForm({
     name: "",
     designation: "",
     date: new Date(),
-    signature: ""
+    signature: "",
+    remarks: ""
   });
 
-  // Initialize canvas when modal opens
   useEffect(() => {
     if (showSignatureModal && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -72,10 +89,8 @@ export default function SignatureForm({
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const rect = canvas.getBoundingClientRect();
     const x = ("clientX" in e ? e.clientX : e.touches[0].clientX) - rect.left;
     const y = ("clientY" in e ? e.clientY : e.touches[0].clientY) - rect.top;
@@ -87,10 +102,8 @@ export default function SignatureForm({
     if (!isDrawing) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const rect = canvas.getBoundingClientRect();
     const x = ("clientX" in e ? e.clientX : e.touches[0].clientX) - rect.left;
     const y = ("clientY" in e ? e.clientY : e.touches[0].clientY) - rect.top;
@@ -101,9 +114,7 @@ export default function SignatureForm({
     ctx.stroke();
   };
 
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
+  const stopDrawing = () => setIsDrawing(false);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
@@ -123,18 +134,13 @@ export default function SignatureForm({
 
     setIsUploadingSignature(true);
     try {
-      // Convert canvas to blob
       canvas.toBlob(async (blob) => {
         if (!blob) {
           notify({ description: "Failed to create signature image", type: "error" });
           setIsUploadingSignature(false);
           return;
         }
-
-        // Create a File from the blob
         const file = new File([blob], `signature-${Date.now()}.png`, { type: "image/png" });
-
-        // Upload to PocketBase
         const uploadResponse = await uploadFile(file);
 
         if (uploadResponse.success && uploadResponse.data?.file_url) {
@@ -142,7 +148,10 @@ export default function SignatureForm({
           setShowSignatureModal(false);
           notify({ description: "Signature saved", type: "success" });
         } else {
-          notify({ description: uploadResponse.message || "Failed to upload signature", type: "error" });
+          notify({
+            description: uploadResponse.message || "Failed to upload signature",
+            type: "error"
+          });
         }
       });
     } catch (error: any) {
@@ -152,21 +161,28 @@ export default function SignatureForm({
     }
   };
 
-  const handleSubmit = async () => {
-    if (!checkPermission(MODULE_CODES.RISK_ACCEPTANCES, "can_approve")) return;
-
+  const validateCommonFields = () => {
     if (!formData.name.trim()) {
       notify({ description: "Please enter your name", type: "error" });
-      return;
+      return false;
     }
     if (!formData.designation.trim()) {
       notify({ description: "Please enter your designation", type: "error" });
+      return false;
+    }
+    return true;
+  };
+
+  const handleApprove = async () => {
+    if (!checkPermission(MODULE_CODES.RISK_ACCEPTANCES, "can_approve")) return;
+    if (!validateCommonFields()) return;
+    if (!formData.signature) {
+      notify({ description: "Please add your signature to approve", type: "error" });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Submit to API
       const submitResponse = await submitRiskAcceptanceSignature(acceptanceId, {
         action_id: formData.action_id,
         user_id: formData.user_id,
@@ -176,32 +192,82 @@ export default function SignatureForm({
       });
 
       if (!submitResponse.success) {
-        throw new Error(submitResponse.message || "Failed to submit signature");
+        throw new Error(submitResponse.message || "Failed to submit approval");
       }
 
-      // Call the onSubmit callback
       await onSubmit(formData);
-      notify({ description: "Signature submitted successfully", type: "success" });
+      notify({ description: "Risk acceptance approved", type: "success" });
       onClose();
     } catch (error: any) {
-      notify({ description: error.message || "Failed to submit signature", type: "error" });
+      notify({ description: error.message || "Failed to submit approval", type: "error" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleReject = async () => {
+    if (!checkPermission(MODULE_CODES.RISK_ACCEPTANCES, "can_approve")) return;
+    if (!validateCommonFields()) return;
+    if (!formData.remarks?.trim()) {
+      notify({ description: "Please provide remarks for rejection", type: "error" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const submitResponse = await submitRiskAcceptanceSignature(acceptanceId, {
+        action_id: formData.action_id,
+        user_id: formData.user_id,
+        name: formData.name,
+        designation: formData.designation,
+        signature: "",
+        remarks: formData.remarks.trim()
+      });
+
+      if (!submitResponse.success) {
+        throw new Error(submitResponse.message || "Failed to submit rejection");
+      }
+
+      await onSubmit({ ...formData, signature: "" });
+      notify({ description: "Risk acceptance rejected", type: "success" });
+      onClose();
+    } catch (error: any) {
+      notify({ description: error.message || "Failed to submit rejection", type: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const goBack = () => setDecision(null);
+
+  const headerContent = (() => {
+    if (decision === "APPROVE") {
+      return {
+        title: "Approve Risk Acceptance",
+        description: `Sign off on: ${riskName}`
+      };
+    }
+    if (decision === "REJECT") {
+      return {
+        title: "Reject Risk Acceptance",
+        description: `Provide remarks for: ${riskName}`
+      };
+    }
+    return {
+      title: "Risk Acceptance Approval",
+      description: "How would you like to respond?"
+    };
+  })();
+
   return (
     <>
-      {/* Signature Modal */}
       {showSignatureModal && (
         <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center rounded-lg bg-black p-4">
           <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
             <div className="flex items-center justify-between border-b p-4">
               <h3 className="text-lg font-semibold text-slate-800">Sign Here</h3>
               <button
-                onClick={() => {
-                  setShowSignatureModal(false);
-                }}
+                onClick={() => setShowSignatureModal(false)}
                 className="rounded p-1 hover:bg-slate-100">
                 <X className="h-5 w-5" />
               </button>
@@ -239,96 +305,174 @@ export default function SignatureForm({
         </div>
       )}
 
-      {/* Main Form */}
-      <div className="space-y-6 rounded-lg">
-        <div>
-          <h3 className="mb-4 font-semibold text-slate-700">Approval Sign-Off</h3>
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <DialogTitle className="text-lg font-semibold">{headerContent.title}</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-sm">
+            {headerContent.description}
+          </DialogDescription>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <Input
-            label="Name"
-            required
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-            placeholder="Full name"
-          />
+        {decision === null && (
+          <div className="animate-in fade-in slide-in-from-bottom-1 flex flex-col gap-3 duration-200">
+            <button
+              type="button"
+              onClick={() => setDecision("APPROVE")}
+              className="group hover:border-emerald-400 hover:bg-emerald-50/60 focus-visible:ring-emerald-500/40 flex items-center gap-4 rounded-lg border border-l-4 border-l-emerald-500 border-slate-200 bg-white p-4 text-left transition focus-visible:ring-2 focus-visible:outline-none">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-900">Approve</p>
+                <p className="text-muted-foreground text-sm">Sign off and accept this risk.</p>
+              </div>
+              <ChevronRight className="text-muted-foreground h-4 w-4 transition group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+            </button>
 
-          <Input
-            label="Designation"
-            required
-            type="text"
-            value={formData.designation}
-            onChange={(e) => setFormData((prev) => ({ ...prev, designation: e.target.value }))}
-            placeholder="Job title"
-          />
-
-          <div>
-            <Label className="mb-1 block">
-              Date <span className="!text-red-500">*</span>
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.date && "text-muted-foreground"
-                  )}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date ? format(formData.date as Date, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.date as Date}
-                  onSelect={(date) => setFormData((prev) => ({ ...prev, date: date as Date }))}
-                />
-              </PopoverContent>
-            </Popover>
+            <button
+              type="button"
+              onClick={() => setDecision("REJECT")}
+              className="group hover:border-red-400 hover:bg-red-50/60 focus-visible:ring-red-500/40 flex items-center gap-4 rounded-lg border border-l-4 border-l-red-500 border-slate-200 bg-white p-4 text-left transition focus-visible:ring-2 focus-visible:outline-none">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                <XCircle className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-900">Reject</p>
+                <p className="text-muted-foreground text-sm">Decline with written remarks.</p>
+              </div>
+              <ChevronRight className="text-muted-foreground h-4 w-4 transition group-hover:translate-x-0.5 group-hover:text-red-600" />
+            </button>
           </div>
-        </div>
+        )}
 
-        <div>
-          <Label className="mb-2 block">
-            Signature <span className="!text-red-500">*</span>
-          </Label>
-          {formData.signature ? (
-            <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-4">
-              <img
-                src={formData.signature}
-                alt="Signature"
-                className="h-16 max-w-[200px] object-contain"
-              />
-              <Button onClick={() => setShowSignatureModal(true)}>Change</Button>
+        {decision !== null && (
+          <div className="animate-in fade-in slide-in-from-bottom-1 space-y-4 duration-200">
+            <Input
+              label="Name"
+              required
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="Full name"
+            />
+
+            <Input
+              label="Designation"
+              required
+              type="text"
+              value={formData.designation}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, designation: e.target.value }))
+              }
+              placeholder="Job title"
+            />
+
+            <div>
+              <Label className="mb-1 block">
+                Date <span className="!text-red-500">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.date && "text-muted-foreground"
+                    )}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.date ? format(formData.date as Date, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date as Date}
+                    onSelect={(date) =>
+                      setFormData((prev) => ({ ...prev, date: date as Date }))
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-          ) : (
-            <Button
-              onClick={() => setShowSignatureModal(true)}
-              variant="outline"
-              className="w-full">
-              <Pen className="mr-2 h-5 w-5" />
-              Click to Sign
-            </Button>
-          )}
-          <div className="mt-3 gap-2 rounded-lg bg-orange-50 px-2 py-2">
-            <span className="font-mono text-xs italic">
-              Submitting this form without a signature will be treated as a rejection of the action.
-            </span>
-          </div>
-        </div>
 
-        <div className="flex gap-3 border-t pt-6">
-          <Button onClick={onClose} variant="destructive" className="flex-1" disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting} className="flex-1">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Submitting..." : "Submit Signature"}
-          </Button>
-        </div>
+            {decision === "APPROVE" && (
+              <div>
+                <Label className="mb-2 block">
+                  Signature <span className="!text-red-500">*</span>
+                </Label>
+                {formData.signature ? (
+                  <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50 p-4">
+                    <img
+                      src={formData.signature}
+                      alt="Signature"
+                      className="h-16 max-w-[200px] object-contain"
+                    />
+                    <Button onClick={() => setShowSignatureModal(true)}>Change</Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => setShowSignatureModal(true)}
+                    variant="outline"
+                    className="w-full">
+                    <Pen className="mr-2 h-5 w-5" />
+                    Click to Sign
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {decision === "REJECT" && (
+              <Textarea
+                label="Remarks"
+                required
+                rows={5}
+                value={formData.remarks ?? ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, remarks: e.target.value }))
+                }
+                placeholder="Explain why this risk acceptance is being rejected…"
+              />
+            )}
+
+            <div className="flex gap-3 border-t pt-6">
+              <Button
+                onClick={goBack}
+                variant="ghost"
+                disabled={isSubmitting}
+                className="flex-1">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+              {decision === "APPROVE" ? (
+                <Button onClick={handleApprove} disabled={isSubmitting} className="flex-1">
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting ? "Submitting..." : "Approve & Sign"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleReject}
+                  disabled={isSubmitting}
+                  variant="destructive"
+                  className="flex-1">
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting ? "Submitting..." : "Confirm Rejection"}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {decision === null && (
+          <div className="border-t pt-4">
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              className="text-muted-foreground w-full"
+              disabled={isSubmitting}>
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );

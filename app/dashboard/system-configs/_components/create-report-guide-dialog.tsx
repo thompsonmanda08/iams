@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { notify } from "@/lib/utils";
 import { createReportGuide } from "@/app/_actions/config-actions";
@@ -112,17 +111,15 @@ export function CreateReportGuideDialog({
             onValueChange={(value) => setFormData({ ...formData, report_type: value })}
           />
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe the purpose and guidelines for this report guide..."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              disabled={isLoading}
-              rows={4}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            id="description"
+            placeholder="Describe the purpose and guidelines for this report guide..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            disabled={isLoading}
+            rows={4}
+          />
 
           <DialogFooter>
             <Button

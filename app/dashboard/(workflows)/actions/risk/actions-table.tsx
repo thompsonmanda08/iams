@@ -36,13 +36,7 @@ import { Pagination } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import { sendRiskActionReminder } from "@/app/_actions/task-actions";
 import SignatureForm, { type ApproverSignature } from "./_components/signature-form";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ActionIncidentReviewDialog } from "./_components/action-incident-review-dialog";
 
 interface ActionsTableProps {
@@ -419,16 +413,11 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
               e.preventDefault();
             }}
             className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Risk Acceptance Approval</DialogTitle>
-              <DialogDescription>
-                Sign off on the risk acceptance for: {selectedActionForSignature.risk_name}
-              </DialogDescription>
-            </DialogHeader>
             <SignatureForm
               actionId={selectedActionForSignature.action.id}
               userId={selectedActionForSignature.action.created_by}
               acceptanceId={selectedActionForSignature.action.acceptance_id}
+              riskName={selectedActionForSignature.risk_name}
               onSubmit={handleSignatureSubmit}
               onClose={() => setSignatureDialogOpen(false)}
             />
