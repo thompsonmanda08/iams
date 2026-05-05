@@ -9,17 +9,18 @@ import BackButton from "@/components/back-button";
 
 function getStatusColor(status: string) {
   const colors = {
-    normal: "bg-white text-green-700 border-green-200",
-    warning: "bg-white text-amber-700 border-amber-200",
-    critical: "bg-white text-red-700 border-red-200"
+    normal: "bg-card border-l-green-500 dark:border-l-green-400",
+    warning: "bg-card border-l-amber-500 dark:border-l-amber-400",
+    critical: "bg-card border-l-red-500 dark:border-l-red-400"
   };
-  return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
+  return colors[status as keyof typeof colors] || "bg-card";
 }
 
 function getTrendIcon(trend: string) {
-  if (trend === "up") return <TrendingUp className="h-4 w-4 text-red-600" />;
-  if (trend === "down") return <TrendingDown className="h-4 w-4 text-green-600" />;
-  return <Minus className="h-4 w-4 text-gray-600" />;
+  if (trend === "up") return <TrendingUp className="h-4 w-4 text-red-600 dark:text-red-400" />;
+  if (trend === "down")
+    return <TrendingDown className="h-4 w-4 text-green-600 dark:text-green-400" />;
+  return <Minus className="text-muted-foreground h-4 w-4" />;
 }
 
 function formatValue(
@@ -125,6 +126,8 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
   const response = await getKRIs({ kri_register_id: id });
   const kris: any[] = response.success && response.data?.data ? response.data.data : [];
 
+  console.log("KRI Data:", kris);
+
   // Normalize status values
   const normalizeStatus = (status: string): string => {
     const normalized = status?.toLowerCase();
@@ -189,10 +192,10 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Normal</p>
-              <p className="text-2xl font-bold text-green-600">{normalCount}</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{normalCount}</p>
             </div>
-            <div className="rounded-lg bg-green-50 p-3">
-              <AlertCircle className="h-6 w-6 text-green-600" />
+            <div className="rounded-lg bg-green-50 p-3 dark:bg-green-500/15">
+              <AlertCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
         </Card>
@@ -200,10 +203,12 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Warning</p>
-              <p className="text-2xl font-bold text-amber-600">{warningCount}</p>
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                {warningCount}
+              </p>
             </div>
-            <div className="rounded-lg bg-amber-50 p-3">
-              <AlertCircle className="h-6 w-6 text-amber-600" />
+            <div className="rounded-lg bg-amber-50 p-3 dark:bg-amber-500/15">
+              <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
             </div>
           </div>
         </Card>
@@ -211,10 +216,10 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Critical</p>
-              <p className="text-2xl font-bold text-red-600">{criticalCount}</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{criticalCount}</p>
             </div>
-            <div className="rounded-lg bg-red-50 p-3">
-              <AlertCircle className="h-6 w-6 text-red-600" />
+            <div className="rounded-lg bg-red-50 p-3 dark:bg-red-500/15">
+              <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
           </div>
         </Card>
@@ -222,10 +227,10 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Total KRIs</p>
-              <p className="text-2xl font-bold text-blue-600">{totalCount}</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalCount}</p>
             </div>
-            <div className="rounded-lg bg-blue-50 p-3">
-              <BarChart3 className="h-6 w-6 text-blue-600" />
+            <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-500/15">
+              <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </Card>
@@ -264,9 +269,12 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                   <span
                     className={cn(
                       "rounded-full px-3 py-1 text-xs font-medium capitalize",
-                      kri.status === "normal" && "bg-green-100 text-green-700",
-                      kri.status === "warning" && "bg-amber-100 text-amber-700",
-                      kri.status === "critical" && "bg-red-100 text-red-700"
+                      kri.status === "normal" &&
+                        "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+                      kri.status === "warning" &&
+                        "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+                      kri.status === "critical" &&
+                        "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
                     )}>
                     {kri.status}
                   </span>
@@ -282,13 +290,13 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs">Target Value</p>
-                    <p className="text-lg font-bold text-green-600">
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
                       {formatValue(kri.target_value, kri.measurement_type, kri.currency_code)}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs">Limit Value</p>
-                    <p className="text-lg font-bold text-red-600">
+                    <p className="text-lg font-bold text-red-600 dark:text-red-400">
                       {formatValue(kri.limit_value, kri.measurement_type, kri.currency_code)}
                     </p>
                   </div>
@@ -336,7 +344,7 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                       %
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                  <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={cn(
                         "h-full transition-all",
