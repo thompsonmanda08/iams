@@ -600,28 +600,24 @@ export function KRIConfigureForm({ open, onOpenChange, registerId, onSubmit }: K
                   </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="commentary">Commentary</Label>
-                <Textarea
-                  id="commentary"
-                  placeholder="e.g., Initial setup for customer retention tracking"
-                  value={formData.commentary}
-                  onChange={(e) => updateFormData("commentary", e.target.value)}
-                  rows={3}
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="mitigant_plan">Mitigant Plan</Label>
-                <Textarea
-                  id="mitigant_plan"
-                  placeholder="e.g., Implement customer feedback survey quarterly"
-                  value={formData.mitigant_plan}
-                  onChange={(e) => updateFormData("mitigant_plan", e.target.value)}
-                  rows={3}
-                  disabled={isLoading}
-                />
-              </div>
+              <Textarea
+                id="commentary"
+                label="Commentary"
+                placeholder="e.g., Initial setup for customer retention tracking"
+                value={formData.commentary}
+                onChange={(e) => updateFormData("commentary", e.target.value)}
+                rows={3}
+                disabled={isLoading}
+              />
+              <Textarea
+                id="mitigant_plan"
+                label="Mitigant Plan"
+                placeholder="e.g., Implement customer feedback survey quarterly"
+                value={formData.mitigant_plan}
+                onChange={(e) => updateFormData("mitigant_plan", e.target.value)}
+                rows={3}
+                disabled={isLoading}
+              />
             </>
           )}
 

@@ -242,30 +242,26 @@ export function CreateOrUpdateFindingModal({
                 </div>
 
                 {/* Workings and Test Results */}
-                <div className="space-y-2">
-                  <Label htmlFor="workingsAndTestResults">Workings and Test Results</Label>
-                  <Textarea
-                    id="workingsAndTestResults"
-                    value={workingsAndTestResults}
-                    onChange={(e) => setWorkingsAndTestResults(e.target.value)}
-                    placeholder="Document detailed test workings and results for the report..."
-                    rows={4}
-                    className="resize-none"
-                  />
-                </div>
+                <Textarea
+                  id="workingsAndTestResults"
+                  label="Workings and Test Results"
+                  value={workingsAndTestResults}
+                  onChange={(e) => setWorkingsAndTestResults(e.target.value)}
+                  placeholder="Document detailed test workings and results for the report..."
+                  rows={4}
+                  className="resize-none"
+                />
 
                 {/* Conclusion */}
-                <div className="space-y-2">
-                  <Label htmlFor="conclusion">Conclusion</Label>
-                  <Textarea
-                    id="conclusion"
-                    value={conclusion}
-                    onChange={(e) => setConclusion(e.target.value)}
-                    placeholder="Summarize the conclusion for the final report..."
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
+                <Textarea
+                  id="conclusion"
+                  label="Conclusion"
+                  value={conclusion}
+                  onChange={(e) => setConclusion(e.target.value)}
+                  placeholder="Summarize the conclusion for the final report..."
+                  rows={3}
+                  className="resize-none"
+                />
               </div>
             )}
           </div>
@@ -273,26 +269,22 @@ export function CreateOrUpdateFindingModal({
           <Separator />
 
           {/* Assigned To */}
-          <div className="space-y-2">
-            <Label htmlFor="assignedTo">Assigned To</Label>
-            <Input
-              id="assignedTo"
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-              placeholder="e.g., John Doe"
-            />
-          </div>
+          <Input
+            id="assignedTo"
+            label="Assigned To"
+            value={assignedTo}
+            onChange={(e) => setAssignedTo(e.target.value)}
+            placeholder="e.g., John Doe"
+          />
 
           {/* Due Date */}
-          <div className="space-y-2">
-            <Label htmlFor="dueDate">Due Date</Label>
-            <Input
-              id="dueDate"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
+          <Input
+            id="dueDate"
+            label="Due Date"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
 
           <DialogFooter>
             <Button
