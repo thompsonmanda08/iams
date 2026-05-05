@@ -150,6 +150,14 @@ export function ActionReviewDialog({
 
   const handleNextStep = () => {
     if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_approve")) return;
+    if (!execution || execution.status !== "SUBMITTED") {
+      notify({
+        description:
+          "The assigned action has not been worked on yet. Wait for the actioner to submit evidence before reviewing.",
+        type: "warning"
+      });
+      return;
+    }
     if (validateStep(step)) {
       // Submit Step 1 review to API - Step 2 will only be shown after success
       submitReviewMutation.mutate();
