@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
@@ -174,7 +173,7 @@ export function MultiSelectModal({
             <DialogTitle>{label || "Select Items"}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
             {/* Search Input */}
             <div className="relative">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 opacity-50" />
@@ -187,16 +186,16 @@ export function MultiSelectModal({
             </div>
 
             {/* Two Column Layout */}
-            <div className="flex flex-1 gap-4 overflow-hidden">
+            <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
               {/* Left Column - Available Items */}
-              <div className="flex flex-1 flex-col overflow-hidden rounded-md border">
-                <div className="border-b bg-slate-50 p-3 dark:bg-slate-900">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border">
+                <div className="border-b bg-muted/50 p-3">
                   <h4 className="text-sm font-medium">
                     Available Items (
                     {filteredOptions.filter((opt) => !value.includes(opt.value)).length})
                   </h4>
                 </div>
-                <ScrollArea className="flex-1">
+                <div className="min-h-0 flex-1 overflow-y-auto">
                   <div className="p-4">
                     {filteredOptions.filter((opt) => !value.includes(opt.value)).length === 0 ? (
                       <p className="text-muted-foreground py-8 text-center text-sm">
@@ -214,7 +213,7 @@ export function MultiSelectModal({
                             <div
                               key={option.value}
                               className={cn(
-                                "flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                                "flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-muted"
                               )}
                               onClick={() => handleToggleSelect(option.value)}>
                               <Checkbox
@@ -244,12 +243,12 @@ export function MultiSelectModal({
                       </div>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
 
               {/* Right Column - Selected Items */}
-              <div className="flex flex-1 flex-col overflow-hidden rounded-md border">
-                <div className="flex items-center justify-between border-b bg-slate-50 p-3 dark:bg-slate-900">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border">
+                <div className="flex items-center justify-between border-b bg-muted/50 p-3">
                   <h4 className="text-sm font-medium">Selected Items ({selectedOptions.length})</h4>
                   {selectedOptions.length > 0 && (
                     <Button
@@ -262,7 +261,7 @@ export function MultiSelectModal({
                     </Button>
                   )}
                 </div>
-                <ScrollArea className="flex-1">
+                <div className="min-h-0 flex-1 overflow-y-auto">
                   <div className="p-4">
                     {selectedOptions.length === 0 ? (
                       <p className="text-muted-foreground py-8 text-center text-sm">
@@ -274,7 +273,7 @@ export function MultiSelectModal({
                           <div
                             key={option.value}
                             className={cn(
-                              "flex cursor-pointer items-center gap-3 rounded-md bg-blue-50 p-2 transition-colors hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900"
+                              "bg-primary/10 hover:bg-primary/15 flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors"
                             )}
                             onClick={() => handleToggleSelect(option.value)}>
                             <Checkbox
@@ -313,7 +312,7 @@ export function MultiSelectModal({
                       </div>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
             </div>
           </div>
