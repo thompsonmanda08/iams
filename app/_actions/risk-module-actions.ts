@@ -1739,6 +1739,7 @@ export interface RiskAcceptanceSignatureInput {
   name: string;
   designation: string;
   signature: string;
+  remarks?: string;
 }
 
 /**
