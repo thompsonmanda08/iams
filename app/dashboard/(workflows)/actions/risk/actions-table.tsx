@@ -121,8 +121,6 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     }
   };
 
-  console.log("ACTIONS:", actions);
-
   return (
     <Card>
       <CardHeader>
