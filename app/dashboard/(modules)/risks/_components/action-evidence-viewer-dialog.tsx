@@ -9,7 +9,6 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import type { Execution } from "@/app/_actions/risk-module-actions";
 import { StatusBadge } from "@/components/status-badge";

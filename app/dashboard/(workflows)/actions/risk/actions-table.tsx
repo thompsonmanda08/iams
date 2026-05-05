@@ -38,6 +38,7 @@ import { sendRiskActionReminder } from "@/app/_actions/task-actions";
 import SignatureForm, { type ApproverSignature } from "./_components/signature-form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ActionIncidentReviewDialog } from "./_components/action-incident-review-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ActionsTableProps {
   actions: ActionDefinition[];
@@ -46,7 +47,9 @@ interface ActionsTableProps {
 
 export function ActionsTable({ actions, pagination }: ActionsTableProps) {
   const router = useRouter();
-  const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useTableSearch({ debounceMs: 200 });
+  const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useTableSearch({
+    debounceMs: 200
+  });
   const searchParams = useSearchParams();
   const [_, startTransition] = useTransition();
   const [selectedActionForFindings, setSelectedActionForFindings] =
@@ -177,9 +180,14 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                     <TableRow key={action.id}>
                       <TableCell className="align-top">
                         <div className="max-w-sm space-y-1">
-                          <div className="text-sm font-semibold">
-                            {action.instructions.slice(0, 40)}...
-                          </div>
+                          <Tooltip>
+                            <TooltipTrigger className="max-w-[160px] truncate text-sm font-semibold">
+                              {action.instructions}
+                            </TooltipTrigger>
+                            <TooltipContent className="text-xs">
+                              {action.instructions}
+                            </TooltipContent>
+                          </Tooltip>
                           <span className="text-muted-foreground line-clamp-3 text-xs">
                             Date created: {format(new Date(action.created_at), "MMM dd, yyyy")}
                           </span>

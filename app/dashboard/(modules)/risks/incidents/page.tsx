@@ -23,7 +23,7 @@ export default function IncidentsPage() {
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="my-incidents" className="w-full space-y-6">
           <TabsList className="w-full">
-            <TabsTrigger value="my-incidents">My Incidents</TabsTrigger>
+            <TabsTrigger value="my-incidents">Incidents Log</TabsTrigger>
             <TabsTrigger value="new-incident">New Incident</TabsTrigger>
             <TabsTrigger value="effects-report">Effects Report</TabsTrigger>
           </TabsList>
