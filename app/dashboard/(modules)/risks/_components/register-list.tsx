@@ -472,10 +472,9 @@ export default function KRIRegistersClient({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">
-                Register Name <span className="text-destructive">*</span>
-              </Label>
               <Input
+                label="Register Name"
+                required
                 id="name"
                 placeholder="e.g., Quarterly EMC Report Q1 2025"
                 value={formData.name}
@@ -486,10 +485,9 @@ export default function KRIRegistersClient({
               {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">
-                Description <span className="text-destructive">*</span>
-              </Label>
               <Textarea
+                label="Description"
+                required
                 id="description"
                 placeholder="Describe the purpose and scope of this register..."
                 value={formData.description}
@@ -530,10 +528,9 @@ export default function KRIRegistersClient({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">
-                Register Name <span className="text-destructive">*</span>
-              </Label>
               <Input
+                label="Register Name"
+                required
                 id="edit-name"
                 placeholder="e.g., Quarterly EMC Report Q1 2025"
                 value={formData.name}
@@ -544,10 +541,9 @@ export default function KRIRegistersClient({
               {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-description">
-                Description <span className="text-destructive">*</span>
-              </Label>
               <Textarea
+                label="Description"
+                required
                 id="edit-description"
                 placeholder="Describe the purpose and scope of this register..."
                 value={formData.description}

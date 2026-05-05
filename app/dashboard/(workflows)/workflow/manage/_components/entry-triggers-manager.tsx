@@ -252,17 +252,14 @@ export const EntryTriggersManager = ({ workflowId, workflowName }: EntryTriggers
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="trigger-name">
-                Trigger Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="trigger-name"
-                value={triggerName}
-                onChange={(e) => setTriggerName(e.target.value)}
-                placeholder="e.g., Start workflow on risk creation"
-              />
-            </div>
+            <Input
+              label="Trigger Name"
+              required
+              id="trigger-name"
+              value={triggerName}
+              onChange={(e) => setTriggerName(e.target.value)}
+              placeholder="e.g., Start workflow on risk creation"
+            />
 
             <div className="space-y-2">
               <Label htmlFor="trigger-type">

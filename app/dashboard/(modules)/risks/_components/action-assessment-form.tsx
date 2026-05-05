@@ -127,10 +127,9 @@ export function ActionAssessmentForm({
 
       {/* Feedback */}
       <div className="space-y-2">
-        <Label htmlFor="feedback" className="text-sm font-semibold">
-          Assessment Feedback *
-        </Label>
         <Textarea
+          label="Assessment Feedback"
+          required
           id="feedback"
           placeholder="Provide detailed feedback on the action taken, effectiveness of controls, and any recommendations for further improvement..."
           value={formData.reviewer_feedback}

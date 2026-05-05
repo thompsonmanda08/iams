@@ -261,17 +261,14 @@ export const TransitionTriggersManager = ({
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="trigger-name">
-                Trigger Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="trigger-name"
-                value={triggerName}
-                onChange={(e) => setTriggerName(e.target.value)}
-                placeholder="e.g., Auto-approve after review"
-              />
-            </div>
+            <Input
+              label="Trigger Name"
+              required
+              id="trigger-name"
+              value={triggerName}
+              onChange={(e) => setTriggerName(e.target.value)}
+              placeholder="e.g., Auto-approve after review"
+            />
 
             <div className="space-y-2">
               <Label htmlFor="trigger-type">
@@ -301,8 +298,8 @@ export const TransitionTriggersManager = ({
 
             {(triggerType === "DELAYED" || triggerType === "SCHEDULED") && (
               <div className="space-y-2">
-                <Label htmlFor="delay-duration">Delay Duration</Label>
                 <Input
+                  label="Delay Duration"
                   id="delay-duration"
                   value={delayDuration}
                   onChange={(e) => setDelayDuration(e.target.value)}

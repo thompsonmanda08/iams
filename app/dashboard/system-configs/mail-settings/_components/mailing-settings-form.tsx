@@ -264,21 +264,16 @@ export function MailingSettingsForm({
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-6 space-y-4">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="auth_method" className="text-sm font-medium">
-                    Authentication Method
-                  </Label>
-                  <SelectField
-                    id="auth_method"
-                    name="auth_method"
-                    label=""
-                    value={formData.auth_method}
-                    onValueChange={(value) => handleInputChange("auth_method", value)}
-                    placeholder="Select method"
-                    options={authMethodOptions}
-                    className="w-full"
-                  />
-                </div>
+                <SelectField
+                  id="auth_method"
+                  name="auth_method"
+                  label="Authentication Method"
+                  value={formData.auth_method}
+                  onValueChange={(value) => handleInputChange("auth_method", value)}
+                  placeholder="Select method"
+                  options={authMethodOptions}
+                  className="w-full"
+                />
                 <div>
                   <Label htmlFor="encryption" className="mb-2 text-xs font-medium">
                     Encryption Method

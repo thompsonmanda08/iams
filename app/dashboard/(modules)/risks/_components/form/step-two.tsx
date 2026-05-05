@@ -1,4 +1,3 @@
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { StepTwoData, RiskMatrix } from "@/lib/types/risk-type";
@@ -93,17 +92,15 @@ export function StepTwo({
         />
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="existing_controls">Existing Controls</Label>
-        <Textarea
-          id="existing_controls"
-          placeholder="Describe current controls in place (optional)"
-          rows={3}
-          value={data.existing_controls}
-          onChange={(e) => onChange({ existing_controls: e.target.value })}
-          disabled={isLoading}
-        />
-      </div>
+      <Textarea
+        label="Existing Controls"
+        id="existing_controls"
+        placeholder="Describe current controls in place (optional)"
+        rows={3}
+        value={data.existing_controls}
+        onChange={(e) => onChange({ existing_controls: e.target.value })}
+        disabled={isLoading}
+      />
 
       <div className="grid gap-2">
         <SearchSelectField

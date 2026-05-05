@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -564,10 +563,9 @@ export function AuditClosureReview({
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="closure_notes">
-                Closure Notes <span className="text-red-500">*</span>
-              </Label>
               <Textarea
+                label="Closure Notes"
+                required
                 id="closure_notes"
                 placeholder="Summarize the audit execution, key findings, and remediation actions..."
                 value={closureNotes}
@@ -648,18 +646,15 @@ export function AuditClosureReview({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="management_comments">
-                Sign-Off Comments <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="management_comments"
-                placeholder="Confirm that you have reviewed all findings and provide any observations..."
-                value={signOffComments}
-                onChange={(e) => setSignOffComments(e.target.value)}
-                rows={4}
-              />
-            </div>
+            <Textarea
+              label="Sign-Off Comments"
+              required
+              id="management_comments"
+              placeholder="Confirm that you have reviewed all findings and provide any observations..."
+              value={signOffComments}
+              onChange={(e) => setSignOffComments(e.target.value)}
+              rows={4}
+            />
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"

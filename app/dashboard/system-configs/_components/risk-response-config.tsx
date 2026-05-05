@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Edit2, Save, X } from "lucide-react";
 import { notify } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -134,21 +133,19 @@ export function RiskResponseConfig() {
                   </Badge>
                 </div>
                 {editingStrategies ? (
-                  <div className="space-y-2">
-                    <Label htmlFor={`strategy-${strategy.id}`}>Description</Label>
-                    <Textarea
-                      id={`strategy-${strategy.id}`}
-                      value={strategy.description}
-                      onChange={(e) => {
-                        setStrategies(
-                          strategies.map((s) =>
-                            s.id === strategy.id ? { ...s, description: e.target.value } : s
-                          )
-                        );
-                      }}
-                      rows={2}
-                    />
-                  </div>
+                  <Textarea
+                    label="Description"
+                    id={`strategy-${strategy.id}`}
+                    value={strategy.description}
+                    onChange={(e) => {
+                      setStrategies(
+                        strategies.map((s) =>
+                          s.id === strategy.id ? { ...s, description: e.target.value } : s
+                        )
+                      );
+                    }}
+                    rows={2}
+                  />
                 ) : (
                   <p className="text-muted-foreground text-sm">{strategy.description}</p>
                 )}

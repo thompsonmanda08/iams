@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { notify } from "@/lib/utils";
 import { submitActionReview, updateRiskStepTwo } from "@/app/_actions/risk-module-actions";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
@@ -409,22 +408,20 @@ export function ActionReviewDialog({
                 <div className="space-y-4 rounded-lg border p-4">
                   <h3 className="font-semibold">Control Assessment</h3>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="existing_controls">Existing Controls</Label>
-                    <Textarea
-                      id="existing_controls"
-                      placeholder="Describe current controls in place (optional)"
-                      rows={3}
-                      value={formData.existing_controls}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          existing_controls: e.target.value
-                        }))
-                      }
-                      disabled={updateRiskMutation.isPending}
-                    />
-                  </div>
+                  <Textarea
+                    label="Existing Controls"
+                    id="existing_controls"
+                    placeholder="Describe current controls in place (optional)"
+                    rows={3}
+                    value={formData.existing_controls}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        existing_controls: e.target.value
+                      }))
+                    }
+                    disabled={updateRiskMutation.isPending}
+                  />
 
                   <SearchSelectField
                     label="Control Effectiveness"

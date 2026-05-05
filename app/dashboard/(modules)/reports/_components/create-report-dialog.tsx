@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { PermissionButton } from "@/components/ui/permission-button";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Plus, FileText, ShieldAlert, AlertCircle } from "lucide-react";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import CustomAlert from "@/components/ui/custom-alert";
@@ -278,20 +277,17 @@ export function CreateReportDialog({
         </DialogHeader>
         <form onSubmit={handleCreateReport} className="space-y-4">
           {/* Report Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">
-              Report Title <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="title"
-              placeholder="Enter report title"
-              value={formData.title}
-              onChange={(e) => {
-                setError({ status: false, message: "" });
-                setFormData((prev) => ({ ...prev, title: e.target.value }));
-              }}
-            />
-          </div>
+          <Input
+            label="Report Title"
+            required
+            id="title"
+            placeholder="Enter report title"
+            value={formData.title}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((prev) => ({ ...prev, title: e.target.value }));
+            }}
+          />
 
           {/* Report Type */}
           <SearchSelectField
@@ -340,19 +336,17 @@ export function CreateReportDialog({
           )}
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Optional description for this report"
-              value={formData.description}
-              onChange={(e) => {
-                setError({ status: false, message: "" });
-                setFormData((prev) => ({ ...prev, description: e.target.value }));
-              }}
-              rows={3}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            id="description"
+            placeholder="Optional description for this report"
+            value={formData.description}
+            onChange={(e) => {
+              setError({ status: false, message: "" });
+              setFormData((prev) => ({ ...prev, description: e.target.value }));
+            }}
+            rows={3}
+          />
 
           {/* Error Alert */}
           {error.status && <CustomAlert type="error" message={error.message} Icon={ShieldAlert} />}

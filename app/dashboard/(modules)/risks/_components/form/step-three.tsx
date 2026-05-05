@@ -41,19 +41,16 @@ export function StepThree({
 }: StepThreeProps) {
   return (
     <>
-      <div className="grid gap-2">
-        <Label htmlFor="treatment_plan">
-          Treatment Plan <span className="text-destructive">*</span>
-        </Label>
-        <Textarea
-          id="treatment_plan"
-          placeholder="Describe the risk mitigation strategy"
-          rows={3}
-          value={data.treatment_plan}
-          onChange={(e) => onChange({ treatment_plan: e.target.value })}
-          disabled={isLoading}
-        />
-      </div>
+      <Textarea
+        label="Treatment Plan"
+        required
+        id="treatment_plan"
+        placeholder="Describe the risk mitigation strategy"
+        rows={3}
+        value={data.treatment_plan}
+        onChange={(e) => onChange({ treatment_plan: e.target.value })}
+        disabled={isLoading}
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <SearchSelectField
@@ -113,19 +110,16 @@ export function StepThree({
             </PopoverContent>
           </Popover>
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="mitigation_cost">
-            Mitigation Cost<span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="mitigation_cost"
-            type="number"
-            placeholder="0.00"
-            value={data.mitigation_cost || ""}
-            onChange={(e) => onChange({ mitigation_cost: parseFloat(e.target.value) || 0 })}
-            disabled={isLoading}
-          />
-        </div>
+        <Input
+          label="Mitigation Cost"
+          required
+          id="mitigation_cost"
+          type="number"
+          placeholder="0.00"
+          value={data.mitigation_cost || ""}
+          onChange={(e) => onChange({ mitigation_cost: parseFloat(e.target.value) || 0 })}
+          disabled={isLoading}
+        />
       </div>
     </>
   );
