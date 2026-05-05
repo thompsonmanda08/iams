@@ -169,7 +169,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
           <Wallet className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
           <h2 className="mb-4 text-2xl font-bold">Budget Not Found</h2>
           <p className="text-muted-foreground mb-6">The budget you're looking for doesn't exist.</p>
-          <BackButton title="Back to Budgets" />
+          <BackButton title="Back to Budgets" href="/dashboard/audit/budgets" />
         </Card>
       </div>
     );

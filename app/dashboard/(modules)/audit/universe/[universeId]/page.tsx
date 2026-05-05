@@ -52,7 +52,7 @@ const UniversePage = async ({
               }}
               showBackButton={true}
             />
-            <BackButton title="Back to Universes" />
+            <BackButton title="Back to Universes" href="/dashboard/audit/universe" />
           </div>
         </div>
       </header>

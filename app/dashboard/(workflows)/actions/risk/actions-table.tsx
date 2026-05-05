@@ -335,32 +335,54 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
 
                           {isUserReviewer &&
                             action.action_type === "MITIGATION" &&
-                            action.status !== "COMPLETED" && (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedActionForReview(actionDef);
-                                  setReviewDialogOpen(true);
-                                }}
-                                className="gap-1.5">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Review
-                              </Button>
-                            )}
+                            action.status !== "COMPLETED" &&
+                            (() => {
+                              const isAwaitingActioner =
+                                !actionDef.execution || actionDef.execution.status !== "SUBMITTED";
+                              return (
+                                <Button
+                                  size="sm"
+                                  disabled={isAwaitingActioner}
+                                  onClick={() => {
+                                    setSelectedActionForReview(actionDef);
+                                    setReviewDialogOpen(true);
+                                  }}
+                                  className="gap-1.5"
+                                  title={
+                                    isAwaitingActioner
+                                      ? "Awaiting actioner to submit evidence before review"
+                                      : undefined
+                                  }>
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Review
+                                </Button>
+                              );
+                            })()}
                           {isUserReviewer &&
                             action.action_type === "INCIDENT" &&
-                            action.status !== "RESOLVED" && (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedActionForIncidentReview(actionDef);
-                                  setIncidentReviewDialogOpen(true);
-                                }}
-                                className="gap-1.5">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Review
-                              </Button>
-                            )}
+                            action.status !== "RESOLVED" &&
+                            (() => {
+                              const isAwaitingActioner =
+                                !actionDef.execution || actionDef.execution.status !== "SUBMITTED";
+                              return (
+                                <Button
+                                  size="sm"
+                                  disabled={isAwaitingActioner}
+                                  onClick={() => {
+                                    setSelectedActionForIncidentReview(actionDef);
+                                    setIncidentReviewDialogOpen(true);
+                                  }}
+                                  className="gap-1.5"
+                                  title={
+                                    isAwaitingActioner
+                                      ? "Awaiting actioner to submit evidence before review"
+                                      : undefined
+                                  }>
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Review
+                                </Button>
+                              );
+                            })()}
                         </div>
                       </TableCell>
                     </TableRow>

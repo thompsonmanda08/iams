@@ -127,6 +127,15 @@ export function ActionIncidentReviewDialog({
   const handleSubmit = async () => {
     if (!checkPermission(MODULE_CODES.RISK_INCIDENTS, "can_approve")) return;
 
+    if (!actionDefinition?.execution || actionDefinition.execution.status !== "SUBMITTED") {
+      notify({
+        description:
+          "The assigned action has not been worked on yet. Wait for the actioner to submit evidence before reviewing.",
+        type: "warning"
+      });
+      return;
+    }
+
     if (!formData.comment.trim()) {
       notify({ description: "Please add a comment before submitting", type: "error" });
       return;
