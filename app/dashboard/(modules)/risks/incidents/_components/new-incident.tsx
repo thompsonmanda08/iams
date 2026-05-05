@@ -14,7 +14,6 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { SearchSelectField } from "@/components/ui/search-select-field";
-import { Department, User } from "@/lib/types/risk-type";
 import {
   useDepartmentsForIncident,
   useCausesHierarchyForIncident,
@@ -31,7 +30,7 @@ export function NewIncident() {
   const [formData, setFormData] = useState({
     department_id: "",
     primary_cause_id: "",
-    specific_cause_id: "",
+    specific_cause_id: null,
     kri_id: "",
     materiality: "",
     incident_date: undefined as Date | undefined,
@@ -49,7 +48,9 @@ export function NewIncident() {
   // Fetch data using query hooks
   const { data: departments = [], isLoading: loadingDepartments } = useDepartmentsForIncident();
   const { data: causes = [], isLoading: loadingCauses } = useCausesHierarchyForIncident();
-  const { data: users = [], isLoading: loadingUsers } = useDepartmentUsersForIncident(formData.department_id);
+  const { data: users = [], isLoading: loadingUsers } = useDepartmentUsersForIncident(
+    formData.department_id
+  );
   const { data: kris = [], isLoading: loadingKRIs } = useIncidentKRIs(formData.department_id);
 
   // Mutation hook for creating incident
@@ -58,7 +59,7 @@ export function NewIncident() {
       setFormData({
         department_id: "",
         primary_cause_id: "",
-        specific_cause_id: "",
+        specific_cause_id: null,
         kri_id: "",
         materiality: "",
         incident_date: undefined,
@@ -90,7 +91,7 @@ export function NewIncident() {
   // Computed values
   const availableSubCauses = useMemo(() => {
     if (!formData.primary_cause_id) return [];
-    const selectedCause = causes.find((process:any) => process.id === formData.primary_cause_id);
+    const selectedCause = causes.find((process: any) => process.id === formData.primary_cause_id);
     return selectedCause?.sub_causes || [];
   }, [formData.primary_cause_id, causes]);
 
@@ -185,13 +186,15 @@ export function NewIncident() {
               classNames={{ wrapper: "max-w-full" }}
             />
             <SearchSelectField
-              label="Sub Process"
+              label="Sub Cause (Optional)"
               placeholder={
-                !formData.primary_cause_id ? "Select macro process first" : "Select sub process"
+                !formData.primary_cause_id ? "Select primary Cause first" : "Select sub cause"
               }
               options={availableSubCauses}
-              value={formData.specific_cause_id}
-              onValueChange={(value) => setFormData({ ...formData, specific_cause_id: value })}
+              value={formData.specific_cause_id || undefined}
+              onValueChange={(value: any) =>
+                setFormData({ ...formData, specific_cause_id: value || null })
+              }
               isLoading={loadingCauses}
               isDisabled={isLoading || loadingCauses || !formData.primary_cause_id}
               classNames={{ wrapper: "max-w-full" }}
