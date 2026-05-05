@@ -98,52 +98,43 @@ export function CreateRatingDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g., Low, Medium, High"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Name"
+              required
+              id="name"
+              placeholder="e.g., Low, Medium, High"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isLoading}
+            />
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="min_score">
-                  Min Score <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="min_score"
-                  type="number"
-                  min="1"
-                  value={formData.min_score}
-                  onChange={(e) =>
-                    setFormData({ ...formData, min_score: parseInt(e.target.value) || 1 })
-                  }
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="max_score">
-                  Max Score <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="max_score"
-                  type="number"
-                  min="1"
-                  max="25"
-                  value={formData.max_score}
-                  onChange={(e) => {
-                    const parsed = parseInt(e.target.value) || 1;
-                    setFormData({ ...formData, max_score: Math.min(parsed, 25) });
-                  }}
-                  disabled={isLoading}
-                />
-              </div>
+              <Input
+                label="Min Score"
+                required
+                id="min_score"
+                type="number"
+                min="1"
+                value={formData.min_score}
+                onChange={(e) =>
+                  setFormData({ ...formData, min_score: parseInt(e.target.value) || 1 })
+                }
+                disabled={isLoading}
+              />
+              <Input
+                label="Max Score"
+                required
+                id="max_score"
+                type="number"
+                min="1"
+                max="25"
+                value={formData.max_score}
+                onChange={(e) => {
+                  const parsed = parseInt(e.target.value) || 1;
+                  setFormData({ ...formData, max_score: Math.min(parsed, 25) });
+                }}
+                disabled={isLoading}
+              />
             </div>
 
             <div className="grid gap-2">
@@ -157,17 +148,15 @@ export function CreateRatingDialog({
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe this rating level"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              id="description"
+              placeholder="Describe this rating level"
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              disabled={isLoading}
+            />
           </div>
 
           <DialogFooter>

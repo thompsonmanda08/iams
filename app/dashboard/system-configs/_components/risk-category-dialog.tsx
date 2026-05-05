@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectField } from "@/components/ui/select-field";
 import { Loader2 } from "lucide-react";
@@ -155,78 +154,63 @@ export function RiskCategoryFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="department">
-              Department <span className="text-destructive">*</span>
-            </Label>
-            <SelectField
-              value={formData.department_id}
-              onValueChange={(value) => handleChange("department_id", value)}
-              placeholder="Select department"
-              options={departments.map((dept) => ({
-                id: dept.id,
-                name: dept.name
-              }))}
-              disabled={isSubmitting}
-              className="w-full"
-            />
-          </div>
+          <SelectField
+            label="Department"
+            required
+            value={formData.department_id}
+            onValueChange={(value) => handleChange("department_id", value)}
+            placeholder="Select department"
+            options={departments.map((dept) => ({
+              id: dept.id,
+              name: dept.name
+            }))}
+            disabled={isSubmitting}
+            className="w-full"
+          />
 
           <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">
-                Category Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="e.g., Operational Risk"
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="code">
-                Category Code <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => handleChange("code", e.target.value.toUpperCase())}
-                placeholder="e.g., OPR"
-                maxLength={10}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description || ""}
-              onChange={(e) => handleChange("description", e.target.value)}
-              placeholder="Provide a brief description of this risk category..."
-              rows={3}
-              disabled={isSubmitting}
-              className="resize-none"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="sort_order">Sort Order</Label>
             <Input
-              id="sort_order"
-              type="number"
-              min="1"
-              value={formData.sort_order}
-              onChange={(e) => handleChange("sort_order", parseInt(e.target.value) || 1)}
+              label="Category Name"
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="e.g., Operational Risk"
               disabled={isSubmitting}
+              required
+            />
+
+            <Input
+              label="Category Code"
+              id="code"
+              value={formData.code}
+              onChange={(e) => handleChange("code", e.target.value.toUpperCase())}
+              placeholder="e.g., OPR"
+              maxLength={10}
+              disabled={isSubmitting}
+              required
             />
           </div>
+
+          <Textarea
+            label="Description"
+            id="description"
+            value={formData.description || ""}
+            onChange={(e) => handleChange("description", e.target.value)}
+            placeholder="Provide a brief description of this risk category..."
+            rows={3}
+            disabled={isSubmitting}
+            className="resize-none"
+          />
+
+          <Input
+            label="Sort Order"
+            id="sort_order"
+            type="number"
+            min="1"
+            value={formData.sort_order}
+            onChange={(e) => handleChange("sort_order", parseInt(e.target.value) || 1)}
+            disabled={isSubmitting}
+          />
 
           <div className="flex justify-end gap-3 pt-4">
             <Button

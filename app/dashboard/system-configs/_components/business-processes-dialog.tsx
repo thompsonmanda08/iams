@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -168,46 +167,38 @@ export function BusinessProcessesDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Process Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g., IT Operations, Security Management"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-                required
-              />
-            </div>
+            <Input
+              label="Process Name"
+              id="name"
+              placeholder="e.g., IT Operations, Security Management"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isLoading}
+              required
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="parent_id">Parent Process (Optional)</Label>
-              <SearchSelectField
-                value={formData.parent_id}
-                onValueChange={(value) => setFormData({ ...formData, parent_id: value || "" })}
-                placeholder={loadingProcesses ? "Loading processes..." : "Select parent process"}
-                options={parentProcessOptions}
-                isDisabled={isLoading || loadingProcesses}
-                isLoading={loadingProcesses}
-                onModal
-                descriptionText="Select a parent if this is a sub-process"
-              />
-            </div>
+            <SearchSelectField
+              label="Parent Process (Optional)"
+              value={formData.parent_id}
+              onValueChange={(value) => setFormData({ ...formData, parent_id: value || "" })}
+              placeholder={loadingProcesses ? "Loading processes..." : "Select parent process"}
+              options={parentProcessOptions}
+              isDisabled={isLoading || loadingProcesses}
+              isLoading={loadingProcesses}
+              onModal
+              descriptionText="Select a parent if this is a sub-process"
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe this business process..."
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isLoading}
-                className="resize-none"
-              />
-            </div>
+            <Textarea
+              label="Description"
+              id="description"
+              placeholder="Describe this business process..."
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              disabled={isLoading}
+              className="resize-none"
+            />
           </div>
 
           <DialogFooter>

@@ -290,17 +290,14 @@ export default function RiskAcceptanceForm({
             {/* Step 0: Risk Details */}
             {currentStep === 0 && (
               <div className="animate-fade-in space-y-6">
-                <div>
-                  <Label className="mb-2 block">
-                    1. Risk Description <span className="text-destructive">*</span>
-                  </Label>
-                  <Textarea
-                    value={formData.risk_description}
-                    onChange={(e) => updateField("risk_description", e.target.value)}
-                    rows={4}
-                    placeholder="Describe the risk in detail..."
-                  />
-                </div>
+                <Textarea
+                  label="1. Risk Description"
+                  required
+                  value={formData.risk_description}
+                  onChange={(e) => updateField("risk_description", e.target.value)}
+                  rows={4}
+                  placeholder="Describe the risk in detail..."
+                />
 
                 <div>
                   <Label className="mb-2 block">
@@ -326,17 +323,14 @@ export default function RiskAcceptanceForm({
                   </RadioGroup>
                 </div>
 
-                <div>
-                  <Label className="mb-2 block">
-                    2. Description of Deficiency <span className="text-destructive">*</span>
-                  </Label>
-                  <Textarea
-                    value={formData.deficiency_description}
-                    onChange={(e) => updateField("deficiency_description", e.target.value)}
-                    rows={4}
-                    placeholder="Provide a summary of the overall control deficiency..."
-                  />
-                </div>
+                <Textarea
+                  label="2. Description of Deficiency"
+                  required
+                  value={formData.deficiency_description}
+                  onChange={(e) => updateField("deficiency_description", e.target.value)}
+                  rows={4}
+                  placeholder="Provide a summary of the overall control deficiency..."
+                />
               </div>
             )}
 
@@ -344,11 +338,9 @@ export default function RiskAcceptanceForm({
             {currentStep === 1 && (
               <div className="animate-fade-in space-y-6">
                 <div>
-                  <Label className="mb-2 block">
-                    3. Justification of Risk Acceptance{" "}
-                    <span className="text-destructive">*</span>
-                  </Label>
                   <Textarea
+                    label="3. Justification of Risk Acceptance"
+                    required
                     value={formData.justification}
                     onChange={(e) => updateField("justification", e.target.value)}
                     rows={8}
@@ -365,11 +357,9 @@ export default function RiskAcceptanceForm({
             {currentStep === 2 && (
               <div className="animate-fade-in space-y-6">
                 <div>
-                  <Label className="mb-2 block">
-                    4. Description of Compensating Controls{" "}
-                    <span className="text-destructive">*</span>
-                  </Label>
                   <Textarea
+                    label="4. Description of Compensating Controls"
+                    required
                     value={formData.compensating_controls}
                     onChange={(e) => updateField("compensating_controls", e.target.value)}
                     rows={6}
@@ -380,15 +370,13 @@ export default function RiskAcceptanceForm({
                   </p>
                 </div>
 
-                <div>
-                  <Label className="mb-2 block">5. Additional Remarks</Label>
-                  <Textarea
-                    value={formData.additional_remarks}
-                    onChange={(e) => updateField("additional_remarks", e.target.value)}
-                    rows={4}
-                    placeholder="Provide any other comments and supporting evidence..."
-                  />
-                </div>
+                <Textarea
+                  label="5. Additional Remarks"
+                  value={formData.additional_remarks}
+                  onChange={(e) => updateField("additional_remarks", e.target.value)}
+                  rows={4}
+                  placeholder="Provide any other comments and supporting evidence..."
+                />
 
                 <div>
                   <Label className="mb-2 block">

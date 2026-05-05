@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
 import { SearchSelectField } from "@/components/ui/search-select-field";
@@ -415,19 +414,15 @@ export function FindingForm({
               placeholder="Select status"
             />
           </div>
-          <div>
-            <Label htmlFor="recommendation" className="text-sm font-medium">
-              Recommendation
-            </Label>
-            <Textarea
-              id="recommendation"
-              value={formData.recommendation}
-              onChange={(e) => handleInputChange("recommendation", e.target.value)}
-              placeholder="Provide your audit recommendation..."
-              rows={3}
-              className="mt-2 text-sm"
-            />
-          </div>
+          <Textarea
+            label="Recommendation"
+            id="recommendation"
+            value={formData.recommendation}
+            onChange={(e) => handleInputChange("recommendation", e.target.value)}
+            placeholder="Provide your audit recommendation..."
+            rows={3}
+            className="mt-2 text-sm"
+          />
         </CardContent>
       </Card>
 
@@ -437,33 +432,25 @@ export function FindingForm({
           <CardTitle className="text-base">Management Response & Action Plan</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="management_response" className="text-sm font-medium">
-              Management Response
-            </Label>
-            <Textarea
-              id="management_response"
-              value={formData.management_response}
-              onChange={(e) => handleInputChange("management_response", e.target.value)}
-              placeholder="Enter management's response to this finding..."
-              rows={3}
-              className="mt-2 text-sm"
-            />
-          </div>
+          <Textarea
+            label="Management Response"
+            id="management_response"
+            value={formData.management_response}
+            onChange={(e) => handleInputChange("management_response", e.target.value)}
+            placeholder="Enter management's response to this finding..."
+            rows={3}
+            className="mt-2 text-sm"
+          />
 
-          <div>
-            <Label htmlFor="action_plan" className="text-sm font-medium">
-              Corrective Action Plan
-            </Label>
-            <Textarea
-              id="action_plan"
-              value={formData.action_plan}
-              onChange={(e) => handleInputChange("action_plan", e.target.value)}
-              placeholder="Outline the corrective actions to address this finding..."
-              rows={3}
-              className="mt-2 text-sm"
-            />
-          </div>
+          <Textarea
+            label="Corrective Action Plan"
+            id="action_plan"
+            value={formData.action_plan}
+            onChange={(e) => handleInputChange("action_plan", e.target.value)}
+            placeholder="Outline the corrective actions to address this finding..."
+            rows={3}
+            className="mt-2 text-sm"
+          />
 
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             <SearchSelectField

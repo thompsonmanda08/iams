@@ -120,8 +120,8 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="min_length">Minimum Password Length</Label>
               <Input
+                label="Minimum Password Length"
                 id="min_length"
                 type="number"
                 min="4"
@@ -205,8 +205,8 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="password_expiry_days">Password Expiry (Days)</Label>
               <Input
+                label="Password Expiry (Days)"
                 id="password_expiry_days"
                 type="number"
                 min="0"
@@ -234,8 +234,8 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="max_failed_attempts">Maximum Failed Login Attempts</Label>
               <Input
+                label="Maximum Failed Login Attempts"
                 id="max_failed_attempts"
                 type="number"
                 min="1"
@@ -254,8 +254,8 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="lockout_duration_mins">Account Lockout Duration (Minutes)</Label>
               <Input
+                label="Account Lockout Duration (Minutes)"
                 id="lockout_duration_mins"
                 type="number"
                 min="5"
@@ -274,8 +274,8 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="session_timeout_mins">Session Timeout (Minutes)</Label>
               <Input
+                label="Session Timeout (Minutes)"
                 id="session_timeout_mins"
                 type="number"
                 min="5"
@@ -320,8 +320,8 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="otp_length">OTP Length (Digits)</Label>
               <Input
+                label="OTP Length (Digits)"
                 id="otp_length"
                 type="number"
                 min="4"
@@ -339,8 +339,8 @@ export function PasswordPolicyTab({ initialData }: PasswordPolicyTabProps) {
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="otp_expiry_mins">OTP Expiry Time (Minutes)</Label>
               <Input
+                label="OTP Expiry Time (Minutes)"
                 id="otp_expiry_mins"
                 type="number"
                 min="1"

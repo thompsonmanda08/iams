@@ -875,17 +875,15 @@ export default function NewAuditPlanPage() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="audit_language">Audit Language</Label>
-                      <Input
-                        id="audit_language"
-                        value={formData.audit_language}
-                        onChange={(e) =>
-                          setFormData({ ...formData, audit_language: e.target.value })
-                        }
-                        placeholder="English"
-                      />
-                    </div>
+                    <Input
+                      id="audit_language"
+                      label="Audit Language"
+                      value={formData.audit_language}
+                      onChange={(e) =>
+                        setFormData({ ...formData, audit_language: e.target.value })
+                      }
+                      placeholder="English"
+                    />
                   </div>
                 </div>
               )}

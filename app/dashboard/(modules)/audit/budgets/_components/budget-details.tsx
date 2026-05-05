@@ -457,18 +457,14 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
           </div>
           <form id="line-form" onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="lineName" className="text-sm font-semibold">
-                  Line Name *
-                </Label>
-                <Input
-                  id="lineName"
-                  value={lineData.name}
-                  onChange={(e) => updateLineData({ name: e.target.value })}
-                  placeholder="e.g., Personnel Costs"
-                  required
-                />
-              </div>
+              <Input
+                label="Line Name"
+                required
+                id="lineName"
+                value={lineData.name}
+                onChange={(e) => updateLineData({ name: e.target.value })}
+                placeholder="e.g., Personnel Costs"
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="lineCategory" className="text-sm font-semibold">
@@ -492,36 +488,28 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="lineAllocated" className="text-sm font-semibold">
-                  Allocated Amount *
-                </Label>
-                <Input
-                  id="lineAllocated"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={lineData.allocated_amount || ""}
-                  onChange={(e) => updateLineData({ allocated_amount: Number(e.target.value) })}
-                  placeholder="0.00"
-                  required
-                />
-              </div>
+              <Input
+                label="Allocated Amount"
+                required
+                id="lineAllocated"
+                type="number"
+                step="0.01"
+                min="0"
+                value={lineData.allocated_amount || ""}
+                onChange={(e) => updateLineData({ allocated_amount: Number(e.target.value) })}
+                placeholder="0.00"
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="lineSpent" className="text-sm font-semibold">
-                  Spent Amount
-                </Label>
-                <Input
-                  id="lineSpent"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={lineData.spent_amount || ""}
-                  onChange={(e) => updateLineData({ spent_amount: Number(e.target.value) })}
-                  placeholder="0.00"
-                />
-              </div>
+              <Input
+                label="Spent Amount"
+                id="lineSpent"
+                type="number"
+                step="0.01"
+                min="0"
+                value={lineData.spent_amount || ""}
+                onChange={(e) => updateLineData({ spent_amount: Number(e.target.value) })}
+                placeholder="0.00"
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="lineCurrency" className="text-sm font-semibold">
@@ -578,19 +566,15 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="lineDescription" className="text-sm font-semibold">
-                Description
-              </Label>
-              <Textarea
-                id="lineDescription"
-                value={lineData.description}
-                onChange={(e) => updateLineData({ description: e.target.value })}
-                rows={3}
-                placeholder="Describe the purpose and scope of this budget line..."
-                className="resize-none"
-              />
-            </div>
+            <Textarea
+              label="Description"
+              id="lineDescription"
+              value={lineData.description}
+              onChange={(e) => updateLineData({ description: e.target.value })}
+              rows={3}
+              placeholder="Describe the purpose and scope of this budget line..."
+              className="resize-none"
+            />
 
             <div className="flex justify-end gap-4">
               <Button type="button" variant="outline" onClick={handleCancelForm}>

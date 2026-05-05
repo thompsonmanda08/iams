@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -139,43 +138,36 @@ export function RiskCauseDialog({ open, onOpenChange, onSuccess, cause }: RiskCa
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Risk Cause Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g., Root Cause Analysis, Technical Failure"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Risk Cause Name"
+              required
+              id="name"
+              placeholder="e.g., Root Cause Analysis, Technical Failure"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isLoading}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="parent_id">Risk Cause Parent (Optional)</Label>
-              <SearchSelectField
-                value={formData.parent_id || ""}
-                onValueChange={(value) => setFormData({ ...formData, parent_id: value || null })}
-                placeholder="Select risk cause parent"
-                options={parentRiskCauses}
-                isDisabled={isLoading}
-                onModal
-                descriptionText="Select a parent if this is a sub-cause"
-              />
-            </div>
+            <SearchSelectField
+              label="Risk Cause Parent (Optional)"
+              value={formData.parent_id || ""}
+              onValueChange={(value) => setFormData({ ...formData, parent_id: value || null })}
+              placeholder="Select risk cause parent"
+              options={parentRiskCauses}
+              isDisabled={isLoading}
+              onModal
+              descriptionText="Select a parent if this is a sub-cause"
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe this risk cause"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              id="description"
+              placeholder="Describe this risk cause"
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              disabled={isLoading}
+            />
           </div>
 
           <DialogFooter>
