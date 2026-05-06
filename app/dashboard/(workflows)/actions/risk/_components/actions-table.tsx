@@ -200,6 +200,22 @@ export function ActionsTable({
                   const isUserExecutor = task?.task_type === "EXECUTION" && isAssignedToMe;
                   const isUserReviewer = task?.task_type === "REVIEW" && isAssignedToMe;
                   const overdue = isOverdue(action.due_date, action.status);
+                  const TERMINAL_STATUSES = [
+                    "COMPLETE",
+                    "COMPLETED",
+                    "RESOLVED",
+                    "REVIEWED",
+                    "APPROVED",
+                    "CANCELLED",
+                    "ARCHIVED",
+                    "CLOSED"
+                  ];
+                  const isTerminal = (s?: string) =>
+                    !!s && TERMINAL_STATUSES.includes(s.toUpperCase());
+                  const reviewAlreadyDone =
+                    isTerminal(action.status) ||
+                    isTerminal(execution?.status) ||
+                    (actionDef.incident_log?.reviewer_submissions?.length ?? 0) > 0;
 
                   return (
                     <TableRow key={action.id}>
@@ -362,7 +378,7 @@ export function ActionsTable({
 
                           {isUserReviewer &&
                             action.action_type === "MITIGATION" &&
-                            action.status !== "COMPLETED" &&
+                            !reviewAlreadyDone &&
                             (() => {
                               const isAwaitingActioner = !actionDef.execution;
                               return (
@@ -386,7 +402,7 @@ export function ActionsTable({
                             })()}
                           {isUserReviewer &&
                             action.action_type === "INCIDENT" &&
-                            action.status !== "RESOLVED" &&
+                            !reviewAlreadyDone &&
                             (() => {
                               const isAwaitingActioner = !actionDef.execution;
                               return (

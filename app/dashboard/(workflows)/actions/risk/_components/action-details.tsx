@@ -28,7 +28,7 @@ import {
 import { format } from "date-fns";
 import { cn, notify } from "@/lib/utils";
 import BackButton from "@/components/back-button";
-import { ActionLog } from "./[id]/_components/action-log";
+import { ActionLog } from "../[id]/_components/action-log";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RiskActionLog, PaginationInfo } from "@/lib/types/risk-log";
 import { useState } from "react";

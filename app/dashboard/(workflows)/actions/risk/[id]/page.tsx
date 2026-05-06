@@ -1,4 +1,4 @@
-import { ActionDetails } from "../action-details";
+import { ActionDetails } from "../_components/action-details";
 import { getRisk, getRiskLogs } from "@/app/_actions/risk-module-actions";
 
 export default async function ActionDetailPage({ params }: { params: Promise<{ id: string }> }) {
