@@ -16,11 +16,18 @@ export const MAX_FILE_SIZE = 5 * 1024 * 1024; // MB
 export const DEFAULT_DATE_RANGE_DAYS = 30; // 30 DAYS
 export const DEFAULT_PAGINATION = { page: 1, limit: 20 };
 
+function _toLocalYMD(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export const DEFAULT_DATE_RANGE = {
-  start_date: new Date(new Date().getTime() - DEFAULT_DATE_RANGE_DAYS * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0],
-  end_date: new Date().toISOString().split("T")[0],
+  start_date: _toLocalYMD(
+    new Date(new Date().getTime() - DEFAULT_DATE_RANGE_DAYS * 24 * 60 * 60 * 1000)
+  ),
+  end_date: _toLocalYMD(new Date()),
   range: ""
 };
 

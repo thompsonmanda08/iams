@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toLocalDateString } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -198,7 +199,7 @@ export function EvidenceGrid({
                   <Input
                     type="date"
                     value={
-                      row.documentDate ? new Date(row.documentDate).toISOString().split("T")[0] : ""
+                      row.documentDate ? toLocalDateString(new Date(row.documentDate)) : ""
                     }
                     onChange={(e) =>
                       updateRow(

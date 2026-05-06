@@ -109,3 +109,15 @@ export function generateRandomString(length = 10) {
     .sort(() => Math.random() - 0.5)
     .join("");
 }
+
+/**
+ * Format Date as YYYY-MM-DD in local timezone. Avoids UTC drift from
+ * `toISOString().split("T")[0]` which shifts the date for any non-UTC zone.
+ */
+export function toLocalDateString(date: Date | null | undefined): string {
+  if (!date) return "";
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}

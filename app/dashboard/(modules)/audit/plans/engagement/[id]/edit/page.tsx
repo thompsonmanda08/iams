@@ -31,7 +31,7 @@ import {
   useAuditPlans,
   useUpdateAuditPlan
 } from "@/hooks/use-audit-query-data";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import { useHeadsOfDepartments, useUsers } from "@/hooks/use-users-query-data";
 import { useDepartments } from "@/hooks/use-query-data";
 import { User } from "@/lib/types/account";
@@ -440,12 +440,12 @@ export default function EditAuditPlanPage() {
       year: new Date().getFullYear(), // DEFAULT BUT NOT REQUIRED
       title: formData.title,
       description: formData.description,
-      start_date: formData.start_date?.toISOString().split("T")[0] as string,
-      end_date: formData.end_date?.toISOString().split("T")[0] as string,
+      start_date: toLocalDateString(formData.start_date) as string,
+      end_date: toLocalDateString(formData.end_date) as string,
       ref_no: formData.ref_no,
       audit_plan_date: formData.audit_plan_date
-        ? formData.audit_plan_date.toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
+        ? toLocalDateString(formData.audit_plan_date)
+        : toLocalDateString(new Date()),
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
       audit_criteria: formData.audit_criteria,
@@ -456,10 +456,10 @@ export default function EditAuditPlanPage() {
       client_representative: formData.client_representative,
       audit_language: formData.audit_language,
       opening_meeting_datetime: formData.opening_meeting_datetime
-        ? formData.opening_meeting_datetime.toISOString().split("T")[0]
+        ? toLocalDateString(formData.opening_meeting_datetime)
         : undefined,
       closing_meeting_datetime: formData.closing_meeting_datetime
-        ? formData.closing_meeting_datetime.toISOString().split("T")[0]
+        ? toLocalDateString(formData.closing_meeting_datetime)
         : undefined,
       working_paper_template_id: isGeneralFramework ? null : formData.working_paper_template_id,
       general_work_paper_template_id: isGeneralFramework

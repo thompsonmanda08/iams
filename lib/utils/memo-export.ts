@@ -102,7 +102,9 @@ export async function generateMemoDocx(
     const url = URL.createObjectURL(blob);
 
     link.href = url;
-    link.download = `${memoTitle}_${new Date().toISOString().split("T")[0]}.docx`;
+    const _d = new Date();
+    const _ymd = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, "0")}-${String(_d.getDate()).padStart(2, "0")}`;
+    link.download = `${memoTitle}_${_ymd}.docx`;
     document.body.appendChild(link);
     link.click();
 

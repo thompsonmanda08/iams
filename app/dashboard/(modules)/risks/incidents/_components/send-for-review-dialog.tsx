@@ -23,7 +23,7 @@ import { useUsers } from "@/hooks/use-users-query-data";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useQueryClient } from "@tanstack/react-query";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
@@ -251,9 +251,7 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
               onValueChange={(date) => {
                 setFormData((prev) => ({
                   ...prev,
-                  due_date: date
-                    ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-                    : ""
+                  due_date: toLocalDateString(date)
                 }));
                 if (errors.due_date) {
                   setErrors((prev: any) => ({ ...prev, due_date: undefined }));

@@ -11,7 +11,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { SelectField } from "@/components/ui/select-field";
 import { CheckCircle2, Save, Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import type { AuditPlan } from "@/lib/types/audit-types";
 import { updateFinding } from "@/app/_actions/audit-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -211,7 +211,7 @@ export function FindingForm({
       management_response: formData.management_response || "",
       action_plan: formData.action_plan || "",
       responsible_person: formData.responsible_person || "",
-      due_date: formData.due_date ? formData.due_date.toISOString().split("T")[0] : "",
+      due_date: toLocalDateString(formData.due_date),
       evidence_links: formData?.evidence_links,
       status: formData.status
     };

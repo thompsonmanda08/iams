@@ -16,7 +16,7 @@ import {
 import { MultiSelectField } from "@/components/ui/multi-select-field";
 import { SearchSelectField } from "@/components/ui/search-select-field";
 import { DatePicker } from "@/components/ui/date-picker";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { createRiskAction } from "@/app/_actions/risk-module-actions";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -231,7 +231,7 @@ export function AssignActionDialog({
             onValueChange={(date) => {
               setFormData((prev) => ({
                 ...prev,
-                due_date: date ? date.toISOString().split('T')[0] : ""
+                due_date: toLocalDateString(date)
               }));
               if (errors.due_date) {
                 setErrors((prev) => ({ ...prev, due_date: undefined }));

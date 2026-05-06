@@ -36,7 +36,7 @@ import {
   generateMemoDocx,
   buildMemoPdfPreviewUrl
 } from "@/lib/utils/memo-export";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import { getTemplateById, getTemplateOptionsGrouped } from "@/lib/templates/memo-templates";
 import { StatusBadge } from "@/components/status-badge";
 
@@ -338,7 +338,7 @@ export const CreateOrUpdateMemo = forwardRef<CreateOrUpdateMemoRef, CreateOrUpda
           });
           return;
         }
-        const filename = `${title}_${new Date().toISOString().split("T")[0]}.html`;
+        const filename = `${title}_${toLocalDateString(new Date())}.html`;
         downloadHtmlAsFile(content, filename);
         notify({
           title: "Success",

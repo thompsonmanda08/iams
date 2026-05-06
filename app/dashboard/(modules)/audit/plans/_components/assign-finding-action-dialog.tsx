@@ -18,7 +18,7 @@ import { useCreateFindingActionMutation } from "@/hooks/use-finding-actions-quer
 import type { WorkpaperFinding } from "@/lib/types/audit-types";
 import { Loader2 } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 
@@ -109,9 +109,7 @@ export function AssignFindingActionDialog({
       return;
     }
 
-    // Format due_date as YYYY-MM-DD
-    const dueDate = formData.due_date!;
-    const formattedDueDate = dueDate.toISOString().split("T")[0];
+    const formattedDueDate = toLocalDateString(formData.due_date!);
 
     createActionMutation.mutate(
       {

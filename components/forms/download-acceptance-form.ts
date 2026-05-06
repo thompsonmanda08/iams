@@ -1,3 +1,4 @@
+import { toLocalDateString } from "@/lib/utils";
 
 type ApproverKey = "riskCoordinator" | "riskOwner" | "reviewedBy" | "emcApproval" | "boardApproval";
 
@@ -117,7 +118,7 @@ export const downloadPDF = ({formData}:any): void => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Risk_Acceptance_Form_${new Date().toISOString().split("T")[0]}.html`;
+    a.download = `Risk_Acceptance_Form_${toLocalDateString(new Date())}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

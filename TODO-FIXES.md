@@ -83,10 +83,9 @@ Tally: 9 CONFIRMED-FE • 1 MAYBE-FIXED • 2 LIKELY-BE • 1 CANNOT-LOCATE • 
 - **Investigation:** Searched `app/dashboard/(modules)/risks/incidents/**` — no `reassign` references. Reassign UI exists only in workflow approvals (`workflow-task-reassign-dialog.tsx`) for approval tasks, not incidents.
 - **Action:** Feature build required (BE endpoint + FE dialog + hook). Confirm scope with PM.
 
-### #10 — Budget date TZ off-by-one — CONFIRMED-FE
-- **File:** `app/dashboard/(modules)/audit/budgets/_components/budget-form.tsx:178-179,196-197,337,353,553,565`
-- **Root cause:** `new Date(...).toISOString()` and `date?.toISOString().split("T")[0]` convert local-tz date to UTC, drops a day for users west of UTC. Zambia (UTC+2) unaffected; affects users in negative-UTC zones.
-- **Fix scope (FE):** Replace with `format(date, "yyyy-MM-dd")` from `date-fns` (no tz conversion). 4 spots.
+### #10 — Date TZ off-by-one — FIXED
+- **Root cause:** `date.toISOString().split("T")[0]` converts local-tz Date to UTC string. For UTC+N zones (Zambia UTC+2), local midnight serializes to previous-day UTC; for UTC-N zones, to next-day UTC. Either way, drops/shifts a day from what user picked. Earlier note here ("Zambia unaffected") was wrong.
+- **Fix:** Added `toLocalDateString(date)` helper in `lib/utils/index.ts` (uses `getFullYear/Month/Date`). Replaced all client-side date-picker call sites. Server-side helpers (`app/_actions/finding-actions.ts`, `lib/config/report-template-merger.ts`) intentionally left — server TZ is independent of user TZ; client must format before sending.
 
 ### #11 — Create Budget button always active — CONFIRMED-FE
 - **File:** `app/dashboard/(modules)/audit/budgets/_components/budget-form.tsx:386,149-170,593-595`

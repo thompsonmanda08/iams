@@ -30,7 +30,7 @@ import {
   Save,
   Send
 } from "lucide-react";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { CURRENCIES } from "@/lib/constants";
@@ -545,7 +545,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                       : undefined
                   }
                   onValueChange={(date) =>
-                    updateLineData({ start_date: date?.toISOString().split("T")[0] || "" })
+                    updateLineData({ start_date: toLocalDateString(date) })
                   }
                 />
               </div>
@@ -560,7 +560,7 @@ const BudgetDetails = ({ budget, budgetLines }: BudgetDetailsProps) => {
                     lineData.end_date ? (new Date(lineData.end_date) as unknown as any) : undefined
                   }
                   onValueChange={(date) =>
-                    updateLineData({ end_date: date?.toISOString().split("T")[0] || "" })
+                    updateLineData({ end_date: toLocalDateString(date) })
                   }
                 />
               </div>

@@ -682,7 +682,9 @@ async function buildMemoBlob(html: string, title: string): Promise<Blob> {
 
 function safeFileName(title: string): string {
   const safe = (title && title.trim()) || "Audit Memo";
-  return `${safe.replace(/[^\w\-\s]/g, "").trim().replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+  const d = new Date();
+  const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${safe.replace(/[^\w\-\s]/g, "").trim().replace(/\s+/g, "_")}_${ymd}.pdf`;
 }
 
 /**

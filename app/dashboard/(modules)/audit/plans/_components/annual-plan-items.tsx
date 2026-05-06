@@ -28,6 +28,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { ConfirmationModal } from "@/components/confirmation-modal";
+import { toLocalDateString } from "@/lib/utils";
 import {
   Empty,
   EmptyContent,
@@ -775,7 +776,7 @@ export function CreateOrUpdatePlanItem({
               }
               onValueChange={(date) => {
                 setError({ status: false, message: "" });
-                const formattedDate = date ? date.toISOString().split("T")[0] : "";
+                const formattedDate = toLocalDateString(date);
                 setFormData((c) => ({
                   ...c,
                   engagement_date: formattedDate
@@ -793,7 +794,7 @@ export function CreateOrUpdatePlanItem({
               }
               onValueChange={(date) => {
                 setError({ status: false, message: "" });
-                const formattedDate = date ? date.toISOString().split("T")[0] : "";
+                const formattedDate = toLocalDateString(date);
                 setFormData((c) => ({
                   ...c,
                   engagement_end_date: formattedDate
@@ -1047,9 +1048,9 @@ export function GenerateAuditPlanModal({ item, planId }: GenerateAuditPlanModalP
       description: formData.description,
       ref_no: formData.ref_no,
       audit_plan_date: formData.audit_plan_date
-        ? formData.audit_plan_date.toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      end_date: formData.end_date?.toISOString().split("T")[0] || "",
+        ? toLocalDateString(formData.audit_plan_date)
+        : toLocalDateString(new Date()),
+      end_date: toLocalDateString(formData.end_date),
       audit_area: formData.audit_area,
       audit_scope: formData.audit_scope,
       audit_criteria: formData.audit_criteria,

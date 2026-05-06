@@ -16,7 +16,7 @@ import { TICK_MARKS, DEFAULT_REVENUE_TICK_MARKS } from "@/lib/config/tick-marks"
 import { SelectField } from "../../../../../components/ui/select-field";
 import { useUsers } from "@/hooks/use-users-query-data";
 import { User } from "@/lib/types/account";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 
 interface GeneralWorkpaperFormProps {
   templateId?: string | null;
@@ -277,7 +277,7 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
               label="Preparation Date"
               required
               type="date"
-              value={formData.preparedDate.toISOString().split("T")[0]}
+              value={toLocalDateString(formData.preparedDate)}
               onChange={(e) => updateField("preparedDate", new Date(e.target.value))}
             />
 
@@ -302,7 +302,7 @@ export function GeneralWorkpaperForm({ templateId, initialData }: GeneralWorkpap
               label="Review Date (Optional)"
               type="date"
               value={
-                formData.reviewedDate ? formData.reviewedDate.toISOString().split("T")[0] : ""
+                toLocalDateString(formData.reviewedDate)
               }
               onChange={(e) =>
                 updateField("reviewedDate", e.target.value ? new Date(e.target.value) : undefined)

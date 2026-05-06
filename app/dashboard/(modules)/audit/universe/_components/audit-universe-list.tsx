@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import { AuditUniverse, AuditUniverseStatus } from "@/lib/types/audit-types";
 import { Badge } from "@/components/ui/badge";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -407,7 +407,7 @@ export default function AuditUniverseList({
                         const auditableAreas = item.auditableAreas || [];
                         const status = item.status || "UNIVERSE_CREATION";
                         const dateCreated =
-                          item.created_at || new Date().toISOString().split("T")[0];
+                          item.created_at || toLocalDateString(new Date());
                         const itemCount = universeItemsMap[item.id]?.length || 0;
 
                         return (

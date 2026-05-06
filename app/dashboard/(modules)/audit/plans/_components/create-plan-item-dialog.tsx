@@ -19,7 +19,7 @@ import CustomAlert from "@/components/ui/custom-alert";
 import { Textarea } from "@/components/ui/textarea";
 import { useDepartments } from "@/hooks/use-query-data";
 import { createAnnualAuditPlanItem, updateAnnualAuditPlan } from "@/app/_actions/audit-module-actions";
-import { notify } from "@/lib/utils";
+import { notify, toLocalDateString } from "@/lib/utils";
 import { AUDIT_QUERY_KEYS } from "@/hooks/use-audit-query-data";
 import { Department, ErrorState } from "@/lib/types";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -229,7 +229,7 @@ export function CreatePlanItemDialog({
                 setError({ status: false, message: "" });
                 setFormData((c) => ({
                   ...c,
-                  engagement_date: date ? date.toISOString().split('T')[0] : ""
+                  engagement_date: toLocalDateString(date)
                 }));
               }}
             />
@@ -246,7 +246,7 @@ export function CreatePlanItemDialog({
                 setError({ status: false, message: "" });
                 setFormData((c) => ({
                   ...c,
-                  engagement_end_date: date ? date.toISOString().split('T')[0] : ""
+                  engagement_end_date: toLocalDateString(date)
                 }));
               }}
             />
