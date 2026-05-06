@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -54,6 +55,7 @@ export function ActionIncidentReviewDialog({
   actionDefinition
 }: ActionIncidentReviewDialogProps) {
   const { checkPermission, hasPermission } = usePermissions();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<SubmissionFormData>({
     status: "",
     comment: "",
@@ -127,7 +129,7 @@ export function ActionIncidentReviewDialog({
   const handleSubmit = async () => {
     if (!checkPermission(MODULE_CODES.RISK_INCIDENTS, "can_approve")) return;
 
-    if (!actionDefinition?.execution || actionDefinition.execution.status !== "SUBMITTED") {
+    if (!actionDefinition?.execution) {
       notify({
         description:
           "The assigned action has not been worked on yet. Wait for the actioner to submit evidence before reviewing.",
@@ -153,6 +155,8 @@ export function ActionIncidentReviewDialog({
       if (response.success) {
         notify({ description: "Review findings submitted successfully", type: "success" });
         setFormData({ status: "", comment: "", file_urls: [] });
+        queryClient.invalidateQueries({ queryKey: ["actions"] });
+        queryClient.invalidateQueries({ queryKey: ["incidents"] });
         onOpenChange(false);
       } else {
         notify({ description: response.message || "Failed to submit findings", type: "error" });

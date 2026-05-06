@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -52,6 +53,7 @@ export function ActionIncidentSubmissionDialog({
   actionDefinition
 }: ActionIncidentSubmissionDialogProps) {
   const { checkPermission, hasPermission } = usePermissions();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<SubmissionFormData>({
     comment: "",
     file_urls: []
@@ -140,6 +142,8 @@ export function ActionIncidentSubmissionDialog({
       if (response.success) {
         notify({ description: "Findings submitted successfully", type: "success" });
         setFormData({ comment: "", file_urls: [] });
+        queryClient.invalidateQueries({ queryKey: ["actions"] });
+        queryClient.invalidateQueries({ queryKey: ["incidents"] });
         onOpenChange(false);
       } else {
         notify({ description: response.message || "Failed to submit findings", type: "error" });
@@ -154,7 +158,7 @@ export function ActionIncidentSubmissionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="w-full max-w-2xl!" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Incident Action Submission</DialogTitle>
           <DialogDescription>Review incident details and submit your findings</DialogDescription>
@@ -380,7 +384,9 @@ export function ActionIncidentSubmissionDialog({
                               <div className="space-y-2">
                                 {submission.file_urls.map((fileUrl: any, fileIdx: number) => {
                                   return (
-                                    <div key={fileIdx} className="rounded-lg border border-gray-200 p-4">
+                                    <div
+                                      key={fileIdx}
+                                      className="rounded-lg border border-gray-200 p-4">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                           <div>

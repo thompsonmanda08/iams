@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   X,
   Pen,
@@ -55,6 +56,7 @@ export default function SignatureForm({
   onClose
 }: SignatureFormProps) {
   const { checkPermission } = usePermissions();
+  const queryClient = useQueryClient();
   const [decision, setDecision] = useState<Decision>(null);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -196,6 +198,8 @@ export default function SignatureForm({
       }
 
       await onSubmit(formData);
+      queryClient.invalidateQueries({ queryKey: ["actions"] });
+      queryClient.invalidateQueries({ queryKey: ["risk-acceptances"] });
       notify({ description: "Risk acceptance approved", type: "success" });
       onClose();
     } catch (error: any) {
@@ -229,6 +233,8 @@ export default function SignatureForm({
       }
 
       await onSubmit({ ...formData, signature: "" });
+      queryClient.invalidateQueries({ queryKey: ["actions"] });
+      queryClient.invalidateQueries({ queryKey: ["risk-acceptances"] });
       notify({ description: "Risk acceptance rejected", type: "success" });
       onClose();
     } catch (error: any) {

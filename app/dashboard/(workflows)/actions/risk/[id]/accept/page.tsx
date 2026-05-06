@@ -1,5 +1,6 @@
 "use client";
 import { use, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import BackButton from "@/components/back-button";
 import RiskAcceptanceForm, { FormData } from "@/components/forms/risk-acceptance-form";
 import { notify } from "@/lib/utils";
@@ -11,6 +12,7 @@ import { MODULE_CODES } from "@/lib/constants/module-codes";
 
 export default function RiskAcceptancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { checkPermission, hasPermission } = usePermissions();
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [existingFormData, setExistingFormData] = useState<Partial<FormData> | null>(null);
@@ -24,6 +26,8 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
         notify({ description: response.message || "Risk Acceptance Form created successfully!", type: "success" });
         setExistingFormData(data);
         setFormMode("edit");
+        queryClient.invalidateQueries({ queryKey: ["actions"] });
+        queryClient.invalidateQueries({ queryKey: ["risk-acceptances"] });
         router.push("/dashboard/risks/risk-acceptances");
       } else {
         notify({ description: response.message || "Failed to create Risk Acceptance Form", type: "error" });
@@ -42,6 +46,8 @@ export default function RiskAcceptancePage({ params }: { params: Promise<{ id: s
       if (response.success) {
         notify({ description: response.message || "Risk Acceptance Form updated successfully!", type: "success" });
         setExistingFormData(data);
+        queryClient.invalidateQueries({ queryKey: ["actions"] });
+        queryClient.invalidateQueries({ queryKey: ["risk-acceptances"] });
       } else {
         notify({ description: response.message || "Failed to update Risk Acceptance Form", type: "error" });
       }

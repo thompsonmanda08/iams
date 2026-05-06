@@ -251,7 +251,9 @@ export function SendForReviewDialog({ open, onOpenChange, incident }: SendForRev
               onValueChange={(date) => {
                 setFormData((prev) => ({
                   ...prev,
-                  due_date: date ? date.toISOString().split("T")[0] : ""
+                  due_date: date
+                    ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+                    : ""
                 }));
                 if (errors.due_date) {
                   setErrors((prev: any) => ({ ...prev, due_date: undefined }));

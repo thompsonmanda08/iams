@@ -150,7 +150,7 @@ export function ActionReviewDialog({
 
   const handleNextStep = () => {
     if (!checkPermission(MODULE_CODES.RISK_ACTIONS, "can_approve")) return;
-    if (!execution || execution.status !== "SUBMITTED") {
+    if (!execution) {
       notify({
         description:
           "The assigned action has not been worked on yet. Wait for the actioner to submit evidence before reviewing.",
@@ -185,6 +185,8 @@ export function ActionReviewDialog({
     onSuccess: (response) => {
       if (response.success) {
         notify({ description: "Review step 1 submitted", type: "success" });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTIONS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTION_LOGS] });
         // Continue to Step 2 for risk assessment
         setStep(2);
       } else {
@@ -225,7 +227,10 @@ export function ActionReviewDialog({
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTIONS] });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ACTION_LOGS] });
       } else {
-        notify({ description: response.message || "Failed to update risk assessment", type: "error" });
+        notify({
+          description: response.message || "Failed to update risk assessment",
+          type: "error"
+        });
       }
     },
     onError: (error) => {
@@ -247,7 +252,7 @@ export function ActionReviewDialog({
         onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        className="max-w-2xl">
+        className="max-w-2xl!">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />

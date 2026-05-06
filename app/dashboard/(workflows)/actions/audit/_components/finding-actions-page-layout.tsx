@@ -12,13 +12,21 @@ import { SelectField } from "@/components/ui/select-field";
 import { CustomPagination } from "@/components/ui/pagination";
 import { Pagination } from "@/lib/types";
 import { ClipboardList, LogsIcon } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notify } from "@/lib/utils";
 import { sendFollowupReminder } from "@/app/_actions/finding-actions";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
+import {
+  useAuditFollowupLogsList,
+  useFindingActionsList
+} from "@/hooks/use-finding-actions-queries";
 
 interface FindingActionsPageLayoutProps {
+  page: number;
+  pageSize: number;
+  auditPage: number;
+  auditPageSize: number;
   initialActions: FindingAction[];
   pagination: Pagination;
   auditLogActions: FindingAction[];
@@ -45,6 +53,10 @@ const ACTION_STATUSES: { value: ActionStatus; label: string }[] = [
 ];
 
 export function FindingActionsPageLayout({
+  page,
+  pageSize,
+  auditPage,
+  auditPageSize,
   initialActions = [],
   pagination,
   auditLogActions = [],
@@ -52,7 +64,22 @@ export function FindingActionsPageLayout({
 }: FindingActionsPageLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { checkPermission, hasPermission } = usePermissions();
+
+  const { data: actionsData } = useFindingActionsList(
+    { page, page_size: pageSize },
+    { actions: initialActions, pagination }
+  );
+  const { data: auditLogData } = useAuditFollowupLogsList(
+    { page: auditPage, page_size: auditPageSize },
+    { actions: auditLogActions, pagination: auditLogPagination }
+  );
+
+  const myActions = actionsData?.actions ?? initialActions;
+  const myActionsPagination = actionsData?.pagination ?? pagination;
+  const followupActions = auditLogData?.actions ?? auditLogActions;
+  const followupPagination = auditLogData?.pagination ?? auditLogPagination;
 
   const [activeTab, setActiveTab] = useState("my-actions");
   const [statusFilter, setStatusFilter] = useState<ActionStatus | "ALL">("ALL");
@@ -70,7 +97,7 @@ export function FindingActionsPageLayout({
   } = useTableSearch({ debounceMs: 200 });
 
   const filteredActions = useMemo(() => {
-    let filtered = initialActions;
+    let filtered = myActions;
 
     if (debouncedSearchTerm.trim()) {
       const lowerSearch = debouncedSearchTerm.toLowerCase();
@@ -87,10 +114,10 @@ export function FindingActionsPageLayout({
     }
 
     return filtered;
-  }, [initialActions, debouncedSearchTerm, statusFilter]);
+  }, [myActions, debouncedSearchTerm, statusFilter]);
 
   const filteredAuditLogActions = useMemo(() => {
-    let filtered = auditLogActions;
+    let filtered = followupActions;
 
     if (debouncedAuditSearchTerm.trim()) {
       const lowerSearch = debouncedAuditSearchTerm.toLowerCase();
@@ -103,21 +130,21 @@ export function FindingActionsPageLayout({
     }
 
     return filtered;
-  }, [auditLogActions, debouncedAuditSearchTerm]);
+  }, [followupActions, debouncedAuditSearchTerm]);
 
   const handlePaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || pagination?.page_size || 10;
+    const nextSize = pageConfig.page_size || myActionsPagination?.page_size || 10;
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(pageConfig.page));
-    params.set("page_size", String(pageSize));
+    params.set("page_size", String(nextSize));
     router.push(`?${params.toString()}`);
   };
 
   const handleAuditLogPaginationChange = (pageConfig: { page: number; page_size?: number }) => {
-    const pageSize = pageConfig.page_size || auditLogPagination?.page_size || 10;
+    const nextSize = pageConfig.page_size || followupPagination?.page_size || 10;
     const params = new URLSearchParams(searchParams.toString());
     params.set("audit_page", String(pageConfig.page));
-    params.set("audit_page_size", String(pageSize));
+    params.set("audit_page_size", String(nextSize));
     router.push(`?${params.toString()}`);
   };
 
@@ -125,6 +152,7 @@ export function FindingActionsPageLayout({
     mutationFn: (actionId: string) => sendFollowupReminder(actionId),
     onSuccess: (data) => {
       if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["finding-actions"] });
         notify({
           type: "success",
           description: "Reminder sent successfully"
@@ -211,7 +239,7 @@ export function FindingActionsPageLayout({
 
           {/* Pagination */}
           <CustomPagination
-            pagination={pagination}
+            pagination={myActionsPagination}
             updatePagination={handlePaginationChange}
             showDetails={true}
             allowSetPageSize={true}
@@ -261,7 +289,7 @@ export function FindingActionsPageLayout({
 
           {/* Pagination */}
           <CustomPagination
-            pagination={auditLogPagination}
+            pagination={followupPagination}
             updatePagination={handleAuditLogPaginationChange}
             showDetails={true}
             allowSetPageSize={true}

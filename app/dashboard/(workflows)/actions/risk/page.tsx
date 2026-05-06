@@ -1,5 +1,5 @@
 import { getActions } from "@/app/_actions/risk-module-actions";
-import { ActionsTable } from "./actions-table";
+import { ActionsTable } from "./_components/actions-table";
 import PageHeader from "@/components/page-header";
 import { Pagination } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,8 @@ export default async function ActionsPage({
     has_prev: false
   };
 
+  console.log("[RISK ACTIONS]", response?.data?.data);
+
   return (
     <main className="min-h-screen">
       <div className="bg-card border-b">
@@ -79,18 +81,23 @@ export default async function ActionsPage({
             description="View risks assigned to you and submit evidence of mitigation actions taken"
             icon="AlertTriangle"
           />
-          <div className="flex hidden gap-2">
+          {/* <div className="flex hidden gap-2">
             <Link href="/dashboard/actions/risk/logs">
               <Button variant="outline" className="gap-2">
                 <LogsIcon className="h-4 w-4" />
                 View Action Logs
               </Button>
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="container mx-auto px-4 py-8">
-        <ActionsTable actions={actions} pagination={pagination} />
+        <ActionsTable
+          page={page}
+          pageSize={page_size}
+          initialActions={actions}
+          initialPagination={pagination}
+        />
       </div>
     </main>
   );

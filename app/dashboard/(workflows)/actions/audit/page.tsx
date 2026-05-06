@@ -66,6 +66,10 @@ export default async function FindingActionsPage({
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <FindingActionsPageLayout
+          page={page}
+          pageSize={page_size}
+          auditPage={audit_page}
+          auditPageSize={audit_page_size}
           initialActions={findingActions}
           pagination={pagination}
           auditLogActions={auditLogActions}

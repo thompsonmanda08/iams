@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTableSearch } from "@/hooks/use-table-search";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -30,23 +31,45 @@ import { cn, notify } from "@/lib/utils";
 import { ActionFindingsDialog } from "@/app/dashboard/(modules)/risks/_components/action-findings-dialog";
 import { ActionEvidenceViewerDialog } from "@/app/dashboard/(modules)/risks/_components/action-evidence-viewer-dialog";
 import { ActionReviewDialog } from "@/app/dashboard/(modules)/risks/_components/action-review-dialog";
-import { ActionIncidentSubmissionDialog } from "./_components/action-incident-submission-dialog";
+import { ActionIncidentSubmissionDialog } from "./action-incident-submission-dialog";
 import type { ActionDefinition } from "@/app/_actions/risk-module-actions";
 import { Pagination } from "@/lib/types";
+import { useRiskActions } from "@/hooks/use-risk-actions-queries";
+import { useSession } from "@/store/session-store";
 import { StatusBadge } from "@/components/status-badge";
 import { sendRiskActionReminder } from "@/app/_actions/task-actions";
-import SignatureForm, { type ApproverSignature } from "./_components/signature-form";
+import SignatureForm, { type ApproverSignature } from "./signature-form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ActionIncidentReviewDialog } from "./_components/action-incident-review-dialog";
+import { ActionIncidentReviewDialog } from "./action-incident-review-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ActionsTableProps {
-  actions: ActionDefinition[];
-  pagination: Pagination;
+  page: number;
+  pageSize: number;
+  initialActions: ActionDefinition[];
+  initialPagination: Pagination;
 }
 
-export function ActionsTable({ actions, pagination }: ActionsTableProps) {
+export function ActionsTable({
+  page,
+  pageSize,
+  initialActions,
+  initialPagination
+}: ActionsTableProps) {
+  const { data } = useRiskActions(
+    { page, page_size: pageSize },
+    { actions: initialActions, pagination: initialPagination }
+  );
+  const actions = data?.actions ?? initialActions;
+  const pagination = data?.pagination ?? initialPagination;
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { session, user: currentUser } = useSession();
+  const currentUserId =
+    session?.user?.id ??
+    (session as any)?.user_id ??
+    (currentUser as any)?.user?.id ??
+    (currentUser as any)?.id;
   const { searchValue: searchQuery, setSearchValue: setSearchQuery } = useTableSearch({
     debounceMs: 200
   });
@@ -101,6 +124,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
     try {
       const response = await sendRiskActionReminder(actionId);
       if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ["actions"] });
         notify({ description: response.message || "Reminder sent successfully", type: "success" });
       } else {
         notify({ description: response.message || "Failed to send reminder", type: "error" });
@@ -172,8 +196,9 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                   const action = actionDef.action;
                   const task = actionDef.task;
                   const execution = actionDef.execution;
-                  const isUserExecutor = task?.task_type === "EXECUTION";
-                  const isUserReviewer = task?.task_type === "REVIEW";
+                  const isAssignedToMe = !!currentUserId && task?.assigned_to === currentUserId;
+                  const isUserExecutor = task?.task_type === "EXECUTION" && isAssignedToMe;
+                  const isUserReviewer = task?.task_type === "REVIEW" && isAssignedToMe;
                   const overdue = isOverdue(action.due_date, action.status);
 
                   return (
@@ -255,7 +280,9 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                           status={
                             action.action_type === "RISK_ACCEPTANCE"
                               ? action?.status
-                              : execution?.status || "Awaiting Action"
+                              : execution
+                                ? execution.status || "Pending"
+                                : "Awaiting Action"
                           }
                         />
                       </TableCell>
@@ -317,26 +344,27 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                             </Button>
                           )}
 
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSendReminder(action.id)}
-                            disabled={reminderSendingId === action.id}
-                            className="h-8 gap-1.5">
-                            {reminderSendingId === action.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Send className="h-3.5 w-3.5" />
-                            )}
-                            {reminderSendingId === action.id ? "Sending..." : "Send Reminder"}
-                          </Button>
+                          {!["COMPLETED", "RESOLVED", "CANCELLED"].includes(action.status) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSendReminder(action.id)}
+                              disabled={reminderSendingId === action.id}
+                              className="h-8 gap-1.5">
+                              {reminderSendingId === action.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Send className="h-3.5 w-3.5" />
+                              )}
+                              {reminderSendingId === action.id ? "Sending..." : "Send Reminder"}
+                            </Button>
+                          )}
 
                           {isUserReviewer &&
                             action.action_type === "MITIGATION" &&
                             action.status !== "COMPLETED" &&
                             (() => {
-                              const isAwaitingActioner =
-                                !actionDef.execution || actionDef.execution.status !== "SUBMITTED";
+                              const isAwaitingActioner = !actionDef.execution;
                               return (
                                 <Button
                                   size="sm"
@@ -360,8 +388,7 @@ export function ActionsTable({ actions, pagination }: ActionsTableProps) {
                             action.action_type === "INCIDENT" &&
                             action.status !== "RESOLVED" &&
                             (() => {
-                              const isAwaitingActioner =
-                                !actionDef.execution || actionDef.execution.status !== "SUBMITTED";
+                              const isAwaitingActioner = !actionDef.execution;
                               return (
                                 <Button
                                   size="sm"

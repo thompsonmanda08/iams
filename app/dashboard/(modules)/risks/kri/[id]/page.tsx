@@ -341,52 +341,84 @@ export default async function KRIPage({ params }: { params: Promise<{ id: string
                   </div>
 
                   {/* Metrics */}
-                  <div
-                    className={cn(
-                      "border-border bg-muted/30 grid grid-cols-2 divide-x divide-y rounded-xl border",
-                      kri.total_measured_value != null
-                        ? "sm:grid-cols-2"
-                        : "sm:grid-cols-3 sm:divide-y-0"
-                    )}>
-                    <div className="p-4">
-                      <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
-                        Current
-                      </p>
-                      <p className="text-foreground mt-1 font-mono text-lg font-semibold tabular-nums">
-                        {formatValue(kri.currentValue, kri.measurement_type, kri.currency_code)}
-                      </p>
-                    </div>
-                    {kri.total_measured_value != null && (
-                      <div className="p-4">
-                        <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
-                          Total Measured
-                        </p>
-                        <p className="text-foreground mt-1 font-mono text-lg font-semibold tabular-nums">
-                          {formatValue(
-                            kri.total_measured_value,
-                            kri.measurement_type,
-                            kri.currency_code
-                          )}
-                        </p>
+                  {(() => {
+                    const showTotalMeasured = kri.total_measured_value != null;
+                    const cells = [
+                      {
+                        label: "Current",
+                        value: formatValue(
+                          kri.currentValue,
+                          kri.measurement_type,
+                          kri.currency_code
+                        ),
+                        valueClass: "text-foreground"
+                      },
+                      ...(showTotalMeasured
+                        ? [
+                            {
+                              label: "Total Measured",
+                              value: formatValue(
+                                kri.total_measured_value,
+                                kri.measurement_type,
+                                kri.currency_code
+                              ),
+                              valueClass: "text-foreground"
+                            }
+                          ]
+                        : []),
+                      {
+                        label: "Target",
+                        value: formatValue(
+                          kri.target_value,
+                          kri.measurement_type,
+                          kri.currency_code
+                        ),
+                        valueClass: "text-emerald-600 dark:text-emerald-400"
+                      },
+                      {
+                        label: "Limit",
+                        value: formatValue(
+                          kri.limit_value,
+                          kri.measurement_type,
+                          kri.currency_code
+                        ),
+                        valueClass: "text-red-600 dark:text-red-400"
+                      }
+                    ];
+                    const cols = showTotalMeasured ? 2 : 3;
+                    return (
+                      <div
+                        className={cn(
+                          "border-border bg-muted/30 grid grid-cols-2 overflow-hidden rounded-xl border",
+                          showTotalMeasured ? "sm:grid-cols-2" : "sm:grid-cols-3"
+                        )}>
+                        {cells.map((cell, i) => {
+                          const col = i % cols;
+                          const row = Math.floor(i / cols);
+                          return (
+                            <div
+                              key={cell.label}
+                              className={cn(
+                                "p-4",
+                                col > 0 && "border-border border-l",
+                                row > 0 && "border-border border-t"
+                              )}>
+                              <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
+                                {cell.label}
+                              </p>
+                              <p
+                                className={cn(
+                                  "mt-1 font-mono text-lg font-semibold tabular-nums",
+                                  cell.valueClass
+                                )}>
+                                {cell.value}
+                              </p>
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
-                    <div className="p-4">
-                      <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
-                        Target
-                      </p>
-                      <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                        {formatValue(kri.target_value, kri.measurement_type, kri.currency_code)}
-                      </p>
-                    </div>
-                    <div className="p-4">
-                      <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
-                        Limit
-                      </p>
-                      <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-red-600 dark:text-red-400">
-                        {formatValue(kri.limit_value, kri.measurement_type, kri.currency_code)}
-                      </p>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {/* Warning zone — plain language */}
                   <div className="border-border rounded-xl border border-dashed p-4">

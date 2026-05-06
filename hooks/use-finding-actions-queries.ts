@@ -9,6 +9,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notify } from "@/lib/utils";
 import {
+  getAuditFollowupLogs,
   getFindingActions,
   getFindingActionsByFinding,
   getFindingAction,
@@ -32,6 +33,7 @@ import {
 } from "@/app/_actions/finding-actions";
 import { getFinding } from "@/app/_actions/audit-module-actions";
 import { getGeneralFinding, updateGeneralFinding } from "@/app/_actions/general-findings-actions";
+import type { Pagination } from "@/lib/types";
 import type {
   FindingAction,
   CreateFindingActionInput,
@@ -73,6 +75,62 @@ export const FINDING_QUERY_KEYS = {
 // ============================================================================
 // FINDING ACTION HOOKS
 // ============================================================================
+
+export interface FindingActionsListResult {
+  actions: FindingAction[];
+  pagination: Pagination;
+}
+
+const DEFAULT_FINDING_PAGINATION: Pagination = {
+  total: 0,
+  page: 1,
+  page_size: 10,
+  total_pages: 0,
+  has_next: false,
+  has_prev: false
+};
+
+/**
+ * Hook to fetch finding actions with pagination, supporting SSR initialData hydration.
+ */
+export function useFindingActionsList(
+  filters: { page?: number; page_size?: number } = {},
+  initialData?: FindingActionsListResult
+) {
+  return useQuery<FindingActionsListResult>({
+    queryKey: [...FINDING_ACTION_QUERY_KEYS.lists(), "paginated", filters],
+    queryFn: async () => {
+      const response = await getFindingActions(filters);
+      return {
+        actions: response.data?.data || [],
+        pagination: response.data?.pagination || DEFAULT_FINDING_PAGINATION
+      };
+    },
+    initialData,
+    staleTime: 60 * 1000
+  });
+}
+
+/**
+ * Hook to fetch audit follow-up logs with pagination, supporting SSR initialData.
+ */
+export function useAuditFollowupLogsList(
+  filters: { page?: number; page_size?: number } = {},
+  initialData?: FindingActionsListResult
+) {
+  return useQuery<FindingActionsListResult>({
+    queryKey: [...FINDING_ACTION_QUERY_KEYS.all, "audit-followup-log", filters],
+    queryFn: async () => {
+      const response = await getAuditFollowupLogs(filters);
+      return {
+        actions: response.data?.data || [],
+        pagination: response.data?.pagination || DEFAULT_FINDING_PAGINATION
+      };
+    },
+    initialData,
+    staleTime: 60 * 1000
+  });
+}
 
 /**
  * Hook to fetch all finding actions with optional filters
