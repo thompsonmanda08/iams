@@ -53,11 +53,9 @@ export default async function SystemSetupPage({ searchParams }: PageProps) {
     departmentsData = departmentsRes.success ? departmentsRes.data : null;
     pagination = departmentsData?.pagination ?? pagination;
   } else if (tab === "users") {
-    // Push the active/inactive tab filter to the server so pagination counts
-    // reflect the rows the user actually sees (was previously client-filtered,
-    // which caused "page_size=10" to render fewer rows).
     const status = params.status === "inactive" ? "inactive" : "active";
-    const usersRes = await getUsers({ page, page_size, isActive: status === "active" });
+    const search = params.search || undefined;
+    const usersRes = await getUsers({ page, page_size, isActive: status === "active", search });
     usersData = (usersRes?.data?.data || []) as User[];
     pagination = usersRes?.data?.pagination ?? pagination;
   }

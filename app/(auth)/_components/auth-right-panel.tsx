@@ -34,7 +34,7 @@ export default function AuthRightPanel() {
           <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-tr from-white/0 via-white/5 to-white/0 transition-transform duration-1000 group-hover:translate-x-full" />
 
           <div className="mb-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-[1.5px] border-white/30 border-t-white" />
+            <div className="h-8 w-8 rounded-full border-[1.5px] border-white/30" />
           </div>
 
           <h2 className="mb-4 text-2xl leading-snug font-medium tracking-tight">

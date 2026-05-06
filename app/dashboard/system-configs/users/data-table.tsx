@@ -441,22 +441,24 @@ export default function UsersDataTable({
     isCurrentUser
   );
 
-  const { searchValue: localSearch, setSearchValue: setLocalSearch, filteredData: filteredUsers } = useTableSearch<User>({
-    data,
-    filterFn: (user, query) => {
-      const lower = query.toLowerCase();
-      return (
-        `${user.first_name} ${user.last_name}`.toLowerCase().includes(lower) ||
-        user.email?.toLowerCase().includes(lower) ||
-        user.username?.toLowerCase().includes(lower)
-      );
+  const { searchValue: localSearch, setSearchValue: setLocalSearch } = useTableSearch<User>({
+    initialValue: searchParams.get("search") ?? "",
+    onDebouncedChange: (value) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set("search", value);
+      } else {
+        params.delete("search");
+      }
+      params.delete("page");
+      startTransition(() => {
+        router.push(`?${params.toString()}`);
+      });
     },
-    debounceMs: 200,
+    debounceMs: 400,
   });
 
-  // is_active is filtered server-side via ?status=; don't double-filter here
-  // (that previously made "10 per page" render as fewer rows).
-  const displayedUsers = filteredUsers.filter(user => {
+  const displayedUsers = data.filter(user => {
     const matchesRole = selectedRole === "all" || user.role?.name === selectedRole;
     return matchesRole;
   });
@@ -473,23 +475,8 @@ export default function UsersDataTable({
     pageCount: pagination.total_pages
   });
 
-  // Update search params
-  const updateSearchParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (value && value !== "all") {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-
-    if (key !== "page") {
-      params.delete("page");
-    }
-
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
+  const handleSearchChange = (value: string) => {
+    setLocalSearch(value);
   };
 
   const handleRoleChange = (value: string) => {
@@ -521,6 +508,7 @@ export default function UsersDataTable({
     setSelectedRole("all");
     const params = new URLSearchParams(searchParams.toString());
     params.delete("status");
+    params.delete("search");
     params.delete("page");
     startTransition(() => router.push(`?${params.toString()}`));
   };
@@ -566,7 +554,7 @@ export default function UsersDataTable({
             <Search
               placeholder="Search users by name or email..."
               value={localSearch}
-              onChange={setLocalSearch}
+              onChange={handleSearchChange}
               disabled={isPending}
             />
 
