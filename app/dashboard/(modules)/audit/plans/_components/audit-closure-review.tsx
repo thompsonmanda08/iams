@@ -275,8 +275,9 @@ export function AuditClosureReview({
   }
 
   const canRequestClosure = closureData.readyForClosure;
-  const completedCount = closureData.checklists.filter((c) => c.completed).length;
-  const totalCount = closureData.checklists.length;
+  const requiredChecklists = closureData.checklists.filter((c) => c.required);
+  const completedCount = requiredChecklists.filter((c) => c.completed).length;
+  const totalCount = requiredChecklists.length;
   const signedOff = auditPlan.management_comments?.trim();
 
   return (

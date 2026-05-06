@@ -618,6 +618,17 @@ export function FindingActionDetailsDialog({
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Create Reassessment / Update Finding Button */}
+                {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
+                  <Button
+                    onClick={() => {
+                      setCreateReassessmentOpen(true);
+                    }}
+                    className="w-full">
+                    {isGeneralFinding ? "Update Finding" : "Create Reassessment"}
+                  </Button>
+                )}
               </TabsContent>
 
               {/* Finding Evidence Tab */}
@@ -917,17 +928,6 @@ export function FindingActionDetailsDialog({
                 )}
               </TabsContent>
             </Tabs>
-
-            {/* Create Reassessment / Update Finding Button */}
-            {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
-              <Button
-                onClick={() => {
-                  setCreateReassessmentOpen(true);
-                }}
-                className="w-full">
-                {isGeneralFinding ? "Update Finding" : "Create Reassessment"}
-              </Button>
-            )}
           </div>
         </DialogContent>
       </Dialog>
