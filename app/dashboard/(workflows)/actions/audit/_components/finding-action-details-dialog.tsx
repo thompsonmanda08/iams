@@ -620,15 +620,28 @@ export function FindingActionDetailsDialog({
                 )}
 
                 {/* Create Reassessment / Update Finding Button */}
-                {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (
-                  <Button
-                    onClick={() => {
-                      setCreateReassessmentOpen(true);
-                    }}
-                    className="w-full">
-                    {isGeneralFinding ? "Update Finding" : "Create Reassessment"}
-                  </Button>
-                )}
+                {actionHasEvidence && isAssignedReviewer && (isGeneralFinding || !isCompliant) && (() => {
+                  const terminalStatuses = ["COMPLETE", "COMPLETED", "RESOLVED", "CLOSED"];
+                  const findingStatus = String(
+                    generalFindingData?.status ?? (finding as any)?.status ?? ""
+                  ).toUpperCase();
+                  const alreadyComplete =
+                    terminalStatuses.includes(findingStatus) ||
+                    !!(generalFindingData as any)?.is_marked_complete;
+                  return (
+                    <Button
+                      onClick={() => setCreateReassessmentOpen(true)}
+                      disabled={alreadyComplete}
+                      title={
+                        alreadyComplete
+                          ? "Finding already marked complete — no further updates allowed"
+                          : undefined
+                      }
+                      className="w-full">
+                      {isGeneralFinding ? "Update Finding" : "Create Reassessment"}
+                    </Button>
+                  );
+                })()}
               </TabsContent>
 
               {/* Finding Evidence Tab */}

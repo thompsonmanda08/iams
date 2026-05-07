@@ -201,23 +201,36 @@ function GeneralFindingRow({
               <TooltipContent>Submit for approval</TooltipContent>
             </Tooltip>
           )}
-          {finding.status === "APPROVED" && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PermissionButton
-                  moduleCode={MODULE_CODES.AUDIT_PLANS}
-                  action="can_assign"
-                  size="sm"
-                  variant="outline"
-                  className="text-violet-600 hover:text-violet-700"
-                  onClick={() => onAssign({ ...finding, framework: "GENERAL" })}>
-                  <UserPlus className="h-3 w-3" />
-                  Assign
-                </PermissionButton>
-              </TooltipTrigger>
-              <TooltipContent>Assign action</TooltipContent>
-            </Tooltip>
-          )}
+          {finding.status === "APPROVED" &&
+            (() => {
+              const isCompliant =
+                String(finding.compliance_status ?? "").toLowerCase() === "compliant";
+              const alreadyAssigned = actionsCount > 0;
+              const disabled = isCompliant || alreadyAssigned;
+              const tooltip = isCompliant
+                ? "Finding is compliant — no action needed"
+                : alreadyAssigned
+                  ? "Action already assigned for this finding"
+                  : "Assign action";
+              return (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PermissionButton
+                      moduleCode={MODULE_CODES.AUDIT_PLANS}
+                      action="can_assign"
+                      size="sm"
+                      variant="outline"
+                      disabled={disabled}
+                      className="text-violet-600 hover:text-violet-700"
+                      onClick={() => onAssign({ ...finding, framework: "GENERAL" })}>
+                      <UserPlus className="h-3 w-3" />
+                      Assign
+                    </PermissionButton>
+                  </TooltipTrigger>
+                  <TooltipContent>{tooltip}</TooltipContent>
+                </Tooltip>
+              );
+            })()}
         </div>
       </TableCell>
     </TableRow>

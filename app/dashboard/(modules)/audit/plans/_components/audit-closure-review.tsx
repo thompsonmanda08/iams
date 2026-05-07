@@ -414,7 +414,7 @@ export function AuditClosureReview({
                               setShowSignOffDialog(true);
                             }}
                             className="text-primary hover:text-primary/80 text-xs underline underline-offset-2">
-                            Provide Sign-Off
+                            Management Corrective Action
                           </button>
                           <button
                             onClick={() => setShowRequestSignOffConfirm(true)}

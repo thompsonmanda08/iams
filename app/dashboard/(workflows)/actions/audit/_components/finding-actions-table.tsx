@@ -73,22 +73,49 @@ export function FindingActionsTable({ actions, handleSendReminder }: FindingActi
                     <div className="space-y-1">
                       {action.framework_type === "GENERAL" ? (
                         <>
-                          <p className="truncate font-medium">General Workpaper Finding</p>
-                          <p className="text-muted-foreground font-mono text-xs">
-                            {action.finding_id?.substring(0, 24)}...
+                          <p
+                            className="truncate font-medium"
+                            title={action.finding_id || ""}>
+                            General Workpaper Finding
+                            <span className="text-muted-foreground ml-1 font-mono text-xs">
+                              · #{action.finding_id?.substring(0, 8) || "—"}
+                            </span>
                           </p>
+                          <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="bg-muted rounded-full px-2 py-0.5">
+                              Iteration {action.iteration_number ?? 1}
+                            </span>
+                            {Array.isArray(action.evidence) && action.evidence.length > 0 && (
+                              <span className="bg-muted rounded-full px-2 py-0.5">
+                                {action.evidence.length} evidence
+                              </span>
+                            )}
+                          </div>
                         </>
                       ) : (
                         <>
-                          <p className="truncate font-medium">
+                          <p
+                            className="truncate font-medium"
+                            title={action.clause_description || ""}>
                             {action.clause_description
-                              ? action.clause_description.substring(0, 60) + "..."
+                              ? action.clause_description.length > 60
+                                ? action.clause_description.substring(0, 60) + "…"
+                                : action.clause_description
                               : action.finding?.category_name || "Unknown"}
                           </p>
-                          <p className="text-xs font-medium">
-                            Clause No.{" "}
-                            {action.clause_number || action.finding?.clause_number || "N/A"}
-                          </p>
+                          <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="bg-muted rounded-full px-2 py-0.5">
+                              Clause {action.clause_number || action.finding?.clause_number || "N/A"}
+                            </span>
+                            <span className="bg-muted rounded-full px-2 py-0.5">
+                              Iteration {action.iteration_number ?? 1}
+                            </span>
+                            {Array.isArray(action.evidence) && action.evidence.length > 0 && (
+                              <span className="bg-muted rounded-full px-2 py-0.5">
+                                {action.evidence.length} evidence
+                              </span>
+                            )}
+                          </div>
                         </>
                       )}
                     </div>
