@@ -76,13 +76,21 @@ const createStyles = (primaryColor: string, secondaryColor: string) =>
     sectionTitle: {
       fontSize: 20,
       fontWeight: "bold",
-      marginBottom: 20,
+      marginBottom: 6,
       marginTop: 30,
-      color: primaryColor,
+      color: primaryColor
+    },
+    sectionTitleDivider: {
       borderBottomWidth: 2,
       borderBottomColor: primaryColor,
       borderBottomStyle: "solid",
-      paddingBottom: 10
+      marginBottom: 14
+    },
+    sectionSubHeader: {
+      fontSize: 12,
+      color: secondaryColor,
+      marginBottom: 10,
+      fontStyle: "italic"
     },
     sectionContent: {
       marginTop: 20
@@ -305,6 +313,10 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                 <Text style={styles.sectionTitle}>
                   {globalIndex + 1}. {section.header}
                 </Text>
+                {section.sub_header && section.show_sub_header !== false && (
+                  <Text style={styles.sectionSubHeader}>{section.sub_header}</Text>
+                )}
+                <View style={styles.sectionTitleDivider} />
             <View style={styles.sectionContent}>
               {/* Section content */}
               {section.content && <Text style={styles.textContent}>{section.content}</Text>}

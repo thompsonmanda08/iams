@@ -55,6 +55,7 @@ interface SectionEditorProps {
   onToggle: () => void;
   onHeaderChange: (header: string) => void;
   onSubHeaderChange: (subHeader: string) => void;
+  onShowSubHeaderChange?: (showSubHeader: boolean) => void;
   onContentChange: (content: string) => void;
   onFindingsSelectionChange?: (selectedIds: string[]) => void;
   generalFindings?: GeneralFindingSummary[];
@@ -94,6 +95,7 @@ export const SectionEditor = ({
   onToggle,
   onHeaderChange,
   onSubHeaderChange,
+  onShowSubHeaderChange,
   onContentChange,
   onFindingsSelectionChange,
   generalFindings,
@@ -301,12 +303,25 @@ export const SectionEditor = ({
                 value={section.header}
                 onChange={(e) => onHeaderChange(e.target.value)}
               />
-              <Input
-                label="Sub-Header"
-                type="text"
-                value={section.sub_header}
-                onChange={(e) => onSubHeaderChange(e.target.value)}
-              />
+              <div className="space-y-2">
+                <Input
+                  label="Sub-Header"
+                  type="text"
+                  value={section.sub_header}
+                  onChange={(e) => onSubHeaderChange(e.target.value)}
+                />
+                {onShowSubHeaderChange && (
+                  <label className="text-muted-foreground flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={section.show_sub_header !== false}
+                      onChange={(e) => onShowSubHeaderChange(e.target.checked)}
+                      className="border-input text-primary focus:ring-ring rounded"
+                    />
+                    Show on PDF / preview
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Content Logic */}

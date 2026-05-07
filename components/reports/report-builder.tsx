@@ -967,6 +967,9 @@ export function ReportBuilder({
                   onSubHeaderChange={(sub_header) =>
                     updateSection(section.section_id, { sub_header })
                   }
+                  onShowSubHeaderChange={(show_sub_header) =>
+                    updateSection(section.section_id, { show_sub_header })
+                  }
                   onContentChange={(content) => updateSection(section.section_id, { content })}
                   onOrientationChange={(page_orientation) =>
                     updateSection(section.section_id, { page_orientation })

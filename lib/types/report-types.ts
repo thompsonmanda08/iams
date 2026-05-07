@@ -138,6 +138,8 @@ export interface ReportSection {
   toc_level: 1 | 2 | 3;
   header: string;
   sub_header?: string;
+  /** Render sub_header in the PDF / preview. Defaults to true when sub_header is set. */
+  show_sub_header?: boolean;
   content?: string;
   widgets: WidgetInstance[];
   selected_finding_ids?: string[];
