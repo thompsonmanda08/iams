@@ -488,9 +488,89 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
               {!(
                 report.management_standard?.toUpperCase() === "GENERAL" &&
                 (section.section_type === "findings_selector" || section.section_type === "compliance_findings")
-              ) && section.widgets?.map((widget) => (
+              ) && section.widgets?.map((widget) => {
+                // Hide widgets that have no real data so the PDF doesn't show
+                // placeholder titles ("Manual Entry", "New Pie Chart", ...) or
+                // "No X data available" stubs to readers.
+                const d = (widget.data ?? {}) as any;
+                const PLACEHOLDER_TITLES = new Set([
+                  "manual entry",
+                  "new widget",
+                  "new pie chart",
+                  "new bar chart",
+                  "new line chart",
+                  "new area chart",
+                  "new metric",
+                  "new metric card",
+                  "new text block",
+                  "new table",
+                  "data table"
+                ]);
+                const titleNorm = String(d.title ?? "").trim().toLowerCase();
+                const isPlaceholderTitle = !titleNorm || PLACEHOLDER_TITLES.has(titleNorm);
+
+                let isEmpty = false;
+                switch (widget.widget_type) {
+                  case "table":
+                    isEmpty =
+                      !Array.isArray(d.columns) ||
+                      d.columns.length === 0 ||
+                      !Array.isArray(d.rows) ||
+                      d.rows.length === 0;
+                    break;
+                  case "pie_chart":
+                    isEmpty =
+                      !Array.isArray(d.slices) ||
+                      d.slices.length === 0 ||
+                      d.slices.every((s: any) => !s?.value);
+                    break;
+                  case "bar_chart":
+                    isEmpty =
+                      !Array.isArray(d.categories) ||
+                      d.categories.length === 0 ||
+                      d.categories.every(
+                        (c: any) =>
+                          !Array.isArray(c?.series) ||
+                          c.series.length === 0 ||
+                          c.series.every((s: any) => !s?.value)
+                      );
+                    break;
+                  case "line_chart":
+                  case "area_chart":
+                    isEmpty =
+                      !Array.isArray(d.categories) ||
+                      d.categories.length === 0 ||
+                      !Array.isArray(d.series) ||
+                      d.series.length === 0 ||
+                      d.series.every(
+                        (s: any) =>
+                          !Array.isArray(s?.data) || s.data.every((v: number) => !v)
+                      );
+                    break;
+                  case "metric_card":
+                    isEmpty =
+                      (!Array.isArray(d.metrics) || d.metrics.length === 0) &&
+                      !d.value;
+                    break;
+                  case "text_block":
+                    isEmpty = !String(d.content ?? "").trim();
+                    break;
+                  case "risk_objective_mapping":
+                    isEmpty =
+                      !Array.isArray(d.risks) ||
+                      d.risks.length === 0 ||
+                      !Array.isArray(d.objectives) ||
+                      d.objectives.length === 0;
+                    break;
+                }
+
+                if (isEmpty) return null;
+
+                return (
                 <View key={widget.instance_id}>
-                  {widget.data.title && <Text style={styles.widgetTitle}>{widget.data.title}</Text>}
+                  {d.title && !isPlaceholderTitle && (
+                    <Text style={styles.widgetTitle}>{d.title}</Text>
+                  )}
 
                   {/* Table Widget */}
                   {widget.widget_type === "table" && "columns" in widget.data && (
@@ -1663,7 +1743,8 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                     </View>
                   )}
                 </View>
-              ))}
+                );
+              })}
             </View>
           </View>
             );
