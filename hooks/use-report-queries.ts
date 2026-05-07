@@ -51,6 +51,8 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
   }, [entityId, entityType, setEntityId, setEntityType]);
 
   // Fetch initial report
+  // Disable refetchOnWindowFocus so unsaved manual widget edits in the store
+  // are not clobbered when the user switches browser tabs and back.
   const { isLoading: isReportLoading, refetch: refetchReport } = useQuery({
     queryKey: [REPORT_QUERY_KEYS.REPORT, "initial", entityId, entityType],
     queryFn: async () => {
@@ -58,7 +60,10 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
       const result = await fetchInitialReport(entityId, entityType);
       return result.success ? result.data : null;
     },
-    enabled: !!entityId && !!entityType
+    enabled: !!entityId && !!entityType,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000
   });
 
   // Fetch findings for the entity (only for audit plans)
@@ -195,8 +200,7 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
           queryKey: [REPORT_QUERY_KEYS.REPORT, "entity", entityId, entityType]
         });
       }
-      // Refetch the current report
-      refetchReport();
+      // Invalidations above already trigger refetch automatically — no explicit refetch needed.
     },
     onError: (error: Error) => {
       notify({ description: error.message || "Failed to save report", type: "error" });
@@ -225,8 +229,6 @@ export function useReportFetching(entityId?: string, entityType?: ReportEntityTy
           queryKey: [REPORT_QUERY_KEYS.REPORT, "entity", entityId, entityType]
         });
       }
-      // Refetch the current report
-      refetchReport();
     },
     onError: (error: Error) => {
       notify({ description: error.message || "Failed to submit report", type: "error" });
@@ -298,7 +300,11 @@ export function useReportByEntityId(
       const result = await getReportByEntityId(entityId, entityType);
       return result.success ? result.data : null;
     },
-    enabled: !!entityId
+    enabled: !!entityId,
+    // Don't clobber unsaved store edits when the tab regains focus.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000
   });
 }
 

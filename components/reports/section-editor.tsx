@@ -36,6 +36,10 @@ import { ConfigurableTable } from "./configurable-table";
 import { DynamicSection } from "./dynamic-section";
 import { ConfirmDeleteDialog } from "@/components/dialogs/confirm-delete-dialog";
 import { BarChartWidget } from "./bar-chart-widget";
+import { LineChartWidget } from "./line-chart-widget";
+import { AreaChartWidget } from "./area-chart-widget";
+import { MetricCardWidget } from "./metric-card-widget";
+import { TextBlockWidget } from "./text-block-widget";
 import { RiskObjectiveMappingTable } from "./risk-objective-mapping-table";
 import { WidgetManager } from "./widget-manager";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -487,6 +491,82 @@ export const SectionEditor = ({
                             onDataSourceChange={
                               onWidgetDataSourceChange
                                 ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
+                                : undefined
+                            }
+                          />
+                        );
+                      }
+                      if (widget.widget_type === "line_chart") {
+                        return (
+                          <LineChartWidget
+                            key={widget.instance_id}
+                            data={widget.data as any}
+                            dataSourceId={widget.data.data_source_id}
+                            onDataSourceChange={
+                              onWidgetDataSourceChange
+                                ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
+                                : undefined
+                            }
+                            onDataChange={
+                              onWidgetDataChange
+                                ? (data) => onWidgetDataChange(widget.instance_id, data)
+                                : undefined
+                            }
+                          />
+                        );
+                      }
+                      if (widget.widget_type === "area_chart") {
+                        return (
+                          <AreaChartWidget
+                            key={widget.instance_id}
+                            data={widget.data as any}
+                            dataSourceId={widget.data.data_source_id}
+                            onDataSourceChange={
+                              onWidgetDataSourceChange
+                                ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
+                                : undefined
+                            }
+                            onDataChange={
+                              onWidgetDataChange
+                                ? (data) => onWidgetDataChange(widget.instance_id, data)
+                                : undefined
+                            }
+                          />
+                        );
+                      }
+                      if (widget.widget_type === "metric_card") {
+                        return (
+                          <MetricCardWidget
+                            key={widget.instance_id}
+                            data={widget.data as any}
+                            dataSourceId={widget.data.data_source_id}
+                            onDataSourceChange={
+                              onWidgetDataSourceChange
+                                ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
+                                : undefined
+                            }
+                            onDataChange={
+                              onWidgetDataChange
+                                ? (data) => onWidgetDataChange(widget.instance_id, data)
+                                : undefined
+                            }
+                          />
+                        );
+                      }
+                      if (widget.widget_type === "text_block") {
+                        return (
+                          <TextBlockWidget
+                            key={widget.instance_id}
+                            data={widget.data as any}
+                            dataSourceId={widget.data.data_source_id}
+                            onDataSourceChange={
+                              onWidgetDataSourceChange
+                                ? (ds) => onWidgetDataSourceChange(widget.instance_id, ds)
+                                : undefined
+                            }
+                            onDataChange={
+                              onWidgetDataChange
+                                ? (data) => onWidgetDataChange(widget.instance_id, data)
                                 : undefined
                             }
                           />

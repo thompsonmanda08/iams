@@ -39,7 +39,11 @@ function getWidgetsWithDataSources(sections: ReportSection[]): Array<{
 
   for (const section of sections) {
     for (const widget of section.widgets || []) {
-      if (widget.data?.data_source_id) {
+      if (
+        widget.data?.data_source_id &&
+        widget.data.data_source_id !== "manual" &&
+        !widget.data.is_manual_override
+      ) {
         result.push({
           sectionId: section.section_id,
           widget

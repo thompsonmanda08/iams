@@ -56,7 +56,10 @@ export function UpdateGeneralFindingDialog({
   const keyConfigMap = useMemo(() => {
     const ks = workpaperConfig?.keys ?? [];
     return Object.fromEntries(
-      ks.map((k: any) => [k.key, { name: k.name, description: k.description }])
+      ks.map((k: any) => [
+        k.key,
+        { name: k.name, description: k.description, type: k.type }
+      ])
     );
   }, [workpaperConfig]);
 
@@ -104,7 +107,10 @@ export function UpdateGeneralFindingDialog({
     });
   };
 
-  const isBooleanKey = (value: any): boolean => {
+  const isBooleanKey = (value: any, configType?: string): boolean => {
+    if (configType === "boolean" || configType === "checkbox" || configType === "tickmark") {
+      return true;
+    }
     return typeof value === "boolean" || value === "true" || value === "false";
   };
 
@@ -200,7 +206,7 @@ export function UpdateGeneralFindingDialog({
                     const cfg = keyConfigMap[k.key];
                     const label = cfg?.name || k.key.replace(/_/g, " ");
                     const description = cfg?.description;
-                    return isBooleanKey(k.value) ? (
+                    return isBooleanKey(k.value, cfg?.type) ? (
                       <div key={k.key} className="flex items-center gap-2">
                         <Checkbox
                           id={`key-${k.key}`}

@@ -50,9 +50,14 @@ export interface WidgetConfigurationModalProps {
  * Create empty data structure for manual entry based on widget type
  */
 function getEmptyDataForWidgetType(widgetType: WidgetType): any {
+  // Common defaults for every manual-entry widget so callers don't have to
+  // remember to tag manual mode and override flags.
+  const base = { data_source_id: "manual", is_manual_override: false };
+
   switch (widgetType) {
     case "pie_chart":
       return {
+        ...base,
         title: "New Pie Chart",
         slices: [
           { label: "Category 1", value: 10, color: "#3b82f6" },
@@ -63,6 +68,7 @@ function getEmptyDataForWidgetType(widgetType: WidgetType): any {
 
     case "bar_chart":
       return {
+        ...base,
         title: "New Bar Chart",
         categories: [
           {
@@ -86,6 +92,7 @@ function getEmptyDataForWidgetType(widgetType: WidgetType): any {
 
     case "table":
       return {
+        ...base,
         title: "New Table",
         columns: [
           { key: "column1", header: "Column 1" },
@@ -99,6 +106,7 @@ function getEmptyDataForWidgetType(widgetType: WidgetType): any {
     case "line_chart":
     case "area_chart":
       return {
+        ...base,
         title: widgetType === "line_chart" ? "New Line Chart" : "New Area Chart",
         categories: ["Jan", "Feb", "Mar", "Apr", "May"],
         series: [
@@ -112,6 +120,7 @@ function getEmptyDataForWidgetType(widgetType: WidgetType): any {
 
     case "metric_card":
       return {
+        ...base,
         title: "New Metric",
         value: 0,
         unit: "",
@@ -119,8 +128,16 @@ function getEmptyDataForWidgetType(widgetType: WidgetType): any {
         description: ""
       };
 
+    case "text_block":
+      return {
+        ...base,
+        title: "New Text Block",
+        content: ""
+      };
+
     default:
       return {
+        ...base,
         title: "New Widget"
       };
   }
@@ -511,6 +528,7 @@ function InlineDataSourceSelector({
                 "line_chart",
                 "area_chart",
                 "metric_card",
+                "text_block",
                 "risk_objective_mapping"
               ],
               requires_entity: false,

@@ -406,12 +406,13 @@ export const useReportStore = create<ReportState>((set, get) => ({
                     }
                   };
                 } else {
-                  // Reset to manual/empty if disconnected
+                  // Disconnect from data source — switch to manual entry mode.
+                  // Preserve existing rows/columns/etc; only re-tag as manual.
                   return {
                     ...w,
                     data: {
                       ...w.data,
-                      data_source_id: undefined,
+                      data_source_id: "manual",
                       is_manual_override: false
                     }
                   };

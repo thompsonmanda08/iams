@@ -54,6 +54,9 @@ export const ConfigurableTable = ({
 }: ConfigurableTableProps) => {
   const [isEditingColumns, setIsEditingColumns] = useState(false);
   const [newColumnHeader, setNewColumnHeader] = useState("");
+  const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
+  const [editingColumnHeader, setEditingColumnHeader] = useState("");
+  const [dragColumnKey, setDragColumnKey] = useState<string | null>(null);
 
   // Check if in manual mode (no data source or manual entry)
   const isManualMode = !dataSourceId || dataSourceId === "manual";
@@ -70,6 +73,41 @@ export const ConfigurableTable = ({
   const removeColumn = (keyToRemove: string) => {
     if (!onColumnsChange) return;
     onColumnsChange(data.columns.filter((col) => col.key !== keyToRemove));
+  };
+
+  const startEditingColumn = (key: string, header: string) => {
+    setEditingColumnKey(key);
+    setEditingColumnHeader(header);
+  };
+
+  const commitColumnEdit = () => {
+    if (!editingColumnKey || !onColumnsChange) {
+      setEditingColumnKey(null);
+      return;
+    }
+    const trimmed = editingColumnHeader.trim();
+    if (!trimmed) {
+      setEditingColumnKey(null);
+      return;
+    }
+    onColumnsChange(
+      data.columns.map((col) =>
+        col.key === editingColumnKey ? { ...col, header: trimmed } : col
+      )
+    );
+    setEditingColumnKey(null);
+    setEditingColumnHeader("");
+  };
+
+  const moveColumn = (sourceKey: string, targetKey: string) => {
+    if (!onColumnsChange || sourceKey === targetKey) return;
+    const cols = [...data.columns];
+    const fromIdx = cols.findIndex((c) => c.key === sourceKey);
+    const toIdx = cols.findIndex((c) => c.key === targetKey);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = cols.splice(fromIdx, 1);
+    cols.splice(toIdx, 0, moved);
+    onColumnsChange(cols);
   };
 
   const addRow = () => {
@@ -89,10 +127,10 @@ export const ConfigurableTable = ({
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-        <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-          <Table2 className="h-4 w-4 text-blue-600" />
+    <div className="border-border bg-card rounded-lg border">
+      <div className="border-border flex items-center justify-between border-b px-4 py-3">
+        <h4 className="text-foreground flex items-center gap-2 text-sm font-semibold">
+          <Table2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           {data.title}
         </h4>
         <div className="flex items-center gap-2">
@@ -101,8 +139,8 @@ export const ConfigurableTable = ({
               onClick={() => onToggleManualOverride(!data.is_manual_override)}
               className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
                 data.is_manual_override
-                  ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                  : "text-gray-600 hover:bg-gray-100"
+                  ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-950/30 dark:text-amber-300"
+                  : "text-muted-foreground hover:bg-muted"
               }`}>
               {data.is_manual_override ? (
                 <>
@@ -121,7 +159,9 @@ export const ConfigurableTable = ({
             <button
               onClick={() => setIsEditingColumns(!isEditingColumns)}
               className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                isEditingColumns ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+                isEditingColumns
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300"
+                  : "text-muted-foreground hover:bg-muted"
               }`}>
               <Settings2 className="h-3 w-3" />
               {isEditingColumns ? "Done" : "Configure Columns"}
@@ -130,7 +170,7 @@ export const ConfigurableTable = ({
           {isEditable && onRowsChange && (
             <button
               onClick={addRow}
-              className="flex items-center gap-1 rounded bg-green-50 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-100">
+              className="flex items-center gap-1 rounded bg-green-50 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-100 dark:bg-green-950/30 dark:text-green-300 dark:hover:bg-green-950/50">
               <Plus className="h-3 w-3" />
               Add Row
             </button>
@@ -139,29 +179,74 @@ export const ConfigurableTable = ({
       </div>
 
       {data.is_manual_override && (
-        <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+        <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
           <Pencil className="h-3 w-3" />
           <span>Manual edit mode — changes will not sync with the data source</span>
         </div>
       )}
 
       {isEditingColumns && (
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-          <div className="mb-2 text-xs font-medium text-gray-600">Current Columns:</div>
+        <div className="border-border bg-muted/40 border-b px-4 py-3">
+          <div className="text-muted-foreground mb-2 text-xs font-medium">Current Columns:</div>
           <div className="mb-3 flex flex-wrap gap-2">
-            {data.columns.map((col) => (
-              <span
-                key={col.key}
-                className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-sm shadow-sm">
-                <GripVertical className="h-3 w-3 cursor-move text-gray-400" />
-                {col.header}
-                <button
-                  onClick={() => removeColumn(col.key)}
-                  className="ml-1 text-gray-400 hover:text-red-500">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
+            {data.columns.map((col) => {
+              const isEditing = editingColumnKey === col.key;
+              const isDragTarget = dragColumnKey && dragColumnKey !== col.key;
+              return (
+                <span
+                  key={col.key}
+                  draggable={!isEditing}
+                  onDragStart={(e) => {
+                    setDragColumnKey(col.key);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    if (isDragTarget) e.preventDefault();
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragColumnKey) moveColumn(dragColumnKey, col.key);
+                    setDragColumnKey(null);
+                  }}
+                  onDragEnd={() => setDragColumnKey(null)}
+                  className={`bg-card text-foreground ring-border inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm shadow-sm ring-1 ${
+                    isEditing ? "" : "cursor-move"
+                  } ${isDragTarget ? "ring-primary ring-2" : ""}`}>
+                  <GripVertical className="text-muted-foreground h-3 w-3" />
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      autoFocus
+                      value={editingColumnHeader}
+                      onChange={(e) => setEditingColumnHeader(e.target.value)}
+                      onBlur={commitColumnEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commitColumnEdit();
+                        } else if (e.key === "Escape") {
+                          setEditingColumnKey(null);
+                          setEditingColumnHeader("");
+                        }
+                      }}
+                      className="border-input bg-background text-foreground rounded border px-1.5 py-0.5 text-sm focus:outline-none"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => startEditingColumn(col.key, col.header)}
+                      className="hover:text-primary cursor-text bg-transparent">
+                      {col.header}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => removeColumn(col.key)}
+                    className="text-muted-foreground hover:text-destructive ml-1">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              );
+            })}
           </div>
           <div className="flex gap-2">
             <input
@@ -169,12 +254,12 @@ export const ConfigurableTable = ({
               value={newColumnHeader}
               onChange={(e) => setNewColumnHeader(e.target.value)}
               placeholder="New column header..."
-              className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="border-input bg-background text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring flex-1 rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-1"
             />
             <button
               onClick={addColumn}
               disabled={!newColumnHeader.trim()}
-              className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50">
+              className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded px-3 py-1.5 text-sm disabled:opacity-50">
               <Plus className="h-3 w-3" />
               Add
             </button>
@@ -185,23 +270,23 @@ export const ConfigurableTable = ({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
-              {data?.columns?.map((col) => (
+            <tr className="border-border bg-muted/40 border-b">
+              {data?.columns?.map((col, idx) => (
                 <th
-                  key={col?.key}
-                  className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  key={col?.key || col?.header || `col-${idx}`}
+                  className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                   {col.header}
                 </th>
               ))}
               {isEditable && onRowsChange && <th className="w-10 px-4 py-3"></th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-border divide-y">
             {data.rows.length === 0 ? (
               <tr>
                 <td
                   colSpan={data.columns.length + (isEditable && onRowsChange ? 1 : 0)}
-                  className="px-4 py-8 text-center text-gray-500">
+                  className="text-muted-foreground px-4 py-8 text-center">
                   {isEditable
                     ? "No data yet. Click 'Add Row' to get started."
                     : "No data available."}
@@ -209,7 +294,7 @@ export const ConfigurableTable = ({
               </tr>
             ) : (
               data.rows.map((row, rowIndex) => (
-                <tr key={rowIndex} className="group hover:bg-gray-50/50">
+                <tr key={rowIndex} className="group hover:bg-muted/30">
                   {data.columns.map((col) => (
                     <td key={col.key} className="px-4 py-3">
                       {isEditable && onRowsChange ? (
@@ -217,11 +302,11 @@ export const ConfigurableTable = ({
                           type="text"
                           value={row[col.key] || ""}
                           onChange={(e) => updateCell(rowIndex, col.key, e.target.value)}
-                          className="w-full border-none bg-transparent text-sm text-gray-900 placeholder:text-gray-300 focus:ring-0 focus:outline-none"
+                          className="text-foreground placeholder:text-muted-foreground w-full border-none bg-transparent text-sm focus:ring-0 focus:outline-none"
                           placeholder="..."
                         />
                       ) : (
-                        <div className="text-sm text-gray-900">
+                        <div className="text-foreground text-sm">
                           {col.key === "severity" ? (
                             <SeverityBadge severity={row[col.key]} />
                           ) : col.key === "status" ? (
@@ -237,7 +322,7 @@ export const ConfigurableTable = ({
                     <td className="px-4 py-3 text-right opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         onClick={() => removeRow(rowIndex)}
-                        className="text-gray-400 hover:text-red-500">
+                        className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>

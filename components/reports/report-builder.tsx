@@ -33,7 +33,7 @@ import { Button } from "../ui/button";
 import { PermissionButton } from "@/components/ui/permission-button";
 import { MODULE_CODES } from "@/lib/constants/module-codes";
 import CustomAlert from "../ui/custom-alert";
-import Loader from "../ui/loader";
+import { ReportBuilderSkeleton } from "./report-builder-skeleton";
 import { getDataSourceData } from "@/app/_actions/reports-actions";
 import { transformWidgetData } from "@/hooks/shared/use-widget-data";
 import { notify } from "@/lib/utils";
@@ -176,6 +176,10 @@ export function ReportBuilder({
     for (const section of report.sections || []) {
       for (const widget of section.widgets || []) {
         if (!widget.data?.data_source_id) continue;
+        // Skip manual-entry widgets — their data is user-authored, not server-fetched
+        if (widget.data.data_source_id === "manual") continue;
+        // Skip data-source widgets that the user has overridden manually
+        if (widget.data.is_manual_override) continue;
         // Check if widget data is empty (template placeholder)
         const d = widget.data;
         const isEmpty =
@@ -214,9 +218,24 @@ export function ReportBuilder({
             widget.data.title
           );
           updateWidgetData(sectionId, widget.instance_id, transformed);
+        } else if (!result.success) {
+          console.warn(
+            `[report-builder] Auto-fetch failed for widget ${widget.instance_id} (${widget.data.data_source_id}): ${result.message}`
+          );
+          notify({
+            description: `Could not load data for "${widget.data.title || widget.widget_type}". Use the retry button to try again.`,
+            type: "warning"
+          });
         }
-      } catch {
-        // Fallback: keep template defaults (empty slices/rows)
+      } catch (error: any) {
+        console.error(
+          `[report-builder] Auto-fetch error for widget ${widget.instance_id}:`,
+          error
+        );
+        notify({
+          description: `Could not load data for "${widget.data.title || widget.widget_type}". ${error?.message || "Network error"}`,
+          type: "error"
+        });
       }
     });
   }, [report, entity.id, entityType, updateWidgetData]);
@@ -552,8 +571,8 @@ export function ReportBuilder({
   const handleSave = () => {
     if (report) {
       saveReport(report);
-      // Refresh after save completes (handled by mutation's onSuccess)
-      setTimeout(() => router.refresh(), 1000);
+      // Mutation onSuccess already invalidates the report queries which triggers a refetch.
+      // No router.refresh() needed — that double-fetched and caused layout thrash.
     }
   };
 
@@ -561,8 +580,7 @@ export function ReportBuilder({
   const handlePublish = () => {
     if (report) {
       publishReport(report.report_id);
-      // Refresh after publish completes (handled by mutation's onSuccess)
-      setTimeout(() => router.refresh(), 1000);
+      // Mutation onSuccess handles cache invalidation — no manual refresh needed.
     }
   };
 
@@ -625,11 +643,7 @@ export function ReportBuilder({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader loadingText="Loading report..." classNames={{ spinner: "w-16 h-16" }} />
-      </div>
-    );
+    return <ReportBuilderSkeleton />;
   }
 
   if (!report) {

@@ -152,19 +152,9 @@ function mergeReportSections(
     mergedSections.push(placeholderSection);
   });
 
-  // Re-order sections based on their order property
-  mergedSections.sort((a, b) => {
-    // User sections keep their original order
-    const aIsUserSection = userSectionIds.has(a.section_id.replace(/-template-\d+$/, ""));
-    const bIsUserSection = userSectionIds.has(b.section_id.replace(/-template-\d+$/, ""));
-
-    if (aIsUserSection && !bIsUserSection) return -1; // User sections first
-    if (!aIsUserSection && bIsUserSection) return 1; // Template sections last
-
-    return a.order - b.order;
-  });
-
-  // Reassign order numbers sequentially
+  // Preserve insertion order: user sections (in their saved order) first,
+  // then template sections appended at the end. Reassign order numbers
+  // sequentially so children stay grouped under parents.
   return mergedSections.map((section, index) => ({
     ...section,
     order: index

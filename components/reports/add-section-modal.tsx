@@ -32,6 +32,11 @@ export const AddSectionModal = ({
   const [parentSectionId, setParentSectionId] = useState<string | null>(null);
   const [addTable, setAddTable] = useState(false);
   const [addPieChart, setAddPieChart] = useState(false);
+  const [addBarChart, setAddBarChart] = useState(false);
+  const [addLineChart, setAddLineChart] = useState(false);
+  const [addAreaChart, setAddAreaChart] = useState(false);
+  const [addMetricCard, setAddMetricCard] = useState(false);
+  const [addTextBlock, setAddTextBlock] = useState(false);
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
     { key: "column_1", header: "Column 1" },
     { key: "column_2", header: "Column 2" }
@@ -74,25 +79,112 @@ export const AddSectionModal = ({
           data: {
             title: "Data Table",
             is_configurable: true,
+            data_source_id: "manual",
             columns: tableColumns,
             rows: []
           } as TableWidgetData
         });
       }
 
-      if (addPieChart && sectionType === "text_with_widgets") {
-        widgets.push({
-          instance_id: `widget-pie-${Date.now()}`,
-          widget_type: "pie_chart",
-          order: 1,
-          data: {
-            title: "Pie Chart",
-            slices: [
-              { label: "Segment A", value: 30, color: "#3b82f6" },
-              { label: "Segment B", value: 70, color: "#10b981" }
-            ]
-          }
-        });
+      if (sectionType === "text_with_widgets") {
+        let nextOrder = widgets.length;
+        if (addPieChart) {
+          widgets.push({
+            instance_id: `widget-pie-${Date.now()}`,
+            widget_type: "pie_chart",
+            order: nextOrder++,
+            data: {
+              title: "Pie Chart",
+              data_source_id: "manual",
+              slices: [
+                { label: "Segment A", value: 30, color: "#3b82f6" },
+                { label: "Segment B", value: 70, color: "#10b981" }
+              ]
+            }
+          });
+        }
+        if (addBarChart) {
+          widgets.push({
+            instance_id: `widget-bar-${Date.now()}`,
+            widget_type: "bar_chart",
+            order: nextOrder++,
+            data: {
+              title: "Bar Chart",
+              data_source_id: "manual",
+              categories: [
+                {
+                  label: "Category 1",
+                  series: [
+                    { label: "Series 1", value: 10, color: "#3b82f6" },
+                    { label: "Series 2", value: 15, color: "#10b981" }
+                  ]
+                },
+                {
+                  label: "Category 2",
+                  series: [
+                    { label: "Series 1", value: 12, color: "#3b82f6" },
+                    { label: "Series 2", value: 18, color: "#10b981" }
+                  ]
+                }
+              ],
+              orientation: "vertical",
+              show_values: true
+            } as any
+          });
+        }
+        if (addLineChart) {
+          widgets.push({
+            instance_id: `widget-line-${Date.now()}`,
+            widget_type: "line_chart",
+            order: nextOrder++,
+            data: {
+              title: "Line Chart",
+              data_source_id: "manual",
+              categories: ["Jan", "Feb", "Mar", "Apr", "May"],
+              series: [{ label: "Series 1", data: [10, 15, 12, 18, 20], color: "#3b82f6" }]
+            } as any
+          });
+        }
+        if (addAreaChart) {
+          widgets.push({
+            instance_id: `widget-area-${Date.now()}`,
+            widget_type: "area_chart",
+            order: nextOrder++,
+            data: {
+              title: "Area Chart",
+              data_source_id: "manual",
+              categories: ["Jan", "Feb", "Mar", "Apr", "May"],
+              series: [{ label: "Series 1", data: [10, 15, 12, 18, 20], color: "#3b82f6" }]
+            } as any
+          });
+        }
+        if (addMetricCard) {
+          widgets.push({
+            instance_id: `widget-metric-${Date.now()}`,
+            widget_type: "metric_card",
+            order: nextOrder++,
+            data: {
+              title: "New Metric",
+              data_source_id: "manual",
+              value: 0,
+              unit: "",
+              trend: 0,
+              description: ""
+            } as any
+          });
+        }
+        if (addTextBlock) {
+          widgets.push({
+            instance_id: `widget-text-${Date.now()}`,
+            widget_type: "text_block",
+            order: nextOrder++,
+            data: {
+              title: "New Text Block",
+              data_source_id: "manual",
+              content: ""
+            } as any
+          });
+        }
       }
     }
 
@@ -360,15 +452,62 @@ export const AddSectionModal = ({
                     )}
 
                     {sectionType === "text_with_widgets" && (
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={addPieChart}
-                          onChange={(e) => setAddPieChart(e.target.checked)}
-                          className="rounded border-input text-primary focus:ring-ring"
-                        />
-                        <span className="text-sm text-foreground">Add Pie Chart</span>
-                      </label>
+                      <>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={addPieChart}
+                            onChange={(e) => setAddPieChart(e.target.checked)}
+                            className="rounded border-input text-primary focus:ring-ring"
+                          />
+                          <span className="text-sm text-foreground">Add Pie Chart</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={addBarChart}
+                            onChange={(e) => setAddBarChart(e.target.checked)}
+                            className="rounded border-input text-primary focus:ring-ring"
+                          />
+                          <span className="text-sm text-foreground">Add Bar Chart</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={addLineChart}
+                            onChange={(e) => setAddLineChart(e.target.checked)}
+                            className="rounded border-input text-primary focus:ring-ring"
+                          />
+                          <span className="text-sm text-foreground">Add Line Chart</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={addAreaChart}
+                            onChange={(e) => setAddAreaChart(e.target.checked)}
+                            className="rounded border-input text-primary focus:ring-ring"
+                          />
+                          <span className="text-sm text-foreground">Add Area Chart</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={addMetricCard}
+                            onChange={(e) => setAddMetricCard(e.target.checked)}
+                            className="rounded border-input text-primary focus:ring-ring"
+                          />
+                          <span className="text-sm text-foreground">Add Metric Card</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={addTextBlock}
+                            onChange={(e) => setAddTextBlock(e.target.checked)}
+                            className="rounded border-input text-primary focus:ring-ring"
+                          />
+                          <span className="text-sm text-foreground">Add Text Block</span>
+                        </label>
+                      </>
                     )}
                   </div>
                 </div>

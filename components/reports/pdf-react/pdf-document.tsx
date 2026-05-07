@@ -484,10 +484,14 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                   {widget.widget_type === "table" && "columns" in widget.data && (
                     <View style={styles.table}>
                       {(() => {
-                        const columns = (widget.data as any).columns || [];
-                        const rows = (widget.data as any).rows || [];
+                        const columns = Array.isArray((widget.data as any).columns)
+                          ? (widget.data as any).columns
+                          : [];
+                        const rows = Array.isArray((widget.data as any).rows)
+                          ? (widget.data as any).rows
+                          : [];
 
-                        if (!columns || columns.length === 0) {
+                        if (columns.length === 0 || columns.some((c: any) => !c?.key)) {
                           return (
                             <Text style={{ fontSize: 10, color: "#666" }}>
                               No table data available
@@ -596,11 +600,10 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                         marginVertical: 15
                       }}>
                       {(() => {
-                        // Handle both formats: slices property or direct array
-                        let slices = Array.isArray(widget.data)
-                          ? widget.data
-                          : (widget.data as any).slices || [];
-                        if (!slices || slices.length === 0) {
+                        const slices = Array.isArray((widget.data as any).slices)
+                          ? (widget.data as any).slices
+                          : [];
+                        if (slices.length === 0) {
                           return (
                             <Text style={{ fontSize: 10, color: "#666" }}>
                               No pie chart data available
@@ -1492,6 +1495,161 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                         ))}
                       </View>
                     )}
+
+                  {/* Bar Chart Widget */}
+                  {widget.widget_type === "bar_chart" && (
+                    <View style={{ marginVertical: 15 }}>
+                      {(() => {
+                        const categories = (widget.data as any).categories || [];
+                        if (!categories.length) {
+                          return (
+                            <Text style={{ fontSize: 10, color: "#666" }}>
+                              No bar chart data available
+                            </Text>
+                          );
+                        }
+
+                        const chartWidth = 400;
+                        const chartHeight = 200;
+                        const padding = 40;
+                        const graphWidth = chartWidth - padding * 2;
+                        const graphHeight = chartHeight - padding * 2;
+
+                        let maxValue = 0;
+                        const seriesLabels: { label: string; color: string }[] = [];
+                        const seriesColorMap: Record<string, string> = {};
+                        categories.forEach((cat: any) => {
+                          (cat.series || []).forEach((s: any) => {
+                            maxValue = Math.max(maxValue, s.value || 0);
+                            if (!seriesColorMap[s.label]) {
+                              seriesColorMap[s.label] = s.color || "#3b82f6";
+                              seriesLabels.push({
+                                label: s.label,
+                                color: s.color || "#3b82f6"
+                              });
+                            }
+                          });
+                        });
+                        if (maxValue === 0) maxValue = 1;
+
+                        const groupWidth = graphWidth / categories.length;
+                        const seriesCount = seriesLabels.length || 1;
+                        const barWidth = (groupWidth * 0.8) / seriesCount;
+
+                        return (
+                          <View style={{ width: "100%", alignItems: "center" }}>
+                            <Svg
+                              width={chartWidth}
+                              height={chartHeight}
+                              viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                              {[0, 1, 2, 3, 4].map((i: number) => {
+                                const y = padding + (graphHeight / 4) * i;
+                                return (
+                                  <Path
+                                    key={`bar-grid-${i}`}
+                                    d={`M ${padding} ${y} L ${chartWidth - padding} ${y}`}
+                                    stroke="#e5e7eb"
+                                    strokeWidth="0.5"
+                                  />
+                                );
+                              })}
+
+                              {categories.map((cat: any, catIdx: number) => {
+                                const groupX = padding + groupWidth * catIdx + groupWidth * 0.1;
+                                return (cat.series || []).map((s: any, sIdx: number) => {
+                                  const value = s.value || 0;
+                                  const barH = (value / maxValue) * graphHeight;
+                                  const x = groupX + barWidth * sIdx;
+                                  const y = chartHeight - padding - barH;
+                                  return (
+                                    <Path
+                                      key={`bar-${catIdx}-${sIdx}`}
+                                      d={`M ${x} ${y} L ${x + barWidth} ${y} L ${x + barWidth} ${chartHeight - padding} L ${x} ${chartHeight - padding} Z`}
+                                      fill={s.color || "#3b82f6"}
+                                    />
+                                  );
+                                });
+                              })}
+                            </Svg>
+
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                gap: 6,
+                                marginTop: 5,
+                                paddingHorizontal: padding
+                              }}>
+                              {categories.map((cat: any, idx: number) => (
+                                <Text
+                                  key={`bar-cat-${idx}`}
+                                  style={{
+                                    fontSize: 8,
+                                    color: "#475569",
+                                    flex: 1,
+                                    textAlign: "center"
+                                  }}>
+                                  {cat.label}
+                                </Text>
+                              ))}
+                            </View>
+
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                flexWrap: "wrap",
+                                gap: 15,
+                                marginTop: 10,
+                                justifyContent: "center"
+                              }}>
+                              {seriesLabels.map((s, idx) => (
+                                <View
+                                  key={idx}
+                                  style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 6
+                                  }}>
+                                  <View
+                                    style={{
+                                      width: 12,
+                                      height: 12,
+                                      backgroundColor: s.color
+                                    }}
+                                  />
+                                  <Text style={{ fontSize: 9, color: "#475569" }}>{s.label}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        );
+                      })()}
+                    </View>
+                  )}
+
+                  {/* Text Block Widget */}
+                  {widget.widget_type === "text_block" && (
+                    <View style={{ marginVertical: 10 }}>
+                      {(widget.data as any).title && (
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: "bold",
+                            color: "#0f172a",
+                            marginBottom: 6
+                          }}>
+                          {(widget.data as any).title}
+                        </Text>
+                      )}
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          color: "#334155",
+                          lineHeight: 1.5
+                        }}>
+                        {(widget.data as any).content || ""}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               ))}
             </View>
