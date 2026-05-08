@@ -880,6 +880,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                   )}
 
                   {/* Bar Chart Widget */}
+                  {widget.widget_type === "bar_chart" && (
                   <View style={{ marginVertical: 15 }}>
                     {/* Determine orientation */}
                     {(() => {
@@ -1135,6 +1136,7 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({
                       }
                     })()}
                   </View>
+                  )}
                   {/* Metric Card Widget */}
                   {widget.widget_type === "metric_card" && (() => {
                     const metricData = widget.data as any;
