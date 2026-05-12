@@ -28,6 +28,7 @@ import {
 import { generateAvatarFallback, getAvatarSrc } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import CreateUserForm from "@/app/dashboard/system-configs/_components/create-user-dialog";
+import { formatDate, formatDateTime } from "@/lib/utils/date-format";
 
 interface UserDetailsClientProps {
   user: User;
@@ -50,11 +51,7 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
 
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    });
+    return formatDate(date);
   };
 
   return (
@@ -236,21 +233,13 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                     <div className="flex flex-col gap-1 text-sm">
                       <span className="text-muted-foreground">Created At</span>
                       <span className="font-medium">
-                        {new Date(user.created_at).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric"
-                        })}
+                        {formatDate(user.created_at)}
                       </span>
                     </div>
                     <div className="flex flex-col gap-1 text-sm">
                       <span className="text-muted-foreground">Last Updated</span>
                       <span className="font-medium">
-                        {new Date(user.updated_at).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric"
-                        })}
+                        {formatDate(user.updated_at)}
                       </span>
                     </div>
                   </div>
@@ -363,13 +352,7 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                           <p className="text-sm font-medium">Last Login</p>
                           <p className="text-muted-foreground text-xs">
                             {user.last_login
-                              ? new Date(user.last_login).toLocaleDateString("en-US", {
-                                  month: "long",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit"
-                                })
+                              ? formatDateTime(user.last_login)
                               : "Never logged in"}
                           </p>
                         </div>
@@ -384,11 +367,7 @@ export function UserDetailsClient({ user }: UserDetailsClientProps) {
                         <div className="flex-1">
                           <p className="text-sm font-medium">Account Created</p>
                           <p className="text-muted-foreground text-xs">
-                            {new Date(user.created_at).toLocaleDateString("en-US", {
-                              month: "long",
-                              day: "numeric",
-                              year: "numeric"
-                            })}
+                            {formatDate(user.created_at)}
                           </p>
                         </div>
                       </div>

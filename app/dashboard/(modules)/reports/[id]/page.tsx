@@ -56,8 +56,6 @@ export default async function ReportDetailsPage({ params }: { params: Promise<{ 
 
   const report = reportResponse.data?.data;
 
-  console.log("Report fetched:", report);
-
   // Get entity type from report and fetch entity details
   let entity: any = null;
   const entityType = report.entity_type || "audit_plan";

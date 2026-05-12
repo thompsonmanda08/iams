@@ -10,13 +10,26 @@
 /**
  * Supported entity types for workflow approvals
  */
-export type EntityType = "RISK" | "AUDIT_PLAN" | "BUDGET" | "FINDING" | "UNIVERSE" | "ANNUAL_AUDIT_PLAN";
+export type EntityType =
+  | "RISK"
+  | "AUDIT_PLAN"
+  | "BUDGET"
+  | "FINDING"
+  | "UNIVERSE"
+  | "ANNUAL_AUDIT_PLAN"
+  | "REPORT";
 
 /**
  * Extended entity type that includes workflow variations
  * Used for normalization from backend values
  */
-export type WorkflowEntityType = EntityType | "RISK_ACCEPTANCE" | "FINDINGS" | "AUDIT_CLOSURE" | "AUDIT_UNIVERSE";
+export type WorkflowEntityType =
+  | EntityType
+  | "RISK_ACCEPTANCE"
+  | "FINDINGS"
+  | "AUDIT_CLOSURE"
+  | "AUDIT_UNIVERSE"
+  | "REPORT_APPROVAL";
 
 /**
  * Entity preview data with type-specific fields

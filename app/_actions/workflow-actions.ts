@@ -63,26 +63,25 @@ export async function createWorkflow(data: {
  * Update an existing workflow
  * NOTE: This is a mock implementation. Real API endpoint TBD.
  */
-export async function updateWorkflow(
-  workflowId: string,
-  data: {
-    name: string;
-    trigger_type?: WorkflowTriggerType;
-    description?: string;
-  }
-): Promise<APIResponse> {
-  if (!workflowId) {
-    return handleBadRequest("Workflow ID is required");
-  }
+// export async function updateWorkflow(
+//   workflowId: string,
+//   data: {
+//     name: string;
+//     trigger_type?: WorkflowTriggerType;
+//     description?: string;
+//   }
+// ): Promise<APIResponse> {
+//   if (!workflowId) {
+//     return handleBadRequest("Workflow ID is required");
+//   }
 
-  if (!data.name) {
-    return handleBadRequest("Workflow name is required");
-  }
+//   if (!data.name) {
+//     return handleBadRequest("Workflow name is required");
+//   }
 
-  // Mock implementation - returns success
-  // TODO: Replace with actual API call when endpoint is available
-  return successResponse({ id: workflowId, ...data }, "Workflow updated successfully");
-}
+//   // Mock implementation — backend endpoint not yet wired.
+//   return successResponse({ id: workflowId, ...data }, "Workflow updated successfully");
+// }
 
 /**
  * Get workflow details by ID
@@ -315,9 +314,9 @@ export async function updateWorkflowTransition(
   const url = `/api/v1/simple-workflow-transitions/${transitionId}`;
 
   try {
-    const response = await authenticatedApiClient({ 
-      method: "PUT", 
-      url, 
+    const response = await authenticatedApiClient({
+      method: "PUT",
+      url,
       data: {
         ...data,
         is_active: data.is_active ?? true
@@ -359,87 +358,87 @@ export async function deleteWorkflowTransition(transitionId: string): Promise<AP
  * Approve a workflow transition
  * POST /api/v1/simple-workflows/instances/{id}/approve
  */
-export async function approveWorkflowTransition(
-  instanceId: string,
-  approvedBy: string,
-  comments?: string
-): Promise<APIResponse> {
-  if (!instanceId) {
-    return handleBadRequest("Instance ID is required");
-  }
+// export async function approveWorkflowTransition(
+//   instanceId: string,
+//   approvedBy: string,
+//   comments?: string
+// ): Promise<APIResponse> {
+//   if (!instanceId) {
+//     return handleBadRequest("Instance ID is required");
+//   }
 
-  if (!approvedBy) {
-    return handleBadRequest("Approved by user ID is required");
-  }
+//   if (!approvedBy) {
+//     return handleBadRequest("Approved by user ID is required");
+//   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/simple-workflows/instances/${instanceId}/approve`,
-      data: {
-        approved_by: approvedBy,
-        comments
-      }
-    });
+//   try {
+//     const response = await authenticatedApiClient({
+//       method: "POST",
+//       url: `/api/v1/simple-workflows/instances/${instanceId}/approve`,
+//       data: {
+//         approved_by: approvedBy,
+//         comments
+//       }
+//     });
 
-    revalidatePath("/dashboard/workflow/manage");
-    return successResponse(
-      response.data?.data || response.data,
-      "Workflow instance approved successfully"
-    );
-  } catch (error: any) {
-    return handleError(
-      error,
-      "POST | APPROVE INSTANCE",
-      `/api/v1/simple-workflows/instances/${instanceId}/approve`
-    );
-  }
-}
+//     revalidatePath("/dashboard/workflow/manage");
+//     return successResponse(
+//       response.data?.data || response.data,
+//       "Workflow instance approved successfully"
+//     );
+//   } catch (error: any) {
+//     return handleError(
+//       error,
+//       "POST | APPROVE INSTANCE",
+//       `/api/v1/simple-workflows/instances/${instanceId}/approve`
+//     );
+//   }
+// }
 
 /**
  * Reject a workflow transition
  * POST /api/v1/simple-workflows/instances/{id}/reject
  */
-export async function rejectWorkflowTransition(
-  instanceId: string,
-  rejectedBy: string,
-  reason: string
-): Promise<APIResponse> {
-  if (!instanceId) {
-    return handleBadRequest("Instance ID is required");
-  }
+// export async function rejectWorkflowTransition(
+//   instanceId: string,
+//   rejectedBy: string,
+//   reason: string
+// ): Promise<APIResponse> {
+//   if (!instanceId) {
+//     return handleBadRequest("Instance ID is required");
+//   }
 
-  if (!rejectedBy) {
-    return handleBadRequest("Rejected by user ID is required");
-  }
+//   if (!rejectedBy) {
+//     return handleBadRequest("Rejected by user ID is required");
+//   }
 
-  if (!reason) {
-    return handleBadRequest("Rejection reason is required");
-  }
+//   if (!reason) {
+//     return handleBadRequest("Rejection reason is required");
+//   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "POST",
-      url: `/api/v1/simple-workflows/instances/${instanceId}/reject`,
-      data: {
-        rejected_by: rejectedBy,
-        reason
-      }
-    });
+//   try {
+//     const response = await authenticatedApiClient({
+//       method: "POST",
+//       url: `/api/v1/simple-workflows/instances/${instanceId}/reject`,
+//       data: {
+//         rejected_by: rejectedBy,
+//         reason
+//       }
+//     });
 
-    revalidatePath("/dashboard/workflow/manage");
-    return successResponse(
-      response.data?.data || response.data,
-      "Workflow instance rejected successfully"
-    );
-  } catch (error: any) {
-    return handleError(
-      error,
-      "POST | REJECT INSTANCE",
-      `/api/v1/simple-workflows/instances/${instanceId}/reject`
-    );
-  }
-}
+//     revalidatePath("/dashboard/workflow/manage");
+//     return successResponse(
+//       response.data?.data || response.data,
+//       "Workflow instance rejected successfully"
+//     );
+//   } catch (error: any) {
+//     return handleError(
+//       error,
+//       "POST | REJECT INSTANCE",
+//       `/api/v1/simple-workflows/instances/${instanceId}/reject`
+//     );
+//   }
+// }
 
 /**
  * Get pending approvals for an instance

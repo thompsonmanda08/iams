@@ -56,7 +56,7 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
       workpaper?.management_standard
   ).toUpperCase();
 
-  console.log("Audit Plan:", auditPlan);
+  // console.log("Audit Plan:", auditPlan);
   // console.log("Workpaper:", workpaper);
   // console.log("Findings:", allFindings);
   return (

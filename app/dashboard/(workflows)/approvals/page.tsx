@@ -12,19 +12,23 @@ export default async function TasksPage() {
   // Fetch workflow instances (SSR)
   const instancesResponse = await getWorkflowInstances({ page: "1", page_size: "15" });
   const instances = instancesResponse.success
-    ? (Array.isArray(instancesResponse?.data?.data) ? instancesResponse.data.data : [])
+    ? Array.isArray(instancesResponse?.data?.data)
+      ? instancesResponse.data.data
+      : []
     : [];
   const instancesPagination: any = instancesResponse?.data?.pagination || {};
-
-  console.log("Instances:", instances);
 
   // Fetch user-assigned workflow tasks (SSR)
   const tasksResponse = await getUserAssignedWorkflowTasks({ page: "1", page_size: "15" });
   const tasks = tasksResponse.success
-    ? (Array.isArray(tasksResponse?.data?.data) ? tasksResponse.data.data : [])
+    ? Array.isArray(tasksResponse?.data?.data)
+      ? tasksResponse.data.data
+      : []
     : [];
   const tasksPagination: any = tasksResponse?.data?.pagination || {};
 
+  // console.log("Instances:", instances);
+  console.log("Tasks:", tasks);
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}

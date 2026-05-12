@@ -1028,96 +1028,96 @@ export async function completeAuditPlan(auditPlanId: string): Promise<APIRespons
 /**
  * Get all audit logs with filters
  */
-export async function getAuditLogs(filters?: {
-  action?: string;
-  entity_type?: string;
-  user_id?: string;
-  start_date?: string;
-  end_date?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<APIResponse> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.action) params.append("action", filters.action);
-    if (filters?.entity_type) params.append("entity_type", filters.entity_type);
-    if (filters?.user_id) params.append("user_id", filters.user_id);
-    if (filters?.start_date) params.append("start_date", filters.start_date);
-    if (filters?.end_date) params.append("end_date", filters.end_date);
-    if (filters?.limit) params.append("limit", String(filters.limit));
-    if (filters?.offset) params.append("offset", String(filters.offset));
+// export async function getAuditLogs(filters?: {
+//   action?: string;
+//   entity_type?: string;
+//   user_id?: string;
+//   start_date?: string;
+//   end_date?: string;
+//   limit?: number;
+//   offset?: number;
+// }): Promise<APIResponse> {
+//   try {
+//     const params = new URLSearchParams();
+//     if (filters?.action) params.append("action", filters.action);
+//     if (filters?.entity_type) params.append("entity_type", filters.entity_type);
+//     if (filters?.user_id) params.append("user_id", filters.user_id);
+//     if (filters?.start_date) params.append("start_date", filters.start_date);
+//     if (filters?.end_date) params.append("end_date", filters.end_date);
+//     if (filters?.limit) params.append("limit", String(filters.limit));
+//     if (filters?.offset) params.append("offset", String(filters.offset));
 
-    const queryString = params.toString();
-    const url = `/api/v1/audit-logs${queryString ? `?${queryString}` : ""}`;
+//     const queryString = params.toString();
+//     const url = `/api/v1/audit-logs${queryString ? `?${queryString}` : ""}`;
 
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url
-    });
+//     const response = await authenticatedApiClient({
+//       method: "GET",
+//       url
+//     });
 
-    return successResponse(response.data, "Audit logs fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | AUDIT LOGS", "/api/v1/audit-logs");
-  }
-}
+//     return successResponse(response.data, "Audit logs fetched successfully");
+//   } catch (error: any) {
+//     return handleError(error, "GET | AUDIT LOGS", "/api/v1/audit-logs");
+//   }
+// }
 
-/**
- * Get audit logs by user
- */
-export async function getAuditLogsByUser(
-  userId: string,
-  limit?: number,
-  offset?: number
-): Promise<APIResponse> {
-  if (!userId) {
-    return handleBadRequest("User ID is required");
-  }
+// /**
+//  * Get audit logs by user
+//  */
+// export async function getAuditLogsByUser(
+//   userId: string,
+//   limit?: number,
+//   offset?: number
+// ): Promise<APIResponse> {
+//   if (!userId) {
+//     return handleBadRequest("User ID is required");
+//   }
 
-  try {
-    const params = new URLSearchParams();
-    if (limit) params.append("limit", String(limit));
-    if (offset) params.append("offset", String(offset));
+//   try {
+//     const params = new URLSearchParams();
+//     if (limit) params.append("limit", String(limit));
+//     if (offset) params.append("offset", String(offset));
 
-    const queryString = params.toString();
-    const url = `/api/v1/audit-logs/user/${userId}${queryString ? `?${queryString}` : ""}`;
+//     const queryString = params.toString();
+//     const url = `/api/v1/audit-logs/user/${userId}${queryString ? `?${queryString}` : ""}`;
 
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url
-    });
+//     const response = await authenticatedApiClient({
+//       method: "GET",
+//       url
+//     });
 
-    return successResponse(response.data, "User audit logs fetched successfully");
-  } catch (error: any) {
-    return handleError(error, "GET | USER AUDIT LOGS", `/api/v1/audit-logs/user/${userId}`);
-  }
-}
+//     return successResponse(response.data, "User audit logs fetched successfully");
+//   } catch (error: any) {
+//     return handleError(error, "GET | USER AUDIT LOGS", `/api/v1/audit-logs/user/${userId}`);
+//   }
+// }
 
-/**
- * Get audit logs by entity
- */
-export async function getAuditLogsByEntity(
-  entityType: string,
-  entityId: string
-): Promise<APIResponse> {
-  if (!entityType || !entityId) {
-    return handleBadRequest("Entity type and ID are required");
-  }
+// /**
+//  * Get audit logs by entity
+//  */
+// export async function getAuditLogsByEntity(
+//   entityType: string,
+//   entityId: string
+// ): Promise<APIResponse> {
+//   if (!entityType || !entityId) {
+//     return handleBadRequest("Entity type and ID are required");
+//   }
 
-  try {
-    const response = await authenticatedApiClient({
-      method: "GET",
-      url: `/api/v1/audit-logs/entity/${entityType}/${entityId}`
-    });
+//   try {
+//     const response = await authenticatedApiClient({
+//       method: "GET",
+//       url: `/api/v1/audit-logs/entity/${entityType}/${entityId}`
+//     });
 
-    return successResponse(response.data, "Entity audit logs fetched successfully");
-  } catch (error: any) {
-    return handleError(
-      error,
-      "GET | ENTITY AUDIT LOGS",
-      `/api/v1/audit-logs/entity/${entityType}/${entityId}`
-    );
-  }
-}
+//     return successResponse(response.data, "Entity audit logs fetched successfully");
+//   } catch (error: any) {
+//     return handleError(
+//       error,
+//       "GET | ENTITY AUDIT LOGS",
+//       `/api/v1/audit-logs/entity/${entityType}/${entityId}`
+//     );
+//   }
+// }
 
 /**
  * Create a new budget
@@ -1229,7 +1229,7 @@ export async function getBudgetLines(
   if (params?.department_id) queryParams.append("department_id", params.department_id);
   if (params?.status) queryParams.append("status", params.status);
 
-  const url = `/api/v1/audit/budgets/${budgetId}/lines`;
+  const url = `/api/v1/audit/budgets/${budgetId}/lines${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   try {
     const response = await authenticatedApiClient({ url });

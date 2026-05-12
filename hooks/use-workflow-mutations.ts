@@ -86,40 +86,40 @@ export function useWorkflowMutations() {
    * Update an existing workflow
    * PUT /api/v1/workflows/update
    */
-  const updateWorkflowData = async (
-    workflowId: string,
-    workflow: WorkflowItem
-  ): Promise<SaveWorkflowResult> => {
-    setState({ isLoading: true, error: null });
+  // const updateWorkflowData = async (
+  //   workflowId: string,
+  //   workflow: WorkflowItem
+  // ): Promise<SaveWorkflowResult> => {
+  //   setState({ isLoading: true, error: null });
 
-    try {
-      const response = await updateWorkflow(workflowId, {
-        name: workflow.name,
-        trigger_type: workflow.trigger_type,
-        description: workflow.description || `WorkflowItem for ${workflow.trigger_type}`
-      });
+  //   try {
+  //     const response = await updateWorkflow(workflowId, {
+  //       name: workflow.name,
+  //       trigger_type: workflow.trigger_type,
+  //       description: workflow.description || `WorkflowItem for ${workflow.trigger_type}`
+  //     });
 
-      if (!response.success) {
-        throw new Error((response as any).message || "Failed to update workflow");
-      }
+  //     if (!response.success) {
+  //       throw new Error((response as any).message || "Failed to update workflow");
+  //     }
 
-      setState({ isLoading: false, error: null });
+  //     setState({ isLoading: false, error: null });
 
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error: any) {
-      const errorMessage = error?.message || "Failed to update workflow";
-      setState({ isLoading: false, error: errorMessage });
-      notify({ description: errorMessage, type: "error" });
+  //     return {
+  //       success: true,
+  //       data: response.data
+  //     };
+  //   } catch (error: any) {
+  //     const errorMessage = error?.message || "Failed to update workflow";
+  //     setState({ isLoading: false, error: errorMessage });
+  //     notify({ description: errorMessage, type: "error" });
 
-      return {
-        success: false,
-        error: errorMessage
-      };
-    }
-  };
+  //     return {
+  //       success: false,
+  //       error: errorMessage
+  //     };
+  //   }
+  // };
 
   /**
    * Create workflow states
@@ -436,11 +436,13 @@ export function useWorkflowMutations() {
       // Step 1: Create or update the workflow itself
       let workflowResult: SaveWorkflowResult;
 
-      if (isExisting) {
-        workflowResult = await updateWorkflowData(workflow.id, workflow);
-      } else {
-        workflowResult = await saveWorkflow(workflow);
-      }
+      // if (isExisting) {
+      //   workflowResult = await updateWorkflowData(workflow.id, workflow);
+      // } else {
+      //   workflowResult = await saveWorkflow(workflow);
+      // }
+
+      workflowResult = await saveWorkflow(workflow);
 
       if (!workflowResult.success) {
         throw new Error(workflowResult.error || "Failed to save workflow");
@@ -538,7 +540,7 @@ export function useWorkflowMutations() {
 
   return {
     saveWorkflow,
-    updateWorkflowData,
+    // updateWorkflowData,
     deleteWorkflow,
     saveOrUpdateWorkflow,
     createStates,

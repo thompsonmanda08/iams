@@ -203,12 +203,10 @@ function ScreenLock({
         hideCloseButton
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="lock-dialog-title"
-        aria-describedby="lock-dialog-desc"
       >
         <DialogHeader>
-          <DialogTitle id="lock-dialog-title">Are you still there?</DialogTitle>
-          <DialogDescription id="lock-dialog-desc">
+          <DialogTitle>Are you still there?</DialogTitle>
+          <DialogDescription>
             You have been idle for some time now, you will be logged out automatically in
           </DialogDescription>
         </DialogHeader>
@@ -935,15 +933,10 @@ export function IdleTimerContainer({ session }: { session: AuthSession | null })
       {/* HIGH-5: Logout confirmation dialog — shown when countdown reaches 0 or
           the user explicitly clicks "Log Out". Gives one last chance to cancel. */}
       <Dialog open={showLogoutConfirm} onOpenChange={cancelLogout}>
-        <DialogContent
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="logout-confirm-title"
-          aria-describedby="logout-confirm-desc"
-        >
+        <DialogContent role="alertdialog" aria-modal="true">
           <DialogHeader>
-            <DialogTitle id="logout-confirm-title">Confirm Logout</DialogTitle>
-            <DialogDescription id="logout-confirm-desc">
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>
               Your session has timed out. Are you sure you want to log out now?
             </DialogDescription>
           </DialogHeader>

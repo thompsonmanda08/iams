@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { searchDataSources } from "@/lib/utils/search-data-sources";
 import { Button } from "@/components/ui/button";
 import { getWidgetTypeInfo } from "./widget-type-selector";
+import { Spinner } from "../ui/spinner";
 
 export interface DataSourceSelectorProps {
   selectedDataSourceId?: string;
@@ -164,13 +165,13 @@ export function DataSourceSelector({
           className={cn("w-full justify-between", className)}>
           <div className="flex items-center gap-2 truncate">
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <Spinner className="text-muted-foreground h-4 w-4 animate-spin" />
             ) : selectedSource ? (
               <>
                 {React.createElement(categoryConfig[selectedSource.category].icon, {
                   className: `h-4 w-4 ${categoryConfig[selectedSource.category].color}`
                 })}
-                <span className="truncate text-foreground">{selectedSource.name}</span>
+                <span className="text-foreground truncate">{selectedSource.name}</span>
                 <span
                   className={cn(
                     "shrink-0 rounded px-1.5 py-0.5 text-xs",
@@ -186,7 +187,7 @@ export function DataSourceSelector({
           </div>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+              "text-muted-foreground h-4 w-4 shrink-0 transition-transform",
               isOpen && "rotate-180"
             )}
           />
@@ -195,22 +196,22 @@ export function DataSourceSelector({
 
       <PopoverContent className="w-[500px] p-0" align="start" side="bottom" sideOffset={8}>
         {/* Search */}
-        <div className="border-b border-border p-3">
+        <div className="border-border border-b p-3">
           <div className="relative">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search data sources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-input py-2 pr-3 pl-9 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+              className="border-input focus:border-primary focus:ring-primary w-full rounded-md border py-2 pr-3 pl-9 text-sm focus:ring-1 focus:outline-none"
               autoFocus
             />
           </div>
         </div>
 
         {/* Category Filters */}
-        <div className="flex flex-wrap gap-1 border-b border-border p-2">
+        <div className="border-border flex flex-wrap gap-1 border-b p-2">
           <button
             type="button"
             onClick={() => setSelectedCategory("all")}
@@ -239,7 +240,7 @@ export function DataSourceSelector({
         </div>
 
         {/* Manual Entry Option */}
-        <div className="border-b border-border p-2">
+        <div className="border-border border-b p-2">
           <button
             type="button"
             onClick={() => {
@@ -261,15 +262,15 @@ export function DataSourceSelector({
                 sample_data: {}
               } as DataSource);
             }}
-            className="mb-1 w-full rounded-lg p-3 text-left transition-colors hover:bg-muted">
+            className="hover:bg-muted mb-1 w-full rounded-lg p-3 text-left transition-colors">
             <div className="flex items-center gap-2">
               <Edit2 className="h-4 w-4 text-purple-500" />
-              <span className="font-medium text-foreground">Manual Entry</span>
+              <span className="text-foreground font-medium">Manual Entry</span>
               <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">
                 Custom
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Enter your own data manually</p>
+            <p className="text-muted-foreground mt-1 text-xs">Enter your own data manually</p>
             <div className="mt-2 flex flex-wrap gap-1">
               {(
                 [
@@ -286,7 +287,7 @@ export function DataSourceSelector({
                 return (
                   <span
                     key={type}
-                    className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+                    className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs"
                     title={info.description}>
                     {React.createElement(info.icon, { className: "h-3 w-3" })}
                     {info.label}
@@ -301,11 +302,13 @@ export function DataSourceSelector({
         <div className="max-h-96 overflow-y-auto p-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">Loading data sources...</span>
+              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+              <span className="text-muted-foreground ml-2 text-sm">Loading data sources...</span>
             </div>
           ) : filteredSources.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">No data sources found</div>
+            <div className="text-muted-foreground py-8 text-center text-sm">
+              No data sources found
+            </div>
           ) : (
             filteredSources.map((source) => {
               const config = categoryConfig[source.category];
@@ -319,17 +322,17 @@ export function DataSourceSelector({
                   onClick={() => handleSelect(source)}
                   className={cn(
                     "mb-1 w-full rounded-lg p-3 text-left transition-colors",
-                    isSelected ? "border border-primary/30 bg-primary/10" : "hover:bg-muted"
+                    isSelected ? "border-primary/30 bg-primary/10 border" : "hover:bg-muted"
                   )}>
                   <div className="flex items-center gap-2">
                     <Icon className={cn("h-4 w-4", config.color)} />
-                    <span className="font-medium text-foreground">{source.name}</span>
+                    <span className="text-foreground font-medium">{source.name}</span>
                     <span
                       className={cn("rounded px-1.5 py-0.5 text-xs", config.bgColor, config.color)}>
                       {config.label}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{source.description}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">{source.description}</p>
                   {source.requires_entity && (
                     <p className="mt-1 text-xs text-amber-600">
                       ⚠ Requires linked audit plan or risk register
@@ -344,7 +347,7 @@ export function DataSourceSelector({
                         return (
                           <span
                             key={widgetType}
-                            className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+                            className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs"
                             title={info.description}>
                             {React.createElement(info.icon, { className: "h-3 w-3" })}
                             {info.label}
@@ -360,11 +363,11 @@ export function DataSourceSelector({
         </div>
 
         {/* Close Button */}
-        <div className="border-t border-border p-2">
+        <div className="border-border border-t p-2">
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="w-full rounded bg-muted px-3 py-2 text-sm text-muted-foreground hover:bg-muted/80">
+            className="bg-muted text-muted-foreground hover:bg-muted/80 w-full rounded px-3 py-2 text-sm">
             Cancel
           </button>
         </div>
