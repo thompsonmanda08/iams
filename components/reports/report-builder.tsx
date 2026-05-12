@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Download, FileText, Eye, Send, Loader2, Menu } from "lucide-react";
+import { Save, Download, FileText, Eye, Send, Loader2, Menu, GitBranch } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { useReportStore } from "@/store/report-store";
 import { useReportFetching } from "@/hooks/use-report-queries";
@@ -11,6 +11,7 @@ import { AddSectionModal } from "./add-section-modal";
 import { AddSectionButton } from "./add-section-button";
 import { TableOfContents } from "./table-of-contents";
 import { PDFPreviewModal } from "./pdf-preview-modal";
+import { SnapshotVersionDialog } from "./snapshot-version-dialog";
 import { PDFDocument } from "./pdf-react/pdf-document";
 import { SelectField } from "@/components/ui/select-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
@@ -162,6 +163,7 @@ export function ReportBuilder({
     widgetId: string;
   } | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showSnapshotDialog, setShowSnapshotDialog] = useState(false);
 
   // Auto-fetch data for template widgets that have a data_source_id but empty data.
   // Runs once when the report first loads. Falls back to template defaults on error.
@@ -792,6 +794,20 @@ export function ReportBuilder({
                 <span className="hidden md:inline">Save Draft</span>
               </PermissionButton>
             )}
+            {report.status !== "PUBLISHED" && report.report_id && (
+              <PermissionButton
+                moduleCode={MODULE_CODES.AUDIT_REPORTS}
+                action="can_edit"
+                variant={"outline"}
+                size="icon"
+                onClick={() => setShowSnapshotDialog(true)}
+                className="sm:w-auto sm:px-3"
+                title="Save as new version">
+                <GitBranch className="h-4 w-4" />
+                <span className="hidden sm:inline md:hidden">Version</span>
+                <span className="hidden md:inline">Save as Version</span>
+              </PermissionButton>
+            )}
             <Button
               variant={"outline"}
               size="icon"
@@ -1069,6 +1085,15 @@ export function ReportBuilder({
         onConfirm={handleConfirmChangeReportType}
         type="close"
       />
+
+      {/* Save as Version Dialog */}
+      {report.report_id && (
+        <SnapshotVersionDialog
+          reportId={report.report_id}
+          open={showSnapshotDialog}
+          onOpenChange={setShowSnapshotDialog}
+        />
+      )}
     </div>
   );
 }
