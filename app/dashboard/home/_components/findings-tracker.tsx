@@ -38,12 +38,12 @@ export default function FindingsTracker({ findings }: FindingsTrackerProps) {
       <CardContent>
         <div className="space-y-3">
           {openFindings.length > 0 ? (
-            openFindings.slice(0, 5).map((finding) => {
+            openFindings.slice(0, 5).map((finding, index) => {
               const daysOverdue = getDaysOverdue(finding.due_date);
 
               return (
                 <div
-                  key={finding.finding_number}
+                  key={`${finding.finding_number}-${index}`}
                   className="border-border border-b pb-3 last:border-0">
                   <div className="mb-2 flex items-start justify-between">
                     <div className="flex-1">

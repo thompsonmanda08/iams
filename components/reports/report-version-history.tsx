@@ -125,7 +125,7 @@ export function ReportVersionHistory({
                 <Button
                   size="icon"
                   variant="ghost"
-                  title="Publish version"
+                  title="Submit for Approval"
                   disabled={publish.isPending}
                   onClick={() => publish.mutate({ versionNumber: v.version_number })}
                 >

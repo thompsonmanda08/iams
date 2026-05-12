@@ -528,14 +528,14 @@ export function usePublishVersion(reportId: string) {
     },
     onSuccess: (_data, args) => {
       notify({
-        description: `Version ${args.versionNumber} published`,
+        description: `Version ${args.versionNumber} submitted for approval`,
         type: "success"
       });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORT, reportId] });
       queryClient.invalidateQueries({ queryKey: [REPORT_QUERY_KEYS.REPORTS] });
     },
     onError: (error: Error) => {
-      notify({ description: error.message || "Failed to publish version", type: "error" });
+      notify({ description: error.message || "Failed to submit for approval", type: "error" });
     }
   });
 }
