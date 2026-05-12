@@ -1,20 +1,14 @@
-import type { ReportContent, ReportSection, ReportStatus } from "@/lib/types/report-types";
+import type { ReportContent, ReportStatus } from "@/lib/types/report-types";
 import {
   normalizeManagementStandard,
   getTemplateForStandard
 } from "@/components/reports/report-templates";
 
 /**
- * Intelligently merges saved report data with template data
- *
- * Strategy:
- * 1. If report has no sections -> use all template sections
- * 2. If report has some sections -> merge with template:
- *    - Keep all user-edited sections (by section_id)
- *    - Add missing template sections that user hasn't created yet
- *    - Maintain proper ordering
- *
- * This ensures users get helpful placeholder content while preserving their work
+ * Hydrates a saved report with template defaults only when the saved report
+ * has no sections of its own. Once the user has saved sections, those are
+ * authoritative: deleted sections must stay deleted across reloads, so the
+ * template is not re-merged.
  */
 export function mergeReportWithTemplate(
   savedReport: ReportContent | null | undefined,
@@ -80,85 +74,20 @@ export function mergeReportWithTemplate(
     };
   }
 
-  // Report has sections - perform intelligent merge
-  const mergedSections = mergeReportSections(savedReport.sections, template.default_sections);
-
+  // Report has user sections - treat them as authoritative.
+  // Re-injecting missing template sections here would resurrect anything the
+  // user deleted on every load.
   return {
     ...savedReport,
     version: savedReport.version || "1.0",
     report_type: template.type,
     management_standard:
       normalizeManagementStandard(savedReport.management_standard) || templateKey,
-    sections: mergedSections,
+    sections: savedReport.sections,
     // Use entity metadata timestamps as fallback when report_content doesn't have them
     created_at: savedReport.created_at || entityMetadata?.created_at,
     updated_at: savedReport.updated_at || entityMetadata?.updated_at
   };
-}
-
-/**
- * Merges user sections with template sections
- *
- * Logic:
- * - Keep all user sections (they have priority)
- * - Add template sections that don't exist in user sections
- * - Match by section_type for common sections (like cover_page)
- * - Maintain logical ordering
- */
-function mergeReportSections(
-  userSections: ReportSection[],
-  templateSections: ReportSection[]
-): ReportSection[] {
-  const mergedSections: ReportSection[] = [];
-  const userSectionsByType = new Map<string, ReportSection[]>();
-  const userSectionIds = new Set<string>();
-
-  // Index user sections by type and collect IDs
-  userSections.forEach((section) => {
-    userSectionIds.add(section.section_id);
-
-    const existingSections = userSectionsByType.get(section.section_type) || [];
-    userSectionsByType.set(section.section_type, [...existingSections, section]);
-  });
-
-  // First pass: Add all user sections (they take precedence)
-  userSections.forEach((section) => {
-    mergedSections.push(section);
-  });
-
-  // Second pass: Add template sections that don't exist in user sections
-  templateSections.forEach((templateSection) => {
-    // Skip if user already has a section with this exact ID
-    if (userSectionIds.has(templateSection.section_id)) {
-      return;
-    }
-
-    // For certain unique section types (like cover_page), don't duplicate if user has one
-    const uniqueSectionTypes = new Set(["cover_page"]);
-    if (uniqueSectionTypes.has(templateSection.section_type)) {
-      const userHasThisType = userSectionsByType.has(templateSection.section_type);
-      if (userHasThisType) {
-        return; // User already has this unique section type, skip template version
-      }
-    }
-
-    // Add template section as a helpful placeholder
-    // Generate a unique ID to avoid conflicts
-    const placeholderSection: ReportSection = {
-      ...templateSection,
-      section_id: `${templateSection.section_id}-template-${Date.now()}`
-    };
-
-    mergedSections.push(placeholderSection);
-  });
-
-  // Preserve insertion order: user sections (in their saved order) first,
-  // then template sections appended at the end. Reassign order numbers
-  // sequentially so children stay grouped under parents.
-  return mergedSections.map((section, index) => ({
-    ...section,
-    order: index
-  }));
 }
 
 /**
