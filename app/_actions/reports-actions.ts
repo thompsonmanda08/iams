@@ -660,6 +660,70 @@ export async function publishReportVersion(
   }
 }
 
+/**
+ * Switch the active version pointer and mirror the chosen version's content
+ * into the top-level fields so the editor reloads with it.
+ */
+export async function setActiveVersion(
+  reportId: string,
+  versionNumber: number
+): Promise<APIResponse> {
+  if (!reportId) {
+    return handleBadRequest("Report ID is required");
+  }
+
+  const { isAuthenticated } = await verifySession();
+  if (!isAuthenticated) {
+    return handleBadRequest("Session required to switch versions");
+  }
+
+  try {
+    const reportRes = await getReport(reportId);
+    if (!reportRes.success || !reportRes.data?.data?.report_content) {
+      return handleBadRequest("Report not found");
+    }
+
+    const current = ensureVersionedShape(reportRes.data.data.report_content);
+    const versions = current.versions ?? [];
+    const idx = findVersionIndex(versions, versionNumber);
+
+    if (idx === -1) {
+      return handleBadRequest(`Version ${versionNumber} not found`);
+    }
+
+    const target = versions[idx];
+    const updatedContent: ReportContent = {
+      ...current,
+      title: target.title,
+      management_standard: target.management_standard,
+      branding: structuredClone(target.branding),
+      sections: structuredClone(target.sections),
+      current_version_number: versionNumber
+    };
+
+    const aggregateStatus = computeAggregateStatus(versions);
+
+    const response = await authenticatedApiClient({
+      url: `/api/v1/reports/${reportId}`,
+      method: "PUT",
+      data: {
+        report_content: updatedContent,
+        status: aggregateStatus,
+        is_active: true
+      }
+    });
+
+    revalidatePath(`/dashboard/reports/${reportId}`);
+    return successResponse(response?.data, `Active version set to v${versionNumber}`);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "PUT | SET ACTIVE VERSION",
+      `/api/v1/reports/${reportId}#active-v${versionNumber}`
+    );
+  }
+}
+
 // ============================================================================
 // DATA SOURCES
 // ============================================================================
