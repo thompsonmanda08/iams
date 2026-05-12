@@ -529,6 +529,95 @@ export async function updateReportVersion(
   }
 }
 
+/**
+ * Publish a specific version. Optionally generates the PDF for that snapshot.
+ * Idempotent if the version is already PUBLISHED (regenerates PDF when generatePdf=true).
+ */
+export async function publishReportVersion(
+  reportId: string,
+  versionNumber: number,
+  generatePdf: boolean = true
+): Promise<APIResponse> {
+  if (!reportId) {
+    return handleBadRequest("Report ID is required");
+  }
+
+  try {
+    const reportRes = await getReport(reportId);
+    if (!reportRes.success || !reportRes.data?.data?.report_content) {
+      return handleBadRequest("Report not found");
+    }
+
+    const { isAuthenticated, session } = await verifySession();
+    if (!isAuthenticated) {
+      return handleBadRequest("Session required to publish version");
+    }
+    const userRef = buildUserRef(session);
+    if (!userRef) {
+      return handleBadRequest("Session user details unavailable");
+    }
+
+    const current = ensureVersionedShape(reportRes.data.data.report_content);
+    const versions = current.versions ?? [];
+    const idx = findVersionIndex(versions, versionNumber);
+
+    if (idx === -1) {
+      return handleBadRequest(`Version ${versionNumber} not found`);
+    }
+
+    const now = new Date().toISOString();
+
+    let pdfUrl: string | undefined = versions[idx].pdf_url;
+    if (generatePdf) {
+      try {
+        const pdfRes = await authenticatedApiClient({
+          url: `/api/v1/reports/${reportId}/publish`,
+          method: "POST",
+          data: { generate_pdf: true, version_number: versionNumber }
+        });
+        pdfUrl = pdfRes?.data?.data?.pdf_url ?? pdfUrl;
+      } catch (pdfError: any) {
+        console.warn("[publishReportVersion] PDF generation failed:", pdfError?.message);
+        // Continue — publish status is still applied; pdf_url remains as it was
+      }
+    }
+
+    const updatedVersion = {
+      ...versions[idx],
+      status: "PUBLISHED" as const,
+      published_at: versions[idx].published_at ?? now,
+      published_by: versions[idx].published_by ?? userRef,
+      pdf_url: pdfUrl
+    };
+
+    const updatedVersions = [...versions];
+    updatedVersions[idx] = updatedVersion;
+
+    const updatedContent = { ...current, versions: updatedVersions };
+    const aggregateStatus = computeAggregateStatus(updatedVersions);
+
+    const response = await authenticatedApiClient({
+      url: `/api/v1/reports/${reportId}`,
+      method: "PUT",
+      data: {
+        report_content: updatedContent,
+        status: aggregateStatus,
+        is_active: true
+      }
+    });
+
+    revalidatePath(`/dashboard/reports/${reportId}`);
+    revalidatePath("/dashboard/reports");
+    return successResponse(response?.data, `Version ${versionNumber} published`);
+  } catch (error: any) {
+    return handleError(
+      error,
+      "POST | PUBLISH REPORT VERSION",
+      `/api/v1/reports/${reportId}#publish-v${versionNumber}`
+    );
+  }
+}
+
 // ============================================================================
 // DATA SOURCES
 // ============================================================================
