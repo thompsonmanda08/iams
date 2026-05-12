@@ -329,18 +329,20 @@ export async function publishReport(
   }
 
   try {
-    const response = await authenticatedApiClient({
-      url: `/api/v1/reports/${reportId}/publish`,
-      method: "POST",
-      data: { generate_pdf: generatePdf }
-    });
+    // Always snapshot current draft first so published state is tracked
+    const snapshotRes = await snapshotReportVersion(reportId);
+    if (!snapshotRes.success) {
+      return snapshotRes;
+    }
 
-    // Revalidate all report-related pages
-    revalidatePath("/dashboard/reports");
-    revalidatePath(`/dashboard/reports/${reportId}`);
-    revalidatePath("/dashboard/audit/plans", "layout");
+    // Re-read to find the version we just created (snapshotReportVersion sets current_version_number)
+    const reportRes = await getReport(reportId);
+    const versionNumber = reportRes.data?.data?.report_content?.current_version_number;
+    if (typeof versionNumber !== "number") {
+      return handleBadRequest("Could not locate snapshot to publish");
+    }
 
-    return successResponse(response?.data, "Report published successfully");
+    return publishReportVersion(reportId, versionNumber, generatePdf);
   } catch (error: any) {
     return handleError(error, "POST | PUBLISH REPORT", `/api/v1/reports/${reportId}/publish`);
   }
