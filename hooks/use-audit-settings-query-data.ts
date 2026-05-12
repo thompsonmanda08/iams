@@ -177,6 +177,7 @@ export const useUniverses = (params?: {
   page?: number;
   page_size?: number;
   is_active?: boolean;
+  status?: string;
 }) => {
   return useQuery({
     queryKey: [QUERY_KEYS.UNIVERSES, params],

@@ -94,7 +94,7 @@ const DEFAULT_FINDING_PAGINATION: Pagination = {
  * Hook to fetch finding actions with pagination, supporting SSR initialData hydration.
  */
 export function useFindingActionsList(
-  filters: { page?: number; page_size?: number } = {},
+  filters: { page?: number; page_size?: number; status?: string } = {},
   initialData?: FindingActionsListResult
 ) {
   return useQuery<FindingActionsListResult>({
@@ -115,7 +115,7 @@ export function useFindingActionsList(
  * Hook to fetch audit follow-up logs with pagination, supporting SSR initialData.
  */
 export function useAuditFollowupLogsList(
-  filters: { page?: number; page_size?: number } = {},
+  filters: { page?: number; page_size?: number; status?: string } = {},
   initialData?: FindingActionsListResult
 ) {
   return useQuery<FindingActionsListResult>({

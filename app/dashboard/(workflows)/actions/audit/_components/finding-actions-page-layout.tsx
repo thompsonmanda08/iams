@@ -27,27 +27,20 @@ interface FindingActionsPageLayoutProps {
   pageSize: number;
   auditPage: number;
   auditPageSize: number;
+  status: string;
   initialActions: FindingAction[];
   pagination: Pagination;
   auditLogActions: FindingAction[];
   auditLogPagination: Pagination;
 }
 
-type ActionStatus =
-  | "ALL"
-  | "PENDING"
-  | "IN_PROGRESS"
-  | "UNDER_REVIEW"
-  | "APPROVED"
-  | "COMPLETED"
-  | "REJECTED";
+type ActionStatus = "ALL" | "PENDING" | "IN_PROGRESS" | "UNDER_REVIEW" | "COMPLETED" | "REJECTED";
 
 const ACTION_STATUSES: { value: ActionStatus; label: string }[] = [
   { value: "ALL", label: "All Statuses" },
   { value: "PENDING", label: "Pending" },
   { value: "IN_PROGRESS", label: "In Progress" },
   { value: "UNDER_REVIEW", label: "Under Review" },
-  { value: "APPROVED", label: "Approved" },
   { value: "COMPLETED", label: "Completed" },
   { value: "REJECTED", label: "Rejected" }
 ];
@@ -57,6 +50,7 @@ export function FindingActionsPageLayout({
   pageSize,
   auditPage,
   auditPageSize,
+  status,
   initialActions = [],
   pagination,
   auditLogActions = [],
@@ -67,12 +61,15 @@ export function FindingActionsPageLayout({
   const queryClient = useQueryClient();
   const { checkPermission, hasPermission } = usePermissions();
 
+  const statusFilter = (status as ActionStatus) ?? "ALL";
+  const statusParam = statusFilter !== "ALL" ? statusFilter : undefined;
+
   const { data: actionsData } = useFindingActionsList(
-    { page, page_size: pageSize },
+    { page, page_size: pageSize, status: statusParam },
     { actions: initialActions, pagination }
   );
   const { data: auditLogData } = useAuditFollowupLogsList(
-    { page: auditPage, page_size: auditPageSize },
+    { page: auditPage, page_size: auditPageSize, status: statusParam },
     { actions: auditLogActions, pagination: auditLogPagination }
   );
 
@@ -82,18 +79,29 @@ export function FindingActionsPageLayout({
   const followupPagination = auditLogData?.pagination ?? auditLogPagination;
 
   const [activeTab, setActiveTab] = useState("my-actions");
-  const [statusFilter, setStatusFilter] = useState<ActionStatus | "ALL">("ALL");
+
+  const handleStatusChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "ALL") {
+      params.set("status", value);
+    } else {
+      params.delete("status");
+    }
+    params.set("page", "1");
+    params.set("audit_page", "1");
+    router.push(`?${params.toString()}`);
+  };
 
   const {
     searchValue: searchTerm,
     setSearchValue: setSearchTerm,
-    debouncedSearch: debouncedSearchTerm,
+    debouncedSearch: debouncedSearchTerm
   } = useTableSearch({ debounceMs: 200 });
 
   const {
     searchValue: auditSearchTerm,
     setSearchValue: setAuditSearchTerm,
-    debouncedSearch: debouncedAuditSearchTerm,
+    debouncedSearch: debouncedAuditSearchTerm
   } = useTableSearch({ debounceMs: 200 });
 
   const filteredActions = useMemo(() => {
@@ -109,12 +117,8 @@ export function FindingActionsPageLayout({
       );
     }
 
-    if (statusFilter !== "ALL") {
-      filtered = filtered.filter((action) => action.status === statusFilter);
-    }
-
     return filtered;
-  }, [myActions, debouncedSearchTerm, statusFilter]);
+  }, [myActions, debouncedSearchTerm]);
 
   const filteredAuditLogActions = useMemo(() => {
     let filtered = followupActions;
@@ -220,7 +224,7 @@ export function FindingActionsPageLayout({
                   label="Status"
                   placeholder="All Statuses"
                   value={statusFilter}
-                  onValueChange={(value) => setStatusFilter(value as ActionStatus | "ALL")}
+                  onValueChange={handleStatusChange}
                   options={ACTION_STATUSES as any[]}
                 />
               </div>
@@ -265,7 +269,7 @@ export function FindingActionsPageLayout({
                   label="Status"
                   placeholder="All Statuses"
                   value={statusFilter}
-                  onValueChange={(value) => setStatusFilter(value as ActionStatus | "ALL")}
+                  onValueChange={handleStatusChange}
                   options={ACTION_STATUSES as any[]}
                 />
               </div>

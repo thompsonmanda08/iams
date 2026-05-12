@@ -166,9 +166,11 @@ export default function NewAuditPlanPage() {
   // Field validation errors
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  // Fetch universes dynamically for the dropdown
+  // Fetch universes dynamically for the dropdown — engagement planning only
+  // shows APPROVED universes so plans can't reference draft/pending universes.
   const { data: universesResponse, isLoading: loadingUniverses } = useUniverses({
-    is_active: true
+    is_active: true,
+    status: "APPROVED"
   });
   const universesData = Array.isArray(universesResponse?.data)
     ? universesResponse.data
@@ -199,10 +201,12 @@ export default function NewAuditPlanPage() {
       ? universeItemsResponse.data
       : [];
 
-  // Fetch budgets
+  // Fetch budgets — engagement planning only shows APPROVED budgets so
+  // auditors can't tie a plan to a draft/pending budget.
   const { data: budgetsResponse, isLoading: loadingBudgets } = useBudgets({
     is_active: true,
-    department_id: formData.department_id
+    department_id: formData.department_id,
+    status: "APPROVED"
   });
 
   const budgetsData = Array.isArray(budgetsResponse?.data)

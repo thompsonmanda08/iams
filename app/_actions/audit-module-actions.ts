@@ -1355,6 +1355,7 @@ export async function getUniverses(params?: {
   page?: number;
   page_size?: number;
   is_active?: boolean;
+  status?: string;
 }): Promise<APIResponse> {
   try {
     const queryParams = new URLSearchParams();
@@ -1362,6 +1363,7 @@ export async function getUniverses(params?: {
     if (params?.page_size) queryParams.append("page_size", params.page_size.toString());
     if (params?.is_active !== undefined)
       queryParams.append("is_active", params.is_active.toString());
+    if (params?.status) queryParams.append("status", params.status);
 
     const url = `/api/v1/audit/universes${
       queryParams.toString() ? `?${queryParams.toString()}` : ""

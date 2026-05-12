@@ -15,6 +15,7 @@ export default async function FindingActionsPage({
     page_size?: string;
     audit_page?: string;
     audit_page_size?: string;
+    status?: string;
   }>;
 }) {
   const urlSearchParams = await searchParams;
@@ -25,11 +26,15 @@ export default async function FindingActionsPage({
   const audit_page_size = urlSearchParams?.audit_page_size
     ? Number(urlSearchParams.audit_page_size)
     : 10;
+  const status =
+    urlSearchParams?.status && urlSearchParams.status !== "ALL"
+      ? urlSearchParams.status
+      : undefined;
 
   // Fetch all finding actions server-side (for My Actions tab)
   const [actionsResponse, auditLogResponse] = await Promise.all([
-    getFindingActions({ page, page_size }),
-    getAuditFollowupLogs({ page: audit_page, page_size: audit_page_size })
+    getFindingActions({ page, page_size, status }),
+    getAuditFollowupLogs({ page: audit_page, page_size: audit_page_size, status })
   ]);
 
   const findingActions = actionsResponse.data?.data || [];
@@ -70,6 +75,7 @@ export default async function FindingActionsPage({
           pageSize={page_size}
           auditPage={audit_page}
           auditPageSize={audit_page_size}
+          status={urlSearchParams?.status ?? "ALL"}
           initialActions={findingActions}
           pagination={pagination}
           auditLogActions={auditLogActions}
