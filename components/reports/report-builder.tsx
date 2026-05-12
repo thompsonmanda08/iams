@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Download, FileText, Eye, Send, Loader2, Menu, GitBranch } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
@@ -14,6 +14,8 @@ import { PDFPreviewModal } from "./pdf-preview-modal";
 import { SnapshotVersionDialog } from "./snapshot-version-dialog";
 import { PDFDocument } from "./pdf-react/pdf-document";
 import { SelectField } from "@/components/ui/select-field";
+import { useSetActiveVersion } from "@/hooks/use-report-queries";
+import { ensureVersionedShape } from "@/lib/config/ensure-versioned-shape";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import type {
   ReportSection,
@@ -164,6 +166,31 @@ export function ReportBuilder({
   } | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showSnapshotDialog, setShowSnapshotDialog] = useState(false);
+  const [pendingSwitch, setPendingSwitch] = useState<number | null>(null);
+  const [switchDialogOpen, setSwitchDialogOpen] = useState(false);
+  const setActiveVersionMutation = useSetActiveVersion(report?.report_id || "");
+
+  const versions = useMemo(() => {
+    if (!report) return [];
+    const normalized = ensureVersionedShape(report);
+    return [...(normalized.versions ?? [])].sort((a, b) => b.version_number - a.version_number);
+  }, [report]);
+
+  const activeVersionNumber = report?.current_version_number;
+
+  const versionOptions = useMemo(
+    () =>
+      versions.map((v) => {
+        const labelPart = v.label ? ` · ${v.label}` : "";
+        const ago = formatDistanceToNow(new Date(v.snapshotted_at), { addSuffix: true });
+        return {
+          id: String(v.version_number),
+          value: String(v.version_number),
+          label: `v${v.version_number}${labelPart} · ${v.status} · ${ago}`
+        };
+      }),
+    [versions]
+  );
 
   // Auto-fetch data for template widgets that have a data_source_id but empty data.
   // Runs once when the report first loads. Falls back to template defaults on error.
@@ -900,11 +927,35 @@ export function ReportBuilder({
                   <span className="text-muted-foreground">Sections:</span>
                   <p className="text-foreground font-medium">{report.sections?.length || 0}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Version:</span>
-                  <Badge variant={"default"} className="font-medium">
-                    {report.version}
-                  </Badge>
+                <div>
+                  <span className="text-muted-foreground text-sm">Active Version</span>
+                  {versions.length === 0 ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <Badge variant={"default"} className="font-medium">
+                        {report.version}
+                      </Badge>
+                      <span className="text-muted-foreground text-xs">first save creates v1</span>
+                    </div>
+                  ) : (
+                    <SelectField
+                      value={String(activeVersionNumber ?? versions[0]?.version_number ?? 1)}
+                      onValueChange={(value) => {
+                        const next = Number(value);
+                        if (next === activeVersionNumber) return;
+                        setPendingSwitch(next);
+                        setSwitchDialogOpen(true);
+                      }}
+                      options={versionOptions}
+                      placeholder="Select version"
+                      isDisabled={setActiveVersionMutation.isPending}
+                      classNames={{ wrapper: "mt-1" }}
+                    />
+                  )}
+                  {versions.length > 0 && (
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {versions.length} version{versions.length === 1 ? "" : "s"} · v{activeVersionNumber} active
+                    </p>
+                  )}
                 </div>
                 <div>
                   <span className="text-muted-foreground text-xs">Created</span>
@@ -1094,6 +1145,28 @@ export function ReportBuilder({
           onOpenChange={setShowSnapshotDialog}
         />
       )}
+
+      {/* Confirm Active Version Switch */}
+      <ConfirmationModal
+        open={switchDialogOpen}
+        title="Switch active version?"
+        description={`Switch the editor to v${pendingSwitch}? Save any unsaved edits to v${activeVersionNumber} first to avoid losing them.`}
+        type="default"
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingSwitch(null);
+            setSwitchDialogOpen(false);
+          }
+        }}
+        onConfirm={() => {
+          if (pendingSwitch !== null) {
+            setActiveVersionMutation.mutate(pendingSwitch);
+          }
+          setPendingSwitch(null);
+          setSwitchDialogOpen(false);
+        }}
+        isLoading={setActiveVersionMutation.isPending}
+      />
     </div>
   );
 }
