@@ -1,41 +1,14 @@
-import { useMemo, useState } from "react";
-import { Check, GitBranch } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { useReportStore } from "@/store/report-store";
 import { TableOfContents } from "./table-of-contents";
 import { AddSectionButton } from "./add-section-button";
 import { SelectField } from "@/components/ui/select-field";
 import { ConfirmationModal } from "@/components/confirmation-modal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { StatusBadge } from "@/components/status-badge";
-import { useSetActiveVersion } from "@/hooks/use-report-queries";
-import { ensureVersionedShape } from "@/lib/config/ensure-versioned-shape";
+import { useState } from "react";
 
-interface ReportSidebarProps {
-  reportId: string;
-}
-
-export const ReportSidebar = ({ reportId }: ReportSidebarProps) => {
+export const ReportSidebar = () => {
   const { report, setAddSectionModalOpen, changeManagementStandard } = useReportStore();
   const [pendingReportType, setPendingReportType] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [pendingSwitch, setPendingSwitch] = useState<number | null>(null);
-  const [switchDialogOpen, setSwitchDialogOpen] = useState(false);
-  const setActiveVersionMutation = useSetActiveVersion(reportId);
-
-  const versions = useMemo(() => {
-    if (!report) return [];
-    const normalized = ensureVersionedShape(report);
-    return [...(normalized.versions ?? [])].sort((a, b) => b.version_number - a.version_number);
-  }, [report]);
-
-  const activeVersionNumber = report?.current_version_number;
 
   if (!report) return null;
 
@@ -112,52 +85,8 @@ export const ReportSidebar = ({ reportId }: ReportSidebarProps) => {
             <p className="font-medium text-gray-900">{report.sections.length}</p>
           </div>
           <div>
-            <span className="text-gray-500">Active Version:</span>
-            {versions.length === 0 ? (
-              <p className="mt-0.5 font-medium text-gray-900">
-                {report.version || "1.0"}
-                <span className="ml-2 text-xs text-gray-500">— first save creates v1</span>
-              </p>
-            ) : (
-              <Select
-                value={String(activeVersionNumber ?? versions[0]?.version_number ?? 1)}
-                onValueChange={(value) => {
-                  const next = Number(value);
-                  if (next === activeVersionNumber) return;
-                  setPendingSwitch(next);
-                  setSwitchDialogOpen(true);
-                }}
-                disabled={setActiveVersionMutation.isPending}
-              >
-                <SelectTrigger className="mt-1 w-full">
-                  <SelectValue placeholder="Select version" />
-                </SelectTrigger>
-                <SelectContent>
-                  {versions.map((v) => (
-                    <SelectItem key={v.version_number} value={String(v.version_number)}>
-                      <span className="flex items-center gap-2">
-                        {v.version_number === activeVersionNumber ? (
-                          <Check className="h-3.5 w-3.5 text-blue-600" />
-                        ) : (
-                          <GitBranch className="h-3.5 w-3.5 text-gray-400" />
-                        )}
-                        <span className="font-mono text-xs">v{v.version_number}</span>
-                        {v.label && <span className="truncate text-xs text-gray-600">— {v.label}</span>}
-                        <StatusBadge status={v.status} size="sm" />
-                        <span className="text-xs text-gray-500">
-                          {formatDistanceToNow(new Date(v.snapshotted_at), { addSuffix: true })}
-                        </span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {versions.length > 0 && (
-              <p className="mt-1 text-xs text-gray-500">
-                {versions.length} version{versions.length === 1 ? "" : "s"} · v{activeVersionNumber} active
-              </p>
-            )}
+            <span className="text-gray-500">Version:</span>
+            <p className="font-medium text-gray-900">{report.version || "1.0"}</p>
           </div>
           <div>
             <span className="text-gray-500">Status:</span>
@@ -197,26 +126,6 @@ export const ReportSidebar = ({ reportId }: ReportSidebarProps) => {
         }}
         onConfirm={handleConfirmChangeReportType}
         type="close"
-      />
-      <ConfirmationModal
-        open={switchDialogOpen}
-        title="Switch active version?"
-        description={`Switch the editor to v${pendingSwitch}? Save any unsaved edits to v${activeVersionNumber} first to avoid losing them.`}
-        type="default"
-        onOpenChange={(open) => {
-          if (!open) {
-            setPendingSwitch(null);
-            setSwitchDialogOpen(false);
-          }
-        }}
-        onConfirm={() => {
-          if (pendingSwitch !== null) {
-            setActiveVersionMutation.mutate(pendingSwitch);
-          }
-          setPendingSwitch(null);
-          setSwitchDialogOpen(false);
-        }}
-        isLoading={setActiveVersionMutation.isPending}
       />
     </div>
   );
